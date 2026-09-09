@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-09T17:34:00Z",
+  "checkpoint": "P0.1",
+  "requirements": ["INIT-001", "INIT-002", "INIT-003", "INIT-004", "INIT-005", "INIT-006", "INIT-007"],
+  "environment": {
+    "os": "macOS",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "bun_version": "1.4.2",
+    "branch": "main",
+    "tested_source_tree": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6"
+  },
+  "observations": [
+    {"command": "git status --short --branch", "exit_code": 0, "result": "main at the planning baseline; no pre-existing working-tree changes were present before P0.1 files were added."},
+    {"command": "git rev-parse --verify HEAD", "exit_code": 0, "result": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6"},
+    {"command": "git remote -v", "exit_code": 0, "result": "origin=https://github.com/ashutoshpw/open-obsidian.git for fetch and push"},
+    {"command": "git ls-remote --heads origin main", "exit_code": 0, "result": "no remote main ref exists yet; initial phased push will establish it"},
+    {"command": "bun --version", "exit_code": 0, "result": "1.4.2"},
+    {"command": "bun create @knip/config", "exit_code": 0, "result": "created knip.json and added Knip to package.json scripts/dependencies"},
+    {"command": "bunx fallow --help", "exit_code": 0, "result": "fallow is available; recurring audit commands are wired in package.json"}
+  ],
+  "limitations": [
+    "No application source or automated product fixtures existed at this baseline.",
+    "The assigned GitHub repository has no remote main ref yet, so Actions results are not available.",
+    "Knip and Fallow have been configured for recurring use; a clean application audit is deferred until implementation source exists."
+  ]
+}

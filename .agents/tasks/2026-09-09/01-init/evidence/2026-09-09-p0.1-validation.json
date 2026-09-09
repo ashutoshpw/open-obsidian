@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-09T18:17:24Z",
+  "checkpoint": "P0.1",
+  "requirements": ["INIT-001", "INIT-002", "INIT-003", "INIT-004", "INIT-005", "INIT-006", "INIT-007"],
+  "environment": {
+    "os": "macOS",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "bun_version": "1.4.2",
+    "branch": "main",
+    "tested_source_tree": "c224a06200a770304edc8336378ee24cfab8d905ec05a8cea758f1c3643d974a"
+  },
+  "observations": [
+    {"command": "bun run validate:state", "exit_code": 0, "result": "STRUCTURE CHECK: passed; 19 checkpoints recognized; 196 rows recognized; 183 mandatory rows remain pending; 6 rows are external-pending."},
+    {"command": "bun run release:check", "exit_code": 2, "result": "RELEASE CHECK: incomplete; mandatory implementation work or required evidence remains."},
+    {"command": "bun test", "exit_code": 0, "result": "2 tests passed across scripts/status.test.ts; the validator pass and honest release-failure contract are covered."},
+    {"command": "bun run knip", "exit_code": 0, "result": "Knip completed with no reported unused files, dependencies or exports."},
+    {"command": "bun run audit:fallow", "exit_code": 0, "result": "Fallow health report-only completed with health-score 90.0:A, no dead files/cycles/unused dependencies; it surfaced five advisory CRAP/coverage findings in scripts/status.ts and the test file is discovered."},
+    {"command": "bun run audit:fallow:changed", "exit_code": 0, "result": "Fallow changed-code review brief completed; it surfaced the same status-script complexity and a dependency review decision without suppressing findings."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 1, "result": "Strict Fallow audit intentionally reports one dead-test-file finding and five advisory complexity/coverage findings; the report is retained for future cleanup rather than suppressed."}
+  ],
+  "limitations": [
+    "The strict command bun run audit:fallow:strict remains available and currently fails until the validator's advisory complexity/coverage findings and Fallow test-file discovery are reduced or covered.",
+    "No product source, vault fixtures, plugin artifacts, platform builds or live provider access existed at P0.1.",
+    "The evidence is tied to the P0.1 working tree and must be reconciled to the first P0.1 commit before the checkpoint is marked complete."
+  ]
+}

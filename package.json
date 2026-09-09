@@ -1,0 +1,25 @@
+{
+  "name": "openobsidian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An Obsidian-compatible AI workspace for individual power users.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "status": "bun scripts/status.ts",
+    "validate:state": "bun scripts/status.ts --validate",
+    "release:check": "bun scripts/status.ts --release",
+    "test": "bun test",
+    "knip": "knip",
+    "audit:fallow": "bunx fallow health --root . --format compact --report-only",
+    "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",
+    "audit:fallow:changed": "bunx fallow audit --root . --base HEAD --format compact --brief",
+    "audit:fallow:strict": "bunx fallow audit --root . --base HEAD --format compact",
+    "quality": "bun run validate:state && bun run knip && bun run audit:fallow"
+  },
+  "devDependencies": {
+    "@types/node": "26.5.0",
+    "knip": "6.35.1",
+    "typescript": "7.0.2"
+  }
+}
