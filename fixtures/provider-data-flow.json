@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "contract_version": "2026-09-10.p0.2",
+  "status": "contract_defined_live_terms_external_pending",
+  "shared_invariants": {
+    "selected_scope_visible": true,
+    "exclusions_applied_before_indexing": true,
+    "exclusions_applied_before_inference": true,
+    "provider_destination_visible": true,
+    "credentials_in_os_credential_storage": true,
+    "no_silent_local_to_cloud_fallback": true,
+    "retrieved_notes_and_plugin_output_are_untrusted": true,
+    "actions_require_approved_scope_and_preview": true,
+    "conversation_export": "portable and explicit",
+    "embedding_deletion": "delete derivatives when source exclusion or deletion requires it"
+  },
+  "modes": [
+    {
+      "id": "managed",
+      "credentials": "app account authorizes the OpenRouter-proxy backend; proxy secrets remain server-side",
+      "context": "only selected, non-excluded context",
+      "destination": "configured OpenRouter proxy endpoint",
+      "trust_and_retention": "provider, subprocessors, retention, training, regional routing, deletion and billing terms are external-pending",
+      "failure": "readable unavailable/setup state, timeout and cancellation; no claim of live connectivity",
+      "live_status": "external_pending"
+    },
+    {
+      "id": "byok",
+      "credentials": "user key stored in OS credential storage with rotation and redacted errors",
+      "context": "only selected, non-excluded context",
+      "destination": "user-configured provider endpoint",
+      "trust_and_retention": "provider-specific terms and endpoint trust are shown as configuration prerequisites",
+      "failure": "validation, timeout, quota and cancellation states are explicit",
+      "live_status": "automated_contract_only"
+    },
+    {
+      "id": "local",
+      "credentials": "local endpoint/model configuration; no remote secret",
+      "context": "only selected, non-excluded context sent to verified local runtime",
+      "destination": "configured local endpoint; locality must be verified before privacy claims",
+      "trust_and_retention": "model source/license/integrity, storage/RAM, endpoint trust and offline behavior are recorded",
+      "failure": "offline/setup state; never silently falls back to cloud",
+      "live_status": "automated_contract_only"
+    }
+  ],
+  "change_contract": {
+    "operation": "draft -> review -> per-file accept/reject -> revision validation -> journaled apply",
+    "undo": true,
+    "recovery": true,
+    "arbitrary_model_code": false,
+    "shell_network_connectors": "separate opt-in capabilities"
+  },
+  "usage_and_costs": {
+    "preflight_estimate": "where provider exposes enough information",
+    "usage_recorded": true,
+    "hard_caps": true,
+    "quota_handling": "visible and cancellable where provider permits",
+    "managed_billing": "deferred by D13"
+  }
+}

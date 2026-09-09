@@ -1,0 +1,1199 @@
+{
+  "schema_version": 1,
+  "retrieved_at": "2026-09-09",
+  "verification": {
+    "method": "Downloaded immutable GitHub release assets; SHA-256 calculated locally",
+    "artifact_hash_algorithm": "SHA-256",
+    "compatibility_status": "planned",
+    "d15_policy": "isolated_preview_required; unsafe paths are disabled and visibly unsupported"
+  },
+  "selection_sources": {
+    "stats": {
+      "url": "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugin-stats.json",
+      "sha256": "99c0b10ab6b02d01a9ed7474585d599511638706f35eda00582ad1e3eb997c37",
+      "bytes": 2216761
+    },
+    "registry": {
+      "url": "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
+      "sha256": "76fe1fa4957b03eac436123a27e4818e2efb3cd8259a3cb95b741991423766e7",
+      "bytes": 2203969
+    }
+  },
+  "artifacts": [
+    {
+      "id": "PC01",
+      "registry_id": "obsidian-excalidraw-plugin",
+      "name": "Excalidraw",
+      "repo": "zsviczian/obsidian-excalidraw-plugin",
+      "rank": 1,
+      "downloads": 7837439,
+      "tag": "2.27.3",
+      "published_at": "2026-09-06T12:38:47Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/zsviczian/obsidian-excalidraw-plugin",
+      "release_url": "https://github.com/zsviczian/obsidian-excalidraw-plugin/releases/tag/2.27.3",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/zsviczian/obsidian-excalidraw-plugin/releases/download/2.27.3/main.js",
+          "bytes": 4884569,
+          "sha256": "8275e85d0f6314654a3d5ad86125d2e1b0018b4ffd60eddab2bbc8eefa0e13c1"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/zsviczian/obsidian-excalidraw-plugin/releases/download/2.27.3/manifest.json",
+          "bytes": 463,
+          "sha256": "30bfc399dae79f7ca1ce050bb2a9497aada72ef576be831375571f5444f428a2",
+          "manifest": {
+            "id": "obsidian-excalidraw-plugin",
+            "name": "Excalidraw",
+            "version": "2.27.3",
+            "minAppVersion": "1.8.7"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/zsviczian/obsidian-excalidraw-plugin/releases/download/2.27.3/styles.css",
+          "bytes": 333231,
+          "sha256": "4a9b329e24abdc310ccd8a0fb91c7863619ceea2a0d266981a86d6c5ebd1abea"
+        }
+      ]
+    },
+    {
+      "id": "PC02",
+      "registry_id": "templater-obsidian",
+      "name": "Templater",
+      "repo": "silentvoid13/Templater",
+      "rank": 2,
+      "downloads": 5545597,
+      "tag": "2.25.0",
+      "published_at": "2026-08-05T05:45:57Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css",
+        "templater-obsidian.zip"
+      ],
+      "source_repository": "https://github.com/silentvoid13/Templater",
+      "release_url": "https://github.com/silentvoid13/Templater/releases/tag/2.25.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/silentvoid13/Templater/releases/download/2.25.0/main.js",
+          "bytes": 453404,
+          "sha256": "6a29790e8ad3bb3de5bcc7381588f20093b2dbecc1ff27d8a5d7ed3fcebbdf4e"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/silentvoid13/Templater/releases/download/2.25.0/manifest.json",
+          "bytes": 756,
+          "sha256": "75985188fac8b518eebb791370a24dae1a2476cce3912de4709778dbde0171e4",
+          "manifest": {
+            "id": "templater-obsidian",
+            "name": "Templater",
+            "version": "2.25.0",
+            "minAppVersion": "1.13.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/silentvoid13/Templater/releases/download/2.25.0/styles.css",
+          "bytes": 4089,
+          "sha256": "eb94063be602679f397e3e35fcb7f6a4b027da82e17c213bb44a267c6b45d8de"
+        },
+        {
+          "name": "templater-obsidian.zip",
+          "url": "https://github.com/silentvoid13/Templater/releases/download/2.25.0/templater-obsidian.zip",
+          "bytes": 127994,
+          "sha256": "01c328a2840fa7cb8a971885c9c4c5a722963db62fd1753634a70e659f659cbf"
+        }
+      ]
+    },
+    {
+      "id": "PC03",
+      "registry_id": "dataview",
+      "name": "Dataview",
+      "repo": "blacksmithgu/obsidian-dataview",
+      "rank": 3,
+      "downloads": 4931109,
+      "tag": "0.5.68",
+      "published_at": null,
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/blacksmithgu/obsidian-dataview",
+      "release_url": "https://github.com/blacksmithgu/obsidian-dataview/releases/tag/0.5.68",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/blacksmithgu/obsidian-dataview/releases/download/0.5.68/main.js",
+          "bytes": 2377639,
+          "sha256": "794e9eaede73920bb8d54b0eda4f5de2182d698cc638774500f24f14bcd4da0b"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/blacksmithgu/obsidian-dataview/releases/download/0.5.68/manifest.json",
+          "bytes": 357,
+          "sha256": "9235db47112da81b85591c79ecb9ae2574e5e72207056e976472f90616286185",
+          "manifest": {
+            "id": "dataview",
+            "name": "Dataview",
+            "version": "0.5.68",
+            "minAppVersion": "0.13.11"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/blacksmithgu/obsidian-dataview/releases/download/0.5.68/styles.css",
+          "bytes": 2965,
+          "sha256": "3306dd9032e00f989ba7233a37fd255bc4d3f4340cee661762e952f3f6aa1de9"
+        }
+      ]
+    },
+    {
+      "id": "PC04",
+      "registry_id": "obsidian-tasks-plugin",
+      "name": "Tasks",
+      "repo": "obsidian-tasks-group/obsidian-tasks",
+      "rank": 4,
+      "downloads": 4203635,
+      "tag": "8.4.0",
+      "published_at": "2026-08-25T21:36:58Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "obsidian-tasks-8.4.0.zip",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/obsidian-tasks-group/obsidian-tasks",
+      "release_url": "https://github.com/obsidian-tasks-group/obsidian-tasks/releases/tag/8.4.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/obsidian-tasks-group/obsidian-tasks/releases/download/8.4.0/main.js",
+          "bytes": 935515,
+          "sha256": "c1e3333bce3fee7c1a06397ea2989cd27e1659cc30795c53ed5a60e7941e48fa"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/obsidian-tasks-group/obsidian-tasks/releases/download/8.4.0/manifest.json",
+          "bytes": 517,
+          "sha256": "499cfa146ba9cbdd70ccfc9d16b6b6cbfb4243158d14335b2b336259e867c33f",
+          "manifest": {
+            "id": "obsidian-tasks-plugin",
+            "name": "Tasks",
+            "version": "8.4.0",
+            "minAppVersion": "1.8.7"
+          }
+        },
+        {
+          "name": "obsidian-tasks-8.4.0.zip",
+          "url": "https://github.com/obsidian-tasks-group/obsidian-tasks/releases/download/8.4.0/obsidian-tasks-8.4.0.zip",
+          "bytes": 250092,
+          "sha256": "60a0cf91a636a275cfce1468b026a0eb57dc3f999039d1240f341864a0b12967"
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/obsidian-tasks-group/obsidian-tasks/releases/download/8.4.0/styles.css",
+          "bytes": 30408,
+          "sha256": "3b2ca53d3b74162b5899b251d18b695f532546181ebaed6354befbe72c29935d"
+        }
+      ]
+    },
+    {
+      "id": "PC05",
+      "registry_id": "table-editor-obsidian",
+      "name": "Advanced Tables",
+      "repo": "tgrosinger/advanced-tables-obsidian",
+      "rank": 5,
+      "downloads": 3180678,
+      "tag": "0.23.2",
+      "published_at": "2026-05-13T18:10:52Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/tgrosinger/advanced-tables-obsidian",
+      "release_url": "https://github.com/tgrosinger/advanced-tables-obsidian/releases/tag/0.23.2",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/tgrosinger/advanced-tables-obsidian/releases/download/0.23.2/main.js",
+          "bytes": 272036,
+          "sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/tgrosinger/advanced-tables-obsidian/releases/download/0.23.2/manifest.json",
+          "bytes": 493,
+          "sha256": "698b4f77445e07d887f33450eaf533a28e099b7b483f642fa883362ffbd8ffe9",
+          "manifest": {
+            "id": "table-editor-obsidian",
+            "name": "Advanced Tables",
+            "version": "0.23.2",
+            "minAppVersion": "1.0.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/tgrosinger/advanced-tables-obsidian/releases/download/0.23.2/styles.css",
+          "bytes": 1744,
+          "sha256": "23fa30d76f117fd3d1624c4c2e6ddedabf809923996b0534895f8254ea6a39f7"
+        }
+      ]
+    },
+    {
+      "id": "PC06",
+      "registry_id": "obsidian-git",
+      "name": "Git",
+      "repo": "vinzent03/obsidian-git",
+      "rank": 6,
+      "downloads": 3119400,
+      "tag": "2.39.0",
+      "published_at": "2026-08-12T21:16:32Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "obsidian-git-2.39.0.zip",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/vinzent03/obsidian-git",
+      "release_url": "https://github.com/vinzent03/obsidian-git/releases/tag/2.39.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/vinzent03/obsidian-git/releases/download/2.39.0/main.js",
+          "bytes": 727717,
+          "sha256": "d5a74036cf17c1a02957c1f33f59e47cf3af83525641c4374ca1fa09d95f3eb4"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/vinzent03/obsidian-git/releases/download/2.39.0/manifest.json",
+          "bytes": 325,
+          "sha256": "270410edd6e64f51d974343c6e29ec8399502f6e057ae5d6264d259b104f625c",
+          "manifest": {
+            "id": "obsidian-git",
+            "name": "Git",
+            "version": "2.39.0",
+            "minAppVersion": null
+          }
+        },
+        {
+          "name": "obsidian-git-2.39.0.zip",
+          "url": "https://github.com/vinzent03/obsidian-git/releases/download/2.39.0/obsidian-git-2.39.0.zip",
+          "bytes": 231313,
+          "sha256": "3e59513834c785a7aab75c341dc25d8814aa78b6d6c8dee1e8d10c2cbe543c5f"
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/vinzent03/obsidian-git/releases/download/2.39.0/styles.css",
+          "bytes": 18303,
+          "sha256": "f5ab93f4d5b4dd1bd1e577864c5c79087f7adfd448ac346e0489e5847ce6922d"
+        }
+      ]
+    },
+    {
+      "id": "PC07",
+      "registry_id": "calendar",
+      "name": "Calendar",
+      "repo": "liamcain/obsidian-calendar-plugin",
+      "rank": 7,
+      "downloads": 3085881,
+      "tag": "1.5.10",
+      "published_at": null,
+      "assets": [
+        "main.js",
+        "manifest.json"
+      ],
+      "source_repository": "https://github.com/liamcain/obsidian-calendar-plugin",
+      "release_url": "https://github.com/liamcain/obsidian-calendar-plugin/releases/tag/1.5.10",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/liamcain/obsidian-calendar-plugin/releases/download/1.5.10/main.js",
+          "bytes": 141498,
+          "sha256": "7fb339e9cf9fdbe5a801fa2b8ab85b366b5b3777fbd193cbc8728bc27711d125"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/liamcain/obsidian-calendar-plugin/releases/download/1.5.10/manifest.json",
+          "bytes": 249,
+          "sha256": "f3e9581338648512baa12d5b458490f7fd367918f7bdb6bd86171ce57be7d08b",
+          "manifest": {
+            "id": "calendar",
+            "name": "Calendar",
+            "version": "1.5.10",
+            "minAppVersion": "0.9.11"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC08",
+      "registry_id": "obsidian-style-settings",
+      "name": "Style Settings",
+      "repo": "obsidian-community/obsidian-style-settings",
+      "rank": 8,
+      "downloads": 2665411,
+      "tag": "1.0.9",
+      "published_at": "2024-08-24T17:45:16Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/obsidian-community/obsidian-style-settings",
+      "release_url": "https://github.com/obsidian-community/obsidian-style-settings/releases/tag/1.0.9",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/obsidian-community/obsidian-style-settings/releases/download/1.0.9/main.js",
+          "bytes": 154561,
+          "sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/obsidian-community/obsidian-style-settings/releases/download/1.0.9/manifest.json",
+          "bytes": 321,
+          "sha256": "9cffdc20cf2aa1354820e0050b694b0f9b576446e3d5d44a36ae8b0187e5bfb8",
+          "manifest": {
+            "id": "obsidian-style-settings",
+            "name": "Style Settings",
+            "version": "1.0.9",
+            "minAppVersion": "0.11.5"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/obsidian-community/obsidian-style-settings/releases/download/1.0.9/styles.css",
+          "bytes": 13906,
+          "sha256": "ee7937d2be50653a89ccb30ae5f0572b23507d5b7f1328d005271a363075bfd8"
+        }
+      ]
+    },
+    {
+      "id": "PC09",
+      "registry_id": "obsidian-kanban",
+      "name": "Kanban",
+      "repo": "obsidian-community/obsidian-kanban",
+      "rank": 9,
+      "downloads": 2644322,
+      "tag": "2.0.51",
+      "published_at": "2024-05-31T01:08:28Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/obsidian-community/obsidian-kanban",
+      "release_url": "https://github.com/obsidian-community/obsidian-kanban/releases/tag/2.0.51",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/obsidian-community/obsidian-kanban/releases/download/2.0.51/main.js",
+          "bytes": 990749,
+          "sha256": "a7e3bd4cf25f9b7f53a841c44ce990db0ef5f7954ebcab17ae6dca80310c39ac"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/obsidian-community/obsidian-kanban/releases/download/2.0.51/manifest.json",
+          "bytes": 348,
+          "sha256": "24976787097ead467969e014a35654e7a80e4db49a977689a48afadfa15e1854",
+          "manifest": {
+            "id": "obsidian-kanban",
+            "name": "Kanban",
+            "version": "2.0.51",
+            "minAppVersion": "1.0.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/obsidian-community/obsidian-kanban/releases/download/2.0.51/styles.css",
+          "bytes": 60802,
+          "sha256": "ecf6dd31f1727c441cce6f54794b0d3916dcfffc87fa17b855c79ba04a85d9a7"
+        }
+      ]
+    },
+    {
+      "id": "PC10",
+      "registry_id": "remotely-save",
+      "name": "Remotely Save",
+      "repo": "remotely-save/remotely-save",
+      "rank": 10,
+      "downloads": 2216022,
+      "tag": "0.5.25",
+      "published_at": "2024-10-20T09:14:34Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/remotely-save/remotely-save",
+      "release_url": "https://github.com/remotely-save/remotely-save/releases/tag/0.5.25",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/remotely-save/remotely-save/releases/download/0.5.25/main.js",
+          "bytes": 4249067,
+          "sha256": "b3afbd27f15188b9784618c958607869baa434dc0abcf072774f99362c11fa04"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/remotely-save/remotely-save/releases/download/0.5.25/manifest.json",
+          "bytes": 374,
+          "sha256": "71d9c0b616003f3a696880e7aa88296e5b31555757e933a12d2900b96c4caa90",
+          "manifest": {
+            "id": "remotely-save",
+            "name": "Remotely Save",
+            "version": "0.5.25",
+            "minAppVersion": "0.13.21"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/remotely-save/remotely-save/releases/download/0.5.25/styles.css",
+          "bytes": 3125,
+          "sha256": "87584e7d538ca58c527afbb2625b09ea282bcae7bf784b7cce33ca92e9e0dfb3"
+        }
+      ]
+    },
+    {
+      "id": "PC11",
+      "registry_id": "obsidian-icon-folder",
+      "name": "Iconize",
+      "repo": "florianwoelki/obsidian-iconize",
+      "rank": 11,
+      "downloads": 2213970,
+      "tag": "2.14.7",
+      "published_at": "2025-01-03T09:03:15Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/florianwoelki/obsidian-iconize",
+      "release_url": "https://github.com/florianwoelki/obsidian-iconize/releases/tag/2.14.7",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/florianwoelki/obsidian-iconize/releases/download/2.14.7/main.js",
+          "bytes": 1003749,
+          "sha256": "ada0b009706556c98101f953a6a87f5cafd3001085df593d3be28eeeea218201"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/florianwoelki/obsidian-iconize/releases/download/2.14.7/manifest.json",
+          "bytes": 311,
+          "sha256": "f524a18d69e990a244173a3595681c39a20bcbc9dc18b59af51e45660fef5ca2",
+          "manifest": {
+            "id": "obsidian-icon-folder",
+            "name": "Iconize",
+            "version": "2.14.7",
+            "minAppVersion": "0.9.12"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/florianwoelki/obsidian-iconize/releases/download/2.14.7/styles.css",
+          "bytes": 2216,
+          "sha256": "56ffeb8349f4af97dab8a14fcadcb0019d3b37b116d7a34aa21e958e98455a89"
+        }
+      ]
+    },
+    {
+      "id": "PC12",
+      "registry_id": "quickadd",
+      "name": "QuickAdd",
+      "repo": "chhoumann/quickadd",
+      "rank": 12,
+      "downloads": 2089718,
+      "tag": "2.24.2",
+      "published_at": "2026-09-02T23:16:37Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/chhoumann/quickadd",
+      "release_url": "https://github.com/chhoumann/quickadd/releases/tag/2.24.2",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/chhoumann/quickadd/releases/download/2.24.2/main.js",
+          "bytes": 1184148,
+          "sha256": "9cfce437aaff293b7f72e3a5d86243e8ecc9677b4cdc89556e28b8bb8e1adf19"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/chhoumann/quickadd/releases/download/2.24.2/manifest.json",
+          "bytes": 372,
+          "sha256": "94cc0726bba84fa05ceba5acc1372e99cd3093f21c264722fe0be47fc5df93db",
+          "manifest": {
+            "id": "quickadd",
+            "name": "QuickAdd",
+            "version": "2.24.2",
+            "minAppVersion": "1.13.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/chhoumann/quickadd/releases/download/2.24.2/styles.css",
+          "bytes": 38408,
+          "sha256": "4a4e1610afae6c5d072d7b23c4cba42c8aaf0d616daa6ee78fb3ab6d7b7a33dd"
+        }
+      ]
+    },
+    {
+      "id": "PC13",
+      "registry_id": "realclaudian",
+      "name": "Claudian",
+      "repo": "yishentu/claudian",
+      "rank": 13,
+      "downloads": 2053650,
+      "tag": "2.2.6",
+      "published_at": "2026-09-06T10:13:57Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/yishentu/claudian",
+      "release_url": "https://github.com/yishentu/claudian/releases/tag/2.2.6",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/yishentu/claudian/releases/download/2.2.6/main.js",
+          "bytes": 4963269,
+          "sha256": "ecac017f1cf02aca00535687dc76a0767cb43bad0e09c2139195ecc068418b33"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/yishentu/claudian/releases/download/2.2.6/manifest.json",
+          "bytes": 447,
+          "sha256": "03daf2c5d330768f4b5b28f8426a4a9c2061c1f05137455d40ff95077199059a",
+          "manifest": {
+            "id": "realclaudian",
+            "name": "Claudian",
+            "version": "2.2.6",
+            "minAppVersion": "1.13.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/yishentu/claudian/releases/download/2.2.6/styles.css",
+          "bytes": 200924,
+          "sha256": "e9e77a6d919ab4d30aa0dc21bcaaed3f92d66640a73437b5920c1958796fdf21"
+        }
+      ]
+    },
+    {
+      "id": "PC14",
+      "registry_id": "editing-toolbar",
+      "name": "Editing Toolbar",
+      "repo": "pkm-er/obsidian-editing-toolbar",
+      "rank": 14,
+      "downloads": 1860031,
+      "tag": "4.1.3",
+      "published_at": "2026-09-06T13:38:53Z",
+      "assets": [
+        "editing-toolbar.zip",
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/pkm-er/obsidian-editing-toolbar",
+      "release_url": "https://github.com/pkm-er/obsidian-editing-toolbar/releases/tag/4.1.3",
+      "release_assets": [
+        {
+          "name": "editing-toolbar.zip",
+          "url": "https://github.com/pkm-er/obsidian-editing-toolbar/releases/download/4.1.3/editing-toolbar.zip",
+          "bytes": 533554,
+          "sha256": "3c30f204d684a93bba35dfbb2f1e220ff5fcc8598c2992450182000e2eb497b2"
+        },
+        {
+          "name": "main.js",
+          "url": "https://github.com/pkm-er/obsidian-editing-toolbar/releases/download/4.1.3/main.js",
+          "bytes": 1699317,
+          "sha256": "9b389790e6decc763d09686cf5f6ddfde93c67f44f4d5e46014541521e646b7b"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/pkm-er/obsidian-editing-toolbar/releases/download/4.1.3/manifest.json",
+          "bytes": 405,
+          "sha256": "1a32cb69a8536e6f4711de3214fa4e2c8135fb1a410b396b7f32bcf6afeea2cd",
+          "manifest": {
+            "id": "editing-toolbar",
+            "name": "Editing Toolbar",
+            "version": "4.1.3",
+            "minAppVersion": "0.14.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/pkm-er/obsidian-editing-toolbar/releases/download/4.1.3/styles.css",
+          "bytes": 83039,
+          "sha256": "9e640edaa93e92d13cf76506ff53502e46bc45ab1c6927d774f34da0ccd4ce11"
+        }
+      ]
+    },
+    {
+      "id": "PC15",
+      "registry_id": "omnisearch",
+      "name": "Omnisearch",
+      "repo": "scambier/obsidian-omnisearch",
+      "rank": 15,
+      "downloads": 1850420,
+      "tag": "1.31.0",
+      "published_at": "2026-09-05T12:22:04Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/scambier/obsidian-omnisearch",
+      "release_url": "https://github.com/scambier/obsidian-omnisearch/releases/tag/1.31.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/scambier/obsidian-omnisearch/releases/download/1.31.0/main.js",
+          "bytes": 718803,
+          "sha256": "9f2456705d0840f3cccf62a8e99a6fdaf8901939936e44d4dd27fc6b2d522f31"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/scambier/obsidian-omnisearch/releases/download/1.31.0/manifest.json",
+          "bytes": 367,
+          "sha256": "26b1ffc250b1d90605f60c132f783e3148dd399e5baf5862040671d86294bc85",
+          "manifest": {
+            "id": "omnisearch",
+            "name": "Omnisearch",
+            "version": "1.31.0",
+            "minAppVersion": "1.13.3"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/scambier/obsidian-omnisearch/releases/download/1.31.0/styles.css",
+          "bytes": 2750,
+          "sha256": "c6a56b1a18ff867f12ebbb3a139060a249704281e1b449003ff487969621a2e6"
+        }
+      ]
+    },
+    {
+      "id": "PC16",
+      "registry_id": "copilot",
+      "name": "Copilot",
+      "repo": "logancyang/obsidian-copilot",
+      "rank": 16,
+      "downloads": 1845334,
+      "tag": "4.0.7",
+      "published_at": "2026-09-09T04:36:33Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/logancyang/obsidian-copilot",
+      "release_url": "https://github.com/logancyang/obsidian-copilot/releases/tag/4.0.7",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/logancyang/obsidian-copilot/releases/download/4.0.7/main.js",
+          "bytes": 4855673,
+          "sha256": "ed09fa6581e2868226be56fa22f89d085ce040e9246c2b2ff4d00b80f3dd6d7b"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/logancyang/obsidian-copilot/releases/download/4.0.7/manifest.json",
+          "bytes": 518,
+          "sha256": "dae529e1dba96c9440596938dd543eb1c0c5c9a710c1b77325ad2a19313ca10c",
+          "manifest": {
+            "id": "copilot",
+            "name": "Copilot",
+            "version": "4.0.7",
+            "minAppVersion": "1.11.4"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/logancyang/obsidian-copilot/releases/download/4.0.7/styles.css",
+          "bytes": 77063,
+          "sha256": "51c049bd18c3088f62d4263b5cad06de96b5c148604f751fc2f27ceb06f9e29a"
+        }
+      ]
+    },
+    {
+      "id": "PC17",
+      "registry_id": "obsidian-minimal-settings",
+      "name": "Minimal Theme Settings",
+      "repo": "kepano/obsidian-minimal-settings",
+      "rank": 17,
+      "downloads": 1792641,
+      "tag": "9.0.0",
+      "published_at": "2026-07-31T20:37:39Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/kepano/obsidian-minimal-settings",
+      "release_url": "https://github.com/kepano/obsidian-minimal-settings/releases/tag/9.0.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/kepano/obsidian-minimal-settings/releases/download/9.0.0/main.js",
+          "bytes": 26403,
+          "sha256": "f754e0ce6523e433bff8e7995a848f7d7fac205399f9ab3b1258430261fd90c4"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/kepano/obsidian-minimal-settings/releases/download/9.0.0/manifest.json",
+          "bytes": 347,
+          "sha256": "2038f9c1f5ca026ebc1f3e156bad97c671d2c401a20718384508ef72071e8c5f",
+          "manifest": {
+            "id": "obsidian-minimal-settings",
+            "name": "Minimal Theme Settings",
+            "version": "9.0.0",
+            "minAppVersion": "1.13.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/kepano/obsidian-minimal-settings/releases/download/9.0.0/styles.css",
+          "bytes": 89,
+          "sha256": "50084760da927a5bf5ac1b9d3b960dc52e1d0a3bf690e54df8f4d76f8212628c"
+        }
+      ]
+    },
+    {
+      "id": "PC18",
+      "registry_id": "obsidian-importer",
+      "name": "Importer",
+      "repo": "obsidianmd/obsidian-importer",
+      "rank": 18,
+      "downloads": 1647030,
+      "tag": "3.1.5",
+      "published_at": "2026-09-05T16:53:08Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/obsidianmd/obsidian-importer",
+      "release_url": "https://github.com/obsidianmd/obsidian-importer/releases/tag/3.1.5",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/obsidianmd/obsidian-importer/releases/download/3.1.5/main.js",
+          "bytes": 5004444,
+          "sha256": "5213e3fada32237d2f309dbb94ad0b0fb0e3a4842dfe68808327ec26cfb2d63c"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/obsidianmd/obsidian-importer/releases/download/3.1.5/manifest.json",
+          "bytes": 371,
+          "sha256": "be259cb770ca451dfde228146d22e130a186600b381084223de9104167efd19d",
+          "manifest": {
+            "id": "obsidian-importer",
+            "name": "Importer",
+            "version": "3.1.5",
+            "minAppVersion": "1.13.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/obsidianmd/obsidian-importer/releases/download/3.1.5/styles.css",
+          "bytes": 44613,
+          "sha256": "d774395b9d4e81f28374496d0a327a67a6ebe47ae305b45aaf1ab102f46aa9dd"
+        }
+      ]
+    },
+    {
+      "id": "PC19",
+      "registry_id": "tasknotes",
+      "name": "TaskNotes",
+      "repo": "callumalpass/tasknotes",
+      "rank": 19,
+      "downloads": 1422632,
+      "tag": "4.12.5",
+      "published_at": "2026-08-28T19:01:28Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/callumalpass/tasknotes",
+      "release_url": "https://github.com/callumalpass/tasknotes/releases/tag/4.12.5",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/callumalpass/tasknotes/releases/download/4.12.5/main.js",
+          "bytes": 5233350,
+          "sha256": "7f82b6bbffe5ff4b03c6b1581aa193f1204cd5970700ef9641f095e0c277bc4e"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/callumalpass/tasknotes/releases/download/4.12.5/manifest.json",
+          "bytes": 306,
+          "sha256": "9bec988938c67a3bca22424d946680e02b0ea1d2c39fd860cfcaef35c372048d",
+          "manifest": {
+            "id": "tasknotes",
+            "name": "TaskNotes",
+            "version": "4.12.5",
+            "minAppVersion": "1.12.2"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/callumalpass/tasknotes/releases/download/4.12.5/styles.css",
+          "bytes": 613634,
+          "sha256": "20b739b66bf4559621049d1d4b8068bed816270a127731e46bb620ff314d58d8"
+        }
+      ]
+    },
+    {
+      "id": "PC20",
+      "registry_id": "obsidian-outliner",
+      "name": "Outliner",
+      "repo": "vslinko/obsidian-outliner",
+      "rank": 20,
+      "downloads": 1395484,
+      "tag": "4.10.2",
+      "published_at": "2026-06-27T18:50:19Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/vslinko/obsidian-outliner",
+      "release_url": "https://github.com/vslinko/obsidian-outliner/releases/tag/4.10.2",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/vslinko/obsidian-outliner/releases/download/4.10.2/main.js",
+          "bytes": 475201,
+          "sha256": "3d5bc634d3045ead4df9747d07ab51f16d9722f4601f9fee27e0c7fe9828fb33"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/vslinko/obsidian-outliner/releases/download/4.10.2/manifest.json",
+          "bytes": 286,
+          "sha256": "277a8887eb959cc7a4ae047608421153b359bdf451c2d66caab91c35ca98b93f",
+          "manifest": {
+            "id": "obsidian-outliner",
+            "name": "Outliner",
+            "version": "4.10.2",
+            "minAppVersion": "1.11.7"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/vslinko/obsidian-outliner/releases/download/4.10.2/styles.css",
+          "bytes": 2169,
+          "sha256": "7922a264883894e69f22c37f549744f7d46d1de926fc802aa4e94c75cd2fbceb"
+        }
+      ]
+    },
+    {
+      "id": "PC21",
+      "registry_id": "homepage",
+      "name": "Homepage",
+      "repo": "mirnovov/obsidian-homepage",
+      "rank": 21,
+      "downloads": 1319450,
+      "tag": "4.5.0",
+      "published_at": "2026-09-02T11:08:16Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/mirnovov/obsidian-homepage",
+      "release_url": "https://github.com/mirnovov/obsidian-homepage/releases/tag/4.5.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/mirnovov/obsidian-homepage/releases/download/4.5.0/main.js",
+          "bytes": 59450,
+          "sha256": "567b14e6e7913301b46d9b61fd36a4081fa7de1818f1926c1fcb586792aab201"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/mirnovov/obsidian-homepage/releases/download/4.5.0/manifest.json",
+          "bytes": 344,
+          "sha256": "5e7e20085c952d10a10d373ca5718516997f52b2dfeae1627cafc9c70f8df29c",
+          "manifest": {
+            "id": "homepage",
+            "name": "Homepage",
+            "version": "4.5.0",
+            "minAppVersion": "1.13.0"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/mirnovov/obsidian-homepage/releases/download/4.5.0/styles.css",
+          "bytes": 3685,
+          "sha256": "bf346def46e6626446c54983f7e6ce4775b84b01159cd046301e9be5c3407589"
+        }
+      ]
+    },
+    {
+      "id": "PC22",
+      "registry_id": "smart-connections",
+      "name": "Smart Connections",
+      "repo": "brianpetro/obsidian-smart-connections",
+      "rank": 22,
+      "downloads": 1192397,
+      "tag": "4.7.2",
+      "published_at": "2026-08-06T12:06:31Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/brianpetro/obsidian-smart-connections",
+      "release_url": "https://github.com/brianpetro/obsidian-smart-connections/releases/tag/4.7.2",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/brianpetro/obsidian-smart-connections/releases/download/4.7.2/main.js",
+          "bytes": 1526647,
+          "sha256": "f5b1e045e9427a7b7ffc43cd46ba7e0b9223adcc856037d4e0571dc7a9c08083"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/brianpetro/obsidian-smart-connections/releases/download/4.7.2/manifest.json",
+          "bytes": 409,
+          "sha256": "781506575bc026f94923789b0377214908889e4ae13289391d0e94c58727fa32",
+          "manifest": {
+            "id": "smart-connections",
+            "name": "Smart Connections",
+            "version": "4.7.2",
+            "minAppVersion": "1.8.7"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/brianpetro/obsidian-smart-connections/releases/download/4.7.2/styles.css",
+          "bytes": 113322,
+          "sha256": "5892f589156b29078642513ae56ed1e513eb9b04b6ce4fd89fbacdd395bf6580"
+        }
+      ]
+    },
+    {
+      "id": "PC23",
+      "registry_id": "recent-files-obsidian",
+      "name": "Recent Files",
+      "repo": "tgrosinger/recent-files-obsidian",
+      "rank": 23,
+      "downloads": 1183033,
+      "tag": "1.7.10",
+      "published_at": "2026-07-21T21:04:06Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/tgrosinger/recent-files-obsidian",
+      "release_url": "https://github.com/tgrosinger/recent-files-obsidian/releases/tag/1.7.10",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/tgrosinger/recent-files-obsidian/releases/download/1.7.10/main.js",
+          "bytes": 54453,
+          "sha256": "9a85d22a342d6bc8cfcbfe89a8ed04cdfdb444c370a220b008e4423f1fd37dc8"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/tgrosinger/recent-files-obsidian/releases/download/1.7.10/manifest.json",
+          "bytes": 460,
+          "sha256": "6dbfa314a4b5df3f7f8283fd41bc64d149bef3c1128e15b5a94dc690b55fb0d7",
+          "manifest": {
+            "id": "recent-files-obsidian",
+            "name": "Recent Files",
+            "version": "1.7.10",
+            "minAppVersion": "0.16.3"
+          }
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/tgrosinger/recent-files-obsidian/releases/download/1.7.10/styles.css",
+          "bytes": 523,
+          "sha256": "2ee49c92ab0bb848221a09626f7ba676bbe85372c4c8065ee7790b0832cb3ddb"
+        }
+      ]
+    },
+    {
+      "id": "PC24",
+      "registry_id": "tag-wrangler",
+      "name": "Tag Wrangler",
+      "repo": "pjeby/tag-wrangler",
+      "rank": 24,
+      "downloads": 1083951,
+      "tag": "0.6.5",
+      "published_at": "2026-08-13T17:23:06Z",
+      "assets": [
+        "main.js",
+        "manifest.json"
+      ],
+      "source_repository": "https://github.com/pjeby/tag-wrangler",
+      "release_url": "https://github.com/pjeby/tag-wrangler/releases/tag/0.6.5",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/pjeby/tag-wrangler/releases/download/0.6.5/main.js",
+          "bytes": 133501,
+          "sha256": "f390bf135135033cb2b8485438af42efb993ddd93255ac0836016e112ee9ab20"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/pjeby/tag-wrangler/releases/download/0.6.5/manifest.json",
+          "bytes": 367,
+          "sha256": "271a93e605b09f689fb4b05af1f73f5080e0876fc247635e4fe9e2c2d88ada96",
+          "manifest": {
+            "id": "tag-wrangler",
+            "name": "Tag Wrangler",
+            "version": "0.6.5",
+            "minAppVersion": "1.12.7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "PC25",
+      "registry_id": "obsidian-linter",
+      "name": "Linter",
+      "repo": "platers/obsidian-linter",
+      "rank": 25,
+      "downloads": 1046498,
+      "tag": "1.32.0",
+      "published_at": "2026-06-17T23:04:39Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "obsidian-linter.zip",
+        "styles.css"
+      ],
+      "source_repository": "https://github.com/platers/obsidian-linter",
+      "release_url": "https://github.com/platers/obsidian-linter/releases/tag/1.32.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/platers/obsidian-linter/releases/download/1.32.0/main.js",
+          "bytes": 902746,
+          "sha256": "1b4f44bf929024cf78dd5e60a655f7cffdf7ff49f8f55695a01591f8f69e3416"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/platers/obsidian-linter/releases/download/1.32.0/manifest.json",
+          "bytes": 536,
+          "sha256": "ebe2da23394289758e13020fe2932e2f930acb20bce65f61fc233902de6ec839",
+          "manifest": {
+            "id": "obsidian-linter",
+            "name": "Linter",
+            "version": "1.32.0",
+            "minAppVersion": "1.12.0"
+          }
+        },
+        {
+          "name": "obsidian-linter.zip",
+          "url": "https://github.com/platers/obsidian-linter/releases/download/1.32.0/obsidian-linter.zip",
+          "bytes": 376778,
+          "sha256": "61bab73b3c139b935252fd3ab265c0b5d8c51be2d89d4ddb995e82ab0d49164f"
+        },
+        {
+          "name": "styles.css",
+          "url": "https://github.com/platers/obsidian-linter/releases/download/1.32.0/styles.css",
+          "bytes": 4333,
+          "sha256": "e64117e999ea0594fc9840f00a3b6f8133b5df12340cb564124b77934b424269"
+        }
+      ]
+    },
+    {
+      "id": "PC-DEP-MINIMAL",
+      "registry_id": null,
+      "name": "Minimal",
+      "repo": "kepano/obsidian-minimal",
+      "rank": null,
+      "downloads": null,
+      "tag": "9.1.0",
+      "published_at": "2026-09-04T01:27:56Z",
+      "assets": [
+        "manifest.json",
+        "theme.css"
+      ],
+      "source_repository": "https://github.com/kepano/obsidian-minimal",
+      "release_url": "https://github.com/kepano/obsidian-minimal/releases/tag/9.1.0",
+      "release_assets": [
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/kepano/obsidian-minimal/releases/download/9.1.0/manifest.json",
+          "bytes": 200,
+          "sha256": "e01344d2fc722931c689ce7ba35c786312be10d677b8fe6921e0d3a7a1ea1184",
+          "manifest": {
+            "id": null,
+            "name": "Minimal",
+            "version": "9.1.0",
+            "minAppVersion": "1.14.0"
+          }
+        },
+        {
+          "name": "theme.css",
+          "url": "https://github.com/kepano/obsidian-minimal/releases/download/9.1.0/theme.css",
+          "bytes": 265574,
+          "sha256": "c95225a3653dcf600d006e9551c1038a06c336d03228a623bd5008b1561438a4"
+        }
+      ]
+    },
+    {
+      "id": "PC-DEP-TEXT-EXTRACTOR",
+      "registry_id": "text-extractor",
+      "name": "Text Extractor",
+      "repo": "scambier/obsidian-text-extractor",
+      "rank": null,
+      "downloads": null,
+      "tag": "0.7.0",
+      "published_at": "2025-12-26T10:08:38Z",
+      "assets": [
+        "main.js",
+        "manifest.json",
+        "text-extractor-0.7.0.zip"
+      ],
+      "source_repository": "https://github.com/scambier/obsidian-text-extractor",
+      "release_url": "https://github.com/scambier/obsidian-text-extractor/releases/tag/0.7.0",
+      "release_assets": [
+        {
+          "name": "main.js",
+          "url": "https://github.com/scambier/obsidian-text-extractor/releases/download/0.7.0/main.js",
+          "bytes": 3037705,
+          "sha256": "1eec6b986b64717434ce5acec3e7470bc08aafb649aca5f0d33c7ccc720d5eef"
+        },
+        {
+          "name": "manifest.json",
+          "url": "https://github.com/scambier/obsidian-text-extractor/releases/download/0.7.0/manifest.json",
+          "bytes": 443,
+          "sha256": "ff57053e0491b20f0c5d9becc0600c378d341a00f1fffa6efcb8b0006d2122b3",
+          "manifest": {
+            "id": "text-extractor",
+            "name": "Text Extractor",
+            "version": "0.7.0",
+            "minAppVersion": "1.4.16"
+          }
+        },
+        {
+          "name": "text-extractor-0.7.0.zip",
+          "url": "https://github.com/scambier/obsidian-text-extractor/releases/download/0.7.0/text-extractor-0.7.0.zip",
+          "bytes": 1158923,
+          "sha256": "cdb3fb8c54ea5b1dfad2637bfd4b25c35c246f0648a2432caf8d4b1d5b626632"
+        }
+      ]
+    }
+  ]
+}

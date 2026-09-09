@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "contract_id": "openobsidian-v1",
+  "frozen_at": "2026-09-10",
+  "research_cutoff": "2026-09-09",
+  "status": "implementation_in_progress",
+  "product": {
+    "runtime": "Electron",
+    "audience": "individual power users",
+    "working_name": "OpenObsidian",
+    "desktop_platforms": ["macOS", "Windows", "Linux"],
+    "mobile": "separate later scope"
+  },
+  "vault": {
+    "open_existing_directories_in_place": true,
+    "required_import_or_conversion": false,
+    "authoritative_data": "existing vault files",
+    "types": [
+      {"id": "standard", "name": "Standard Vault", "git": false},
+      {"id": "chronicle", "name": "Chronicle Vault", "git": true, "opt_in": true}
+    ],
+    "portable_metadata": "reserved namespace only; never inject opaque AI state into existing frontmatter"
+  },
+  "compatibility": {
+    "core_surfaces": ["notes", "properties", "links", "graph", "canvas", "bases", "existing_files"],
+    "community_scope": "top 25 registered community plugins by official cumulative downloads",
+    "dependency_scope": ["Minimal theme", "Text Extractor"],
+    "artifact_policy": "unchanged released assets with recorded source, version and SHA-256",
+    "certification_status": "not_started"
+  },
+  "security": {
+    "preview_required_for": ["app AI changes", "plugin changes", "CLI changes"],
+    "isolation_required_for": ["every plugin", "every theme-controlled extension surface", "provider credentials"],
+    "trusted_bypass": false,
+    "d15_rule": "A reproduced unsafe-boundary conflict is disabled and visibly unsupported; missing implementation is not a security exception.",
+    "privileged_operations": "main-process broker with validated IPC and revision-aware journal"
+  },
+  "ai": {
+    "modes": ["managed", "byok", "local"],
+    "managed_service": "OpenRouter-proxy client seam only; operated hosting, billing and paid entitlements are deferred",
+    "local_fallback": false,
+    "selected_context_visible": true,
+    "exclusions_before_indexing_and_inference": true,
+    "changes": "reviewable per-file changesets with revision validation, undo and recovery"
+  },
+  "sync_and_recovery": {
+    "external_sync_first": true,
+    "owned_encrypted_sync": "later scope",
+    "history_retention_days": 30,
+    "history_cap_gib": 5,
+    "unresolved_conflicts": "never automatically removed"
+  },
+  "release": {
+    "license": "AGPL-3.0-only",
+    "stable_reference": {"product": "Obsidian Desktop", "version": "1.13.7"},
+    "early_access_reference": {"product": "Obsidian Desktop", "version": "1.14.1"},
+    "main_push": "checks plus clearly labeled preview artifacts and configured staging handoff",
+    "date_tag": "vYYYY-MM-DD; exact calendar date, verified main ancestry and no overwrite",
+    "signed_release": "requires external signing credentials; absent credentials fail the production gate",
+    "human_validation": "separate handoff, never represented as automated pass",
+    "public_release": "outside this implementation goal"
+  },
+  "telemetry": {
+    "default_note_content_collection": false,
+    "diagnostics": "opt-in and privacy-preserving",
+    "provider_secrets_in_default_telemetry": false
+  },
+  "governance": {
+    "deadline": null,
+    "staffing": "estimate from P1 compatibility and safety evidence",
+    "managed_operations_and_billing": "deferred",
+    "source_of_truth": "requirements.json plus evidence records"
+  }
+}

@@ -1,0 +1,1137 @@
+{
+  "schema_version": 1,
+  "catalog_version": "2026-09-10.p0.2",
+  "selection_basis": {
+    "method": "Top 25 currently registered community plugins by cumulative download events",
+    "source_manifest": "fixtures/compatibility-manifest.json",
+    "ranking_limitations": "Downloads are events, not active users or installations; committed scope is not automatically removed when rankings refresh.",
+    "mandatory_scope": [
+      "PC01",
+      "PC02",
+      "PC03",
+      "PC04",
+      "PC05",
+      "PC06",
+      "PC07",
+      "PC08",
+      "PC09",
+      "PC10",
+      "PC11",
+      "PC12",
+      "PC13",
+      "PC14",
+      "PC15",
+      "PC16",
+      "PC17",
+      "PC18",
+      "PC19",
+      "PC20",
+      "PC21",
+      "PC22",
+      "PC23",
+      "PC24",
+      "PC25"
+    ],
+    "dependencies": [
+      "PC-DEP-MINIMAL",
+      "PC-DEP-TEXT-EXTRACTOR"
+    ]
+  },
+  "policy": {
+    "compatibility_status": "planned",
+    "security_status": "not_certified",
+    "isolation": "Every plugin and theme integration is previewed and isolated; no trusted bypass exists.",
+    "unsupported_security_rule": "Only a reproduced D15 boundary conflict may become unsupported-security; missing implementation or an ordinary failing test remains pending or failing.",
+    "unchanged_artifact_rule": "Certification uses the pinned upstream release assets without modifying plugin bundles."
+  },
+  "entries": [
+    {
+      "id": "PC01",
+      "registry_id": "obsidian-excalidraw-plugin",
+      "name": "Excalidraw",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC01",
+      "source": {
+        "repository": "https://github.com/zsviczian/obsidian-excalidraw-plugin",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc01",
+      "workflows": [
+        {
+          "id": "workflow:pc01",
+          "criticality": "high",
+          "description": "Open/edit existing drawing files, preserve linked assets, follow note links, embed drawings, export and reopen in Obsidian; exercise the frozen release scripting interface.",
+          "expected_outputs": [
+            "drawing files byte-preserved",
+            "linked assets resolve",
+            "export/reopen trace passes"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC02",
+      "registry_id": "templater-obsidian",
+      "name": "Templater",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC02",
+      "source": {
+        "repository": "https://github.com/silentvoid13/Templater",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc02",
+      "workflows": [
+        {
+          "id": "workflow:pc02",
+          "criticality": "high",
+          "description": "Execute existing templates, dynamic values, prompts, includes and user scripts; create/move notes and preserve cursor/output behavior; explicitly test system-command integration.",
+          "expected_outputs": [
+            "template output matches fixture",
+            "cursor/output behavior recorded",
+            "system-command path denied or isolated"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "configured template scripts",
+        "system command prerequisite"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC03",
+      "registry_id": "dataview",
+      "name": "Dataview",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC03",
+      "source": {
+        "repository": "https://github.com/blacksmithgu/obsidian-dataview",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc03",
+      "workflows": [
+        {
+          "id": "workflow:pc03",
+          "criticality": "high",
+          "description": "Render existing DQL and DataviewJS queries from frontmatter/inline fields; validate links, tasks and refresh after external edits.",
+          "expected_outputs": [
+            "DQL output matches fixture",
+            "DataviewJS boundary tested",
+            "external edit refresh recorded"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC04",
+      "registry_id": "obsidian-tasks-plugin",
+      "name": "Tasks",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC04",
+      "source": {
+        "repository": "https://github.com/obsidian-tasks-group/obsidian-tasks",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc04",
+      "workflows": [
+        {
+          "id": "workflow:pc04",
+          "criticality": "normal",
+          "description": "Query, filter, group, create and complete tasks; retain existing date/status/recurrence syntax and correct source-note updates.",
+          "expected_outputs": [
+            "task query output matches",
+            "source-note update is surgical",
+            "recurrence syntax round-trips"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC05",
+      "registry_id": "table-editor-obsidian",
+      "name": "Advanced Tables",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC05",
+      "source": {
+        "repository": "https://github.com/tgrosinger/advanced-tables-obsidian",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc05",
+      "workflows": [
+        {
+          "id": "workflow:pc05",
+          "criticality": "normal",
+          "description": "Navigate, edit and format Markdown tables using the plugin commands; validate calculations supported by the pinned version and intended serialization.",
+          "expected_outputs": [
+            "table command trace passes",
+            "unrelated Markdown bytes preserved",
+            "serialization matches fixture"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC06",
+      "registry_id": "obsidian-git",
+      "name": "Git",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC06",
+      "source": {
+        "repository": "https://github.com/vinzent03/obsidian-git",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc06",
+      "workflows": [
+        {
+          "id": "workflow:pc06",
+          "criticality": "high",
+          "description": "Use an existing repository for status, diff, commit, pull/push and conflicts; preserve credential-helper behavior and scheduled operations on each OS.",
+          "expected_outputs": [
+            "status/diff trace passes",
+            "conflict recovery is retained",
+            "credential/process boundary is enforced"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "test Git repository",
+        "credential helper"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC07",
+      "registry_id": "calendar",
+      "name": "Calendar",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC07",
+      "source": {
+        "repository": "https://github.com/liamcain/obsidian-calendar-plugin",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc07",
+      "workflows": [
+        {
+          "id": "workflow:pc07",
+          "criticality": "normal",
+          "description": "Open/create daily notes from calendar navigation using existing date formats, folders and templates; test configured weekly-note integration.",
+          "expected_outputs": [
+            "daily note path matches",
+            "date format preserved",
+            "weekly-note integration disposition recorded"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC08",
+      "registry_id": "obsidian-style-settings",
+      "name": "Style Settings",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC08",
+      "source": {
+        "repository": "https://github.com/obsidian-community/obsidian-style-settings",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc08",
+      "workflows": [
+        {
+          "id": "workflow:pc08",
+          "criticality": "normal",
+          "description": "Load theme/snippet/plugin setting definitions, change CSS variables/classes, persist values and render consistently across windows.",
+          "expected_outputs": [
+            "settings definitions load",
+            "CSS variable changes persist",
+            "light/dark screenshots recorded"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "Minimal theme"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC09",
+      "registry_id": "obsidian-kanban",
+      "name": "Kanban",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC09",
+      "source": {
+        "repository": "https://github.com/obsidian-community/obsidian-kanban",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc09",
+      "workflows": [
+        {
+          "id": "workflow:pc09",
+          "criticality": "normal",
+          "description": "Open existing Markdown boards; move/edit cards and lanes, preserve metadata/links and reopen in Obsidian without board conversion.",
+          "expected_outputs": [
+            "board Markdown round-trips",
+            "card/lanes edits are surgical",
+            "Obsidian reopen trace passes"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC10",
+      "registry_id": "remotely-save",
+      "name": "Remotely Save",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC10",
+      "source": {
+        "repository": "https://github.com/remotely-save/remotely-save",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc10",
+      "workflows": [
+        {
+          "id": "workflow:pc10",
+          "criticality": "high",
+          "description": "Use existing supported backend configuration; authenticate, sync, resume interrupted transfer and preserve compatible encryption/conflict behavior. Test two-device text/binary/rename/delete cases.",
+          "expected_outputs": [
+            "backend prerequisite is explicit",
+            "interrupted transfer resumes",
+            "two-device conflict trace is recoverable"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "provisioned sync backend",
+        "test credentials"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC11",
+      "registry_id": "obsidian-icon-folder",
+      "name": "Iconize",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC11",
+      "source": {
+        "repository": "https://github.com/florianwoelki/obsidian-iconize",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc11",
+      "workflows": [
+        {
+          "id": "workflow:pc11",
+          "criticality": "normal",
+          "description": "Retain existing file/folder icon assignments and rules; validate renames, restart, sidebar/tab rendering and configured icon assets.",
+          "expected_outputs": [
+            "icon assignments persist",
+            "rename/restart trace passes",
+            "asset references resolve"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC12",
+      "registry_id": "quickadd",
+      "name": "QuickAdd",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC12",
+      "source": {
+        "repository": "https://github.com/chhoumann/quickadd",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc12",
+      "workflows": [
+        {
+          "id": "workflow:pc12",
+          "criticality": "normal",
+          "description": "Run existing capture/template/macro choices, including linked automation scripts; verify generated files and prompt/command ordering.",
+          "expected_outputs": [
+            "capture output matches",
+            "macro ordering recorded",
+            "script boundary is enforced"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "configured QuickAdd choices"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC13",
+      "registry_id": "realclaudian",
+      "name": "Claudian",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC13",
+      "source": {
+        "repository": "https://github.com/yishentu/claudian",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc13",
+      "workflows": [
+        {
+          "id": "workflow:pc13",
+          "criticality": "high",
+          "description": "Discover configured agent CLI, open a session, stream responses, provide selected context and preserve session/settings; test tool approvals, file changes and process cancellation.",
+          "expected_outputs": [
+            "CLI discovery is explicit",
+            "approval gates precede tools",
+            "cancellation leaves recoverable state"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "configured agent CLI",
+        "test provider"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC14",
+      "registry_id": "editing-toolbar",
+      "name": "Editing Toolbar",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC14",
+      "source": {
+        "repository": "https://github.com/pkm-er/obsidian-editing-toolbar",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc14",
+      "workflows": [
+        {
+          "id": "workflow:pc14",
+          "criticality": "normal",
+          "description": "Load configured toolbar, apply editing commands to selections, persist customization and verify source/live-preview/popout behavior.",
+          "expected_outputs": [
+            "selection edits match",
+            "toolbar customization persists",
+            "popout behavior recorded"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC15",
+      "registry_id": "omnisearch",
+      "name": "Omnisearch",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC15",
+      "source": {
+        "repository": "https://github.com/scambier/obsidian-omnisearch",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc15",
+      "workflows": [
+        {
+          "id": "workflow:pc15",
+          "criticality": "high",
+          "description": "Run relevance/typo/phrase search and keyboard navigation, insert links and refresh the index; include Text Extractor for PDF/image/document search.",
+          "expected_outputs": [
+            "search ranking fixture passes",
+            "keyboard navigation trace passes",
+            "document extraction dependency is paired"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "Text Extractor"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC16",
+      "registry_id": "copilot",
+      "name": "Copilot",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC16",
+      "source": {
+        "repository": "https://github.com/logancyang/obsidian-copilot",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc16",
+      "workflows": [
+        {
+          "id": "workflow:pc16",
+          "criticality": "high",
+          "description": "Run the pinned release documented AI/agent workflows with existing supported configuration, context and history; test provider failure/cancellation and file-change controls.",
+          "expected_outputs": [
+            "selected context is visible",
+            "provider failure is readable",
+            "file changes require review"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "test provider",
+        "provider credentials"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC17",
+      "registry_id": "obsidian-minimal-settings",
+      "name": "Minimal Theme Settings",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC17",
+      "source": {
+        "repository": "https://github.com/kepano/obsidian-minimal-settings",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc17",
+      "workflows": [
+        {
+          "id": "workflow:pc17",
+          "criticality": "normal",
+          "description": "With Minimal theme active, apply existing font/color/layout settings and hotkeys; persist values and verify both light and dark modes.",
+          "expected_outputs": [
+            "Minimal pairing loads",
+            "settings persist",
+            "light/dark screenshots recorded"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "Minimal theme"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC18",
+      "registry_id": "obsidian-importer",
+      "name": "Importer",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC18",
+      "source": {
+        "repository": "https://github.com/obsidianmd/obsidian-importer",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc18",
+      "workflows": [
+        {
+          "id": "workflow:pc18",
+          "criticality": "normal",
+          "description": "Run imports supported by the pinned release on applicable OS; preserve attachments/links, handle collisions, and avoid modifying unrelated existing notes.",
+          "expected_outputs": [
+            "attachment/link mapping recorded",
+            "collision policy is explicit",
+            "unrelated notes unchanged"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "source import fixture"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC19",
+      "registry_id": "tasknotes",
+      "name": "TaskNotes",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC19",
+      "source": {
+        "repository": "https://github.com/callumalpass/tasknotes",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc19",
+      "workflows": [
+        {
+          "id": "workflow:pc19",
+          "criticality": "high",
+          "description": "Create/update note-backed tasks and dates/recurrence; render configured Bases views and calendar/time-tracking workflows; preserve YAML and references.",
+          "expected_outputs": [
+            "task note YAML round-trips",
+            "Bases view disposition recorded",
+            "calendar/time trace passes"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "Bases fixture"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC20",
+      "registry_id": "obsidian-outliner",
+      "name": "Outliner",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC20",
+      "source": {
+        "repository": "https://github.com/vslinko/obsidian-outliner",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc20",
+      "workflows": [
+        {
+          "id": "workflow:pc20",
+          "criticality": "normal",
+          "description": "Move/indent/outdent nested list blocks and use configured shortcuts; preserve child hierarchy and validate editor undo.",
+          "expected_outputs": [
+            "nested list hierarchy preserved",
+            "shortcut trace passes",
+            "undo restores prior bytes"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC21",
+      "registry_id": "homepage",
+      "name": "Homepage",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC21",
+      "source": {
+        "repository": "https://github.com/mirnovov/obsidian-homepage",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc21",
+      "workflows": [
+        {
+          "id": "workflow:pc21",
+          "criticality": "normal",
+          "description": "Restore the configured startup target and supported workspace/view behavior; preserve startup settings and command integration.",
+          "expected_outputs": [
+            "startup target restores",
+            "workspace behavior recorded",
+            "settings survive restart"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC22",
+      "registry_id": "smart-connections",
+      "name": "Smart Connections",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC22",
+      "source": {
+        "repository": "https://github.com/brianpetro/obsidian-smart-connections",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc22",
+      "workflows": [
+        {
+          "id": "workflow:pc22",
+          "criticality": "high",
+          "description": "Build/use the pinned release semantic related-note index, retrieve relevant excerpts and reflect edited/deleted notes; verify configured local-model and exclusion behavior.",
+          "expected_outputs": [
+            "related-note retrieval is grounded",
+            "edit/delete invalidates stale index",
+            "local model/exclusion trace passes"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "configured local model"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC23",
+      "registry_id": "recent-files-obsidian",
+      "name": "Recent Files",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC23",
+      "source": {
+        "repository": "https://github.com/tgrosinger/recent-files-obsidian",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc23",
+      "workflows": [
+        {
+          "id": "workflow:pc23",
+          "criticality": "normal",
+          "description": "Record/reopen recent files, preserve configured exclusions and navigation behavior, and survive restart/rename/delete.",
+          "expected_outputs": [
+            "recent list matches fixture",
+            "exclusions persist",
+            "rename/delete behavior recorded"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC24",
+      "registry_id": "tag-wrangler",
+      "name": "Tag Wrangler",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC24",
+      "source": {
+        "repository": "https://github.com/pjeby/tag-wrangler",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc24",
+      "workflows": [
+        {
+          "id": "workflow:pc24",
+          "criticality": "normal",
+          "description": "Rename/merge hierarchical tags through plugin commands; update intended occurrences without corrupting unrelated text/properties.",
+          "expected_outputs": [
+            "tag rename is scoped",
+            "merge output is deterministic",
+            "unrelated properties unchanged"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC25",
+      "registry_id": "obsidian-linter",
+      "name": "Linter",
+      "kind": "plugin",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC25",
+      "source": {
+        "repository": "https://github.com/platers/obsidian-linter",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc25",
+      "workflows": [
+        {
+          "id": "workflow:pc25",
+          "criticality": "normal",
+          "description": "Apply existing enabled rules to explicit test notes; preserve configured lint-on-save behavior and predictable YAML/Markdown output; no first-open bulk linting.",
+          "expected_outputs": [
+            "only explicit lint fixture changes",
+            "lint-on-save disposition recorded",
+            "first-open remains no-op"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC-DEP-MINIMAL",
+      "registry_id": null,
+      "name": "Minimal",
+      "kind": "theme_dependency",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC-DEP-MINIMAL",
+      "source": {
+        "repository": "https://github.com/kepano/obsidian-minimal",
+        "registry_entry": null,
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc-dep-minimal",
+      "workflows": [
+        {
+          "id": "workflow:pc-dep-minimal",
+          "criticality": "normal",
+          "description": "Load the released Minimal theme as the paired dependency for Minimal Theme Settings and Style Settings.",
+          "expected_outputs": [
+            "theme CSS loads",
+            "light/dark layout traces pass",
+            "theme-controlled UI does not reach privileged dialogs"
+          ]
+        }
+      ],
+      "external_prerequisites": [],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    },
+    {
+      "id": "PC-DEP-TEXT-EXTRACTOR",
+      "registry_id": "text-extractor",
+      "name": "Text Extractor",
+      "kind": "plugin_dependency",
+      "release_pin_ref": "fixtures/compatibility-manifest.json#PC-DEP-TEXT-EXTRACTOR",
+      "source": {
+        "repository": "https://github.com/scambier/obsidian-text-extractor",
+        "registry_entry": "https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json",
+        "license_status": "pending_per_artifact_review"
+      },
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "configuration_fixture_id": "fixture:configuration:pc-dep-text-extractor",
+      "workflows": [
+        {
+          "id": "workflow:pc-dep-text-extractor",
+          "criticality": "high",
+          "description": "Extract text from PDF/image/document fixtures for the Omnisearch workflow without sending excluded contents to remote providers.",
+          "expected_outputs": [
+            "PDF extraction fixture passes",
+            "image extraction fixture passes",
+            "exclusions are enforced before inference"
+          ]
+        }
+      ],
+      "external_prerequisites": [
+        "PDF/image fixtures"
+      ],
+      "status": "planned",
+      "security_policy": "D15: isolated preview required"
+    }
+  ],
+  "combinations": [
+    {
+      "id": "combo-templater-calendar-quickadd",
+      "members": [
+        "PC02",
+        "PC07",
+        "PC12"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "combo-dataview-tasks",
+      "members": [
+        "PC03",
+        "PC04"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "combo-minimal-style-settings",
+      "members": [
+        "PC08",
+        "PC17",
+        "PC-DEP-MINIMAL"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "combo-omnisearch-text-extractor",
+      "members": [
+        "PC15",
+        "PC-DEP-TEXT-EXTRACTOR"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "combo-excalidraw-embeds",
+      "members": [
+        "PC01"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "combo-tasknotes-bases",
+      "members": [
+        "PC19"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "combo-linter-template-generated-notes",
+      "members": [
+        "PC25",
+        "PC02"
+      ],
+      "status": "planned"
+    }
+  ]
+}

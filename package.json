@@ -5,19 +5,24 @@
   "description": "An Obsidian-compatible AI workspace for individual power users.",
   "license": "AGPL-3.0-only",
   "type": "module",
+  "packageManager": "bun@1.4.2",
   "scripts": {
     "status": "bun scripts/status.ts",
     "validate:state": "bun scripts/status.ts --validate",
     "release:check": "bun scripts/status.ts --release",
     "test": "bun test",
+    "validate:contracts": "bun scripts/validate-contracts.ts",
+    "verify:plugin-selection": "bun scripts/verify-plugin-selection.ts",
+    "verify:compatibility-pins": "bun scripts/verify-compatibility-pins.ts",
     "knip": "knip",
     "audit:fallow": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:changed": "bunx fallow audit --root . --base HEAD --format compact --brief",
     "audit:fallow:strict": "bunx fallow audit --root . --base HEAD --format compact",
-    "quality": "bun run validate:state && bun run knip && bun run audit:fallow"
+    "quality": "bun run validate:state && bun run validate:contracts && bun run knip && bun run audit:fallow"
   },
   "devDependencies": {
+    "@types/bun": "1.4.2",
     "@types/node": "26.5.0",
     "knip": "6.35.1",
     "typescript": "7.0.2"

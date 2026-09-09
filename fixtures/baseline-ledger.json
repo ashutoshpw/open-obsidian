@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "ledger_version": "2026-09-10.p0.2",
+  "research_cutoff": "2026-09-09",
+  "stable_reference": {
+    "product": "Obsidian Desktop",
+    "version": "1.13.7",
+    "release_status": "public",
+    "source": "https://obsidian.md/changelog/",
+    "retrieved_at": "2026-09-09"
+  },
+  "early_access_reference": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.1",
+    "release_status": "Catalyst/early access",
+    "source": "https://obsidian.md/changelog/",
+    "retrieved_at": "2026-09-09"
+  },
+  "surfaces": [
+    {"id":"editing","category":"core","status":"planned","fixture":"fixture:baseline:editing","reference":"https://obsidian.md/help/editing-and-formatting/basic-formatting-syntax"},
+    {"id":"properties","category":"core","status":"planned","fixture":"fixture:baseline:properties","reference":"https://help.obsidian.md/properties"},
+    {"id":"backlinks","category":"core","status":"planned","fixture":"fixture:baseline:backlinks","reference":"https://help.obsidian.md/plugins/backlinks"},
+    {"id":"graph","category":"core","status":"planned","fixture":"fixture:baseline:graph","reference":"https://help.obsidian.md/plugins/graph-view"},
+    {"id":"canvas","category":"core","status":"planned","fixture":"fixture:baseline:canvas","reference":"https://jsoncanvas.org/spec/1.0/"},
+    {"id":"bases","category":"core","status":"planned","fixture":"fixture:baseline:bases","reference":"https://obsidian.md/help/bases/syntax"},
+    {"id":"search","category":"core","status":"planned","fixture":"fixture:baseline:search","reference":"https://help.obsidian.md/plugins/search"},
+    {"id":"workspaces","category":"core","status":"planned","fixture":"fixture:baseline:workspaces","reference":"https://help.obsidian.md/workspaces"},
+    {"id":"core-plugins","category":"native","status":"planned","fixture":"fixture:baseline:core-plugins","reference":"https://help.obsidian.md/plugins"},
+    {"id":"community-extensions","category":"ecosystem","status":"planned","fixture":"fixture:baseline:community-extensions","reference":"https://github.com/obsidianmd/obsidian-releases"},
+    {"id":"themes","category":"ecosystem","status":"planned","fixture":"fixture:baseline:themes","reference":"https://help.obsidian.md/appearance/themes"},
+    {"id":"cli-automation","category":"automation","status":"planned","fixture":"fixture:baseline:cli","reference":"https://obsidian.md/help/Obsidian+CLI"},
+    {"id":"web-capture","category":"capture","status":"planned","fixture":"fixture:baseline:web-capture","reference":"https://obsidian.md/clipper"},
+    {"id":"sync","category":"service-interoperability","status":"planned","fixture":"fixture:baseline:sync","reference":"https://obsidian.md/sync"},
+    {"id":"publish","category":"service-interoperability","status":"planned","fixture":"fixture:baseline:publish","reference":"https://obsidian.md/publish"},
+    {"id":"mobile","category":"separate-platform","status":"deferred","fixture":"fixture:baseline:mobile","reference":"https://obsidian.md/mobile"}
+  ],
+  "reference_policy": "Documentation is evidence input, not proof of behavioral parity; every surface receives differential fixtures before certification.",
+  "recheck_policy": "Recheck stable and early-access references at specification freeze and before every release."
+}

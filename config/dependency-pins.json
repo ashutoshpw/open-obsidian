@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "frozen_at": "2026-09-10",
+  "status": "selected_for_prototype; runtime dependencies are not installed until the Electron scaffold is implemented",
+  "pins": [
+    {
+      "id": "electron",
+      "version": "44.3.0",
+      "role": "desktop runtime",
+      "source": "https://github.com/electron/electron/releases/tag/v44.3.0",
+      "source_tag_commit": "a5d1c52118831d762385f34c1b3ffbcc4d99de58",
+      "published_at": "2026-09-08T19:21:28Z",
+      "status": "selected_pending_scaffold",
+      "rationale": "Current official stable release at the P0.2 freeze; verify OS and extension behavior in the feasibility spike."
+    },
+    {
+      "id": "electron-builder",
+      "version": "26.16.1",
+      "role": "cross-platform packaging",
+      "source": "https://github.com/electron-userland/electron-builder/releases/tag/electron-builder%4026.16.1",
+      "source_tag_commit": "c0b6be992ff73bed74e8eae46933ed132f525930",
+      "published_at": "2026-09-07T18:24:21Z",
+      "status": "selected_pending_scaffold",
+      "rationale": "Current official release paired with the selected Electron runtime; packaging targets remain preview-only until P6."
+    },
+    {
+      "id": "bun",
+      "version": "1.4.2",
+      "role": "repository package manager and test runner",
+      "source": "https://bun.sh/docs",
+      "source_tag_commit": "744846f844374847c902b5e7fd59b4342a51ef99",
+      "status": "verified_environment",
+      "rationale": "Bun is the repository-native tool required by the execution instructions."
+    },
+    {
+      "id": "typescript",
+      "version": "7.0.2",
+      "role": "type checking and application source",
+      "source": "https://www.typescriptlang.org/",
+      "status": "installed_in_lockfile",
+      "rationale": "Pinned by the initial Bun/Knip setup; application compiler options will be tightened with the Electron scaffold."
+    },
+    {
+      "id": "knip",
+      "version": "6.35.1",
+      "role": "unused files, dependencies and exports audit",
+      "source": "https://knip.dev/",
+      "status": "installed_in_lockfile",
+      "rationale": "Created with bun create @knip/config and run at every quality gate."
+    },
+    {
+      "id": "fallow",
+      "version": "3.24.0",
+      "role": "complexity, dependency and changed-code audit",
+      "source": "https://github.com/fallow-rs/fallow",
+      "status": "bunx_verified_signed; not bundled",
+      "rationale": "The repository invokes bunx fallow for scheduled health and changed-code reviews; strict findings remain visible until addressed."
+    }
+  ],
+  "lockfile": "bun.lock",
+  "refresh_rule": "Recheck official release metadata at specification freeze and before release; update hashes/source commits and reopen affected requirements when pins drift."
+}

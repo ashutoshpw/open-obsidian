@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "protocol_version": "2026-09-10.p0.2",
+  "status": "defined_not_run",
+  "platform_matrix": [
+    {"id":"macos-arm64","os":"macOS","architecture":"arm64","runner":"macos-latest","release_support":"candidate_pending_p1"},
+    {"id":"macos-x64","os":"macOS","architecture":"x64","runner":"macos-13","release_support":"candidate_pending_p1"},
+    {"id":"windows-x64","os":"Windows","architecture":"x64","runner":"windows-latest","release_support":"candidate_pending_p1"},
+    {"id":"linux-x64","os":"Linux","architecture":"x64","runner":"ubuntu-latest","release_support":"candidate_pending_p1"},
+    {"id":"linux-arm64","os":"Linux","architecture":"arm64","runner":"self_hosted_or_cross_compile","release_support":"candidate_pending_p1"}
+  ],
+  "reference_tracks": [
+    {"id":"obsidian-stable","product":"Obsidian Desktop","version":"1.13.7","status":"public_stable"},
+    {"id":"obsidian-early-access","product":"Obsidian Desktop","version":"1.14.1","status":"early_access_separate_track"}
+  ],
+  "synthetic_vault_profiles": [
+    {"id":"smoke-edge-cases","notes":25,"purpose":"Markdown dialect, properties, links, Unicode, duplicate names and malformed-file handling","attachments":["png","pdf","binary"],"expected":"no-op open/index/close is byte-identical"},
+    {"id":"medium-10k","notes":10000,"purpose":"startup, warm search, incremental indexing and watcher latency","expected":"p95 startup <= 2s to editable prior note; warm search p95 <= 150ms"},
+    {"id":"large-100k","notes":100000,"purpose":"resource budgets, indexing progress and long-running stability","expected":"record RAM/CPU/battery distribution; no unbounded growth"},
+    {"id":"canvas-bases","notes":80,"purpose":"JSON Canvas nodes/edges and file-based Bases definitions","attachments":["canvas","bases"],"expected":"round-trip preserves unknown fields and references"},
+    {"id":"conflict-recovery","notes":40,"purpose":"external edits, interrupted writes, duplicate names and unresolved conflicts","expected":"recoverable versions and no silent overwrite"},
+    {"id":"ai-grounding","notes":120,"purpose":"factual answers, conflicting evidence, exclusions and prompt-injection content","expected":"citations resolve to source revision; excluded files never disclose"}
+  ],
+  "plugin_profiles": [
+    {"id":"stock","catalog":"none","purpose":"baseline without community extensions"},
+    {"id":"required-community","catalog":"fixtures/plugin-catalog.json","purpose":"top 25 plus Minimal and Text Extractor dependencies"},
+    {"id":"representative-discovery","catalog":"30-50 plugin and 10-15 theme spike","purpose":"discover API requirements; never substitutes for top-25 certification"}
+  ],
+  "required_comparisons": ["stock Obsidian", "plugin-equipped Obsidian", "OpenObsidian"],
+  "quality_gates": {
+    "no_op_fidelity": "100% fixture files byte-identical after open/index/close",
+    "edit_fidelity": "approved edits only; unrelated bytes and unknown fields preserved",
+    "reliability": "no unacknowledged content loss in fault-injection suite",
+    "responsiveness": {"input_to_paint_p95_ms":16,"input_to_paint_p99_ms":50},
+    "ai_grounding": {"supported_claims_min":0.95,"excluded_file_disclosures":0},
+    "practical_advantage": {"task_time_improvement_min":0.25,"accuracy_regression_allowed":false},
+    "accessibility": "keyboard and screen-reader core journeys with no launch-blocking focus, contrast or input issue"
+  },
+  "run_policy": {
+    "counterbalanced_pilot_tasks": true,
+    "runs_and_failure_budget": "freeze per release candidate before measurement; never tune to hide failures",
+    "network_and_model_conditions": "record provider mode, model, endpoint, network and cancellation conditions",
+    "private_vault_upload": "forbidden by default",
+    "status_values": ["planned","implemented","passing","failing","unsupported-security","external-pending"]
+  }
+}

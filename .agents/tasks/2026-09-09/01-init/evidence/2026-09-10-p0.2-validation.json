@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-09T19:05:33Z",
+  "checkpoint": "P0.2",
+  "requirements": ["D04", "D14", "BASE-001", "BASE-002", "PC-DEP-MINIMAL", "PC-DEP-TEXT-EXTRACTOR", "PLUG-001", "PLUG-010", "RESEARCH-001", "RESEARCH-002", "RESEARCH-003", "RESEARCH-004", "AI-001", "RISK-008", "RISK-009"],
+  "environment": {
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "f897db2f74173cac39f155fb62ff59d93f9626ee4a8981a6f3d94f3b8b9f0b9b",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked source paths plus file bytes, excluding .agents, .git, node_modules and .fallow."
+  },
+  "observations": [
+    {"command": "bun run validate:contracts", "exit_code": 0, "result": "27 compatibility entries, no structural errors or review warnings."},
+    {"command": "bun run verify:plugin-selection", "exit_code": 0, "result": "Official registry/stat hashes and the ranked 25 targets match the frozen snapshot."},
+    {"command": "bun run verify:compatibility-pins", "exit_code": 1, "result": "An earlier 83-download run exceeded the original 30-second per-request timeout; the verifier was hardened with bounded concurrency and retries."},
+    {"command": "bun run verify:compatibility-pins", "exit_code": 0, "result": "After bounded concurrency and retry handling, 27 artifacts and 83 release assets match recorded SHA-256 hashes and byte counts."},
+    {"command": "bunx tsc --noEmit", "exit_code": 0, "result": "TypeScript validation passed with Bun and Node declarations."},
+    {"command": "bun test", "exit_code": 0, "result": "2 tests passed; 6 expectations."},
+    {"command": "bun run knip", "exit_code": 0, "result": "Knip reported no unused files, dependencies or exports."},
+    {"command": "bun run audit:fallow", "exit_code": 0, "result": "Health score 100.0/A with no dead files, circular dependencies or unused dependencies; advisory complexity remains confined to the pre-existing status validator."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 24 changed files; complexity, dead-code and duplication checks passed for the P0.2 diff."},
+    {"command": "bun run validate:state", "exit_code": 0, "result": "1 of 19 checkpoints complete; 196 rows, 24 passing, 166 pending and 6 external-pending; structural check passed."},
+    {"command": "bun run release:check", "exit_code": 2, "result": "Release remains incomplete because 166 mandatory rows are not release-passing."}
+  ],
+  "limitations": [
+    "D01, D02 and D03 remain pending until the Electron scaffold and vault/core-surface implementation exist.",
+    "D12, BASE-005, RESEARCH-005 and ARCH-010 retain explicit follow-up for packaging notices, primary-reference hashes, runtime/API feasibility and installed Electron pins.",
+    "Plugin compatibility is planned rather than certified; the release manifest pins artifacts and hashes but does not claim workflow parity."
+  ]
+}
