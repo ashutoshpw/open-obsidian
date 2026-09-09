@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-09T18:18:42Z",
+  "checkpoint": "P0.1",
+  "requirements": ["INIT-001", "INIT-002", "INIT-003", "INIT-004", "INIT-005", "INIT-006", "INIT-007", "DEL-001", "DEL-003"],
+  "environment": {
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "tested_source_tree": "c224a06200a770304edc8336378ee24cfab8d905ec05a8cea758f1c3643d974a",
+    "commit": "8baaae3f0152fbc2fbd73dcd954f6ddec2bce0e6",
+    "remote": "origin/main",
+    "remote_commit": "8baaae3f0152fbc2fbd73dcd954f6ddec2bce0e6"
+  },
+  "observations": [
+    {"command": "git log -1 --format=%H%n%s", "exit_code": 0, "result": "Required P0.1 marker is present on commit 8baaae3f0152fbc2fbd73dcd954f6ddec2bce0e6."},
+    {"command": "git ls-remote --heads origin main", "exit_code": 0, "result": "origin/main resolves to 8baaae3f0152fbc2fbd73dcd954f6ddec2bce0e6."},
+    {"command": "git status --short", "exit_code": 0, "result": "Clean working tree after the P0.1 push."}
+  ],
+  "limitations": [
+    "P0.1 establishes tracking and quality tooling only; product implementation and release evidence remain pending.",
+    "The repository has no product source, vault fixtures, plugin artifacts, platform builds or live provider access yet."
+  ]
+}

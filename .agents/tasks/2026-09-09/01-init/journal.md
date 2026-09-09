@@ -19,3 +19,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Quality audit: `bun run audit:fallow` and the changed-code Fallow review brief complete without suppressing findings. Fallow reports health grade A, no dead files/cycles/unused dependencies, and five advisory CRAP/coverage findings in the validator. `audit:fallow:strict` remains available and is intentionally not claimed as passing until those findings are addressed.
 - Decision: keep Fallow health/review reporting advisory while the repository has only progress tooling; preserve the strict changed-code command for later commit gates. This does not alter the implementation/release acceptance denominator.
 - Next operation: inspect the staged P0.1 diff, run final checks, commit with `[openobsidian P0.1] Initialize goal tracking`, verify marker/branch/status and push to `origin/main`.
+
+## 2026-09-09T18:18:42Z — P0.1 reconciled and pushed
+
+- Completed: committed the initialized tracking/tooling baseline as `8baaae3f0152fbc2fbd73dcd954f6ddec2bce0e6` with marker `[openobsidian P0.1] Initialize goal tracking`.
+- Completed: pushed `main` to `origin` and verified `git ls-remote --heads origin main` returns the same commit SHA; the working tree is clean.
+- Reconciled: marked all nine P0.1 acceptance rows passing, moved the current checkpoint to P0.2, and added the durable reconciliation evidence record.
+- Next operation: freeze the P0.2 launch contract, release artifact pins, platform matrix, compatibility corpus/evaluation protocol and GitHub Actions prerequisites; continue running Knip and Fallow at each checkpoint gate.
