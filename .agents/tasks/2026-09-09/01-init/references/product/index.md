@@ -10,7 +10,15 @@ Build an Electron application for individual power users that opens their existi
 
 “Better than Obsidian” means demonstrably better on selected user tasks while meeting the compatibility and reliability gates below. It cannot honestly mean every existing and future plugin works without testing. Broad ecosystem compatibility remains the objective; a versioned certification matrix must make actual coverage visible. Any reduction of the user's compatibility requirement requires a product decision, not an engineering assumption.
 
-## User jobs and primary journeys
+## Vault types
+
+- **Standard Vault:** open/create ordinary Obsidian-compatible folders without initializing Git or requiring an account.
+- **Chronicle Vault:** the Git-enabled vault type. Offer explicit initialization or adoption of an existing repository, status/diff, selected-file commits, history, recoverable restore, optional remote setup and explicit pull/push with conflict resolution. Keep Markdown/Canvas/Bases/attachments authoritative and portable.
+- Opening or scanning either type is read-only. Detect existing Git without initializing, staging, committing or contacting remotes automatically. Upgrade Standard to Chronicle only through an explicit action; switching off Chronicle features never deletes `.git` or history. Test dirty repositories, existing branches/remotes, unborn HEAD, no configured author, offline operation and merge conflicts.
+- Keep credentials, app caches, embeddings and recovery snapshots out of new Git commits by default. Review selected paths and exclusions before each commit. Preserve existing ignore rules and unrelated staged changes. Personal vault remote actions require vault-level user intent; project CI/push authorization does not transfer to vaults. Do not enable competing Git/Remotely Save automatic writers by default.
+- Chronicle is built-in functionality and does not certify PC06 (the unchanged Git plugin). It uses the same revision checks and recovery boundaries; Git history does not replace the recovery journal.
+
+## Core journeys
 
 1. **Adopt without migration:** choose an existing directory → read-only compatibility scan → see notes, graph, Canvas, Bases, and extension status → open a note immediately → explicitly enable desired extensions. Never require an account for local note access.
 2. **Find reliable answers:** ask a question → choose vault/folder scope → retrieve relevant passages → receive an answer with clickable file/heading/block citations → inspect evidence. If evidence is absent or conflicting, say so.

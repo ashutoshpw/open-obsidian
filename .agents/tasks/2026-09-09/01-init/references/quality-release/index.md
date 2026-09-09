@@ -12,7 +12,7 @@ Targets below are proposals, not measured results. Benchmark on pinned reference
 | --- | --- |
 | No-op fidelity | 100% fixture files byte-identical after open/index/close; no unintended content/config writes |
 | Edit fidelity | Approved edits only; all unrelated bytes/unknown fields preserved; round trip back into reference Obsidian |
-| Required extensions | Every declared launch-critical plugin/theme workflow passes on each applicable version/OS in the pinned support matrix; documented upstream-intrinsic restrictions must match reference Obsidian; exceptions block certification |
+| Required extensions | Every supported workflow passes per applicable OS/version; all 25 evaluated. Proven D15 security conflicts remain disabled/unsupported, never certified; no ordinary failure or missing implementation qualifies as an exception |
 | Reliability | No unacknowledged content loss in failure-injection suite; complete recoverable versions for unresolved conflicts |
 | Startup | p95 ≤2 seconds to editable prior note on 10k-note reference vault, full indexing not required first |
 | Responsiveness | Input-to-paint p95 ≤16 ms, p99 ≤50 ms on agreed editing fixture; large-file behavior separately measured |
@@ -35,5 +35,9 @@ Distribution: signed/notarized macOS build, signed Windows installer, selected L
 Operations: privacy-preserving opt-in diagnostics, local exportable support bundle, crash safe mode, extension bisect/disable, known-issues matrix, recovery documentation, vulnerability reporting, release notes and rollback runbook. No note content or provider secrets in default telemetry.
 
 ## Additional release details to resolve
+
+D18 separates implementation completion from human validation and public release. Run available automated accessibility, performance, grounding and platform suites; hand off screen-reader/user studies and real-vault pilots that require humans without claiming they passed. D13 defers operated managed service and billing. Missing signing/live-provider access is external-pending with reproducible setup instructions; implement the adapters, workflows and available tests now. These categories are not permission to skip available tests or core functionality.
+
+Use the assigned GitHub project's Actions runners for macOS, Windows and Linux. On push to main, run checks/builds and deliver clearly labeled preview artifacts plus staging deployment when a target is configured. On tags matching `vYYYY-MM-DD`, validate both exact format and calendar date before production builds. Tags must point to a verified main commit; do not create release tags as part of completing the implementation goal. Avoid overwriting an existing same-date tag. Build pipelines retain artifact hashes and source/run identifiers, AGPL license/source notices and third-party notices. Production signing/publishing requires its credentials and must fail clearly rather than silently publish unsigned artifacts. Preview artifact delivery is not proof of hosted staging deployment. Choose available staging targets from the assigned project; do not invent paid infrastructure.
 
 Additional release details to resolve: proxy/firewall support, minimum OS and architecture versions, update channels, plugin update rollback, app crash-free-session target, adoption/retention measures and AI change acceptance rate. Pilot data should set credible targets rather than inventing business forecasts.

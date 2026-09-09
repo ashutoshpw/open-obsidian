@@ -24,3 +24,5 @@ Working specification · v0.3 · 9 September 2026. Confirmed decisions, proposal
 | C14 | Exit portability | Files edited here reopen and behave correctly in reference Obsidian. New AI outputs default to ordinary Markdown/Canvas; chat history export available. No mandatory proprietary database for note access. |
 
 Preserving an unsupported format is necessary but does not count as full functional compatibility. Track byte fidelity, behavioral fidelity, visual fidelity, and extension compatibility separately.
+
+C15 — Vault types: implement Standard and Chronicle vaults according to the product module, including explicit Git initialization/adoption, diff/commit/history/restore, optional remotes, conflict recovery, no-op opening and credential/cache exclusions. Cover both types in file-fidelity and end-to-end suites. C11 certification follows D15: proven unsafe workflows stay disabled and visibly unsupported; there is no trusted bypass.

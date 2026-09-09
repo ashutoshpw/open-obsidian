@@ -10,7 +10,7 @@ Working specification · v0.3 · 9 September 2026. Confirmed decisions, proposal
 | --- | --- |
 | Plugin relies on private internals | Fixture evidence, adapter cost, compatibility tier; revisit release contract with user if infeasible |
 | Theme parity constrains redesign | Stable legacy surface plus additive AI UI; prototype actual themes before choosing DOM architecture |
-| Legacy code has broad filesystem/network access | Explicit trusted mode or stronger isolation feasibility; never claim permission enforcement against code that bypasses it |
+| Legacy code has broad filesystem/network access | D15 requires enforced isolation/preview; deny unsafe paths and record proven incompatibilities as unsupported, never add a trusted bypass |
 | File normalization destroys syntax | Lossless representations, surgical edits, unknown-field retention and golden tests |
 | External writer/sync races | Revision checks, preserved versions, transaction recovery and supported-tool matrix |
 | AI leaks or invents knowledge | Enforced exclusions, citations/evals, provider visibility and controlled changes |

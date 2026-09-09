@@ -19,7 +19,7 @@ Primary download URLs: [statistics](https://raw.githubusercontent.com/obsidianmd
 - `community-plugin-stats.json`: `99c0b10ab6b02d01a9ed7474585d599511638706f35eda00582ad1e3eb997c37`
 - `community-plugins.json`: `13608c196df5808661f67b4abea863f0c09a6d0db682bc3df782606ffadd7088`
 
-No compatibility runtime has been built or tested in this planning task. The research establishes first-release requirements and selection evidence, not implementation status.
+No compatibility runtime has been built or tested in this planning task. The research establishes selection evidence, not implementation status. Historical mandatory-compatibility wording in this research snapshot is superseded by D15: retain all 25 in evaluation, with proven unsafe workflows disabled and visibly unsupported.
 
 ## Upstream manifest discovery snapshot
 

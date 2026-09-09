@@ -20,7 +20,9 @@ Working specification · v0.3 · 9 September 2026. Confirmed decisions, proposal
 
 MCP/CLI integration is a proposed extension point: scoped read/search/propose/apply operations using the same broker and change journal. Do not bypass vault permissions through another integration path. Exact transport/authentication design is a later technical specification.
 
-Managed AI also requires accounts, entitlements, rate limits, billing reconciliation, retries/idempotency, abuse controls, service health, deletion and incident response. Providers and retention guarantees remain vendor decisions; no unsupported privacy promises.
+Managed operations and billing are explicitly deferred by D13. This goal implements the configurable OpenRouter-proxy client interface, scope/provider visibility, credential separation, cancellation, timeouts, errors and deterministic contract tests. Keep upstream proxy secrets server-side; never embed them in the desktop bundle. The proxy endpoint/authentication deployment contract is supplied later. A missing endpoint displays an honest unavailable/setup state, with no cloud fallback from local mode.
+
+Operate accounts, entitlements, billing/pricing/reconciliation, production quotas and incident response in a later managed-service task. Preserve typed interfaces and usage/cap handling in the client without building a billing service now. Run provisioned live tests only when access exists; otherwise record live verification as external-pending, not passed. No paid provisioning or inference spend is authorized by this specification. BYOK/local implementations and available automated checks remain in scope. Do not promise provider retention/training terms without current evidence.
 
 ## AI data-flow specification checklist
 

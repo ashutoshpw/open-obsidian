@@ -6,7 +6,7 @@ Working specification · v0.3 · 9 September 2026. Confirmed decisions, proposal
 
 ## Required support and workflow fixtures
 
-Every row below is mandatory v1, currently **planned / not implemented or certified**. Workflows are minimum acceptance-test requirements derived from official registry descriptions and selected upstream documentation; they do not purport to enumerate every command of every release. Before coding certification fixtures, pin released artifacts and expand each row against that release's documented behavior. Repository links preserve registry attribution; follow and record upstream ownership redirects when pinning.
+Every row requires implementation effort and evaluation, currently **planned / not implemented or certified**. D15 takes priority over compatibility: proven isolation/preview conflicts remain safely disabled and explicitly unsupported, with evidence. All other supported workflows must pass. Workflows below are minimum acceptance requirements; expand them against pinned released artifacts before certification. Repository links preserve attribution; follow ownership redirects when pinning.
 
 | Rank / requirement | Plugin and primary repository | Downloads | Minimum v1 acceptance workflow |
 | --- | --- | ---: | --- |

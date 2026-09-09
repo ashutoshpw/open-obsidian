@@ -1,6 +1,6 @@
 # Obsidian-compatible AI workspace — implementation plan
 
-Version 0.3 · 9 September 2026 · Working PRD and implementation plan
+Version 0.4 · 9 September 2026 · Working PRD and implementation plan
 
 Build an Electron application for individual power users that opens existing Obsidian vaults directly and improves knowledge retrieval, synthesis and organization through AI. This is a planning specification; no application or plugin compatibility has been implemented or certified yet.
 
@@ -8,11 +8,14 @@ Build an Electron application for individual power users that opens existing Obs
 
 - **Electron on macOS, Windows and Linux.** Mobile is a later, separate implementation.
 - **Open existing vaults in place:** retain notes, files, links/graph relationships, Canvas nodes and Obsidian interoperability.
-- **Existing plugins and themes must work.** The researched top 25 community plugins are mandatory first-release targets, with Minimal theme and Text Extractor as workflow dependencies.
+- **Evaluate and implement the top 25 plugins**, with Minimal theme and Text Extractor dependencies. Enforced isolation and preview take priority: evidence-backed security incompatibilities stay explicitly unsupported, never enabled through a trusted bypass.
 - **AI for individual power users:** managed service, BYOK and local models.
 - **Preview AI changes before applying**, with recovery and undo.
 - **External file sync first**; our own encrypted sync is deferred.
 - **Scope before deadline:** estimate staffing and dates after compatibility prototypes.
+- **GNU AGPL v3.0; Standard and Chronicle vaults.** Chronicle adds opt-in Git workflows while retaining ordinary vault files.
+- **Managed operations and billing later.** Build the OpenRouter-proxy client seam now alongside BYOK/local modes.
+- **Autonomous implementation handoff:** available automated checks and cross-platform builds complete this goal; human validation, signing access and public release are tracked separately. Push phased commits to origin/main; main pushes trigger staging/preview, and vYYYY-MM-DD tags trigger production builds.
 
 The authoritative [decision register](references/decisions/index.md) also records open questions. “Better than Obsidian” must be established through the [quality scorecard](references/quality-release/index.md), including comparison with plugin-equipped Obsidian.
 
@@ -55,14 +58,14 @@ See [delivery](references/delivery/index.md) for dependencies, responsibilities 
 ## Non-negotiable release gates
 
 1. Opening/indexing a vault causes no unintended writes; edits survive reopening in reference Obsidian.
-2. All 25 required plugin workflows and necessary dependency fixtures pass each applicable OS/version in their pinned support matrix; documented upstream-intrinsic restrictions must match reference Obsidian. Similar built-in features do not substitute for running the existing plugins.
+2. Evaluate all 25 plugins and dependencies across the applicable matrix. Supported workflows must pass using unchanged artifacts; demonstrated isolation/preview incompatibilities must be safely disabled and listed as unsupported under D15. Missing implementation cannot be relabeled a security exception.
 3. Conflicts and interrupted changes remain recoverable; no unacknowledged content loss in the failure suite.
-4. AI scope, provider destination and change approval are enforced and tested. Any conflict with legacy agents that write directly must be resolved with the user before release.
+4. AI scope, provider destination, isolation and change approval are enforced and tested for app AI and every enabled plugin. Direct-write bypasses are forbidden; D15 already determines the compatibility tradeoff.
 5. Performance, accessibility, source-grounding and practical user benefit meet the agreed scorecard.
 
 ## Next decisions and work
 
-Resolve the legacy plugin trust model using concrete P1 evidence; select distribution/business model, history policy, hardware floor and resources. Pin released plugin artifacts and their hashes from the [research inventory](references/plugin-research/index.md). Research a broader theme certification set beyond Minimal. Do not silently defer committed plugins or weaken file/AI guarantees to meet a date.
+Apply D11–D21 from the decision register without reopening approved choices. Pin released plugin artifacts and hashes; choose engineering defaults and broader theme coverage from evidence. The phase descriptions describe the product lifecycle; this implementation goal completes the automated implementation portions of P0–P6 and hands off deferred managed operations, human validation and release execution explicitly.
 
 ## Documentation maintenance
 
