@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-09T19:34:20Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2"],
+  "fixture_ids": ["fixture:no-op-fidelity", "fixture:reference-roundtrip", "fixture:revision-conflict", "fixture:symlink-boundary"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "36573b7f72206be5934e2637fd3524b104b5918ac2025226e9977ce1702a3202",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked source paths plus file bytes, excluding .agents, .git, node_modules, dist and out."
+  },
+  "observations": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passed for core, Electron, preload, renderer, scripts and tests."},
+    {"command": "bun test", "exit_code": 0, "result": "6 tests passed; 25 expectations cover no-op snapshots, BOM/CRLF and unknown-byte preservation, revision-aware writes, recovery history, conflicts and symlink denial."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and browser renderer bundles compiled with Bun."},
+    {"command": "bun run knip", "exit_code": 0, "result": "Knip reported no unused files, dependencies or exports across source, scripts and tests."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 15 changed files; complexity, dead-code and duplication checks passed."},
+    {"command": "bun run audit:fallow", "exit_code": 0, "result": "Health score 100.0/A; no dead files, circular dependencies or unused dependencies."},
+    {"command": "bun run package:dir", "exit_code": 1, "result": "The local unpacked package attempt reached electron-builder but the pinned Electron 44.3.0 macOS binary download timed out after 600 seconds; the cross-platform GitHub Actions build remains configured for verification."}
+  ],
+  "implemented": [
+    "Vault snapshots hash every regular file and record symlink targets without following them.",
+    "Read operations return original bytes and revisions without creating app data or modifying the vault.",
+    "Writes compare the current revision, preserve the previous version outside the vault, and replace through a same-directory temporary file.",
+    "Stale writes are rejected while preserving incoming bytes in a separate conflict record."
+  ],
+  "limitations": [
+    "Only the local macOS arm64 environment has executed the tests; Windows and Linux matrix runs are pending in Actions.",
+    "Reference Obsidian round-trips and injected interrupted-write, disk-full, permission-loss, delete-versus-edit and Unicode/case fault cases remain planned.",
+    "The Electron UI was compiled but not launched locally because the runtime download timed out."
+  ]
+}

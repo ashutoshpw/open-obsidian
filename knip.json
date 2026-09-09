@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["scripts/**/*.ts", "tests/**/*.ts"],
-  "project": ["scripts/**/*.ts", "tests/**/*.ts"],
+  "entry": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
+  "project": ["src/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"],
   "tags": [
     "-lintignore"
   ]

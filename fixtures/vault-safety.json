@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "purpose": "P1.1 lossless open/index/close, revision-aware writing and recovery spike",
+  "profiles": [
+    {
+      "id": "fixture:no-op-fidelity",
+      "paths": ["note.md", "binary.bin", ".obsidian/app.json"],
+      "assertions": ["snapshot digest is unchanged", "all bytes and symlink targets are unchanged", "app data remains outside the vault"]
+    },
+    {
+      "id": "fixture:reference-roundtrip",
+      "paths": ["note.md"],
+      "assertions": ["UTF-8 BOM survives", "CRLF line endings survive", "unrepresented properties and untouched spans survive"]
+    },
+    {
+      "id": "fixture:revision-conflict",
+      "paths": ["note.md"],
+      "assertions": ["external bytes remain authoritative", "incoming bytes are preserved separately", "the stale write is rejected"]
+    },
+    {
+      "id": "fixture:symlink-boundary",
+      "paths": ["outside.txt"],
+      "assertions": ["symlink metadata is recorded", "read and write do not follow a vault symlink"]
+    }
+  ],
+  "fault_matrix": [
+    {"id": "fault:interrupted-temp-write", "status": "planned", "applicable_platforms": ["macOS", "Windows", "Linux"]},
+    {"id": "fault:permission-loss", "status": "planned", "applicable_platforms": ["macOS", "Windows", "Linux"]},
+    {"id": "fault:disk-full", "status": "planned", "applicable_platforms": ["macOS", "Windows", "Linux"]},
+    {"id": "fault:delete-versus-edit", "status": "planned", "applicable_platforms": ["macOS", "Windows", "Linux"]},
+    {"id": "fault:case-only-rename", "status": "planned", "applicable_platforms": ["Windows"]},
+    {"id": "fault:unicode-normalization", "status": "planned", "applicable_platforms": ["macOS", "Windows", "Linux"]}
+  ]
+}

@@ -36,8 +36,12 @@ jobs:
         run: bun run validate:state
       - name: Validate frozen contracts
         run: bun run validate:contracts
+      - name: Type-check source
+        run: bun run typecheck
       - name: Run tests
         run: bun test
+      - name: Compile Electron shell
+        run: bun run compile
       - name: Run Knip audit
         run: bun run knip
       - name: Run Fallow health audit
