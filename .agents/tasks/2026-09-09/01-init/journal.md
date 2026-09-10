@@ -151,3 +151,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled implementation: committed as `5bee01a3ca8973aa9f25fce13fea0f6b600f7423` with marker `[openobsidian P2.2] Add workspace modes and navigation`, pushed `main`, and recorded tested source tree `d3bf15b2f7cd5518f450ddad696991383fb7bdcebb486a689ffd88da5e53b1ce`.
 - Limitations: the local Electron binary is unavailable, so visible launch/accessibility-tree and cross-platform UI automation remain pending; settings have no restart fixture or visible runtime readback, tabs/navigation are session-scoped, and full Markdown dialect/reference reopen validation remains pending.
 - Next operation: finish restart/state fixtures, richer Markdown dialect rendering, command palette and remaining named UX surfaces, then run visible accessibility, cross-platform and reference Obsidian reopen checks.
+
+## 2026-09-10T09:53:08Z — P2.3 conflict and retention controls pushed
+
+- Completed: added safe conflict-record inspection and explicit keep-current/keep-incoming resolution with revision checks; protected conflict artifacts are not removed by retention cleanup.
+- Completed: added validated retention-plan/cleanup IPC and non-modal history controls for explicit removal of managed non-conflict recovery records.
+- Completed: added visible contract-only dispositions for Chronicle Git, Remotely Save, Syncthing, Dropbox/OneDrive and Obsidian Sync/Publish without implying proprietary Sync or Publish access.
+- Validation: `bun run quality` passes with 58 tests and 253 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 89.0/A with only the pre-existing `scripts/status.ts` advisory; strict Fallow reports no issues in the 19-file increment.
+- Reconciled implementation: committed as `79296e8d0e843650bb08fdf0302b79b821944457` with marker `[openobsidian P2.3] Add conflict and retention controls`, pushed `main`, and recorded tested source tree `1b2cce49e03cd34db365d3e17e1c361d24f80b32984b2c82a2d77712e8e19a86`.
+- Limitations: the local Electron binary is unavailable, so visible launch/accessibility-tree and cross-platform UI automation remain pending; retention policy values are still default IPC values, and live sync/backend, per-tool certification, partial-sync and reference Obsidian checks remain pending.
+- Next operation: finish user-configurable retention policy settings and explicit uninstall cleanup choices, then complete live sync/backends and cross-platform/reference round trips.

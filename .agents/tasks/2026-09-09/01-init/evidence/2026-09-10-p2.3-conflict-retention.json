@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T09:53:08Z",
+  "checkpoint": "P2.3",
+  "requirements": ["D10", "D16", "GATE-003", "PROD-004", "PROD-006", "C13", "C15", "C15.1", "SYNC-005", "SYNC-006", "RISK-005", "UX-001"],
+  "fixture_ids": ["fixture:conflict-recovery", "fixture:history-retention", "fixture:sync-tool-matrix", "fixture:risk-sync-races", "fixture:workspace-review"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "1b2cce49e03cd34db365d3e17e1c361d24f80b32984b2c82a2d77712e8e19a86"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 58 tests with 253 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 89.0/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bunx fallow audit --root . --base e0dcd91ad15e68479371d2935b9f4491c98c8e51 --format compact", "exit_code": 0, "result": "No issues in the 19 changed implementation/test files for this P2.3 increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun test -- tests/vault.test.ts tests/api.test.ts tests/sync-tools.test.ts", "exit_code": 0, "result": "22 focused tests with 109 expectations cover preserved conflict bytes, explicit keep-incoming resolution, safe history/conflict IPC validation and the named external sync disposition list."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile with conflict inspection/resolution, retention review/cleanup and sync-disposition IPC/UI wiring."}
+  ],
+  "implemented": [
+    "Added safe conflict-record inspection and explicit keep-current or keep-incoming resolution through VaultStore, including revision checks and protected-record cleanup only after the user action succeeds.",
+    "Added validated history-plan and cleanup IPC; cleanup removes only managed non-conflict recovery artifacts while protected conflicts remain retained and visible.",
+    "Added a non-modal history-surface conflict resolver with incoming-byte preview, explicit action buttons, retention summary and cleanup approval controls.",
+    "Added named contract-only dispositions for built-in Chronicle Git, Remotely Save, Syncthing, Dropbox/OneDrive and Obsidian Sync/Publish; unsupported proprietary access is visibly denied rather than implied."
+  ],
+  "limitations": [
+    "The Electron binary is unavailable locally, so visible launch, accessibility-tree and cross-platform UI automation were not completed.",
+    "Retention policy values are still supplied by the default IPC policy; user-facing configurable policy settings, long-running retention tests and OS encryption readback remain pending.",
+    "Live external sync backends, per-tool OS/version certification, partial-sync integration, CLI/deep-link validation and reference Obsidian reopen tests remain pending."
+  ]
+}
