@@ -211,3 +211,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: marked D17, D20, UX-004, UX-005, Q-011, Q-015, Q-017 and Q-018 implemented with local fixture and contract evidence; screen-reader, visible Electron, cross-platform interaction, signing, staging, updater, rollback and publication gates remain pending or external-pending.
 - Tested source tree: `4fb71710...` across 112 included paths.
 - Next operation: verify the pushed matrix on Actions, then continue P5.2 visible/human handoffs and P6.2 final-audit evidence without creating a release tag.
+
+## 2026-09-10T13:50:00Z — P6.1 platform matrix verified
+
+- Completed: fixed the macOS preview packaging path in source commit `133b84f84fdf8222e5a198fcc0555ae6bf22931a` by disabling Electron Builder implicit publishing and identity discovery for unsigned previews.
+- Validation: Actions quality run `34480078768` and desktop-build run `34480078771` passed on macOS, Ubuntu and Windows; desktop packaging, release preflight, SHA-256 artifact manifests and uploads completed on all three runners.
+- Reconciled: marked D09 implemented with the matrix evidence and refreshed the P5.2/P6.1 tested source tree to `28b604d0...` across 112 included paths.
+- Limitation: the successful runs are labeled previews; signing, staging, updater/rollback, publication and visible app interaction remain separate external gates. No release tag was created.
+- Next operation: continue P5.2 visible/human handoffs and P6.2 final-audit evidence while preserving the explicit production block.

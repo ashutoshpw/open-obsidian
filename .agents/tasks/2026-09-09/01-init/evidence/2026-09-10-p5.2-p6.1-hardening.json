@@ -2,22 +2,23 @@
   "schema_version": 1,
   "recorded_at": "2026-09-10T13:20:00Z",
   "checkpoints": ["P5.2", "P6.1"],
-  "requirements": ["D17", "D20", "UX-004", "UX-005", "Q-011", "Q-015", "Q-017", "Q-018"],
-  "fixture_ids": ["fixture:privacy-defaults", "fixture:ux-accessibility", "fixture:ux-localization", "fixture:delivery-workflows", "fixture:q-accessibility", "fixture:q-operations", "fixture:q-actions", "fixture:q-signing-gate"],
+  "requirements": ["D09", "D17", "D20", "UX-004", "UX-005", "Q-011", "Q-015", "Q-017", "Q-018"],
+  "fixture_ids": ["fixture:platform-matrix", "fixture:privacy-defaults", "fixture:ux-accessibility", "fixture:ux-localization", "fixture:delivery-workflows", "fixture:q-accessibility", "fixture:q-operations", "fixture:q-actions", "fixture:q-signing-gate"],
   "environment": {
     "os": "macOS",
     "architecture": "arm64",
     "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
     "branch": "main",
     "bun_version": "1.4.2",
-    "implementation_commit": "819d283152512704c5d1af244bea5db29d347a2f",
-    "tested_source_tree": "4fb71710c6f7f3beea57c4cf5ec852aaf8002a007ea9d1949c1e30b45c8b5453"
+    "implementation_commit": "133b84f84fdf8222e5a198fcc0555ae6bf22931a",
+    "tested_source_tree": "28b604d094f758e05ccfb18e9fa2c63215b7f57ab0102d892cf0d1c87fc66d12"
   },
   "observations": [
     {"command": "bun run quality", "exit_code": 0, "result": "88 tests pass with 520 expectations; state, contracts, architecture, distribution, accessibility, typecheck, compile and Knip pass; report-only Fallow health is 88.2/A with only the inherited scripts/status.ts collectRow advisory."},
     {"command": "bunx fallow audit --root . --base ac24269 --format compact", "exit_code": 0, "result": "No issues in 19 changed files."},
     {"command": "bun run check:accessibility", "exit_code": 0, "result": "Seven static renderer checks pass: interactive names, form labels, button types, focus-visible, reduced motion, live status and dialog labels."},
-    {"command": "bun run release:gate", "exit_code": 0, "result": "Credential-absent local preview is explicitly labeled unsigned-preview; production behavior is covered by tests as blocked without signing and staging."}
+    {"command": "bun run release:gate", "exit_code": 0, "result": "Credential-absent local preview is explicitly labeled unsigned-preview; production behavior is covered by tests as blocked without signing and staging."},
+    {"command": "GitHub Actions runs 34480078768 and 34480078771", "exit_code": 0, "result": "Quality and desktop-build matrices passed on macOS, Ubuntu and Windows; desktop artifacts were packaged, hashed and uploaded after the preview gate."}
   ],
   "implemented": [
     "Privacy defaults and a main-process diagnostics manifest exclude note content, provider secrets and absolute paths; the renderer exposes the local-only diagnostics control and PRIVACY.md documents safe-mode and extension-bisect handoffs.",
