@@ -51,3 +51,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: marked `SYNC-001` implemented with the local concurrent-edit fixture; P2.1 remains in progress and release status remains honest at 1/19 checkpoints complete, 32 implemented rows and 165 mandatory rows not release-passing.
 - Limitations: merge is intentionally conservative and does not yet handle structural edits; stable identities, watcher overflow/sleep recovery, full nested YAML fidelity, Standard/Chronicle workflows, cross-platform runs and reference Obsidian validation remain pending.
 - Next operation: stage and review this increment, run the final quality gate before commit, push `main`, then monitor the resulting Actions quality/build runs.
+
+## 2026-09-10T07:34:08Z — P2.1 foundation increment reconciled and pushed
+
+- Completed: committed the P2.1 recovery/reconciliation increment as `1e63b975e9b9b8e0092b5f42812dfd6ffad53849` with marker `[openobsidian P2.1] Add recovery reconciliation foundation`.
+- Completed: pushed `main` to `origin` and verified the push advanced remote `main` from `38053e9` to the new commit. Durable state now records the pushed head and timestamp.
+- Next operation: inspect the new quality and desktop-build Actions runs; preserve any cross-platform or packaged-runtime failure as an explicit blocker.
