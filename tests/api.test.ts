@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -55,4 +55,11 @@ test("Canvas IPC validation keeps edits revision-aware and note creation explici
   expect(validateCanvasCreateNoteRequest({relativePath: "boards/plan.canvas", expectedRevision: "b".repeat(64), nodeId: "text-1", notePath: "notes/plan.md"}).notePath).toBe("notes/plan.md");
   expect(() => validateCanvasTextEditRequest({relativePath: "/outside.canvas", expectedRevision: "a", nodeId: "text-1", text: "updated"})).toThrow("Invalid workspace path");
   expect(() => validateCanvasCreateNoteRequest({relativePath: "boards/plan.canvas", expectedRevision: "b", nodeId: "text-1", notePath: "../plan.md"})).toThrow("Invalid workspace note path");
+});
+
+test("retrieval IPC validation keeps scope and limits bounded", () => {
+  expect(validateRetrievalRequest({query: "  local notes ", limit: 5, scope: {folders: ["Projects"], tags: ["#ai"], excludedPaths: ["private.md"], modifiedAfter: "2026-01-01T00:00:00Z"}})).toEqual({query: "local notes", limit: 5, scope: {paths: [], folders: ["Projects"], tags: ["ai"], modifiedAfter: "2026-01-01T00:00:00Z", modifiedBefore: undefined, excludedPaths: ["private.md"]}});
+  expect(() => validateRetrievalRequest({query: "notes", limit: 0})).toThrow("Invalid retrieval limit");
+  expect(() => validateRetrievalRequest({query: "notes", scope: {folders: ["../outside"]}})).toThrow("Invalid workspace folders");
+  expect(() => validateRetrievalRequest({query: "notes", scope: {modifiedBefore: "not-a-date"}})).toThrow("Invalid retrieval end date");
 });

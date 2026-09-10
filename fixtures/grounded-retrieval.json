@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "grounded-local-retrieval",
+  "mode": "local-hybrid",
+  "provider_destination": "none",
+  "default_exclusions": [".obsidian", ".git", ".trash"],
+  "cases": [
+    {"id": "scoped-source-retrieval", "query": "local retrieval", "scope": {"folder": "Projects", "tag": "ai", "excluded_path": "Projects/private.md"}, "expected": ["source-revision", "heading", "line-range", "no-provider-context"]},
+    {"id": "missing-evidence", "query": "unrecorded question", "expected": ["missing-evidence", "no-inference"]}
+  ],
+  "external_pending": ["visible-electron-progress", "provider-inference-run", "reference-grounding-run", "cross-platform-grounding-run"]
+}

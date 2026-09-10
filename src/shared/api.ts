@@ -25,6 +25,8 @@ export const CHANNELS = {
   editCanvasText: "workspace:edit-canvas-text",
   createCanvasNote: "workspace:create-canvas-note",
   base: "workspace:base",
+  retrieve: "workspace:retrieve",
+  retrievalProgress: "workspace:retrieval-progress",
 } as const;
 
 export type VaultGitSummary = {
@@ -188,6 +190,22 @@ export type BaseRowView = {path: string; values: Record<string, BaseValue>};
 export type BaseEvaluationView = {name?: string; type: "table" | "list" | "cards"; rows: BaseRowView[]; groups: Record<string, BaseRowView[]>; issues: BaseIssueView[]};
 export type BaseResponse = {relativePath: string; revision: string; views: BaseEvaluationView[]};
 
+export type RetrievalScope = {
+  paths?: string[];
+  folders?: string[];
+  tags?: string[];
+  modifiedAfter?: string;
+  modifiedBefore?: string;
+  excludedPaths?: string[];
+};
+
+export type RetrievalRequest = {query: string; scope?: RetrievalScope; limit?: number};
+export type RetrievalProgress = {phase: "indexing" | "complete"; processed: number; total: number; indexed: number; excluded: number; currentPath?: string};
+export type RetrievalCitation = {id: string; kind: "source"; relativePath: string; revision: string; heading: string | null; lineStart: number; lineEnd: number; snippet: string};
+export type RetrievalPassage = RetrievalCitation & {score: number; keywordScore: number; semanticScore: number};
+export type GroundedAnswer = {status: "grounded" | "missing-evidence" | "conflicting-evidence"; answer: string; inference: string | null; conflicts: string[]; citations: RetrievalCitation[]};
+export type RetrievalResponse = {query: string; mode: "local-hybrid" | "keyword-fallback"; provider: "none"; scope: RetrievalScope; passages: RetrievalPassage[]; answer: GroundedAnswer; indexedFiles: string[]; excludedFiles: string[]; scopedOutFiles: string[]; progress: RetrievalProgress};
+
 export type WorkspaceSettings = {
   editorMode: EditorMode;
   splitView: boolean;
@@ -313,6 +331,58 @@ export function validateCanvasCreateNoteRequest(value: unknown): CanvasCreateNot
   return {relativePath: validateCanvasPath(value.relativePath, "path"), expectedRevision: validateCanvasRevision(value.expectedRevision), nodeId: value.nodeId, notePath: validateCanvasPath(value.notePath, "note path")};
 }
 
+function validateRetrievalPaths(value: unknown, label: string): string[] {
+  if (value === undefined) return [];
+  return validateWorkspacePaths(value, label, 50);
+}
+
+function validateRetrievalTags(value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 50 || value.some((tag) => typeof tag !== "string" || tag.trim().length === 0 || tag.length > 100)) throw new Error("Invalid retrieval tags");
+  return [...new Set(value.map((tag) => tag.trim().replace(/^#/, "").toLocaleLowerCase()))];
+}
+
+function validateRetrievalDate(value: unknown, label: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || Number.isNaN(Date.parse(value))) throw new Error(`Invalid retrieval ${label}`);
+  return value;
+}
+
+function validateRetrievalQuery(value: unknown): string {
+  if (typeof value !== "string" || value.trim().length === 0 || value.length > 500) throw new Error("Invalid retrieval request");
+  return value.trim();
+}
+
+function validateRetrievalLimit(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (!Number.isSafeInteger(value) || (value as number) < 1 || (value as number) > 50) throw new Error("Invalid retrieval limit");
+  return value as number;
+}
+
+function validateRetrievalScope(value: unknown): RetrievalScope {
+  if (!isRecord(value)) throw new Error("Invalid retrieval scope");
+  return {
+    paths: validateRetrievalPaths(value.paths, "paths"),
+    folders: validateRetrievalPaths(value.folders, "folders"),
+    tags: validateRetrievalTags(value.tags),
+    modifiedAfter: validateRetrievalDate(value.modifiedAfter, "start date"),
+    modifiedBefore: validateRetrievalDate(value.modifiedBefore, "end date"),
+    excludedPaths: validateRetrievalPaths(value.excludedPaths, "excluded paths"),
+  };
+}
+
+export function validateRetrievalRequest(value: unknown): RetrievalRequest {
+  if (!isRecord(value)) throw new Error("Invalid retrieval request");
+  const query = validateRetrievalQuery(value.query);
+  const limit = validateRetrievalLimit(value.limit);
+  if (value.scope === undefined) return {query, limit};
+  return {
+    query,
+    limit,
+    scope: validateRetrievalScope(value.scope),
+  };
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   listFiles: () => Promise<VaultFileSummary[]>;
@@ -340,4 +410,6 @@ export type OpenObsidianAPI = {
   editCanvasText: (request: CanvasTextEditRequest) => Promise<CanvasView>;
   createCanvasNote: (request: CanvasCreateNoteRequest) => Promise<CanvasCreateNoteResponse>;
   base: (relativePath: string) => Promise<BaseResponse>;
+  retrieve: (request: RetrievalRequest) => Promise<RetrievalResponse>;
+  onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => () => void;
 };

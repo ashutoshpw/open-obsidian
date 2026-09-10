@@ -10,10 +10,11 @@ import {buildVaultGraph} from "../core/graph.js";
 import {cleanupHistory, DEFAULT_HISTORY_POLICY, historyRecordsFromStore, planHistoryRetention} from "../core/history.js";
 import {parseMarkdown} from "../core/markdown.js";
 import {buildNoteContext} from "../core/note-context.js";
+import {retrieveVault} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -261,6 +262,11 @@ function baseRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): BaseR
   return {relativePath: read.relativePath, revision: read.revision, views: document.views.map((view) => baseEvaluationView(document, view, rows))};
 }
 
+function retrieveRequest(event: Electron.IpcMainInvokeEvent, value: unknown): RetrievalResponse {
+  const request = validateRetrievalRequest(value);
+  return retrieveVault(requireVault(), request, (progress) => event.sender.send(CHANNELS.retrievalProgress, progress));
+}
+
 function restoreChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
   const request = validateChronicleRestoreRequest(value);
   const store = requireChronicle();
@@ -337,6 +343,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.editCanvasText, editCanvasTextRequest);
   ipcMain.handle(CHANNELS.createCanvasNote, createCanvasNoteRequest);
   ipcMain.handle(CHANNELS.base, baseRequest);
+  ipcMain.handle(CHANNELS.retrieve, retrieveRequest);
   ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
   ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
   ipcMain.handle(CHANNELS.noteContext, noteContext);

@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -58,6 +58,18 @@ const openCommandPaletteButton = document.querySelector<HTMLButtonElement>("#ope
 const closeCommandPaletteButton = document.querySelector<HTMLButtonElement>("#close-command-palette");
 const commandQuery = document.querySelector<HTMLInputElement>("#command-query");
 const commandResults = document.querySelector<HTMLElement>("#command-results");
+const openRetrievalButton = document.querySelector<HTMLButtonElement>("#open-retrieval");
+const retrievalPanel = document.querySelector<HTMLElement>("#retrieval-panel");
+const closeRetrievalButton = document.querySelector<HTMLButtonElement>("#close-retrieval");
+const retrievalForm = document.querySelector<HTMLFormElement>("#retrieval-form");
+const retrievalQuery = document.querySelector<HTMLInputElement>("#retrieval-query");
+const retrievalFolder = document.querySelector<HTMLInputElement>("#retrieval-folder");
+const retrievalTags = document.querySelector<HTMLInputElement>("#retrieval-tags");
+const retrievalExcluded = document.querySelector<HTMLInputElement>("#retrieval-excluded");
+const runRetrievalButton = document.querySelector<HTMLButtonElement>("#run-retrieval");
+const retrievalMeta = document.querySelector<HTMLElement>("#retrieval-meta");
+const retrievalAnswer = document.querySelector<HTMLElement>("#retrieval-answer");
+const retrievalResults = document.querySelector<HTMLElement>("#retrieval-results");
 const settingsPanel = document.querySelector<HTMLElement>("#settings-panel");
 const toggleSettingsButton = document.querySelector<HTMLButtonElement>("#toggle-settings");
 const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-settings");
@@ -106,6 +118,8 @@ let vaultFiles: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>> = [];
 let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
+let retrievalData: RetrievalResponse | null = null;
+let pendingCitation: RetrievalCitation | null = null;
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -351,6 +365,7 @@ function wholeNumber(value: number, minimum: number): number | null {
 
 function updateChronicleControls(): void {
   setDisabled(openQuickSwitcherButton, !selectedSummary);
+  setDisabled(openRetrievalButton, !selectedSummary);
   updateWorkspaceToolControls();
   setDisabled(reviewButton, !selectedSummary || selectedSummary.git.vaultType !== "chronicle");
   setDisabled(historyButton, !selectedSummary);
@@ -636,6 +651,7 @@ function workspaceCommands(): WorkspaceCommand[] {
   return [
     {label: "Open vault", shortcut: "", available: () => Boolean(api && selectButton), run: () => selectButton?.click()},
     {label: "Quick switcher", shortcut: "⌘/Ctrl P", available: () => Boolean(selectedSummary), run: openQuickSwitcher},
+    {label: "Open grounded search", shortcut: "", available: () => Boolean(selectedSummary), run: openRetrievalPanel},
     {label: "Open graph", shortcut: "", available: () => Boolean(selectedSummary), run: () => void openGraphPanel()},
     {label: "Open Canvas", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".canvas")), run: () => void openCanvasPanel()},
     {label: "Open Bases", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".base")), run: () => void openBasePanel()},
@@ -776,7 +792,7 @@ async function openGraphPanel(): Promise<void> {
 }
 
 function togglePanel(panel: HTMLElement | null, visible: boolean): void {
-  [changePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
+  [changePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel, retrievalPanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
 }
 
 function selectPathOptions(select: HTMLSelectElement | null, paths: string[], selected: string | undefined): void {
@@ -1038,6 +1054,143 @@ async function openBasePanel(): Promise<void> {
 function selectedBasePath(paths: string[]): string {
   const current = baseData?.relativePath;
   return current !== undefined && paths.includes(current) ? current : paths[0]!;
+}
+
+function filterValues(value: string | undefined): string[] {
+  return (value ?? "").split(",").map((item) => item.trim().replace(/\/+$/, "")).filter(Boolean);
+}
+
+function retrievalQueryValue(): string | null {
+  const query = retrievalQuery?.value.trim() ?? "";
+  if (!query) {
+    setStatus("Enter a question or search terms before starting grounded search.");
+    retrievalQuery?.focus();
+    return null;
+  }
+  return query;
+}
+
+function retrievalScopeFromForm(): RetrievalRequest["scope"] {
+  return {folders: filterValues(retrievalFolder?.value), tags: filterValues(retrievalTags?.value), excludedPaths: filterValues(retrievalExcluded?.value)};
+}
+
+function retrievalRequestFromForm(): RetrievalRequest | null {
+  const query = retrievalQueryValue();
+  return query ? {query, limit: 20, scope: retrievalScopeFromForm()} : null;
+}
+
+function scopeFilterLabel(label: string, values: string[] | undefined): string {
+  return values && values.length > 0 ? `${label}: ${values.join(", ")}` : "";
+}
+
+function retrievalScopeLabel(scope: RetrievalResponse["scope"]): string {
+  const filters = [scopeFilterLabel("folders", scope.folders), scopeFilterLabel("tags", scope.tags), scopeFilterLabel("extra exclusions", scope.excludedPaths)].filter(Boolean);
+  return filters.length === 0 ? "Scope: entire selected vault" : `Scope: selected vault · ${filters.join(" · ")}`;
+}
+
+function renderRetrievalProgress(progress: RetrievalProgress): void {
+  if (!retrievalMeta) return;
+  if (progress.phase === "complete") {
+    setText(retrievalMeta, `Local index complete · ${progress.processed}/${progress.total} Markdown files visited · ${progress.indexed} passages indexed · ${progress.excluded} excluded.`);
+    return;
+  }
+  const current = progress.currentPath ? ` · ${progress.currentPath}` : "";
+  setText(retrievalMeta, `Indexing locally · ${progress.processed}/${progress.total} Markdown files visited · ${progress.indexed} passages indexed · ${progress.excluded} excluded${current}`);
+}
+
+function groundingStatus(status: RetrievalResponse["answer"]["status"]): string {
+  return {grounded: "Source-grounded", "missing-evidence": "Missing evidence", "conflicting-evidence": "Conflicting evidence"}[status];
+}
+
+function renderRetrievalAnswer(answer: RetrievalResponse["answer"]): void {
+  if (!retrievalAnswer) return;
+  retrievalAnswer.hidden = false;
+  retrievalAnswer.dataset.status = answer.status;
+  retrievalAnswer.replaceChildren();
+  const heading = document.createElement("strong");
+  heading.textContent = groundingStatus(answer.status);
+  const source = document.createElement("p");
+  source.textContent = answer.answer;
+  retrievalAnswer.append(heading, source);
+  if (answer.inference) {
+    const inference = document.createElement("small");
+    inference.textContent = answer.inference;
+    retrievalAnswer.append(inference);
+  }
+  answer.conflicts.forEach((conflict) => {
+    const warning = document.createElement("small");
+    warning.textContent = `Conflict: ${conflict}`;
+    retrievalAnswer.append(warning);
+  });
+}
+
+function retrievalResultButton(passage: RetrievalResponse["passages"][number]): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "retrieval-result";
+  const header = document.createElement("header");
+  const path = document.createElement("strong");
+  path.textContent = passage.relativePath;
+  const score = document.createElement("small");
+  score.textContent = `score ${passage.score.toFixed(2)}`;
+  header.append(path, score);
+  const snippet = document.createElement("p");
+  snippet.textContent = passage.snippet;
+  const source = document.createElement("small");
+  source.textContent = `${passage.heading ?? "Untitled block"} · lines ${passage.lineStart}-${passage.lineEnd} · revision ${passage.revision.slice(0, 12)}… · Open source`;
+  button.append(header, snippet, source);
+  button.addEventListener("click", () => openRetrievalCitation(passage));
+  return button;
+}
+
+function renderRetrievalResults(passages: RetrievalResponse["passages"]): void {
+  if (!retrievalResults) return;
+  retrievalResults.replaceChildren(...passages.map(retrievalResultButton));
+  if (passages.length === 0) retrievalResults.append(contextEmpty("No source passages match this scope. The answer is intentionally marked as missing evidence."));
+}
+
+function renderRetrieval(response: RetrievalResponse): void {
+  setText(retrievalMeta, `${response.mode === "local-hybrid" ? "Local hybrid" : "Keyword fallback"} · provider destination: none · ${retrievalScopeLabel(response.scope)} · ${response.indexedFiles.length} source files · ${response.excludedFiles.length} excluded`);
+  renderRetrievalAnswer(response.answer);
+  renderRetrievalResults(response.passages);
+}
+
+function openRetrievalCitation(citation: RetrievalCitation): void {
+  pendingCitation = citation;
+  openFile(citation.relativePath);
+  if (selectedPath === citation.relativePath && currentTab()?.loaded) {
+    pendingCitation = null;
+    focusEditorLine(citation.lineStart);
+  }
+}
+
+function openRetrievalPanel(): void {
+  if (!selectedSummary) return;
+  togglePanel(retrievalPanel, true);
+  if (retrievalData) renderRetrieval(retrievalData);
+  retrievalQuery?.focus();
+}
+
+async function performRetrieval(client: OpenObsidianAPI, request: RetrievalRequest): Promise<void> {
+  setDisabled(runRetrievalButton, true);
+  setText(retrievalMeta, "Starting a local source index; no provider has received context…");
+  setHidden(retrievalAnswer, true);
+  try {
+    retrievalData = await client.retrieve(request);
+    renderRetrieval(retrievalData);
+    setStatus(`Grounded search found ${retrievalData.passages.length} source passage${retrievalData.passages.length === 1 ? "" : "s"}; no provider request was made.`);
+  } catch (error) {
+    setText(retrievalMeta, errorText(error, "Unable to run grounded search."));
+  } finally {
+    setDisabled(runRetrievalButton, false);
+  }
+}
+
+async function runRetrievalRequest(): Promise<void> {
+  const client = api;
+  if (!client || !selectedSummary) return;
+  const request = retrievalRequestFromForm();
+  if (request) await performRetrieval(client, request);
 }
 
 function changeKind(review: NonNullable<typeof changeReview>, path: string): string {
@@ -1484,6 +1637,11 @@ function applyReadResponse(response: Awaited<ReturnType<OpenObsidianAPI["readFil
   updateEditorState();
   renderTabs();
   void loadNoteContext(response.relativePath);
+  if (pendingCitation?.relativePath === response.relativePath) {
+    const citation = pendingCitation;
+    pendingCitation = null;
+    focusEditorLine(citation.lineStart);
+  }
 }
 
 async function restoreWorkspaceTabs(client: OpenObsidianAPI): Promise<void> {
@@ -1614,6 +1772,8 @@ function resetEditor(): void {
   graphData = null;
   canvasData = null;
   baseData = null;
+  retrievalData = null;
+  pendingCitation = null;
   renderTabs();
   renderNoteContext({relativePath: "", headings: [], backlinks: []});
   updateEditorState();
@@ -1629,6 +1789,7 @@ function showNoVault(): void {
   setHidden(graphPanel, true);
   setHidden(canvasPanel, true);
   setHidden(basePanel, true);
+  setHidden(retrievalPanel, true);
   setHidden(conflictBox, true);
   selectedConflict = null;
   changeReview = null;
@@ -1636,6 +1797,8 @@ function showNoVault(): void {
   graphData = null;
   canvasData = null;
   baseData = null;
+  retrievalData = null;
+  pendingCitation = null;
   updateChronicleControls();
   setStatus(summaryMessage(selectedSummary));
 }
@@ -1684,6 +1847,12 @@ if (commandQuery) {
   commandQuery.addEventListener("keydown", commandQueryKeydown);
 }
 if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", () => openQuickSwitcher());
+if (openRetrievalButton) openRetrievalButton.addEventListener("click", openRetrievalPanel);
+if (closeRetrievalButton) closeRetrievalButton.addEventListener("click", () => setHidden(retrievalPanel, true));
+if (retrievalForm) retrievalForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void runRetrievalRequest();
+});
 if (openGraphButton) openGraphButton.addEventListener("click", () => void openGraphPanel());
 if (openCanvasButton) openCanvasButton.addEventListener("click", () => void openCanvasPanel());
 if (openBaseButton) openBaseButton.addEventListener("click", () => void openBasePanel());
@@ -1743,6 +1912,7 @@ if (editor) editor.addEventListener("input", () => {
   setStatus("Unsaved changes · save to create a recoverable revision.");
 });
 if (saveButton) saveButton.addEventListener("click", () => void saveNote());
+if (api) api.onRetrievalProgress(renderRetrievalProgress);
 function keyboardShortcut(event: KeyboardEvent): (() => void) | undefined {
   if (!(event.metaKey || event.ctrlKey)) return undefined;
   return ({s: () => void saveNote(), p: openQuickSwitcher, o: openQuickSwitcher, k: openCommandPalette} as Record<string, () => void>)[event.key.toLowerCase()];

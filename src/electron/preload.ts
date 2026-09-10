@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type OpenObsidianAPI, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type OpenObsidianAPI, type RetrievalProgress, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -28,6 +28,12 @@ const api: OpenObsidianAPI = {
   editCanvasText: (request) => ipcRenderer.invoke(CHANNELS.editCanvasText, request),
   createCanvasNote: (request) => ipcRenderer.invoke(CHANNELS.createCanvasNote, request),
   base: (relativePath) => ipcRenderer.invoke(CHANNELS.base, relativePath),
+  retrieve: (request) => ipcRenderer.invoke(CHANNELS.retrieve, request),
+  onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgress) => listener(progress);
+    ipcRenderer.on(CHANNELS.retrievalProgress, handler);
+    return () => ipcRenderer.removeListener(CHANNELS.retrievalProgress, handler);
+  },
 };
 
 contextBridge.exposeInMainWorld("openObsidian", api);
