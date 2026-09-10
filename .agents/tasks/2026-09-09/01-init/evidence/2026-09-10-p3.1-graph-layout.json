@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T17:11:50Z",
+  "checkpoints": ["P3.1"],
+  "requirements": ["C05", "C05.1"],
+  "fixture_ids": ["fixture:derived-surfaces", "fixture:c05-graph", "fixture:c05-graph-no-write"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "364cfcd5690a74ebc7c38dc8b68b44e459e7c9b9",
+    "tested_source_tree": "e477a9ed589632cc8ec6756593224179f894497b28515e2a716273bf4dffb46f"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes at the pushed commit: 99 tests with 578 expectations, state/contract/architecture/surface/accessibility/layout/typecheck checks, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes at the pushed commit: compile, distribution, quality-program, 99 tests with 578 expectations, Knip and report-only Fallow health all pass."},
+    {"command": "bun run validate:layout", "exit_code": 0, "result": "25 static layout checks pass, including graph layout mode control, spatial graph surface and keyboard node-list alternative."},
+    {"command": "bun test tests/canvas-graph.test.ts tests/shared-ui.test.ts", "exit_code": 0, "result": "4 focused tests pass with 39 expectations, including deterministic force/radial/hierarchical point maps and future-Expo shared source portability."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the graph-layout/API/renderer increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
+    {"command": "OpenObsidian quality / 34506573788", "exit_code": 0, "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for commit 364cfcd5690a74ebc7c38dc8b68b44e459e7c9b9."},
+    {"command": "OpenObsidian desktop build / 34506573784", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime notice audits passed."}
+  ],
+  "implemented": [
+    "Added a platform-neutral src/shared/ui/graph.ts layout contract with deterministic force, hierarchical and radial positions and bounded dimensions.",
+    "Extended the typed GraphView response with layout mode and point coordinates while retaining authoritative link-derived, read-only graph construction.",
+    "Added a renderer SVG spatial map with layout control, edge/node styling, safe text labels and the existing keyboard-accessible node list as the interaction alternative.",
+    "Documented the graph block as reusable by a future Expo/native host and added focused tests plus static layout markers."
+  ],
+  "limitations": [
+    "Reference Obsidian Graph behavior, visual comparison and cross-platform visible interaction remain pending external validation.",
+    "The spatial SVG is a read-only visualization; node navigation continues through the keyboard-accessible list and graph state never writes vault files."
+  ]
+}

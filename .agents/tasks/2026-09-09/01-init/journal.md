@@ -287,3 +287,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: D06, UX-003 and A02.1 point to `2026-09-10-p2.2-ux-surfaces.json`; the named inventory reports 10 implemented and 4 external-pending surfaces.
 - Tested source tree: `56bb8e8e7908ff3fac8fb76acee9e5f24ee836f44235373a52b59f58f991e34f` across 136 included paths.
 - Limitation: screen-reader/input/IME, reference Obsidian, visible cross-platform interaction, extension/runtime and managed-service certification remain pending.
+## 2026-09-10T17:11:50Z — P3.1 reusable graph layout increment
+
+- Completed: committed and pushed `364cfcd5690a74ebc7c38dc8b68b44e459e7c9b9` with marker `[openobsidian P3.1] Add reusable graph layout`.
+- Completed: added `src/shared/ui/graph.ts` with deterministic force, hierarchical and radial point layouts; extended `GraphView` with typed positions; and added a visible SVG graph map with layout control and a keyboard-accessible node-list alternative.
+- Completed: documented the reusable graph boundary for a future Expo/native host and expanded static layout plus shared portability tests.
+- Validation: exact pushed commit passes `bun run check:fast` (99 tests, 578 expectations), `bun run quality`, Knip and strict changed-file Fallow.
+- Validation: quality run `34506573788` and desktop-build run `34506573784` passed on macOS, Ubuntu and Windows for `364cfcd5690a74ebc7c38dc8b68b44e459e7c9b9`.
+- Reconciled: C05 and C05.1 now point to `2026-09-10-p3.1-graph-layout.json`; Graph spatial layout is implemented locally while reference Obsidian and cross-platform visual validation remain pending.
+- Tested source tree: `e477a9ed589632cc8ec6756593224179f894497b28515e2a716273bf4dffb46f` across 137 included paths.
+- Limitation: the spatial map is read-only; navigation remains in the keyboard-accessible list and no vault writes occur when building or opening graph state.
