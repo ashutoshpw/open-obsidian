@@ -30,7 +30,7 @@ test("delivery workflow fixture and artifact hashes are explicit", () => {
   expect(fixture.release_tag_created_by_goal).toBe(false);
   const quality = readFileSync(new URL(".github/workflows/quality.yml", root), "utf8");
   const desktop = readFileSync(new URL(".github/workflows/desktop-build.yml", root), "utf8");
-  for (const workflow of [quality, desktop]) expect(workflow).toContain('tags: ["v????-??-??"]');
+  for (const workflow of [quality, desktop]) expect(workflow).toContain('tags: ["v*"]');
   for (const runner of fixture.runner_matrix) expect(desktop).toContain(runner);
   for (const contract of fixture.artifact_contract) expect(desktop).toContain(contract);
 
