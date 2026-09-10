@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "name": "openobsidian-v1-quality-scorecard",
+  "profiles": ["stock-obsidian", "plugin-equipped-obsidian", "openobsidian"],
+  "tasks": ["find", "synthesize", "organize"],
+  "corpus_profiles": [
+    "smoke-edge-cases",
+    "medium-10k",
+    "large-100k",
+    "canvas-bases",
+    "conflict-recovery",
+    "ai-grounding"
+  ],
+  "budgets": {
+    "no_op_fidelity": 1,
+    "warm_search_p95_ms": 150,
+    "warm_search_p99_ms": 300,
+    "supported_claims_min": 0.95,
+    "excluded_file_disclosures": 0,
+    "cross_vault_disclosures": 0,
+    "prompt_injection_actions": 0
+  },
+  "test_layers": [
+    {"id": "parser-and-link-differential", "status": "implemented", "command": "bun test tests/markdown.test.ts tests/links.test.ts tests/markdown-preview.test.ts"},
+    {"id": "byte-round-trip", "status": "implemented", "command": "bun test tests/vault.test.ts tests/canvas-graph.test.ts tests/bases.test.ts"},
+    {"id": "extension-contracts", "status": "external-pending", "owner": "compatibility-runtime", "reason": "Reference plugin artifacts require runtime certification."},
+    {"id": "end-to-end-workflows", "status": "external-pending", "owner": "product-ux", "reason": "Visible Electron runtime and human workflow access are unavailable in this run."},
+    {"id": "fault-injection", "status": "implemented", "command": "bun test tests/vault.test.ts tests/history-watcher.test.ts"},
+    {"id": "grounding-and-exclusion", "status": "implemented", "command": "bun test tests/retrieval.test.ts tests/quality-program.test.ts"},
+    {"id": "long-running-resources", "status": "external-pending", "owner": "qa-security", "reason": "Pinned 1k/10k/100k hardware runs are release validation work."},
+    {"id": "accessibility-and-screen-reader", "status": "external-pending", "owner": "product-ux", "reason": "Screen-reader and visible focus review require the launched desktop runtime."},
+    {"id": "distribution-update-rollback", "status": "external-pending", "owner": "desktop-release", "reason": "Signed artifacts and updater credentials are not available."}
+  ],
+  "privacy_defaults": {
+    "private_vault_upload": false,
+    "note_content_telemetry": false,
+    "provider_secret_telemetry": false,
+    "diagnostics_destination": "local-export-only"
+  },
+  "comparison_status": "defined_not_run",
+  "human_validation_status": "external_pending"
+}

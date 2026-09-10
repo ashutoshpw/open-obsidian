@@ -27,12 +27,13 @@
     "verify:compatibility-pins": "bun scripts/verify-compatibility-pins.ts",
     "verify:primary-references": "bun scripts/verify-primary-references.ts",
     "verify:distribution": "bun scripts/verify-distribution.ts",
+    "quality:program": "bun scripts/quality-program.ts",
     "knip": "knip",
     "audit:fallow": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:changed": "bunx fallow audit --root . --base HEAD --format compact --brief",
     "audit:fallow:strict": "bunx fallow audit --root . --base HEAD --format compact",
-    "quality": "bun run validate:state && bun run validate:contracts && bun run validate:architecture && bun run verify:distribution && bun run typecheck && bun test && bun run compile && bun run knip && bun run audit:fallow"
+    "quality": "bun run validate:state && bun run validate:contracts && bun run validate:architecture && bun run verify:distribution && bun run typecheck && bun test && bun run quality:program && bun run compile && bun run knip && bun run audit:fallow"
   },
   "build": {
     "appId": "ai.openobsidian.desktop",
