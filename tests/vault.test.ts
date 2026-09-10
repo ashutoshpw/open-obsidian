@@ -2,6 +2,7 @@ import {afterEach, expect, test} from "bun:test";
 import {mkdtempSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {inspectVaultGitState} from "../src/core/chronicle.js";
 import {RevisionConflict, VaultSafetyError, VaultStore, snapshotVault} from "../src/core/vault.js";
 
 const temporaryRoots: string[] = [];
@@ -15,6 +16,16 @@ function createFixture(): {root: string; appData: string} {
   writeFileSync(join(root, "binary.bin"), Buffer.from([0, 255, 7, 10, 128]));
   writeFileSync(join(root, ".obsidian", "app.json"), "{\"theme\":\"minimal\"}\n");
   return {root, appData};
+}
+
+function gitResult(root: string, args: string[]): {exitCode: number; stdout: string} {
+  const result = Bun.spawnSync(["git", "-C", root, ...args]);
+  return {exitCode: result.exitCode, stdout: result.stdout.toString().trim()};
+}
+
+function runGit(root: string, args: string[]): void {
+  const result = Bun.spawnSync(["git", "-C", root, ...args]);
+  if (result.exitCode !== 0) throw new Error(result.stderr.toString());
 }
 
 afterEach(() => {
@@ -242,6 +253,39 @@ test("the safety failure matrix names every required non-destructive outcome", (
     const store = new VaultStore(fixture.root, fixture.appData);
     expect(() => store.read("CON")).toThrow("Windows-reserved");
   }
+});
+
+test("Standard vault Git inspection is read-only", () => {
+  const fixture = createFixture();
+  const before = snapshotVault(fixture.root);
+  const state = inspectVaultGitState(fixture.root);
+  const after = snapshotVault(fixture.root);
+
+  expect(state.vaultType).toBe("standard");
+  expect(state.isRepository).toBe(false);
+  expect(state.remoteContacted).toBe(false);
+  expect(after.sha256).toBe(before.sha256);
+});
+
+test("Chronicle inspection captures dirty unborn remotes without remote contact", () => {
+  const fixture = createFixture();
+  runGit(fixture.root, ["init", "--quiet"]);
+  runGit(fixture.root, ["remote", "add", "origin", "https://offline.invalid/openobsidian.git"]);
+  writeFileSync(join(fixture.root, "untracked.md"), "untracked\n");
+  const before = snapshotVault(fixture.root);
+  const state = inspectVaultGitState(fixture.root, (root, args) => args[0] === "config" ? {exitCode: 1, stdout: ""} : gitResult(root, args));
+  const after = snapshotVault(fixture.root);
+
+  expect(state.vaultType).toBe("chronicle");
+  expect(state.isRepository).toBe(true);
+  expect(state.unborn).toBe(true);
+  expect(state.dirty).toBe(true);
+  expect(state.untracked).toBe(true);
+  expect(state.staged).toBe(false);
+  expect(state.authorConfigured).toBe(false);
+  expect(state.remotes).toEqual([{name: "origin", fetchUrl: "https://offline.invalid/openobsidian.git", pushUrl: "https://offline.invalid/openobsidian.git"}]);
+  expect(state.remoteContacted).toBe(false);
+  expect(after.sha256).toBe(before.sha256);
 });
 
 function diffPaths(before: ReturnType<typeof snapshotVault>, after: ReturnType<typeof snapshotVault>): string[] {

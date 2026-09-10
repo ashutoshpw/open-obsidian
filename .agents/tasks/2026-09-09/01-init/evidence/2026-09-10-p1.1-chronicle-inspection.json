@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T08:20:02Z",
+  "checkpoint": "P1.1",
+  "requirements": ["PROD-005"],
+  "fixture_ids": ["fixture:chronicle-no-op"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b26fc2a5a2616270812291c02c237d8fc1ce3bb7aea4df99c00e7a6e9f36823d"
+  },
+  "observations": [
+    {"command": "bun test tests/vault.test.ts", "exit_code": 0, "result": "14 tests and 75 expectations pass, including Standard no-op inspection and Chronicle detection of dirty/unborn state, configured remotes and absent author configuration without remote contact."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "The Chronicle detector, shared IPC summary and renderer summary compile with strict TypeScript checking."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile; vault selection now includes read-only Git state in the shared summary."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the five changed files relative to f06965d75720bff1c5ea64a167646fb33b1f2325d."}
+  ],
+  "implemented": [
+    "inspectVaultGitState identifies Standard and existing Chronicle vaults, branch/head/unborn state, dirty/staged/untracked files, remotes and effective author configuration through read-only Git commands.",
+    "The detector records remoteContacted:false and never runs init, add, commit, fetch, pull or push.",
+    "Electron vault selection exposes the read-only Git summary to the isolated renderer, including a visible Standard/Chronicle and dirty/clean status."
+  ],
+  "limitations": [
+    "Chronicle initialization/adoption, diff/selected-file commit/history/restore and explicit remote pull/push conflict workflows remain P2.3 work.",
+    "The local test uses an offline.invalid remote and a command seam; no remote network operation is attempted or certified.",
+    "Reference Obsidian round trips and platform-specific Git filesystem behavior remain pending."
+  ]
+}

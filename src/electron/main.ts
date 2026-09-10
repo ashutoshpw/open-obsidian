@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {existsSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
+import {inspectVaultGitState} from "../core/chronicle.js";
 import {VaultStore} from "../core/vault.js";
 import {CHANNELS, validateVaultWriteRequest, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
 
@@ -58,7 +59,25 @@ async function selectVault(): Promise<VaultSummary | null> {
   if (!existsSync(root)) throw new Error("Selected vault directory is no longer available");
   activeVault = new VaultStore(root, vaultAppData(root));
   const scan = activeVault.scan();
-  return {root: activeVault.root, fileCount: scan.after.entries.length, unchanged: scan.unchanged, sha256: scan.after.sha256};
+  const git = inspectVaultGitState(activeVault.root);
+  return {
+    root: activeVault.root,
+    fileCount: scan.after.entries.length,
+    unchanged: scan.unchanged,
+    sha256: scan.after.sha256,
+    git: {
+      vaultType: git.vaultType,
+      branch: git.branch,
+      head: git.head,
+      unborn: git.unborn,
+      dirty: git.dirty,
+      staged: git.staged,
+      untracked: git.untracked,
+      remoteCount: git.remotes.length,
+      authorConfigured: git.authorConfigured,
+      remoteContacted: git.remoteContacted,
+    },
+  };
 }
 
 function readFile(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): object {

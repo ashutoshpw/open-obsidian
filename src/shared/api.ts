@@ -4,11 +4,25 @@ export const CHANNELS = {
   writeFile: "vault:write",
 } as const;
 
+export type VaultGitSummary = {
+  vaultType: "standard" | "chronicle";
+  branch: string | null;
+  head: string | null;
+  unborn: boolean;
+  dirty: boolean;
+  staged: boolean;
+  untracked: boolean;
+  remoteCount: number;
+  authorConfigured: boolean;
+  remoteContacted: false;
+};
+
 export type VaultSummary = {
   root: string;
   fileCount: number;
   unchanged: boolean;
   sha256: string;
+  git: VaultGitSummary;
 };
 
 export type VaultReadResponse = {
