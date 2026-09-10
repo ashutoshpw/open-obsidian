@@ -20,11 +20,11 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "fc062ea3339950155d11eae1303ea76537d801b1",
+  "last_reconciled_head": "c39a00c5f1d4f58da0c92bf8e34be2acdfc51a76",
   "updated_at": "2026-09-10T08:07:59Z",
   "status": "active",
   "current_checkpoint": "P0.2",
-  "next_action": "Complete remaining P0.2 rows: add primary reference hashes or immutable versions and finish distribution source/notice audit before freezing P0.2; continue the P1.1 file-safety spike in parallel.",
+  "next_action": "Complete the packaged Electron/Chromium/Node and final transitive notice audit when a platform artifact is available; continue P1.1 cross-platform/reference round trips and P1.2/P1.3 runtime feasibility in parallel.",
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",

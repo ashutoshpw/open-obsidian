@@ -200,7 +200,7 @@
     {
       "id": "GATE-001", "parent_id": null,
       "source": {"path": ".agents/tasks/2026-09-09/01-init/plan.md", "heading": "Non-negotiable release gates", "clause": "Opening and indexing a vault causes no unintended writes and edited files survive reopening in reference Obsidian."},
-      "checkpoint": "P1.1", "owner": "vault-filesystem", "mandatory": true, "acceptance_criteria": "No-op byte comparison and reference round-trip fixtures pass across the supported desktop matrix.", "fixture_ids": ["fixture:no-op-fidelity", "fixture:reference-roundtrip"], "reference_versions": [{"kind": "plan", "version": "v0.4", "sha256": "0ea085aa7b9b14a279e7a51ec1a476b2ca8e3034d6a2947ca40f4e2d98cc5942"}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [], "tested_source_tree": null, "blocker": "P1.1 not started.", "gate_class": "implementation", "decision_id": "D02"
+      "checkpoint": "P1.1", "owner": "vault-filesystem", "mandatory": true, "acceptance_criteria": "No-op byte comparison and reference round-trip fixtures pass across the supported desktop matrix.", "fixture_ids": ["fixture:no-op-fidelity", "fixture:reference-roundtrip"], "reference_versions": [{"kind": "plan", "version": "v0.4", "sha256": "0ea085aa7b9b14a279e7a51ec1a476b2ca8e3034d6a2947ca40f4e2d98cc5942"}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [], "tested_source_tree": null, "blocker": "Local no-op evidence exists; cross-platform and reference-application reopen round trips remain pending.", "gate_class": "implementation", "decision_id": "D02"
     },
     {
       "id": "GATE-002", "parent_id": null,

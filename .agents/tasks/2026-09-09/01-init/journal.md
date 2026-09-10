@@ -99,3 +99,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Decision: mark `BASE-005` passing and `D12`/`RISK-009` implemented with explicit blockers. Packaged Electron/Chromium/Node notices and final transitive attribution remain release gates because the pinned Electron binary was unavailable locally.
 - Reconciled: committed as `fc062ea3339950155d11eae1303ea76537d801b1` with marker `[openobsidian P0.2] Add provenance audits`, pushed `main`, and verified `origin/main` at the same SHA.
 - Next operation: complete the packaged-artifact notice audit when available, while continuing P1.1 cross-platform/reference round trips and P1.2/P1.3 runtime feasibility; the full product implementation remains in progress.
+
+## 2026-09-10T08:14:21Z — P1.1 vault safety increment pushed
+
+- Completed: hardened VaultStore path resolution against intermediate symlinks, dot aliases, non-directory parents and Windows-reserved names; added a pre-temp-write fault stage for disk-full simulation and permission-loss coverage.
+- Completed: added regression coverage for delete-versus-edit, rename-versus-edit, case-only renames, Unicode bytes and the complete portable safety-failure matrix.
+- Validation: `bun run quality` passes with 40 tests and 163 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 88.8/A; strict Fallow reports no issues in the six-file increment.
+- Reconciled: marked `SYNC-004` implemented with explicit real-filesystem/cloud/reference limitations, committed as `c39a00c5f1d4f58da0c92bf8e34be2acdfc51a76`, pushed `main`, and verified `origin/main` at the same SHA.
+- Next operation: run cross-platform and reference-application round trips, complete Standard/Chronicle read-only Git detection and continue P1.2/P1.3 runtime feasibility before changing the release status.
