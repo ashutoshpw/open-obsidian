@@ -276,3 +276,14 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: C02, C02.1 and ARCH-002 now point to `2026-09-10-p2.2-shared-preview-contract.json`; cross-platform, reference and visible accessibility checks remain pending.
 - Tested source tree: `7216e991a452a354489034f4cbadb5931c353d428d968af3631418f8d9314d76` across 133 included paths.
 - Next operation: push and reconcile this increment, then continue remaining P2.2 named UX and P1/P3 compatibility work.
+
+## 2026-09-10T16:57:21Z — named UX surface inventory increment
+
+- Completed: committed and pushed `4a0ec66492847986b432a5ae7e96f1186bfcc84e` with marker `[openobsidian P2.2] Complete UX surface inventory`.
+- Completed: added searchable settings, a visible grounded-source inspector, and explicit non-operational handoff states for extension trust, model/download management, account/billing and safe mode.
+- Completed: added `fixtures/ux-surfaces.json` and `bun run validate:surfaces`; `bun run check:fast` now checks the inventory as a routine gate.
+- Validation: local `bun run check:fast` passed 99 tests with 572 expectations; `bun run quality` passed; Knip and strict changed-file Fallow passed.
+- Validation: quality run `34505117641` and desktop-build run `34505117549` passed on macOS, Windows and Ubuntu for `4a0ec66492847986b432a5ae7e96f1186bfcc84e`.
+- Reconciled: D06, UX-003 and A02.1 point to `2026-09-10-p2.2-ux-surfaces.json`; the named inventory reports 10 implemented and 4 external-pending surfaces.
+- Tested source tree: `56bb8e8e7908ff3fac8fb76acee9e5f24ee836f44235373a52b59f58f991e34f` across 136 included paths.
+- Limitation: screen-reader/input/IME, reference Obsidian, visible cross-platform interaction, extension/runtime and managed-service certification remain pending.

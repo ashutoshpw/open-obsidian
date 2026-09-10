@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T16:57:21Z",
+  "checkpoints": ["P2.2"],
+  "requirements": ["D06", "UX-003", "A02.1"],
+  "fixture_ids": ["fixture:ux-surface-inventory", "fixture:a02-source-inspector", "fixture:ux-workspace"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "4a0ec66492847986b432a5ae7e96f1186bfcc84e",
+    "tested_source_tree": "56bb8e8e7908ff3fac8fb76acee9e5f24ee836f44235373a52b59f58f991e34f"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes: state, contracts, architecture, UX surface inventory, accessibility, layout, typecheck, 99 tests with 572 expectations, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes: 99 tests with 572 expectations, contracts/architecture/distribution/accessibility/layout/typecheck/quality-program/compile/Knip/Fallow all pass; state remains honest at 1/19 checkpoints and 196 rows."},
+    {"command": "bun run validate:surfaces", "exit_code": 0, "result": "The named UX fixture maps 10 implemented surfaces and 4 explicit external-pending handoffs to renderer markers."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed UX surface, source inspector, settings-search or validation-script increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
+    {"command": "OpenObsidian quality / 34505117641", "exit_code": 0, "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for commit 4a0ec66492847986b432a5ae7e96f1186bfcc84e."},
+    {"command": "OpenObsidian desktop build / 34505117549", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime notice audits passed."}
+  ],
+  "implemented": [
+    "Added a searchable settings surface that filters editor, provider, privacy, extension, model, account and safe-mode sections without changing persisted settings.",
+    "Added a visible source inspector for grounded citations with safe text rendering, path, heading, cited lines, source revision and an explicit no-model-inference label before opening the source.",
+    "Added honest external-pending handoff states for extension trust/enablement, model/download management, account/billing and safe mode, with owner/prerequisite text and non-operational review buttons.",
+    "Added fixtures/ux-surfaces.json and bun run validate:surfaces; the short Bun check now runs this contract before routine UI validation."
+  ],
+  "limitations": [
+    "Reference Obsidian differential/reopen behavior, screen-reader/input/IME validation and human visible focus review remain pending.",
+    "External-pending handoff surfaces intentionally do not claim extension runtime, local model download, managed billing or packaged safe-mode certification."
+  ]
+}
