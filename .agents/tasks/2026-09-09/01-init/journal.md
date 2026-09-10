@@ -241,3 +241,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: the visible fixture smoke test confirmed both sidebar toggles hide and restore their panes, `bun run validate:layout` passes 22 structural checks, and mobile CSS keeps the titlebar controls fluid below 760px.
 - Validation: `bun run quality` passes 93 tests with 557 expectations; Knip is clean, strict changed-file Fallow reports no issues, and the tested source tree is `8717c571...` across 128 included paths.
 - Limitation: this is an initial structural/geometric 90-percent baseline, not a pixel-diff or full Obsidian compatibility certification; theme/snippet, plugin view, cross-platform, screen-reader, input and reference-vault round-trip checks remain pending.
+
+## 2026-09-10T15:07:23Z — P2.2/P5.2 shell and shared UI contract pushed
+
+- Completed: committed `7056ec471cdd08dc54767f9f9eeec60335e1cf4f` with marker `[openobsidian P2.2/P5.2] Align shell and shared UI contract` and pushed `main`; local `HEAD` and `origin/main` match.
+- Validation: quality workflow `34493366846` passed on macOS, Windows and Ubuntu; desktop-build workflow `34493366856` passed packaging, release-manifest hashes and artifact uploads on all three runners.
+- Validation: the workflows retain unsigned-preview labeling and the existing Node.js 20 deprecation annotation; signing, staging, publication and updater installation remain external release gates.
