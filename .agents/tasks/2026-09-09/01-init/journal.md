@@ -90,3 +90,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: desktop-build run `34451550421` for the same head passed on Ubuntu, macOS and Windows.
 - Finding retained: GitHub Actions emits a non-blocking Node.js 20 deprecation annotation for `actions/checkout@v4`; no job failed from it.
 - Next operation: keep the weekly quality schedule and per-change Knip/Fallow checks in place while proceeding to the next dependency-ready implementation slice.
+
+## 2026-09-10T08:07:59Z — P0.2 provenance audit increment pushed
+
+- Completed: recorded eight primary compatibility and architecture references with retrieval metadata, immutable versions or source commits and SHA-256 hashes; the retrying verifier matched all eight sources.
+- Completed: added the direct distribution audit for the six declared packages plus the external `bunx fallow` tool. It verifies project/package licenses, local license files, HTTPS sources and notice entries; `@types/bun` is now included in the notice inventory.
+- Validation: `bun run quality` passes with 35 tests and 138 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 88.8/A; strict Fallow reports no issues in the 13-file increment.
+- Decision: mark `BASE-005` passing and `D12`/`RISK-009` implemented with explicit blockers. Packaged Electron/Chromium/Node notices and final transitive attribution remain release gates because the pinned Electron binary was unavailable locally.
+- Reconciled: committed as `fc062ea3339950155d11eae1303ea76537d801b1` with marker `[openobsidian P0.2] Add provenance audits`, pushed `main`, and verified `origin/main` at the same SHA.
+- Next operation: complete the packaged-artifact notice audit when available, while continuing P1.1 cross-platform/reference round trips and P1.2/P1.3 runtime feasibility; the full product implementation remains in progress.
