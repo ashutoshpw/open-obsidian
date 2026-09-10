@@ -28,6 +28,7 @@
     "validate:surfaces": "bun scripts/validate-ux-surfaces.ts",
     "verify:plugin-selection": "bun scripts/verify-plugin-selection.ts",
     "verify:compatibility-pins": "bun scripts/verify-compatibility-pins.ts",
+    "verify:version-baseline": "bun scripts/verify-version-baseline.ts",
     "verify:primary-references": "bun scripts/verify-primary-references.ts",
     "verify:distribution": "bun scripts/verify-distribution.ts",
     "audit:dependencies": "bun scripts/audit-dependency-attribution.ts",
@@ -44,7 +45,7 @@
     "audit:fallow:changed": "bunx fallow audit --root . --base HEAD --format compact --brief",
     "audit:fallow:strict": "bunx fallow audit --root . --base HEAD --format compact",
     "audit:source-tree": "bun scripts/source-tree-digest.ts",
-    "quality": "bun run validate:state && bun run final:audit && bun run release:update-check && bun run validate:contracts && bun run validate:architecture && bun run verify:distribution && bun run check:accessibility && bun run validate:layout && bun run typecheck && bun test && bun run quality:program && bun run compile && bun run knip && bun run audit:fallow"
+    "quality": "bun run validate:state && bun run final:audit && bun run release:update-check && bun run validate:contracts && bun run validate:architecture && bun run verify:version-baseline && bun run verify:distribution && bun run check:accessibility && bun run validate:layout && bun run typecheck && bun test && bun run quality:program && bun run compile && bun run knip && bun run audit:fallow"
   },
   "build": {
     "appId": "ai.openobsidian.desktop",

@@ -18,6 +18,8 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
+      - name: Verify version baseline policy
+        run: bun run verify:version-baseline
       - name: Verify recorded release hashes
         run: bun run verify:plugin-selection && bun run verify:compatibility-pins
       - name: Verify recorded primary references

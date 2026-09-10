@@ -16,7 +16,9 @@ bun run audit:packaged -- --artifacts-dir out  # packaged artifact notice audit
 bun run audit:dependencies -- --artifacts-dir out  # transitive dependency/package-scope audit
 ```
 
-`check:fast` runs state, contract, architecture, named-UX-surface, accessibility, layout, typecheck, tests, Knip and the changed-file Fallow audit. It intentionally skips Electron compilation, the quality scorecard, packaging and the full release audit. Run `bun run quality` before a phased checkpoint commit or when changing build/release code.
+`check:fast` runs state, contract, architecture, named-UX-surface, version-baseline, accessibility, layout, typecheck, tests, Knip and the changed-file Fallow audit. It intentionally skips Electron compilation, the quality scorecard, packaging and the full release audit. Run `bun run quality` before a phased checkpoint commit or when changing build/release code.
+
+`bun run verify:version-baseline` checks that the public Obsidian 1.13.7 baseline and separate 1.14.1 early-access track agree across the launch contract, baseline ledger, evaluation protocol and pinned plugin manifests. It records minimum-version interpretation without treating that declaration as API or runtime proof; pending runtime certification stays visible.
 
 The recurring audit commands are also available separately:
 

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "fixture_id": "fixture:version-baseline",
+  "recorded_at": "2026-09-11",
+  "api_reference_id": "obsidian-api",
+  "stable_baseline": {
+    "product": "Obsidian Desktop",
+    "version": "1.13.7",
+    "release_status": "public"
+  },
+  "early_access_track": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.1",
+    "release_status": "early_access"
+  },
+  "policy": {
+    "minimum_app_version_is_not_api_proof": true,
+    "plugin_fixture_may_advance_stable": false,
+    "stable_advance_requires": [
+      "immutable primary reference",
+      "API declaration review",
+      "unchanged artifact runtime matrix"
+    ],
+    "runtime_owner": "compatibility-runtime",
+    "runtime_next_step": "P1.2 unchanged released artifact prototype"
+  },
+  "records": [
+    {"artifact_id":"PC01","minimum_app_version":"1.8.7","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC02","minimum_app_version":"1.13.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC03","minimum_app_version":"0.13.11","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC04","minimum_app_version":"1.8.7","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC05","minimum_app_version":"1.0.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC06","minimum_app_version":null,"minimum_app_version_source":"manifest-not-declared","required_track":"undetermined","api_verification":{"status":"not-established","evidence":"The released manifest does not declare a minimum app version; no API compatibility is inferred."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC07","minimum_app_version":"0.9.11","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC08","minimum_app_version":"0.11.5","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC09","minimum_app_version":"1.0.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC10","minimum_app_version":"0.13.21","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC11","minimum_app_version":"0.9.12","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC12","minimum_app_version":"1.13.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC13","minimum_app_version":"1.13.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC14","minimum_app_version":"0.14.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC15","minimum_app_version":"1.13.3","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC16","minimum_app_version":"1.11.4","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC17","minimum_app_version":"1.13.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC18","minimum_app_version":"1.13.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC19","minimum_app_version":"1.12.2","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC20","minimum_app_version":"1.11.7","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC21","minimum_app_version":"1.13.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC22","minimum_app_version":"1.8.7","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC23","minimum_app_version":"0.16.3","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC24","minimum_app_version":"1.12.7","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC25","minimum_app_version":"1.12.0","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC-DEP-MINIMAL","minimum_app_version":"1.14.0","minimum_app_version_source":"release-manifest","required_track":"early-access","api_verification":{"status":"not-established","evidence":"The minimum app version requires the separate early-access comparison track; it is not API proof."},"runtime_verification":{"status":"pending","evidence":null}},
+    {"artifact_id":"PC-DEP-TEXT-EXTRACTOR","minimum_app_version":"1.4.16","minimum_app_version_source":"release-manifest","required_track":"stable","api_verification":{"status":"not-established","evidence":"Manifest minimum app version is recorded but is not API proof."},"runtime_verification":{"status":"pending","evidence":null}}
+  ]
+}

@@ -41,6 +41,8 @@ jobs:
         run: bun run validate:contracts
       - name: Validate architecture manifest
         run: bun run validate:architecture
+      - name: Verify version baseline policy
+        run: bun run verify:version-baseline
       - name: Verify distribution metadata
         run: bun run verify:distribution
       - name: Verify update/rollback manifest contract
