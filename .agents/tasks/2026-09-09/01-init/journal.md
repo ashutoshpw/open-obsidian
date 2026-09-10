@@ -76,3 +76,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: updated the status CLI tests to use `cmd.exe` resolution on Windows and direct Bun execution on POSIX; local status tests, typecheck, Knip and strict Fallow pass.
 - Completed: committed the fix as `934161c6be2f7f9068ecfa0d582f14817ca2f606` with marker `[openobsidian P0.2] Resolve Windows CLI test launch`, pushed `main`, and reconciled durable state to that head.
 - Next operation: verify the latest quality and desktop-build runs; this is the final expected Windows portability adjustment for the current gate.
+
+## 2026-09-10T07:44:51Z — status validator test seam reconciled and pushed
+
+- Completed: replaced subprocess-based status tests with direct calls to the exported `runStatus` seam; CLI execution remains guarded by `import.meta.main`. This removes the Windows runner's inability to spawn Bun or `cmd.exe` from the test process.
+- Validation: local `bun run quality` passes with 33 tests and 129 expectations; Knip and Fallow remain clean for the changed files.
+- Completed: committed the seam as `40d3b34e25bed22743c63f4b98f14d46358ef624` with marker `[openobsidian P0.2] Make status validation testable`, pushed `main`, and reconciled durable state to that head.
+- Next operation: inspect the latest Actions quality/build runs and close out the CI portability loop.
