@@ -63,3 +63,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: fixed the quality workflow to fetch full Git history for checkpoint-marker validation, enforce LF checkout semantics through `.gitattributes`, and validate the architecture manifest in CI.
 - Completed: committed the fix as `8328eee3a7e4f2075105cead10ec77b04f9d0888` with marker `[openobsidian P0.2] Stabilize cross-platform quality checks` and pushed `main` to `origin/main`.
 - Next operation: poll the new multi-OS quality run and desktop build; the prior quality failure is retained as a CI plumbing finding, not treated as a product-quality pass.
+
+## 2026-09-10T07:39:26Z — Windows quality harness fix reconciled and pushed
+
+- Completed: fixed the Windows-only status tests to spawn `process.execPath` instead of assuming the literal `bun` command is resolvable from `Bun.spawnSync`.
+- Validation: the focused Windows-sensitive status tests pass locally; typecheck, Knip and strict Fallow also pass. The preceding multi-OS run passed Ubuntu/macOS quality, all desktop builds, and failed only the Windows status harness before this fix.
+- Completed: committed the fix as `e9b47ce4f8d0ba51fa54d5f94c9eb4e94ce97748` with marker `[openobsidian P0.2] Fix Windows Bun test spawning`, pushed `main`, and reconciled durable state to that head.
+- Next operation: verify the new multi-OS quality run; if green, retain the original failed run as historical evidence of the portability fix.
