@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -36,6 +38,8 @@ jobs:
         run: bun run validate:state
       - name: Validate frozen contracts
         run: bun run validate:contracts
+      - name: Validate architecture manifest
+        run: bun run validate:architecture
       - name: Type-check source
         run: bun run typecheck
       - name: Run tests
