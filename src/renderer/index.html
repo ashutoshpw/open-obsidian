@@ -281,6 +281,9 @@
       .sidebar-tab::before { content: attr(data-icon); font-size: 15px; line-height: 1; }
       .sidebar-tab:hover, .sidebar-tab:focus-visible { background: #ffffff08; color: #e6e6e6; }
       .sidebar-tab[aria-selected="true"] { border-bottom-color: var(--accent); color: #d4d4d4; }
+      .bookmarks-empty { display: none; margin: 8px 10px; color: #858585; font-size: 11px; line-height: 1.5; }
+      .sidebar[data-active-pane="bookmarks"] #file-list { display: none; }
+      .sidebar[data-active-pane="bookmarks"] .bookmarks-empty { display: block; }
       .search-wrap { flex: 0 0 auto; gap: 0; padding: 8px 10px 6px; }
       .search-wrap label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
       #vault-search { height: 30px; padding: 6px 9px; border-color: #ffffff16; border-radius: 5px; background: #1a1a1a; color: #d9d9d9; font-size: 12px; }
@@ -400,19 +403,20 @@
         <span class="ribbon-spacer"></span>
         <button class="ribbon-button" data-action-target="show-history" data-icon="◷" aria-label="History" title="History" type="button">History</button>
       </aside>
-      <aside class="sidebar" aria-label="Vault navigation">
+      <aside class="sidebar" data-active-pane="files" aria-label="Vault navigation">
         <div class="brand">
           <div class="brand-heading"><span class="brand-symbol" aria-hidden="true">O</span><div><h1>OpenObsidian</h1><p>Local knowledge workspace</p></div></div>
           <button class="primary-action" id="select-vault" data-message-key="openVault" aria-label="Open vault" title="Open vault" type="button">Open vault</button>
         </div>
         <nav class="sidebar-tabs" aria-label="Vault panes" role="tablist">
           <button class="sidebar-tab" id="sidebar-tab-files" data-sidebar-pane="files" role="tab" aria-controls="file-list" aria-selected="true" title="Files" type="button">Files</button>
-          <button class="sidebar-tab" id="sidebar-tab-search" data-sidebar-pane="search" role="tab" aria-controls="vault-search" aria-selected="false" title="Search" type="button">Search</button>
-          <button class="sidebar-tab" id="sidebar-tab-bookmarks" data-sidebar-pane="bookmarks" role="tab" aria-controls="file-list" aria-selected="false" title="Bookmarks" type="button">Bookmarks</button>
+          <button class="sidebar-tab" id="sidebar-tab-search" data-sidebar-pane="search" role="tab" aria-controls="file-list" aria-selected="false" title="Search" type="button">Search</button>
+          <button class="sidebar-tab" id="sidebar-tab-bookmarks" data-sidebar-pane="bookmarks" role="tab" aria-controls="bookmarks-empty" aria-selected="false" title="Bookmarks" type="button">Bookmarks</button>
         </nav>
         <div class="search-wrap"><label for="vault-search">Find in vault</label><input id="vault-search" type="search" placeholder="Search notes…" autocomplete="off" /></div>
         <div id="vault-mode" aria-label="Vault mode">No vault</div>
         <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
+        <p class="bookmarks-empty" id="bookmarks-empty" aria-label="Bookmarks">Bookmarks are pending; no bookmark data is created or inferred.</p>
         <footer class="sidebar-footer" aria-label="Vault identity"><strong id="vault-name">No vault open</strong><span id="vault-branch">Local workspace</span></footer>
       </aside>
       <main class="workspace">

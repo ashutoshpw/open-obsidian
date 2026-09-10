@@ -15,6 +15,7 @@ const vaultMode = document.querySelector<HTMLElement>("#vault-mode");
 const vaultName = document.querySelector<HTMLElement>("#vault-name");
 const vaultBranch = document.querySelector<HTMLElement>("#vault-branch");
 const appShell = document.querySelector<HTMLElement>(".app-shell");
+const sidebar = document.querySelector<HTMLElement>(".sidebar");
 const toggleLeftSidebarButton = document.querySelector<HTMLButtonElement>("#toggle-left-sidebar");
 const toggleRightSidebarButton = document.querySelector<HTMLButtonElement>("[data-ui-action=\"toggle-right-sidebar\"]");
 const sidebarPaneButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-sidebar-pane]")];
@@ -346,6 +347,7 @@ const vaultPaneActions: Record<VaultPaneId, () => void> = {
 
 function setVaultPane(id: VaultPaneId): void {
   activeVaultPane = id;
+  sidebar?.setAttribute("data-active-pane", id);
   sidebarPaneButtons.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.sidebarPane === id)));
   vaultPaneActions[id]();
 }
