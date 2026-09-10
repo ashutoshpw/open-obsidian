@@ -41,6 +41,7 @@
     "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:changed": "bunx fallow audit --root . --base HEAD --format compact --brief",
     "audit:fallow:strict": "bunx fallow audit --root . --base HEAD --format compact",
+    "audit:source-tree": "bun scripts/source-tree-digest.ts",
     "quality": "bun run validate:state && bun run final:audit && bun run release:update-check && bun run validate:contracts && bun run validate:architecture && bun run verify:distribution && bun run check:accessibility && bun run validate:layout && bun run typecheck && bun test && bun run quality:program && bun run compile && bun run knip && bun run audit:fallow"
   },
   "build": {
