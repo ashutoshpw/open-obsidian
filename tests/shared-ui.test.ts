@@ -8,7 +8,7 @@ test("shared workspace UI contract exposes reusable blocks and semantic actions"
   const visibility: WorkspaceVisibility = {...DEFAULT_WORKSPACE_VISIBILITY, leftSidebar: false};
   const sharedAction: SharedWorkspaceAction = {actionId: "toggle-right-sidebar", enabled: true};
   const action: WorkspaceAction = workspaceAction(sharedAction.actionId);
-  expect(OPEN_OBSIDIAN_THEME.metrics).toMatchObject({titlebarHeight: 40, ribbonWidth: 44, sidebarWidth: 300, iconSize: 18, tabStripHeight: 34});
+  expect(OPEN_OBSIDIAN_THEME.metrics).toMatchObject({titlebarHeight: 40, ribbonWidth: 44, sidebarWidth: 300, iconSize: 20, tabStripHeight: 34});
   expect(new Set(WORKSPACE_BLOCKS.map((block) => block.id)).size).toBe(WORKSPACE_BLOCKS.length);
   expect(firstBlockId).toBe("titlebar");
   expect(workspaceBlock(firstBlockId)).toEqual(firstBlock);
