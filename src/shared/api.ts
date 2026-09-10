@@ -197,7 +197,7 @@ export type CanvasCreateNoteResponse = {canvas: CanvasView; created: VaultReadRe
 
 export type BaseIssueView = {kind: "unsupported-formula" | "invalid-filter"; message: string; expression?: string};
 export type BaseScalar = string | number | boolean | null;
-export type BaseValue = BaseScalar | BaseValue[];
+export type BaseValue = BaseScalar | BaseValue[] | {[key: string]: BaseValue};
 export type BaseRowView = {path: string; values: Record<string, BaseValue>};
 export type BaseEvaluationView = {name?: string; type: "table" | "list" | "cards"; rows: BaseRowView[]; groups: Record<string, BaseRowView[]>; issues: BaseIssueView[]};
 export type BaseResponse = {relativePath: string; revision: string; views: BaseEvaluationView[]};

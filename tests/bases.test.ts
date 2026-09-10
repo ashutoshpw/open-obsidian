@@ -15,7 +15,7 @@ test("Bases preserves unknown definitions and evaluates a safe table view", () =
   expect(fixture.bases.preserve).toContain("unknown-fields");
   expect(Object.values(fixture.invariants).every(Boolean)).toBe(true);
   const result = evaluateBase(document, "Open", [
-    {path: "a.md", properties: {status: "open", priority: 1, owner: "A"}},
+    {path: "a.md", properties: {status: "open", priority: 1, owner: "A", metadata: {labels: ["one"]}}},
     {path: "b.md", properties: {status: "open", priority: 2, owner: "B"}},
     {path: "c.md", properties: {status: "done", priority: 3, owner: "A"}},
   ]);
@@ -23,6 +23,7 @@ test("Bases preserves unknown definitions and evaluates a safe table view", () =
   expect(result.rows.map((row) => row.path)).toEqual(["b.md", "a.md"]);
   expect(result.rows[0]?.values.pathLabel).toBe("b.md");
   expect(result.groups.A).toHaveLength(1);
+  expect(result.rows.find((row) => row.path === "a.md")?.properties.metadata).toEqual({labels: ["one"]});
   expect(parseBase(encodeBase(document)).unknownRoot).toEqual({keep: true});
   expect((parseBase(encodeBase(document)).views[0] as Record<string, unknown>).unknownView).toEqual({keep: true});
   expect(parseBase(encodeBase(document)).views.map((view) => view.type)).toEqual(["table", "list", "cards"]);
@@ -34,4 +35,10 @@ test("unsupported Bases formulas are visible and never evaluated", () => {
 
   expect(result.rows[0]?.values.bad).toBeUndefined();
   expect(result.issues).toEqual([{kind: "unsupported-formula", message: "Unsupported Bases formula: date(today)", expression: "date(today)"}]);
+});
+
+test("Bases preserves nested values in supported filter definitions", () => {
+  const document = parseBase(new TextEncoder().encode(JSON.stringify({version: 1, views: [{type: "table", filter: {kind: "comparison", field: "metadata", operator: "equals", value: {labels: ["one"]}}}]})));
+
+  expect((document.views[0]?.filter as {value: unknown}).value).toEqual({labels: ["one"]});
 });

@@ -34,6 +34,8 @@ The named UI states are recorded in `fixtures/ux-surfaces.json`. Implemented sur
 
 Keep platform-specific code in `src/electron` and `src/renderer`. Keep reusable contracts and pure transforms in `src/shared/ui` (and other explicitly shared modules), and add tests that prevent native or DOM dependencies from crossing that boundary.
 
+The Markdown core keeps raw property spans authoritative while exposing a bounded, read-only YAML mapping for nested arrays and maps. Unsupported YAML constructs are reported to callers and are never serialized back over the vault source.
+
 ## Packaging
 
 `bun run package:dir` creates an unsigned unpacked preview under `out`. The desktop-build workflow runs the packaged runtime notice audit on Ubuntu, macOS and Windows. Signing, staging, updater installation and production publication remain explicit release handoffs.

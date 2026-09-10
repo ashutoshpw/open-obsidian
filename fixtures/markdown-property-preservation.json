@@ -4,6 +4,7 @@
   "invariants": {
     "unrepresented_keys_survive": true,
     "nested_values_survive": true,
+    "nested_values_parse_for_readers": true,
     "comments_survive": true,
     "property_order_survives": true,
     "line_endings_survive": true

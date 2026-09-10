@@ -1,8 +1,11 @@
+import {parseYamlMapping, type YamlValue} from "./yaml.js";
+
 export type MarkdownLineEnding = "\r\n" | "\n" | "\r" | "mixed" | "none";
 
 export type MarkdownProperty = {
   key: string;
   rawValue: string;
+  value: YamlValue | undefined;
   valueStart: number;
   valueEnd: number;
 };
@@ -12,6 +15,7 @@ export type MarkdownDocument = {
   hasBom: boolean;
   lineEnding: MarkdownLineEnding;
   properties: MarkdownProperty[];
+  yamlIssues: string[];
 };
 
 export type MarkdownHeading = {
@@ -43,10 +47,11 @@ function frontmatterBounds(text: string): FrontmatterBounds | null {
   return {contentStart: opening[0].length, contentEnd: opening[0].length + closing.index};
 }
 
-function propertiesIn(text: string, bounds: FrontmatterBounds | null): MarkdownProperty[] {
-  if (!bounds) return [];
+function propertiesIn(text: string, bounds: FrontmatterBounds | null): {properties: MarkdownProperty[]; yamlIssues: string[]} {
+  if (!bounds) return {properties: [], yamlIssues: []};
   const properties: MarkdownProperty[] = [];
   const source = text.slice(bounds.contentStart, bounds.contentEnd);
+  const parsed = parseYamlMapping(source);
   const linePattern = /[^\r\n]*(?:\r\n|\n|\r|$)/g;
   let offset = 0;
   for (const match of source.matchAll(linePattern)) {
@@ -55,17 +60,18 @@ function propertiesIn(text: string, bounds: FrontmatterBounds | null): MarkdownP
     if (property) {
       const prefix = `${property[1]}${property[2]}:${property[3]}`;
       const valueStart = bounds.contentStart + offset + prefix.length;
-      properties.push({key: property[1], rawValue: property[4], valueStart, valueEnd: valueStart + property[4].length});
+      properties.push({key: property[1], rawValue: property[4], value: parsed.value[property[1]], valueStart, valueEnd: valueStart + property[4].length});
     }
     offset += line.length;
     if (line.length === 0) break;
   }
-  return properties;
+  return {properties, yamlIssues: parsed.issues};
 }
 
 export function parseMarkdown(bytes: Uint8Array): MarkdownDocument {
   const decoded = decodeUtf8(bytes);
-  return {text: decoded.text, hasBom: decoded.hasBom, lineEnding: detectLineEnding(decoded.text), properties: propertiesIn(decoded.text, frontmatterBounds(decoded.text))};
+  const metadata = propertiesIn(decoded.text, frontmatterBounds(decoded.text));
+  return {text: decoded.text, hasBom: decoded.hasBom, lineEnding: detectLineEnding(decoded.text), properties: metadata.properties, yamlIssues: metadata.yamlIssues};
 }
 
 export function extractMarkdownHeadings(text: string): MarkdownHeading[] {

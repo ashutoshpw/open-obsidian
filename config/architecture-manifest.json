@@ -36,7 +36,7 @@
   ],
   "domain_interfaces": [
     {"name": "VaultStore", "path": "src/core/vault.ts", "purpose": "byte snapshots, revisions, journaled writes and recovery"},
-    {"name": "Markdown source contract", "path": "src/core/markdown.ts", "purpose": "BOM, line-ending and source-span preservation"},
+    {"name": "Markdown source contract", "path": "src/core/markdown.ts", "purpose": "BOM, line-ending, source-span and bounded nested-YAML read preservation"},
     {"name": "Link contract", "path": "src/core/links.ts", "purpose": "link extraction, resolution and scoped rename updates"},
     {"name": "Canvas contract", "path": "src/core/canvas.ts", "purpose": "unknown-field-preserving JSON Canvas edits"},
     {"name": "Graph contract", "path": "src/core/graph.ts", "purpose": "derived resolved and unresolved link graph"},

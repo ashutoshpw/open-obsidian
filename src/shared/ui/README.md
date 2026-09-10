@@ -5,6 +5,7 @@ This folder is deliberately platform-neutral. It contains no Electron, DOM or Re
 - `design-system.ts` owns the dark Obsidian-compatible color, metric, spacing and radius tokens plus the semantic action catalog.
 - `workspace.ts` describes the reusable workspace blocks and visibility model that a desktop shell or mobile navigation can compose. Use `workspaceBlock(id)` instead of duplicating labels or mobile presentation rules in a host renderer.
 - `markdown-preview.ts` parses safe preview blocks and inline segments into data-only values. Desktop HTML and future native views can render the same blocks without sharing a DOM renderer.
+- Markdown properties keep their raw source spans while the core read path exposes a bounded YAML mapping for nested arrays/maps; unsupported YAML constructs remain source-only and are reported as issues rather than serialized back.
 - `graph.ts` provides a deterministic, platform-neutral spatial layout for force, hierarchical and radial graph views. Hosts can render its point map with SVG on desktop or a native/canvas surface in Expo while retaining the keyboard/list alternative.
 - `index.ts` is the stable import surface for the future design system package.
 

@@ -1,5 +1,5 @@
-export type BaseScalar = string | number | boolean | null;
-export type BaseValue = BaseScalar | BaseValue[];
+import type {BaseValue} from "../shared/api.js";
+
 export type BaseRow = {path: string; properties: Record<string, BaseValue>};
 type BaseComparisonOperator = "equals" | "not-equals" | "contains" | "gt" | "gte" | "lt" | "lte";
 const comparisonOperators = new Set<BaseComparisonOperator>(["equals", "not-equals", "contains", "gt", "gte", "lt", "lte"]);
@@ -32,7 +32,8 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function requireValue(value: unknown): BaseValue {
   if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
   if (Array.isArray(value)) return value.map(requireValue);
-  throw new Error("Bases values must be JSON scalars or arrays");
+  if (isObject(value)) return Object.fromEntries(Object.entries(value).map(([key, nested]) => [key, requireValue(nested)]));
+  throw new Error("Bases values must be JSON scalars, arrays or maps");
 }
 
 function compoundFilter(value: Record<string, unknown>): BaseFilter | undefined {

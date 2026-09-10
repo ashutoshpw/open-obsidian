@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, workspaceAction, type WorkspaceActionId} from "../shared/ui/index.js";
@@ -1466,8 +1466,22 @@ function requiredCanvasNotePath(value: string): string | null {
   return null;
 }
 
+function formatBaseScalar(value: BaseScalar): string {
+  return String(value ?? "null");
+}
+
+function formatBaseArray(value: BaseValue[]): string {
+  return `[${value.map(formatBaseValue).join(", ")}]`;
+}
+
+function formatBaseObject(value: {[key: string]: BaseValue}): string {
+  return `{${Object.entries(value).map(([key, nested]) => `${key}: ${formatBaseValue(nested)}`).join(", ")}}`;
+}
+
 function formatBaseValue(value: BaseValue): string {
-  return Array.isArray(value) ? `[${value.map(formatBaseValue).join(", ")}]` : String(value ?? "null");
+  if (Array.isArray(value)) return formatBaseArray(value);
+  if (value !== null && typeof value === "object") return formatBaseObject(value);
+  return formatBaseScalar(value);
 }
 
 function baseViewAt(): BaseEvaluationView | undefined {
