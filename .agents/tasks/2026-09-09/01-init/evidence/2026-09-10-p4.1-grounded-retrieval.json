@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T11:02:09Z",
+  "checkpoint": "P4.1",
+  "requirements": ["D05", "PROD-008", "A01", "A01.1", "A02", "A02.1", "A06", "RISK-006"],
+  "fixture_ids": ["fixture:ai-workspace", "fixture:journey-grounded-answer", "fixture:a01-retrieval", "fixture:a01-exclusions", "fixture:a02-grounding", "fixture:a02-source-inspector", "fixture:a06-context-privacy", "fixture:risk-ai-grounding", "fixture:grounded-local-retrieval"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "5c4b3f1f25e05d438f52c9e95a25d89fa9bb0e8e",
+    "tested_source_tree": "1fa0118252fc52a6f6c9126b323586df97fc6fcdfa5e81778c465a60cf2b344e"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 64 tests with 311 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 89.0/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bunx fallow audit --root . --base fc23c2d --format compact", "exit_code": 0, "result": "No issues in the 11 changed implementation, UI, fixture and test files for this grounded-retrieval increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun test", "exit_code": 0, "result": "64 tests with 311 expectations pass, including scoped retrieval, pre-read exclusions, source revision citations, missing-evidence handling, IPC validation and journey entry-point coverage."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main 84.36 KB, preload 3.71 KB and renderer 74.34 KB bundles compile with retrieval IPC, progress events and the grounded-search workspace panel."}
+  ],
+  "implemented": [
+    "Added a local hybrid retrieval broker that combines exact term scoring with deterministic local feature-vector similarity and supports bounded folder, path, tag and modified-date scope filters.",
+    "Applied default application-data exclusions and user exclusions before reading candidate content, and emitted progress events with indexed, excluded and scoped-out counts.",
+    "Added revision-aware source citations with exact relative path, heading, line range, snippet and source hash, plus a renderer source action that opens and focuses the cited note line.",
+    "Added an explicit local grounded-search UI and source-only answer contract that shows selected scope, provider destination none, source-grounded state, missing evidence and no-model-inference labeling."
+  ],
+  "limitations": [
+    "This slice does not contact a provider or run model inference; the local vector score is a deterministic feature fallback, not a downloaded embedding model.",
+    "Durable incremental index invalidation, provider-neutral model lifecycle, conflicting-claim adjudication, prompt-injection evaluation and cross-vault release scoring remain pending in P4.1/P4.3.",
+    "The Electron binary is unavailable locally, so visible progress/citation automation, screen-reader inspection and cross-platform/reference grounding runs remain external-pending."
+  ]
+}
