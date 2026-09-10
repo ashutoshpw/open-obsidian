@@ -2,6 +2,15 @@
 
 This file is append-only. Entries use UTC timestamps and describe the exact handoff state.
 
+## 2026-09-10T12:30:00Z — P2.2/P2.3 compatibility increment reconciled
+
+- Completed: pushed source commit `de9fd2ea0feeb38fa4794b387ac4b62635a99647` with marker `[openobsidian P2.2] Add compatibility-safe previews and rename plans`.
+- Completed: added fixture-driven Markdown dialect preview, lossless represented-property editing coverage, resolution-aware rename/move plans, attachment-aware Graph grouping and expanded Canvas/Bases round-trip fixtures.
+- Validation: the focused compatibility suite passes 15 tests with 75 expectations; `bun run quality` passes 81 tests with 457 expectations, Electron compilation, Knip and report-only Fallow health 88.0/A; changed-file Fallow audit is clean.
+- Reconciled: marked D03, C02.1, C03.2 and C04.1 implemented with local evidence; kept reference Obsidian, visible Electron, cross-platform, full YAML/embedded Bases and plugin-runtime checks explicitly pending.
+- Tested source tree: `b0fa5d2e8f3ea0f4540bfae50f3cd8a16ae8bdb633563f1d5133f2734e7f4593` across 98 included paths.
+- Next operation: add restart/readback and named-surface test dispositions, then run P5 quality/reliability/privacy suites while preserving external release handoffs.
+
 ## 2026-09-09T17:34:00Z — P0.1 in progress
 
 - Checkpoint: `P0.1`; branch: `main`; baseline HEAD: `4bd4e9b79fa511a051f9a8c798a324a78bf991d6`.

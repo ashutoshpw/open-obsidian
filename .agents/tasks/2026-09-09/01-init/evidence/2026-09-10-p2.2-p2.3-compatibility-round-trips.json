@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T12:30:00Z",
+  "checkpoints": ["P2.2", "P2.3", "P3.1"],
+  "requirements": ["D03", "C02.1", "C03.2", "C04.1", "C05", "C05.1", "C06", "C06.1", "C07", "C07.1"],
+  "fixture_ids": ["fixture:core-surfaces", "fixture:c02-dialects", "fixture:c03-rename-move", "fixture:c04-unknown-preservation", "fixture:c05-graph", "fixture:c06-canvas", "fixture:c07-bases"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "de9fd2ea0feeb38fa4794b387ac4b62635a99647",
+    "tested_source_tree": "b0fa5d2e8f3ea0f4540bfae50f3cd8a16ae8bdb633563f1d5133f2734e7f4593"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/canvas-graph.test.ts tests/bases.test.ts tests/markdown-preview.test.ts tests/markdown.test.ts tests/links.test.ts tests/rename-plan.test.ts", "exit_code": 0, "result": "15 compatibility tests pass with 75 expectations, covering dialect blocks, safe unsupported syntax, nested property preservation, resolution-aware rename plans, attachment-aware graph groups, unknown Canvas fields and all supported Bases view types."},
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, typecheck, 81 tests with 457 expectations, Electron compilation, Knip and report-only Fallow health pass. Fallow health is 88.0/A with only the pre-existing scripts/status.ts collectRow advisory."},
+    {"command": "bunx fallow audit --root . --base a416b16 --format compact", "exit_code": 0, "result": "No issues in the compatibility source increment after the provider-contract baseline."},
+    {"command": "git diff --check", "exit_code": 0, "result": "No whitespace errors before commit."}
+  ],
+  "implemented": [
+    "Markdown live preview now renders headings, tasks, lists, tables, callouts, fenced code and highlights through text-only DOM construction; footnotes, math, diagrams and raw HTML are visibly labeled without execution or source rewriting.",
+    "Represented frontmatter edits replace only the selected scalar span while preserving comments, property order, nested values, unknown keys, BOM and line endings.",
+    "Rename/move planning resolves references before mutation, preserves aliases and subpaths, reports ambiguous or unresolved matches and applies only explicit update actions.",
+    "Graph metadata distinguishes notes, attachments and unresolved targets and derives folder groups; Canvas and Bases fixtures cover source-preserving unknown fields and supported view/node types."
+  ],
+  "limitations": [
+    "The local Electron binary is unavailable, so visible renderer/accessibility interaction and cross-platform runtime checks remain pending.",
+    "Reference Obsidian reopen/differential checks, richer YAML/embedded Bases behavior, spatial graph layout interaction and full link heading/block/transclusion semantics remain pending.",
+    "The source files remain authoritative; no reference application or remote sync was contacted."
+  ]
+}
