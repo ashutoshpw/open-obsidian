@@ -2,8 +2,8 @@ import {expect, test} from "bun:test";
 import {mkdtempSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {historyRecords, planHistoryRetention, type HistoryRecord} from "../src/core/history.js";
-import {reconcileVault, watchVault} from "../src/core/watcher.js";
+import {cleanupHistory, DEFAULT_HISTORY_POLICY, historyCapWarning, historyRecords, planHistoryRetention, type HistoryRecord} from "../src/core/history.js";
+import {createVaultWatcher, reconcileVault, watchVault, watchVaultWithRecovery} from "../src/core/watcher.js";
 import {snapshotVault, VaultStore} from "../src/core/vault.js";
 
 function record(id: string, capturedAt: string, bytes: number, kind: HistoryRecord["kind"] = "recovery"): HistoryRecord {
@@ -23,6 +23,11 @@ test("history retention plans age and byte pruning without deleting protected co
   expect(plan.protected.map((entry) => entry.id)).toEqual(["conflict"]);
   expect(plan.retainedBytes).toBe(24);
   expect(plan.pruneableBytes).toBe(4);
+  expect(DEFAULT_HISTORY_POLICY).toEqual({maxAgeDays: 30, maxBytes: 5 * 1024 * 1024 * 1024});
+  expect(historyCapWarning(plan, {maxAgeDays: 30, maxBytes: 5})).toBe(true);
+  const removed: string[] = [];
+  expect(cleanupHistory(plan, {maxAgeDays: 30, maxBytes: 5}, (path) => removed.push(path))).toMatchObject({removed: ["old"], protected: ["conflict"], warning: true});
+  expect(removed).toEqual(["/recovery/old"]);
 });
 
 test("history records combine store recovery categories and reconciliation trusts a fresh snapshot", () => {
@@ -33,13 +38,32 @@ test("history records combine store recovery categories and reconciliation trust
   try {
     writeFileSync(join(root, "note.md"), "before\n");
     const before = snapshotVault(root);
-    const closeWatcher = watchVault(root, () => undefined);
-    closeWatcher();
+    const legacyClose = watchVault(root, () => undefined);
+    legacyClose();
+    const closeWatcher = watchVaultWithRecovery(root, () => undefined);
+    closeWatcher.close();
     writeFileSync(join(root, "note.md"), "external\n");
     const reconciliation = reconcileVault(before, root);
     expect(reconciliation.changed).toBe(true);
     expect(reconciliation.changedPaths).toEqual(["note.md"]);
     expect(new VaultStore(root, join(root, ".app-data")).scan().after.sha256).toBe(reconciliation.after.sha256);
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
+
+test("watcher recovery rescans after overflow, sleep and reconnect signals", () => {
+  const root = mkdtempSync(join(tmpdir(), "openobsidian-watcher-recovery-"));
+  try {
+    writeFileSync(join(root, "note.md"), "before\n");
+    const events: string[] = [];
+    const watcher = createVaultWatcher(root, (event) => events.push(event.event));
+    writeFileSync(join(root, "note.md"), "after\n");
+    expect(watcher.rescan("overflow").changedPaths).toEqual(["note.md"]);
+    expect(watcher.rescan("sleep").changed).toBe(false);
+    expect(watcher.rescan("reconnect").changed).toBe(false);
+    watcher.close();
+    expect(events).toEqual(["rescan", "rescan", "rescan"]);
   } finally {
     rmSync(root, {recursive: true, force: true});
   }

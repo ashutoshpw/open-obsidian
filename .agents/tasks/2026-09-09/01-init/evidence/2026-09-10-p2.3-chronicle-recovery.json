@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T08:45:00Z",
+  "checkpoint": "P2.3",
+  "requirements": ["D10", "D16", "D21", "GATE-003", "PROD-003", "PROD-004", "PROD-006", "C13", "C15", "C15.1", "SYNC-003", "SYNC-006", "SYNC-007", "RISK-005", "ARCH-005"],
+  "fixture_ids": ["fixture:standard-vault", "fixture:chronicle-vault", "fixture:chronicle-exclusions", "fixture:c15-git-safety", "fixture:sync-watcher-recovery", "fixture:sync-history-policy", "fixture:sync-os-protection", "fixture:arch-identities", "fixture:risk-sync-races"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b6c70b5cee95170fe01624bbd3688867f85601925b1aee27b420d08490ac917c"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 49 tests with 221 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 88.9/A with the existing status-script complexity advisory and documented distribution warnings."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 10 changed implementation/test files relative to 28d59eb."},
+    {"command": "bun test tests/chronicle.test.ts tests/history-watcher.test.ts tests/vault-index.test.ts tests/storage-protection.test.ts", "exit_code": 0, "result": "11 focused tests and 62 expectations pass."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Chronicle, recovery, watcher, storage-protection and stable-identity contracts compile with strict TypeScript checking."}
+  ],
+  "implemented": [
+    "The Chronicle command runner is Node-safe inside Electron and supports explicit initialization/adoption, offline read-only inspection, diff, selected-path commit review, history, revision-aware file restore, remote setup and explicit ff-only pull/push seams.",
+    "Selected Chronicle commits use --only and preserve unrelated staged changes; app-private paths are excluded from the default review and no remote command is run during inspection.",
+    "Watcher recovery exposes verified rescans for overflow, sleep and reconnect signals, while stable identity records live outside the vault and survive rename, duplicate creation and same-path replacement.",
+    "History retention keeps protected conflicts, reports protected-cap overflow, and provides an explicit cleanup callback; OS storage probes report enabled, disabled or unknown without claiming unverified encryption."
+  ],
+  "limitations": [
+    "No live remote pull/push or provisioned external sync backend was attempted; the test remote is offline.invalid and sync calls use an injectable command seam.",
+    "Chronicle conflict resolution beyond file-level revision recovery, retention file deletion wiring, uninstall cleanup UI, external-tool matrix certification, cross-platform local filesystem behavior and reference Obsidian reopen tests remain pending.",
+    "Electron visible launch/accessibility automation and the packaged Electron/Chromium/Node notice audit remain pending."
+  ]
+}

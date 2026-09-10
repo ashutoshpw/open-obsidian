@@ -51,6 +51,8 @@ export type RecoveryRecord = {
   capturedAt: string;
 };
 
+export type ConflictRecord = RecoveryRecord & {kind: "conflict"; expectedRevision: string | null; currentRevision: string | null; protected: true};
+
 export type VaultFaultStage = "before-temp-write" | "after-temp-write" | "before-replace";
 
 export type VaultStoreOptions = {
@@ -83,6 +85,21 @@ export class RevisionConflict extends Error {
     this.currentRevision = currentRevision;
     this.preservedIncomingPath = preservedIncomingPath;
   }
+}
+
+function hasConflictFields(raw: Partial<ConflictRecord>): raw is Partial<ConflictRecord> & {id: string; relativePath: string; path: string; capturedAt: string} {
+  return typeof raw.id === "string" && typeof raw.relativePath === "string" && typeof raw.path === "string" && typeof raw.capturedAt === "string";
+}
+
+function conflictBytes(raw: Partial<ConflictRecord> & {path: string}): number {
+  if (typeof raw.bytes === "number") return raw.bytes;
+  if (!existsSync(raw.path)) return 0;
+  return readFileSync(raw.path).byteLength;
+}
+
+function conflictRecord(raw: Partial<ConflictRecord>): ConflictRecord[] {
+  if (!hasConflictFields(raw)) return [];
+  return [{id: raw.id, relativePath: raw.relativePath, revision: raw.revision ?? raw.expectedRevision ?? "", bytes: conflictBytes(raw), path: raw.path, capturedAt: raw.capturedAt, kind: "conflict", expectedRevision: raw.expectedRevision ?? null, currentRevision: raw.currentRevision ?? null, protected: true}];
 }
 
 type JournalEntry = {
@@ -292,14 +309,19 @@ export class VaultStore {
     return this.listRecords("failed", relativePath);
   }
 
+  listConflicts(relativePath?: string): ConflictRecord[] {
+    return this.listJsonRecords<Partial<ConflictRecord>>("conflicts", relativePath).flatMap(conflictRecord);
+  }
+
   private listRecords(directoryName: "recovery" | "failed", relativePath?: string): RecoveryRecord[] {
+    return this.listJsonRecords<RecoveryRecord>(directoryName, relativePath);
+  }
+
+  private listJsonRecords<T extends {relativePath?: string; capturedAt?: string}>(directoryName: "recovery" | "failed" | "conflicts", relativePath?: string): T[] {
     const directory = join(this.appDataRoot, directoryName);
     if (!existsSync(directory)) return [];
     const normalized = relativePath ? normalizeRelativePath(relativePath) : null;
-    return readdirSync(directory).filter((name) => name.endsWith(".json")).flatMap((name) => {
-      const record = JSON.parse(readFileSync(join(directory, name), "utf8")) as RecoveryRecord;
-      return !normalized || record.relativePath === normalized ? [record] : [];
-    }).sort((left, right) => left.capturedAt.localeCompare(right.capturedAt));
+    return readdirSync(directory).filter((name) => name.endsWith(".json")).map((name) => JSON.parse(readFileSync(join(directory, name), "utf8")) as T).filter((record) => !normalized || record.relativePath === normalized).sort((left, right) => (left.capturedAt ?? "").localeCompare(right.capturedAt ?? ""));
   }
 
   private currentRevision(filePath: string): string | null {
@@ -336,7 +358,7 @@ export class VaultStore {
     mkdirSync(directory, {recursive: true});
     const path = join(directory, `${id}.incoming`);
     writeFileSync(path, bytes);
-    writeFileSync(join(directory, `${id}.json`), JSON.stringify({id, relativePath, expectedRevision, currentRevision, capturedAt: new Date().toISOString(), path}, null, 2));
+    writeFileSync(join(directory, `${id}.json`), JSON.stringify({id, relativePath, expectedRevision, currentRevision, revision: expectedRevision ?? "", bytes: bytes.byteLength, capturedAt: new Date().toISOString(), path}, null, 2));
     return path;
   }
 

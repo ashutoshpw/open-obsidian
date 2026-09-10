@@ -1,10 +1,11 @@
-import type {RecoveryRecord} from "./vault.js";
+import type {RecoveryRecord, VaultStore} from "./vault.js";
 
 export type HistoryPolicy = {maxAgeDays: number; maxBytes: number};
-export type HistoryRecord = RecoveryRecord & {kind: "recovery" | "failed" | "conflict"; protected?: boolean};
+export type HistoryRecord = RecoveryRecord & {kind: "recovery" | "failed" | "conflict"; protected?: boolean; expectedRevision?: string | null; currentRevision?: string | null};
 export type HistoryPlan = {retained: HistoryRecord[]; pruneable: HistoryRecord[]; protected: HistoryRecord[]; retainedBytes: number; pruneableBytes: number};
+export type HistoryCleanup = {removed: string[]; protected: string[]; warning: boolean};
 
-const defaultPolicy: HistoryPolicy = {maxAgeDays: 30, maxBytes: 5 * 1024 * 1024 * 1024};
+export const DEFAULT_HISTORY_POLICY: HistoryPolicy = {maxAgeDays: 30, maxBytes: 5 * 1024 * 1024 * 1024};
 
 function validPolicy(policy: HistoryPolicy): HistoryPolicy {
   if (!Number.isFinite(policy.maxAgeDays) || policy.maxAgeDays < 0) throw new Error("History maxAgeDays must be non-negative");
@@ -20,7 +21,7 @@ function isExpired(record: HistoryRecord, cutoff: number): boolean {
   return Date.parse(record.capturedAt) < cutoff;
 }
 
-export function planHistoryRetention(records: HistoryRecord[], now = new Date(), policy: HistoryPolicy = defaultPolicy): HistoryPlan {
+export function planHistoryRetention(records: HistoryRecord[], now = new Date(), policy: HistoryPolicy = DEFAULT_HISTORY_POLICY): HistoryPlan {
   const selected = validPolicy(policy);
   const cutoff = now.getTime() - selected.maxAgeDays * 24 * 60 * 60 * 1000;
   const sorted = [...records].sort((left, right) => right.capturedAt.localeCompare(left.capturedAt));
@@ -40,9 +41,30 @@ export function planHistoryRetention(records: HistoryRecord[], now = new Date(),
   return {retained, pruneable, protected: retained.filter(isProtected), retainedBytes, pruneableBytes: pruneable.reduce((total, record) => total + record.bytes, 0)};
 }
 
-export function historyRecords(storeRecords: {recovery: RecoveryRecord[]; failed: RecoveryRecord[]}): HistoryRecord[] {
+export function historyRecords(storeRecords: {recovery: RecoveryRecord[]; failed: RecoveryRecord[]; conflicts?: HistoryRecord[]}): HistoryRecord[] {
   return [
     ...storeRecords.recovery.map((record) => ({...record, kind: "recovery" as const})),
     ...storeRecords.failed.map((record) => ({...record, kind: "failed" as const})),
+    ...(storeRecords.conflicts ?? []),
   ];
+}
+
+export function historyRecordsFromStore(store: VaultStore): HistoryRecord[] {
+  return historyRecords({recovery: store.listRecovery(), failed: store.listFailedWrites(), conflicts: store.listConflicts()});
+}
+
+export function cleanupHistory(plan: HistoryPlan, policy: HistoryPolicy, remove: (path: string) => void): HistoryCleanup {
+  const removed: string[] = [];
+  for (const record of plan.pruneable) {
+    remove(record.path);
+    removed.push(record.id);
+  }
+  const protectedRecords = plan.protected.map((record) => record.id);
+  return {removed, protected: protectedRecords, warning: historyCapWarning(plan, policy)};
+}
+
+export function historyCapWarning(plan: HistoryPlan, policy: HistoryPolicy): boolean {
+  const selected = validPolicy(policy);
+  const protectedBytes = plan.protected.reduce((total, record) => total + record.bytes, 0);
+  return protectedBytes > selected.maxBytes;
 }
