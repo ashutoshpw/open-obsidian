@@ -1,0 +1,23 @@
+filters:
+  and:
+    - status == "open"
+    - priority >= 2
+formulas:
+  pathLabel: file.path
+properties:
+  status:
+    displayName: Status
+views:
+  - type: table
+    name: "Open items"
+    limit: 1
+    groupBy:
+      property: owner
+      direction: DESC
+    filters:
+      and:
+        - status == "open"
+    order:
+      - priority
+  - type: list
+    name: "All items"

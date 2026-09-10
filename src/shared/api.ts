@@ -195,7 +195,7 @@ export type CanvasTextEditRequest = {relativePath: string; expectedRevision: str
 export type CanvasCreateNoteRequest = {relativePath: string; expectedRevision: string; nodeId: string; notePath: string};
 export type CanvasCreateNoteResponse = {canvas: CanvasView; created: VaultReadResponse};
 
-export type BaseIssueView = {kind: "unsupported-formula" | "invalid-filter"; message: string; expression?: string};
+export type BaseIssueView = {kind: "unsupported-formula" | "invalid-filter" | "invalid-source"; message: string; expression?: string};
 export type BaseScalar = string | number | boolean | null;
 export type BaseValue = BaseScalar | BaseValue[] | {[key: string]: BaseValue};
 export type BaseRowView = {path: string; values: Record<string, BaseValue>};

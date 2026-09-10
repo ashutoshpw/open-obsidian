@@ -15,6 +15,7 @@
     "release:check": "bun scripts/status.ts --release",
     "check:fast": "bun scripts/check-fast.ts",
     "test": "bun test",
+    "test:bases": "bun test tests/bases.test.ts",
     "typecheck": "bunx tsc --noEmit",
     "compile": "bun run compile:main && bun run compile:preload && bun run compile:renderer",
     "compile:main": "bun build src/electron/main.ts --target=node --outfile=dist/main.js --external electron",

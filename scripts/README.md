@@ -5,6 +5,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | Command | Use |
 | --- | --- |
 | `bun run check:fast` | Routine source/UI gate: state, contracts, architecture, named surfaces, accessibility, layout, typecheck, tests, Knip and changed-file Fallow. |
+| `bun run test:bases` | Focused JSON/native-YAML Bases compatibility fixture tests. |
 | `bun run quality` | Phase-boundary gate: full local checks, compile, distribution, quality scorecard, Knip and report-only Fallow health. |
 | `bun run knip` | Recurring unused files, exports and dependencies audit. |
 | `bun run audit:fallow` | Repository health score; inherited advisories stay visible. |

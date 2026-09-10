@@ -26,6 +26,8 @@ The recurring audit commands are also available separately:
 - `bun run validate:state` keeps the implementation ledger honest and reports incomplete work instead of turning it into a release pass.
 - `bun run validate:surfaces` checks `fixtures/ux-surfaces.json` against the renderer and requires an owner/prerequisite handoff for every external-pending surface.
 
+For focused compatibility work, `bun run test:bases` runs the JSON and native YAML `.base` fixture tests without running the entire suite. The Bases reader accepts the bounded Obsidian-native YAML view shape, normalizes supported filters/order/grouping/limits into the platform-neutral evaluator, preserves the original YAML source for read-only round trips, and exposes unsupported expressions as compatibility issues.
+
 ## Reusable UI boundary
 
 `src/shared/ui/index.ts` is the stable, platform-neutral surface for workspace actions, layout blocks, theme tokens, safe Markdown preview data and deterministic graph positions. It has no Electron, DOM or React Native imports. The Electron renderer maps those values to HTML/SVG; a future Expo app can map the same action IDs, preview blocks and graph layout to native `Pressable`, `View`, `Text` or a canvas surface without copying product vocabulary or parsing rules.

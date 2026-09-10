@@ -2,6 +2,7 @@ import {expect, test} from "bun:test";
 import {encodeBase, evaluateBase, parseBase} from "../src/core/bases.js";
 
 const fixture = await Bun.file(new URL("../fixtures/derived-surfaces.json", import.meta.url)).json() as {schema_version: number; bases: {view_types: string[]; preserve: string[]}; invariants: Record<string, boolean>};
+const nativeFixture = await Bun.file(new URL("../fixtures/bases-native.yaml", import.meta.url)).text();
 
 test("Bases preserves unknown definitions and evaluates a safe table view", () => {
   const source = {
@@ -41,4 +42,30 @@ test("Bases preserves nested values in supported filter definitions", () => {
   const document = parseBase(new TextEncoder().encode(JSON.stringify({version: 1, views: [{type: "table", filter: {kind: "comparison", field: "metadata", operator: "equals", value: {labels: ["one"]}}}]})));
 
   expect((document.views[0]?.filter as {value: unknown}).value).toEqual({labels: ["one"]});
+});
+
+test("Bases reads the native YAML view shape without rewriting its source", () => {
+  const document = parseBase(new TextEncoder().encode(nativeFixture));
+  const result = evaluateBase(document, "Open items", [
+    {path: "a.md", properties: {status: "open", priority: 1, owner: "A"}},
+    {path: "b.md", properties: {status: "open", priority: 2, owner: "B"}},
+    {path: "c.md", properties: {status: "done", priority: 3, owner: "A"}},
+  ]);
+
+  expect(document.sourceFormat).toBe("yaml");
+  expect(result.rows.map((row) => row.path)).toEqual(["b.md"]);
+  expect(result.rows[0]?.values.pathLabel).toBe("b.md");
+  expect(result.view.groupBy).toBe("owner");
+  expect(result.view.sort).toEqual([{field: "priority", direction: "asc"}]);
+  expect(result.issues).toEqual([]);
+  expect(new TextDecoder().decode(encodeBase(document))).toBe(nativeFixture);
+  expect((document.properties as {status: {displayName: string}}).status.displayName).toBe("Status");
+});
+
+test("unsupported native Bases expressions remain visible and are not partially applied", () => {
+  const source = ["filters: file.hasTag(\"open\")", "views:", "  - type: list", "    name: Notes"].join("\n") + "\n";
+  const result = evaluateBase(parseBase(new TextEncoder().encode(source)), "Notes", [{path: "note.md", properties: {status: "open"}}]);
+
+  expect(result.rows).toHaveLength(1);
+  expect(result.issues).toEqual([{kind: "invalid-filter", message: 'Native Bases filter is outside the supported comparison subset: file.hasTag("open")'}]);
 });
