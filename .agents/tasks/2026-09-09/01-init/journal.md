@@ -306,3 +306,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run check:fast` and `bun run quality` pass locally with 102 tests and 588 expectations; `bun run knip` and strict changed-file Fallow pass; report-only Fallow health is 88.5/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
 - Validation: quality run `34509334716` and desktop-build run `34509334708` passed on macOS, Ubuntu and Windows for `d45aeec`.
 - Reconciled: C04 and C04.1 now point to `2026-09-10-p2.1-yaml-metadata.json`; P2.1 remains in progress because structured YAML serialization, full dialect coverage, reference Obsidian round trips and cross-platform validation remain pending.
+
+## 2026-09-10T17:47:02Z — P5.1 repeatable script playbook
+
+- Completed: pushed `589ea3213bfad2800cc0526e8c294a81100f9dd0` with `bun run audit:source-tree` and `scripts/README.md`, so routine gates, Fallow/Knip audits, evidence validation and source-tree digests have short documented entry points.
+- Validation: `bun run check:fast`, `bun run knip` and strict changed-file Fallow pass; the source-tree helper reports 141 included paths with digest `df86528d79a97d7de92564709b2fc8aa14ac4ea8d53fd3f93f60c113e87bf2d5`.
+- Limitation: script automation shortens repeatable local checks but does not replace cross-platform CI, packaged runtime checks, reference Obsidian comparison or human validation.

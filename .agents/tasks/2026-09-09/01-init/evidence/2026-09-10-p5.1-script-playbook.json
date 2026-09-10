@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T17:47:02Z",
+  "checkpoint": "P5.1",
+  "requirements": ["GATE-005", "Q-013"],
+  "fixture_ids": ["fixture:quality-scorecard", "fixture:q-test-layers"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "589ea3213bfad2800cc0526e8c294a81100f9dd0",
+    "tested_source_tree": "df86528d79a97d7de92564709b2fc8aa14ac4ea8d53fd3f93f60c113e87bf2d5"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "The repeatable source-tree script reports 141 included paths and digest df86528d79a97d7de92564709b2fc8aa14ac4ea8d53fd3f93f60c113e87bf2d5 for commit 589ea3213bfad2800cc0526e8c294a81100f9dd0."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes with 102 tests and 588 expectations, including Knip and changed-file Fallow."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the three-file script-playbook increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."}
+  ],
+  "implemented": [
+    "Added bun run audit:source-tree as a short, deterministic evidence helper using the repository's documented source-tree hash definition.",
+    "Added scripts/README.md as the command playbook for routine checks, phase gates, Knip/Fallow audits, state/evidence validation and packaged audits.",
+    "Kept check:fast as the shortest routine gate while retaining full quality and strict Fallow commands for checkpoint boundaries."
+  ],
+  "limitations": [
+    "The source-tree helper records local source state; it does not replace cross-platform CI, packaged runtime checks or reference-application validation.",
+    "Report-only Fallow health retains the inherited scripts/status.ts collectRow advisory; changed-file strict Fallow remains clean."
+  ]
+}
