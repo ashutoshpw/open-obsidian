@@ -321,3 +321,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run test:bases`, `bun run check:fast`, `bun run quality`, `bun run knip`, strict Fallow and report-only Fallow health pass locally; health remains 88.5/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
 - Validation: quality run `34511798033` and desktop-build run `34511798038` passed on macOS, Ubuntu and Windows for `d0359bf3b3d4e770e900719cc58e65d94c4a256c`.
 - Reconciled: C07 and C07.1 now point to `2026-09-10-p3.1-native-bases-yaml.json`; native YAML/JSON read and safe subset behavior are locally covered while embedded bases, full native semantics, reference reopen and cross-platform comparison remain pending.
+
+## 2026-09-10T18:13:35Z — P3.1 embedded Bases increment
+
+- Completed: pushed `28540eca552457c2bb85c9adbb1b03707f7b6c17` with marker `[openobsidian P3.1] Add embedded Bases blocks`; the source tree digest is `91de3a2e2306faf68d72444d53ce45809587a635ca394a9df174ef47cbcd7e62` across 144 included paths.
+- Completed: added a pure embedded-base extractor that retains exact fenced source spans, parses valid JSON/native-YAML Base blocks through the safe grammar, and reports unsupported or unclosed definitions without Markdown writes.
+- Completed: added an inert shared Markdown preview block and renderer adapter plus focused `bun run test:bases`/Markdown tests for reusable desktop and future Expo data paths.
+- Validation: `bun run test:bases`, `bun run check:fast`, `bun run quality`, `bun run knip` and strict Fallow pass locally; report-only Fallow health is 88.9/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
+- Validation: quality run `34512991125` and desktop-build run `34512991166` passed on macOS, Ubuntu and Windows for `28540eca552457c2bb85c9adbb1b03707f7b6c17`.
+- Reconciled: C07 and C07.1 now point to the native and embedded Bases evidence artifacts; embedded source handling is locally covered while interactive embedded views, full native semantics, reference reopen and cross-platform comparison remain pending.

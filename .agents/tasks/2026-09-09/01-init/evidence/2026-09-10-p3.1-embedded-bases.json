@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T18:13:35Z",
+  "checkpoints": ["P3.1"],
+  "requirements": ["C07", "C07.1"],
+  "fixture_ids": ["fixture:c07-bases", "fixture:c07-unsupported-formula"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "28540eca552457c2bb85c9adbb1b03707f7b6c17",
+    "tested_source_tree": "91de3a2e2306faf68d72444d53ce45809587a635ca394a9df174ef47cbcd7e62"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run test:bases", "exit_code": 0, "result": "7 focused Bases tests pass with 32 expectations, including embedded fenced definitions, exact content spans, valid native YAML documents, unsupported-expression issues and unclosed-fence handling."},
+    {"command": "bun test tests/markdown-preview.test.ts", "exit_code": 0, "result": "5 Markdown preview tests pass with 22 expectations; base fences are represented as inert data-only blocks and are never executed."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes at the pushed commit: 107 tests with 608 expectations, state/contract/architecture/surface/accessibility/layout/typecheck checks, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes at the pushed commit: compile, distribution, quality-program, 107 tests with 608 expectations, Knip and report-only Fallow health."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 8-file embedded Bases/Markdown preview increment."},
+    {"command": "OpenObsidian quality / 34512991125", "exit_code": 0, "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for commit 28540eca552457c2bb85c9adbb1b03707f7b6c17."},
+    {"command": "OpenObsidian desktop build / 34512991166", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime notice audits passed."}
+  ],
+  "implemented": [
+    "Added a pure embedded-base extractor that identifies fenced base blocks, retains their exact source spans and returns structured documents or visible compatibility issues without writing Markdown.",
+    "Added an inert shared Markdown preview block for base fences and a renderer adapter that displays the definition as read-only source rather than evaluating it in the renderer.",
+    "Added focused fixture coverage for valid, unsupported and unclosed embedded definitions and documented the reusable desktop/Expo data boundary."
+  ],
+  "limitations": [
+    "Embedded definitions are parsed and safely representable but are not yet exposed as a separate interactive Bases panel from a Markdown note.",
+    "Full Obsidian formula/filter semantics, all YAML dialect constructs, plugin-provided layouts, reference Obsidian reopen comparisons and cross-platform visible interaction remain pending."
+  ]
+}
