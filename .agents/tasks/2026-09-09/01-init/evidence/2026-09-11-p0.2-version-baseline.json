@@ -1,0 +1,61 @@
+{
+  "evidence_version": 1,
+  "captured_at": "2026-09-10T21:02:57Z",
+  "checkpoint": "P0.2",
+  "requirement_ids": ["RESEARCH-005"],
+  "tested_source_tree": "1d1709918a8c7cbf09e328ed9d424f70f93a43c7e535f6e7227334a944e0f897",
+  "source_tree_paths": 150,
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "commit_sha": "8450c9d49fe809540f836aad62e99a2cdd14a31c",
+  "fixture": "fixtures/version-baseline.json",
+  "policy": {
+    "stable_reference": "Obsidian Desktop 1.13.7 public",
+    "early_access_reference": "Obsidian Desktop 1.14.1 separate early-access track",
+    "pinned_artifacts": 27,
+    "stable_baseline_advanced_from_plugin_fixtures": false,
+    "minimum_app_version_treated_as_api_proof": false
+  },
+  "verification": {
+    "minimum_versions_recorded": 27,
+    "api_status_not_established": 27,
+    "runtime_status_pending": 27,
+    "special_cases": [
+      "PC06 Git has no declared minimum app version and remains undetermined until runtime verification.",
+      "PC-DEP-MINIMAL declares 1.14.0 and is assigned to the separate 1.14.1 early-access comparison track."
+    ]
+  },
+  "local_checks": [
+    {"command": "bun run verify:version-baseline", "exit_code": 0},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "116 tests, 650 expectations, Knip and changed-file Fallow passed."},
+    {"command": "bun run quality", "exit_code": 0, "result": "116 tests, 650 expectations, TypeScript, compile, Knip and report-only Fallow health passed."},
+    {"command": "bunx fallow audit --root . --base HEAD --format compact", "exit_code": 0},
+    {"command": "bun run audit:source-tree", "exit_code": 0}
+  ],
+  "quality_workflow": {
+    "name": "OpenObsidian quality",
+    "run_id": 34529791728,
+    "head_sha": "8450c9d49fe809540f836aad62e99a2cdd14a31c",
+    "conclusion": "success",
+    "jobs": [
+      {"platform": "ubuntu-latest", "job_id": 103047443781, "conclusion": "success", "version_baseline_step": "success"},
+      {"platform": "macos-latest", "job_id": 103047443989, "conclusion": "success", "version_baseline_step": "success"},
+      {"platform": "windows-latest", "job_id": 103047444132, "conclusion": "success", "version_baseline_step": "success"}
+    ]
+  },
+  "desktop_workflow": {
+    "name": "OpenObsidian desktop build",
+    "run_id": 34529791766,
+    "head_sha": "8450c9d49fe809540f836aad62e99a2cdd14a31c",
+    "conclusion": "success",
+    "jobs": [
+      {"platform": "macos-latest", "job_id": 103047443789, "conclusion": "success", "attribution_step": "success"},
+      {"platform": "ubuntu-latest", "job_id": 103047444235, "conclusion": "success", "attribution_step": "success"},
+      {"platform": "windows-latest", "job_id": 103047444681, "conclusion": "success", "attribution_step": "success"}
+    ]
+  },
+  "limitations": [
+    "Minimum app-version declarations do not establish undocumented API behavior or runtime compatibility.",
+    "Unchanged plugin bundles have not yet run in the compatibility runtime; P1.2 must record API/runtime results and D15 outcomes before this requirement can pass.",
+    "The frozen mutable selection snapshot remains drift-pending and was not refreshed by this verifier."
+  ]
+}

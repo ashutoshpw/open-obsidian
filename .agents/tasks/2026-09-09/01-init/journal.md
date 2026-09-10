@@ -414,3 +414,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: layout checks, shared UI/Expo portability tests, TypeScript and strict Fallow passed locally; quality run `34528081739` and desktop-build run `34528081779` passed on Ubuntu, macOS and Windows.
 - Reconciled: P2.2 now records the icon-scale evidence at source tree `ee6cb9196bc4e1b4386cc3738359cf782abc057be1fbd27eb48008263cd13be2` across 147 included paths.
 - Limitation: reference-window pixel comparison and human accessibility/focus validation remain separate handoffs; no UI automation was restarted.
+
+## 2026-09-10T21:02:57Z — P0.2 executable version baseline
+
+- Completed: pushed `8450c9d49fe809540f836aad62e99a2cdd14a31c` with marker `[openobsidian P0.2] Add version baseline verifier`; added `fixtures/version-baseline.json` and `scripts/verify-version-baseline.ts`.
+- Completed: the verifier cross-checks the public Obsidian 1.13.7 baseline and separate 1.14.1 early-access track across the launch contract, baseline ledger, evaluation protocol and primary references, then records all 27 pinned artifact minimum versions and release-track interpretation.
+- Safety: minimum app-version declarations are explicitly not treated as API proof; PC06 Git remains undetermined because its released manifest declares no minimum, and PC-DEP-MINIMAL is assigned to early access because it declares 1.14.0.
+- Validation: local `bun run check:fast` and `bun run quality` pass with 116 tests and 650 expectations; TypeScript, Knip, compile and strict changed-file Fallow pass. Quality run `34529791728` and desktop-build run `34529791766` passed on Ubuntu, macOS and Windows.
+- Reconciled: `RESEARCH-005` is now `implemented` with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p0.2-version-baseline.json`; runtime certification remains pending for all 27 unchanged artifacts in P1.2, so the requirement is not marked passing.
