@@ -1,5 +1,5 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
-import {parseMarkdownPreview, type MarkdownPreviewBlock} from "../core/markdown-preview.js";
+import {parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, workspaceAction, type WorkspaceActionId} from "../shared/ui/index.js";
 
@@ -259,15 +259,27 @@ function applySharedActionMetadata(): void {
 }
 
 function appendPreviewInline(element: HTMLElement, value: string): void {
-  value.split(/(==[^=]+==)/g).forEach((part) => {
-    if (/^==[^=]+==$/.test(part)) {
-      const mark = document.createElement("mark");
-      mark.textContent = part.slice(2, -2);
-      element.append(mark);
-    } else if (part) {
-      element.append(document.createTextNode(part));
-    }
-  });
+  parseInlineMarkdown(value).forEach((segment) => element.append(previewInlineSegment(segment)));
+}
+
+type MarkdownStyledSegment = Exclude<MarkdownInlineSegment, {kind: "text" | "link" | "wiki-link"}>;
+const markdownInlineTags: Record<MarkdownStyledSegment["kind"], keyof HTMLElementTagNameMap> = {highlight: "mark", strong: "strong", emphasis: "em", strikethrough: "del", code: "code"};
+
+function previewLinkSegment(segment: Extract<MarkdownInlineSegment, {kind: "link" | "wiki-link"}>): HTMLElement {
+  const link = document.createElement("span");
+  link.className = segment.kind === "wiki-link" ? "markdown-wiki-link" : "markdown-link";
+  link.dataset.target = segment.target;
+  link.title = `Link target: ${segment.target}`;
+  link.textContent = segment.text;
+  return link;
+}
+
+function previewInlineSegment(segment: MarkdownInlineSegment): Node {
+  if (segment.kind === "text") return document.createTextNode(segment.text);
+  if (segment.kind === "link" || segment.kind === "wiki-link") return previewLinkSegment(segment);
+  const element = document.createElement(markdownInlineTags[segment.kind]);
+  element.textContent = segment.text;
+  return element;
 }
 
 function previewHeading(block: Extract<MarkdownPreviewBlock, {kind: "heading"}>): HTMLElement {
@@ -342,6 +354,12 @@ function previewTable(block: Extract<MarkdownPreviewBlock, {kind: "table"}>): HT
   return table;
 }
 
+function previewThematicBreak(): HTMLElement {
+  const element = document.createElement("hr");
+  element.setAttribute("aria-hidden", "true");
+  return element;
+}
+
 function previewUnsupported(block: Extract<MarkdownPreviewBlock, {kind: "unsupported"}>): HTMLElement {
   const element = document.createElement("p");
   element.className = "markdown-unsupported";
@@ -357,6 +375,7 @@ const previewBuilders: {[K in MarkdownPreviewBlock["kind"]]: (block: Extract<Mar
   quote: previewQuote,
   code: previewCode,
   table: previewTable,
+  "thematic-break": previewThematicBreak,
   unsupported: previewUnsupported,
 };
 

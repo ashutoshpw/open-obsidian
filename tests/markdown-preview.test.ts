@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readFileSync} from "node:fs";
-import {parseMarkdownPreview} from "../src/core/markdown-preview.js";
+import {parseInlineMarkdown, parseMarkdownPreview} from "../src/core/markdown-preview.js";
 
 const fixture = JSON.parse(readFileSync(new URL("../fixtures/markdown-dialects.json", import.meta.url), "utf8")) as {schema_version: number; supported_blocks: string[]; visible_unsupported_blocks: string[]; invariants: Record<string, boolean>};
 
@@ -53,4 +53,34 @@ test("Markdown preview keeps task state and does not execute fenced source", () 
   const code = blocks[2];
   expect(code).toMatchObject({kind: "unsupported", syntax: "diagram"});
   expect(JSON.stringify(code)).toContain("await dangerous()");
+});
+
+test("Markdown preview groups richer blocks without rewriting their source text", () => {
+  const blocks = parseMarkdownPreview("Setext heading\n===\n\nParagraph line one\nline two\n\n> first line\n>\n> second line\n\n---\n\n~~~ts\nconst value = 1;\n~~~");
+  expect(blocks).toEqual([
+    {kind: "heading", level: 1, text: "Setext heading"},
+    {kind: "paragraph", text: "Paragraph line one\nline two"},
+    {kind: "quote", text: "first line\n\nsecond line"},
+    {kind: "thematic-break"},
+    {kind: "code", language: "ts", text: "const value = 1;"},
+  ]);
+});
+
+test("shared inline Markdown segments are safe for DOM or native renderers", () => {
+  expect(parseInlineMarkdown("==mark== **bold** *italic* ~~old~~ `code` [docs](https://example.com) [[Note|open]] <script>")).toEqual([
+    {kind: "highlight", text: "mark"},
+    {kind: "text", text: " "},
+    {kind: "strong", text: "bold"},
+    {kind: "text", text: " "},
+    {kind: "emphasis", text: "italic"},
+    {kind: "text", text: " "},
+    {kind: "strikethrough", text: "old"},
+    {kind: "text", text: " "},
+    {kind: "code", text: "code"},
+    {kind: "text", text: " "},
+    {kind: "link", text: "docs", target: "https://example.com"},
+    {kind: "text", text: " "},
+    {kind: "wiki-link", text: "open", target: "Note"},
+    {kind: "text", text: " <script>"},
+  ]);
 });

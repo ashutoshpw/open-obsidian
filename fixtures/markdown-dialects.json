@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "safe-markdown-preview-dialects",
-  "supported_blocks": ["headings", "tasks", "unordered-lists", "ordered-lists", "tables", "callouts", "fenced-code", "highlights"],
+  "supported_blocks": ["headings", "setext-headings", "tasks", "unordered-lists", "ordered-lists", "tables", "callouts", "fenced-code", "thematic-breaks", "inline-formatting", "wiki-links", "highlights"],
   "visible_unsupported_blocks": ["footnotes", "math", "diagrams", "raw-html"],
   "invariants": {
     "source_bytes_remain_authoritative": true,

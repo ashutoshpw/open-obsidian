@@ -13,6 +13,7 @@
     "status": "bun scripts/status.ts",
     "validate:state": "bun scripts/status.ts --validate",
     "release:check": "bun scripts/status.ts --release",
+    "check:fast": "bun scripts/check-fast.ts",
     "test": "bun test",
     "typecheck": "bunx tsc --noEmit",
     "compile": "bun run compile:main && bun run compile:preload && bun run compile:renderer",

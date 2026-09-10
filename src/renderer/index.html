@@ -184,6 +184,12 @@
       #note-preview th, #note-preview td { border: 1px solid #ffffff18; padding: 6px 8px; text-align: left; vertical-align: top; }
       #note-preview th { color: #c9c1ff; background: #a78bfa12; }
       #note-preview mark { border-radius: 2px; padding: 0 2px; background: #f1d56a55; color: inherit; }
+      #note-preview hr { border: 0; border-top: 1px solid #ffffff1c; margin: 0.4em 0 1.1em; }
+      #note-preview .markdown-link, #note-preview .markdown-wiki-link { border-bottom: 1px dashed #a78bfa88; color: #c9c1ff; cursor: default; }
+      #note-preview .markdown-link::after { content: " ↗"; color: #858b9c; font-size: 0.8em; }
+      #note-preview .markdown-wiki-link::after { content: " ↗"; color: #858b9c; font-size: 0.8em; }
+      #note-preview code:not(pre code) { border: 1px solid #ffffff16; border-radius: 4px; padding: 1px 4px; background: #0c0e12; color: #e2d9ff; font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+      #note-preview strong { color: #eeeafa; }
       #note-preview .markdown-unsupported { border-left: 3px solid #d79b4c88; padding-left: 10px; color: #ffd28b; font-size: 12px; }
       #note-preview .task-line { display: flex; align-items: baseline; gap: 8px; margin: 0 0 0.55em; color: #d8dbe5; }
       #note-preview .task-line input { accent-color: #a78bfa; }

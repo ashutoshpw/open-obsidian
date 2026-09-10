@@ -46,6 +46,7 @@
     {"name": "Three-way merge", "path": "src/core/merge.ts", "purpose": "conservative text reconciliation with explicit conflict output"},
     {"name": "Watcher reconciliation", "path": "src/core/watcher.ts", "purpose": "filesystem hints followed by authoritative snapshot reconciliation"},
     {"name": "IPC contract", "path": "src/shared/api.ts", "purpose": "schema validation for renderer vault requests"},
+    {"name": "Shared UI and preview contract", "path": "src/shared/ui/index.ts", "purpose": "platform-neutral workspace blocks, actions and safe Markdown preview data for desktop and future native hosts"},
     {"name": "PreviewBroker", "path": "src/plugins/policy.ts", "purpose": "stage plugin changes before explicit approval"}
   ],
   "security_claims": [

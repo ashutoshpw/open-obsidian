@@ -28,6 +28,12 @@ export const WORKSPACE_BLOCKS: readonly WorkspaceBlock[] = [
   {id: "status", label: "Workspace status", role: "contentinfo", mobilePresentation: "inline"},
 ];
 
+export function workspaceBlock(id: WorkspaceBlockId): WorkspaceBlock {
+  const block = WORKSPACE_BLOCKS.find((candidate) => candidate.id === id);
+  if (!block) throw new Error(`Unknown workspace block: ${id}`);
+  return block;
+}
+
 export type WorkspaceVisibility = {
   leftSidebar: boolean;
   rightSidebar: boolean;
