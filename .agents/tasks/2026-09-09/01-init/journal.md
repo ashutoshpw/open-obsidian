@@ -36,3 +36,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Limitations: only macOS arm64 has run locally; Windows/Linux Actions, reference Obsidian reopen/differential tests, packaged Electron launch, unchanged plugin artifacts and renderer DOM compatibility remain unverified. The earlier `bun run package:dir` attempt reached electron-builder but the pinned Electron 44.3.0 download timed out after 600 seconds; no package is claimed.
 - Decision: keep all locally implemented rows as `implemented`, never `passing`, until the applicable platform, reference-runtime and unchanged-artifact evidence exists. Do not convert generic policy denial into a D15 exception for an artifact without its reproduction and alternatives.
 - Next operation: finish P0.2 primary-reference/distribution audit, then run the available cross-platform workflows and load the pinned hardest compatibility artifacts; continue foundation work behind the explicit broker and recovery contracts.
+
+## 2026-09-10T07:17:58Z — feasibility increment pushed
+
+- Completed: committed the staged P1.1/P1.2/P1.3/P3.1 feasibility increment as `eda8ab914b092dccb5eb63fb6aa4cbfbe0731eec` with marker `[openobsidian P1.1 work] Add feasibility contracts`; verified the worktree was clean and pushed `main` to `origin/main` at the same SHA.
+- CI handoff: GitHub Actions runs were created for the push: quality run `34449244274` (`https://github.com/ashutoshpw/open-obsidian/actions/runs/34449244274`, in progress at reconciliation) and desktop-build run `34449244503` (`https://github.com/ashutoshpw/open-obsidian/actions/runs/34449244503`, queued at reconciliation).
+- Next operation: monitor those runs to completion while implementing the next dependency-ready foundation slice; retain any cross-platform failure as an explicit blocker and do not mark a checkpoint complete from local evidence alone.
