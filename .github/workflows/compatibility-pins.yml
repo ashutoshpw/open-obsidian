@@ -20,3 +20,5 @@ jobs:
           bun-version-file: package.json
       - name: Verify recorded release hashes
         run: bun run verify:plugin-selection && bun run verify:compatibility-pins
+      - name: Verify recorded primary references
+        run: bun run verify:primary-references

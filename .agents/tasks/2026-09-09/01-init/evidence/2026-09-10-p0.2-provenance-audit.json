@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T08:03:49Z",
+  "checkpoint": "P0.2",
+  "requirements": ["D12", "BASE-005", "RISK-009"],
+  "fixture_ids": ["fixture:primary-references", "fixture:license-audit", "fixture:risk-licensing"],
+  "environment": {
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "3db4928a4d3091d8042bd26cd010d0ec0c8b922d87ff42dc738d1fda3a301412",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked source paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "observations": [
+    {"command": "bun run verify:primary-references", "exit_code": 0, "result": "All eight recorded primary references matched HTTP status, content type, byte count and SHA-256; versioned sources include Obsidian Desktop 1.13.7, Obsidian Desktop 1.14.1, JSON Canvas Spec 1.0 and Obsidian API commit cc1744324150c632416857c98964f87b1574a5fc."},
+    {"command": "bun run verify:distribution", "exit_code": 0, "result": "Six direct packages plus the external bunx Fallow tool matched package versions, licenses, local license files, HTTPS sources and third-party notice entries."},
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 35 tests with 138 expectations, Bun compilation, Knip and report-only Fallow health passed; report-only Fallow health was 88.8/A with the pre-existing status-validator complexity advisory."},
+    {"command": "bun run knip", "exit_code": 0, "result": "Knip reported no unused files, dependencies or exports."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 10 files changed relative to df2bab7502de1916c0a86d37d539355e9f125f37."},
+    {"command": "bun run verify:primary-references", "exit_code": 1, "result": "An initial SQLite WAL fetch encountered a transient ECONNRESET; the bounded retry path was exercised and the subsequent verification passed."}
+  ],
+  "implemented": [
+    "Primary compatibility and architecture sources are recorded in config/primary-references.json with retrieval time, immutable versions or source commits, response metadata and SHA-256 hashes.",
+    "A scheduled Bun verifier re-fetches those sources and fails on status, content type, byte count or hash drift.",
+    "config/distribution-audit.json and verify-distribution.ts reconcile every direct package in package.json with installed metadata, local license files, HTTPS source evidence and THIRD_PARTY_NOTICES.md.",
+    "Knip and report-only Fallow remain part of the repository quality command and scheduled multi-platform workflow; strict Fallow is available for changed-code review and is clean for this increment."
+  ],
+  "limitations": [
+    "The Electron 44.3.0 binary was not available locally after the earlier download timeout, so bundled Chromium/Node notices were not inspected in a packaged macOS, Windows or Linux artifact.",
+    "The final electron-builder transitive dependency graph still requires reconciliation against each shipped artifact before a release can be marked passing.",
+    "Reference application reopen tests, unchanged plugin runtime certification and cross-platform UI/runtime validation remain P1/P3 work."
+  ]
+}

@@ -8,6 +8,7 @@ claim that plugin bundles are being redistributed by this repository.
 
 | Package/tool | Version | Purpose | License/source status |
 | --- | --- | --- | --- |
+| `@types/bun` | 1.4.2 | Bun type declarations | MIT; package metadata and lockfile |
 | `@types/node` | 26.5.0 | Node.js type declarations | MIT; package metadata and lockfile |
 | `typescript` | 7.0.2 | Type checking | Apache-2.0; package metadata and lockfile |
 | `electron` | 44.3.0 | Desktop runtime | MIT; package metadata and lockfile; bundled runtime notices remain a release gate |
@@ -20,3 +21,11 @@ The planned Electron and plugin release pins are recorded separately in
 [`fixtures/compatibility-manifest.json`](fixtures/compatibility-manifest.json).
 Each shipped third-party artifact requires a license, source, brand and
 redistribution review before a release status can become `passing`.
+
+The direct package metadata and notice inventory is machine-checked with
+[`config/distribution-audit.json`](config/distribution-audit.json) by running
+`bun run verify:distribution`. The check confirms the package versions,
+declared licenses, local license files, HTTPS sources and notice entries. It
+does not close the release gates for Electron's bundled Chromium/Node notices
+or the final transitive dependency graph; those require inspection of each
+platform artifact after packaging.

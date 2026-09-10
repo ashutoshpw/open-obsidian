@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "package_file": "package.json",
+  "project": {
+    "license": "AGPL-3.0-only",
+    "license_file": "LICENSE",
+    "notice_file": "THIRD_PARTY_NOTICES.md"
+  },
+  "direct_packages": [
+    {
+      "name": "@types/bun",
+      "version": "1.4.2",
+      "license": "MIT",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/bun",
+      "package_license_file": "LICENSE",
+      "distribution_scope": "type-only"
+    },
+    {
+      "name": "@types/node",
+      "version": "26.5.0",
+      "license": "MIT",
+      "source": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node",
+      "package_license_file": "LICENSE",
+      "distribution_scope": "type-only"
+    },
+    {
+      "name": "electron",
+      "version": "44.3.0",
+      "license": "MIT",
+      "source": "https://github.com/electron/electron/releases/tag/v44.3.0",
+      "package_license_file": "LICENSE",
+      "distribution_scope": "bundled-runtime"
+    },
+    {
+      "name": "electron-builder",
+      "version": "26.16.1",
+      "license": "MIT",
+      "source": "https://github.com/electron-userland/electron-builder/releases/tag/electron-builder%4026.16.1",
+      "package_license_file": "LICENSE",
+      "distribution_scope": "build-only"
+    },
+    {
+      "name": "knip",
+      "version": "6.35.1",
+      "license": "ISC",
+      "source": "https://knip.dev/",
+      "package_license_file": "LICENSE",
+      "distribution_scope": "audit-only"
+    },
+    {
+      "name": "typescript",
+      "version": "7.0.2",
+      "license": "Apache-2.0",
+      "source": "https://www.typescriptlang.org/",
+      "package_license_file": "LICENSE",
+      "distribution_scope": "type-only"
+    }
+  ],
+  "external_tools": [
+    {
+      "name": "fallow",
+      "version": "3.24.0",
+      "source": "https://github.com/fallow-rs/fallow",
+      "installation": "bunx",
+      "bundled": false
+    }
+  ],
+  "release_gates": [
+    {
+      "id": "electron-bundled-runtime-notices",
+      "status": "pending",
+      "reason": "Inspect the packaged Electron/Chromium/Node notices in each platform artifact before release."
+    },
+    {
+      "id": "transitive-package-attribution",
+      "status": "pending",
+      "reason": "Reconcile the final electron-builder dependency graph against the shipped artifact and preserve required notices."
+    }
+  ]
+}
