@@ -26,6 +26,7 @@ export function auditRendererLayout(html = readFileSync(join(root, "src/renderer
   requiredRegion(html, "note tab strip", /class=["'][^"']*\bnote-tabs\b[^"']*["']/i, checks, failures);
   requiredRegion(html, "split editor stage", /class=["'][^"']*\beditor-stage\b[^"']*["'][^>]*\bid=["']editor-stage["']/i, checks, failures);
   requiredRegion(html, "note context pane", /id=["']context-pane["'][^>]*aria-label=["']Note context["']/i, checks, failures);
+  requiredRegion(html, "outgoing links context", /id=["']outgoing-links-list["']/i, checks, failures);
   requiredRegion(html, "workspace status footer", /id=["']status["'][^>]*role=["']status["'][^>]*aria-live=["']polite["']/i, checks, failures);
   requiredRegion(html, "explicit uninstall cleanup choices", /data-ui-surface=["']uninstall-cleanup["'][\s\S]*data-uninstall-choice=["']app-cache["'][\s\S]*data-uninstall-choice=["']credentials["'][\s\S]*data-uninstall-choice=["']recovery-history["']/i, checks, failures);
   requiredRegion(html, "three-column shell sizing", /grid-template-columns:\s*44px\s+300px\s+minmax\(0,\s*1fr\)/i, checks, failures);

@@ -282,9 +282,21 @@ export type NoteBacklink = {
   text: string;
 };
 
+export type NoteLinkStatus = "resolved" | "unresolved" | "ambiguous" | "external";
+
+export type NoteLink = {
+  target: string;
+  resolvedPath?: string;
+  status: NoteLinkStatus;
+  candidates: string[];
+  line: number;
+  text: string;
+};
+
 export type NoteContext = {
   relativePath: string;
   headings: NoteHeading[];
+  outgoingLinks: NoteLink[];
   backlinks: NoteBacklink[];
 };
 

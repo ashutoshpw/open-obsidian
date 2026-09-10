@@ -57,6 +57,7 @@ const editorModeButtons = [...document.querySelectorAll<HTMLButtonElement>("[dat
 const contextPane = document.querySelector<HTMLElement>("#context-pane");
 const toggleContextButton = document.querySelector<HTMLButtonElement>("#toggle-context");
 const outlineList = document.querySelector<HTMLElement>("#outline-list");
+const outgoingLinksList = document.querySelector<HTMLElement>("#outgoing-links-list");
 const backlinksList = document.querySelector<HTMLElement>("#backlinks-list");
 const quickSwitcher = document.querySelector<HTMLDialogElement>("#quick-switcher");
 const openQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#open-quick-switcher");
@@ -1089,6 +1090,14 @@ function contextEmpty(message: string): HTMLLIElement {
 
 function renderNoteContext(context: NoteContext): void {
   renderContextList(outlineList, context.headings.map((heading) => contextButton(`${"· ".repeat(Math.max(0, heading.level - 1))}${heading.text}`, `line ${heading.line}`, () => focusEditorLine(heading.line))), "No headings in this note.");
+  renderContextList(outgoingLinksList, context.outgoingLinks.map((link) => {
+    const target = link.resolvedPath ?? link.target;
+    const status = link.status === "resolved" ? "" : ` · ${link.status}`;
+    return contextButton(`${target}${status}`, `line ${link.line}`, () => {
+      if (link.resolvedPath) openFile(link.resolvedPath);
+      else setStatus(`Link target ${link.target || "(empty)"} remains ${link.status}; no file was opened.`);
+    });
+  }), "No outgoing links in this note.");
   renderContextList(backlinksList, context.backlinks.map((backlink) => contextButton(backlink.relativePath, `line ${backlink.line}`, () => openFile(backlink.relativePath))), "No notes link here yet.");
 }
 
@@ -2597,7 +2606,7 @@ function resetEditor(): void {
   aiChangeSet = null;
   aiUndoId = null;
   renderTabs();
-  renderNoteContext({relativePath: "", headings: [], backlinks: []});
+  renderNoteContext({relativePath: "", headings: [], outgoingLinks: [], backlinks: []});
   updateEditorState();
   updateWorkspaceToolControls();
 }
