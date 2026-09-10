@@ -54,11 +54,13 @@
     {
       "id": "electron-security",
       "topic": "Electron security guidance",
-      "url": "https://www.electronjs.org/docs/latest/tutorial/security",
+      "url": "https://raw.githubusercontent.com/electron/electron/07e460719c75b2ec5ee4893f7d2192ef31c7b8c2/docs/tutorial/security.md",
+      "immutable_version": "Electron v44.3.0",
+      "source_commit": "07e460719c75b2ec5ee4893f7d2192ef31c7b8c2",
       "status": 200,
-      "content_type": "text/html",
-      "bytes": 170321,
-      "sha256": "282670ba3be0773a4ef933ad9bd42feaf33e4be83916f7e405b7ba2da2bc5a9f"
+      "content_type": "text/plain; charset=utf-8",
+      "bytes": 32586,
+      "sha256": "cc0a31ed8b68e5004b194e68616a8eb85725e5fbb154d11d886edda96478f5c5"
     },
     {
       "id": "obsidian-api",
