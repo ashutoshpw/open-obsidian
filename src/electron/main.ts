@@ -4,11 +4,12 @@ import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
-import {historyRecordsFromStore} from "../core/history.js";
+import {cleanupHistory, DEFAULT_HISTORY_POLICY, historyRecordsFromStore, planHistoryRetention} from "../core/history.js";
 import {buildNoteContext} from "../core/note-context.js";
+import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateVaultWriteRequest, validateWorkspaceSettings, type NoteContext, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings} from "../shared/api.js";
+import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, type ConflictReadResponse, type ConflictResolutionResponse, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -146,6 +147,40 @@ function historyRecordsRequest(_event: Electron.IpcMainInvokeEvent, relativePath
   }));
 }
 
+function historyPolicy(value: unknown): HistoryPolicy {
+  return value === undefined || value === null ? DEFAULT_HISTORY_POLICY : validateHistoryPolicy(value);
+}
+
+function historyPlanRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): HistoryPlanSummary {
+  const policy = historyPolicy(value);
+  const plan = planHistoryRetention(historyRecordsFromStore(requireVault()), new Date(), policy);
+  return {retainedCount: plan.retained.length, pruneableCount: plan.pruneable.length, protectedCount: plan.protected.length, retainedBytes: plan.retainedBytes, pruneableBytes: plan.pruneableBytes, warning: plan.protected.length > 0 && plan.protected.reduce((total, record) => total + record.bytes, 0) > policy.maxBytes};
+}
+
+function cleanupHistoryRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): HistoryCleanupResult {
+  const store = requireVault();
+  const policy = historyPolicy(value);
+  const plan = planHistoryRetention(historyRecordsFromStore(store), new Date(), policy);
+  return cleanupHistory(plan, policy, (path) => store.removeHistoryPath(path));
+}
+
+function conflictReadRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): ConflictReadResponse {
+  const request = validateConflictReadRequest(value);
+  const conflict = requireVault().readConflict(request.id, request.relativePath);
+  const revision = createHash("sha256").update(conflict.bytes).digest("hex");
+  return {id: conflict.record.id, relativePath: conflict.record.relativePath, base64: Buffer.from(conflict.bytes).toString("base64"), revision};
+}
+
+function conflictResolutionRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): ConflictResolutionResponse {
+  const request = validateConflictResolutionRequest(value);
+  const result = requireVault().resolveConflict(request.id, request.action, request.relativePath);
+  return {id: result.id, relativePath: result.relativePath, action: result.action, read: result.read ? {relativePath: result.read.relativePath, base64: Buffer.from(result.read.bytes).toString("base64"), revision: result.read.revision} : undefined};
+}
+
+function syncToolsRequest(): SyncToolDisposition[] {
+  return syncToolDispositions();
+}
+
 function restoreChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
   const request = validateChronicleRestoreRequest(value);
   const store = requireChronicle();
@@ -193,6 +228,11 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.diffChanges, diffChanges);
   ipcMain.handle(CHANNELS.chronicleHistory, chronicleHistoryRequest);
   ipcMain.handle(CHANNELS.historyRecords, historyRecordsRequest);
+  ipcMain.handle(CHANNELS.historyPlan, historyPlanRequest);
+  ipcMain.handle(CHANNELS.cleanupHistory, cleanupHistoryRequest);
+  ipcMain.handle(CHANNELS.readConflict, conflictReadRequest);
+  ipcMain.handle(CHANNELS.resolveConflict, conflictResolutionRequest);
+  ipcMain.handle(CHANNELS.syncTools, syncToolsRequest);
   ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
   ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
   ipcMain.handle(CHANNELS.noteContext, noteContext);

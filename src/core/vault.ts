@@ -1,6 +1,7 @@
 import {createHash, randomUUID} from "node:crypto";
 import {existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, renameSync, unlinkSync, writeFileSync} from "node:fs";
 import {basename, dirname, join, relative, resolve} from "node:path";
+import type {ConflictResolutionAction} from "../shared/api.js";
 import {threeWayMergeBytes, type MergeResult} from "./merge.js";
 
 export type VaultEntryKind = "file" | "symlink";
@@ -52,6 +53,7 @@ export type RecoveryRecord = {
 };
 
 export type ConflictRecord = RecoveryRecord & {kind: "conflict"; expectedRevision: string | null; currentRevision: string | null; protected: true};
+export type ConflictResolution = {id: string; relativePath: string; action: ConflictResolutionAction; read?: VaultRead};
 
 export type VaultFaultStage = "before-temp-write" | "after-temp-write" | "before-replace";
 
@@ -310,7 +312,43 @@ export class VaultStore {
   }
 
   listConflicts(relativePath?: string): ConflictRecord[] {
-    return this.listJsonRecords<Partial<ConflictRecord>>("conflicts", relativePath).flatMap(conflictRecord);
+    return this.listJsonRecords<Partial<ConflictRecord>>("conflicts", relativePath).flatMap((raw) => {
+      if (typeof raw.id !== "string" || typeof raw.path !== "string") return [];
+      const expectedPath = join(resolve(this.appDataRoot, "conflicts"), `${raw.id}.incoming`);
+      return resolve(raw.path) === expectedPath ? conflictRecord(raw) : [];
+    });
+  }
+
+  readConflict(id: string, relativePath?: string): {record: ConflictRecord; bytes: Uint8Array} {
+    const record = this.listConflicts(relativePath).find((candidate) => candidate.id === id);
+    if (!record) throw new VaultSafetyError(`Conflict record does not exist: ${id}`);
+    const path = this.historyArtifactPath(record.path, "conflicts", record.id, ".incoming");
+    if (!existsSync(path)) throw new VaultSafetyError(`Conflict bytes do not exist: ${id}`);
+    return {record, bytes: new Uint8Array(readFileSync(path))};
+  }
+
+  resolveConflict(id: string, action: ConflictResolutionAction, relativePath?: string): ConflictResolution {
+    const conflict = this.readConflict(id, relativePath);
+    if (action === "keep-incoming") {
+      const read = this.write({relativePath: conflict.record.relativePath, expectedRevision: conflict.record.currentRevision, bytes: conflict.bytes});
+      this.removeConflictArtifact(conflict.record);
+      return {id, relativePath: conflict.record.relativePath, action, read};
+    }
+    this.removeConflictArtifact(conflict.record);
+    return {id, relativePath: conflict.record.relativePath, action};
+  }
+
+  removeHistoryPath(path: string): void {
+    const resolved = resolve(path);
+    for (const directoryName of ["recovery", "failed"] as const) {
+      const directory = resolve(this.appDataRoot, directoryName);
+      if (relative(directory, resolved) !== basename(resolved) || !/^[0-9a-f-]{36}\.bin$/i.test(basename(resolved))) continue;
+      this.removeArtifact(resolved);
+      const metadata = join(directory, `${basename(resolved, ".bin")}.json`);
+      this.removeArtifact(metadata);
+      return;
+    }
+    throw new VaultSafetyError("History cleanup path is outside the managed recovery directories");
   }
 
   private listRecords(directoryName: "recovery" | "failed", relativePath?: string): RecoveryRecord[] {
@@ -322,6 +360,23 @@ export class VaultStore {
     if (!existsSync(directory)) return [];
     const normalized = relativePath ? normalizeRelativePath(relativePath) : null;
     return readdirSync(directory).filter((name) => name.endsWith(".json")).map((name) => JSON.parse(readFileSync(join(directory, name), "utf8")) as T).filter((record) => !normalized || record.relativePath === normalized).sort((left, right) => (left.capturedAt ?? "").localeCompare(right.capturedAt ?? ""));
+  }
+
+  private historyArtifactPath(path: string, directoryName: "recovery" | "failed" | "conflicts", id: string, extension: ".bin" | ".incoming"): string {
+    const directory = resolve(this.appDataRoot, directoryName);
+    const expected = join(directory, `${id}${extension}`);
+    if (resolve(path) !== expected) throw new VaultSafetyError("History artifact path is outside the managed recovery directories");
+    return expected;
+  }
+
+  private removeConflictArtifact(record: ConflictRecord): void {
+    const path = this.historyArtifactPath(record.path, "conflicts", record.id, ".incoming");
+    this.removeArtifact(path);
+    this.removeArtifact(join(dirname(path), `${record.id}.json`));
+  }
+
+  private removeArtifact(path: string): void {
+    if (existsSync(path)) unlinkSync(path);
   }
 
   private currentRevision(filePath: string): string | null {

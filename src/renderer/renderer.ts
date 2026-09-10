@@ -1,4 +1,4 @@
-import {DEFAULT_WORKSPACE_SETTINGS, type EditorMode, type NoteContext, type OpenObsidianAPI, type WorkspaceSettings} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, type EditorMode, type NoteContext, type OpenObsidianAPI, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -28,6 +28,17 @@ const historyPanel = document.querySelector<HTMLElement>("#history-panel");
 const closeHistoryButton = document.querySelector<HTMLButtonElement>("#close-history");
 const historySummary = document.querySelector<HTMLElement>("#history-summary");
 const historyList = document.querySelector<HTMLElement>("#history-list");
+const retentionSummary = document.querySelector<HTMLElement>("#retention-summary");
+const reviewRetentionButton = document.querySelector<HTMLButtonElement>("#review-retention");
+const cleanupHistoryButton = document.querySelector<HTMLButtonElement>("#cleanup-history");
+const syncToolList = document.querySelector<HTMLElement>("#sync-tool-list");
+const conflictBox = document.querySelector<HTMLElement>("#conflict-box");
+const conflictTitle = document.querySelector<HTMLElement>("#conflict-title");
+const conflictSummary = document.querySelector<HTMLElement>("#conflict-summary");
+const conflictOutput = document.querySelector<HTMLElement>("#conflict-output");
+const closeConflictButton = document.querySelector<HTMLButtonElement>("#close-conflict");
+const keepCurrentButton = document.querySelector<HTMLButtonElement>("#keep-current");
+const keepIncomingButton = document.querySelector<HTMLButtonElement>("#keep-incoming");
 const status = document.querySelector<HTMLDivElement>("#status");
 const noteTabs = document.querySelector<HTMLElement>("#note-tabs");
 const editorStage = document.querySelector<HTMLElement>("#editor-stage");
@@ -57,6 +68,7 @@ let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS};
 let tabStates: NoteTab[] = [];
 let contextRequestId = 0;
 let paletteRequestId = 0;
+let selectedConflict: VaultHistoryRecord | null = null;
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -203,6 +215,8 @@ function updateChronicleControls(): void {
   setDisabled(openQuickSwitcherButton, !selectedSummary);
   setDisabled(reviewButton, !selectedSummary || selectedSummary.git.vaultType !== "chronicle");
   setDisabled(historyButton, !selectedSummary);
+  setDisabled(reviewRetentionButton, !selectedSummary);
+  if (!selectedSummary) setDisabled(cleanupHistoryButton, true);
 }
 
 function updateEditorState(): void {
@@ -596,9 +610,30 @@ function restoreAction(revision: string): HTMLButtonElement {
   return button;
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} bytes`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GiB`;
+}
+
+function inspectConflictAction(record: VaultHistoryRecord): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "history-restore";
+  button.textContent = "Inspect conflict";
+  button.title = `Inspect incoming bytes for ${record.relativePath}`;
+  button.addEventListener("click", () => void inspectConflict(record));
+  return button;
+}
+
+function conflictAction(record: VaultHistoryRecord): HTMLButtonElement | undefined {
+  return record.kind === "conflict" ? inspectConflictAction(record) : undefined;
+}
+
 function recoveryRow(record: Awaited<ReturnType<OpenObsidianAPI["historyRecords"]>>[number]): HTMLDivElement {
   const protection = record.protected ? "protected" : "retained until cleanup";
-  return historyRow(`${record.kind} · ${record.relativePath}`, `${record.capturedAt} · ${record.bytes} bytes · ${protection}`);
+  return historyRow(`${record.kind} · ${record.relativePath}`, `${record.capturedAt} · ${formatBytes(record.bytes)} · ${protection}`, conflictAction(record));
 }
 
 function emptyHistoryRow(): HTMLParagraphElement {
@@ -620,6 +655,145 @@ function renderHistory(commits: Awaited<ReturnType<OpenObsidianAPI["chronicleHis
   const selectedMessage = selectedPath ? `Restore actions target ${selectedPath}.` : "Open a note to enable a commit restore action.";
   setText(historySummary, `${selectedMessage} ${commits.length} Chronicle commit${commits.length === 1 ? "" : "s"} · ${records.length} local recovery record${records.length === 1 ? "" : "s"}.`);
   renderHistoryList(commits, records);
+  selectedConflict = null;
+  setHidden(conflictBox, true);
+}
+
+function renderRetentionSummary(plan: Awaited<ReturnType<OpenObsidianAPI["historyPlan"]>>): void {
+  const warning = plan.warning ? " · protected history exceeds the configured cap" : "";
+  setText(retentionSummary, `${plan.retainedCount} retained (${formatBytes(plan.retainedBytes)}) · ${plan.pruneableCount} pruneable (${formatBytes(plan.pruneableBytes)}) · ${plan.protectedCount} protected${warning}.`);
+  setDisabled(cleanupHistoryButton, plan.pruneableCount === 0 || !selectedSummary);
+}
+
+async function retentionPlanRequest(): Promise<void> {
+  if (!api || !selectedSummary) return;
+  try {
+    renderRetentionSummary(await api.historyPlan(DEFAULT_HISTORY_POLICY));
+  } catch (error) {
+    setText(retentionSummary, errorText(error, "Unable to review recovery retention."));
+    setDisabled(cleanupHistoryButton, true);
+  }
+}
+
+function renderSyncTools(dispositions: SyncToolDisposition[]): void {
+  if (!syncToolList) return;
+  syncToolList.replaceChildren(...dispositions.map((disposition) => {
+    const row = document.createElement("div");
+    row.className = "sync-tool-row";
+    row.dataset.mode = disposition.mode;
+    const name = document.createElement("strong");
+    name.textContent = `${disposition.name} · ${disposition.mode}`;
+    const note = document.createElement("span");
+    note.textContent = disposition.note;
+    row.append(name, note);
+    return row;
+  }));
+}
+
+async function loadSyncTools(): Promise<void> {
+  if (!api) return;
+  try {
+    renderSyncTools(await api.syncTools());
+  } catch (error) {
+    setText(syncToolList, errorText(error, "Unable to load external sync dispositions."));
+  }
+}
+
+async function cleanupHistoryRequest(): Promise<void> {
+  if (!api || !selectedSummary) return;
+  setDisabled(cleanupHistoryButton, true);
+  setStatus("Removing only expired or over-cap non-conflict recovery records…");
+  try {
+    const result = await api.cleanupHistory(DEFAULT_HISTORY_POLICY);
+    await historyRequest();
+    setStatus(cleanupSuccessMessage(result.removed.length));
+  } catch (error) {
+    setStatus(errorText(error, "Unable to clean up recovery history; protected conflicts remain intact."));
+    await retentionPlanRequest();
+  }
+}
+
+function cleanupSuccessMessage(count: number): string {
+  return `${count} recovery record${count === 1 ? "" : "s"} removed; protected conflicts were retained.`;
+}
+
+function closeConflict(): void {
+  selectedConflict = null;
+  setHidden(conflictBox, true);
+}
+
+function renderConflictContent(record: VaultHistoryRecord, content: Awaited<ReturnType<OpenObsidianAPI["readConflict"]>>): void {
+  if (selectedConflict?.id !== record.id) return;
+  setText(conflictTitle, `Conflict · ${record.relativePath}`);
+  setText(conflictSummary, `Incoming bytes captured ${record.capturedAt} · ${formatBytes(record.bytes)} · revision ${content.revision.slice(0, 12)}…`);
+  setText(conflictOutput, decodeBase64(content.base64));
+  setDisabled(keepCurrentButton, false);
+  setDisabled(keepIncomingButton, false);
+}
+
+async function inspectConflict(record: VaultHistoryRecord): Promise<void> {
+  if (!api || record.kind !== "conflict") return;
+  selectedConflict = record;
+  setHidden(conflictBox, false);
+  setText(conflictTitle, `Conflict · ${record.relativePath}`);
+  setText(conflictSummary, "Reading the preserved incoming bytes without changing the vault…");
+  setText(conflictOutput, "Loading incoming bytes…");
+  setDisabled(keepCurrentButton, true);
+  setDisabled(keepIncomingButton, true);
+  try {
+    renderConflictContent(record, await api.readConflict({id: record.id, relativePath: record.relativePath}));
+  } catch (error) {
+    setText(conflictSummary, errorText(error, "Unable to read the preserved conflict bytes."));
+  }
+}
+
+function applyConflictReadToTab(response: NonNullable<Awaited<ReturnType<OpenObsidianAPI["resolveConflict"]>>["read"]>): void {
+  const tab = tabStates.find((candidate) => candidate.path === response.relativePath);
+  if (!tab) return;
+  const content = decodeBase64(response.base64);
+  tab.revision = response.revision;
+  tab.content = content;
+  tab.dirty = false;
+  tab.loaded = true;
+  if (selectedPath !== response.relativePath) return;
+  selectedRevision = response.revision;
+  dirty = false;
+  if (editor) editor.value = content;
+  renderNotePreview(content);
+  renderTabs();
+  updateEditorState();
+  void loadNoteContext(response.relativePath);
+}
+
+function conflictSelection(): VaultHistoryRecord | null {
+  return selectedConflict?.kind === "conflict" ? selectedConflict : null;
+}
+
+function conflictActionLabel(action: "keep-current" | "keep-incoming"): string {
+  return action === "keep-incoming" ? "Incoming" : "Current";
+}
+
+function applyConflictResolutionRead(read: NonNullable<Awaited<ReturnType<OpenObsidianAPI["resolveConflict"]>>["read"]> | undefined): void {
+  if (read) applyConflictReadToTab(read);
+}
+
+async function resolveSelectedConflict(action: "keep-current" | "keep-incoming"): Promise<void> {
+  const record = conflictSelection();
+  if (!api || !record) return;
+  setDisabled(keepCurrentButton, true);
+  setDisabled(keepIncomingButton, true);
+  setStatus(`Keeping ${conflictActionLabel(action).toLocaleLowerCase()} bytes for ${record.relativePath}…`);
+  try {
+    const result = await api.resolveConflict({id: record.id, relativePath: record.relativePath, action});
+    applyConflictResolutionRead(result.read);
+    closeConflict();
+    await historyRequest();
+    setStatus(`${conflictActionLabel(action)} bytes kept for ${record.relativePath}; the conflict record was resolved explicitly.`);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to resolve the conflict; both preserved versions remain available."));
+    setDisabled(keepCurrentButton, false);
+    setDisabled(keepIncomingButton, false);
+  }
 }
 
 async function loadHistory(client: OpenObsidianAPI, chronicle: boolean): Promise<{commits: Awaited<ReturnType<OpenObsidianAPI["chronicleHistory"]>>; records: Awaited<ReturnType<OpenObsidianAPI["historyRecords"]>>}> {
@@ -636,6 +810,7 @@ async function historyRequest(): Promise<void> {
     const history = await loadHistory(api, selectedSummary.git.vaultType === "chronicle");
     togglePanel(historyPanel, true);
     renderHistory(history.commits, history.records);
+    await Promise.all([retentionPlanRequest(), loadSyncTools()]);
     setStatus("History is read-only until you explicitly choose a restore action.");
   } catch (error) {
     setStatus(errorText(error, "Unable to read vault history."));
@@ -831,6 +1006,8 @@ function showNoVault(): void {
   setHidden(changePanel, true);
   setHidden(historyPanel, true);
   setHidden(settingsPanel, true);
+  setHidden(conflictBox, true);
+  selectedConflict = null;
   changeReview = null;
   updateChronicleControls();
   setStatus(summaryMessage(selectedSummary));
@@ -890,6 +1067,11 @@ if (defaultEditorMode) defaultEditorMode.addEventListener("change", () => {
   if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);
 });
 if (splitView) splitView.addEventListener("change", () => setSplitView(splitView.checked));
+if (reviewRetentionButton) reviewRetentionButton.addEventListener("click", () => void retentionPlanRequest());
+if (cleanupHistoryButton) cleanupHistoryButton.addEventListener("click", () => void cleanupHistoryRequest());
+if (closeConflictButton) closeConflictButton.addEventListener("click", closeConflict);
+if (keepCurrentButton) keepCurrentButton.addEventListener("click", () => void resolveSelectedConflict("keep-current"));
+if (keepIncomingButton) keepIncomingButton.addEventListener("click", () => void resolveSelectedConflict("keep-incoming"));
 if (reviewButton) reviewButton.addEventListener("click", () => void reviewChangesRequest());
 if (historyButton) historyButton.addEventListener("click", () => void historyRequest());
 if (closeChangesButton) closeChangesButton.addEventListener("click", () => setHidden(changePanel, true));

@@ -85,6 +85,24 @@ test("concurrent edits preserve incoming bytes as a conflict", () => {
   expect(readFileSync(join(fixture.root, "note.md"))).toEqual(external);
 });
 
+test("conflict review exposes incoming bytes and requires an explicit resolution", () => {
+  const fixture = createFixture();
+  const store = new VaultStore(fixture.root, fixture.appData);
+  const original = store.read("note.md");
+  const incoming = Buffer.from("incoming edit\n", "utf8");
+  writeFileSync(join(fixture.root, "note.md"), Buffer.from("external edit\n", "utf8"));
+
+  expect(() => store.write({relativePath: "note.md", expectedRevision: original.revision, bytes: incoming})).toThrow(RevisionConflict);
+  const conflict = store.listConflicts("note.md")[0]!;
+  expect(store.readConflict(conflict.id, "note.md").bytes).toEqual(incoming);
+  const resolved = store.resolveConflict(conflict.id, "keep-incoming", "note.md");
+
+  expect(resolved.action).toBe("keep-incoming");
+  expect(readFileSync(join(fixture.root, "note.md"))).toEqual(incoming);
+  expect(store.listConflicts("note.md")).toEqual([]);
+  expect(store.listRecovery("note.md")).toHaveLength(1);
+});
+
 test("three-way merge writes disjoint edits and preserves overlapping conflicts", () => {
   const fixture = createFixture();
   const mergePath = join(fixture.root, "merge.md");

@@ -16,6 +16,11 @@ const api: OpenObsidianAPI = {
   noteContext: (relativePath) => ipcRenderer.invoke(CHANNELS.noteContext, relativePath),
   loadSettings: () => ipcRenderer.invoke(CHANNELS.loadSettings),
   saveSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveSettings, settings),
+  historyPlan: (policy) => ipcRenderer.invoke(CHANNELS.historyPlan, policy),
+  cleanupHistory: (policy) => ipcRenderer.invoke(CHANNELS.cleanupHistory, policy),
+  readConflict: (request) => ipcRenderer.invoke(CHANNELS.readConflict, request),
+  resolveConflict: (request) => ipcRenderer.invoke(CHANNELS.resolveConflict, request),
+  syncTools: () => ipcRenderer.invoke(CHANNELS.syncTools),
 };
 
 contextBridge.exposeInMainWorld("openObsidian", api);

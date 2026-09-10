@@ -13,6 +13,11 @@ export const CHANNELS = {
   noteContext: "vault:note-context",
   loadSettings: "workspace:load-settings",
   saveSettings: "workspace:save-settings",
+  historyPlan: "vault:history-plan",
+  cleanupHistory: "vault:cleanup-history",
+  readConflict: "vault:read-conflict",
+  resolveConflict: "vault:resolve-conflict",
+  syncTools: "workspace:sync-tools",
 } as const;
 
 export type VaultGitSummary = {
@@ -86,6 +91,59 @@ export type VaultHistoryRecord = {
   protected: boolean;
   expectedRevision?: string | null;
   currentRevision?: string | null;
+};
+
+export type HistoryPolicy = {
+  maxAgeDays: number;
+  maxBytes: number;
+};
+
+export const DEFAULT_HISTORY_POLICY: HistoryPolicy = {maxAgeDays: 30, maxBytes: 5 * 1024 * 1024 * 1024};
+
+export type HistoryPlanSummary = {
+  retainedCount: number;
+  pruneableCount: number;
+  protectedCount: number;
+  retainedBytes: number;
+  pruneableBytes: number;
+  warning: boolean;
+};
+
+export type HistoryCleanupResult = {
+  removed: string[];
+  protected: string[];
+  warning: boolean;
+};
+
+export type ConflictReadResponse = {
+  id: string;
+  relativePath: string;
+  base64: string;
+  revision: string;
+};
+
+export type ConflictResolutionAction = "keep-current" | "keep-incoming";
+
+export type ConflictResolutionRequest = {
+  id: string;
+  relativePath: string;
+  action: ConflictResolutionAction;
+};
+
+export type ConflictResolutionResponse = {
+  id: string;
+  relativePath: string;
+  action: ConflictResolutionAction;
+  read?: VaultReadResponse;
+};
+
+export type SyncToolDisposition = {
+  id: string;
+  name: string;
+  mode: "built-in" | "manual" | "unsupported";
+  verification: "contract-only";
+  remoteContacted: false;
+  note: string;
 };
 
 export type ChronicleDiffRequest = {
@@ -166,6 +224,21 @@ export function validateWorkspaceSettings(value: unknown): WorkspaceSettings {
   return {editorMode: value.editorMode as EditorMode, splitView: value.splitView};
 }
 
+export function validateHistoryPolicy(value: unknown): HistoryPolicy {
+  if (!isRecord(value) || !Number.isInteger(value.maxAgeDays) || (value.maxAgeDays as number) < 0 || !Number.isSafeInteger(value.maxBytes) || (value.maxBytes as number) < 0) throw new Error("Invalid history policy");
+  return {maxAgeDays: value.maxAgeDays as number, maxBytes: value.maxBytes as number};
+}
+
+export function validateConflictReadRequest(value: unknown): {id: string; relativePath: string} {
+  if (!isRecord(value) || typeof value.id !== "string" || value.id.length === 0 || typeof value.relativePath !== "string" || value.relativePath.length === 0) throw new Error("Invalid conflict read request");
+  return {id: value.id, relativePath: value.relativePath};
+}
+
+export function validateConflictResolutionRequest(value: unknown): ConflictResolutionRequest {
+  if (!isRecord(value) || typeof value.id !== "string" || value.id.length === 0 || typeof value.relativePath !== "string" || value.relativePath.length === 0 || (value.action !== "keep-current" && value.action !== "keep-incoming")) throw new Error("Invalid conflict resolution request");
+  return {id: value.id, relativePath: value.relativePath, action: value.action};
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   listFiles: () => Promise<VaultFileSummary[]>;
@@ -181,4 +254,9 @@ export type OpenObsidianAPI = {
   noteContext: (relativePath: string) => Promise<NoteContext>;
   loadSettings: () => Promise<WorkspaceSettings>;
   saveSettings: (settings: WorkspaceSettings) => Promise<WorkspaceSettings>;
+  historyPlan: (policy?: HistoryPolicy) => Promise<HistoryPlanSummary>;
+  cleanupHistory: (policy?: HistoryPolicy) => Promise<HistoryCleanupResult>;
+  readConflict: (request: {id: string; relativePath: string}) => Promise<ConflictReadResponse>;
+  resolveConflict: (request: ConflictResolutionRequest) => Promise<ConflictResolutionResponse>;
+  syncTools: () => Promise<SyncToolDisposition[]>;
 };

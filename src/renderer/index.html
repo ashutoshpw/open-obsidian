@@ -68,6 +68,19 @@
       .history-meta { margin-top: 4px; overflow-wrap: anywhere; white-space: normal; }
       .history-restore { flex: 0 0 auto; border: 1px solid #ffffff1e; border-radius: 7px; padding: 6px 8px; background: #ffffff0b; color: #eef0f6; font-size: 11px; }
       .history-restore:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
+      .history-tools, .conflict-box { display: grid; gap: 10px; border: 1px solid #ffffff12; border-radius: 9px; padding: 12px; background: #ffffff05; }
+      .history-tools h3, .conflict-box h3 { margin: 0; color: #eef0f6; font-size: 12px; }
+      .history-tools p, .conflict-box p { margin: 0; color: #9da3b5; font-size: 11px; line-height: 1.5; }
+      .history-tools button, .conflict-actions button { border: 1px solid #ffffff1e; border-radius: 7px; padding: 6px 9px; background: #ffffff0b; color: #eef0f6; font-size: 11px; }
+      .history-tools button:not(:disabled):hover, .conflict-actions button:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
+      .conflict-box[hidden] { display: none; }
+      .conflict-output { max-height: 220px; overflow: auto; margin: 0; border: 1px solid #ffffff12; border-radius: 8px; padding: 10px; background: #0c0e12; color: #ffd28b; font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+      .conflict-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .sync-tool-list { display: grid; gap: 6px; }
+      .sync-tool-row { display: grid; gap: 3px; border: 1px solid #ffffff12; border-radius: 7px; padding: 8px 9px; background: #ffffff04; }
+      .sync-tool-row strong { color: #d8dbe5; font-size: 11px; }
+      .sync-tool-row span { color: #858b9c; font-size: 11px; line-height: 1.45; }
+      .sync-tool-row[data-mode="unsupported"] strong { color: #ffd28b; }
       .editor-wrap { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; padding: 18px clamp(20px, 6vw, 90px) 28px; }
       .editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
       .view-switch { display: flex; gap: 3px; padding: 3px; border: 1px solid #ffffff14; border-radius: 9px; background: #0e1015aa; }
@@ -148,6 +161,9 @@
           <div class="panel-header"><h2>History and recovery</h2><button class="panel-close" id="close-history" type="button">Close</button></div>
           <p class="panel-summary" id="history-summary">No history loaded.</p>
           <div class="history-list" id="history-list" aria-label="Vault history"></div>
+          <section class="history-tools" aria-label="Recovery retention"><h3>Recovery retention</h3><p id="retention-summary">Review retention before removing old non-conflict recovery records.</p><button class="tool-action" id="review-retention" type="button">Review retention</button><button class="tool-action" id="cleanup-history" type="button" disabled>Clean up pruneable history</button></section>
+          <section class="history-tools" aria-label="External sync compatibility"><h3>External sync compatibility</h3><p>Named dispositions are shown explicitly; no Obsidian Sync or Publish access is implied.</p><div class="sync-tool-list" id="sync-tool-list"></div></section>
+          <section class="conflict-box" id="conflict-box" aria-label="Conflict resolver" hidden><div class="panel-header"><h3 id="conflict-title">Conflict</h3><button class="panel-close" id="close-conflict" type="button">Close</button></div><p id="conflict-summary">Inspect the incoming bytes before resolving this conflict.</p><pre class="conflict-output" id="conflict-output">No conflict selected.</pre><div class="conflict-actions"><button id="keep-current" type="button">Keep current vault bytes</button><button id="keep-incoming" type="button">Keep incoming bytes</button></div></section>
         </section>
         <section class="editor-wrap" aria-label="Note editor"><div class="editor-toolbar"><div class="view-switch" role="group" aria-label="Editor mode"><button class="view-button" data-editor-mode="source" type="button">Source</button><button class="view-button" data-editor-mode="live-preview" type="button">Live preview</button><button class="view-button" data-editor-mode="reading" type="button">Reading</button></div><button class="context-toggle" id="toggle-context" type="button">Hide context</button></div><div class="editor-stage" id="editor-stage"><div class="note-surface"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><article id="note-preview" aria-label="Rendered Markdown" hidden></article><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></div><aside class="context-pane" id="context-pane" aria-label="Note context"><div class="context-group"><h2>Outline</h2><ul class="context-list" id="outline-list"></ul></div><div class="context-group"><h2>Backlinks</h2><ul class="context-list" id="backlinks-list"></ul></div></aside></div></section>
         <div id="status" role="status" aria-live="polite">No vault selected.</div>

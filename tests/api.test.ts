@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateVaultWriteRequest, validateWorkspaceSettings} from "../src/shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -32,4 +32,13 @@ test("workspace settings validation keeps editor modes and split state explicit"
   expect(validateWorkspaceSettings({editorMode: "reading", splitView: false})).toEqual({editorMode: "reading", splitView: false});
   expect(() => validateWorkspaceSettings({editorMode: "wysiwyg", splitView: true})).toThrow("Invalid workspace settings");
   expect(() => validateWorkspaceSettings({editorMode: "source", splitView: "yes"})).toThrow("Invalid workspace settings");
+});
+
+test("history and conflict IPC validation keeps destructive actions explicit", () => {
+  expect(validateHistoryPolicy(DEFAULT_HISTORY_POLICY)).toEqual(DEFAULT_HISTORY_POLICY);
+  expect(validateConflictReadRequest({id: "conflict-id", relativePath: "note.md"})).toEqual({id: "conflict-id", relativePath: "note.md"});
+  expect(validateConflictResolutionRequest({id: "conflict-id", relativePath: "note.md", action: "keep-incoming"})).toEqual({id: "conflict-id", relativePath: "note.md", action: "keep-incoming"});
+  expect(() => validateHistoryPolicy({maxAgeDays: -1, maxBytes: 10})).toThrow("Invalid history policy");
+  expect(() => validateHistoryPolicy({maxAgeDays: 30, maxBytes: Number.POSITIVE_INFINITY})).toThrow("Invalid history policy");
+  expect(() => validateConflictResolutionRequest({id: "conflict-id", relativePath: "note.md", action: "delete"})).toThrow("Invalid conflict resolution request");
 });

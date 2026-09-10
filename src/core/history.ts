@@ -1,17 +1,12 @@
 import type {RecoveryRecord, VaultStore} from "./vault.js";
+import {DEFAULT_HISTORY_POLICY, validateHistoryPolicy, type HistoryPolicy} from "../shared/api.js";
 
-export type HistoryPolicy = {maxAgeDays: number; maxBytes: number};
+export {DEFAULT_HISTORY_POLICY};
+export type {HistoryPolicy};
+
 export type HistoryRecord = RecoveryRecord & {kind: "recovery" | "failed" | "conflict"; protected?: boolean; expectedRevision?: string | null; currentRevision?: string | null};
 export type HistoryPlan = {retained: HistoryRecord[]; pruneable: HistoryRecord[]; protected: HistoryRecord[]; retainedBytes: number; pruneableBytes: number};
 export type HistoryCleanup = {removed: string[]; protected: string[]; warning: boolean};
-
-export const DEFAULT_HISTORY_POLICY: HistoryPolicy = {maxAgeDays: 30, maxBytes: 5 * 1024 * 1024 * 1024};
-
-function validPolicy(policy: HistoryPolicy): HistoryPolicy {
-  if (!Number.isFinite(policy.maxAgeDays) || policy.maxAgeDays < 0) throw new Error("History maxAgeDays must be non-negative");
-  if (!Number.isFinite(policy.maxBytes) || policy.maxBytes < 0) throw new Error("History maxBytes must be non-negative");
-  return policy;
-}
 
 function isProtected(record: HistoryRecord): boolean {
   return record.kind === "conflict" || record.protected === true;
@@ -22,7 +17,7 @@ function isExpired(record: HistoryRecord, cutoff: number): boolean {
 }
 
 export function planHistoryRetention(records: HistoryRecord[], now = new Date(), policy: HistoryPolicy = DEFAULT_HISTORY_POLICY): HistoryPlan {
-  const selected = validPolicy(policy);
+  const selected = validateHistoryPolicy(policy);
   const cutoff = now.getTime() - selected.maxAgeDays * 24 * 60 * 60 * 1000;
   const sorted = [...records].sort((left, right) => right.capturedAt.localeCompare(left.capturedAt));
   const retained: HistoryRecord[] = [];
@@ -64,7 +59,7 @@ export function cleanupHistory(plan: HistoryPlan, policy: HistoryPolicy, remove:
 }
 
 export function historyCapWarning(plan: HistoryPlan, policy: HistoryPolicy): boolean {
-  const selected = validPolicy(policy);
+  const selected = validateHistoryPolicy(policy);
   const protectedBytes = plan.protected.reduce((total, record) => total + record.bytes, 0);
   return protectedBytes > selected.maxBytes;
 }
