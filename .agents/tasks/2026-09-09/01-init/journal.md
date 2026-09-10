@@ -57,3 +57,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: committed the P2.1 recovery/reconciliation increment as `1e63b975e9b9b8e0092b5f42812dfd6ffad53849` with marker `[openobsidian P2.1] Add recovery reconciliation foundation`.
 - Completed: pushed `main` to `origin` and verified the push advanced remote `main` from `38053e9` to the new commit. Durable state now records the pushed head and timestamp.
 - Next operation: inspect the new quality and desktop-build Actions runs; preserve any cross-platform or packaged-runtime failure as an explicit blocker.
+
+## 2026-09-10T07:36:54Z — cross-platform quality fix reconciled and pushed
+
+- Completed: fixed the quality workflow to fetch full Git history for checkpoint-marker validation, enforce LF checkout semantics through `.gitattributes`, and validate the architecture manifest in CI.
+- Completed: committed the fix as `8328eee3a7e4f2075105cead10ec77b04f9d0888` with marker `[openobsidian P0.2] Stabilize cross-platform quality checks` and pushed `main` to `origin/main`.
+- Next operation: poll the new multi-OS quality run and desktop build; the prior quality failure is retained as a CI plumbing finding, not treated as a product-quality pass.
