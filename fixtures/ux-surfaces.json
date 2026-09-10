@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "surfaces": [
+    {"id": "first-run-scan", "label": "First-run and existing-vault scan", "status": "implemented", "markers": ["id=\"select-vault\""], "note": "Selects an existing folder, scans it read-only and exposes local compatibility state."},
+    {"id": "unsupported-extension-report", "label": "Unsupported extension report", "status": "implemented", "markers": ["id=\"file-list\""], "note": "Unsupported and symlink entries remain visible without becoming editable targets."},
+    {"id": "extension-trust-enablement", "label": "Extension trust and enablement", "status": "external-pending", "markers": ["id=\"extension-trust\""], "handoff": "Owner: compatibility-runtime. Prerequisite: unchanged pinned extension bundles and a provisioned runtime; certify mediated enablement or record a D15 denial."},
+    {"id": "provider-setup", "label": "Provider setup", "status": "implemented", "markers": ["id=\"provider-mode\""], "note": "Managed, BYOK and local modes are explicit and show unavailable state without silent fallback."},
+    {"id": "source-inspector", "label": "Source inspector", "status": "implemented", "markers": ["id=\"source-inspector\""], "note": "Citation excerpts show path, heading, line range, revision and a no-model-inference label before opening source."},
+    {"id": "multi-file-diff", "label": "Multi-file diff", "status": "implemented", "markers": ["id=\"diff-path\""], "note": "Chronicle review selects files and switches between aggregate and per-path diffs."},
+    {"id": "conflict-resolver", "label": "Conflict resolver", "status": "implemented", "markers": ["id=\"conflict-box\""], "note": "Preserved incoming bytes are inspectable before an explicit current/incoming resolution."},
+    {"id": "history-restore", "label": "History and restore", "status": "implemented", "markers": ["id=\"history-panel\""], "note": "Chronicle commits and local recovery records remain visible with revision-checked restore actions."},
+    {"id": "settings-search", "label": "Settings search", "status": "implemented", "markers": ["id=\"settings-search\""], "note": "Settings sections are filterable without changing persisted values."},
+    {"id": "keyboard-shortcuts", "label": "Keyboard shortcuts", "status": "implemented", "markers": ["id=\"command-palette\"", "event.key.toLowerCase()"], "note": "Command palette, quick switcher and save shortcuts have visible entry points and a searchable command list."},
+    {"id": "model-management", "label": "Model and download management", "status": "external-pending", "markers": ["id=\"model-management\""], "handoff": "Owner: ai-retrieval. Prerequisite: local model runtime, hardware matrix and download/storage authority; certify integrity, offline, reindex and derivative cleanup behavior."},
+    {"id": "account-billing", "label": "Account and billing", "status": "external-pending", "markers": ["id=\"account-billing\""], "handoff": "Owner: managed-service/backend operations. Prerequisite: authorized managed endpoint, account/entitlement contract and billing policy; no paid provisioning is enabled in this client."},
+    {"id": "safe-mode", "label": "Safe mode and extension bisect", "status": "external-pending", "markers": ["id=\"safe-mode\"", "id=\"safe-mode-action\""], "handoff": "Owner: operations-handoff. Prerequisite: packaged crash restart and extension-disable harness; validate safe-mode launch and bisect without deleting vault data."},
+    {"id": "diagnostics", "label": "Privacy-preserving diagnostics", "status": "implemented", "markers": ["id=\"show-diagnostics\""], "note": "The local manifest excludes note content, provider secrets and absolute paths."}
+  ]
+}

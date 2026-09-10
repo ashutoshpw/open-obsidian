@@ -24,6 +24,7 @@
     "package:dir": "bun run compile && electron-builder --dir --publish never",
     "validate:architecture": "bun scripts/validate-architecture.ts",
     "validate:contracts": "bun scripts/validate-contracts.ts",
+    "validate:surfaces": "bun scripts/validate-ux-surfaces.ts",
     "verify:plugin-selection": "bun scripts/verify-plugin-selection.ts",
     "verify:compatibility-pins": "bun scripts/verify-compatibility-pins.ts",
     "verify:primary-references": "bun scripts/verify-primary-references.ts",

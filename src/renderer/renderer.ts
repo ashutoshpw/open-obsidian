@@ -78,6 +78,11 @@ const runRetrievalButton = document.querySelector<HTMLButtonElement>("#run-retri
 const retrievalMeta = document.querySelector<HTMLElement>("#retrieval-meta");
 const retrievalAnswer = document.querySelector<HTMLElement>("#retrieval-answer");
 const retrievalResults = document.querySelector<HTMLElement>("#retrieval-results");
+const sourceInspector = document.querySelector<HTMLElement>("#source-inspector");
+const sourceInspectorPath = document.querySelector<HTMLElement>("#source-inspector-path");
+const sourceInspectorMeta = document.querySelector<HTMLElement>("#source-inspector-meta");
+const sourceInspectorSnippet = document.querySelector<HTMLElement>("#source-inspector-snippet");
+const openSourceInspectorButton = document.querySelector<HTMLButtonElement>("#open-source-inspector");
 const openAIReviewButton = document.querySelector<HTMLButtonElement>("#open-ai-review");
 const aiPanel = document.querySelector<HTMLElement>("#ai-panel");
 const closeAIPanelButton = document.querySelector<HTMLButtonElement>("#close-ai");
@@ -93,6 +98,9 @@ const aiOrganization = document.querySelector<HTMLElement>("#ai-organization");
 const settingsPanel = document.querySelector<HTMLElement>("#settings-panel");
 const toggleSettingsButton = document.querySelector<HTMLButtonElement>("#toggle-settings");
 const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-settings");
+const settingsSearch = document.querySelector<HTMLInputElement>("#settings-search");
+const settingsSearchStatus = document.querySelector<HTMLElement>("#settings-search-status");
+const settingsSections = [...document.querySelectorAll<HTMLElement>("[data-settings-section]")];
 const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-editor-mode");
 const splitView = document.querySelector<HTMLInputElement>("#split-view");
 const historyAgeDays = document.querySelector<HTMLInputElement>("#history-age-days");
@@ -112,6 +120,10 @@ const refreshProviderButton = document.querySelector<HTMLButtonElement>("#refres
 const providerStatusOutput = document.querySelector<HTMLElement>("#provider-status");
 const showDiagnosticsButton = document.querySelector<HTMLButtonElement>("#show-diagnostics");
 const diagnosticsOutput = document.querySelector<HTMLElement>("#diagnostics-output");
+const extensionBisectButton = document.querySelector<HTMLButtonElement>("#extension-bisect");
+const showModelHandoffButton = document.querySelector<HTMLButtonElement>("#show-model-handoff");
+const showAccountBillingHandoffButton = document.querySelector<HTMLButtonElement>("#show-account-billing-handoff");
+const safeModeButton = document.querySelector<HTMLButtonElement>("#safe-mode-action");
 const openGraphButton = document.querySelector<HTMLButtonElement>("#open-graph");
 const openCanvasButton = document.querySelector<HTMLButtonElement>("#open-canvas");
 const openBaseButton = document.querySelector<HTMLButtonElement>("#open-base");
@@ -157,6 +169,7 @@ let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
 let retrievalData: RetrievalResponse | null = null;
 let pendingCitation: RetrievalCitation | null = null;
+let sourceInspectorCitation: RetrievalCitation | null = null;
 let aiChangeSet: AIChangeSet | null = null;
 let aiUndoId: string | null = null;
 const uiLocale = normalizeLocale(navigator.language);
@@ -217,6 +230,46 @@ function setDisabled(element: HTMLButtonElement | HTMLTextAreaElement | null, va
 
 function setHidden(element: HTMLElement | null, value: boolean): void {
   if (element) element.hidden = value;
+}
+
+function settingsSectionMatches(section: HTMLElement, query: string): boolean {
+  const haystack = `${section.dataset.settingsSection ?? ""} ${section.textContent ?? ""}`.toLocaleLowerCase();
+  return !query || haystack.includes(query);
+}
+
+function settingsQueryValue(): string {
+  return settingsSearch?.value.trim().toLocaleLowerCase() ?? "";
+}
+
+function visibleSettingsSectionCount(query: string): number {
+  let visible = 0;
+  for (const section of settingsSections) {
+    const matches = settingsSectionMatches(section, query);
+    setHidden(section, !matches);
+    visible += Number(matches);
+  }
+  return visible;
+}
+
+function settingsSearchMessage(query: string, visible: number): string {
+  if (!query) return "Showing all settings.";
+  return `${visible} setting section${visible === 1 ? "" : "s"} match “${query}”.`;
+}
+
+function renderSettingsSearch(): void {
+  const query = settingsQueryValue();
+  setText(settingsSearchStatus, settingsSearchMessage(query, visibleSettingsSectionCount(query)));
+}
+
+function openSettingsPanel(): void {
+  if (!settingsPanel) return;
+  togglePanel(settingsPanel, true);
+  renderSettingsSearch();
+  settingsSearch?.focus();
+}
+
+function reportExternalHandoff(label: string): void {
+  setStatus(`${label} remains external-pending; no unsupported runtime action was started.`);
 }
 
 function applySharedDesignTokens(): void {
@@ -1063,7 +1116,8 @@ function workspaceCommands(): WorkspaceCommand[] {
     {label: "Open graph", shortcut: "", available: () => Boolean(selectedSummary), run: () => void openGraphPanel()},
     {label: "Open Canvas", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".canvas")), run: () => void openCanvasPanel()},
     {label: "Open Bases", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".base")), run: () => void openBasePanel()},
-    {label: "Open settings", shortcut: "", available: () => Boolean(settingsPanel), run: () => { if (settingsPanel) togglePanel(settingsPanel, true); }},
+    {label: "Open settings", shortcut: "", available: () => Boolean(settingsPanel), run: openSettingsPanel},
+    {label: "Search settings", shortcut: "", available: () => Boolean(settingsPanel), run: openSettingsPanel},
     {label: "Review changes", shortcut: "", available: () => Boolean(selectedSummary?.git.vaultType === "chronicle"), run: () => void reviewChangesRequest()},
     {label: "Open history", shortcut: "", available: () => Boolean(selectedSummary), run: () => void historyRequest()},
     {label: "Toggle context pane", shortcut: "", available: () => Boolean(selectedPath), run: () => setSplitView(!workspaceSettings.splitView)},
@@ -1569,6 +1623,27 @@ function renderRetrievalResults(passages: RetrievalResponse["passages"]): void {
   if (passages.length === 0) retrievalResults.append(contextEmpty("No source passages match this scope. The answer is intentionally marked as missing evidence."));
 }
 
+function renderSourceInspector(citation: RetrievalCitation): void {
+  sourceInspectorCitation = citation;
+  setText(sourceInspectorPath, citation.relativePath);
+  setText(sourceInspectorMeta, `${citation.heading ?? "Untitled block"} · lines ${citation.lineStart}-${citation.lineEnd} · revision ${citation.revision.slice(0, 12)}… · no model inference`);
+  setText(sourceInspectorSnippet, citation.snippet);
+  setHidden(sourceInspector, false);
+}
+
+function resetSourceInspector(): void {
+  sourceInspectorCitation = null;
+  setHidden(sourceInspector, true);
+}
+
+function openSourceInspector(): void {
+  if (!sourceInspectorCitation) {
+    setStatus("Select a grounded source passage before opening the source inspector.");
+    return;
+  }
+  openRetrievalCitation(sourceInspectorCitation);
+}
+
 function renderRetrieval(response: RetrievalResponse): void {
   const safety = response.safety.promptInjectionDetected ? " · instruction-like source treated as untrusted" : "";
   setText(retrievalMeta, `${response.mode === "local-hybrid" ? "Local hybrid" : "Keyword fallback"} · provider destination: none · ${retrievalScopeLabel(response.scope)} · ${response.indexedFiles.length} source files · ${response.excludedFiles.length} excluded${safety}`);
@@ -1577,6 +1652,7 @@ function renderRetrieval(response: RetrievalResponse): void {
 }
 
 function openRetrievalCitation(citation: RetrievalCitation): void {
+  renderSourceInspector(citation);
   pendingCitation = citation;
   openFile(citation.relativePath);
   if (selectedPath === citation.relativePath && currentTab()?.loaded) {
@@ -2373,6 +2449,7 @@ function resetEditor(): void {
   baseData = null;
   retrievalData = null;
   pendingCitation = null;
+  resetSourceInspector();
   aiChangeSet = null;
   aiUndoId = null;
   renderTabs();
@@ -2403,6 +2480,7 @@ function showNoVault(): void {
   baseData = null;
   retrievalData = null;
   pendingCitation = null;
+  resetSourceInspector();
   aiChangeSet = null;
   aiUndoId = null;
   updateChronicleControls();
@@ -2500,10 +2578,11 @@ if (toggleContextButton) toggleContextButton.addEventListener("click", () => set
 if (toggleLeftSidebarButton) toggleLeftSidebarButton.addEventListener("click", () => setLeftSidebarVisible(!leftSidebarVisible));
 if (toggleSettingsButton) toggleSettingsButton.addEventListener("click", () => {
   if (!settingsPanel) return;
-  const visible: boolean = settingsPanel.hidden === true;
-  togglePanel(settingsPanel, visible);
+  if (settingsPanel.hidden) openSettingsPanel();
+  else togglePanel(settingsPanel, false);
 });
 if (closeSettingsButton) closeSettingsButton.addEventListener("click", () => setHidden(settingsPanel, true));
+if (settingsSearch) settingsSearch.addEventListener("input", renderSettingsSearch);
 if (defaultEditorMode) defaultEditorMode.addEventListener("change", () => {
   const mode = defaultEditorMode.value;
   if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);
@@ -2515,6 +2594,11 @@ if (saveProviderButton) saveProviderButton.addEventListener("click", () => void 
 if (saveProviderCredentialButton) saveProviderCredentialButton.addEventListener("click", () => void saveProviderCredential());
 if (refreshProviderButton) refreshProviderButton.addEventListener("click", () => void loadProviderConfiguration());
 if (showDiagnosticsButton) showDiagnosticsButton.addEventListener("click", () => void loadDiagnosticManifest());
+if (extensionBisectButton) extensionBisectButton.addEventListener("click", () => reportExternalHandoff("Extension trust and bisect"));
+if (showModelHandoffButton) showModelHandoffButton.addEventListener("click", () => reportExternalHandoff("Model and download management"));
+if (showAccountBillingHandoffButton) showAccountBillingHandoffButton.addEventListener("click", () => reportExternalHandoff("Account and billing"));
+if (safeModeButton) safeModeButton.addEventListener("click", () => reportExternalHandoff("Safe mode"));
+if (openSourceInspectorButton) openSourceInspectorButton.addEventListener("click", openSourceInspector);
 if (reviewRetentionButton) reviewRetentionButton.addEventListener("click", () => void retentionPlanRequest());
 if (cleanupHistoryButton) cleanupHistoryButton.addEventListener("click", () => void cleanupHistoryRequest());
 if (closeConflictButton) closeConflictButton.addEventListener("click", closeConflict);
@@ -2555,6 +2639,7 @@ document.addEventListener("keydown", handleKeydown);
 applySharedDesignTokens();
 applySharedActionMetadata();
 renderLeftSidebar();
+renderSettingsSearch();
 applyLocale();
 updateEditorState();
 workspaceStateReady = loadWorkspaceSettings().then(() => loadWorkspaceState()).then(() => loadProviderConfiguration());

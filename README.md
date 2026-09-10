@@ -9,12 +9,13 @@ Use the shortest check that matches the change:
 ```sh
 bun install --frozen-lockfile
 bun run check:fast       # routine source/UI changes
+bun run validate:surfaces # verify named UX surfaces and external handoffs
 bun run quality          # phase boundary or release-candidate gate
 bun run audit:fallow     # repository health report
 bun run audit:packaged -- --artifacts-dir out  # packaged artifact notice audit
 ```
 
-`check:fast` runs state, contract, architecture, accessibility, layout, typecheck, tests, Knip and the changed-file Fallow audit. It intentionally skips Electron compilation, the quality scorecard, packaging and the full release audit. Run `bun run quality` before a phased checkpoint commit or when changing build/release code.
+`check:fast` runs state, contract, architecture, named-UX-surface, accessibility, layout, typecheck, tests, Knip and the changed-file Fallow audit. It intentionally skips Electron compilation, the quality scorecard, packaging and the full release audit. Run `bun run quality` before a phased checkpoint commit or when changing build/release code.
 
 The recurring audit commands are also available separately:
 
@@ -23,10 +24,13 @@ The recurring audit commands are also available separately:
 - `bun run audit:fallow:strict` runs the changed-file Fallow audit without the brief review mode.
 - `bun run audit:fallow` records the full repository health score; its current inherited advisory is tracked rather than hidden.
 - `bun run validate:state` keeps the implementation ledger honest and reports incomplete work instead of turning it into a release pass.
+- `bun run validate:surfaces` checks `fixtures/ux-surfaces.json` against the renderer and requires an owner/prerequisite handoff for every external-pending surface.
 
 ## Reusable UI boundary
 
 `src/shared/ui/index.ts` is the stable, platform-neutral surface for workspace actions, layout blocks, theme tokens and safe Markdown preview data. It has no Electron, DOM or React Native imports. The Electron renderer maps those values to HTML; a future Expo app can map the same action IDs and preview blocks to native `Pressable`, `View` and `Text` components without copying product vocabulary or parsing rules.
+
+The named UI states are recorded in `fixtures/ux-surfaces.json`. Implemented surfaces have renderer markers and notes; unavailable runtime-dependent surfaces remain visibly labeled as external-pending with an owner and prerequisite instead of pretending to be complete.
 
 Keep platform-specific code in `src/electron` and `src/renderer`. Keep reusable contracts and pure transforms in `src/shared/ui` (and other explicitly shared modules), and add tests that prevent native or DOM dependencies from crossing that boundary.
 
