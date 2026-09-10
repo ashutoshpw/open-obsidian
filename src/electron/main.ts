@@ -4,12 +4,16 @@ import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
+import {createNoteFromTextNode, editCanvasTextNode, parseCanvas} from "../core/canvas.js";
+import {evaluateBase, parseBase, type BaseRow, type BaseValue} from "../core/bases.js";
+import {buildVaultGraph} from "../core/graph.js";
 import {cleanupHistory, DEFAULT_HISTORY_POLICY, historyRecordsFromStore, planHistoryRetention} from "../core/history.js";
+import {parseMarkdown} from "../core/markdown.js";
 import {buildNoteContext} from "../core/note-context.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type ConflictReadResponse, type ConflictResolutionResponse, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -181,6 +185,82 @@ function syncToolsRequest(): SyncToolDisposition[] {
   return syncToolDispositions();
 }
 
+function graphRequest(): GraphView {
+  return buildVaultGraph(buildVaultIndex(requireVault()));
+}
+
+function canvasView(store: VaultStore, relativePath: string): CanvasView {
+  const read = store.read(relativePath);
+  const document = parseCanvas(read.bytes);
+  return {relativePath: read.relativePath, revision: read.revision, nodes: document.nodes, edges: document.edges};
+}
+
+function canvasRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): CanvasView {
+  if (typeof value !== "string") throw new Error("Canvas path must be a string");
+  return canvasView(requireVault(), value);
+}
+
+function editCanvasTextRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): CanvasView {
+  const request = validateCanvasTextEditRequest(value);
+  const store = requireVault();
+  const current = store.read(request.relativePath);
+  const bytes = editCanvasTextNode(current.bytes, request.nodeId, request.text);
+  store.write({relativePath: current.relativePath, expectedRevision: request.expectedRevision, bytes});
+  return canvasView(store, current.relativePath);
+}
+
+function createCanvasNoteRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): CanvasCreateNoteResponse {
+  const request = validateCanvasCreateNoteRequest(value);
+  const store = requireVault();
+  const current = store.read(request.relativePath);
+  if (current.revision !== request.expectedRevision) throw new Error("Canvas changed; reopen it before creating a note");
+  const source = createNoteFromTextNode(current.bytes, request.nodeId, request.notePath);
+  const created = store.write({relativePath: source.path, expectedRevision: null, bytes: source.bytes});
+  return {canvas: canvasView(store, current.relativePath), created: {relativePath: created.relativePath, base64: Buffer.from(created.bytes).toString("base64"), revision: created.revision}};
+}
+
+function baseKeyword(value: string): BaseValue | undefined {
+  return {null: null, true: true, false: false}[value];
+}
+
+function baseNumber(value: string): number | undefined {
+  return /^-?\d+(?:\.\d+)?$/.test(value) ? Number(value) : undefined;
+}
+
+function baseValue(rawValue: string): BaseValue {
+  const value = rawValue.trim();
+  const keyword = baseKeyword(value);
+  if (keyword !== undefined) return keyword;
+  return baseNumber(value) ?? value.replace(/^(?:"([\s\S]*)"|'([\s\S]*)')$/, "$1$2");
+}
+
+function baseProperties(store: VaultStore, relativePath: string): Record<string, BaseValue> {
+  try {
+    const read = store.read(relativePath);
+    return Object.fromEntries(parseMarkdown(read.bytes).properties.map((property) => [property.key, baseValue(property.rawValue)]));
+  } catch {
+    return {};
+  }
+}
+
+function baseRows(store: VaultStore): BaseRow[] {
+  return buildVaultIndex(store).files.filter((file) => file.relativePath.toLowerCase().endsWith(".md")).map((file) => ({path: file.relativePath, properties: baseProperties(store, file.relativePath)}));
+}
+
+function baseEvaluationView(document: ReturnType<typeof parseBase>, view: ReturnType<typeof parseBase>["views"][number], rows: BaseRow[]): BaseEvaluationView {
+  const evaluation = evaluateBase({...document, views: [view]}, view.name ?? "", rows);
+  return {name: view.name, type: view.type, rows: evaluation.rows.map((row) => ({path: row.path, values: row.values})), groups: Object.fromEntries(Object.entries(evaluation.groups).map(([key, group]) => [key, group.map((row) => ({path: row.path, values: row.values}))])), issues: evaluation.issues};
+}
+
+function baseRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): BaseResponse {
+  if (typeof value !== "string") throw new Error("Bases path must be a string");
+  const store = requireVault();
+  const read = store.read(value);
+  const document = parseBase(read.bytes);
+  const rows = baseRows(store);
+  return {relativePath: read.relativePath, revision: read.revision, views: document.views.map((view) => baseEvaluationView(document, view, rows))};
+}
+
 function restoreChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
   const request = validateChronicleRestoreRequest(value);
   const store = requireChronicle();
@@ -252,6 +332,11 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.readConflict, conflictReadRequest);
   ipcMain.handle(CHANNELS.resolveConflict, conflictResolutionRequest);
   ipcMain.handle(CHANNELS.syncTools, syncToolsRequest);
+  ipcMain.handle(CHANNELS.graph, graphRequest);
+  ipcMain.handle(CHANNELS.canvas, canvasRequest);
+  ipcMain.handle(CHANNELS.editCanvasText, editCanvasTextRequest);
+  ipcMain.handle(CHANNELS.createCanvasNote, createCanvasNoteRequest);
+  ipcMain.handle(CHANNELS.base, baseRequest);
   ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
   ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
   ipcMain.handle(CHANNELS.noteContext, noteContext);

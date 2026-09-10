@@ -81,6 +81,32 @@
       .sync-tool-row strong { color: #d8dbe5; font-size: 11px; }
       .sync-tool-row span { color: #858b9c; font-size: 11px; line-height: 1.45; }
       .sync-tool-row[data-mode="unsupported"] strong { color: #ffd28b; }
+      .graph-controls, .canvas-controls, .base-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .graph-controls label, .canvas-controls label, .base-controls label { color: #9da3b5; font-size: 11px; }
+      .graph-controls input, .graph-controls select, .canvas-controls select, .base-controls select { min-width: 150px; border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
+      .graph-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+      .graph-grid section { min-width: 0; }
+      .graph-grid h3 { margin: 0 0 7px; color: #eef0f6; font-size: 12px; }
+      .graph-list, .canvas-node-list, .canvas-edge-list, .base-results, .base-issues { display: grid; gap: 6px; max-height: 230px; overflow: auto; }
+      .graph-node, .graph-edge, .canvas-node, .canvas-edge, .base-row, .base-issue { border: 1px solid #ffffff12; border-radius: 8px; padding: 8px 9px; background: #ffffff05; color: #d8dbe5; font-size: 11px; }
+      .graph-node { width: 100%; text-align: left; }
+      .graph-node:not(:disabled):hover { border-color: #a78bfa88; background: #a78bfa18; }
+      .graph-node[data-kind="unresolved"], .base-issue { color: #ffd28b; }
+      .graph-edge, .canvas-edge { color: #9da3b5; overflow-wrap: anywhere; }
+      .canvas-node { display: grid; gap: 8px; }
+      .canvas-node header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+      .canvas-node header strong { color: #eef0f6; font-size: 12px; }
+      .canvas-node header span { color: #858b9c; }
+      .canvas-node textarea, .canvas-node input { width: 100%; border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 8px; background: #0f1116; color: #eef0f6; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .canvas-node textarea { min-height: 70px; resize: vertical; }
+      .canvas-node .node-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+      .canvas-node .node-actions button { border: 1px solid #ffffff1e; border-radius: 7px; padding: 6px 8px; background: #ffffff0b; color: #eef0f6; font-size: 11px; }
+      .canvas-node .node-actions button:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
+      .base-row { display: grid; grid-template-columns: minmax(130px, 0.55fr) minmax(0, 1fr); gap: 8px; }
+      .base-row strong { overflow-wrap: anywhere; color: #c9c1ff; }
+      .base-row span { overflow-wrap: anywhere; color: #d8dbe5; }
+      .base-issue { display: grid; gap: 3px; }
+      .base-issue small { color: #b29b6c; }
       .editor-wrap { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; padding: 18px clamp(20px, 6vw, 90px) 28px; }
       .editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
       .view-switch { display: flex; gap: 3px; padding: 3px; border: 1px solid #ffffff14; border-radius: 9px; background: #0e1015aa; }
@@ -143,7 +169,7 @@
         <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
       </aside>
       <main class="workspace">
-        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-quick-switcher" type="button">Quick switcher</button><button class="tool-action" id="toggle-settings" type="button">Settings</button><button class="tool-action" id="review-changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" type="button" disabled>History</button><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
+        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-quick-switcher" type="button">Quick switcher</button><button class="tool-action" id="open-graph" type="button" disabled>Graph</button><button class="tool-action" id="open-canvas" type="button" disabled>Canvas</button><button class="tool-action" id="open-base" type="button" disabled>Bases</button><button class="tool-action" id="toggle-settings" type="button">Settings</button><button class="tool-action" id="review-changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" type="button" disabled>History</button><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
         <nav class="note-tabs" id="note-tabs" aria-label="Open notes"></nav>
         <section class="tool-panel" id="settings-panel" aria-label="Workspace settings" hidden>
           <div class="panel-header"><h2>Workspace settings</h2><button class="panel-close" id="close-settings" type="button">Close</button></div>
@@ -164,6 +190,26 @@
           <section class="history-tools" aria-label="Recovery retention"><h3>Recovery retention</h3><p id="retention-summary">Review retention before removing old non-conflict recovery records.</p><button class="tool-action" id="review-retention" type="button">Review retention</button><button class="tool-action" id="cleanup-history" type="button" disabled>Clean up pruneable history</button></section>
           <section class="history-tools" aria-label="External sync compatibility"><h3>External sync compatibility</h3><p>Named dispositions are shown explicitly; no Obsidian Sync or Publish access is implied.</p><div class="sync-tool-list" id="sync-tool-list"></div></section>
           <section class="conflict-box" id="conflict-box" aria-label="Conflict resolver" hidden><div class="panel-header"><h3 id="conflict-title">Conflict</h3><button class="panel-close" id="close-conflict" type="button">Close</button></div><p id="conflict-summary">Inspect the incoming bytes before resolving this conflict.</p><pre class="conflict-output" id="conflict-output">No conflict selected.</pre><div class="conflict-actions"><button id="keep-current" type="button">Keep current vault bytes</button><button id="keep-incoming" type="button">Keep incoming bytes</button></div></section>
+        </section>
+        <section class="tool-panel" id="graph-panel" aria-label="Vault graph" hidden>
+          <div class="panel-header"><h2>Vault graph</h2><button class="panel-close" id="close-graph" type="button">Close</button></div>
+          <div class="graph-controls"><label for="graph-query">Find nodes</label><input id="graph-query" type="search" placeholder="Filter files and unresolved links…" autocomplete="off" /><label for="graph-node-kind">Nodes</label><select id="graph-node-kind"><option value="all">All</option><option value="file">Files</option><option value="unresolved">Unresolved</option></select><label for="graph-edge-kind">Edges</label><select id="graph-edge-kind"><option value="all">All</option><option value="link">Links</option><option value="embed">Embeds</option></select></div>
+          <p class="panel-summary" id="graph-summary">Derived graph state does not write to the vault.</p>
+          <div class="graph-grid"><section><h3>Nodes</h3><div class="graph-list" id="graph-node-list"></div></section><section><h3>Edges</h3><div class="graph-list" id="graph-edge-list"></div></section></div>
+        </section>
+        <section class="tool-panel" id="canvas-panel" aria-label="Canvas workspace" hidden>
+          <div class="panel-header"><h2>Canvas</h2><button class="panel-close" id="close-canvas" type="button">Close</button></div>
+          <div class="canvas-controls"><label for="canvas-file">Canvas file</label><select id="canvas-file"></select></div>
+          <p class="panel-summary" id="canvas-summary">Canvas nodes remain source-preserving until an explicit action.</p>
+          <div class="canvas-node-list" id="canvas-node-list"></div>
+          <div class="canvas-edge-list" id="canvas-edge-list"></div>
+        </section>
+        <section class="tool-panel" id="base-panel" aria-label="Bases workspace" hidden>
+          <div class="panel-header"><h2>Bases</h2><button class="panel-close" id="close-base" type="button">Close</button></div>
+          <div class="base-controls"><label for="base-file">Base file</label><select id="base-file"></select><label for="base-view">View</label><select id="base-view"></select></div>
+          <p class="panel-summary" id="base-summary">Bases views are read-only projections over indexed Markdown properties.</p>
+          <div class="base-issues" id="base-issues"></div>
+          <div class="base-results" id="base-results"></div>
         </section>
         <section class="editor-wrap" aria-label="Note editor"><div class="editor-toolbar"><div class="view-switch" role="group" aria-label="Editor mode"><button class="view-button" data-editor-mode="source" type="button">Source</button><button class="view-button" data-editor-mode="live-preview" type="button">Live preview</button><button class="view-button" data-editor-mode="reading" type="button">Reading</button></div><button class="context-toggle" id="toggle-context" type="button">Hide context</button></div><div class="editor-stage" id="editor-stage"><div class="note-surface"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><article id="note-preview" aria-label="Rendered Markdown" hidden></article><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></div><aside class="context-pane" id="context-pane" aria-label="Note context"><div class="context-group"><h2>Outline</h2><ul class="context-list" id="outline-list"></ul></div><div class="context-group"><h2>Backlinks</h2><ul class="context-list" id="backlinks-list"></ul></div></aside></div></section>
         <div id="status" role="status" aria-live="polite">No vault selected.</div>

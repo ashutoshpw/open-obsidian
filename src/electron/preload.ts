@@ -23,6 +23,11 @@ const api: OpenObsidianAPI = {
   syncTools: () => ipcRenderer.invoke(CHANNELS.syncTools),
   loadWorkspaceState: () => ipcRenderer.invoke(CHANNELS.loadWorkspaceState),
   saveWorkspaceState: (state) => ipcRenderer.invoke(CHANNELS.saveWorkspaceState, state),
+  graph: () => ipcRenderer.invoke(CHANNELS.graph),
+  canvas: (relativePath) => ipcRenderer.invoke(CHANNELS.canvas, relativePath),
+  editCanvasText: (request) => ipcRenderer.invoke(CHANNELS.editCanvasText, request),
+  createCanvasNote: (request) => ipcRenderer.invoke(CHANNELS.createCanvasNote, request),
+  base: (relativePath) => ipcRenderer.invoke(CHANNELS.base, relativePath),
 };
 
 contextBridge.exposeInMainWorld("openObsidian", api);

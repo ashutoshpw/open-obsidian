@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type EditorMode, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -60,6 +60,30 @@ const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-ed
 const splitView = document.querySelector<HTMLInputElement>("#split-view");
 const historyAgeDays = document.querySelector<HTMLInputElement>("#history-age-days");
 const historyMaxMiB = document.querySelector<HTMLInputElement>("#history-max-mib");
+const openGraphButton = document.querySelector<HTMLButtonElement>("#open-graph");
+const openCanvasButton = document.querySelector<HTMLButtonElement>("#open-canvas");
+const openBaseButton = document.querySelector<HTMLButtonElement>("#open-base");
+const graphPanel = document.querySelector<HTMLElement>("#graph-panel");
+const closeGraphButton = document.querySelector<HTMLButtonElement>("#close-graph");
+const graphQuery = document.querySelector<HTMLInputElement>("#graph-query");
+const graphNodeKind = document.querySelector<HTMLSelectElement>("#graph-node-kind");
+const graphEdgeKind = document.querySelector<HTMLSelectElement>("#graph-edge-kind");
+const graphSummary = document.querySelector<HTMLElement>("#graph-summary");
+const graphNodeList = document.querySelector<HTMLElement>("#graph-node-list");
+const graphEdgeList = document.querySelector<HTMLElement>("#graph-edge-list");
+const canvasPanel = document.querySelector<HTMLElement>("#canvas-panel");
+const closeCanvasButton = document.querySelector<HTMLButtonElement>("#close-canvas");
+const canvasFile = document.querySelector<HTMLSelectElement>("#canvas-file");
+const canvasSummary = document.querySelector<HTMLElement>("#canvas-summary");
+const canvasNodeList = document.querySelector<HTMLElement>("#canvas-node-list");
+const canvasEdgeList = document.querySelector<HTMLElement>("#canvas-edge-list");
+const basePanel = document.querySelector<HTMLElement>("#base-panel");
+const closeBaseButton = document.querySelector<HTMLButtonElement>("#close-base");
+const baseFile = document.querySelector<HTMLSelectElement>("#base-file");
+const baseView = document.querySelector<HTMLSelectElement>("#base-view");
+const baseSummary = document.querySelector<HTMLElement>("#base-summary");
+const baseIssues = document.querySelector<HTMLElement>("#base-issues");
+const baseResults = document.querySelector<HTMLElement>("#base-results");
 let selectedSummary: VaultSummary | null = null;
 let selectedPath: string | null = null;
 let selectedRevision: string | null = null;
@@ -73,6 +97,10 @@ let contextRequestId = 0;
 let paletteRequestId = 0;
 let selectedConflict: VaultHistoryRecord | null = null;
 let workspaceStateReady: Promise<void> = Promise.resolve();
+let vaultFiles: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>> = [];
+let graphData: GraphView | null = null;
+let canvasData: CanvasView | null = null;
+let baseData: BaseResponse | null = null;
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -318,10 +346,21 @@ function wholeNumber(value: number, minimum: number): number | null {
 
 function updateChronicleControls(): void {
   setDisabled(openQuickSwitcherButton, !selectedSummary);
+  updateWorkspaceToolControls();
   setDisabled(reviewButton, !selectedSummary || selectedSummary.git.vaultType !== "chronicle");
   setDisabled(historyButton, !selectedSummary);
   setDisabled(reviewRetentionButton, !selectedSummary);
   if (!selectedSummary) setDisabled(cleanupHistoryButton, true);
+}
+
+function hasWorkspaceFile(extension: string): boolean {
+  return vaultFiles.some((file) => file.kind === "file" && file.relativePath.toLowerCase().endsWith(extension));
+}
+
+function updateWorkspaceToolControls(): void {
+  setDisabled(openGraphButton, !selectedSummary);
+  setDisabled(openCanvasButton, !selectedSummary || !hasWorkspaceFile(".canvas"));
+  setDisabled(openBaseButton, !selectedSummary || !hasWorkspaceFile(".base"));
 }
 
 function updateEditorState(): void {
@@ -372,7 +411,14 @@ function fileButton(path: string, kind: "file" | "symlink", preview?: string, op
   return button;
 }
 
+function supportedWorkspaceFile(path: string): boolean {
+  const lower = path.toLowerCase();
+  return lower.endsWith(".md") || lower.endsWith(".canvas") || lower.endsWith(".base");
+}
+
 function renderFiles(files: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>>): void {
+  vaultFiles = files;
+  updateWorkspaceToolControls();
   if (!fileList) return;
   fileList.replaceChildren();
   if (files.length === 0) {
@@ -382,7 +428,7 @@ function renderFiles(files: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>>): 
     fileList.append(message);
     return;
   }
-  files.forEach((file) => fileList.append(fileButton(file.relativePath, file.kind, undefined, file.kind === "file" && file.relativePath.toLowerCase().endsWith(".md"))));
+  files.forEach((file) => fileList.append(fileButton(file.relativePath, file.kind, undefined, file.kind === "file" && supportedWorkspaceFile(file.relativePath))));
 }
 
 function renderSearchResults(results: Awaited<ReturnType<OpenObsidianAPI["search"]>>): void {
@@ -395,7 +441,7 @@ function renderSearchResults(results: Awaited<ReturnType<OpenObsidianAPI["search
     fileList.append(message);
     return;
   }
-  results.forEach((result) => fileList.append(fileButton(result.relativePath, "file", result.preview)));
+  results.forEach((result) => fileList.append(fileButton(result.relativePath, "file", result.preview, supportedWorkspaceFile(result.relativePath))));
 }
 
 function currentTab(): NoteTab | undefined {
@@ -579,10 +625,349 @@ function openQuickSwitcher(): void {
   searchQuickSwitcher("");
 }
 
+function graphKindMatches(node: GraphView["nodes"][number]): boolean {
+  const kind = graphNodeKind?.value ?? "all";
+  return kind === "all" || kind === node.kind;
+}
+
+function graphQueryMatches(node: GraphView["nodes"][number]): boolean {
+  const query = graphQuery?.value.trim().toLocaleLowerCase() ?? "";
+  return !query || node.label.toLocaleLowerCase().includes(query);
+}
+
+function graphNodeMatches(node: GraphView["nodes"][number]): boolean {
+  return [graphKindMatches(node), graphQueryMatches(node)].every(Boolean);
+}
+
+function graphEdgeKindMatches(edge: GraphView["edges"][number]): boolean {
+  const kind = graphEdgeKind?.value ?? "all";
+  return kind === "all" || kind === edge.kind;
+}
+
+function graphEdgeMatches(edge: GraphView["edges"][number], nodeIds: Set<string>): boolean {
+  return [graphEdgeKindMatches(edge), nodeIds.has(edge.from), nodeIds.has(edge.to)].every(Boolean);
+}
+
+function graphNodeButton(node: GraphView["nodes"][number]): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "graph-node";
+  button.dataset.kind = node.kind;
+  button.disabled = node.kind === "unresolved";
+  button.textContent = `${node.kind === "unresolved" ? "Unresolved" : "Open"} · ${node.label}`;
+  if (node.kind === "file") button.addEventListener("click", () => openFile(node.id));
+  return button;
+}
+
+function graphEdgeRow(edge: GraphView["edges"][number]): HTMLDivElement {
+  const row = document.createElement("div");
+  row.className = "graph-edge";
+  row.textContent = `${edge.kind} · ${edge.from} → ${edge.to}`;
+  return row;
+}
+
+function graphEmpty(message: string): HTMLParagraphElement {
+  const empty = document.createElement("p");
+  empty.className = "context-empty";
+  empty.textContent = message;
+  return empty;
+}
+
+function renderGraphList(list: HTMLElement, rows: HTMLElement[], message: string): void {
+  list.replaceChildren(...rows);
+  if (rows.length === 0) list.append(graphEmpty(message));
+}
+
+function graphCountLabel(count: number, singular: string): string {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
+}
+
+function renderGraph(): void {
+  if (!graphData || !graphNodeList || !graphEdgeList) return;
+  const nodes = graphData.nodes.filter(graphNodeMatches);
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = graphData.edges.filter((edge) => graphEdgeMatches(edge, nodeIds));
+  setText(graphSummary, `${graphCountLabel(nodes.length, "visible node")} · ${graphCountLabel(edges.length, "visible edge")} · derived state only`);
+  renderGraphList(graphNodeList, nodes.map(graphNodeButton), "No graph nodes match this filter.");
+  renderGraphList(graphEdgeList, edges.map(graphEdgeRow), "No graph edges match this filter.");
+}
+
+async function openGraphPanel(): Promise<void> {
+  if (!api || !selectedSummary) return;
+  togglePanel(graphPanel, true);
+  setText(graphSummary, "Building the graph from the authoritative vault index…");
+  try {
+    graphData = await api.graph();
+    renderGraph();
+    setStatus("Graph ready; opening it did not write to the vault.");
+  } catch (error) {
+    setText(graphSummary, errorText(error, "Unable to load the vault graph."));
+  }
+}
+
 function togglePanel(panel: HTMLElement | null, visible: boolean): void {
-  setHidden(changePanel, panel !== changePanel || !visible);
-  setHidden(historyPanel, panel !== historyPanel || !visible);
-  setHidden(settingsPanel, panel !== settingsPanel || !visible);
+  [changePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
+}
+
+function selectPathOptions(select: HTMLSelectElement | null, paths: string[], selected: string | undefined): void {
+  if (!select) return;
+  select.replaceChildren(...paths.map((path) => new Option(path, path, path === selected, path === selected)));
+}
+
+function canvasNodeText(node: CanvasNodeView): string {
+  return typeof node.text === "string" ? node.text : "";
+}
+
+function canvasNodeTarget(node: CanvasNodeView): string | null {
+  if (typeof node.file === "string") return node.file;
+  if (typeof node.url === "string") return node.url;
+  if (typeof node.link === "string") return node.link;
+  return null;
+}
+
+function canvasAction(label: string, action: () => void): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", action);
+  return button;
+}
+
+function canvasCardHeader(node: CanvasNodeView): HTMLElement {
+  const header = document.createElement("header");
+  const title = document.createElement("strong");
+  title.textContent = node.id;
+  const type = document.createElement("span");
+  type.textContent = node.type;
+  header.append(title, type);
+  return header;
+}
+
+function canvasTextCard(node: CanvasNodeView, card: HTMLDivElement): void {
+  const text = document.createElement("textarea");
+  text.value = canvasNodeText(node);
+  const notePath = document.createElement("input");
+  notePath.type = "text";
+  notePath.placeholder = "New note path, e.g. canvas-card.md";
+  const actions = document.createElement("div");
+  actions.className = "node-actions";
+  actions.append(canvasAction("Save text card", () => void editCanvasText(node.id, text.value)), canvasAction("Create note from card", () => void createCanvasNote(node.id, notePath.value)));
+  card.append(text, notePath, actions);
+}
+
+function canvasTargetCard(node: CanvasNodeView, card: HTMLDivElement): void {
+  const target = canvasNodeTarget(node);
+  const description = document.createElement("p");
+  description.className = "panel-summary";
+  description.textContent = target ? `${node.type} target · ${target}` : "This node type is visible but has no supported local target.";
+  card.append(description);
+  if (target && !/^[a-z][a-z0-9+.-]*:/i.test(target)) card.append(canvasAction("Open target", () => openFile(target.split("#", 1)[0]!)));
+}
+
+function canvasNodeCard(node: CanvasNodeView): HTMLDivElement {
+  const card = document.createElement("div");
+  card.className = "canvas-node";
+  card.append(canvasCardHeader(node));
+  if (node.type === "text") {
+    canvasTextCard(node, card);
+  } else {
+    canvasTargetCard(node, card);
+  }
+  return card;
+}
+
+function canvasEdgeRow(edge: CanvasView["edges"][number]): HTMLDivElement {
+  const row = document.createElement("div");
+  row.className = "canvas-edge";
+  const label = typeof edge.label === "string" ? ` · ${edge.label}` : "";
+  row.textContent = `${edge.fromNode} → ${edge.toNode}${label}`;
+  return row;
+}
+
+function renderCanvas(): void {
+  if (!canvasData || !canvasNodeList || !canvasEdgeList) return;
+  setText(canvasSummary, `${graphCountLabel(canvasData.nodes.length, "node")} · ${graphCountLabel(canvasData.edges.length, "edge")} · revision ${canvasData.revision.slice(0, 12)}… · unknown fields remain preserved`);
+  renderGraphList(canvasNodeList, canvasData.nodes.map(canvasNodeCard), "This Canvas has no nodes.");
+  renderGraphList(canvasEdgeList, canvasData.edges.map(canvasEdgeRow), "This Canvas has no edges.");
+}
+
+function canvasPaths(): string[] {
+  return vaultFiles.filter((file) => file.kind === "file" && file.relativePath.toLowerCase().endsWith(".canvas")).map((file) => file.relativePath);
+}
+
+function selectedCanvasPath(paths: string[]): string {
+  const current = canvasData?.relativePath;
+  return current !== undefined && paths.includes(current) ? current : paths[0]!;
+}
+
+async function loadCanvasFile(path: string): Promise<void> {
+  if (!api) return;
+  selectPathOptions(canvasFile, canvasPaths(), path);
+  setText(canvasSummary, `Reading ${path} without changing the vault…`);
+  try {
+    canvasData = await api.canvas(path);
+    renderCanvas();
+    setStatus(`Canvas ${path} is ready; writes require an explicit node action.`);
+  } catch (error) {
+    setText(canvasSummary, errorText(error, "Unable to load the Canvas file."));
+  }
+}
+
+async function openCanvasPanel(): Promise<void> {
+  const paths = canvasPaths();
+  if (!api || !selectedSummary || paths.length === 0) return;
+  togglePanel(canvasPanel, true);
+  await loadCanvasFile(selectedCanvasPath(paths));
+}
+
+async function editCanvasText(nodeId: string, text: string): Promise<void> {
+  if (!api || !canvasData) return;
+  setStatus(`Saving Canvas text card ${nodeId} with a revision check…`);
+  try {
+    canvasData = await api.editCanvasText({relativePath: canvasData.relativePath, expectedRevision: canvasData.revision, nodeId, text});
+    renderCanvas();
+    setStatus(`Updated Canvas text card ${nodeId}; unknown fields remain intact.`);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to update the Canvas text card; current bytes remain authoritative."));
+  }
+}
+
+async function createCanvasNote(nodeId: string, notePath: string): Promise<void> {
+  const path = requiredCanvasNotePath(notePath);
+  if (!path) return;
+  const client = api;
+  const data = canvasData;
+  if (!client || !data) return;
+  await performCanvasNoteCreation(client, data, nodeId, path);
+}
+
+async function performCanvasNoteCreation(client: OpenObsidianAPI, data: CanvasView, nodeId: string, path: string): Promise<void> {
+  setStatus(`Creating ${path} from Canvas card ${nodeId} with explicit approval…`);
+  try {
+    const result = await client.createCanvasNote({relativePath: data.relativePath, expectedRevision: data.revision, nodeId, notePath: path});
+    canvasData = result.canvas;
+    renderCanvas();
+    await listFilesRequest(client);
+    setStatus(`Created ${result.created.relativePath} explicitly from Canvas card ${nodeId}.`);
+    openFile(result.created.relativePath);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to create a note from the Canvas card; no conversion was performed."));
+  }
+}
+
+function requiredCanvasNotePath(value: string): string | null {
+  const path = value.trim();
+  if (path) return path;
+  setStatus("Enter a new relative note path before creating a note from the Canvas card.");
+  return null;
+}
+
+function formatBaseValue(value: BaseValue): string {
+  return Array.isArray(value) ? `[${value.map(formatBaseValue).join(", ")}]` : String(value ?? "null");
+}
+
+function baseViewAt(): BaseEvaluationView | undefined {
+  const data = baseData;
+  if (!data) return undefined;
+  return data.views[baseViewIndex(data)] ?? data.views[0];
+}
+
+function validBaseIndex(value: number, length: number): boolean {
+  return [Number.isInteger(value), value >= 0, value < length].every(Boolean);
+}
+
+function baseSelectionValue(): string {
+  return baseView ? baseView.value : "0";
+}
+
+function baseViewIndex(data: BaseResponse): number {
+  const value = Number(baseSelectionValue());
+  return validBaseIndex(value, data.views.length) ? value : 0;
+}
+
+function baseIssueRow(issue: BaseEvaluationView["issues"][number]): HTMLDivElement {
+  const row = document.createElement("div");
+  row.className = "base-issue";
+  const message = document.createElement("span");
+  message.textContent = issue.message;
+  row.append(message);
+  if (issue.expression) {
+    const expression = document.createElement("small");
+    expression.textContent = `Expression: ${issue.expression}`;
+    row.append(expression);
+  }
+  return row;
+}
+
+function baseRowButton(row: BaseEvaluationView["rows"][number]): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "base-row";
+  const path = document.createElement("strong");
+  path.textContent = row.path;
+  const values = document.createElement("span");
+  values.textContent = Object.entries(row.values).map(([key, value]) => `${key}: ${formatBaseValue(value)}`).join(" · ") || "No represented properties";
+  button.append(path, values);
+  button.addEventListener("click", () => openFile(row.path));
+  return button;
+}
+
+function renderBaseSummary(view: BaseEvaluationView): void {
+  const viewName = view.name ?? `View ${baseViewIndex(baseData!) + 1}`;
+  setText(baseSummary, `${viewName} · ${view.type} · ${graphCountLabel(view.rows.length, "matching note")} · read-only projection; source definitions remain unchanged`);
+}
+
+function renderBaseIssues(view: BaseEvaluationView): void {
+  if (!baseIssues) return;
+  renderGraphList(baseIssues, view.issues.map(baseIssueRow), "No compatibility issues in this view.");
+}
+
+function renderBaseRows(view: BaseEvaluationView): void {
+  if (!baseResults) return;
+  renderGraphList(baseResults, view.rows.map(baseRowButton), "No notes match this Bases view.");
+}
+
+function renderBase(): void {
+  const view = baseViewAt();
+  if (!view) return;
+  renderBaseSummary(view);
+  renderBaseIssues(view);
+  renderBaseRows(view);
+}
+
+function basePaths(): string[] {
+  return vaultFiles.filter((file) => file.kind === "file" && file.relativePath.toLowerCase().endsWith(".base")).map((file) => file.relativePath);
+}
+
+function renderBaseViewOptions(): void {
+  if (!baseData || !baseView) return;
+  baseView.replaceChildren(...baseData.views.map((view, index) => new Option(view.name ?? `View ${index + 1}`, String(index), index === 0, index === 0)));
+}
+
+async function loadBaseFile(path: string): Promise<void> {
+  if (!api) return;
+  selectPathOptions(baseFile, basePaths(), path);
+  setText(baseSummary, `Reading ${path} without changing the vault…`);
+  try {
+    baseData = await api.base(path);
+    renderBaseViewOptions();
+    renderBase();
+    setStatus(`Bases ${path} is ready; unsupported formulas are shown as compatibility issues.`);
+  } catch (error) {
+    setText(baseSummary, errorText(error, "Unable to load the Bases file."));
+  }
+}
+
+async function openBasePanel(): Promise<void> {
+  const paths = basePaths();
+  if (!api || !selectedSummary || paths.length === 0) return;
+  togglePanel(basePanel, true);
+  await loadBaseFile(selectedBasePath(paths));
+}
+
+function selectedBasePath(paths: string[]): string {
+  const current = baseData?.relativePath;
+  return current !== undefined && paths.includes(current) ? current : paths[0]!;
 }
 
 function changeKind(review: NonNullable<typeof changeReview>, path: string): string {
@@ -1077,8 +1462,27 @@ function activateLoadedTab(path: string): boolean {
 
 function openFile(path: string): void {
   if (!api) return;
+  if (openSpecialFile(path)) return;
   if (activateLoadedTab(path)) return;
   beginFileRead(api, path);
+}
+
+function openCanvasFile(path: string): void {
+  togglePanel(canvasPanel, true);
+  void loadCanvasFile(path);
+}
+
+function openBaseFile(path: string): void {
+  togglePanel(basePanel, true);
+  void loadBaseFile(path);
+}
+
+function openSpecialFile(path: string): boolean {
+  const extension = path.toLowerCase().slice(path.lastIndexOf("."));
+  const opener = ({".canvas": openCanvasFile, ".base": openBaseFile} as Record<string, (path: string) => void>)[extension];
+  if (!opener) return false;
+  opener(path);
+  return true;
 }
 
 async function writeNoteRequest(client: OpenObsidianAPI, path: string, revision: string | null, value: string): Promise<void> {
@@ -1136,9 +1540,14 @@ function resetEditor(): void {
   selectedRevision = null;
   dirty = false;
   tabStates = [];
+  vaultFiles = [];
+  graphData = null;
+  canvasData = null;
+  baseData = null;
   renderTabs();
   renderNoteContext({relativePath: "", headings: [], backlinks: []});
   updateEditorState();
+  updateWorkspaceToolControls();
 }
 
 function showNoVault(): void {
@@ -1147,9 +1556,16 @@ function showNoVault(): void {
   setHidden(changePanel, true);
   setHidden(historyPanel, true);
   setHidden(settingsPanel, true);
+  setHidden(graphPanel, true);
+  setHidden(canvasPanel, true);
+  setHidden(basePanel, true);
   setHidden(conflictBox, true);
   selectedConflict = null;
   changeReview = null;
+  vaultFiles = [];
+  graphData = null;
+  canvasData = null;
+  baseData = null;
   updateChronicleControls();
   setStatus(summaryMessage(selectedSummary));
 }
@@ -1192,6 +1608,22 @@ function searchVault(query: string): void {
 
 if (api && selectButton) selectButton.addEventListener("click", () => void openSelectedVault(api, selectButton));
 if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", () => openQuickSwitcher());
+if (openGraphButton) openGraphButton.addEventListener("click", () => void openGraphPanel());
+if (openCanvasButton) openCanvasButton.addEventListener("click", () => void openCanvasPanel());
+if (openBaseButton) openBaseButton.addEventListener("click", () => void openBasePanel());
+if (closeGraphButton) closeGraphButton.addEventListener("click", () => setHidden(graphPanel, true));
+if (closeCanvasButton) closeCanvasButton.addEventListener("click", () => setHidden(canvasPanel, true));
+if (closeBaseButton) closeBaseButton.addEventListener("click", () => setHidden(basePanel, true));
+if (graphQuery) graphQuery.addEventListener("input", renderGraph);
+if (graphNodeKind) graphNodeKind.addEventListener("change", renderGraph);
+if (graphEdgeKind) graphEdgeKind.addEventListener("change", renderGraph);
+if (canvasFile) canvasFile.addEventListener("change", () => {
+  if (canvasFile.value) void loadCanvasFile(canvasFile.value);
+});
+if (baseFile) baseFile.addEventListener("change", () => {
+  if (baseFile.value) void loadBaseFile(baseFile.value);
+});
+if (baseView) baseView.addEventListener("change", renderBase);
 if (quickQuery) quickQuery.addEventListener("input", () => searchQuickSwitcher(quickQuery.value));
 if (closeQuickSwitcherButton) closeQuickSwitcherButton.addEventListener("click", () => quickSwitcher?.close());
 editorModeButtons.forEach((button) => button.addEventListener("click", () => {

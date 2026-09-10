@@ -20,6 +20,11 @@ export const CHANNELS = {
   syncTools: "workspace:sync-tools",
   loadWorkspaceState: "workspace:load-state",
   saveWorkspaceState: "workspace:save-state",
+  graph: "workspace:graph",
+  canvas: "workspace:canvas",
+  editCanvasText: "workspace:edit-canvas-text",
+  createCanvasNote: "workspace:create-canvas-note",
+  base: "workspace:base",
 } as const;
 
 export type VaultGitSummary = {
@@ -165,6 +170,24 @@ export type ChronicleRestoreRequest = {
 
 export type EditorMode = "source" | "live-preview" | "reading";
 
+export type GraphNode = {id: string; kind: "file" | "unresolved"; label: string};
+export type GraphEdge = {id: string; from: string; to: string; kind: "link" | "embed"};
+export type GraphView = {nodes: GraphNode[]; edges: GraphEdge[]};
+
+export type CanvasNodeView = {id: string; type: string; [key: string]: unknown};
+export type CanvasEdgeView = {id: string; fromNode: string; toNode: string; [key: string]: unknown};
+export type CanvasView = {relativePath: string; revision: string; nodes: CanvasNodeView[]; edges: CanvasEdgeView[]};
+export type CanvasTextEditRequest = {relativePath: string; expectedRevision: string; nodeId: string; text: string};
+export type CanvasCreateNoteRequest = {relativePath: string; expectedRevision: string; nodeId: string; notePath: string};
+export type CanvasCreateNoteResponse = {canvas: CanvasView; created: VaultReadResponse};
+
+export type BaseIssueView = {kind: "unsupported-formula" | "invalid-filter"; message: string; expression?: string};
+export type BaseScalar = string | number | boolean | null;
+export type BaseValue = BaseScalar | BaseValue[];
+export type BaseRowView = {path: string; values: Record<string, BaseValue>};
+export type BaseEvaluationView = {name?: string; type: "table" | "list" | "cards"; rows: BaseRowView[]; groups: Record<string, BaseRowView[]>; issues: BaseIssueView[]};
+export type BaseResponse = {relativePath: string; revision: string; views: BaseEvaluationView[]};
+
 export type WorkspaceSettings = {
   editorMode: EditorMode;
   splitView: boolean;
@@ -271,6 +294,25 @@ export function validateWorkspaceState(value: unknown): WorkspaceState {
   return {settings: validateWorkspaceSettings(value.settings), vaultRoot: value.vaultRoot as string | null, openTabs, activePath, navigationHistory};
 }
 
+function validateCanvasPath(value: unknown, label: string): string {
+  return validateWorkspacePath(value, label);
+}
+
+function validateCanvasRevision(value: unknown): string {
+  if (typeof value !== "string" || value.length === 0 || value.length > 128) throw new Error("Invalid canvas revision");
+  return value;
+}
+
+export function validateCanvasTextEditRequest(value: unknown): CanvasTextEditRequest {
+  if (!isRecord(value) || typeof value.nodeId !== "string" || value.nodeId.length === 0 || value.nodeId.length > 200 || typeof value.text !== "string") throw new Error("Invalid canvas text edit request");
+  return {relativePath: validateCanvasPath(value.relativePath, "path"), expectedRevision: validateCanvasRevision(value.expectedRevision), nodeId: value.nodeId, text: value.text};
+}
+
+export function validateCanvasCreateNoteRequest(value: unknown): CanvasCreateNoteRequest {
+  if (!isRecord(value) || typeof value.nodeId !== "string" || value.nodeId.length === 0 || value.nodeId.length > 200) throw new Error("Invalid canvas note request");
+  return {relativePath: validateCanvasPath(value.relativePath, "path"), expectedRevision: validateCanvasRevision(value.expectedRevision), nodeId: value.nodeId, notePath: validateCanvasPath(value.notePath, "note path")};
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   listFiles: () => Promise<VaultFileSummary[]>;
@@ -293,4 +335,9 @@ export type OpenObsidianAPI = {
   syncTools: () => Promise<SyncToolDisposition[]>;
   loadWorkspaceState: () => Promise<WorkspaceState>;
   saveWorkspaceState: (state: WorkspaceState) => Promise<WorkspaceState>;
+  graph: () => Promise<GraphView>;
+  canvas: (relativePath: string) => Promise<CanvasView>;
+  editCanvasText: (request: CanvasTextEditRequest) => Promise<CanvasView>;
+  createCanvasNote: (request: CanvasCreateNoteRequest) => Promise<CanvasCreateNoteResponse>;
+  base: (relativePath: string) => Promise<BaseResponse>;
 };
