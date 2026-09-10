@@ -53,6 +53,11 @@ const openQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#open
 const closeQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#close-quick-switcher");
 const quickQuery = document.querySelector<HTMLInputElement>("#quick-query");
 const quickResults = document.querySelector<HTMLElement>("#quick-results");
+const commandPalette = document.querySelector<HTMLDialogElement>("#command-palette");
+const openCommandPaletteButton = document.querySelector<HTMLButtonElement>("#open-command-palette");
+const closeCommandPaletteButton = document.querySelector<HTMLButtonElement>("#close-command-palette");
+const commandQuery = document.querySelector<HTMLInputElement>("#command-query");
+const commandResults = document.querySelector<HTMLElement>("#command-results");
 const settingsPanel = document.querySelector<HTMLElement>("#settings-panel");
 const toggleSettingsButton = document.querySelector<HTMLButtonElement>("#toggle-settings");
 const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-settings");
@@ -623,6 +628,71 @@ function openQuickSwitcher(): void {
     quickQuery.focus();
   }
   searchQuickSwitcher("");
+}
+
+type WorkspaceCommand = {label: string; shortcut: string; available: () => boolean; run: () => void};
+
+function workspaceCommands(): WorkspaceCommand[] {
+  return [
+    {label: "Open vault", shortcut: "", available: () => Boolean(api && selectButton), run: () => selectButton?.click()},
+    {label: "Quick switcher", shortcut: "⌘/Ctrl P", available: () => Boolean(selectedSummary), run: openQuickSwitcher},
+    {label: "Open graph", shortcut: "", available: () => Boolean(selectedSummary), run: () => void openGraphPanel()},
+    {label: "Open Canvas", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".canvas")), run: () => void openCanvasPanel()},
+    {label: "Open Bases", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".base")), run: () => void openBasePanel()},
+    {label: "Open settings", shortcut: "", available: () => Boolean(settingsPanel), run: () => { if (settingsPanel) togglePanel(settingsPanel, true); }},
+    {label: "Review changes", shortcut: "", available: () => Boolean(selectedSummary?.git.vaultType === "chronicle"), run: () => void reviewChangesRequest()},
+    {label: "Open history", shortcut: "", available: () => Boolean(selectedSummary), run: () => void historyRequest()},
+    {label: "Toggle context pane", shortcut: "", available: () => Boolean(selectedPath), run: () => setSplitView(!workspaceSettings.splitView)},
+    {label: "Save current note", shortcut: "⌘/Ctrl S", available: () => Boolean(selectedPath && dirty), run: saveNote},
+    {label: "Close workspace panel", shortcut: "Escape", available: () => true, run: () => togglePanel(null, false)},
+  ];
+}
+
+function commandMatches(command: WorkspaceCommand, query: string): boolean {
+  return command.label.toLocaleLowerCase().includes(query) || command.shortcut.toLocaleLowerCase().includes(query);
+}
+
+function commandButton(command: WorkspaceCommand): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "command-result";
+  button.setAttribute("role", "option");
+  const label = document.createElement("span");
+  label.textContent = command.label;
+  const shortcut = document.createElement("small");
+  shortcut.textContent = command.shortcut;
+  button.append(label, shortcut);
+  button.addEventListener("click", () => {
+    commandPalette?.close();
+    command.run();
+  });
+  return button;
+}
+
+function renderCommandResults(): void {
+  if (!commandResults) return;
+  const query = commandQuery?.value.trim().toLocaleLowerCase() ?? "";
+  const commands = workspaceCommands().filter((command) => command.available() && commandMatches(command, query));
+  commandResults.replaceChildren(...commands.map(commandButton));
+  if (commands.length === 0) commandResults.append(graphEmpty("No available commands match this search."));
+}
+
+function openCommandPalette(): void {
+  if (!commandPalette) return;
+  if (!commandPalette.open) commandPalette.showModal();
+  if (commandQuery) {
+    commandQuery.value = "";
+    commandQuery.focus();
+  }
+  renderCommandResults();
+}
+
+function commandQueryKeydown(event: KeyboardEvent): void {
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    commandResults?.querySelector<HTMLButtonElement>("button")?.focus();
+  }
+  if (event.key === "Enter") commandResults?.querySelector<HTMLButtonElement>("button")?.click();
 }
 
 function graphKindMatches(node: GraphView["nodes"][number]): boolean {
@@ -1607,6 +1677,12 @@ function searchVault(query: string): void {
 }
 
 if (api && selectButton) selectButton.addEventListener("click", () => void openSelectedVault(api, selectButton));
+if (openCommandPaletteButton) openCommandPaletteButton.addEventListener("click", openCommandPalette);
+if (closeCommandPaletteButton) closeCommandPaletteButton.addEventListener("click", () => commandPalette?.close());
+if (commandQuery) {
+  commandQuery.addEventListener("input", renderCommandResults);
+  commandQuery.addEventListener("keydown", commandQueryKeydown);
+}
 if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", () => openQuickSwitcher());
 if (openGraphButton) openGraphButton.addEventListener("click", () => void openGraphPanel());
 if (openCanvasButton) openCanvasButton.addEventListener("click", () => void openCanvasPanel());
@@ -1667,19 +1743,16 @@ if (editor) editor.addEventListener("input", () => {
   setStatus("Unsaved changes · save to create a recoverable revision.");
 });
 if (saveButton) saveButton.addEventListener("click", () => void saveNote());
-function isShortcut(event: KeyboardEvent, key: string): boolean {
-  return (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === key;
+function keyboardShortcut(event: KeyboardEvent): (() => void) | undefined {
+  if (!(event.metaKey || event.ctrlKey)) return undefined;
+  return ({s: () => void saveNote(), p: openQuickSwitcher, o: openQuickSwitcher, k: openCommandPalette} as Record<string, () => void>)[event.key.toLowerCase()];
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-  if (isShortcut(event, "s")) {
-    event.preventDefault();
-    void saveNote();
-  }
-  if (isShortcut(event, "p") || isShortcut(event, "o")) {
-    event.preventDefault();
-    openQuickSwitcher();
-  }
+  const action = keyboardShortcut(event);
+  if (!action) return;
+  event.preventDefault();
+  action();
 }
 
 document.addEventListener("keydown", handleKeydown);

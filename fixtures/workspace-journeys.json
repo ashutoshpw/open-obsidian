@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "shortcuts": [
+    {"key": "Meta/Ctrl-K", "command": "command-palette"},
+    {"key": "Meta/Ctrl-P", "command": "quick-switcher"},
+    {"key": "Meta/Ctrl-S", "command": "save-note"}
+  ],
+  "journeys": [
+    {"id": "adopt-existing-vault", "status": "implemented-locally", "steps": ["select-vault", "vault-mode", "file-list", "note-editor"]},
+    {"id": "search-open-edit-save", "status": "implemented-locally", "steps": ["vault-search", "note-editor", "save-note"]},
+    {"id": "review-and-recover", "status": "implemented-locally", "steps": ["review-changes", "show-history", "conflict-box", "keep-current", "keep-incoming"]},
+    {"id": "explore-derived-surfaces", "status": "implemented-locally", "steps": ["open-graph", "open-canvas", "open-base"]}
+  ],
+  "external_pending": ["visible-electron-keyboard-run", "screen-reader-run", "cross-platform-run", "reference-obsidian-reopen"]
+}
