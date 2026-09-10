@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "expected_origin": "https://github.com/ashutoshpw/open-obsidian.git",
+  "phase_ids": ["P0.1", "P0.2", "P1.1", "P1.2", "P1.3", "P2.1", "P2.2", "P2.3", "P3.1", "P3.2", "P3.3", "P4.1", "P4.2", "P4.3", "P5.1", "P5.2", "P6.1", "P6.2", "P7.1"],
+  "required_markers": ["[openobsidian P0.2]", "[openobsidian P1.1]", "[openobsidian P2.3]", "[openobsidian P4.3]", "[openobsidian P5.1]", "[openobsidian P5.2/P6.1]"],
+  "verified_actions_runs": [34480078768, 34480078771],
+  "handoffs": [
+    {"id": "managed-service", "owner": "operations-handoff", "prerequisites": ["operated endpoint", "retention and billing policy", "live credentials"], "verification": ["run selected-scope provider request", "verify redacted transport and retention behavior"], "status": "external-pending"},
+    {"id": "human-validation", "owner": "product-ux", "prerequisites": ["consent", "participants", "reference and OpenObsidian vault fixtures", "macOS/Windows/Linux hardware"], "verification": ["run counterbalanced find/synthesize/organize tasks", "record accessibility and practical-benefit results"], "status": "external-pending"},
+    {"id": "signed-artifacts", "owner": "desktop-release", "prerequisites": ["macOS signing/notarization credentials", "Windows signing credentials", "configured staging"], "verification": ["run a valid vYYYY-MM-DD tag", "verify artifact manifest and platform signatures"], "status": "external-pending"},
+    {"id": "publication", "owner": "operations-handoff", "prerequisites": ["authorized release owner", "hosted staging target", "signed artifacts"], "verification": ["approve only after production gate", "verify hosted artifact and rollback path"], "status": "external-pending"},
+    {"id": "reference-vault", "owner": "vault-filesystem", "prerequisites": ["reference Obsidian Desktop 1.13.7/1.14.1", "consented fixture vaults"], "verification": ["open-edit-save-reopen in both directions", "compare Markdown/Canvas bytes and portability"], "status": "external-pending"},
+    {"id": "plugin-runtime", "owner": "compatibility-runtime", "prerequisites": ["pinned released plugin/theme artifacts", "matching desktop runtimes"], "verification": ["run PC01-PC25 unchanged-artifact matrix", "record D15 decisions and hashes"], "status": "external-pending"},
+    {"id": "updater-rollback", "owner": "desktop-release", "prerequisites": ["signed update artifacts", "update channel", "previous-version fixture"], "verification": ["verify update manifest signatures", "install, downgrade and restore the previous artifact"], "status": "external-pending"}
+  ],
+  "no_release_tag_created_by_goal": true,
+  "production_publication": "blocked-until-external-gates-pass"
+}

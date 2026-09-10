@@ -34,6 +34,7 @@ test("delivery workflow fixture and artifact hashes are explicit", () => {
   for (const runner of fixture.runner_matrix) expect(desktop).toContain(runner);
   for (const contract of fixture.artifact_contract) expect(desktop).toContain(contract);
   expect(desktop).toContain("Validate release gate before packaging");
+  expect(desktop).toContain("bun run release:update-check");
   expect(desktop).toContain("CSC_IDENTITY_AUTO_DISCOVERY");
   expect(readFileSync(new URL("package.json", root), "utf8")).toContain("electron-builder --dir --publish never");
 

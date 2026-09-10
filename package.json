@@ -29,13 +29,15 @@
     "verify:distribution": "bun scripts/verify-distribution.ts",
     "quality:program": "bun scripts/quality-program.ts",
     "release:gate": "bun scripts/release-gate.ts",
+    "release:update-check": "bun scripts/update-rollback.ts",
+    "final:audit": "bun scripts/final-audit.ts",
     "check:accessibility": "bun scripts/check-accessibility.ts",
     "knip": "knip",
     "audit:fallow": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:changed": "bunx fallow audit --root . --base HEAD --format compact --brief",
     "audit:fallow:strict": "bunx fallow audit --root . --base HEAD --format compact",
-    "quality": "bun run validate:state && bun run validate:contracts && bun run validate:architecture && bun run verify:distribution && bun run check:accessibility && bun run typecheck && bun test && bun run quality:program && bun run compile && bun run knip && bun run audit:fallow"
+    "quality": "bun run validate:state && bun run final:audit && bun run release:update-check && bun run validate:contracts && bun run validate:architecture && bun run verify:distribution && bun run check:accessibility && bun run typecheck && bun test && bun run quality:program && bun run compile && bun run knip && bun run audit:fallow"
   },
   "build": {
     "appId": "ai.openobsidian.desktop",

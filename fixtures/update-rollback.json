@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "current_version": "0.1.0",
+  "target_version": "0.2.0",
+  "rollback_version": "0.1.0",
+  "target_manifest": {
+    "schema_version": 1,
+    "generated_at": "2026-09-10T00:00:00.000Z",
+    "files": [
+      {"path": "OpenObsidian.app", "bytes": 1024, "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+    ]
+  },
+  "rollback_manifest": {
+    "schema_version": 1,
+    "generated_at": "2026-09-09T00:00:00.000Z",
+    "files": [
+      {"path": "OpenObsidian.app", "bytes": 1024, "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
+    ]
+  },
+  "checks": ["manifest-integrity", "previous-artifact-rollback", "offline-installation-external"]
+}

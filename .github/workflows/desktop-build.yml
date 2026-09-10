@@ -45,6 +45,8 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Validate release gate before packaging
         run: bun run release:gate
+      - name: Verify update/rollback manifest contract
+        run: bun run release:update-check
       - name: Configure production signing environment
         if: env.RELEASE_MODE == 'production'
         env:
