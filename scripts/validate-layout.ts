@@ -20,6 +20,8 @@ export function auditRendererLayout(html = readFileSync(join(root, "src/renderer
   requiredRegion(html, "right sidebar toggle", /data-ui-action=["']toggle-right-sidebar["'][^>]*data-action-target=["']toggle-context["']/i, checks, failures);
   requiredRegion(html, "vertical workspace ribbon", /class=["'][^"']*\bribbon\b[^"']*["'][^>]*aria-label=["']Workspace ribbon["']/i, checks, failures);
   requiredRegion(html, "vault file pane", /class=["'][^"']*\bsidebar\b[^"']*["'][^>]*aria-label=["']Vault navigation["']/i, checks, failures);
+  requiredRegion(html, "Obsidian-style vault pane tabs", /class=["'][^"']*\bsidebar-tabs\b[^"']*["'][^>]*aria-label=["']Vault panes["']/i, checks, failures);
+  requiredRegion(html, "Files/Search/Bookmarks pane controls", /data-sidebar-pane=["']files["'][^>]*[^>]*>Files<\/button>[\s\S]*data-sidebar-pane=["']search["'][^>]*[^>]*>Search<\/button>[\s\S]*data-sidebar-pane=["']bookmarks["'][^>]*[^>]*>Bookmarks<\/button>/i, checks, failures);
   requiredRegion(html, "compact workspace header", /class=["'][^"']*\bworkspace-header\b[^"']*["']/i, checks, failures);
   requiredRegion(html, "note tab strip", /class=["'][^"']*\bnote-tabs\b[^"']*["']/i, checks, failures);
   requiredRegion(html, "split editor stage", /class=["'][^"']*\beditor-stage\b[^"']*["'][^>]*\bid=["']editor-stage["']/i, checks, failures);

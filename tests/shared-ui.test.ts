@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readdirSync, readFileSync} from "node:fs";
-import {DEFAULT_WORKSPACE_VISIBILITY, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, type GraphLayoutOptions, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
+import {DEFAULT_WORKSPACE_VISIBILITY, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, type GraphLayoutOptions, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
 
 test("shared workspace UI contract exposes reusable blocks and semantic actions", () => {
   const firstBlock: WorkspaceBlock = WORKSPACE_BLOCKS[0]!;
@@ -14,6 +14,8 @@ test("shared workspace UI contract exposes reusable blocks and semantic actions"
   expect(workspaceBlock(firstBlockId)).toEqual(firstBlock);
   expect(firstBlock.mobilePresentation).toBe("inline");
   expect(new Set(WORKSPACE_ACTIONS.map((action) => action.id)).size).toBe(WORKSPACE_ACTIONS.length);
+  expect(VAULT_PANES.map((pane) => pane.id)).toEqual(["files", "search", "bookmarks"]);
+  expect(vaultPane("search")).toMatchObject({label: "Search", icon: "⌕"});
   expect(TITLEBAR_ACTIONS.every((id) => WORKSPACE_ACTIONS.some((action) => action.id === id))).toBe(true);
   expect(action).toMatchObject({label: "Toggle right sidebar", group: "workspace"});
   expect(sharedAction.enabled).toBe(true);

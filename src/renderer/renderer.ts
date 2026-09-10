@@ -1,7 +1,7 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
-import {OPEN_OBSIDIAN_THEME, workspaceAction, type WorkspaceActionId} from "../shared/ui/index.js";
+import {OPEN_OBSIDIAN_THEME, vaultPane, workspaceAction, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -17,6 +17,7 @@ const vaultBranch = document.querySelector<HTMLElement>("#vault-branch");
 const appShell = document.querySelector<HTMLElement>(".app-shell");
 const toggleLeftSidebarButton = document.querySelector<HTMLButtonElement>("#toggle-left-sidebar");
 const toggleRightSidebarButton = document.querySelector<HTMLButtonElement>("[data-ui-action=\"toggle-right-sidebar\"]");
+const sidebarPaneButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-sidebar-pane]")];
 const editorPath = document.querySelector<HTMLElement>("#editor-path");
 const editor = document.querySelector<HTMLTextAreaElement>("#note-editor");
 const emptyState = document.querySelector<HTMLElement>("#empty-state");
@@ -165,6 +166,7 @@ let paletteRequestId = 0;
 let selectedConflict: VaultHistoryRecord | null = null;
 let workspaceStateReady: Promise<void> = Promise.resolve();
 let leftSidebarVisible = true;
+let activeVaultPane: VaultPaneId = "files";
 let vaultFiles: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>> = [];
 let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
@@ -311,6 +313,41 @@ function applySharedActionMetadata(): void {
     element.title = action.label;
     element.setAttribute("aria-label", action.label);
   });
+}
+
+function applySharedVaultPaneMetadata(): void {
+  sidebarPaneButtons.forEach((element) => {
+    const id = element.dataset.sidebarPane as VaultPaneId | undefined;
+    if (!id) return;
+    const pane: VaultPane = vaultPane(id);
+    element.dataset.icon = pane.icon;
+    element.title = pane.label;
+    element.setAttribute("aria-label", pane.label);
+  });
+}
+
+function paneStatus(id: VaultPaneId): string {
+  const statusByPane: Record<VaultPaneId, string> = {
+    files: selectedSummary ? "Showing Markdown notes from the selected vault." : "Choose a vault to begin.",
+    search: selectedSummary ? "Search the selected vault locally." : "Open a vault to search its notes.",
+    bookmarks: "Bookmarks remain external-pending; the selected vault and source bytes are unchanged.",
+  };
+  return statusByPane[id];
+}
+
+const vaultPaneActions: Record<VaultPaneId, () => void> = {
+  files: () => setStatus(paneStatus("files")),
+  search: () => {
+    searchInput?.focus();
+    setStatus(paneStatus("search"));
+  },
+  bookmarks: () => setStatus(paneStatus("bookmarks")),
+};
+
+function setVaultPane(id: VaultPaneId): void {
+  activeVaultPane = id;
+  sidebarPaneButtons.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.sidebarPane === id)));
+  vaultPaneActions[id]();
 }
 
 function appendPreviewInline(element: HTMLElement, value: string): void {
@@ -2604,6 +2641,10 @@ document.querySelectorAll<HTMLButtonElement>("[data-action-target]").forEach((bu
     target?.click();
   });
 });
+sidebarPaneButtons.forEach((button) => button.addEventListener("click", () => {
+  const id = button.dataset.sidebarPane as VaultPaneId | undefined;
+  if (id) setVaultPane(id);
+}));
 if (openCommandPaletteButton) openCommandPaletteButton.addEventListener("click", openCommandPalette);
 if (closeCommandPaletteButton) closeCommandPaletteButton.addEventListener("click", () => commandPalette?.close());
 if (commandQuery) {
@@ -2713,6 +2754,8 @@ function handleKeydown(event: KeyboardEvent): void {
 document.addEventListener("keydown", handleKeydown);
 applySharedDesignTokens();
 applySharedActionMetadata();
+applySharedVaultPaneMetadata();
+setVaultPane(activeVaultPane);
 renderLeftSidebar();
 renderSettingsSearch();
 applyLocale();

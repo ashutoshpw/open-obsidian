@@ -39,6 +39,26 @@ export type WorkspaceVisibility = {
   rightSidebar: boolean;
 };
 
+export type VaultPaneId = "files" | "search" | "bookmarks";
+
+export type VaultPane = {
+  id: VaultPaneId;
+  label: string;
+  icon: string;
+};
+
+export const VAULT_PANES: readonly VaultPane[] = [
+  {id: "files", label: "Files", icon: "▤"},
+  {id: "search", label: "Search", icon: "⌕"},
+  {id: "bookmarks", label: "Bookmarks", icon: "🔖"},
+];
+
+export function vaultPane(id: VaultPaneId): VaultPane {
+  const pane = VAULT_PANES.find((candidate) => candidate.id === id);
+  if (!pane) throw new Error(`Unknown vault pane: ${id}`);
+  return pane;
+}
+
 export const DEFAULT_WORKSPACE_VISIBILITY: WorkspaceVisibility = {leftSidebar: true, rightSidebar: true};
 
 export function workspaceColumns(visibility: WorkspaceVisibility): {ribbon: number; sidebar: number; content: string} {
