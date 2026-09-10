@@ -4,9 +4,10 @@ set -euo pipefail
 MODE="${1:-run}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ELECTRON_BIN="$ROOT_DIR/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+ELECTRON_CLI="$ROOT_DIR/node_modules/.bin/electron"
 LOG_FILE="${TMPDIR:-/tmp}/openobsidian-electron.log"
 
-if [[ ! -x "$ELECTRON_BIN" ]]; then
+if [[ ! -x "$ELECTRON_BIN" || ! -x "$ELECTRON_CLI" ]]; then
   echo "Electron binary is missing; run bun install first." >&2
   exit 1
 fi
@@ -15,12 +16,13 @@ pkill -f -- "$ELECTRON_BIN" >/dev/null 2>&1 || true
 bun run compile
 
 launch() {
-  "$ELECTRON_BIN" "$ROOT_DIR"
+  (cd "$ROOT_DIR" && "$ELECTRON_CLI" .)
 }
 
 launch_background() {
   : >"$LOG_FILE"
-  nohup "$ELECTRON_BIN" "$ROOT_DIR" >"$LOG_FILE" 2>&1 </dev/null &
+  cd "$ROOT_DIR"
+  nohup "$ELECTRON_CLI" . >"$LOG_FILE" 2>&1 </dev/null &
   LAUNCHED_PID=$!
 }
 

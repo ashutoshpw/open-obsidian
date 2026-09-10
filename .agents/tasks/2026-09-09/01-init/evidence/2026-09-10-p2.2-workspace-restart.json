@@ -1,0 +1,55 @@
+{
+  "evidence_version": 1,
+  "captured_at": "2026-09-10T16:05:00Z",
+  "checkpoint": "P2.2",
+  "requirement_ids": ["C02", "C10", "UX-002", "UX-003"],
+  "tested_source_tree": "52cc9fb9ef8783bde43f698b34a3951672738cbb58d6a05581314784f1778cfe",
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "app": "OpenObsidian packaged Electron preview",
+    "electron": "44.3.0",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "artifact": "out/mac-arm64/OpenObsidian.app",
+    "fixture_vault": "/private/tmp/openobsidian-visible-IEzeLb",
+    "workspace_state_path": "/Users/ashutosh/Library/Application Support/openobsidian/workspace-state.json",
+    "restart_method": "terminate the packaged OpenObsidian process and relaunch the same packaged binary"
+  },
+  "observations": [
+    {
+      "id": "persisted-state-before-restart",
+      "status": "passed",
+      "detail": "workspace-state.json contained the fixture vault root, Welcome.md in openTabs and activePath Welcome.md before the process restart."
+    },
+    {
+      "id": "process-restart",
+      "status": "passed",
+      "detail": "The packaged OpenObsidian process was terminated and relaunched; the OpenObsidian window returned with the same titlebar and workspace shell."
+    },
+    {
+      "id": "layout-and-navigation-readback",
+      "status": "passed",
+      "detail": "The post-relaunch accessibility tree exposed Open vault, Quick switcher, Command palette, left-sidebar toggle, centered workspace title, right-sidebar toggle and Settings in the titlebar; the ribbon exposed Open vault, Command palette, Quick switcher, Graph, Settings and History."
+    },
+    {
+      "id": "vault-and-tab-readback",
+      "status": "passed",
+      "detail": "After selecting the same fixture folder through the native picker, the Standard vault showed Board.canvas, Second.md, Views.base and Welcome.md, restored the Welcome.md tab and active source editor, and rendered outline/backlinks context."
+    },
+    {
+      "id": "no-op-scan",
+      "status": "passed",
+      "detail": "The visible status footer reported the fixture was opened with a no-op scan verified; the four fixture file hashes were unchanged by the restart/readback."
+    }
+  ],
+  "fixture_file_sha256": {
+    "Welcome.md": "d44956dea37befd0cc7503a77143e9adb771c05d0efa1dedd7bf9837b1803c11",
+    "Views.base": "bd101e45ed7e10b0693f2e18c4fa081f700bf9b9a45f10800cd8aa855b383a87",
+    "Board.canvas": "0146992efd39c99e33cda9cf66a0671b96ecddcf92e496cfda4461f1a32aab8e",
+    "Second.md": "90e01d97a50a702a646c58a012252fbdeda5bccafa693ee7fdaa34bf6a8091d3"
+  },
+  "limitations": [
+    "This is a macOS arm64 packaged-app readback; Windows/Linux and reference Obsidian restart behavior remain separate validation work.",
+    "The fixture is intentionally disposable and was reopened through the explicit native picker; richer Markdown dialect coverage, screen-reader/input/IME validation and the remaining named UX surfaces remain pending."
+  ]
+}

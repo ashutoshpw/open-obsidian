@@ -42,5 +42,7 @@ test("distribution audit covers direct packages and records release gates", () =
   expect(audit.project.license).toBe("AGPL-3.0-only");
   expect(audit.direct_packages).toHaveLength(6);
   expect(audit.external_tools.map((tool) => tool.name)).toEqual(["fallow"]);
-  expect(audit.release_gates.every((gate) => gate.status === "pending")).toBe(true);
+  const gateStatuses = Object.fromEntries(audit.release_gates.map((gate) => [gate.id, gate.status]));
+  expect(gateStatuses["electron-bundled-runtime-notices"]).toBe("passing");
+  expect(gateStatuses["transitive-package-attribution"]).toBe("pending");
 });

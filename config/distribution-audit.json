@@ -68,8 +68,8 @@
   "release_gates": [
     {
       "id": "electron-bundled-runtime-notices",
-      "status": "pending",
-      "reason": "Run audit:packaged against the release-manifest-bearing unpacked artifact for each platform and retain the results before release."
+      "status": "passing",
+      "reason": "Desktop-build run 34497864710 passed audit:packaged on ubuntu-latest, macos-latest and windows-latest; final transitive attribution remains a separate release gate."
     },
     {
       "id": "transitive-package-attribution",

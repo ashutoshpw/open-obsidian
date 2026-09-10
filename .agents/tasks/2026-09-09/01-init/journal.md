@@ -253,4 +253,17 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: added `scripts/audit-packaged-runtime.ts` and `bun run audit:packaged`; the desktop-build matrix now validates the release manifest, Electron license, Chromium/Node notice assets and non-empty `app.asar` after packaging on each runner.
 - Validation: the locally packaged macOS `out/` tree passed the new audit with six checks after `bun run release:gate -- --artifacts-dir out`; strict changed-file Fallow, Knip, typecheck and the focused distribution tests pass.
 - Evidence: ranged inspection of the macOS arm64, Windows x64 and Linux x64 preview artifacts from desktop-build run `34493649935` found the required runtime notice assets and parsed release manifests; details and hashes are in `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-packaged-runtime.json`.
-- Limitation: those artifacts predate this audit step, so the next post-change matrix run must execute the new gate; final transitive attribution, signing/notarization, publication and offline installation remain pending.
+- Limitation: those ranged-inspected artifacts predate this audit step; the post-change matrix result is recorded separately. Final transitive attribution, signing/notarization, publication and offline installation remain pending.
+
+## 2026-09-10T15:48:01Z — P0.2 packaged runtime matrix reconciled
+
+- Completed: desktop-build run `34497864710` passed the new `Audit packaged Electron runtime notices` step on `ubuntu-latest` (job `102940811874`), `macos-latest` (job `102940811654`) and `windows-latest` (job `102940811418`); quality run `34497864752` also passed.
+- Reconciled: marked the `electron-bundled-runtime-notices` release gate passing in `config/distribution-audit.json` and linked `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-packaged-runtime-matrix.json` from the P0.2 state and D12/RISK-009 rows.
+- Limitation: this closes the automated preview notice gate only; final transitive attribution, signing/notarization, publication and offline installation remain separate release gates.
+
+## 2026-09-10T16:05:00Z — P2.2 packaged workspace restart/readback
+
+- Completed: built and launched the macOS arm64 packaged preview, selected the disposable fixture through the native picker, terminated the packaged process, relaunched it and selected the same fixture again.
+- Validation: the post-relaunch accessibility tree exposed the Obsidian-aligned titlebar actions (Open vault, Quick switcher, Command palette, left/right sidebar toggles and Settings), the workspace ribbon, the four fixture files, the restored `Welcome.md` tab/source editor, outline/backlinks context and the no-op scan status.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-workspace-restart.json` records the process restart, state readback, fixture hashes and tested source tree `52cc9fb9ef8783bde43f698b34a3951672738cbb58d6a05581314784f1778cfe` across 129 included paths.
+- Limitation: the visible restart is macOS arm64 and the fixture was reopened through the explicit native picker; cross-platform/reference Obsidian reopen checks, screen-reader/input/IME coverage and remaining named UX surfaces remain pending.

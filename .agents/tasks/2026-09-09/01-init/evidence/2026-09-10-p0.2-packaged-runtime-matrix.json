@@ -1,0 +1,49 @@
+{
+  "evidence_version": 1,
+  "captured_at": "2026-09-10T15:48:01Z",
+  "checkpoint": "P0.2",
+  "requirement_ids": ["D12", "RISK-009"],
+  "tested_source_tree": "2b85f4db19b3bee4afaf609174d7467795f4fd5d7f07ea827ea546b461cb7958",
+  "commit_sha": "4928f0836021659c94051e89999a38cc4d4b7faf",
+  "workflow": {
+    "name": "OpenObsidian desktop build",
+    "run_id": 34497864710,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {"platform": "ubuntu-latest", "job_id": 102940811874, "conclusion": "success", "packaged_runtime_step": "success"},
+      {"platform": "macos-latest", "job_id": 102940811654, "conclusion": "success", "packaged_runtime_step": "success"},
+      {"platform": "windows-latest", "job_id": 102940811418, "conclusion": "success", "packaged_runtime_step": "success"}
+    ]
+  },
+  "observations": [
+    {
+      "id": "release-manifest",
+      "status": "passed",
+      "detail": "Each platform generated and validated its release-manifest.json before the packaged-runtime audit."
+    },
+    {
+      "id": "electron-license",
+      "status": "passed",
+      "detail": "Each platform's unpacked artifact contained the Electron runtime license asset and the audit confirmed Electron attribution."
+    },
+    {
+      "id": "chromium-node-notices",
+      "status": "passed",
+      "detail": "Each platform's unpacked artifact contained the Chromium notice asset and the audit confirmed Chromium and Node.js attribution."
+    },
+    {
+      "id": "app-asar",
+      "status": "passed",
+      "detail": "Each platform contained a non-empty app.asar paired with its runtime notice assets."
+    }
+  ],
+  "related_quality_run": {
+    "run_id": 34497864752,
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "limitations": [
+    "This proves the new automated packaged-runtime gate on preview artifacts; final transitive package attribution, signing/notarization, publication and offline installation remain separate release gates."
+  ]
+}
