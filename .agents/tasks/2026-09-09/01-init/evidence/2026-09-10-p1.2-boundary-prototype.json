@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T07:08:46Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D11", "D15", "ARCH-007", "ARCH-009", "RISK-003", "PLUG-009"],
+  "fixture_ids": ["fixture:plugin-isolation", "fixture:plugin-no-op-order", "fixture:hardest-plugin-spike", "fixture:arch-os-isolation", "fixture:feasibility-corpus", "fixture:risk-legacy-access"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b5822a150d2e750b313fd06aaaa5661bb62604775b4c5258b370950ef4b93bd1"
+  },
+  "observations": [
+    {"command": "bun test", "exit_code": 0, "result": "Plugin policy and fixture-runner tests pass; mediated reads are allowed, preview writes are staged, and direct write/filesystem/network/process/credential/privileged DOM capabilities are denied with visible D15 records."},
+    {"command": "bun run validate:contracts", "exit_code": 0, "result": "The 25 mandatory plugin artifacts plus Minimal and Text Extractor remain pinned and marked planned until unchanged-artifact runtime certification."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed implementation and fixture-runner files."}
+  ],
+  "implemented": [
+    "PluginPolicy has no trusted legacy mode and returns visible unsupported-security records for every direct privileged capability.",
+    "PreviewBroker requires explicit approval before a plugin-originated change reaches VaultStore.",
+    "Capability and first-open-write probes are executable locally before any full plugin UI investment."
+  ],
+  "limitations": [
+    "Unchanged upstream plugin bundles have not been loaded into a compatibility runtime; PLUG-009 and the PC01-PC25 certification matrix remain pending.",
+    "Bypass attempts have only run on local macOS arm64; Windows/Linux OS and renderer DOM traces remain pending.",
+    "No D15 requirement is release-passing: unsupported-security is only valid after reproducible artifact-specific evidence and all safe alternatives are recorded."
+  ]
+}

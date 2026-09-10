@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10",
+  "runtime": {
+    "name": "Electron",
+    "version": "44.3.0",
+    "builder": "26.16.1",
+    "entrypoint": "src/electron/main.ts",
+    "renderer_entrypoint": "src/renderer/renderer.ts"
+  },
+  "processes": [
+    {
+      "name": "main",
+      "trust": "privileged",
+      "responsibilities": ["window lifecycle", "folder selection", "vault broker", "OS integration"],
+      "claims": ["renderer input is validated before vault operations"]
+    },
+    {
+      "name": "preload",
+      "trust": "bridge-only",
+      "responsibilities": ["expose typed allowlisted IPC methods"],
+      "claims": ["context isolation remains enabled", "Node APIs are not exposed to page code"]
+    },
+    {
+      "name": "renderer",
+      "trust": "sandboxed",
+      "responsibilities": ["user interface", "editor interactions", "status and approval presentation"],
+      "settings": {"contextIsolation": true, "nodeIntegration": false, "sandbox": true}
+    },
+    {
+      "name": "plugin-runtime",
+      "trust": "unproven",
+      "responsibilities": ["future unchanged-artifact compatibility experiments"],
+      "claims": ["no trusted legacy mode", "D15 policy denies direct privileged capabilities"]
+    }
+  ],
+  "domain_interfaces": [
+    {"name": "VaultStore", "path": "src/core/vault.ts", "purpose": "byte snapshots, revisions, journaled writes and recovery"},
+    {"name": "Markdown source contract", "path": "src/core/markdown.ts", "purpose": "BOM, line-ending and source-span preservation"},
+    {"name": "Link contract", "path": "src/core/links.ts", "purpose": "link extraction, resolution and scoped rename updates"},
+    {"name": "Canvas contract", "path": "src/core/canvas.ts", "purpose": "unknown-field-preserving JSON Canvas edits"},
+    {"name": "Graph contract", "path": "src/core/graph.ts", "purpose": "derived resolved and unresolved link graph"},
+    {"name": "Bases contract", "path": "src/core/bases.ts", "purpose": "versioned safe filter, sort and formula evaluation"},
+    {"name": "Vault index", "path": "src/core/vault-index.ts", "purpose": "rebuildable search and link index outside the vault"},
+    {"name": "IPC contract", "path": "src/shared/api.ts", "purpose": "schema validation for renderer vault requests"},
+    {"name": "PreviewBroker", "path": "src/plugins/policy.ts", "purpose": "stage plugin changes before explicit approval"}
+  ],
+  "security_claims": [
+    {"id": "claim-renderer-isolation", "status": "implemented-locally", "evidence": ["src/electron/main.ts", "src/electron/preload.ts"], "limitation": "packaged runtime launch is pending"},
+    {"id": "claim-ipc-schema-validation", "status": "implemented-locally", "evidence": ["src/shared/api.ts", "tests/api.test.ts"], "limitation": "packaged runtime launch is pending"},
+    {"id": "claim-plugin-strong-isolation", "status": "unproven", "evidence": ["fixtures/plugin-isolation.json", "tests/plugin-policy.test.ts"], "limitation": "same-user legacy plugin bypass attempts must run on each OS"}
+  ],
+  "effort_estimates": [
+    {"workstream": "vault foundation", "optimistic_days": 12, "likely_days": 24, "pessimistic_days": 45, "dependencies": ["P1.1", "P1.3"], "status": "preliminary; not a calendar promise"},
+    {"workstream": "compatibility runtime", "optimistic_days": 18, "likely_days": 40, "pessimistic_days": 90, "dependencies": ["P1.2", "P2.1", "P2.2"], "status": "preliminary; not a calendar promise"},
+    {"workstream": "grounded AI workspace", "optimistic_days": 15, "likely_days": 32, "pessimistic_days": 70, "dependencies": ["P1.3", "P2.1"], "status": "preliminary; not a calendar promise"}
+  ],
+  "open_gaps": [
+    {"id": "gap-electron-runtime", "owner": "desktop-release", "status": "external-pending", "next": "verify packaged runtime on macOS, Windows and Linux"},
+    {"id": "gap-legacy-plugin-boundary", "owner": "compatibility-runtime", "status": "open", "next": "run bypass corpus against unchanged artifacts; deny unsafe paths"},
+    {"id": "gap-reference-roundtrip", "owner": "vault-filesystem", "status": "open", "next": "compare edited bytes and behavior with reference Obsidian"}
+  ]
+}

@@ -48,6 +48,12 @@ export type RecoveryRecord = {
   capturedAt: string;
 };
 
+export type VaultFaultStage = "after-temp-write" | "before-replace";
+
+export type VaultStoreOptions = {
+  faultHook?: (stage: VaultFaultStage, relativePath: string) => void;
+};
+
 export class VaultSafetyError extends Error {
   constructor(message: string) {
     super(message);
@@ -78,11 +84,12 @@ export class RevisionConflict extends Error {
 
 type JournalEntry = {
   id: string;
-  operation: "write";
+  operation: "write" | "batch";
   state: "prepared" | "committed" | "failed";
-  relativePath: string;
-  expectedRevision: string | null;
-  nextRevision: string;
+  relativePath?: string;
+  paths?: string[];
+  expectedRevision?: string | null;
+  nextRevision?: string;
   recordedAt: string;
   error?: string;
 };
@@ -159,10 +166,12 @@ function scanVault(root: string): VaultScan {
 export class VaultStore {
   readonly root: string;
   readonly appDataRoot: string;
+  readonly options: VaultStoreOptions;
 
-  constructor(root: string, appDataRoot: string) {
+  constructor(root: string, appDataRoot: string, options: VaultStoreOptions = {}) {
     this.root = resolve(root);
     this.appDataRoot = resolve(appDataRoot);
+    this.options = options;
   }
 
   scan(): VaultScan {
@@ -202,9 +211,25 @@ export class VaultStore {
     this.appendJournal(journalBase);
     try {
       if (current !== null) this.preservePrevious(normalized, targetPath, current);
-      this.atomicReplace(targetPath, nextBytes);
+      this.atomicReplace(targetPath, normalized, nextBytes);
       this.appendJournal({...journalBase, state: "committed", recordedAt: new Date().toISOString()});
       return {relativePath: normalized, bytes: nextBytes, revision: nextRevision};
+    } catch (error) {
+      this.preserveFailedWrite(normalized, nextRevision, nextBytes);
+      this.appendJournal({...journalBase, state: "failed", recordedAt: new Date().toISOString(), error: error instanceof Error ? error.message : String(error)});
+      throw error;
+    }
+  }
+
+  writeBatch(requests: VaultWrite[], operationId: string = randomUUID()): VaultRead[] {
+    if (requests.length === 0) return [];
+    const journalBase: JournalEntry = {id: operationId, operation: "batch", state: "prepared", paths: requests.map((request) => request.relativePath), recordedAt: new Date().toISOString()};
+    this.appendJournal(journalBase);
+    try {
+      const plans = requests.map((request) => this.prepareBatchWrite(request));
+      const results = plans.map((request, index) => this.write({...request, operationId: `${operationId}:${index}`}));
+      this.appendJournal({...journalBase, state: "committed", recordedAt: new Date().toISOString()});
+      return results;
     } catch (error) {
       this.appendJournal({...journalBase, state: "failed", recordedAt: new Date().toISOString(), error: error instanceof Error ? error.message : String(error)});
       throw error;
@@ -212,7 +237,15 @@ export class VaultStore {
   }
 
   listRecovery(relativePath?: string): RecoveryRecord[] {
-    const directory = join(this.appDataRoot, "recovery");
+    return this.listRecords("recovery", relativePath);
+  }
+
+  listFailedWrites(relativePath?: string): RecoveryRecord[] {
+    return this.listRecords("failed", relativePath);
+  }
+
+  private listRecords(directoryName: "recovery" | "failed", relativePath?: string): RecoveryRecord[] {
+    const directory = join(this.appDataRoot, directoryName);
     if (!existsSync(directory)) return [];
     const normalized = relativePath ? normalizeRelativePath(relativePath) : null;
     return readdirSync(directory).filter((name) => name.endsWith(".json")).flatMap((name) => {
@@ -237,6 +270,18 @@ export class VaultStore {
     this.writeRecoveryRecord(relativePath, revision, bytes, "recovery");
   }
 
+  private prepareBatchWrite(request: VaultWrite): VaultWrite {
+    const normalized = normalizeRelativePath(request.relativePath);
+    const targetPath = pathInside(this.root, normalized);
+    const current = this.currentRevision(targetPath);
+    if (current !== request.expectedRevision) {
+      const nextBytes = new Uint8Array(request.bytes);
+      const preservedPath = this.preserveConflict(normalized, nextBytes, request.expectedRevision, current);
+      throw new RevisionConflict(normalized, request.expectedRevision, current, preservedPath);
+    }
+    return {...request, relativePath: normalized, bytes: new Uint8Array(request.bytes)};
+  }
+
   private preserveConflict(relativePath: string, bytes: Uint8Array, expectedRevision: string | null, currentRevision: string | null): string {
     const id = randomUUID();
     const directory = join(this.appDataRoot, "conflicts");
@@ -247,7 +292,15 @@ export class VaultStore {
     return path;
   }
 
-  private writeRecoveryRecord(relativePath: string, revision: string, bytes: Uint8Array, directoryName: "recovery"): void {
+  private preserveFailedWrite(relativePath: string, revision: string, bytes: Uint8Array): void {
+    try {
+      this.writeRecoveryRecord(relativePath, revision, bytes, "failed");
+    } catch {
+      // Preserve the original write failure when the recovery location is unavailable.
+    }
+  }
+
+  private writeRecoveryRecord(relativePath: string, revision: string, bytes: Uint8Array, directoryName: "recovery" | "failed"): void {
     const id = randomUUID();
     const directory = join(this.appDataRoot, directoryName);
     mkdirSync(directory, {recursive: true});
@@ -257,11 +310,13 @@ export class VaultStore {
     writeFileSync(join(directory, `${id}.json`), JSON.stringify(record, null, 2));
   }
 
-  private atomicReplace(targetPath: string, bytes: Uint8Array): void {
+  private atomicReplace(targetPath: string, relativePath: string, bytes: Uint8Array): void {
     mkdirSync(dirname(targetPath), {recursive: true});
     const temporaryPath = join(dirname(targetPath), `.${basename(targetPath)}.${randomUUID()}.tmp`);
     try {
       writeFileSync(temporaryPath, bytes);
+      this.options.faultHook?.("after-temp-write", relativePath);
+      this.options.faultHook?.("before-replace", relativePath);
       renameSync(temporaryPath, targetPath);
     } finally {
       if (existsSync(temporaryPath)) unlinkSync(temporaryPath);

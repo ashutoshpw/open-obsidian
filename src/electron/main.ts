@@ -4,7 +4,7 @@ import {existsSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, validateVaultWriteRequest, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -27,28 +27,6 @@ function isString(value: unknown): value is string {
 function decodeBase64(value: unknown): Uint8Array {
   if (!isString(value)) throw new Error("File bytes must be a base64 string");
   return new Uint8Array(Buffer.from(value, "base64"));
-}
-
-type IncomingWriteRequest = {relativePath: string; expectedRevision?: string | null; base64: string};
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object";
-}
-
-function isRevision(value: unknown): value is string | null | undefined {
-  return value === null || value === undefined || isString(value);
-}
-
-function isWriteRequest(value: unknown): value is IncomingWriteRequest {
-  if (!isObjectRecord(value)) return false;
-  if (!isString(value.relativePath)) return false;
-  if (!isRevision(value.expectedRevision)) return false;
-  return isString(value.base64);
-}
-
-function validateWriteRequest(value: unknown): VaultWriteRequest {
-  if (!isWriteRequest(value)) throw new Error("Invalid vault write request");
-  return {relativePath: value.relativePath, expectedRevision: value.expectedRevision ?? null, base64: value.base64};
 }
 
 function createWindow(): void {
@@ -90,7 +68,7 @@ function readFile(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): o
 }
 
 function writeFile(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
-  const request = validateWriteRequest(value);
+  const request: VaultWriteRequest = validateVaultWriteRequest(value);
   const written = requireVault().write({
     relativePath: request.relativePath,
     expectedRevision: request.expectedRevision,

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T07:08:46Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "PLUG-008", "SYNC-002", "RISK-004"],
+  "fixture_ids": ["fixture:no-op-fidelity", "fixture:reference-roundtrip", "fixture:revision-conflict", "fixture:symlink-boundary", "fixture:plugin-no-op-order", "fixture:sync-interrupted-write", "fixture:sync-atomic-write", "fixture:risk-normalization"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b5822a150d2e750b313fd06aaaa5661bb62604775b4c5258b370950ef4b93bd1",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked source paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "observations": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passed for core, Electron, preload, renderer, scripts and tests."},
+    {"command": "bun test", "exit_code": 0, "result": "28 tests passed; 106 expectations cover no-op snapshots, BOM/CRLF and unknown-byte preservation, revision-aware writes, recovery history, conflicts, symlink denial, interrupted replacement, batch failure recovery and plugin no-op ordering."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and browser renderer bundles compiled with Bun."},
+    {"command": "bun run knip", "exit_code": 0, "result": "Knip reported no unused files, dependencies or exports across source, scripts and tests."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 27 changed files versus aa042da; strict complexity, dead-code and duplication checks passed."},
+    {"command": "bun run audit:fallow", "exit_code": 0, "result": "Health score 100.0/A; no dead files, circular dependencies or unused dependencies. Report-only baseline complexity findings remain in scripts/status.ts."},
+    {"command": "bun run validate:state", "exit_code": 0, "result": "Progress artifacts and evidence references remain structurally valid."}
+  ],
+  "implemented": [
+    "Fault injection after temporary write preserves the old vault bytes and incoming bytes outside the vault.",
+    "Multi-file writes preflight revisions, journal batch state and preserve the failed incoming version when a later replacement fails.",
+    "The plugin fixture runner captures a no-op snapshot before automation and detects first-open writes.",
+    "Canvas, Markdown and Bases source contracts preserve unknown fields or bytes unless an explicit edit span is selected."
+  ],
+  "limitations": [
+    "Only the local macOS arm64 environment has executed these tests; Windows and Linux matrix runs remain pending in Actions.",
+    "Reference Obsidian round-trips, disk-full/permission-loss simulation, delete-versus-edit and Unicode/case platform fault cases remain pending.",
+    "The Electron UI was compiled but not launched locally because the pinned Electron 44.3.0 download timed out during the earlier package attempt."
+  ]
+}

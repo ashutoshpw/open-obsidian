@@ -74,6 +74,45 @@ test("concurrent edits preserve incoming bytes as a conflict", () => {
   expect(readFileSync(join(fixture.root, "note.md"))).toEqual(external);
 });
 
+test("an interrupted temporary replacement preserves both old and incoming bytes", () => {
+  const fixture = createFixture();
+  const original = readFileSync(join(fixture.root, "note.md"));
+  const incoming = Buffer.from("interrupted assistant edit\n", "utf8");
+  const store = new VaultStore(fixture.root, fixture.appData, {
+    faultHook: (stage) => {
+      if (stage === "after-temp-write") throw new Error("injected interruption");
+    },
+  });
+
+  expect(() => store.write({relativePath: "note.md", expectedRevision: store.read("note.md").revision, bytes: incoming})).toThrow("injected interruption");
+  expect(readFileSync(join(fixture.root, "note.md"))).toEqual(original);
+  expect(readFileSync(store.listFailedWrites("note.md")[0]!.path)).toEqual(incoming);
+  expect(store.listRecovery("note.md")).toHaveLength(1);
+  expect(readdirSync(fixture.root).some((name) => name.endsWith(".tmp"))).toBe(false);
+});
+
+test("a failed multi-file write journals the batch and preserves each version", () => {
+  const fixture = createFixture();
+  writeFileSync(join(fixture.root, "second.md"), "second original\n");
+  const store = new VaultStore(fixture.root, fixture.appData, {
+    faultHook: (stage, relativePath) => {
+      if (stage === "before-replace" && relativePath === "second.md") throw new Error("injected batch failure");
+    },
+  });
+  const first = store.read("note.md");
+  const second = store.read("second.md");
+
+  expect(() => store.writeBatch([
+    {relativePath: "note.md", expectedRevision: first.revision, bytes: Buffer.from("first next\n")},
+    {relativePath: "second.md", expectedRevision: second.revision, bytes: Buffer.from("second next\n")},
+  ], "test-batch")).toThrow("injected batch failure");
+  expect(readFileSync(join(fixture.root, "note.md"))).toEqual(Buffer.from("first next\n"));
+  expect(readFileSync(join(fixture.root, "second.md"))).toEqual(Buffer.from("second original\n"));
+  expect(readFileSync(store.listFailedWrites("second.md")[0]!.path)).toEqual(Buffer.from("second next\n"));
+  const journal = readFileSync(join(fixture.appData, "journal.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as {operation: string; state: string; id: string});
+  expect(journal.some((entry) => entry.operation === "batch" && entry.state === "failed" && entry.id === "test-batch")).toBe(true);
+});
+
 test("symlinks are recorded but never followed for file operations", () => {
   const fixture = createFixture();
   const outside = join(fixture.appData, "outside.txt");

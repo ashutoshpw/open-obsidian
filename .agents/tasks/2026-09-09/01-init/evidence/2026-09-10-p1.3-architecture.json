@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T07:08:46Z",
+  "checkpoint": "P1.3",
+  "requirements": ["D08", "ARCH-001", "ARCH-002", "ARCH-003", "DEL-002"],
+  "fixture_ids": ["fixture:arch-electron-security", "fixture:arch-domain-core", "fixture:arch-process-boundaries", "fixture:delivery-dependencies", "fixture:ipc-schema"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b5822a150d2e750b313fd06aaaa5661bb62604775b4c5258b370950ef4b93bd1"
+  },
+  "observations": [
+    {"command": "bun run validate:architecture", "exit_code": 0, "result": "Electron main/preload/renderer/plugin-runtime boundaries, sandbox settings, domain interfaces and non-calendar effort disclaimers validate."},
+    {"command": "bun test tests/api.test.ts tests/vault.test.ts tests/markdown.test.ts tests/links.test.ts tests/bases.test.ts", "exit_code": 0, "result": "Shared IPC schema validation and pure domain contracts pass, including malformed request rejection and source-preserving edits."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Executable main, preload and renderer interfaces compile with Bun."}
+  ],
+  "implemented": [
+    "The renderer has no Node integration, uses context isolation and sandbox settings, and reaches the vault only through allowlisted preload methods.",
+    "Shared vault, Markdown, link, Canvas, graph, Bases, index and plugin-preview contracts are pure TypeScript interfaces with tests.",
+    "Effort estimates are labeled preliminary and explicitly not calendar promises; state.json records the dependency graph."
+  ],
+  "limitations": [
+    "Packaged runtime inspection, cross-platform process claims and reference-extension DOM compatibility remain pending.",
+    "The architecture manifest is a validated feasibility record, not proof of strong isolation for arbitrary same-user legacy plugins."
+  ]
+}

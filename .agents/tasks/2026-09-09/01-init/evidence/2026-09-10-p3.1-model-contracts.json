@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T07:08:46Z",
+  "checkpoint": "P3.1",
+  "requirements": ["C05", "C05.1", "C06", "C06.1", "C07", "C07.1"],
+  "fixture_ids": ["fixture:c05-graph", "fixture:c05-graph-no-write", "fixture:c06-canvas", "fixture:c06-text-card", "fixture:c07-bases", "fixture:c07-unsupported-formula"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b5822a150d2e750b313fd06aaaa5661bb62604775b4c5258b370950ef4b93bd1"
+  },
+  "observations": [
+    {"command": "bun test tests/canvas-graph.test.ts tests/bases.test.ts", "exit_code": 0, "result": "Graph derives resolved and unresolved nodes/edges; Canvas edits preserve unknown fields and require an explicit note-creation action; Bases evaluates constrained filters/sorts/groups and reports unsupported formulas."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Graph, Canvas and Bases domain contracts compile with the shared TypeScript core."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed Graph, Canvas, Bases and fixture files."}
+  ],
+  "implemented": [
+    "Graph state is derived from the authoritative vault index and represents unresolved targets explicitly.",
+    "JSON Canvas document round-tripping retains unknown root/node fields and text-card to note conversion is explicit.",
+    "The version 1 Bases evaluator is non-executable, preserves source definitions, supports constrained filtering/sorting/grouping and surfaces unsupported formulas."
+  ],
+  "limitations": [
+    "The Bases parser currently covers the repository's version 1 JSON fixture grammar; YAML/reference Obsidian behavior and embedded live views remain pending.",
+    "No packaged/reference Obsidian reopen or interactive graph/canvas UI verification has run; these are domain contracts, not certification.",
+    "Cross-platform and reference-application validation remains pending."
+  ]
+}

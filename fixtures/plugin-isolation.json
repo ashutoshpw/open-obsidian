@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "decision": "D15",
+  "policy": "no trusted legacy mode; deny direct capabilities and stage writes through preview approval",
+  "capabilities": {
+    "allowed": ["vault.read"],
+    "staged": ["vault.preview-write"],
+    "denied": ["vault.direct-write", "filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged"]
+  },
+  "required_record_fields": ["reproduction", "safeAlternativesAttempted", "scope", "visible"],
+  "safe_alternatives": ["mediated vault read", "preview broker", "workflow disabled"],
+  "platforms": ["macOS", "Windows", "Linux"]
+}
