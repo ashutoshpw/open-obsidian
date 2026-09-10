@@ -7,6 +7,12 @@ const api: OpenObsidianAPI = {
   search: (query) => ipcRenderer.invoke(CHANNELS.search, query),
   readFile: (relativePath) => ipcRenderer.invoke(CHANNELS.readFile, relativePath),
   writeFile: (request: VaultWriteRequest) => ipcRenderer.invoke(CHANNELS.writeFile, request),
+  reviewChanges: () => ipcRenderer.invoke(CHANNELS.reviewChanges),
+  diffChanges: (request) => ipcRenderer.invoke(CHANNELS.diffChanges, request),
+  chronicleHistory: (limit) => ipcRenderer.invoke(CHANNELS.chronicleHistory, limit),
+  historyRecords: (relativePath) => ipcRenderer.invoke(CHANNELS.historyRecords, relativePath),
+  restoreChronicle: (request) => ipcRenderer.invoke(CHANNELS.restoreChronicle, request),
+  commitChronicle: (request) => ipcRenderer.invoke(CHANNELS.commitChronicle, request),
 };
 
 contextBridge.exposeInMainWorld("openObsidian", api);

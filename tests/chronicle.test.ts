@@ -2,7 +2,7 @@ import {afterEach, expect, test} from "bun:test";
 import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {addChronicleRemote, adoptChronicle, chronicleDiff, chronicleHistory, commitChronicleSelection, initializeChronicle, inspectVaultGitState, pullChronicle, pushChronicle, restoreChronicleFile, reviewChronicleCommit} from "../src/core/chronicle.js";
+import {addChronicleRemote, adoptChronicle, chronicleChangedPaths, chronicleDiff, chronicleHistory, commitChronicleSelection, initializeChronicle, inspectVaultGitState, pullChronicle, pushChronicle, restoreChronicleFile, reviewChronicleChanges, reviewChronicleCommit} from "../src/core/chronicle.js";
 import {historyRecordsFromStore, planHistoryRetention} from "../src/core/history.js";
 import {VaultStore} from "../src/core/vault.js";
 
@@ -66,6 +66,23 @@ test("Chronicle selection commits only approved paths and preserves unrelated st
   expect(git(root, "diff", "--cached", "--name-only")).toBe("b.md");
   expect(git(root, "status", "--porcelain=v1", "--untracked-files=all")).toContain("credentials.json");
   expect(git(root, "show", `${initial.revision}:b.md`)).toBe("b one");
+});
+
+test("Chronicle change review derives a complete, sorted working-tree selection", () => {
+  const root = createRoot();
+  const appData = join(root, ".openobsidian-data");
+  initializeChronicle(root);
+  configureGit(root);
+  writeFileSync(join(root, "saved.md"), "saved\n");
+  git(root, "add", "saved.md");
+  commitChronicleSelection(root, ["saved.md"], "initial", appData);
+  writeFileSync(join(root, "saved.md"), "changed\n");
+  writeFileSync(join(root, "new.md"), "new\n");
+  mkdirSync(appData, {recursive: true});
+  writeFileSync(join(appData, "private.json"), "private\n");
+
+  expect(chronicleChangedPaths(root)).toEqual([".openobsidian-data/private.json", "new.md", "saved.md"]);
+  expect(reviewChronicleChanges(root, appData)).toMatchObject({selectedPaths: ["new.md", "saved.md"], excludedPaths: [{path: ".openobsidian-data/private.json"}]});
 });
 
 test("Chronicle diff, history and restore use the recovery broker", () => {

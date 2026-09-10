@@ -1,6 +1,7 @@
 import {existsSync, lstatSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {relative, resolve} from "node:path";
+import type {ChronicleCommitReview, ChronicleHistoryEntry} from "../shared/api.js";
 import {snapshotVault, VaultStore, type VaultRead} from "./vault.js";
 
 export type ChronicleRemote = {name: string; fetchUrl: string; pushUrl: string};
@@ -23,23 +24,14 @@ export type VaultGitState = {
 export type ChronicleCommandResult = {exitCode: number; stdout: string; stderr?: string};
 export type ChronicleCommandRunner = (root: string, args: string[]) => ChronicleCommandResult;
 
-export type ChronicleCommitReview = {
-  selectedPaths: string[];
-  excludedPaths: Array<{path: string; reason: string}>;
-  stagedPaths: string[];
-  unstagedPaths: string[];
-  untrackedPaths: string[];
-};
-
 export type ChronicleCommitResult = {revision: string; message: string; paths: string[]};
-export type ChronicleHistoryEntry = {revision: string; authoredAt: string; author: string; message: string};
 export type ChronicleRestoreResult = {read: VaultRead; sourceRevision: string};
 
 function runGit(root: string, args: string[]): ChronicleCommandResult {
   const result = spawnSync("git", ["-C", root, ...args], {encoding: "utf8"});
   return {
     exitCode: result.status ?? 1,
-    stdout: typeof result.stdout === "string" ? result.stdout.trim() : "",
+    stdout: typeof result.stdout === "string" ? result.stdout.trimEnd() : "",
     stderr: typeof result.stderr === "string" ? result.stderr.trim() : result.error?.message,
   };
 }
@@ -154,6 +146,11 @@ function statusPaths(result: ChronicleCommandResult): {stagedPaths: string[]; un
   return {stagedPaths: [...new Set(stagedPaths)].sort(), unstagedPaths: [...new Set(unstagedPaths)].sort(), untrackedPaths: [...new Set(untrackedPaths)].sort()};
 }
 
+export function chronicleChangedPaths(root: string, runner: ChronicleCommandRunner = runGit): string[] {
+  const status = statusPaths(runner(root, ["status", "--porcelain=v1", "--untracked-files=all"]));
+  return [...new Set([...status.stagedPaths, ...status.unstagedPaths, ...status.untrackedPaths])].sort();
+}
+
 function appPrivatePath(root: string, appDataRoot: string | undefined, relativePath: string): boolean {
   if (!appDataRoot) return false;
   const resolvedAppData = resolve(appDataRoot);
@@ -168,6 +165,10 @@ export function reviewChronicleCommit(root: string, selectedPaths: string[], app
   const allowed = selected.filter((path) => !excludedPaths.some((entry) => entry.path === path));
   const status = statusPaths(runner(root, ["status", "--porcelain=v1", "--untracked-files=all"]));
   return {selectedPaths: allowed, excludedPaths, ...status};
+}
+
+export function reviewChronicleChanges(root: string, appDataRoot?: string, runner: ChronicleCommandRunner = runGit): ChronicleCommitReview {
+  return reviewChronicleCommit(root, chronicleChangedPaths(root, runner), appDataRoot, runner);
 }
 
 export function initializeChronicle(root: string, runner: ChronicleCommandRunner = runGit): VaultGitState {

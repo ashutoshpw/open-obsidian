@@ -16,9 +16,10 @@
       .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
       .brand h1 { margin: 0; font-size: 20px; letter-spacing: -0.04em; }
       .brand p { margin: 4px 0 0; color: #9da3b5; font-size: 12px; }
+      :focus-visible { outline: 2px solid #c9c1ff; outline-offset: 3px; }
       .primary-action { border-radius: 9px; padding: 9px 12px; background: #a78bfa; color: #17131f; font-size: 12px; font-weight: 800; }
       .search-wrap { display: grid; gap: 7px; }
-      .search-wrap label { color: #8f96a9; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      .search-wrap label { color: #8f96a9; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
       #vault-search { width: 100%; border: 1px solid #ffffff18; border-radius: 8px; padding: 10px 11px; outline: none; background: #0f1116; color: #eef0f6; }
       #vault-search:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px #a78bfa22; }
       #vault-mode { align-self: flex-start; border: 1px solid #ffffff1b; border-radius: 999px; padding: 5px 9px; color: #c9c1ff; font-size: 11px; }
@@ -31,10 +32,38 @@
       .empty-list { margin: 8px 10px; color: #858b9c; font-size: 12px; }
       .workspace { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; min-height: 100vh; }
       .workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 68px; padding: 18px 28px; border-bottom: 1px solid #ffffff16; }
-      .eyebrow { margin: 0 0 4px; color: #858b9c; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+      .eyebrow { margin: 0 0 4px; color: #858b9c; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
       #editor-path { overflow: hidden; max-width: min(65vw, 760px); color: #eef0f6; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+      .workspace-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+      .tool-action { border: 1px solid #ffffff1e; border-radius: 8px; padding: 8px 11px; background: #ffffff0b; color: #eef0f6; font-size: 12px; font-weight: 700; }
+      .tool-action:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
       .save-action { border: 1px solid #ffffff1e; border-radius: 8px; padding: 8px 12px; background: #ffffff0b; color: #eef0f6; font-size: 12px; font-weight: 700; }
       .save-action:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
+      .tool-panel { display: grid; gap: 14px; max-height: 38vh; overflow: auto; padding: 18px 28px; border-bottom: 1px solid #ffffff16; background: #171923e8; }
+      .tool-panel[hidden] { display: none; }
+      .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .panel-header h2 { margin: 0; font-size: 15px; letter-spacing: -0.02em; }
+      .panel-close { border: 1px solid #ffffff18; border-radius: 7px; padding: 5px 8px; background: transparent; color: #9da3b5; font-size: 11px; }
+      .panel-close:hover { color: #eef0f6; background: #ffffff0b; }
+      .panel-summary { margin: 0; color: #9da3b5; font-size: 12px; line-height: 1.5; }
+      .change-list, .history-list { display: grid; gap: 6px; }
+      .change-row, .history-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #ffffff12; border-radius: 8px; padding: 8px 10px; background: #ffffff05; }
+      .change-row label { display: flex; align-items: center; gap: 8px; min-width: 0; color: #d8dbe5; font-size: 12px; }
+      .change-row label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .change-kind, .history-meta { color: #858b9c; font-size: 11px; white-space: nowrap; }
+      .excluded-row { color: #ffd28b; font-size: 11px; }
+      .diff-controls, .commit-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .diff-controls label, .commit-controls label { color: #9da3b5; font-size: 11px; }
+      .diff-controls select, .commit-controls input { min-width: 180px; border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
+      .diff-controls input[type="checkbox"] { min-width: auto; accent-color: #a78bfa; }
+      .commit-controls input { flex: 1 1 260px; }
+      .diff-output { max-height: 220px; overflow: auto; margin: 0; border: 1px solid #ffffff12; border-radius: 8px; padding: 12px; background: #0c0e12; color: #c9c1ff; font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+      .history-row { align-items: flex-start; }
+      .history-row > div:first-child { min-width: 0; }
+      .history-title { overflow: hidden; color: #d8dbe5; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+      .history-meta { margin-top: 4px; overflow-wrap: anywhere; white-space: normal; }
+      .history-restore { flex: 0 0 auto; border: 1px solid #ffffff1e; border-radius: 7px; padding: 6px 8px; background: #ffffff0b; color: #eef0f6; font-size: 11px; }
+      .history-restore:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
       .editor-wrap { display: grid; min-height: 0; padding: 28px clamp(20px, 6vw, 90px); }
       #note-editor { width: 100%; min-height: 0; resize: none; border: 1px solid #ffffff18; border-radius: 12px; padding: 24px; outline: none; background: #0e1015aa; color: #e8eaf0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; line-height: 1.7; }
       #note-editor:focus { border-color: #a78bfa88; box-shadow: 0 0 0 3px #a78bfa18; }
@@ -43,7 +72,8 @@
       #empty-state h2 { margin: 0 0 10px; font-size: 22px; letter-spacing: -0.04em; }
       #empty-state p { margin: 0; color: #9da3b5; line-height: 1.6; }
       #status { min-height: 54px; padding: 16px 28px; border-top: 1px solid #ffffff12; color: #9da3b5; font-size: 12px; overflow-wrap: anywhere; }
-      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid #ffffff16; } .workspace { min-height: 58vh; } .workspace-header { padding: 14px 18px; } .editor-wrap { padding: 18px; } #status { padding: 12px 18px; } }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
+      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid #ffffff16; } .workspace { min-height: 58vh; } .workspace-header { align-items: flex-start; padding: 14px 18px; } .workspace-actions { justify-content: flex-start; } .tool-panel { padding: 16px 18px; } .editor-wrap { padding: 18px; } #status { padding: 12px 18px; } }
     </style>
   </head>
   <body>
@@ -58,7 +88,20 @@
         <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
       </aside>
       <main class="workspace">
-        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></header>
+        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="review-changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" type="button" disabled>History</button><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
+        <section class="tool-panel" id="change-panel" aria-label="Chronicle change review" hidden>
+          <div class="panel-header"><h2>Review Chronicle changes</h2><button class="panel-close" id="close-changes" type="button">Close</button></div>
+          <p class="panel-summary" id="change-summary">No changes loaded.</p>
+          <div class="change-list" id="change-list" aria-label="Changes selected for commit"></div>
+          <div class="diff-controls"><label for="diff-path">Diff</label><select id="diff-path"><option value="">All working changes</option></select><label><input id="diff-staged" type="checkbox" /> staged snapshot</label></div>
+          <pre class="diff-output" id="diff-output" aria-live="polite">Select a change to inspect its diff.</pre>
+          <div class="commit-controls"><label for="commit-message">Commit message</label><input id="commit-message" type="text" maxlength="200" placeholder="Describe the selected note changes" /><button class="tool-action" id="commit-selected" type="button">Commit selected</button></div>
+        </section>
+        <section class="tool-panel" id="history-panel" aria-label="Chronicle history and recovery records" hidden>
+          <div class="panel-header"><h2>History and recovery</h2><button class="panel-close" id="close-history" type="button">Close</button></div>
+          <p class="panel-summary" id="history-summary">No history loaded.</p>
+          <div class="history-list" id="history-list" aria-label="Vault history"></div>
+        </section>
         <section class="editor-wrap" aria-label="Note editor"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></section>
         <div id="status" role="status" aria-live="polite">No vault selected.</div>
       </main>

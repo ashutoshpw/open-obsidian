@@ -3,10 +3,11 @@ import {createHash} from "node:crypto";
 import {existsSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
-import {inspectVaultGitState} from "../core/chronicle.js";
+import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
+import {historyRecordsFromStore} from "../core/history.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, validateVaultWriteRequest, type VaultFileSummary, type VaultSearchResult, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateVaultWriteRequest, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -106,12 +107,69 @@ function writeFile(_event: Electron.IpcMainInvokeEvent, value: unknown): object 
   return {relativePath: written.relativePath, base64: Buffer.from(written.bytes).toString("base64"), revision: written.revision};
 }
 
+function requireChronicle(): VaultStore {
+  const store = requireVault();
+  if (inspectVaultGitState(store.root).vaultType !== "chronicle") throw new Error("Chronicle actions require a Git-backed vault");
+  return store;
+}
+
+function reviewChanges(): ReturnType<typeof reviewChronicleChanges> {
+  const store = requireChronicle();
+  return reviewChronicleChanges(store.root, store.appDataRoot);
+}
+
+function diffChanges(_event: Electron.IpcMainInvokeEvent, value: unknown): string {
+  const request = validateChronicleDiffRequest(value);
+  const store = requireChronicle();
+  return chronicleDiff(store.root, request.relativePath, request.staged);
+}
+
+function chronicleHistoryRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): ReturnType<typeof chronicleHistory> {
+  const store = requireChronicle();
+  const limit = value === undefined ? undefined : Number(value);
+  return chronicleHistory(store.root, limit);
+}
+
+function historyRecordsRequest(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): VaultHistoryRecord[] {
+  if (relativePath !== undefined && typeof relativePath !== "string") throw new Error("History path must be a string");
+  return historyRecordsFromStore(requireVault(), relativePath).map((record) => ({
+    id: record.id,
+    relativePath: record.relativePath,
+    revision: record.revision,
+    bytes: record.bytes,
+    capturedAt: record.capturedAt,
+    kind: record.kind,
+    protected: record.protected === true,
+    expectedRevision: record.expectedRevision,
+    currentRevision: record.currentRevision,
+  }));
+}
+
+function restoreChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
+  const request = validateChronicleRestoreRequest(value);
+  const store = requireChronicle();
+  const restored = restoreChronicleFile(store.root, store, request.revision, request.relativePath);
+  return {relativePath: restored.read.relativePath, base64: Buffer.from(restored.read.bytes).toString("base64"), revision: restored.read.revision};
+}
+
+function commitChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): ReturnType<typeof commitChronicleSelection> {
+  const request = validateChronicleCommitRequest(value);
+  const store = requireChronicle();
+  return commitChronicleSelection(store.root, request.selectedPaths, request.message, store.appDataRoot);
+}
+
 function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.selectVault, selectVault);
   ipcMain.handle(CHANNELS.listFiles, listFiles);
   ipcMain.handle(CHANNELS.search, searchFiles);
   ipcMain.handle(CHANNELS.readFile, readFile);
   ipcMain.handle(CHANNELS.writeFile, writeFile);
+  ipcMain.handle(CHANNELS.reviewChanges, reviewChanges);
+  ipcMain.handle(CHANNELS.diffChanges, diffChanges);
+  ipcMain.handle(CHANNELS.chronicleHistory, chronicleHistoryRequest);
+  ipcMain.handle(CHANNELS.historyRecords, historyRecordsRequest);
+  ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
+  ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
 }
 
 app.whenReady().then(() => {

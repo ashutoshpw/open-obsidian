@@ -49,8 +49,8 @@ export function historyRecords(storeRecords: {recovery: RecoveryRecord[]; failed
   ];
 }
 
-export function historyRecordsFromStore(store: VaultStore): HistoryRecord[] {
-  return historyRecords({recovery: store.listRecovery(), failed: store.listFailedWrites(), conflicts: store.listConflicts()});
+export function historyRecordsFromStore(store: VaultStore, relativePath?: string): HistoryRecord[] {
+  return historyRecords({recovery: store.listRecovery(relativePath), failed: store.listFailedWrites(relativePath), conflicts: store.listConflicts(relativePath)});
 }
 
 export function cleanupHistory(plan: HistoryPlan, policy: HistoryPolicy, remove: (path: string) => void): HistoryCleanup {
