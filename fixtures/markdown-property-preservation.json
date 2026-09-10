@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "represented-property-lossless-edit",
+  "invariants": {
+    "unrepresented_keys_survive": true,
+    "nested_values_survive": true,
+    "comments_survive": true,
+    "property_order_survives": true,
+    "line_endings_survive": true
+  }
+}

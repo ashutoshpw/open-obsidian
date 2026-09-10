@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "name": "resolution-aware-rename-plan",
+  "actions": ["update", "skip-ambiguous", "skip-unresolved"],
+  "invariants": {
+    "aliases_and_subpaths_preserved": true,
+    "ambiguous_targets_are_not_rewritten": true,
+    "unrelated_targets_are_not_rewritten": true,
+    "plan_precedes_filesystem_mutation": true
+  }
+}

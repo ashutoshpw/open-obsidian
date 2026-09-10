@@ -172,6 +172,16 @@
       #note-preview[hidden] { display: none; }
       #note-preview h1, #note-preview h2, #note-preview h3, #note-preview h4, #note-preview h5, #note-preview h6 { margin: 0.2em 0 0.55em; color: #f4f2fa; line-height: 1.25; }
       #note-preview p { margin: 0 0 0.9em; color: #d8dbe5; white-space: pre-wrap; }
+      #note-preview ul, #note-preview ol { margin: 0 0 0.9em; padding-left: 1.5em; color: #d8dbe5; }
+      #note-preview li { margin: 0.25em 0; }
+      #note-preview blockquote { margin: 0 0 0.9em; border-left: 3px solid #a78bfa88; padding: 0.2em 0 0.2em 12px; color: #c9c1ff; }
+      #note-preview pre { overflow: auto; margin: 0 0 0.9em; border: 1px solid #ffffff12; border-radius: 8px; padding: 10px; background: #0c0e12; color: #c8cedc; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+      #note-preview pre code::before { content: attr(data-language); display: block; margin-bottom: 5px; color: #858b9c; font: 10px/1.2 ui-sans-serif, sans-serif; text-transform: uppercase; }
+      #note-preview table { width: 100%; border-collapse: collapse; margin: 0 0 0.9em; color: #d8dbe5; font-size: 12px; }
+      #note-preview th, #note-preview td { border: 1px solid #ffffff18; padding: 6px 8px; text-align: left; vertical-align: top; }
+      #note-preview th { color: #c9c1ff; background: #a78bfa12; }
+      #note-preview mark { border-radius: 2px; padding: 0 2px; background: #f1d56a55; color: inherit; }
+      #note-preview .markdown-unsupported { border-left: 3px solid #d79b4c88; padding-left: 10px; color: #ffd28b; font-size: 12px; }
       #note-preview .task-line { display: flex; align-items: baseline; gap: 8px; margin: 0 0 0.55em; color: #d8dbe5; }
       #note-preview .task-line input { accent-color: #a78bfa; }
       #empty-state { grid-area: 1 / 1; z-index: 1; align-self: center; justify-self: center; width: min(580px, 100%); padding: 42px; border: 1px solid #ffffff15; border-radius: 16px; background: #171923f2; }
@@ -247,7 +257,7 @@
         </section>
         <section class="tool-panel" id="graph-panel" aria-label="Vault graph" hidden>
           <div class="panel-header"><h2>Vault graph</h2><button class="panel-close" id="close-graph" type="button">Close</button></div>
-          <div class="graph-controls"><label for="graph-query">Find nodes</label><input id="graph-query" type="search" placeholder="Filter files and unresolved links…" autocomplete="off" /><label for="graph-node-kind">Nodes</label><select id="graph-node-kind"><option value="all">All</option><option value="file">Files</option><option value="unresolved">Unresolved</option></select><label for="graph-edge-kind">Edges</label><select id="graph-edge-kind"><option value="all">All</option><option value="link">Links</option><option value="embed">Embeds</option></select></div>
+          <div class="graph-controls"><label for="graph-query">Find nodes</label><input id="graph-query" type="search" placeholder="Filter files, attachments and unresolved links…" autocomplete="off" /><label for="graph-node-kind">Nodes</label><select id="graph-node-kind"><option value="all">All</option><option value="file">Files</option><option value="attachment">Attachments</option><option value="unresolved">Unresolved</option></select><label for="graph-edge-kind">Edges</label><select id="graph-edge-kind"><option value="all">All</option><option value="link">Links</option><option value="embed">Embeds</option></select></div>
           <p class="panel-summary" id="graph-summary">Derived graph state does not write to the vault.</p>
           <div class="graph-grid"><section><h3>Nodes</h3><div class="graph-list" id="graph-node-list"></div></section><section><h3>Edges</h3><div class="graph-list" id="graph-edge-list"></div></section></div>
         </section>

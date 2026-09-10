@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "safe-markdown-preview-dialects",
+  "supported_blocks": ["headings", "tasks", "unordered-lists", "ordered-lists", "tables", "callouts", "fenced-code", "highlights"],
+  "visible_unsupported_blocks": ["footnotes", "math", "diagrams", "raw-html"],
+  "invariants": {
+    "source_bytes_remain_authoritative": true,
+    "preview_uses_text_content_for_untrusted_source": true,
+    "code_and_diagram_execution": false,
+    "unknown_syntax_is_not_silently_rewritten": true
+  }
+}

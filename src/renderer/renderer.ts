@@ -1,4 +1,5 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {parseMarkdownPreview, type MarkdownPreviewBlock} from "../core/markdown-preview.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -198,38 +199,115 @@ function setHidden(element: HTMLElement | null, value: boolean): void {
   if (element) element.hidden = value;
 }
 
-function previewLine(line: string): HTMLElement | null {
-  if (!line.trim()) return null;
-  const heading = /^ {0,3}(#{1,6})[ \t]+(.+?)\s*#*\s*$/.exec(line);
-  if (heading) {
-    const element = document.createElement(`h${heading[1]!.length}`);
-    element.textContent = heading[2]!.trim();
-    return element;
-  }
-  const task = /^\s*[-*][ \t]+\[([ xX])\][ \t]+(.+)$/.exec(line);
-  if (task) {
-    const row = document.createElement("label");
-    row.className = "task-line";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = task[1]!.toLocaleLowerCase() === "x";
-    checkbox.disabled = true;
-    const text = document.createElement("span");
-    text.textContent = task[2]!;
-    row.append(checkbox, text);
-    return row;
-  }
-  const paragraph = document.createElement("p");
-  paragraph.textContent = line;
-  return paragraph;
+function appendPreviewInline(element: HTMLElement, value: string): void {
+  value.split(/(==[^=]+==)/g).forEach((part) => {
+    if (/^==[^=]+==$/.test(part)) {
+      const mark = document.createElement("mark");
+      mark.textContent = part.slice(2, -2);
+      element.append(mark);
+    } else if (part) {
+      element.append(document.createTextNode(part));
+    }
+  });
+}
+
+function previewHeading(block: Extract<MarkdownPreviewBlock, {kind: "heading"}>): HTMLElement {
+  const element = document.createElement(`h${block.level}`);
+  appendPreviewInline(element, block.text);
+  return element;
+}
+
+function previewParagraph(block: Extract<MarkdownPreviewBlock, {kind: "paragraph"}>): HTMLElement {
+  const element = document.createElement("p");
+  appendPreviewInline(element, block.text);
+  return element;
+}
+
+function previewTask(block: Extract<MarkdownPreviewBlock, {kind: "task"}>): HTMLElement {
+  const row = document.createElement("label");
+  row.className = "task-line";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = block.checked;
+  checkbox.disabled = true;
+  const text = document.createElement("span");
+  appendPreviewInline(text, block.text);
+  row.append(checkbox, text);
+  return row;
+}
+
+function previewList(block: Extract<MarkdownPreviewBlock, {kind: "list"}>): HTMLElement {
+  const list = document.createElement(block.ordered ? "ol" : "ul");
+  block.items.forEach((item) => {
+    const row = document.createElement("li");
+    appendPreviewInline(row, item);
+    list.append(row);
+  });
+  return list;
+}
+
+function previewQuote(block: Extract<MarkdownPreviewBlock, {kind: "quote"}>): HTMLElement {
+  const quote = document.createElement("blockquote");
+  appendPreviewInline(quote, block.text);
+  return quote;
+}
+
+function previewCode(block: Extract<MarkdownPreviewBlock, {kind: "code"}>): HTMLElement {
+  const pre = document.createElement("pre");
+  const code = document.createElement("code");
+  code.textContent = block.text;
+  if (block.language) code.dataset.language = block.language;
+  pre.append(code);
+  return pre;
+}
+
+function previewTableCell(value: string, header: boolean): HTMLElement {
+  const cell = document.createElement(header ? "th" : "td");
+  appendPreviewInline(cell, value);
+  return cell;
+}
+
+function previewTable(block: Extract<MarkdownPreviewBlock, {kind: "table"}>): HTMLElement {
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  block.headers.forEach((header) => headRow.append(previewTableCell(header, true)));
+  head.append(headRow);
+  const body = document.createElement("tbody");
+  block.rows.forEach((row) => {
+    const bodyRow = document.createElement("tr");
+    row.forEach((value) => bodyRow.append(previewTableCell(value, false)));
+    body.append(bodyRow);
+  });
+  table.append(head, body);
+  return table;
+}
+
+function previewUnsupported(block: Extract<MarkdownPreviewBlock, {kind: "unsupported"}>): HTMLElement {
+  const element = document.createElement("p");
+  element.className = "markdown-unsupported";
+  element.textContent = `${block.syntax} syntax is shown as text; execution/rendering is not enabled: ${block.text}`;
+  return element;
+}
+
+const previewBuilders: {[K in MarkdownPreviewBlock["kind"]]: (block: Extract<MarkdownPreviewBlock, {kind: K}>) => HTMLElement} = {
+  heading: previewHeading,
+  paragraph: previewParagraph,
+  task: previewTask,
+  list: previewList,
+  quote: previewQuote,
+  code: previewCode,
+  table: previewTable,
+  unsupported: previewUnsupported,
+};
+
+function previewElement(block: MarkdownPreviewBlock): HTMLElement {
+  return previewBuilders[block.kind](block as never);
 }
 
 function renderNotePreview(value: string): void {
   if (!notePreview) return;
-  notePreview.replaceChildren(...value.split(/\r\n|\n|\r/).flatMap((line) => {
-    const element = previewLine(line);
-    return element ? [element] : [];
-  }));
+  notePreview.replaceChildren(...parseMarkdownPreview(value).map(previewElement));
 }
 
 function renderEditorMode(): void {
@@ -938,8 +1016,8 @@ function graphNodeButton(node: GraphView["nodes"][number]): HTMLButtonElement {
   button.className = "graph-node";
   button.dataset.kind = node.kind;
   button.disabled = node.kind === "unresolved";
-  button.textContent = `${node.kind === "unresolved" ? "Unresolved" : "Open"} · ${node.label}`;
-  if (node.kind === "file") button.addEventListener("click", () => openFile(node.id));
+  button.textContent = `${node.kind === "unresolved" ? "Unresolved" : node.kind === "attachment" ? "Open attachment" : "Open"} · ${node.label}`;
+  if (node.kind !== "unresolved") button.addEventListener("click", () => openFile(node.id));
   return button;
 }
 
@@ -966,14 +1044,21 @@ function graphCountLabel(count: number, singular: string): string {
   return `${count} ${singular}${count === 1 ? "" : "s"}`;
 }
 
+function graphSummaryText(data: GraphView, nodeCount: number, edgeCount: number): string {
+  return `${graphCountLabel(nodeCount, "visible node")} · ${graphCountLabel(edgeCount, "visible edge")} · ${data.groups.length} folder group${data.groups.length === 1 ? "" : "s"} · ${data.layout} layout · derived state only`;
+}
+
 function renderGraph(): void {
-  if (!graphData || !graphNodeList || !graphEdgeList) return;
-  const nodes = graphData.nodes.filter(graphNodeMatches);
+  const data = graphData;
+  const nodeList = graphNodeList;
+  const edgeList = graphEdgeList;
+  if (!data || !nodeList || !edgeList) return;
+  const nodes = data.nodes.filter(graphNodeMatches);
   const nodeIds = new Set(nodes.map((node) => node.id));
-  const edges = graphData.edges.filter((edge) => graphEdgeMatches(edge, nodeIds));
-  setText(graphSummary, `${graphCountLabel(nodes.length, "visible node")} · ${graphCountLabel(edges.length, "visible edge")} · derived state only`);
-  renderGraphList(graphNodeList, nodes.map(graphNodeButton), "No graph nodes match this filter.");
-  renderGraphList(graphEdgeList, edges.map(graphEdgeRow), "No graph edges match this filter.");
+  const edges = data.edges.filter((edge) => graphEdgeMatches(edge, nodeIds));
+  setText(graphSummary, graphSummaryText(data, nodes.length, edges.length));
+  renderGraphList(nodeList, nodes.map(graphNodeButton), "No graph nodes match this filter.");
+  renderGraphList(edgeList, edges.map(graphEdgeRow), "No graph edges match this filter.");
 }
 
 async function openGraphPanel(): Promise<void> {

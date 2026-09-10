@@ -1,6 +1,8 @@
 import {expect, test} from "bun:test";
 import {editMarkdownProperty, extractMarkdownHeadings, parseMarkdown} from "../src/core/markdown.js";
 
+const preservationFixture = JSON.parse(await Bun.file(new URL("../fixtures/markdown-property-preservation.json", import.meta.url)).text()) as {schema_version: number; invariants: Record<string, boolean>};
+
 test("markdown property edits preserve BOM, line endings and unknown source", () => {
   const source = Buffer.from("\uFEFF---\r\nstatus: open\r\nunknown: [keep, me]\r\ncomment: # untouched\r\n---\r\nBody\r\n", "utf8");
   const document = parseMarkdown(source);
@@ -16,6 +18,16 @@ test("markdown edits refuse unrepresented or malformed frontmatter", () => {
   const source = Buffer.from("---\nstatus: open\n", "utf8");
   expect(parseMarkdown(source).properties).toEqual([]);
   expect(() => editMarkdownProperty(source, "status", "done")).toThrow("not represented");
+});
+
+test("represented property edits preserve nested values, comments and ordering", () => {
+  const source = Buffer.from("---\r\nstatus: open\r\nmetadata:\r\n  owner: Ashutosh # keep this comment\r\n  labels:\r\n    - one\r\nunknown: [keep, me]\r\n---\r\nBody\r\n", "utf8");
+  const edited = editMarkdownProperty(source, "status", "done");
+
+  expect(preservationFixture.schema_version).toBe(1);
+  expect(Object.values(preservationFixture.invariants).every(Boolean)).toBe(true);
+  expect(Buffer.from(edited).toString("utf8")).toBe("---\r\nstatus: done\r\nmetadata:\r\n  owner: Ashutosh # keep this comment\r\n  labels:\r\n    - one\r\nunknown: [keep, me]\r\n---\r\nBody\r\n");
+  expect(parseMarkdown(edited).properties.map((property) => property.key)).toEqual(["status", "metadata", "unknown"]);
 });
 
 test("markdown outline extraction ignores fenced headings and preserves source line numbers", () => {

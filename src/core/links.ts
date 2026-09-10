@@ -35,10 +35,10 @@ function addWikiReference(references: LinkReference[], match: RegExpExecArray): 
 
 function addMarkdownReference(references: LinkReference[], match: RegExpExecArray): void {
   const raw = match[0];
-  const target = match[2] ?? "";
-  const targetStart = match.index + raw.indexOf(target);
-  const parsed = splitTarget(target);
-  references.push({kind: raw.startsWith("!") ? "embed" : "markdown", raw, ...parsed, start: match.index, end: match.index + raw.length, targetStart, targetEnd: targetStart + target.length});
+  const rawTarget = match[2] ?? "";
+  const targetStart = match.index + raw.indexOf(rawTarget);
+  const parsed = splitTarget(rawTarget);
+  references.push({kind: raw.startsWith("!") ? "embed" : "markdown", raw, ...parsed, start: match.index, end: match.index + raw.length, targetStart, targetEnd: targetStart + parsed.target.length});
 }
 
 export function extractLinks(text: string): LinkReference[] {
@@ -62,10 +62,21 @@ function candidatePaths(target: string, currentPath: string): string[] {
   return [...new Set([relativeTarget, relativeTarget.endsWith(".md") ? relativeTarget : `${relativeTarget}.md`])];
 }
 
+function basenameWithoutExtension(path: string): string {
+  const basename = path.split("/").pop() ?? path;
+  return basename.endsWith(".md") ? basename.slice(0, -3) : basename;
+}
+
+function fileMatchesReference(file: string, normalizedTarget: string, candidates: string[]): boolean {
+  if (candidates.includes(normalizeTarget(file))) return true;
+  return !normalizedTarget.includes("/") && basenameWithoutExtension(normalizeTarget(file)) === normalizedTarget;
+}
+
 export function resolveLink(reference: LinkReference, files: string[], currentPath = ""): LinkResolution {
   if (/^[a-z][a-z0-9+.-]*:/i.test(reference.target)) return {status: "external", candidates: []};
+  const normalizedTarget = normalizeTarget(reference.target);
   const candidates = candidatePaths(reference.target, currentPath);
-  const matches = files.filter((file) => candidates.includes(normalizeTarget(file)));
+  const matches = files.filter((file) => fileMatchesReference(file, normalizedTarget, candidates));
   if (matches.length === 1) return {status: "resolved", target: matches[0], candidates: matches};
   if (matches.length > 1) return {status: "ambiguous", candidates: matches.sort()};
   return {status: "unresolved", candidates};

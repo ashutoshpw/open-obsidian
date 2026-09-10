@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "name": "derived-surface-round-trips",
+  "graph": {
+    "node_kinds": ["file", "attachment", "unresolved"],
+    "layouts": ["force", "hierarchical", "radial"],
+    "grouping": "folder"
+  },
+  "canvas": {
+    "node_types": ["text", "file", "link", "group"],
+    "preserve": ["ids", "position", "size", "style", "labels", "endpoints", "subpaths", "unknown-fields"]
+  },
+  "bases": {
+    "view_types": ["table", "list", "cards"],
+    "preserve": ["properties", "formulas", "sort", "grouping", "unknown-fields"]
+  },
+  "invariants": {
+    "derived_surfaces_do_not_write_authoritative_notes": true,
+    "unknown_fields_round_trip": true,
+    "unsupported_operations_are_visible": true
+  }
+}

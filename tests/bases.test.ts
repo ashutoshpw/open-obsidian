@@ -1,13 +1,19 @@
 import {expect, test} from "bun:test";
 import {encodeBase, evaluateBase, parseBase} from "../src/core/bases.js";
 
+const fixture = await Bun.file(new URL("../fixtures/derived-surfaces.json", import.meta.url)).json() as {schema_version: number; bases: {view_types: string[]; preserve: string[]}; invariants: Record<string, boolean>};
+
 test("Bases preserves unknown definitions and evaluates a safe table view", () => {
   const source = {
     version: 1,
-    views: [{type: "table", name: "Open", filter: {kind: "comparison", field: "status", operator: "equals", value: "open"}, sort: [{field: "priority", direction: "desc"}], groupBy: "owner", formulas: {pathLabel: "file.path"}, unknownView: {keep: true}}],
+    views: [{type: "table", name: "Open", filter: {kind: "comparison", field: "status", operator: "equals", value: "open"}, sort: [{field: "priority", direction: "desc"}], groupBy: "owner", formulas: {pathLabel: "file.path"}, unknownView: {keep: true}}, {type: "list", name: "List", properties: ["status", "priority"]}, {type: "cards", name: "Cards", cardSize: "medium"}],
     unknownRoot: {keep: true},
   };
   const document = parseBase(new TextEncoder().encode(JSON.stringify(source)));
+  expect(fixture.schema_version).toBe(1);
+  expect(fixture.bases.view_types).toEqual(["table", "list", "cards"]);
+  expect(fixture.bases.preserve).toContain("unknown-fields");
+  expect(Object.values(fixture.invariants).every(Boolean)).toBe(true);
   const result = evaluateBase(document, "Open", [
     {path: "a.md", properties: {status: "open", priority: 1, owner: "A"}},
     {path: "b.md", properties: {status: "open", priority: 2, owner: "B"}},
@@ -19,6 +25,7 @@ test("Bases preserves unknown definitions and evaluates a safe table view", () =
   expect(result.groups.A).toHaveLength(1);
   expect(parseBase(encodeBase(document)).unknownRoot).toEqual({keep: true});
   expect((parseBase(encodeBase(document)).views[0] as Record<string, unknown>).unknownView).toEqual({keep: true});
+  expect(parseBase(encodeBase(document)).views.map((view) => view.type)).toEqual(["table", "list", "cards"]);
 });
 
 test("unsupported Bases formulas are visible and never evaluated", () => {

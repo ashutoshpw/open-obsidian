@@ -180,9 +180,10 @@ export type ChronicleRestoreRequest = {
 
 export type EditorMode = "source" | "live-preview" | "reading";
 
-export type GraphNode = {id: string; kind: "file" | "unresolved"; label: string};
+export type GraphNode = {id: string; kind: "file" | "attachment" | "unresolved"; label: string};
 export type GraphEdge = {id: string; from: string; to: string; kind: "link" | "embed"};
-export type GraphView = {nodes: GraphNode[]; edges: GraphEdge[]};
+export type GraphGroup = {id: string; label: string; nodeIds: string[]};
+export type GraphView = {nodes: GraphNode[]; edges: GraphEdge[]; groups: GraphGroup[]; layout: "force" | "hierarchical" | "radial"};
 
 export type CanvasNodeView = {id: string; type: string; [key: string]: unknown};
 export type CanvasEdgeView = {id: string; fromNode: string; toNode: string; [key: string]: unknown};
