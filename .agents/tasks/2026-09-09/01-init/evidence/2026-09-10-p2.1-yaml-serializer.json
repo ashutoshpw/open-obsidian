@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T19:31:48Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C04", "C04.1"],
+  "fixture_ids": ["fixture:c04-properties", "fixture:c04-unknown-preservation"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "846f33380ac4683905bdf6bf103ea70d1010924b",
+    "tested_source_tree": "9e3ce0b840782765a9cc9294f13115907dd55bb8e3098b7a92cabfad154e7290"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/yaml.test.ts tests/markdown.test.ts", "exit_code": 0, "result": "9 focused tests pass with 29 expectations, covering deterministic block/flow YAML serialization, scalar types, unsafe-number and indentation refusal, inline-comment preservation and nested-edit refusal."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes with 111 tests and 626 expectations; state, contracts, architecture, UX surfaces, accessibility, layout, typecheck, Knip and changed-file Fallow all pass."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full post-commit local gate passes at 846f333 with 111 tests and 626 expectations, compilation, distribution, quality-program, Knip and report-only Fallow health."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the five-file YAML/Markdown/documentation increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "145 included paths; source tree digest is 9e3ce0b840782765a9cc9294f13115907dd55bb8e3098b7a92cabfad154e7290."},
+    {"command": "OpenObsidian quality / 34520804993", "exit_code": 0, "result": "GitHub Actions passed on macOS, Windows and Ubuntu for 846f33380ac4683905bdf6bf103ea70d1010924b."},
+    {"command": "OpenObsidian desktop build / 34520805000", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime audits passed."}
+  ],
+  "implemented": [
+    "Added a deterministic serializer for the bounded YAML scalar, sequence and mapping value model, with safe quoted strings, keys, finite numbers and configurable block indentation or flow style.",
+    "Added typed inline Markdown property edits that use flow YAML and preserve existing inline comments and source ordering while refusing nested block properties and literal/folded block scalars.",
+    "Corrected MarkdownProperty.rawValue and edit spans to exclude inline comments, improving tag/property consumers without touching unrelated source bytes."
+  ],
+  "limitations": [
+    "This is an explicit bounded serializer, not full YAML dialect coverage; aliases, anchors, tags, multiline scalars and other unsupported constructs remain source-only and are not rewritten.",
+    "Typed property editing is intentionally inline-only; nested block property editing, reference Obsidian round trips and cross-platform visible validation remain pending.",
+    "The application continues to report 165 mandatory acceptance rows not release-passing; this increment does not claim release readiness."
+  ]
+}

@@ -358,3 +358,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run check:fast` and `bun run quality` pass with 108 tests and 616 expectations; Knip is clean; strict changed-file Fallow is clean; source tree digest is `c14cac9443356546b110ad43a85f97f477efd7f2460e64eb33d5f2fdc3f3e782` across 145 included paths.
 - Validation: quality run `34519589697` and desktop-build run `34519589757` passed on macOS, Windows and Ubuntu for `bb46b4cff469eb9ba364e9c48aa13b65f91ccd4e`.
 - Limitation: visible keyboard/focus, screen-reader, IME/RTL, reference-Obsidian and cross-platform interaction checks remain pending; no UI automation was restarted.
+
+## 2026-09-10T19:31:48Z — P2.1 bounded YAML serializer work
+
+- Completed: committed and pushed `846f33380ac4683905bdf6bf103ea70d1010924b` with marker `[openobsidian P2.1 work] Add bounded YAML serializer`.
+- Completed: added deterministic block/flow serialization for the bounded YAML value model, typed inline Markdown property edits, and comment-excluding property spans that preserve inline comments and source ordering.
+- Safety boundary: nested block properties, literal/folded block scalars, aliases, anchors, tags and other unsupported YAML remain source-only; typed editing refuses the nested/block cases rather than rewriting child lines.
+- Validation: focused YAML/Markdown tests pass (9 tests, 29 expectations); post-commit `bun run quality` passes (111 tests, 626 expectations); Knip is clean; strict Fallow is clean; source tree digest is `9e3ce0b840782765a9cc9294f13115907dd55bb8e3098b7a92cabfad154e7290` across 145 included paths.
+- Validation: quality run `34520804993` and desktop-build run `34520805000` passed on macOS, Windows and Ubuntu for `846f33380ac4683905bdf6bf103ea70d1010924b`.
+- Limitation: full YAML dialect coverage, reference Obsidian open-edit-save-reopen and cross-platform visible validation remain pending.
