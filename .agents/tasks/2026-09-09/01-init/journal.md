@@ -267,3 +267,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: the post-relaunch accessibility tree exposed the Obsidian-aligned titlebar actions (Open vault, Quick switcher, Command palette, left/right sidebar toggles and Settings), the workspace ribbon, the four fixture files, the restored `Welcome.md` tab/source editor, outline/backlinks context and the no-op scan status.
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-workspace-restart.json` records the process restart, state readback, fixture hashes and tested source tree `52cc9fb9ef8783bde43f698b34a3951672738cbb58d6a05581314784f1778cfe` across 129 included paths.
 - Limitation: the visible restart is macOS arm64 and the fixture was reopened through the explicit native picker; cross-platform/reference Obsidian reopen checks, screen-reader/input/IME coverage and remaining named UX surfaces remain pending.
+
+## 2026-09-10T16:42:06Z — shared UI and fast-check increment
+
+- Completed: committed source increment `547adab7bea05e63055b39bfd400b9cc9eaeacb9` with marker `[openobsidian P2.2] Share portable preview blocks`.
+- Completed: moved safe Markdown preview blocks and inline segments into `src/shared/ui`, added `workspaceBlock`, the Expo portability guard/docs, and `bun run check:fast`.
+- Validation: `bun run check:fast` passed 98 tests with 569 expectations; `bun run quality` passed 98 tests with 569 expectations; Knip passed; strict changed-file Fallow passed; report-only Fallow health was 88.4/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
+- Reconciled: C02, C02.1 and ARCH-002 now point to `2026-09-10-p2.2-shared-preview-contract.json`; cross-platform, reference and visible accessibility checks remain pending.
+- Tested source tree: `7216e991a452a354489034f4cbadb5931c353d428d968af3631418f8d9314d76` across 133 included paths.
+- Next operation: push and reconcile this increment, then continue remaining P2.2 named UX and P1/P3 compatibility work.

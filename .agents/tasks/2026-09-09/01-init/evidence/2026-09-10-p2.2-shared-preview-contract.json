@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T16:34:56Z",
+  "checkpoints": ["P1.3", "P2.2"],
+  "requirements": ["ARCH-002", "C02", "C02.1"],
+  "fixture_ids": ["fixture:arch-domain-core", "fixture:c02-dialects", "fixture:ux-workspace"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "547adab7bea05e63055b39bfd400b9cc9eaeacb9",
+    "tested_source_tree": "7216e991a452a354489034f4cbadb5931c353d428d968af3631418f8d9314d76"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes: state, contracts, architecture, accessibility, layout, typecheck, 98 tests with 569 expectations, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes: state remains honest at 1/19 checkpoints and 196 rows, contracts/architecture/distribution/accessibility/layout/typecheck/tests/quality-program/compile/Knip/Fallow all pass; Bun test reports 98 tests with 569 expectations and report-only Fallow health 88.4/A with only the inherited scripts/status.ts collectRow advisory."},
+    {"command": "bun test tests/markdown-preview.test.ts tests/shared-ui.test.ts", "exit_code": 0, "result": "6 focused tests pass with 32 expectations, including setext headings, multiline paragraphs/quotes, thematic breaks, fenced tilde code, safe inline segments and the Expo portability guard."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed source increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."}
+  ],
+  "implemented": [
+    "Moved the safe Markdown preview parser behind src/shared/ui/markdown-preview.ts and kept src/core/markdown-preview.ts as a compatibility re-export, so a future Expo renderer can consume the same data-only block and inline-segment contract.",
+    "Added setext headings, multiline paragraphs and callouts, thematic breaks, tilde fences and safe inline formatting/link/wiki-link segments; the Electron renderer creates textContent-only DOM nodes, displays link targets without navigation and keeps footnotes, math, diagrams and raw HTML visibly unsupported.",
+    "Added workspaceBlock(id), the stable shared-ui export surface, an architecture-manifest entry and a test that rejects Electron, DOM and React Native imports from the shared TypeScript source.",
+    "Added bun run check:fast and README.md guidance distinguishing routine checks from the longer full quality and packaged-release gates."
+  ],
+  "limitations": [
+    "Reference Obsidian Markdown differential/reopen behavior, screen-reader/input/IME validation and Windows/Linux visible renderer behavior remain pending external validation.",
+    "The preview intentionally implements a safe supported subset; unsupported executable or renderer-owned dialects remain text-labeled and no link target is made navigable until a host supplies an explicit allowlist policy.",
+    "The current full quality gate still reports the inherited scripts/status.ts collectRow complexity advisory; the changed-file strict Fallow gate is clean."
+  ]
+}
