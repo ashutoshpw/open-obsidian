@@ -1,13 +1,14 @@
 import {app, BrowserWindow, dialog, ipcMain} from "electron";
 import {createHash} from "node:crypto";
-import {existsSync} from "node:fs";
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
 import {historyRecordsFromStore} from "../core/history.js";
+import {buildNoteContext} from "../core/note-context.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateVaultWriteRequest, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateVaultWriteRequest, validateWorkspaceSettings, type NoteContext, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -158,6 +159,30 @@ function commitChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): R
   return commitChronicleSelection(store.root, request.selectedPaths, request.message, store.appDataRoot);
 }
 
+function workspaceSettingsPath(): string {
+  return join(app.getPath("userData"), "workspace-settings.json");
+}
+
+function loadSettings(): WorkspaceSettings {
+  try {
+    return validateWorkspaceSettings(JSON.parse(readFileSync(workspaceSettingsPath(), "utf8")));
+  } catch {
+    return DEFAULT_WORKSPACE_SETTINGS;
+  }
+}
+
+function saveSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): WorkspaceSettings {
+  const settings = validateWorkspaceSettings(value);
+  mkdirSync(app.getPath("userData"), {recursive: true});
+  writeFileSync(workspaceSettingsPath(), `${JSON.stringify(settings, null, 2)}\n`);
+  return settings;
+}
+
+function noteContext(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): NoteContext {
+  if (typeof relativePath !== "string") throw new Error("Note path must be a string");
+  return buildNoteContext(requireVault(), relativePath);
+}
+
 function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.selectVault, selectVault);
   ipcMain.handle(CHANNELS.listFiles, listFiles);
@@ -170,6 +195,9 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.historyRecords, historyRecordsRequest);
   ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
   ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
+  ipcMain.handle(CHANNELS.noteContext, noteContext);
+  ipcMain.handle(CHANNELS.loadSettings, loadSettings);
+  ipcMain.handle(CHANNELS.saveSettings, saveSettings);
 }
 
 app.whenReady().then(() => {

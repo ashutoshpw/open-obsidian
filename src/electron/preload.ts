@@ -13,6 +13,9 @@ const api: OpenObsidianAPI = {
   historyRecords: (relativePath) => ipcRenderer.invoke(CHANNELS.historyRecords, relativePath),
   restoreChronicle: (request) => ipcRenderer.invoke(CHANNELS.restoreChronicle, request),
   commitChronicle: (request) => ipcRenderer.invoke(CHANNELS.commitChronicle, request),
+  noteContext: (relativePath) => ipcRenderer.invoke(CHANNELS.noteContext, relativePath),
+  loadSettings: () => ipcRenderer.invoke(CHANNELS.loadSettings),
+  saveSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveSettings, settings),
 };
 
 contextBridge.exposeInMainWorld("openObsidian", api);

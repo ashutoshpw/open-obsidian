@@ -14,6 +14,12 @@ export type MarkdownDocument = {
   properties: MarkdownProperty[];
 };
 
+export type MarkdownHeading = {
+  text: string;
+  level: number;
+  line: number;
+};
+
 type FrontmatterBounds = {contentStart: number; contentEnd: number};
 
 function detectLineEnding(text: string): MarkdownLineEnding {
@@ -60,6 +66,20 @@ function propertiesIn(text: string, bounds: FrontmatterBounds | null): MarkdownP
 export function parseMarkdown(bytes: Uint8Array): MarkdownDocument {
   const decoded = decodeUtf8(bytes);
   return {text: decoded.text, hasBom: decoded.hasBom, lineEnding: detectLineEnding(decoded.text), properties: propertiesIn(decoded.text, frontmatterBounds(decoded.text))};
+}
+
+export function extractMarkdownHeadings(text: string): MarkdownHeading[] {
+  let fenced = false;
+  return text.split(/\r\n|\n|\r/).flatMap((line, index) => {
+    if (/^\s*```/.test(line)) {
+      fenced = !fenced;
+      return [];
+    }
+    if (fenced) return [];
+    const match = /^ {0,3}(#{1,6})[ \t]+(.+?)\s*#*\s*$/.exec(line);
+    if (!match) return [];
+    return [{text: match[2]!.trim(), level: match[1]!.length, line: index + 1}];
+  });
 }
 
 function encodeMarkdown(text: string): Uint8Array {

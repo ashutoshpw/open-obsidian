@@ -10,6 +10,9 @@ export const CHANNELS = {
   historyRecords: "vault:history-records",
   restoreChronicle: "chronicle:restore",
   commitChronicle: "chronicle:commit",
+  noteContext: "vault:note-context",
+  loadSettings: "workspace:load-settings",
+  saveSettings: "workspace:save-settings",
 } as const;
 
 export type VaultGitSummary = {
@@ -100,6 +103,33 @@ export type ChronicleRestoreRequest = {
   relativePath: string;
 };
 
+export type EditorMode = "source" | "live-preview" | "reading";
+
+export type WorkspaceSettings = {
+  editorMode: EditorMode;
+  splitView: boolean;
+};
+
+export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {editorMode: "source", splitView: true};
+
+export type NoteHeading = {
+  text: string;
+  level: number;
+  line: number;
+};
+
+export type NoteBacklink = {
+  relativePath: string;
+  line: number;
+  text: string;
+};
+
+export type NoteContext = {
+  relativePath: string;
+  headings: NoteHeading[];
+  backlinks: NoteBacklink[];
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -131,6 +161,11 @@ export function validateChronicleRestoreRequest(value: unknown): ChronicleRestor
   return {revision: value.revision, relativePath: value.relativePath};
 }
 
+export function validateWorkspaceSettings(value: unknown): WorkspaceSettings {
+  if (!isRecord(value) || !["source", "live-preview", "reading"].includes(value.editorMode as string) || typeof value.splitView !== "boolean") throw new Error("Invalid workspace settings");
+  return {editorMode: value.editorMode as EditorMode, splitView: value.splitView};
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   listFiles: () => Promise<VaultFileSummary[]>;
@@ -143,4 +178,7 @@ export type OpenObsidianAPI = {
   historyRecords: (relativePath?: string) => Promise<VaultHistoryRecord[]>;
   restoreChronicle: (request: ChronicleRestoreRequest) => Promise<VaultReadResponse>;
   commitChronicle: (request: ChronicleCommitRequest) => Promise<{revision: string; message: string; paths: string[]}>;
+  noteContext: (relativePath: string) => Promise<NoteContext>;
+  loadSettings: () => Promise<WorkspaceSettings>;
+  saveSettings: (settings: WorkspaceSettings) => Promise<WorkspaceSettings>;
 };

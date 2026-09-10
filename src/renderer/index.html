@@ -39,6 +39,10 @@
       .tool-action:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
       .save-action { border: 1px solid #ffffff1e; border-radius: 8px; padding: 8px 12px; background: #ffffff0b; color: #eef0f6; font-size: 12px; font-weight: 700; }
       .save-action:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
+      .note-tabs { display: flex; gap: 4px; min-width: 0; overflow: auto; padding: 8px 28px 0; border-bottom: 1px solid #ffffff16; background: #13151b; }
+      .note-tab { flex: 0 0 auto; max-width: 240px; border: 1px solid transparent; border-bottom: 0; border-radius: 8px 8px 0 0; padding: 8px 11px; background: transparent; color: #858b9c; font-size: 12px; text-align: left; }
+      .note-tab:hover { color: #eef0f6; background: #ffffff08; }
+      .note-tab[data-active="true"] { border-color: #ffffff18; background: #1b1e28; color: #eef0f6; }
       .tool-panel { display: grid; gap: 14px; max-height: 38vh; overflow: auto; padding: 18px 28px; border-bottom: 1px solid #ffffff16; background: #171923e8; }
       .tool-panel[hidden] { display: none; }
       .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -64,16 +68,54 @@
       .history-meta { margin-top: 4px; overflow-wrap: anywhere; white-space: normal; }
       .history-restore { flex: 0 0 auto; border: 1px solid #ffffff1e; border-radius: 7px; padding: 6px 8px; background: #ffffff0b; color: #eef0f6; font-size: 11px; }
       .history-restore:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
-      .editor-wrap { display: grid; min-height: 0; padding: 28px clamp(20px, 6vw, 90px); }
-      #note-editor { width: 100%; min-height: 0; resize: none; border: 1px solid #ffffff18; border-radius: 12px; padding: 24px; outline: none; background: #0e1015aa; color: #e8eaf0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; line-height: 1.7; }
+      .editor-wrap { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; padding: 18px clamp(20px, 6vw, 90px) 28px; }
+      .editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .view-switch { display: flex; gap: 3px; padding: 3px; border: 1px solid #ffffff14; border-radius: 9px; background: #0e1015aa; }
+      .view-button { border-radius: 6px; padding: 6px 9px; background: transparent; color: #858b9c; font-size: 11px; }
+      .view-button[data-active="true"] { background: #a78bfa22; color: #e7e0ff; }
+      .context-toggle { border: 1px solid #ffffff1e; border-radius: 7px; padding: 7px 9px; background: #ffffff0b; color: #9da3b5; font-size: 11px; }
+      .editor-stage { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-height: 0; }
+      .editor-stage[data-split="true"] { grid-template-columns: minmax(0, 1fr) minmax(210px, 280px); }
+      .note-surface { display: grid; min-width: 0; min-height: 0; }
+      .note-surface[data-mode="live-preview"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+      .note-surface[data-mode="live-preview"] #note-editor, .note-surface[data-mode="live-preview"] #note-preview { grid-area: auto; }
+      #note-editor, #note-preview { grid-area: 1 / 1; width: 100%; min-height: 0; border: 1px solid #ffffff18; border-radius: 12px; padding: 24px; outline: none; background: #0e1015aa; color: #e8eaf0; font-size: 14px; line-height: 1.7; }
+      #note-editor { resize: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
       #note-editor:focus { border-color: #a78bfa88; box-shadow: 0 0 0 3px #a78bfa18; }
-      #empty-state { align-self: center; justify-self: center; width: min(580px, 100%); padding: 42px; border: 1px solid #ffffff15; border-radius: 16px; background: #ffffff06; }
+      #note-preview { overflow: auto; }
+      #note-preview[hidden] { display: none; }
+      #note-preview h1, #note-preview h2, #note-preview h3, #note-preview h4, #note-preview h5, #note-preview h6 { margin: 0.2em 0 0.55em; color: #f4f2fa; line-height: 1.25; }
+      #note-preview p { margin: 0 0 0.9em; color: #d8dbe5; white-space: pre-wrap; }
+      #note-preview .task-line { display: flex; align-items: baseline; gap: 8px; margin: 0 0 0.55em; color: #d8dbe5; }
+      #note-preview .task-line input { accent-color: #a78bfa; }
+      #empty-state { grid-area: 1 / 1; z-index: 1; align-self: center; justify-self: center; width: min(580px, 100%); padding: 42px; border: 1px solid #ffffff15; border-radius: 16px; background: #171923f2; }
       #empty-state[hidden] { display: none; }
       #empty-state h2 { margin: 0 0 10px; font-size: 22px; letter-spacing: -0.04em; }
       #empty-state p { margin: 0; color: #9da3b5; line-height: 1.6; }
+      .context-pane { min-height: 0; overflow: auto; border: 1px solid #ffffff14; border-radius: 12px; padding: 16px; background: #15171d99; }
+      .context-pane[hidden] { display: none; }
+      .context-pane h2 { margin: 0 0 12px; color: #eef0f6; font-size: 13px; }
+      .context-group + .context-group { margin-top: 20px; }
+      .context-list { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+      .context-item { width: 100%; border-radius: 6px; padding: 6px 7px; background: transparent; color: #b8bdcb; font-size: 11px; text-align: left; }
+      .context-item:hover { background: #ffffff0a; color: #eef0f6; }
+      .context-empty { margin: 0; color: #858b9c; font-size: 11px; line-height: 1.5; }
+      .settings-grid { display: grid; gap: 10px; max-width: 520px; }
+      .settings-grid label { display: flex; align-items: center; gap: 8px; color: #c5c9d4; font-size: 12px; }
+      .settings-grid select { width: min(280px, 100%); border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
+      .settings-grid input[type="checkbox"] { accent-color: #a78bfa; }
+      #quick-switcher { width: min(620px, calc(100vw - 36px)); border: 1px solid #ffffff1e; border-radius: 14px; padding: 0; background: #171923; color: #eef0f6; box-shadow: 0 24px 70px #0009; }
+      #quick-switcher::backdrop { background: #07080dcc; }
+      .quick-form { display: grid; gap: 10px; padding: 16px; }
+      .quick-form h2 { margin: 0; font-size: 15px; }
+      #quick-query { width: 100%; border: 1px solid #ffffff18; border-radius: 8px; padding: 10px 11px; outline: none; background: #0f1116; color: #eef0f6; }
+      #quick-results { display: grid; gap: 4px; max-height: 330px; overflow: auto; }
+      .quick-result { display: grid; gap: 3px; width: 100%; border-radius: 7px; padding: 9px 10px; background: transparent; color: #d8dbe5; text-align: left; }
+      .quick-result:hover, .quick-result:focus-visible { background: #a78bfa1c; }
+      .quick-result small { color: #858b9c; font-size: 11px; }
       #status { min-height: 54px; padding: 16px 28px; border-top: 1px solid #ffffff12; color: #9da3b5; font-size: 12px; overflow-wrap: anywhere; }
       @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
-      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid #ffffff16; } .workspace { min-height: 58vh; } .workspace-header { align-items: flex-start; padding: 14px 18px; } .workspace-actions { justify-content: flex-start; } .tool-panel { padding: 16px 18px; } .editor-wrap { padding: 18px; } #status { padding: 12px 18px; } }
+      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid #ffffff16; } .workspace { min-height: 58vh; } .workspace-header { align-items: flex-start; padding: 14px 18px; } .workspace-actions { justify-content: flex-start; } .note-tabs { padding-left: 18px; padding-right: 18px; } .tool-panel { padding: 16px 18px; } .editor-wrap { padding: 16px 18px 18px; } .editor-stage[data-split="true"] { grid-template-columns: 1fr; } .context-pane { max-height: 220px; } #status { padding: 12px 18px; } }
     </style>
   </head>
   <body>
@@ -88,7 +130,12 @@
         <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
       </aside>
       <main class="workspace">
-        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="review-changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" type="button" disabled>History</button><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
+        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-quick-switcher" type="button">Quick switcher</button><button class="tool-action" id="toggle-settings" type="button">Settings</button><button class="tool-action" id="review-changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" type="button" disabled>History</button><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
+        <nav class="note-tabs" id="note-tabs" aria-label="Open notes"></nav>
+        <section class="tool-panel" id="settings-panel" aria-label="Workspace settings" hidden>
+          <div class="panel-header"><h2>Workspace settings</h2><button class="panel-close" id="close-settings" type="button">Close</button></div>
+          <div class="settings-grid"><label for="default-editor-mode">Editor mode</label><select id="default-editor-mode"><option value="source">Source</option><option value="live-preview">Live preview</option><option value="reading">Reading</option></select><label><input id="split-view" type="checkbox" /> Show outline and backlinks</label></div>
+        </section>
         <section class="tool-panel" id="change-panel" aria-label="Chronicle change review" hidden>
           <div class="panel-header"><h2>Review Chronicle changes</h2><button class="panel-close" id="close-changes" type="button">Close</button></div>
           <p class="panel-summary" id="change-summary">No changes loaded.</p>
@@ -102,10 +149,11 @@
           <p class="panel-summary" id="history-summary">No history loaded.</p>
           <div class="history-list" id="history-list" aria-label="Vault history"></div>
         </section>
-        <section class="editor-wrap" aria-label="Note editor"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></section>
+        <section class="editor-wrap" aria-label="Note editor"><div class="editor-toolbar"><div class="view-switch" role="group" aria-label="Editor mode"><button class="view-button" data-editor-mode="source" type="button">Source</button><button class="view-button" data-editor-mode="live-preview" type="button">Live preview</button><button class="view-button" data-editor-mode="reading" type="button">Reading</button></div><button class="context-toggle" id="toggle-context" type="button">Hide context</button></div><div class="editor-stage" id="editor-stage"><div class="note-surface"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><article id="note-preview" aria-label="Rendered Markdown" hidden></article><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></div><aside class="context-pane" id="context-pane" aria-label="Note context"><div class="context-group"><h2>Outline</h2><ul class="context-list" id="outline-list"></ul></div><div class="context-group"><h2>Backlinks</h2><ul class="context-list" id="backlinks-list"></ul></div></aside></div></section>
         <div id="status" role="status" aria-live="polite">No vault selected.</div>
       </main>
     </div>
+    <dialog id="quick-switcher" aria-labelledby="quick-switcher-title"><form class="quick-form" method="dialog"><h2 id="quick-switcher-title">Quick switcher</h2><input id="quick-query" type="search" placeholder="Search notes…" autocomplete="off" /><div id="quick-results" role="listbox" aria-label="Matching notes"></div><button class="panel-close" id="close-quick-switcher" value="cancel" type="submit">Close</button></form></dialog>
     <script type="module" src="../../dist/renderer.js"></script>
   </body>
 </html>

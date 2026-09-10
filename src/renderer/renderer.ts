@@ -1,7 +1,8 @@
-import type {OpenObsidianAPI} from "../shared/api.js";
+import {DEFAULT_WORKSPACE_SETTINGS, type EditorMode, type NoteContext, type OpenObsidianAPI, type WorkspaceSettings} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
+type NoteTab = {path: string; revision: string | null; content: string; dirty: boolean; loaded: boolean};
 
 const api = (window as unknown as OpenObsidianWindow).openObsidian;
 const selectButton = document.querySelector<HTMLButtonElement>("#select-vault");
@@ -28,12 +29,34 @@ const closeHistoryButton = document.querySelector<HTMLButtonElement>("#close-his
 const historySummary = document.querySelector<HTMLElement>("#history-summary");
 const historyList = document.querySelector<HTMLElement>("#history-list");
 const status = document.querySelector<HTMLDivElement>("#status");
+const noteTabs = document.querySelector<HTMLElement>("#note-tabs");
+const editorStage = document.querySelector<HTMLElement>("#editor-stage");
+const notePreview = document.querySelector<HTMLElement>("#note-preview");
+const editorModeButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-editor-mode]")];
+const contextPane = document.querySelector<HTMLElement>("#context-pane");
+const toggleContextButton = document.querySelector<HTMLButtonElement>("#toggle-context");
+const outlineList = document.querySelector<HTMLElement>("#outline-list");
+const backlinksList = document.querySelector<HTMLElement>("#backlinks-list");
+const quickSwitcher = document.querySelector<HTMLDialogElement>("#quick-switcher");
+const openQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#open-quick-switcher");
+const closeQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#close-quick-switcher");
+const quickQuery = document.querySelector<HTMLInputElement>("#quick-query");
+const quickResults = document.querySelector<HTMLElement>("#quick-results");
+const settingsPanel = document.querySelector<HTMLElement>("#settings-panel");
+const toggleSettingsButton = document.querySelector<HTMLButtonElement>("#toggle-settings");
+const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-settings");
+const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-editor-mode");
+const splitView = document.querySelector<HTMLInputElement>("#split-view");
 let selectedSummary: VaultSummary | null = null;
 let selectedPath: string | null = null;
 let selectedRevision: string | null = null;
 let dirty = false;
 let requestId = 0;
 let changeReview: Awaited<ReturnType<OpenObsidianAPI["reviewChanges"]>> | null = null;
+let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS};
+let tabStates: NoteTab[] = [];
+let contextRequestId = 0;
+let paletteRequestId = 0;
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -82,7 +105,102 @@ function setHidden(element: HTMLElement | null, value: boolean): void {
   if (element) element.hidden = value;
 }
 
+function previewLine(line: string): HTMLElement | null {
+  if (!line.trim()) return null;
+  const heading = /^ {0,3}(#{1,6})[ \t]+(.+?)\s*#*\s*$/.exec(line);
+  if (heading) {
+    const element = document.createElement(`h${heading[1]!.length}`);
+    element.textContent = heading[2]!.trim();
+    return element;
+  }
+  const task = /^\s*[-*][ \t]+\[([ xX])\][ \t]+(.+)$/.exec(line);
+  if (task) {
+    const row = document.createElement("label");
+    row.className = "task-line";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = task[1]!.toLocaleLowerCase() === "x";
+    checkbox.disabled = true;
+    const text = document.createElement("span");
+    text.textContent = task[2]!;
+    row.append(checkbox, text);
+    return row;
+  }
+  const paragraph = document.createElement("p");
+  paragraph.textContent = line;
+  return paragraph;
+}
+
+function renderNotePreview(value: string): void {
+  if (!notePreview) return;
+  notePreview.replaceChildren(...value.split(/\r\n|\n|\r/).flatMap((line) => {
+    const element = previewLine(line);
+    return element ? [element] : [];
+  }));
+}
+
+function renderEditorMode(): void {
+  const mode = workspaceSettings.editorMode;
+  editorModeButtons.forEach((button) => {
+    button.dataset.active = button.dataset.editorMode === mode ? "true" : "false";
+    button.disabled = !selectedPath;
+  });
+  setHidden(editor, mode === "reading" || !selectedPath);
+  setHidden(notePreview, mode === "source" || !selectedPath);
+  document.querySelector<HTMLElement>(".note-surface")?.setAttribute("data-mode", mode);
+}
+
+function renderContextSplit(): void {
+  editorStage?.setAttribute("data-split", String(workspaceSettings.splitView));
+  setHidden(contextPane, !workspaceSettings.splitView || !selectedPath);
+  toggleContextButton?.replaceChildren(document.createTextNode(contextButtonLabel()));
+}
+
+function contextButtonLabel(): string {
+  return workspaceSettings.splitView ? "Hide context" : "Show context";
+}
+
+function applyWorkspaceSettings(settings: WorkspaceSettings): void {
+  workspaceSettings = settings;
+  if (defaultEditorMode) defaultEditorMode.value = settings.editorMode;
+  if (splitView) splitView.checked = settings.splitView;
+  renderEditorMode();
+  renderContextSplit();
+}
+
+async function persistWorkspaceSettings(): Promise<void> {
+  if (!api) return;
+  try {
+    applyWorkspaceSettings(await api.saveSettings(workspaceSettings));
+  } catch (error) {
+    setStatus(errorText(error, "Unable to save workspace settings."));
+  }
+}
+
+async function loadWorkspaceSettings(): Promise<void> {
+  if (!api) return;
+  try {
+    applyWorkspaceSettings(await api.loadSettings());
+  } catch (error) {
+    setStatus(errorText(error, "Unable to load workspace settings; using source mode."));
+  }
+}
+
+function setEditorMode(mode: EditorMode): void {
+  workspaceSettings = {...workspaceSettings, editorMode: mode};
+  renderEditorMode();
+  if (defaultEditorMode) defaultEditorMode.value = mode;
+  void persistWorkspaceSettings();
+}
+
+function setSplitView(enabled: boolean): void {
+  workspaceSettings = {...workspaceSettings, splitView: enabled};
+  renderContextSplit();
+  void persistWorkspaceSettings();
+}
+
 function updateChronicleControls(): void {
+  setDisabled(openQuickSwitcherButton, !selectedSummary);
   setDisabled(reviewButton, !selectedSummary || selectedSummary.git.vaultType !== "chronicle");
   setDisabled(historyButton, !selectedSummary);
 }
@@ -92,6 +210,8 @@ function updateEditorState(): void {
   setDisabled(editor, !selectedPath);
   setDisabled(saveButton, !selectedPath || !dirty);
   setHidden(emptyState, Boolean(selectedPath));
+  renderEditorMode();
+  renderContextSplit();
   updateChronicleControls();
 }
 
@@ -157,6 +277,192 @@ function renderSearchResults(results: Awaited<ReturnType<OpenObsidianAPI["search
     return;
   }
   results.forEach((result) => fileList.append(fileButton(result.relativePath, "file", result.preview)));
+}
+
+function currentTab(): NoteTab | undefined {
+  return selectedPath ? tabStates.find((tab) => tab.path === selectedPath) : undefined;
+}
+
+function syncActiveTab(): void {
+  const tab = currentTab();
+  if (!tab || !editor) return;
+  tab.revision = selectedRevision;
+  tab.content = editor.value;
+  tab.dirty = dirty;
+  tab.loaded = true;
+}
+
+function tabButton(tab: NoteTab): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "note-tab";
+  button.dataset.active = tab.path === selectedPath ? "true" : "false";
+  button.textContent = tab.dirty ? `${tab.path} ·` : tab.path;
+  button.title = tab.dirty ? `${tab.path} has unsaved changes` : tab.path;
+  button.addEventListener("click", () => activateTab(tab.path));
+  return button;
+}
+
+function renderTabs(): void {
+  if (!noteTabs) return;
+  noteTabs.replaceChildren(...tabStates.map(tabButton));
+}
+
+function rememberTab(path: string): NoteTab {
+  const existing = tabStates.find((tab) => tab.path === path);
+  if (existing) return existing;
+  const tab: NoteTab = {path, revision: null, content: "", dirty: false, loaded: false};
+  tabStates.push(tab);
+  renderTabs();
+  return tab;
+}
+
+function restoreTab(tab: NoteTab): void {
+  selectedPath = tab.path;
+  selectedRevision = tab.revision;
+  dirty = tab.dirty;
+  if (editor) editor.value = tab.content;
+  renderNotePreview(tab.content);
+  updateEditorState();
+  renderTabs();
+  void loadNoteContext(tab.path);
+  setStatus(`Switched to ${tab.path}${tab.dirty ? " · unsaved changes" : ""}.`);
+}
+
+function activateTab(path: string): void {
+  syncActiveTab();
+  const tab = tabStates.find((candidate) => candidate.path === path);
+  if (!tab) return openFile(path);
+  requestId += 1;
+  if (tab.loaded) restoreTab(tab);
+  else openFile(path);
+}
+
+function contextButton(text: string, meta: string, action: () => void): HTMLLIElement {
+  const item = document.createElement("li");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "context-item";
+  button.textContent = `${text} · ${meta}`;
+  button.addEventListener("click", action);
+  item.append(button);
+  return item;
+}
+
+function contextEmpty(message: string): HTMLLIElement {
+  const item = document.createElement("li");
+  const text = document.createElement("p");
+  text.className = "context-empty";
+  text.textContent = message;
+  item.append(text);
+  return item;
+}
+
+function renderNoteContext(context: NoteContext): void {
+  renderContextList(outlineList, context.headings.map((heading) => contextButton(`${"· ".repeat(Math.max(0, heading.level - 1))}${heading.text}`, `line ${heading.line}`, () => focusEditorLine(heading.line))), "No headings in this note.");
+  renderContextList(backlinksList, context.backlinks.map((backlink) => contextButton(backlink.relativePath, `line ${backlink.line}`, () => openFile(backlink.relativePath))), "No notes link here yet.");
+}
+
+function renderContextList(list: HTMLElement | null, rows: HTMLLIElement[], emptyMessage: string): void {
+  if (!list) return;
+  list.replaceChildren(...rows);
+  if (rows.length === 0) list.append(contextEmpty(emptyMessage));
+}
+
+function focusEditorLine(line: number): void {
+  if (!editor) return;
+  const offset = editor.value.split(/\r\n|\n|\r/).slice(0, Math.max(0, line - 1)).reduce((total, part) => total + part.length + 1, 0);
+  editor.focus();
+  editor.setSelectionRange(offset, offset);
+  setStatus(`Outline focused line ${line}.`);
+}
+
+function acceptNoteContext(currentRequest: number, context: NoteContext): void {
+  if (currentRequest !== contextRequestId || context.relativePath !== selectedPath) return;
+  renderNoteContext(context);
+}
+
+function noteContextError(currentRequest: number, error: unknown): void {
+  if (currentRequest === contextRequestId) setStatus(errorText(error, "Unable to load note context."));
+}
+
+async function loadNoteContext(path: string): Promise<void> {
+  if (!api) return;
+  const currentRequest = ++contextRequestId;
+  try {
+    const context = await api.noteContext(path);
+    acceptNoteContext(currentRequest, context);
+  } catch (error) {
+    noteContextError(currentRequest, error);
+  }
+}
+
+type QuickResult = {relativePath: string; preview: string};
+
+function renderQuickResults(results: QuickResult[]): void {
+  if (!quickResults) return;
+  quickResults.replaceChildren(...results.map((result) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "quick-result";
+    button.setAttribute("role", "option");
+    const path = document.createElement("span");
+    path.textContent = result.relativePath;
+    const preview = document.createElement("small");
+    preview.textContent = result.preview;
+    button.append(path, preview);
+    button.addEventListener("click", () => {
+      quickSwitcher?.close();
+      openFile(result.relativePath);
+    });
+    return button;
+  }));
+  if (results.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "context-empty";
+    empty.textContent = "No Markdown notes match this search.";
+    quickResults.append(empty);
+  }
+}
+
+async function quickMatches(client: OpenObsidianAPI, query: string): Promise<QuickResult[]> {
+  if (query.trim()) return client.search(query);
+  return (await client.listFiles()).filter((file) => file.kind === "file" && file.relativePath.toLowerCase().endsWith(".md")).slice(0, 30).map((file) => ({relativePath: file.relativePath, preview: "Markdown note"}));
+}
+
+async function fetchQuickMatches(client: OpenObsidianAPI, query: string, currentRequest: number): Promise<void> {
+  try {
+    const results = await quickMatches(client, query);
+    if (currentRequest === paletteRequestId) renderQuickResults(results);
+  } catch (error) {
+    if (currentRequest === paletteRequestId) setStatus(errorText(error, "Unable to search the quick switcher."));
+  }
+}
+
+async function quickSearchRequest(query: string, currentRequest: number): Promise<void> {
+  if (!api) return;
+  await fetchQuickMatches(api, query, currentRequest);
+}
+
+function searchQuickSwitcher(query: string): void {
+  const currentRequest = ++paletteRequestId;
+  void quickSearchRequest(query, currentRequest);
+}
+
+function openQuickSwitcher(): void {
+  if (!quickSwitcher) return;
+  if (!quickSwitcher.open) quickSwitcher.showModal();
+  if (quickQuery) {
+    quickQuery.value = "";
+    quickQuery.focus();
+  }
+  searchQuickSwitcher("");
+}
+
+function togglePanel(panel: HTMLElement | null, visible: boolean): void {
+  setHidden(changePanel, panel !== changePanel || !visible);
+  setHidden(historyPanel, panel !== historyPanel || !visible);
+  setHidden(settingsPanel, panel !== settingsPanel || !visible);
 }
 
 function changeKind(review: NonNullable<typeof changeReview>, path: string): string {
@@ -252,8 +558,7 @@ async function reviewChangesRequest(): Promise<void> {
   setStatus("Reviewing Chronicle changes without contacting a remote…");
   try {
     const review = await api.reviewChanges();
-    setHidden(historyPanel, true);
-    setHidden(changePanel, false);
+    togglePanel(changePanel, true);
     renderChangeReview(review);
     applyChangeReviewToSummary(review);
     setStatus("Chronicle review ready; select only the paths you want to commit.");
@@ -329,8 +634,7 @@ async function historyRequest(): Promise<void> {
   setStatus("Reading local history and recovery records without contacting a remote…");
   try {
     const history = await loadHistory(api, selectedSummary.git.vaultType === "chronicle");
-    setHidden(changePanel, true);
-    setHidden(historyPanel, false);
+    togglePanel(historyPanel, true);
     renderHistory(history.commits, history.records);
     setStatus("History is read-only until you explicitly choose a restore action.");
   } catch (error) {
@@ -343,8 +647,19 @@ async function historyRequest(): Promise<void> {
 function applyRestoredNote(response: Awaited<ReturnType<OpenObsidianAPI["restoreChronicle"]>>): void {
   selectedRevision = response.revision;
   dirty = false;
-  if (editor) editor.value = decodeBase64(response.base64);
+  const content = decodeBase64(response.base64);
+  const tab = currentTab();
+  if (tab) {
+    tab.revision = response.revision;
+    tab.content = content;
+    tab.dirty = false;
+    tab.loaded = true;
+  }
+  if (editor) editor.value = content;
+  renderNotePreview(content);
+  renderTabs();
   updateEditorState();
+  void loadNoteContext(response.relativePath);
 }
 
 async function restoreChronicleWithClient(client: OpenObsidianAPI, revision: string, path: string): Promise<void> {
@@ -411,22 +726,44 @@ async function readFileRequest(client: OpenObsidianAPI, path: string, currentReq
   try {
     const response = await client.readFile(path);
     if (currentRequest !== requestId) return;
+    const tab = rememberTab(response.relativePath);
     selectedPath = response.relativePath;
     selectedRevision = response.revision;
     dirty = false;
-    if (editor) editor.value = decodeBase64(response.base64);
+    tab.revision = response.revision;
+    tab.content = decodeBase64(response.base64);
+    tab.dirty = false;
+    tab.loaded = true;
+    if (editor) editor.value = tab.content;
+    renderNotePreview(tab.content);
     updateEditorState();
+    renderTabs();
+    void loadNoteContext(response.relativePath);
     setStatus(`Opened ${response.relativePath} · revision ${response.revision.slice(0, 12)}…`);
   } catch (error) {
     setStatus(errorText(error, "Unable to open the note."));
   }
 }
 
-function openFile(path: string): void {
-  if (!api || !editor) return;
+function beginFileRead(client: OpenObsidianAPI, path: string): void {
+  syncActiveTab();
+  rememberTab(path);
   const currentRequest = ++requestId;
   setStatus(`Reading ${path} without changing the vault…`);
-  void readFileRequest(api, path, currentRequest);
+  void readFileRequest(client, path, currentRequest);
+}
+
+function activateLoadedTab(path: string): boolean {
+  const existing = tabStates.find((tab) => tab.path === path);
+  if (!existing?.loaded) return false;
+  activateTab(path);
+  return true;
+}
+
+function openFile(path: string): void {
+  if (!api) return;
+  if (activateLoadedTab(path)) return;
+  beginFileRead(api, path);
 }
 
 async function writeNoteRequest(client: OpenObsidianAPI, path: string, revision: string | null, value: string): Promise<void> {
@@ -434,6 +771,14 @@ async function writeNoteRequest(client: OpenObsidianAPI, path: string, revision:
     const response = await client.writeFile({relativePath: path, expectedRevision: revision, base64: encodeBase64(value)});
     selectedRevision = response.revision;
     dirty = false;
+    const tab = currentTab();
+    if (tab) {
+      tab.revision = response.revision;
+      tab.content = value;
+      tab.dirty = false;
+      tab.loaded = true;
+    }
+    renderTabs();
     updateEditorState();
     setStatus(`Saved ${response.relativePath} · revision ${response.revision.slice(0, 12)}…`);
   } catch (error) {
@@ -474,6 +819,9 @@ function resetEditor(): void {
   selectedPath = null;
   selectedRevision = null;
   dirty = false;
+  tabStates = [];
+  renderTabs();
+  renderNoteContext({relativePath: "", headings: [], backlinks: []});
   updateEditorState();
 }
 
@@ -482,6 +830,7 @@ function showNoVault(): void {
   if (fileList) fileList.replaceChildren();
   setHidden(changePanel, true);
   setHidden(historyPanel, true);
+  setHidden(settingsPanel, true);
   changeReview = null;
   updateChronicleControls();
   setStatus(summaryMessage(selectedSummary));
@@ -522,6 +871,25 @@ function searchVault(query: string): void {
 }
 
 if (api && selectButton) selectButton.addEventListener("click", () => void openSelectedVault(api, selectButton));
+if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", () => openQuickSwitcher());
+if (quickQuery) quickQuery.addEventListener("input", () => searchQuickSwitcher(quickQuery.value));
+if (closeQuickSwitcherButton) closeQuickSwitcherButton.addEventListener("click", () => quickSwitcher?.close());
+editorModeButtons.forEach((button) => button.addEventListener("click", () => {
+  const mode = button.dataset.editorMode;
+  if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);
+}));
+if (toggleContextButton) toggleContextButton.addEventListener("click", () => setSplitView(!workspaceSettings.splitView));
+if (toggleSettingsButton) toggleSettingsButton.addEventListener("click", () => {
+  if (!settingsPanel) return;
+  const visible: boolean = settingsPanel.hidden === true;
+  togglePanel(settingsPanel, visible);
+});
+if (closeSettingsButton) closeSettingsButton.addEventListener("click", () => setHidden(settingsPanel, true));
+if (defaultEditorMode) defaultEditorMode.addEventListener("change", () => {
+  const mode = defaultEditorMode.value;
+  if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);
+});
+if (splitView) splitView.addEventListener("change", () => setSplitView(splitView.checked));
 if (reviewButton) reviewButton.addEventListener("click", () => void reviewChangesRequest());
 if (historyButton) historyButton.addEventListener("click", () => void historyRequest());
 if (closeChangesButton) closeChangesButton.addEventListener("click", () => setHidden(changePanel, true));
@@ -532,14 +900,28 @@ if (commitSelectedButton) commitSelectedButton.addEventListener("click", () => v
 if (searchInput) searchInput.addEventListener("input", () => void searchVault(searchInput.value));
 if (editor) editor.addEventListener("input", () => {
   dirty = true;
+  syncActiveTab();
+  renderNotePreview(editor.value);
+  renderTabs();
   updateEditorState();
   setStatus("Unsaved changes · save to create a recoverable revision.");
 });
 if (saveButton) saveButton.addEventListener("click", () => void saveNote());
-document.addEventListener("keydown", (event) => {
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+function isShortcut(event: KeyboardEvent, key: string): boolean {
+  return (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === key;
+}
+
+function handleKeydown(event: KeyboardEvent): void {
+  if (isShortcut(event, "s")) {
     event.preventDefault();
     void saveNote();
   }
-});
+  if (isShortcut(event, "p") || isShortcut(event, "o")) {
+    event.preventDefault();
+    openQuickSwitcher();
+  }
+}
+
+document.addEventListener("keydown", handleKeydown);
 updateEditorState();
+void loadWorkspaceSettings();
