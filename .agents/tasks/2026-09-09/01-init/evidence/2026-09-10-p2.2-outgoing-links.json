@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T19:51:34Z",
+  "checkpoint": "P2.2",
+  "requirements": ["C03", "C10"],
+  "fixture_ids": ["fixture:c03-links", "fixture:c10-core-workflows"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "18d9f462cffd0455a9050975843c7a93e52dcbbc",
+    "tested_source_tree": "9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/note-context.test.ts", "exit_code": 0, "result": "The note-context fixture passes with 1 test and 3 expectations, covering heading extraction, resolved outgoing links, unresolved targets and resolved backlinks."},
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 112 tests with 631 expectations, Electron compilation, Knip and report-only Fallow health all pass; layout has 30 static checks and Fallow health is 88.9/A with only the inherited scripts/status.ts collectRow moderate advisory."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 6 changed files for the outgoing-links increment."},
+    {"command": "bun run check:accessibility && bun run validate:layout", "exit_code": 0, "result": "Static accessibility checks pass (14 checks) and the renderer layout contract passes (30 checks), including the outgoing-links context region."},
+    {"command": "gh run watch 34522702258 --exit-status; gh run watch 34522702294 --exit-status", "exit_code": 0, "result": "Quality and desktop-build workflows pass on Ubuntu, macOS and Windows for implementation commit 18d9f46."}
+  ],
+  "implemented": [
+    "Extended the shared NoteContext IPC contract with typed outgoing links carrying target, resolved path, resolution status, candidates, source line and source text.",
+    "Built outgoing-link rows from the existing vault index/link resolver without modifying vault bytes; resolved targets open normally and unresolved or external targets remain visible without opening a guessed file.",
+    "Added the Outgoing links context group to the Obsidian-aligned workspace and covered the behavior with a source-level fixture and static layout marker."
+  ],
+  "limitations": [
+    "The implementation is covered by deterministic core/renderer contracts, not by a fresh visible Electron accessibility-tree run.",
+    "Popout, IME/RTL, cross-platform interaction, reference Obsidian reopen and the remaining C10 workflow inventory remain pending."
+  ]
+}

@@ -377,3 +377,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: quality run `34521857601` and desktop-build run `34521857642` passed on macOS, Ubuntu and Windows for `3473dab68b03d5474f6049294908ec837bdbd2af`.
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-uninstall-cleanup.json` records source tree `6e0f7ef6f57060800652150b07de94ef1baf48af41772e95e207d6d145ccf301` across 146 included paths.
 - Limitation: this is an explicit uninstall-flow handoff only; OS uninstall hooks, destructive cleanup execution, OS encryption readback, long-running retention, visible automation, cross-platform interaction and reference Obsidian checks remain pending.
+
+## 2026-09-10T19:51:34Z — P2.2 outgoing links context pushed
+
+- Completed: committed and pushed `18d9f462cffd0455a9050975843c7a93e52dcbbc` with marker `[openobsidian P2.2 work] Add outgoing links context`.
+- Completed: extended the shared NoteContext IPC response with resolver-backed outgoing links, including resolved/unresolved/ambiguous/external status, candidates and source locations; added the workspace Outgoing links context group.
+- Safety: resolved targets open only when the resolver supplies a concrete path; unresolved/external targets remain visible and do not trigger guessed file access. No vault writes were introduced.
+- Validation: `bun run quality` passes with 112 tests and 631 expectations; Knip, strict changed-file Fallow, typecheck, compilation, 14 accessibility checks and 30 layout checks pass; report-only Fallow health remains 88.9/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
+- Validation: quality run `34522702258` and desktop-build run `34522702294` passed on macOS, Ubuntu and Windows for `18d9f462cffd0455a9050975843c7a93e52dcbbc`.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-outgoing-links.json` records source tree `9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9` across 146 included paths.
+- Limitation: visible accessibility-tree, IME/RTL, popout, cross-platform, reference Obsidian reopen and the remaining C10 workflow checks remain pending.
