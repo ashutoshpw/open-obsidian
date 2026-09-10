@@ -172,3 +172,14 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled implementation: committed as `5057b4157c81ebe0d91ae3dd78550e7622f6e360` with marker `[openobsidian P4.2 work] Add reviewed AI changes`, pushed `main`, and recorded source tree `154d921bc19995504aaffc1cd8871ca032ab0c65abb9f6058b438c5eb98d8e20`.
 - Limitations: provider-backed managed/BYOK/local modes, credential and lifecycle contracts, visible Electron/accessibility automation, cross-platform runs and reference Obsidian round trips remain pending; organization/Canvas/Bases structural writes remain explicit future safe changesets.
 - Next operation: deliver P4.3 provider modes, credential separation, cancellation/errors, usage caps and model lifecycle contracts; monitor quality `34472396372` and desktop-build `34472396365` for `5057b4157c81ebe0d91ae3dd78550e7622f6e360`.
+
+## 2026-09-10T12:11:34Z — P4.3 provider contracts pushed
+
+- Completed: added explicit managed-proxy, BYOK and local provider settings with endpoint/model validation, OS-backed credential references, visible status, usage caps and no silent fallback.
+- Completed: added typed provider transport accounting with selected-scope and exclusion enforcement, transient credential handoff, timeout/cancellation aborts, quota states and redacted transport errors.
+- Completed: added local model integrity/version/offline inspection, reindex decisions, derivative cleanup planning that preserves source notes and portable conversation export.
+- Completed: added provider/model fixtures, API/provider regression tests, main/preload IPC, visible settings and credential controls, and recurring Knip/report-only Fallow quality gates.
+- Validation: `bun run quality` passes with 76 tests and 410 expectations; Knip is clean; report-only Fallow health is 87.9/A with only the pre-existing `scripts/status.ts` advisory; `bunx fallow audit --root . --base e059691 --format compact` reports no issues in the implementation increment.
+- Reconciled implementation: committed as `71952ba366ebd4cf25791944384ab9752e5d118b` with marker `[openobsidian P4.3 work] Add provider contracts`, pushed `main`, and recorded tested source tree `ba27dca04792f677829c7f46aaf1aec6fefabf20dd63e00dbe547d5ac0f7e942` across 90 included paths.
+- Limitations: no live managed/BYOK/local provider or model runtime was contacted; provider retention, billing, hardware/performance and network behavior remain external-pending. The local Electron binary is unavailable, so visible UI/accessibility-tree, cross-platform and reference-Obsidian round-trip validation remain pending. MCP/CLI adapters and managed operations remain explicitly deferred.
+- Next operation: complete visible Electron/accessibility, cross-platform and reference-Obsidian checks; then continue P2.2/P2.3/P3.1 compatibility and P5 release suites.

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T12:10:00Z",
+  "checkpoint": "P4.3",
+  "requirements": ["D07", "D13", "A05", "A07", "A08", "AI-002", "AI-003", "AI-004", "RISK-007"],
+  "fixture_ids": ["fixture:provider-modes", "fixture:a05-provider-modes", "fixture:a07-usage-caps", "fixture:a08-model-lifecycle", "fixture:openrouter-contract", "fixture:managed-handoff", "fixture:mcp-broker-boundary", "fixture:managed-operations-boundary", "fixture:proxy-secret-separation", "fixture:risk-managed-economics"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "71952ba366ebd4cf25791944384ab9752e5d118b",
+    "tested_source_tree": "ba27dca04792f677829c7f46aaf1aec6fefabf20dd63e00dbe547d5ac0f7e942",
+    "source_tree_paths": 90
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture and distribution checks pass; 76 tests with 410 expectations pass; main/preload/renderer bundles compile at 119.42 KB, 4.77 KB and 91.1 KB; Knip is clean; report-only Fallow health is 87.9/A with only the pre-existing scripts/status.ts collectRow advisory."},
+    {"command": "bunx fallow audit --root . --base e059691 --format compact", "exit_code": 0, "result": "The provider and model-lifecycle increment is clean with no dead-code, complexity or duplication findings."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies, exports or other Knip findings reported."},
+    {"command": "bun test tests/providers.test.ts tests/api.test.ts", "exit_code": 0, "result": "16 focused tests with 88 expectations pass for provider selection, endpoint and credential validation, scope denial, no-fallback behavior, timeout, cancellation, quota, redacted errors, model integrity/version/offline states, reindexing, derivative deletion and portable conversation export."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile with provider settings/status IPC and the visible credential-storage controls."},
+    {"command": "bundle secret scan", "exit_code": 0, "result": "Compiled bundles contain no fixture credential values or embedded proxy secret; provider credentials are accepted only by the main-process OS-backed safeStorage seam."}
+  ],
+  "implemented": [
+    "Added shared managed/BYOK/local provider settings, endpoint validation, model selection, credential references, usage caps, availability states and explicit fallback none status.",
+    "Added a main/preload provider settings and credential IPC seam; Electron safeStorage encrypts credential values before writing an OS-protected metadata file, while the renderer clears the entered secret after storage.",
+    "Added an injected provider transport contract with selected-scope and exclusion checks, transient credential handoff, timeout/cancellation aborts, redacted transport errors, hard usage accounting and no implicit fallback.",
+    "Added local model integrity manifests, version/offline readiness inspection, reindex decisions, derivative deletion planning that preserves source notes and portable conversation export.",
+    "Added deterministic provider/model fixtures and API/provider regression tests; MCP/CLI adapters and managed operations/billing remain explicit future handoffs with no paid provisioning."
+  ],
+  "limitations": [
+    "No live managed OpenRouter proxy, BYOK endpoint or local model runtime was contacted; connectivity, retention, billing, hardware capability and performance claims remain external-pending.",
+    "The provider transport is an injected typed seam rather than a live HTTP adapter, and provider-backed free-form AI drafting is not yet wired into the reviewed-change broker.",
+    "The local Electron binary is unavailable, so visible provider settings, accessibility-tree behavior, cross-platform runs and reference-Obsidian round trips remain external-pending."
+  ]
+}
