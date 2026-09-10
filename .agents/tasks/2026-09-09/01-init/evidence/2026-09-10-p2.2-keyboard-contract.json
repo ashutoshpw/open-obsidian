@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T19:18:17Z",
+  "checkpoints": ["P2.2"],
+  "requirements": ["C10", "UX-003", "ARCH-002"],
+  "fixture_ids": ["fixture:workspace-journeys", "fixture:ux-surface-inventory", "fixture:expo-shared-ui"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "bb46b4cff469eb9ba364e9c48aa13b65f91ccd4e",
+    "tested_source_tree": "c14cac9443356546b110ad43a85f97f477efd7f2460e64eb33d5f2fdc3f3e782"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes: state, contracts, architecture, UX surfaces, accessibility, layout, typecheck, 108 tests with 616 expectations, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes: 108 tests with 616 expectations; state remains honest at 1/19 checkpoints and 196 rows; compile, Knip and report-only Fallow pass."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the eight-file keyboard contract increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "145 included paths; source tree digest is c14cac9443356546b110ad43a85f97f477efd7f2460e64eb33d5f2fdc3f3e782."},
+    {"command": "OpenObsidian quality / 34519589697", "exit_code": 0, "result": "GitHub Actions passed on macOS, Windows and Ubuntu for bb46b4cff469eb9ba364e9c48aa13b65f91ccd4e."},
+    {"command": "OpenObsidian desktop build / 34519589757", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime audits passed."}
+  ],
+  "implemented": [
+    "Moved Meta/Ctrl-K, Meta/Ctrl-P, Meta/Ctrl-O and Meta/Ctrl-S resolution into the DOM-free shared UI keyboard contract.",
+    "Mapped the shared command IDs back to Electron command-palette, quick-switcher and save actions without changing the existing shortcut behavior.",
+    "Added an explicit keyboard-shortcuts UX marker and documented the KeyboardEvent/native-input mapping for a future Expo host."
+  ],
+  "limitations": [
+    "The resolver and renderer wiring are unit- and contract-tested; a visible keyboard/focus run, screen-reader run, IME/RTL run and cross-platform interaction run remain pending.",
+    "The application continues to report 165 mandatory acceptance rows not release-passing; this increment does not claim reference-Obsidian compatibility or release readiness."
+  ]
+}

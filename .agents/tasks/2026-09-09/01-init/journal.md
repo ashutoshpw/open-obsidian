@@ -349,3 +349,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 
 - Validation: quality run `34515967876` and desktop-build run `34515967928` passed on macOS, Windows and Ubuntu for `727df032143f6a7f8e41c58cb0b15429dc9f43d1`.
 - Reconciled: `state.json` now records `727df032143f6a7f8e41c58cb0b15429dc9f43d1` as the last observed head for the immutable Electron reference, while the frozen plugin-selection snapshot remains explicitly drift-pending.
+
+## 2026-09-10T19:18:17Z — P2.2 shared keyboard contract work
+
+- Completed: committed and pushed `bb46b4cff469eb9ba364e9c48aa13b65f91ccd4e` with marker `[openobsidian P2.2 work] Share keyboard commands`.
+- Completed: moved the shell's Meta/Ctrl-K, Meta/Ctrl-P, Meta/Ctrl-O and Meta/Ctrl-S command resolution into `src/shared/ui/keyboard.ts`; Electron consumes the resulting platform-neutral command IDs and the Expo/native mapping is documented.
+- Completed: replaced the UX validator's brittle inline-handler marker with explicit `data-ui-surface="keyboard-shortcuts"` and `resolveKeyboardCommand` markers.
+- Validation: `bun run check:fast` and `bun run quality` pass with 108 tests and 616 expectations; Knip is clean; strict changed-file Fallow is clean; source tree digest is `c14cac9443356546b110ad43a85f97f477efd7f2460e64eb33d5f2fdc3f3e782` across 145 included paths.
+- Validation: quality run `34519589697` and desktop-build run `34519589757` passed on macOS, Windows and Ubuntu for `bb46b4cff469eb9ba364e9c48aa13b65f91ccd4e`.
+- Limitation: visible keyboard/focus, screen-reader, IME/RTL, reference-Obsidian and cross-platform interaction checks remain pending; no UI automation was restarted.
