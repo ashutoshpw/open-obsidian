@@ -33,6 +33,21 @@
       "command": "bun run audit:source-tree",
       "exit_code": 0,
       "result": "Source-tree digest e12771138844284f4bd3d196f5908716e05809d9906c12c1f7d323101bfe8c0c across 144 included paths."
+    },
+    {
+      "command": "OpenObsidian quality / 34515967876",
+      "exit_code": 0,
+      "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for reconciliation commit 727df032143f6a7f8e41c58cb0b15429dc9f43d1."
+    },
+    {
+      "command": "OpenObsidian desktop build / 34515967928",
+      "exit_code": 0,
+      "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-gate, artifact-manifest and packaged Electron runtime notice audits passed for reconciliation commit 727df032143f6a7f8e41c58cb0b15429dc9f43d1."
+    },
+    {
+      "command": "bun run verify:primary-references in OpenObsidian quality / 34515967876",
+      "exit_code": 0,
+      "result": "The immutable reference metadata and all quality checks completed successfully on macOS, Windows and Ubuntu."
     }
   ],
   "implemented": [

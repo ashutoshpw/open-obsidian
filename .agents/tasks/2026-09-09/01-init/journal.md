@@ -344,3 +344,8 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: replaced the mutable Electron latest-docs URL in `config/primary-references.json` with the official raw source at that immutable commit and recorded its content type, byte count and SHA-256.
 - Validation: `bun run verify:primary-references` passed all eight references; `bun run check:fast` passed 107 tests with 608 expectations, Knip and changed-file Fallow; the source tree digest is `e12771138844284f4bd3d196f5908716e05809d9906c12c1f7d323101bfe8c0c` across 144 included paths.
 - Reconciled: `BASE-005` and P0.2 now point to the immutable Electron evidence; live community-plugin selection counts remain frozen and explicitly drift-pending, while no plugin release pins were changed.
+
+## 2026-09-10T18:44:11Z — P0.2 immutable-reference CI reconciliation
+
+- Validation: quality run `34515967876` and desktop-build run `34515967928` passed on macOS, Windows and Ubuntu for `727df032143f6a7f8e41c58cb0b15429dc9f43d1`.
+- Reconciled: `state.json` now records `727df032143f6a7f8e41c58cb0b15429dc9f43d1` as the last observed head for the immutable Electron reference, while the frozen plugin-selection snapshot remains explicitly drift-pending.
