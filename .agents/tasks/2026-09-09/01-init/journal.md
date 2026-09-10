@@ -107,3 +107,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run quality` passes with 40 tests and 163 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 88.8/A; strict Fallow reports no issues in the six-file increment.
 - Reconciled: marked `SYNC-004` implemented with explicit real-filesystem/cloud/reference limitations, committed as `c39a00c5f1d4f58da0c92bf8e34be2acdfc51a76`, pushed `main`, and verified `origin/main` at the same SHA.
 - Next operation: run cross-platform and reference-application round trips, complete Standard/Chronicle read-only Git detection and continue P1.2/P1.3 runtime feasibility before changing the release status.
+
+## 2026-09-10T08:22:24Z — P1.1 Chronicle inspection increment pushed
+
+- Completed: added read-only `inspectVaultGitState` and integrated its Standard/Chronicle, dirty/staged/untracked, unborn, remote and author summary into the Electron vault-open response; the detector never initializes, stages, commits or contacts remotes.
+- Validation: the follow-up quality run passes with 42 tests and 177 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health remains 88.8/A; strict Fallow reports no issues in the eight-file increment.
+- CI: quality run `34454170838` and desktop-build run `34454170892` for the preceding safety reconciliation passed on Ubuntu, macOS and Windows; the current Chronicle commit has a new matrix run queued.
+- Reconciled: marked `PROD-005` implemented with explicit mutation/reference limitations, committed as `38ae8290036731ac16d9563a286638b377fe9b65`, pushed `main`, and verified `origin/main` at the same SHA.
+- Next operation: continue the P1.1 cross-platform/reference round trips and move Chronicle mutations to P2.3 only after the vault UI and recovery interfaces are ready; continue P1.2/P1.3 runtime feasibility.
