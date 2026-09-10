@@ -203,8 +203,9 @@ export type RetrievalRequest = {query: string; scope?: RetrievalScope; limit?: n
 export type RetrievalProgress = {phase: "indexing" | "complete"; processed: number; total: number; indexed: number; excluded: number; currentPath?: string};
 export type RetrievalCitation = {id: string; kind: "source"; relativePath: string; revision: string; heading: string | null; lineStart: number; lineEnd: number; snippet: string};
 export type RetrievalPassage = RetrievalCitation & {score: number; keywordScore: number; semanticScore: number};
-export type GroundedAnswer = {status: "grounded" | "missing-evidence" | "conflicting-evidence"; answer: string; inference: string | null; conflicts: string[]; citations: RetrievalCitation[]};
-export type RetrievalResponse = {query: string; mode: "local-hybrid" | "keyword-fallback"; provider: "none"; scope: RetrievalScope; passages: RetrievalPassage[]; answer: GroundedAnswer; indexedFiles: string[]; excludedFiles: string[]; scopedOutFiles: string[]; progress: RetrievalProgress};
+export type RetrievalSafety = {sourceDataUntrusted: true; promptInjectionDetected: boolean; excludedContentDisclosed: false; vaultBoundary: "selected-vault-only"};
+export type GroundedAnswer = {status: "grounded" | "missing-evidence" | "conflicting-evidence"; answer: string; inference: string | null; conflicts: string[]; warnings: string[]; citations: RetrievalCitation[]};
+export type RetrievalResponse = {query: string; mode: "local-hybrid" | "keyword-fallback"; provider: "none"; scope: RetrievalScope; passages: RetrievalPassage[]; answer: GroundedAnswer; safety: RetrievalSafety; indexedFiles: string[]; excludedFiles: string[]; scopedOutFiles: string[]; progress: RetrievalProgress};
 
 export type WorkspaceSettings = {
   editorMode: EditorMode;

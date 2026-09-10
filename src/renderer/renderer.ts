@@ -1122,6 +1122,11 @@ function renderRetrievalAnswer(answer: RetrievalResponse["answer"]): void {
     warning.textContent = `Conflict: ${conflict}`;
     retrievalAnswer.append(warning);
   });
+  answer.warnings.forEach((message) => {
+    const warning = document.createElement("small");
+    warning.textContent = `Safety: ${message}`;
+    retrievalAnswer.append(warning);
+  });
 }
 
 function retrievalResultButton(passage: RetrievalResponse["passages"][number]): HTMLButtonElement {
@@ -1150,7 +1155,8 @@ function renderRetrievalResults(passages: RetrievalResponse["passages"]): void {
 }
 
 function renderRetrieval(response: RetrievalResponse): void {
-  setText(retrievalMeta, `${response.mode === "local-hybrid" ? "Local hybrid" : "Keyword fallback"} · provider destination: none · ${retrievalScopeLabel(response.scope)} · ${response.indexedFiles.length} source files · ${response.excludedFiles.length} excluded`);
+  const safety = response.safety.promptInjectionDetected ? " · instruction-like source treated as untrusted" : "";
+  setText(retrievalMeta, `${response.mode === "local-hybrid" ? "Local hybrid" : "Keyword fallback"} · provider destination: none · ${retrievalScopeLabel(response.scope)} · ${response.indexedFiles.length} source files · ${response.excludedFiles.length} excluded${safety}`);
   renderRetrievalAnswer(response.answer);
   renderRetrievalResults(response.passages);
 }
