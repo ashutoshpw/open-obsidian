@@ -142,3 +142,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Limitation: the local Electron binary download reached 9% but did not complete, so visible launch/accessibility automation remains pending; remote/sync, cleanup, cross-platform and reference-validation blockers remain explicit.
 - Reconciled implementation: committed as `ae833448ecc19227c0b074edaab202f3d7739616` with marker `[openobsidian P2.3] Wire Chronicle recovery controls`, pushed `main`, and verified the exact-head quality/build runs for the preceding metadata commit are green.
 - Next operation: reconcile this evidence and state against `ae83344`, then continue P2.2 editor modes/navigation and P2.3 retention/conflict/external-tool work.
+
+## 2026-09-10T09:38:34Z — P2.2 workspace modes and navigation pushed
+
+- Completed: added explicit source, live-preview and reading controls with a safe DOM-only preview; added session note tabs, keyboard quick switching, outline extraction, resolved backlinks and split context navigation.
+- Completed: added validated workspace settings IPC persisted in Electron user data for editor mode and context split visibility; source bytes remain authoritative through the revision-aware save path.
+- Validation: `bun run quality` passes with 55 tests and 237 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 88.9/A with only the pre-existing `scripts/status.ts` advisory; strict Fallow reports no issues in the 10-file implementation increment.
+- Reconciled implementation: committed as `5bee01a3ca8973aa9f25fce13fea0f6b600f7423` with marker `[openobsidian P2.2] Add workspace modes and navigation`, pushed `main`, and recorded tested source tree `d3bf15b2f7cd5518f450ddad696991383fb7bdcebb486a689ffd88da5e53b1ce`.
+- Limitations: the local Electron binary is unavailable, so visible launch/accessibility-tree and cross-platform UI automation remain pending; settings have no restart fixture or visible runtime readback, tabs/navigation are session-scoped, and full Markdown dialect/reference reopen validation remains pending.
+- Next operation: finish restart/state fixtures, richer Markdown dialect rendering, command palette and remaining named UX surfaces, then run visible accessibility, cross-platform and reference Obsidian reopen checks.
