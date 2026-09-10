@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readdirSync, readFileSync} from "node:fs";
-import {DEFAULT_WORKSPACE_VISIBILITY, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, type GraphLayoutOptions, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
+import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, resolveKeyboardCommand, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
 
 test("shared workspace UI contract exposes reusable blocks and semantic actions", () => {
   const firstBlock: WorkspaceBlock = WORKSPACE_BLOCKS[0]!;
@@ -31,4 +31,15 @@ test("shared UI source remains portable for a future Expo renderer", () => {
   const source = readdirSync(sharedDirectory, {withFileTypes: true}).filter((entry) => entry.isFile() && entry.name.endsWith(".ts")).map((entry) => readFileSync(new URL(entry.name, sharedDirectory), "utf8")).join("\n");
   expect(source).not.toMatch(/from ["'][^"']*(?:electron|react-native|react)[^"']*["']/i);
   expect(source).not.toMatch(/\b(?:document|window|HTMLElement|Node)\b/);
+});
+
+test("shared keyboard contract resolves primary-modifier commands", () => {
+  const shortcut: KeyboardShortcut = KEYBOARD_SHORTCUTS[0]!;
+  const input: KeyboardInput = {key: "K", metaKey: true};
+  expect(shortcut.label).toBe("Meta/Ctrl-K");
+  expect(KEYBOARD_SHORTCUTS.map((entry) => entry.command)).toEqual(["command-palette", "quick-switcher", "quick-switcher", "save-note"]);
+  expect(resolveKeyboardCommand(input)).toBe("command-palette");
+  expect(resolveKeyboardCommand({key: "p", ctrlKey: true})).toBe("quick-switcher");
+  expect(resolveKeyboardCommand({key: "s", ctrlKey: true})).toBe("save-note");
+  expect(resolveKeyboardCommand({key: "k"})).toBeUndefined();
 });

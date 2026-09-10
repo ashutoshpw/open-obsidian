@@ -4,6 +4,7 @@ This folder is deliberately platform-neutral. It contains no Electron, DOM or Re
 
 - `design-system.ts` owns the dark Obsidian-compatible color, metric, spacing and radius tokens plus the semantic action catalog.
 - `workspace.ts` describes the reusable workspace blocks, vault pane strip and visibility model that a desktop shell or mobile navigation can compose. Use `workspaceBlock(id)` and `vaultPane(id)` instead of duplicating labels or mobile presentation rules in a host renderer.
+- `keyboard.ts` owns the data-only shortcut catalog and `resolveKeyboardCommand`. Desktop hosts can pass a `KeyboardEvent`; Expo/native hosts can pass the same `{key, metaKey, ctrlKey}` shape and map the resulting command ID to a native action.
 - `markdown-preview.ts` parses safe preview blocks and inline segments into data-only values. Desktop HTML and future native views can render the same blocks without sharing a DOM renderer.
 - Fenced `base` blocks are represented as inert data-only preview blocks; `src/core/embedded-base.ts` separately parses their retained spans through the same safe Bases grammar when a host needs a structured projection.
 - Markdown properties keep their raw source spans while the core read path exposes a bounded YAML mapping for nested arrays/maps; unsupported YAML constructs remain source-only and are reported as issues rather than serialized back.

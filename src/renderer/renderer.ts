@@ -1,5 +1,5 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
-import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
+import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, vaultPane, workspaceAction, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
@@ -2742,13 +2742,17 @@ if (editor) editor.addEventListener("input", () => {
 });
 if (saveButton) saveButton.addEventListener("click", () => void saveNote());
 if (api) api.onRetrievalProgress(renderRetrievalProgress);
-function keyboardShortcut(event: KeyboardEvent): (() => void) | undefined {
-  if (!(event.metaKey || event.ctrlKey)) return undefined;
-  return ({s: () => void saveNote(), p: openQuickSwitcher, o: openQuickSwitcher, k: openCommandPalette} as Record<string, () => void>)[event.key.toLowerCase()];
+function keyboardAction(command: KeyboardCommandId): (() => void) | undefined {
+  return {
+    "command-palette": openCommandPalette,
+    "quick-switcher": openQuickSwitcher,
+    "save-note": () => void saveNote(),
+  }[command];
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-  const action = keyboardShortcut(event);
+  const command = resolveKeyboardCommand(event);
+  const action = command ? keyboardAction(command) : undefined;
   if (!action) return;
   event.preventDefault();
   action();

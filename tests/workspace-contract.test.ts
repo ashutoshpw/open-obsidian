@@ -13,7 +13,7 @@ test("workspace journey fixture covers keyboard commands and visible entry point
   expect(fixture.external_pending).toContain("visible-electron-keyboard-run");
   expect(fixture.external_pending).toContain("visible-electron-grounded-citation-run");
   for (const id of fixture.journeys.flatMap((journey) => journey.steps)) expect(html.includes(`id="${id}"`) || renderer.includes(`#${id}`)).toBe(true);
-  expect(renderer).toContain("event.key.toLowerCase()");
+  expect(renderer).toContain("resolveKeyboardCommand");
   expect(renderer).toContain("openCommandPalette");
   expect(renderer).toContain("provider destination: none");
 });
