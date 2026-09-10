@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T10:09:38Z",
+  "checkpoint": "P2.2",
+  "requirements": ["UX-002", "C02", "D16", "SYNC-006"],
+  "fixture_ids": ["fixture:ux-workspace-state", "fixture:c02-markdown", "fixture:sync-history-policy"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "0f0fa7571752eddf6cb75a137a4a71c773190aaa",
+    "tested_source_tree": "169f40a0df889d85fba0a445687dc3c174eeda41315bbae6c5bf10ad41bf7647"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 59 tests with 257 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 89.0/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bunx fallow audit --root . --base 6cb5d4ab2b060f59ef83dc789eb16bf5c1f2ed78 --format compact", "exit_code": 0, "result": "No issues in the 6 changed implementation/test files for this workspace-state increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun test", "exit_code": 0, "result": "59 tests with 257 expectations pass, including bounded workspace-state validation, backward-compatible settings defaults and custom history-policy validation."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile with workspace-state load/save IPC, tab restoration and configurable retention controls."}
+  ],
+  "implemented": [
+    "Added validated WorkspaceState IPC persisted in Electron user data with a vault-root guard, bounded relative tabs/navigation and active-tab repair.",
+    "Restored saved tabs after selecting the matching vault, kept missing notes recoverable, and persisted the repaired state without changing authoritative vault bytes.",
+    "Made recovery-history age and byte-cap policy user-configurable in the non-modal settings surface and used the saved policy for review and explicit cleanup planning."
+  ],
+  "limitations": [
+    "The Electron binary is unavailable locally, so visible launch, restart/readback, accessibility-tree and cross-platform UI automation were not completed.",
+    "The state contract, renderer wiring and compile path are tested, but a process-level restart fixture and visible on-device state restoration remain pending.",
+    "Full Markdown dialect rendering, command-palette coverage, live external sync, reference Obsidian reopen checks and long-running retention checks remain pending."
+  ]
+}
