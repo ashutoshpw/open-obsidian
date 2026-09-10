@@ -406,3 +406,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: quality run `34526554733` and desktop-build run `34526555303` passed on macOS, Windows and Ubuntu; local Knip, strict Fallow, typecheck, focused distribution tests and full quality also pass.
 - Reconciled: the `transitive-package-attribution` release gate, D12 and RISK-009 are now `passing` for the implemented license/source and redistribution-audit criteria; source tree digest is `8922052677828f36167694a5fb6f8a30c3c4e6aa809c5d073c511c1c1ed7b5a6` across 147 included paths.
 - Limitation: optional/peer platform gaps, brand/legal approval, signing/notarization, publication, offline installation, cross-platform/reference-vault UX and the remaining implementation rows stay explicit release or validation handoffs.
+
+## 2026-09-10T20:45:49Z — P2.2 Obsidian chrome icon scale
+
+- Completed: pushed `484bca715d85f071383c6e509c9224b681555c08` with marker `[openobsidian P2.2 work] Increase chrome icon scale`.
+- Completed: increased the shared `OPEN_OBSIDIAN_THEME.metrics.iconSize` from `18` to `20` and applied the token consistently to the titlebar, vertical ribbon, sidebar tabs, workspace toolbar, save action and context toggle; the sidebar plus control was raised to the same visual scale.
+- Validation: layout checks, shared UI/Expo portability tests, TypeScript and strict Fallow passed locally; quality run `34528081739` and desktop-build run `34528081779` passed on Ubuntu, macOS and Windows.
+- Reconciled: P2.2 now records the icon-scale evidence at source tree `ee6cb9196bc4e1b4386cc3738359cf782abc057be1fbd27eb48008263cd13be2` across 147 included paths.
+- Limitation: reference-window pixel comparison and human accessibility/focus validation remain separate handoffs; no UI automation was restarted.
