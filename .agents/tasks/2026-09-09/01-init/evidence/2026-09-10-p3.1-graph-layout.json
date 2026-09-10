@@ -18,7 +18,7 @@
     {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes at the pushed commit: 99 tests with 578 expectations, state/contract/architecture/surface/accessibility/layout/typecheck checks, Knip and changed-file Fallow."},
     {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes at the pushed commit: compile, distribution, quality-program, 99 tests with 578 expectations, Knip and report-only Fallow health all pass."},
     {"command": "bun run validate:layout", "exit_code": 0, "result": "25 static layout checks pass, including graph layout mode control, spatial graph surface and keyboard node-list alternative."},
-    {"command": "bun test tests/canvas-graph.test.ts tests/shared-ui.test.ts", "exit_code": 0, "result": "4 focused tests pass with 39 expectations, including deterministic force/radial/hierarchical point maps and future-Expo shared source portability."},
+    {"command": "bun test tests/canvas-graph.test.ts tests/shared-ui.test.ts", "exit_code": 0, "result": "4 focused tests pass with 35 expectations, including deterministic force/radial/hierarchical point maps and future-Expo shared source portability."},
     {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the graph-layout/API/renderer increment."},
     {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
     {"command": "OpenObsidian quality / 34506573788", "exit_code": 0, "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for commit 364cfcd5690a74ebc7c38dc8b68b44e459e7c9b9."},
