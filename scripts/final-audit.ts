@@ -78,15 +78,20 @@ function markerFailures(requiredMarkers: string[], log: string): string[] {
   return requiredMarkers.filter((marker) => !log.includes(marker)).map((marker) => `required Git marker is not reachable: ${marker}`);
 }
 
+function canonicalOrigin(origin: string): string {
+  return origin.replace(/\/+$/, "").replace(/\.git$/, "");
+}
+
 function repositoryAudit(expectedOrigin: string, requiredMarkers: string[]): {repository: FinalAudit["repository"]; failures: string[]} {
   const actualOrigin = gitValue(["remote", "get-url", "origin"]);
   const branch = gitValue(["branch", "--show-current"]);
   const head = gitValue(["rev-parse", "HEAD"]);
   const mainHead = gitValue(["rev-parse", "main"]);
   const log = gitValue(["log", "--format=%s", "--all"]);
+  const originMatches = canonicalOrigin(actualOrigin) === canonicalOrigin(expectedOrigin);
   const requiredMarkersFound = requiredMarkers.filter((marker) => log.includes(marker));
-  const failures = [...(actualOrigin !== expectedOrigin ? [`origin mismatch: expected ${expectedOrigin}, found ${actualOrigin || "(missing)"}`] : []), ...(branch !== "main" ? [`branch must be main, found ${branch || "(detached)"}`] : []), ...markerFailures(requiredMarkers, log)];
-  return {repository: {expected_origin: expectedOrigin, actual_origin: actualOrigin, origin_matches: actualOrigin === expectedOrigin, branch, head, main_head: mainHead, required_markers_found: requiredMarkersFound}, failures};
+  const failures = [...(!originMatches ? [`origin mismatch: expected ${expectedOrigin}, found ${actualOrigin || "(missing)"}`] : []), ...(branch !== "main" ? [`branch must be main, found ${branch || "(detached)"}`] : []), ...markerFailures(requiredMarkers, log)];
+  return {repository: {expected_origin: expectedOrigin, actual_origin: actualOrigin, origin_matches: originMatches, branch, head, main_head: mainHead, required_markers_found: requiredMarkersFound}, failures};
 }
 
 export function runFinalAudit(generatedAt = new Date().toISOString()): FinalAudit {
