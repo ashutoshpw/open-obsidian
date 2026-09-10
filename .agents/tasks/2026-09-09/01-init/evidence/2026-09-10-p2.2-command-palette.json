@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T10:39:11Z",
+  "checkpoint": "P2.2",
+  "requirements": ["D06", "UX-001", "C10"],
+  "fixture_ids": ["fixture:power-user-journeys", "fixture:ux-workspace", "fixture:c10-core-workflows"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "7035f295a2cc28d2da6989eeea55c6d389b2e57e",
+    "tested_source_tree": "df1894a9b7e06a7fba46aeed12d25972ce75fac6fcb077b18d3b214d65255e5a"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 61 tests with 282 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 89.0/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bunx fallow audit --root . --base 49067ae --format compact", "exit_code": 0, "result": "No issues in the 4 changed files for this command-palette and workspace-journey increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun test", "exit_code": 0, "result": "61 tests with 282 expectations pass, including the workspace journey fixture and static keyboard-entry-point contract."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile; the renderer includes the command palette, keyboard shortcuts and safe command dispatch."}
+  ],
+  "implemented": [
+    "Added a keyboard-first command palette with searchable available commands, explicit shortcuts, visible entry-point actions and safe DOM text rendering.",
+    "Added Meta/Ctrl-K command-palette handling alongside the existing quick-switcher and save-note shortcuts, with keyboard focus movement from the query to the first result.",
+    "Added a versioned workspace-journey fixture and contract test covering existing-vault adoption, search/edit/save, change recovery and derived Graph/Canvas/Bases entry points."
+  ],
+  "limitations": [
+    "The Electron binary is unavailable locally, so visible launch, keyboard-only execution, screen-reader tree inspection and cross-platform UI automation were not completed.",
+    "The fixture and renderer contract cover command availability and entry points, but C10 end-to-end keyboard execution, IME/RTL behavior, pop-out behavior and reference Obsidian reopen checks remain pending.",
+    "Richer Markdown dialect rendering and the remaining named UX inventory surfaces remain pending."
+  ]
+}
