@@ -219,3 +219,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: marked D09 implemented with the matrix evidence and refreshed the P5.2/P6.1 tested source tree to `28b604d0...` across 112 included paths.
 - Limitation: the successful runs are labeled previews; signing, staging, updater/rollback, publication and visible app interaction remain separate external gates. No release tag was created.
 - Next operation: continue P5.2 visible/human handoffs and P6.2 final-audit evidence while preserving the explicit production block.
+
+## 2026-09-10T13:17:20Z — P6.1/P6.2 audit and rollback contracts reconciled
+
+- Completed: pushed source commit `0966c02f169accf481eb1006301568bc49a17016` with marker `[openobsidian P6.2] Complete implementation audit`; follow-up source commit `7b5dd04230575acf9dfbffc3e973f8996d259eea` reconciled the post-audit row-count assertion.
+- Completed: added `bun run final:audit` with origin/main and required-marker checks, 19-phase summaries, 196-row coverage and separate implementation/release readiness; added `release-handoff.md` and seven explicit external handoffs.
+- Completed: added `bun run release:update-check` and `fixtures/update-rollback.json`; workflows and the local quality gate now verify target-manifest integrity and previous-artifact rollback while keeping offline installation external-pending.
+- Validation: `bun run quality` passes with 92 tests and 547 expectations; Knip is clean; report-only Fallow health is 88.3/A with only the inherited `scripts/status.ts` `collectRow` advisory; changed-file Fallow from `08f764f` is clean; workflow `actionlint` passes.
+- Reconciled: marked D18, D19, Q-014, Q-016, DEL-004 and RISK-010 implemented with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p6.2-final-audit.json`; tested source tree is `9b57e96d9d55ca9f65cbf922cc31e3afb08318b04e3a216d4d9d661626acc301` across 119 included paths.
+- Current audit: 25 passing, 106 implemented, 59 pending, six external-pending, zero failing and 165 mandatory rows not release-passing; origin matches `https://github.com/ashutoshpw/open-obsidian.git`, verified Actions runs are `34480078768` and `34480078771`, and no release tag was created.
+- Limitations: C14 reference-vault round trips, human validation, managed service, signed/notarized artifacts, staging/publication, plugin-runtime certification and updater installation/downgrade remain external-pending; production publication stays blocked.
