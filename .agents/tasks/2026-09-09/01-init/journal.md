@@ -161,3 +161,14 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled implementation: committed as `79296e8d0e843650bb08fdf0302b79b821944457` with marker `[openobsidian P2.3] Add conflict and retention controls`, pushed `main`, and recorded tested source tree `1b2cce49e03cd34db365d3e17e1c361d24f80b32984b2c82a2d77712e8e19a86`.
 - Limitations: the local Electron binary is unavailable, so visible launch/accessibility-tree and cross-platform UI automation remain pending; retention policy values are still default IPC values, and live sync/backend, per-tool certification, partial-sync and reference Obsidian checks remain pending.
 - Next operation: finish user-configurable retention policy settings and explicit uninstall cleanup choices, then complete live sync/backends and cross-platform/reference round trips.
+
+## 2026-09-10T11:39:18Z — P4.2 reviewed AI changes pushed
+
+- Completed: added provider-neutral local drafting for append, prepend, replace/rewrite, outline and summarize; unsupported free-form drafting fails explicitly without contacting a provider.
+- Completed: added per-file and per-hunk review controls, scope and untrusted-source guards, all-file disk revision preflight, journaled recoverable writes and revision-checked undo through the existing VaultStore broker.
+- Completed: added scoped organization suggestions for links, properties, duplicate analysis, user-chosen rename/move plans, Canvas text cards and read-only Bases views; arbitrary formula/code execution remains denied.
+- Completed: added shared AI IPC validators, sandboxed main/preload handlers, visible review controls, AI safety/journey fixtures and regression coverage for prompt-injection, scope, revision, recovery and plugin-boundary behavior.
+- Validation: `bun run quality` passes with 70 tests and 366 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 87.8/A with only the pre-existing `scripts/status.ts` advisory; `bunx fallow audit --root . --base 7647d73 --format compact` reports no issues in the 12-file implementation increment.
+- Reconciled implementation: committed as `5057b4157c81ebe0d91ae3dd78550e7622f6e360` with marker `[openobsidian P4.2 work] Add reviewed AI changes`, pushed `main`, and recorded source tree `154d921bc19995504aaffc1cd8871ca032ab0c65abb9f6058b438c5eb98d8e20`.
+- Limitations: provider-backed managed/BYOK/local modes, credential and lifecycle contracts, visible Electron/accessibility automation, cross-platform runs and reference Obsidian round trips remain pending; organization/Canvas/Bases structural writes remain explicit future safe changesets.
+- Next operation: deliver P4.3 provider modes, credential separation, cancellation/errors, usage caps and model lifecycle contracts; monitor quality `34472396372` and desktop-build `34472396365` for `5057b4157c81ebe0d91ae3dd78550e7622f6e360`.

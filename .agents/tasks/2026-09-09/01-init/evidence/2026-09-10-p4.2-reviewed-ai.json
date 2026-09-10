@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T11:39:18Z",
+  "checkpoint": "P4.2",
+  "requirements": ["GATE-004", "PROD-009", "A03", "A04", "A09"],
+  "fixture_ids": ["fixture:ai-scope", "fixture:ai-change-approval", "fixture:journey-reviewed-write", "fixture:a03-reviewed-edit", "fixture:a04-organization", "fixture:a09-agent-boundaries", "fixture:reviewed-local-ai-changes"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "5057b4157c81ebe0d91ae3dd78550e7622f6e360",
+    "tested_source_tree": "154d921bc19995504aaffc1cd8871ca032ab0c65abb9f6058b438c5eb98d8e20"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 70 tests with 366 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 87.8/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bunx fallow audit --root . --base 7647d73 --format compact", "exit_code": 0, "result": "No issues in the 12 changed implementation, contract, fixture and test files for the reviewed-AI increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun test tests/ai-changes.test.ts tests/api.test.ts tests/workspace-contract.test.ts", "exit_code": 0, "result": "14 focused tests with 97 expectations pass, covering byte-preserving local drafts, per-file and per-hunk approval, stale revision rejection, recovery undo, organization scope, Canvas/Bases assistance, formula/code denial, IPC validation and the reviewed-AI journey entry points."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main 108.75 KB, preload 4.22 KB and renderer 85.22 KB bundles compile with the reviewed-AI IPC broker and workspace panel."}
+  ],
+  "implemented": [
+    "Added a provider-neutral local drafting broker for append, prepend, replace/rewrite, outline and summarize instructions; unsupported free-form model drafting fails explicitly without a provider fallback.",
+    "Added per-file and per-hunk changesets with before/after bytes, BOM/line-ending preservation, approved-scope validation, preflight of every disk revision, journaled VaultStore writes, recoverable history and revision-checked undo.",
+    "Added a visible AI review panel and command-palette entry with provider destination none, untrusted-source warnings, explicit file/hunk approval, stale-edit save guards and recoverable undo.",
+    "Added scoped organization suggestions for unresolved links, missing properties, duplicate notes, user-chosen rename/move plans, Canvas text cards and read-only Bases views; arbitrary formula/code execution is denied.",
+    "Added shared IPC validators, preload/main broker handlers, journey and safety fixtures, prompt-injection/scope/denial tests and legacy-agent capability isolation through the existing plugin policy boundary."
+  ],
+  "limitations": [
+    "This slice intentionally does not contact a provider; managed, BYOK and local endpoint/model selection, credentials, cancellation, usage caps and model lifecycle remain P4.3 work.",
+    "Organization, Canvas and Bases suggestions are preview/read-only plans; applying an actual organization rename or structural Canvas/Bases model change still requires a separate explicit safe changeset boundary.",
+    "The local Electron binary is unavailable, so visible desktop AI review, accessibility-tree, cross-platform and reference-Obsidian round-trip runs remain external-pending."
+  ]
+}
