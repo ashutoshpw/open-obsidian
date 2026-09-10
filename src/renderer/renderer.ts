@@ -291,6 +291,7 @@ function applySharedDesignTokens(): void {
     "--layout-titlebar-height": `${metrics.titlebarHeight}px`,
     "--layout-ribbon-width": `${metrics.ribbonWidth}px`,
     "--layout-sidebar-width": `${metrics.sidebarWidth}px`,
+    "--layout-icon-size": `${metrics.iconSize}px`,
     "--layout-workspace-header-height": `${metrics.workspaceHeaderHeight}px`,
     "--layout-tab-strip-height": `${metrics.tabStripHeight}px`,
     "--layout-editor-toolbar-height": `${metrics.editorToolbarHeight}px`,

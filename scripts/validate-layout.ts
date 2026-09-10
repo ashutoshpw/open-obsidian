@@ -29,6 +29,7 @@ export function auditRendererLayout(html = readFileSync(join(root, "src/renderer
   requiredRegion(html, "workspace status footer", /id=["']status["'][^>]*role=["']status["'][^>]*aria-live=["']polite["']/i, checks, failures);
   requiredRegion(html, "three-column shell sizing", /grid-template-columns:\s*44px\s+300px\s+minmax\(0,\s*1fr\)/i, checks, failures);
   requiredRegion(html, "shared layout token bridge", /var\(--layout-ribbon-width,\s*44px\)[^;]*var\(--layout-sidebar-width,\s*300px\)/i, checks, failures);
+  requiredRegion(html, "shared icon size token", /var\(--layout-icon-size,\s*18px\)/i, checks, failures);
   requiredRegion(html, "equal editor and context split", /\.editor-stage\[data-split=["']true["']\]\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)/is, checks, failures);
   requiredRegion(html, "compact chrome heights", /\.workspace-header\s*\{[^}]*flex:\s*0\s+0\s+40px/is, checks, failures);
   requiredRegion(html, "graph layout mode control", /id=["']graph-layout["']/i, checks, failures);
