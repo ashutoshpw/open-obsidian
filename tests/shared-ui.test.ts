@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readdirSync, readFileSync} from "node:fs";
-import {DEFAULT_WORKSPACE_VISIBILITY, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
+import {DEFAULT_WORKSPACE_VISIBILITY, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, type GraphLayoutOptions, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
 
 test("shared workspace UI contract exposes reusable blocks and semantic actions", () => {
   const firstBlock: WorkspaceBlock = WORKSPACE_BLOCKS[0]!;
@@ -18,6 +18,10 @@ test("shared workspace UI contract exposes reusable blocks and semantic actions"
   expect(action).toMatchObject({label: "Toggle right sidebar", group: "workspace"});
   expect(sharedAction.enabled).toBe(true);
   expect(workspaceColumns(visibility)).toEqual({ribbon: 44, sidebar: 0, content: "1fr"});
+  const layoutOptions: GraphLayoutOptions = {width: 360, height: 240};
+  const points = layoutGraph([{id: "A.md", kind: "file", label: "A.md"}, {id: "B.md", kind: "file", label: "B.md"}], [{id: "edge", from: "A.md", to: "B.md", kind: "link"}], "hierarchical", layoutOptions);
+  expect(points["A.md"]?.x).toBeLessThan(points["B.md"]?.x ?? 0);
+  expect(Object.values(points).every((point) => point.x >= 34 && point.y >= 34)).toBe(true);
 });
 
 test("shared UI source remains portable for a future Expo renderer", () => {

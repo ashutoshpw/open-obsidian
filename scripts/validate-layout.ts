@@ -29,6 +29,9 @@ export function auditRendererLayout(html = readFileSync(join(root, "src/renderer
   requiredRegion(html, "shared layout token bridge", /var\(--layout-ribbon-width,\s*44px\)[^;]*var\(--layout-sidebar-width,\s*300px\)/i, checks, failures);
   requiredRegion(html, "equal editor and context split", /\.editor-stage\[data-split=["']true["']\]\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(0,\s*1fr\)/is, checks, failures);
   requiredRegion(html, "compact chrome heights", /\.workspace-header\s*\{[^}]*flex:\s*0\s+0\s+40px/is, checks, failures);
+  requiredRegion(html, "graph layout mode control", /id=["']graph-layout["']/i, checks, failures);
+  requiredRegion(html, "spatial graph surface", /id=["']graph-surface["'][^>]*role=["']img["']/i, checks, failures);
+  requiredRegion(html, "keyboard graph alternative", /id=["']graph-map-help["'][^>]*>[^<]*keyboard-accessible node list/i, checks, failures);
 
   const ids = new Set([...html.matchAll(/\bid=["']([^"']+)["']/gi)].map((match) => match[1]));
   auditActionTargets(html, ids, checks, failures);

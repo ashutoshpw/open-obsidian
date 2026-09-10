@@ -84,6 +84,16 @@
       .graph-controls, .canvas-controls, .base-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
       .graph-controls label, .canvas-controls label, .base-controls label { color: #9da3b5; font-size: 11px; }
       .graph-controls input, .graph-controls select, .canvas-controls select, .base-controls select { min-width: 150px; border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
+      .graph-visual { display: grid; gap: 7px; border: 1px solid #ffffff12; border-radius: 9px; padding: 10px; background: #0d0f14; }
+      .graph-visual h3 { margin: 0; color: #eef0f6; font-size: 12px; }
+      #graph-surface { display: block; width: 100%; min-height: 210px; border-radius: 7px; background: radial-gradient(circle at 50% 50%, #2a244322 0, transparent 58%), #0a0c10; }
+      .graph-edge-line { stroke: #9b8cc955; stroke-width: 1.4; }
+      .graph-edge-embed { stroke: #f2b86c99; stroke-dasharray: 4 3; }
+      .graph-point circle { fill: #a78bfa; stroke: #f0ebff; stroke-width: 1.5; }
+      .graph-point-attachment circle { fill: #68c4b8; }
+      .graph-point-unresolved circle { fill: #d79b4c; stroke: #ffd28b; }
+      .graph-point text { fill: #d8dbe5; font-size: 10px; }
+      .graph-visual p { margin: 0; color: #858b9c; font-size: 10px; }
       .graph-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
       .graph-grid section { min-width: 0; }
       .graph-grid h3 { margin: 0 0 7px; color: #eef0f6; font-size: 12px; }
@@ -426,8 +436,9 @@
         </section>
         <section class="tool-panel" id="graph-panel" aria-label="Vault graph" hidden>
           <div class="panel-header"><h2>Vault graph</h2><button class="panel-close" id="close-graph" type="button">Close</button></div>
-          <div class="graph-controls"><label for="graph-query">Find nodes</label><input id="graph-query" type="search" placeholder="Filter files, attachments and unresolved links…" autocomplete="off" /><label for="graph-node-kind">Nodes</label><select id="graph-node-kind"><option value="all">All</option><option value="file">Files</option><option value="attachment">Attachments</option><option value="unresolved">Unresolved</option></select><label for="graph-edge-kind">Edges</label><select id="graph-edge-kind"><option value="all">All</option><option value="link">Links</option><option value="embed">Embeds</option></select></div>
+          <div class="graph-controls"><label for="graph-query">Find nodes</label><input id="graph-query" type="search" placeholder="Filter files, attachments and unresolved links…" autocomplete="off" /><label for="graph-node-kind">Nodes</label><select id="graph-node-kind"><option value="all">All</option><option value="file">Files</option><option value="attachment">Attachments</option><option value="unresolved">Unresolved</option></select><label for="graph-edge-kind">Edges</label><select id="graph-edge-kind"><option value="all">All</option><option value="link">Links</option><option value="embed">Embeds</option></select><label for="graph-layout">Layout</label><select id="graph-layout"><option value="force">Force</option><option value="hierarchical">Hierarchical</option><option value="radial">Radial</option></select></div>
           <p class="panel-summary" id="graph-summary">Derived graph state does not write to the vault.</p>
+          <section class="graph-visual" aria-label="Spatial graph map"><h3>Spatial map</h3><svg id="graph-surface" viewBox="0 0 720 360" role="img" aria-label="Graph map" aria-describedby="graph-map-help"></svg><p id="graph-map-help">The map is a visual overview. Use the keyboard-accessible node list below to open notes.</p></section>
           <div class="graph-grid"><section><h3>Nodes</h3><div class="graph-list" id="graph-node-list"></div></section><section><h3>Edges</h3><div class="graph-list" id="graph-edge-list"></div></section></div>
         </section>
         <section class="tool-panel" id="canvas-panel" aria-label="Canvas workspace" hidden>

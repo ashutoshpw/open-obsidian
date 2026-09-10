@@ -1,6 +1,7 @@
 import {expect, test} from "bun:test";
 import {editCanvasTextNode, parseCanvas, createNoteFromTextNode, encodeCanvas} from "../src/core/canvas.js";
 import {buildVaultGraph} from "../src/core/graph.js";
+import {layoutGraph} from "../src/shared/ui/index.js";
 
 const fixture = await Bun.file(new URL("../fixtures/derived-surfaces.json", import.meta.url)).json() as {schema_version: number; graph: {node_kinds: string[]; grouping: string}; canvas: {node_types: string[]; preserve: string[]}; invariants: Record<string, boolean>};
 
@@ -40,4 +41,8 @@ test("graph derives resolved and unresolved links without changing source files"
   expect(graph.nodes.find((node) => node.id === "assets/image.png")?.kind).toBe("attachment");
   expect(graph.groups.find((group) => group.id === "assets")?.nodeIds).toEqual(["assets/image.png"]);
   expect(graph.layout).toBe("force");
+  expect(Object.keys(graph.positions).sort()).toEqual(graph.nodes.map((node) => node.id).sort());
+  expect(Object.values(graph.positions).every((point) => Number.isFinite(point.x) && Number.isFinite(point.y))).toBe(true);
+  expect(layoutGraph(graph.nodes, graph.edges, "radial")).toEqual(layoutGraph(graph.nodes, graph.edges, "radial"));
+  expect(layoutGraph(graph.nodes, graph.edges, "hierarchical")).not.toEqual(layoutGraph(graph.nodes, graph.edges, "radial"));
 });

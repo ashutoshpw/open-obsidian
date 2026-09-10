@@ -1,5 +1,5 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
-import {parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
+import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, workspaceAction, type WorkspaceActionId} from "../shared/ui/index.js";
 
@@ -132,7 +132,9 @@ const closeGraphButton = document.querySelector<HTMLButtonElement>("#close-graph
 const graphQuery = document.querySelector<HTMLInputElement>("#graph-query");
 const graphNodeKind = document.querySelector<HTMLSelectElement>("#graph-node-kind");
 const graphEdgeKind = document.querySelector<HTMLSelectElement>("#graph-edge-kind");
+const graphLayout = document.querySelector<HTMLSelectElement>("#graph-layout");
 const graphSummary = document.querySelector<HTMLElement>("#graph-summary");
+const graphSurface = document.querySelector<SVGSVGElement>("#graph-surface");
 const graphNodeList = document.querySelector<HTMLElement>("#graph-node-list");
 const graphEdgeList = document.querySelector<HTMLElement>("#graph-edge-list");
 const canvasPanel = document.querySelector<HTMLElement>("#canvas-panel");
@@ -1207,6 +1209,51 @@ function graphNodeButton(node: GraphView["nodes"][number]): HTMLButtonElement {
   return button;
 }
 
+function graphLayoutMode(): GraphView["layout"] {
+  const value = graphLayout?.value;
+  return value === "hierarchical" || value === "radial" ? value : "force";
+}
+
+function svgElement<K extends keyof SVGElementTagNameMap>(name: K): SVGElementTagNameMap[K] {
+  return document.createElementNS("http://www.w3.org/2000/svg", name);
+}
+
+function renderGraphSurface(nodes: GraphView["nodes"], edges: GraphView["edges"], layout: GraphView["layout"]): void {
+  if (!graphSurface) return;
+  const positions = layoutGraph(nodes, edges, layout);
+  graphSurface.replaceChildren();
+  edges.forEach((edge) => {
+    const from = positions[edge.from];
+    const to = positions[edge.to];
+    if (!from || !to) return;
+    const line = svgElement("line");
+    line.setAttribute("x1", String(from.x));
+    line.setAttribute("y1", String(from.y));
+    line.setAttribute("x2", String(to.x));
+    line.setAttribute("y2", String(to.y));
+    line.setAttribute("class", `graph-edge-line graph-edge-${edge.kind}`);
+    graphSurface.append(line);
+  });
+  nodes.forEach((node) => {
+    const point = positions[node.id];
+    if (!point) return;
+    const group = svgElement("g");
+    group.setAttribute("class", `graph-point graph-point-${node.kind}`);
+    const circle = svgElement("circle");
+    circle.setAttribute("cx", String(point.x));
+    circle.setAttribute("cy", String(point.y));
+    circle.setAttribute("r", node.kind === "unresolved" ? "6" : "8");
+    const label = svgElement("text");
+    label.setAttribute("x", String(point.x));
+    label.setAttribute("y", String(point.y + 22));
+    label.setAttribute("text-anchor", "middle");
+    label.textContent = node.label.length > 24 ? `${node.label.slice(0, 22)}…` : node.label;
+    group.append(circle, label);
+    graphSurface.append(group);
+  });
+  graphSurface.setAttribute("aria-label", `${layout} graph map with ${nodes.length} nodes and ${edges.length} edges`);
+}
+
 function graphEdgeRow(edge: GraphView["edges"][number]): HTMLDivElement {
   const row = document.createElement("div");
   row.className = "graph-edge";
@@ -1242,7 +1289,9 @@ function renderGraph(): void {
   const nodes = data.nodes.filter(graphNodeMatches);
   const nodeIds = new Set(nodes.map((node) => node.id));
   const edges = data.edges.filter((edge) => graphEdgeMatches(edge, nodeIds));
-  setText(graphSummary, graphSummaryText(data, nodes.length, edges.length));
+  const layout = graphLayoutMode();
+  setText(graphSummary, `${graphSummaryText({...data, layout}, nodes.length, edges.length)} · spatial map with keyboard list alternative`);
+  renderGraphSurface(nodes, edges, layout);
   renderGraphList(nodeList, nodes.map(graphNodeButton), "No graph nodes match this filter.");
   renderGraphList(edgeList, edges.map(graphEdgeRow), "No graph edges match this filter.");
 }
@@ -2561,6 +2610,7 @@ if (closeBaseButton) closeBaseButton.addEventListener("click", () => setHidden(b
 if (graphQuery) graphQuery.addEventListener("input", renderGraph);
 if (graphNodeKind) graphNodeKind.addEventListener("change", renderGraph);
 if (graphEdgeKind) graphEdgeKind.addEventListener("change", renderGraph);
+if (graphLayout) graphLayout.addEventListener("change", renderGraph);
 if (canvasFile) canvasFile.addEventListener("change", () => {
   if (canvasFile.value) void loadCanvasFile(canvasFile.value);
 });

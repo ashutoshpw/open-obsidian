@@ -1,6 +1,7 @@
 import type {VaultIndex} from "./vault-index.js";
 
 import type {GraphEdge, GraphGroup, GraphNode, GraphView} from "../shared/api.js";
+import {layoutGraph} from "../shared/ui/graph.js";
 
 export type VaultGraph = GraphView;
 
@@ -31,5 +32,5 @@ export function buildVaultGraph(index: VaultIndex): VaultGraph {
     groupMap.set(id, group);
     return groupMap;
   }, new Map<string, GraphGroup>()).values()].sort((left, right) => left.id.localeCompare(right.id));
-  return {nodes, edges, groups, layout: "force"};
+  return {nodes, edges, groups, layout: "force", positions: layoutGraph(nodes, edges, "force")};
 }

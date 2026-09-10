@@ -28,7 +28,7 @@ The recurring audit commands are also available separately:
 
 ## Reusable UI boundary
 
-`src/shared/ui/index.ts` is the stable, platform-neutral surface for workspace actions, layout blocks, theme tokens and safe Markdown preview data. It has no Electron, DOM or React Native imports. The Electron renderer maps those values to HTML; a future Expo app can map the same action IDs and preview blocks to native `Pressable`, `View` and `Text` components without copying product vocabulary or parsing rules.
+`src/shared/ui/index.ts` is the stable, platform-neutral surface for workspace actions, layout blocks, theme tokens, safe Markdown preview data and deterministic graph positions. It has no Electron, DOM or React Native imports. The Electron renderer maps those values to HTML/SVG; a future Expo app can map the same action IDs, preview blocks and graph layout to native `Pressable`, `View`, `Text` or a canvas surface without copying product vocabulary or parsing rules.
 
 The named UI states are recorded in `fixtures/ux-surfaces.json`. Implemented surfaces have renderer markers and notes; unavailable runtime-dependent surfaces remain visibly labeled as external-pending with an owner and prerequisite instead of pretending to be complete.
 
