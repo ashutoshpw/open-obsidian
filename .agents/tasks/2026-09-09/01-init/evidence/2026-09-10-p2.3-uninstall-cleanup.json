@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T19:43:01Z",
+  "checkpoint": "P2.3",
+  "requirements": ["D16", "SYNC-007"],
+  "fixture_ids": ["fixture:sync-uninstall"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "3473dab68b03d5474f6049294908ec837bdbd2af",
+    "tested_source_tree": "6e0f7ef6f57060800652150b07de94ef1baf48af41772e95e207d6d145ccf301"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 112 tests with 630 expectations, Electron compilation, Knip and report-only Fallow health all pass; layout has 29 static checks and Fallow health is 88.9/A with only the pre-existing scripts/status.ts collectRow moderate advisory."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine state, contract, architecture, surface, accessibility, 29-check layout, typecheck, 112-test suite, Knip and changed-file Fallow gates pass."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 7 changed files for the uninstall-cleanup increment after removing an unused type-only barrel re-export."},
+    {"command": "bun run check:accessibility && bun run validate:layout", "exit_code": 0, "result": "Static accessibility checks pass (14 checks) and the renderer layout contract passes (29 checks), including the explicit uninstall-cleanup region and all three choice markers."},
+    {"command": "gh run watch 34521857601 --exit-status; gh run watch 34521857642 --exit-status", "exit_code": 0, "result": "Quality and desktop-build workflows pass on Ubuntu, macOS and Windows for implementation commit 3473dab."}
+  ],
+  "implemented": [
+    "Added a platform-neutral uninstall cleanup contract with explicit App cache, Stored credentials and Recovery history choices; every option is unchecked by default and declares vaultDisposition=preserve.",
+    "Added a visible Settings handoff that lets a user select local app-data categories and reports the selected categories without accessing the vault or dispatching deletion.",
+    "Exported the runtime contract through the shared UI barrel, documented the desktop/Expo reuse boundary and covered the contract with a portable test and static layout marker."
+  ],
+  "limitations": [
+    "No operating-system uninstall hook or deletion action is implemented; a host must perform any local app-data cleanup only after separate explicit confirmation.",
+    "Vault bytes, unresolved conflicts and source notes remain outside this cleanup contract and are not deleted.",
+    "Actual OS encryption readback, long-running retention validation, visible Electron automation, cross-platform interaction and reference Obsidian reopen checks remain pending."
+  ]
+}

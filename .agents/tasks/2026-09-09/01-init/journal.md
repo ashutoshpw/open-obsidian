@@ -367,3 +367,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: focused YAML/Markdown tests pass (9 tests, 29 expectations); post-commit `bun run quality` passes (111 tests, 626 expectations); Knip is clean; strict Fallow is clean; source tree digest is `9e3ce0b840782765a9cc9294f13115907dd55bb8e3098b7a92cabfad154e7290` across 145 included paths.
 - Validation: quality run `34520804993` and desktop-build run `34520805000` passed on macOS, Windows and Ubuntu for `846f33380ac4683905bdf6bf103ea70d1010924b`.
 - Limitation: full YAML dialect coverage, reference Obsidian open-edit-save-reopen and cross-platform visible validation remain pending.
+
+## 2026-09-10T19:43:01Z — P2.3 uninstall cleanup choices pushed
+
+- Completed: committed and pushed `3473dab68b03d5474f6049294908ec837bdbd2af` with marker `[openobsidian P2.3 work] Add explicit uninstall choices`.
+- Completed: added a reusable `src/shared/ui/uninstall.ts` contract for App cache, Stored credentials and Recovery history cleanup choices. Each option is unchecked by default and explicitly preserves the vault.
+- Completed: added the Settings handoff, selection summary, static layout marker, portable shared-contract test and Expo reuse documentation. The renderer performs no vault access and dispatches no deletion.
+- Validation: `bun run quality` passes with 112 tests and 630 expectations; `bun run check:fast`, Knip, strict changed-file Fallow, typecheck, compilation, 14 accessibility checks and 29 layout checks pass locally; report-only Fallow health remains 88.9/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
+- Validation: quality run `34521857601` and desktop-build run `34521857642` passed on macOS, Ubuntu and Windows for `3473dab68b03d5474f6049294908ec837bdbd2af`.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-uninstall-cleanup.json` records source tree `6e0f7ef6f57060800652150b07de94ef1baf48af41772e95e207d6d145ccf301` across 146 included paths.
+- Limitation: this is an explicit uninstall-flow handoff only; OS uninstall hooks, destructive cleanup execution, OS encryption readback, long-running retention, visible automation, cross-platform interaction and reference Obsidian checks remain pending.
