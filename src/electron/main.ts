@@ -3,6 +3,7 @@ import {createHash} from "node:crypto";
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
+import {applyAIChangeSet, draftLocalAIChange, organizationSuggestions, undoAIChange, type AppliedAIChange} from "../core/ai-changes.js";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
 import {createNoteFromTextNode, editCanvasTextNode, parseCanvas} from "../core/canvas.js";
 import {evaluateBase, parseBase, type BaseRow, type BaseValue} from "../core/bases.js";
@@ -14,11 +15,13 @@ import {retrieveVault} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
 let activeVault: VaultStore | null = null;
+const aiChangeSets = new Map<string, AIChangeSet>();
+const aiAppliedChanges = new Map<string, AppliedAIChange>();
 
 function vaultAppData(root: string): string {
   const id = createHash("sha256").update(resolve(root)).digest("hex").slice(0, 24);
@@ -67,6 +70,8 @@ async function selectVault(): Promise<VaultSummary | null> {
   if (!root) return null;
   if (!existsSync(root)) throw new Error("Selected vault directory is no longer available");
   activeVault = new VaultStore(root, vaultAppData(root));
+  aiChangeSets.clear();
+  aiAppliedChanges.clear();
   const scan = activeVault.scan();
   const git = inspectVaultGitState(activeVault.root);
   return {
@@ -267,6 +272,34 @@ function retrieveRequest(event: Electron.IpcMainInvokeEvent, value: unknown): Re
   return retrieveVault(requireVault(), request, (progress) => event.sender.send(CHANNELS.retrievalProgress, progress));
 }
 
+function draftAIChangeRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): AIChangeSet {
+  const changeSet = draftLocalAIChange(requireVault(), validateAIDraftRequest(value));
+  aiChangeSets.set(changeSet.id, changeSet);
+  return changeSet;
+}
+
+function applyAIChangeRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): AIApplyChangeResponse {
+  const request = validateAIApplyChangeRequest(value);
+  const changeSet = aiChangeSets.get(request.changeSetId);
+  if (!changeSet) throw new Error("AI change set is no longer available; create a new preview");
+  const applied = applyAIChangeSet(requireVault(), changeSet, request);
+  aiAppliedChanges.set(applied.undoId, applied);
+  return {changeSetId: applied.changeSetId, undoId: applied.undoId, files: applied.files.map((file) => ({relativePath: file.relativePath, base64: Buffer.from(requireVault().read(file.relativePath).bytes).toString("base64"), revision: file.writtenRevision}))};
+}
+
+function undoAIChangeRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): AIUndoChangeResponse {
+  const request = validateAIUndoChangeRequest(value);
+  const applied = aiAppliedChanges.get(request.undoId);
+  if (!applied) throw new Error("AI undo record is no longer available; inspect recovery history instead");
+  const result = undoAIChange(requireVault(), applied);
+  aiAppliedChanges.delete(request.undoId);
+  return result;
+}
+
+function organizationSuggestionsRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): AIOrganizationResponse {
+  return organizationSuggestions(requireVault(), validateAIOrganizationScope(value));
+}
+
 function restoreChronicle(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
   const request = validateChronicleRestoreRequest(value);
   const store = requireChronicle();
@@ -344,6 +377,10 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.createCanvasNote, createCanvasNoteRequest);
   ipcMain.handle(CHANNELS.base, baseRequest);
   ipcMain.handle(CHANNELS.retrieve, retrieveRequest);
+  ipcMain.handle(CHANNELS.draftAIChange, draftAIChangeRequest);
+  ipcMain.handle(CHANNELS.applyAIChange, applyAIChangeRequest);
+  ipcMain.handle(CHANNELS.undoAIChange, undoAIChangeRequest);
+  ipcMain.handle(CHANNELS.organizationSuggestions, organizationSuggestionsRequest);
   ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
   ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
   ipcMain.handle(CHANNELS.noteContext, noteContext);

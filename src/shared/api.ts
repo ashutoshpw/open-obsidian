@@ -27,6 +27,10 @@ export const CHANNELS = {
   base: "workspace:base",
   retrieve: "workspace:retrieve",
   retrievalProgress: "workspace:retrieval-progress",
+  draftAIChange: "ai:draft-change",
+  applyAIChange: "ai:apply-change",
+  undoAIChange: "ai:undo-change",
+  organizationSuggestions: "ai:organization-suggestions",
 } as const;
 
 export type VaultGitSummary = {
@@ -207,6 +211,20 @@ export type RetrievalSafety = {sourceDataUntrusted: true; promptInjectionDetecte
 export type GroundedAnswer = {status: "grounded" | "missing-evidence" | "conflicting-evidence"; answer: string; inference: string | null; conflicts: string[]; warnings: string[]; citations: RetrievalCitation[]};
 export type RetrievalResponse = {query: string; mode: "local-hybrid" | "keyword-fallback"; provider: "none"; scope: RetrievalScope; passages: RetrievalPassage[]; answer: GroundedAnswer; safety: RetrievalSafety; indexedFiles: string[]; excludedFiles: string[]; scopedOutFiles: string[]; progress: RetrievalProgress};
 
+export type AIChangeHunk = {id: string; startLine: number; endLine: number; before: string; after: string; status: "pending" | "accepted" | "rejected"};
+export type AIFileChange = {id: string; relativePath: string; expectedRevision: string; summary: string; beforeBase64: string; afterBase64: string; hunks: AIChangeHunk[]; status: "pending" | "accepted" | "rejected"};
+export type AIChangeSafety = {previewRequired: true; sourceDataUntrusted: true; shell: false; network: false; connectors: false; provider: "none"};
+export type AIChangeSet = {id: string; kind: "draft" | "organization"; instruction: string; createdAt: string; provider: "none"; scope: RetrievalScope; files: AIFileChange[]; safety: AIChangeSafety};
+export type AIDraftRequest = {relativePath: string; instruction: string; expectedRevision?: string; scope?: RetrievalScope};
+export type AIChangeSelection = {fileId: string; hunkIds: string[]};
+export type AIApplyChangeRequest = {changeSetId: string; selections: AIChangeSelection[]};
+export type AIApplyChangeResponse = {changeSetId: string; undoId: string; files: VaultReadResponse[]};
+export type AIUndoChangeRequest = {undoId: string};
+export type AIUndoChangeResponse = {undoId: string; files: VaultReadResponse[]};
+export type OrganizationSuggestionKind = "link" | "property" | "duplicate" | "rename" | "canvas" | "base" | "formula-code";
+export type OrganizationSuggestion = {id: string; kind: OrganizationSuggestionKind; relativePath: string; targetPath?: string; summary: string; detail: string; status: "awaiting-approval" | "denied-security"; safeAlternative?: string};
+export type AIOrganizationResponse = {provider: "none"; scope: RetrievalScope; suggestions: OrganizationSuggestion[]; warnings: string[]; safety: AIChangeSafety};
+
 export type WorkspaceSettings = {
   editorMode: EditorMode;
   splitView: boolean;
@@ -384,6 +402,39 @@ export function validateRetrievalRequest(value: unknown): RetrievalRequest {
   };
 }
 
+function validateAIInstruction(value: unknown): string {
+  if (typeof value !== "string" || value.trim().length === 0 || value.length > 500) throw new Error("Invalid AI instruction");
+  return value.trim();
+}
+
+export function validateAIDraftRequest(value: unknown): AIDraftRequest {
+  if (!isRecord(value)) throw new Error("Invalid AI draft request");
+  const expectedRevision = value.expectedRevision === undefined ? undefined : validateCanvasRevision(value.expectedRevision);
+  return {relativePath: validateWorkspacePath(value.relativePath, "AI path"), instruction: validateAIInstruction(value.instruction), expectedRevision, scope: value.scope === undefined ? undefined : validateRetrievalScope(value.scope)};
+}
+
+function validateAIChangeSelections(value: unknown): AIChangeSelection[] {
+  if (!Array.isArray(value) || value.length > 50) throw new Error("Invalid AI change selections");
+  return value.map((selection) => {
+    if (!isRecord(selection) || typeof selection.fileId !== "string" || selection.fileId.length === 0 || selection.fileId.length > 100 || !Array.isArray(selection.hunkIds) || selection.hunkIds.length > 100 || selection.hunkIds.some((id) => typeof id !== "string" || id.length === 0 || id.length > 100)) throw new Error("Invalid AI change selection");
+    return {fileId: selection.fileId, hunkIds: [...new Set(selection.hunkIds as string[])]};
+  });
+}
+
+export function validateAIApplyChangeRequest(value: unknown): AIApplyChangeRequest {
+  if (!isRecord(value) || typeof value.changeSetId !== "string" || value.changeSetId.length === 0 || value.changeSetId.length > 100) throw new Error("Invalid AI apply request");
+  return {changeSetId: value.changeSetId, selections: validateAIChangeSelections(value.selections)};
+}
+
+export function validateAIUndoChangeRequest(value: unknown): AIUndoChangeRequest {
+  if (!isRecord(value) || typeof value.undoId !== "string" || value.undoId.length === 0 || value.undoId.length > 100) throw new Error("Invalid AI undo request");
+  return {undoId: value.undoId};
+}
+
+export function validateAIOrganizationScope(value: unknown): RetrievalScope | undefined {
+  return value === undefined ? undefined : validateRetrievalScope(value);
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   listFiles: () => Promise<VaultFileSummary[]>;
@@ -413,4 +464,8 @@ export type OpenObsidianAPI = {
   base: (relativePath: string) => Promise<BaseResponse>;
   retrieve: (request: RetrievalRequest) => Promise<RetrievalResponse>;
   onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => () => void;
+  draftAIChange: (request: AIDraftRequest) => Promise<AIChangeSet>;
+  applyAIChange: (request: AIApplyChangeRequest) => Promise<AIApplyChangeResponse>;
+  undoAIChange: (request: AIUndoChangeRequest) => Promise<AIUndoChangeResponse>;
+  organizationSuggestions: (scope?: RetrievalScope) => Promise<AIOrganizationResponse>;
 };

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "reviewed-local-ai-changes",
+  "provider_destination": "none",
+  "operation": "draft -> review -> per-file and per-hunk approval -> revision validation -> journaled apply -> undo",
+  "supported_local_instructions": ["append:", "prepend:", "replace:", "rewrite:", "outline", "summarize"],
+  "cases": [
+    {"id": "preview-preserves-bytes", "expected": ["no-write-before-approval", "bom-preserved", "crlf-preserved", "before-after-hunk"]},
+    {"id": "stale-approval", "expected": ["preflight-all-revisions", "zero-stale-writes", "explicit-retry"]},
+    {"id": "recovery-undo", "expected": ["journaled-write", "recoverable-before-bytes", "revision-checked-undo"]},
+    {"id": "organization-suggestions", "expected": ["links", "properties", "duplicates", "canvas-and-bases-assistance", "formula-code-denied"]},
+    {"id": "agent-boundary", "expected": ["untrusted-source-warning", "scope-enforced", "shell-denied", "network-denied", "connector-denied", "no-provider-fallback"]}
+  ],
+  "safety": {
+    "source_data_untrusted": true,
+    "preview_required": true,
+    "shell": false,
+    "network": false,
+    "connectors": false,
+    "recoverable_writes": true,
+    "legacy_agent_permissions": "cannot_grant-capabilities"
+  },
+  "external_pending": ["visible-electron-review-run", "provider-backed-draft-run", "reference-obsidian-round-trip", "cross-platform-run"]
+}

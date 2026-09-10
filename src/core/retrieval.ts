@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {existsSync, mkdirSync, readFileSync, statSync, writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {parseMarkdown, type MarkdownProperty} from "./markdown.js";
+import {normalizeScopePath, scopePathMatches} from "./path-scope.js";
 import {snapshotVault, VaultStore, type VaultEntry} from "./vault.js";
 import type {GroundedAnswer, RetrievalCitation, RetrievalProgress, RetrievalRequest, RetrievalResponse, RetrievalSafety, RetrievalScope} from "../shared/api.js";
 
@@ -24,26 +25,17 @@ type ProgressListener = (progress: RetrievalProgress) => void;
 type RetrievalIndexEntry = {relativePath: string; revision: string; modifiedAt: string; tags: string[]; passages: Passage[]};
 type RetrievalIndex = {schema_version: 1; vaultRoot: string; sourceSnapshot: string; entries: RetrievalIndexEntry[]};
 
-function normalizePath(value: string): string {
-  return value.replaceAll("\\", "/").replace(/^\.\//, "").replace(/\/+$/, "");
-}
-
-function pathMatches(path: string, candidate: string): boolean {
-  const normalized = normalizePath(candidate);
-  return normalized.length > 0 && (path === normalized || path.startsWith(`${normalized}/`));
-}
-
 function excludedPath(path: string, exclusions: string[]): boolean {
-  return exclusions.some((candidate) => pathMatches(path, candidate));
+  return exclusions.some((candidate) => scopePathMatches(path, candidate));
 }
 
 function scopePaths(scope: RetrievalScope | undefined): {paths: string[]; folders: string[]} {
-  return {paths: scope?.paths?.map(normalizePath) ?? [], folders: scope?.folders?.map(normalizePath) ?? []};
+  return {paths: scope?.paths?.map(normalizeScopePath) ?? [], folders: scope?.folders?.map(normalizeScopePath) ?? []};
 }
 
 function pathInScope(path: string, scope: RetrievalScope | undefined): boolean {
   const selected = scopePaths(scope);
-  return [selected.paths.length === 0 || selected.paths.includes(path), selected.folders.length === 0 || selected.folders.some((folder) => pathMatches(path, folder))].every(Boolean);
+  return [selected.paths.length === 0 || selected.paths.includes(path), selected.folders.length === 0 || selected.folders.some((folder) => scopePathMatches(path, folder))].every(Boolean);
 }
 
 function tagsInScope(scope: RetrievalScope | undefined, tags: string[]): boolean {

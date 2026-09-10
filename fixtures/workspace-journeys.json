@@ -10,7 +10,8 @@
     {"id": "search-open-edit-save", "status": "implemented-locally", "steps": ["vault-search", "note-editor", "save-note"]},
     {"id": "review-and-recover", "status": "implemented-locally", "steps": ["review-changes", "show-history", "conflict-box", "keep-current", "keep-incoming"]},
     {"id": "explore-derived-surfaces", "status": "implemented-locally", "steps": ["open-graph", "open-canvas", "open-base"]},
-    {"id": "grounded-local-search", "status": "implemented-locally", "steps": ["open-retrieval", "retrieval-form", "retrieval-answer", "retrieval-results"]}
+    {"id": "grounded-local-search", "status": "implemented-locally", "steps": ["open-retrieval", "retrieval-form", "retrieval-answer", "retrieval-results"]},
+    {"id": "reviewed-local-ai-write", "status": "implemented-locally", "steps": ["open-ai-review", "ai-form", "ai-summary", "ai-changes", "apply-ai", "undo-ai", "suggest-ai"]}
   ],
-  "external_pending": ["visible-electron-keyboard-run", "visible-electron-grounded-citation-run", "screen-reader-run", "cross-platform-run", "provider-endpoint-run", "reference-obsidian-reopen"]
+  "external_pending": ["visible-electron-keyboard-run", "visible-electron-grounded-citation-run", "visible-electron-ai-review-run", "screen-reader-run", "cross-platform-run", "provider-endpoint-run", "provider-ai-draft-run", "reference-obsidian-reopen"]
 }

@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -62,4 +62,16 @@ test("retrieval IPC validation keeps scope and limits bounded", () => {
   expect(() => validateRetrievalRequest({query: "notes", limit: 0})).toThrow("Invalid retrieval limit");
   expect(() => validateRetrievalRequest({query: "notes", scope: {folders: ["../outside"]}})).toThrow("Invalid workspace folders");
   expect(() => validateRetrievalRequest({query: "notes", scope: {modifiedBefore: "not-a-date"}})).toThrow("Invalid retrieval end date");
+});
+
+test("reviewed AI IPC validation keeps scope, approval and undo explicit", () => {
+  const revision = "a".repeat(64);
+  expect(validateAIDraftRequest({relativePath: "notes/plan.md", instruction: " append: reviewed follow-up ", expectedRevision: revision, scope: {folders: ["notes"], excludedPaths: ["notes/private.md"]}})).toEqual({relativePath: "notes/plan.md", instruction: "append: reviewed follow-up", expectedRevision: revision, scope: {paths: [], folders: ["notes"], tags: [], modifiedAfter: undefined, modifiedBefore: undefined, excludedPaths: ["notes/private.md"]}});
+  expect(validateAIApplyChangeRequest({changeSetId: "change-set", selections: [{fileId: "file", hunkIds: ["hunk", "hunk"]}]})).toEqual({changeSetId: "change-set", selections: [{fileId: "file", hunkIds: ["hunk"]}]});
+  expect(validateAIUndoChangeRequest({undoId: "undo-record"})).toEqual({undoId: "undo-record"});
+  expect(validateAIOrganizationScope({paths: ["notes/plan.md"]})).toEqual({paths: ["notes/plan.md"], folders: [], tags: [], modifiedAfter: undefined, modifiedBefore: undefined, excludedPaths: []});
+  expect(() => validateAIDraftRequest({relativePath: "../outside.md", instruction: "append: unsafe"})).toThrow("Invalid workspace AI path");
+  expect(() => validateAIDraftRequest({relativePath: "note.md", instruction: "   "})).toThrow("Invalid AI instruction");
+  expect(() => validateAIApplyChangeRequest({changeSetId: "change-set", selections: [{fileId: "file", hunkIds: [7]}]})).toThrow("Invalid AI change selection");
+  expect(() => validateAIUndoChangeRequest({undoId: ""})).toThrow("Invalid AI undo request");
 });

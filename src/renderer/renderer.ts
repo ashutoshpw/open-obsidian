@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -70,6 +70,18 @@ const runRetrievalButton = document.querySelector<HTMLButtonElement>("#run-retri
 const retrievalMeta = document.querySelector<HTMLElement>("#retrieval-meta");
 const retrievalAnswer = document.querySelector<HTMLElement>("#retrieval-answer");
 const retrievalResults = document.querySelector<HTMLElement>("#retrieval-results");
+const openAIReviewButton = document.querySelector<HTMLButtonElement>("#open-ai-review");
+const aiPanel = document.querySelector<HTMLElement>("#ai-panel");
+const closeAIPanelButton = document.querySelector<HTMLButtonElement>("#close-ai");
+const aiForm = document.querySelector<HTMLFormElement>("#ai-form");
+const aiTarget = document.querySelector<HTMLSelectElement>("#ai-target");
+const aiInstruction = document.querySelector<HTMLInputElement>("#ai-instruction");
+const aiSummary = document.querySelector<HTMLElement>("#ai-summary");
+const aiChanges = document.querySelector<HTMLElement>("#ai-changes");
+const applyAIButton = document.querySelector<HTMLButtonElement>("#apply-ai");
+const undoAIButton = document.querySelector<HTMLButtonElement>("#undo-ai");
+const suggestAIButton = document.querySelector<HTMLButtonElement>("#suggest-ai");
+const aiOrganization = document.querySelector<HTMLElement>("#ai-organization");
 const settingsPanel = document.querySelector<HTMLElement>("#settings-panel");
 const toggleSettingsButton = document.querySelector<HTMLButtonElement>("#toggle-settings");
 const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-settings");
@@ -120,6 +132,8 @@ let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
 let retrievalData: RetrievalResponse | null = null;
 let pendingCitation: RetrievalCitation | null = null;
+let aiChangeSet: AIChangeSet | null = null;
+let aiUndoId: string | null = null;
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -366,6 +380,7 @@ function wholeNumber(value: number, minimum: number): number | null {
 function updateChronicleControls(): void {
   setDisabled(openQuickSwitcherButton, !selectedSummary);
   setDisabled(openRetrievalButton, !selectedSummary);
+  setDisabled(openAIReviewButton, !selectedSummary);
   updateWorkspaceToolControls();
   setDisabled(reviewButton, !selectedSummary || selectedSummary.git.vaultType !== "chronicle");
   setDisabled(historyButton, !selectedSummary);
@@ -436,8 +451,66 @@ function supportedWorkspaceFile(path: string): boolean {
   return lower.endsWith(".md") || lower.endsWith(".canvas") || lower.endsWith(".base");
 }
 
+function aiTargetPaths(): string[] {
+  return vaultFiles.filter((file) => file.kind === "file" && file.relativePath.toLowerCase().endsWith(".md")).map((file) => file.relativePath);
+}
+
+function preferredAITarget(paths: string[]): string | undefined {
+  return validAITarget(selectedPath, paths) ?? validAITarget(aiTarget?.value, paths) ?? paths[0];
+}
+
+function validAITarget(candidate: string | null | undefined, paths: string[]): string | undefined {
+  if (!candidate) return undefined;
+  return paths.includes(candidate) ? candidate : undefined;
+}
+
+function aiTargetValue(): string {
+  return aiTarget?.value.trim() ?? "";
+}
+
+function aiInputValue(element: HTMLInputElement | null): string {
+  return element?.value.trim() ?? "";
+}
+
+function aiTargetHasUnsavedChanges(target: string): boolean {
+  return target === selectedPath && dirty;
+}
+
+function aiChangeSetHasUnsavedChanges(changeSet: AIChangeSet): boolean {
+  return dirty && changeSet.files.some((file) => file.relativePath === selectedPath);
+}
+
+function aiDraftDetails(): {target: string; instruction: string} | null {
+  const target = validAITarget(aiTargetValue(), aiTargetPaths());
+  if (!target) return null;
+  const instruction = aiInputValue(aiInstruction);
+  if (!instruction) return null;
+  return {target, instruction};
+}
+
+function aiApplySelections(changeSet: AIChangeSet): Array<{fileId: string; hunkIds: string[]}> | null {
+  if (aiChangeSetHasUnsavedChanges(changeSet)) {
+    setStatus("Save the current note before applying an AI preview.");
+    return null;
+  }
+  const selections = aiSelections();
+  if (selections.length === 0) {
+    setStatus("Approve at least one AI hunk before applying.");
+    return null;
+  }
+  return selections;
+}
+
+function renderAITargetOptions(): void {
+  const paths = aiTargetPaths();
+  if (!aiTarget) return;
+  selectPathOptions(aiTarget, paths, preferredAITarget(paths));
+  setDisabled(applyAIButton, !aiChangeSet || aiSelections().length === 0);
+}
+
 function renderFiles(files: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>>): void {
   vaultFiles = files;
+  renderAITargetOptions();
   updateWorkspaceToolControls();
   if (!fileList) return;
   fileList.replaceChildren();
@@ -652,6 +725,7 @@ function workspaceCommands(): WorkspaceCommand[] {
     {label: "Open vault", shortcut: "", available: () => Boolean(api && selectButton), run: () => selectButton?.click()},
     {label: "Quick switcher", shortcut: "⌘/Ctrl P", available: () => Boolean(selectedSummary), run: openQuickSwitcher},
     {label: "Open grounded search", shortcut: "", available: () => Boolean(selectedSummary), run: openRetrievalPanel},
+    {label: "Review local AI draft", shortcut: "", available: () => Boolean(selectedSummary), run: openAIReviewPanel},
     {label: "Open graph", shortcut: "", available: () => Boolean(selectedSummary), run: () => void openGraphPanel()},
     {label: "Open Canvas", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".canvas")), run: () => void openCanvasPanel()},
     {label: "Open Bases", shortcut: "", available: () => Boolean(selectedSummary && hasWorkspaceFile(".base")), run: () => void openBasePanel()},
@@ -792,7 +866,7 @@ async function openGraphPanel(): Promise<void> {
 }
 
 function togglePanel(panel: HTMLElement | null, visible: boolean): void {
-  [changePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel, retrievalPanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
+  [changePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel, retrievalPanel, aiPanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
 }
 
 function selectPathOptions(select: HTMLSelectElement | null, paths: string[], selected: string | undefined): void {
@@ -1197,6 +1271,183 @@ async function runRetrievalRequest(): Promise<void> {
   if (!client || !selectedSummary) return;
   const request = retrievalRequestFromForm();
   if (request) await performRetrieval(client, request);
+}
+
+function aiSelections(): Array<{fileId: string; hunkIds: string[]}> {
+  if (!aiChanges) return [];
+  const selections = new Map<string, string[]>();
+  aiChanges.querySelectorAll<HTMLInputElement>("input[data-ai-file-id][data-ai-hunk-id]:checked").forEach((input) => {
+    const fileId = input.dataset.aiFileId;
+    const hunkId = input.dataset.aiHunkId;
+    if (!fileId || !hunkId) return;
+    (selections.get(fileId) ?? selections.set(fileId, []).get(fileId)!).push(hunkId);
+  });
+  return [...selections.entries()].map(([fileId, hunkIds]) => ({fileId, hunkIds}));
+}
+
+function aiChangeRow(file: AIChangeSet["files"][number]): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "ai-change";
+  const header = document.createElement("header");
+  const title = document.createElement("strong");
+  title.textContent = file.relativePath;
+  const summary = document.createElement("small");
+  summary.textContent = file.summary;
+  header.append(title, summary);
+  const fileApproval = document.createElement("label");
+  const fileCheckbox = document.createElement("input");
+  fileCheckbox.type = "checkbox";
+  fileCheckbox.checked = true;
+  fileCheckbox.dataset.aiFileApproval = file.id;
+  fileCheckbox.addEventListener("change", () => {
+    section.querySelectorAll<HTMLInputElement>("input[data-ai-hunk-id]").forEach((input) => { input.checked = fileCheckbox.checked; });
+    setDisabled(applyAIButton, aiSelections().length === 0);
+  });
+  fileApproval.append(fileCheckbox, document.createTextNode("Approve this file"));
+  section.append(header, fileApproval);
+  file.hunks.forEach((hunk) => {
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = true;
+    checkbox.dataset.aiFileId = file.id;
+    checkbox.dataset.aiHunkId = hunk.id;
+    checkbox.addEventListener("change", () => setDisabled(applyAIButton, aiSelections().length === 0));
+    label.append(checkbox, document.createTextNode(`Approve hunk · lines ${hunk.startLine}-${hunk.endLine}`));
+    const before = document.createElement("pre");
+    before.textContent = `Before\n${hunk.before}`;
+    const after = document.createElement("pre");
+    after.dataset.kind = "after";
+    after.textContent = `After\n${hunk.after}`;
+    section.append(label, before, after);
+  });
+  return section;
+}
+
+function renderAIChangeSet(changeSet: AIChangeSet): void {
+  if (!aiChanges) return;
+  aiChangeSet = changeSet;
+  setText(aiSummary, `${changeSet.files.length} file preview · provider destination: none · source data remains untrusted · explicit approval and disk revision checks required.`);
+  aiChanges.replaceChildren(...changeSet.files.map(aiChangeRow));
+  setDisabled(applyAIButton, aiSelections().length === 0);
+}
+
+function renderAIOrganization(response: AIOrganizationResponse): void {
+  if (!aiOrganization) return;
+  aiOrganization.hidden = false;
+  aiOrganization.replaceChildren();
+  response.warnings.forEach((warning) => {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = warning;
+    aiOrganization.append(paragraph);
+  });
+  response.suggestions.forEach((suggestion) => {
+    const row = document.createElement("div");
+    row.className = "ai-suggestion";
+    const title = document.createElement("strong");
+    title.textContent = `${suggestion.kind} · ${suggestion.relativePath} · ${suggestion.status}`;
+    const summary = document.createElement("span");
+    summary.textContent = suggestion.summary;
+    const detail = document.createElement("small");
+    detail.textContent = `${suggestion.detail}${suggestion.safeAlternative ? ` ${suggestion.safeAlternative}` : ""}`;
+    row.append(title, summary, detail);
+    aiOrganization.append(row);
+  });
+  if (response.suggestions.length === 0) aiOrganization.append(contextEmpty("No scoped organization suggestions.") as unknown as Node);
+}
+
+function openAIReviewPanel(): void {
+  if (!selectedSummary) return;
+  togglePanel(aiPanel, true);
+  renderAITargetOptions();
+  aiInstruction?.focus();
+}
+
+function aiDraftInput(): {client: OpenObsidianAPI; target: string; instruction: string} | null {
+  const client = api;
+  if (!client) return null;
+  const details = aiDraftDetails();
+  if (!details) return null;
+  if (aiTargetHasUnsavedChanges(details.target)) {
+    setStatus("Save the current note before generating a local AI preview.");
+    return null;
+  }
+  return {client, ...details};
+}
+
+async function runAIDraftRequest(): Promise<void> {
+  const input = aiDraftInput();
+  if (!input) return;
+  setDisabled(applyAIButton, true);
+  setText(aiSummary, "Creating a local preview; no provider receives note content…");
+  try {
+    renderAIChangeSet(await input.client.draftAIChange({relativePath: input.target, instruction: input.instruction, scope: {paths: [input.target]}}));
+    setStatus("Local AI preview ready; select the hunks you approve before applying.");
+  } catch (error) {
+    setText(aiSummary, errorText(error, "Unable to create the local AI preview."));
+  }
+}
+
+function aiApplyInput(): {client: OpenObsidianAPI; changeSet: AIChangeSet; selections: Array<{fileId: string; hunkIds: string[]}>} | null {
+  const client = api;
+  if (!client) return null;
+  const changeSet = aiChangeSet;
+  if (!changeSet) return null;
+  const selections = aiApplySelections(changeSet);
+  if (!selections) return null;
+  return {client, changeSet, selections};
+}
+
+function finishAIApply(response: Awaited<ReturnType<OpenObsidianAPI["applyAIChange"]>>): void {
+  aiUndoId = response.undoId;
+  const current = response.files.find((file) => file.relativePath === selectedPath);
+  if (current) applyReadResponse(current);
+  aiChangeSet = null;
+  aiChanges?.replaceChildren(contextEmpty("AI preview applied; the recoverable undo action remains available.") as unknown as Node);
+  setText(aiSummary, `Applied ${response.files.length} approved file${response.files.length === 1 ? "" : "s"}; local recovery history retained the prior bytes.`);
+  setDisabled(undoAIButton, false);
+  setStatus("Approved AI changes applied with a revision check; use Undo last AI write if needed.");
+}
+
+async function applyAIDraftRequest(): Promise<void> {
+  const input = aiApplyInput();
+  if (!input) return;
+  setDisabled(applyAIButton, true);
+  try {
+    finishAIApply(await input.client.applyAIChange({changeSetId: input.changeSet.id, selections: input.selections}));
+  } catch (error) {
+    setDisabled(applyAIButton, false);
+    setStatus(errorText(error, "Unable to apply the AI preview; no unapproved changes were written."));
+  }
+}
+
+function finishAIUndo(response: Awaited<ReturnType<OpenObsidianAPI["undoAIChange"]>>): void {
+  const current = response.files.find((file) => file.relativePath === selectedPath);
+  if (current) applyReadResponse(current);
+  aiUndoId = null;
+  setDisabled(undoAIButton, true);
+  setStatus("Undid the approved AI write; both versions remain in recovery history.");
+}
+
+async function undoAIRequest(): Promise<void> {
+  const client = api;
+  if (!client || !aiUndoId) return;
+  try {
+    finishAIUndo(await client.undoAIChange({undoId: aiUndoId}));
+  } catch (error) {
+    setStatus(errorText(error, "Unable to undo the AI write; inspect recovery history."));
+  }
+}
+
+async function suggestOrganizationRequest(): Promise<void> {
+  if (!api) return;
+  setText(aiSummary, "Reviewing local structure; no provider receives note content…");
+  try {
+    renderAIOrganization(await api.organizationSuggestions({}));
+    setText(aiSummary, "Organization suggestions are preview-only and individually reviewable; formula/code execution remains denied.");
+  } catch (error) {
+    setText(aiSummary, errorText(error, "Unable to load organization suggestions."));
+  }
 }
 
 function changeKind(review: NonNullable<typeof changeReview>, path: string): string {
@@ -1780,6 +2031,8 @@ function resetEditor(): void {
   baseData = null;
   retrievalData = null;
   pendingCitation = null;
+  aiChangeSet = null;
+  aiUndoId = null;
   renderTabs();
   renderNoteContext({relativePath: "", headings: [], backlinks: []});
   updateEditorState();
@@ -1796,6 +2049,7 @@ function showNoVault(): void {
   setHidden(canvasPanel, true);
   setHidden(basePanel, true);
   setHidden(retrievalPanel, true);
+  setHidden(aiPanel, true);
   setHidden(conflictBox, true);
   selectedConflict = null;
   changeReview = null;
@@ -1805,6 +2059,8 @@ function showNoVault(): void {
   baseData = null;
   retrievalData = null;
   pendingCitation = null;
+  aiChangeSet = null;
+  aiUndoId = null;
   updateChronicleControls();
   setStatus(summaryMessage(selectedSummary));
 }
@@ -1854,6 +2110,15 @@ if (commandQuery) {
 }
 if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", () => openQuickSwitcher());
 if (openRetrievalButton) openRetrievalButton.addEventListener("click", openRetrievalPanel);
+if (openAIReviewButton) openAIReviewButton.addEventListener("click", openAIReviewPanel);
+if (closeAIPanelButton) closeAIPanelButton.addEventListener("click", () => setHidden(aiPanel, true));
+if (aiForm) aiForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void runAIDraftRequest();
+});
+if (applyAIButton) applyAIButton.addEventListener("click", () => void applyAIDraftRequest());
+if (undoAIButton) undoAIButton.addEventListener("click", () => void undoAIRequest());
+if (suggestAIButton) suggestAIButton.addEventListener("click", () => void suggestOrganizationRequest());
 if (closeRetrievalButton) closeRetrievalButton.addEventListener("click", () => setHidden(retrievalPanel, true));
 if (retrievalForm) retrievalForm.addEventListener("submit", (event) => {
   event.preventDefault();
