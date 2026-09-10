@@ -69,7 +69,7 @@
     {
       "id": "electron-bundled-runtime-notices",
       "status": "pending",
-      "reason": "Inspect the packaged Electron/Chromium/Node notices in each platform artifact before release."
+      "reason": "Run audit:packaged against the release-manifest-bearing unpacked artifact for each platform and retain the results before release."
     },
     {
       "id": "transitive-package-attribution",

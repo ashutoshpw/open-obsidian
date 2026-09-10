@@ -247,3 +247,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: committed `7056ec471cdd08dc54767f9f9eeec60335e1cf4f` with marker `[openobsidian P2.2/P5.2] Align shell and shared UI contract` and pushed `main`; local `HEAD` and `origin/main` match.
 - Validation: quality workflow `34493366846` passed on macOS, Windows and Ubuntu; desktop-build workflow `34493366856` passed packaging, release-manifest hashes and artifact uploads on all three runners.
 - Validation: the workflows retain unsigned-preview labeling and the existing Node.js 20 deprecation annotation; signing, staging, publication and updater installation remain external release gates.
+
+## 2026-09-10T15:45:42Z — packaged runtime notice audit added
+
+- Completed: added `scripts/audit-packaged-runtime.ts` and `bun run audit:packaged`; the desktop-build matrix now validates the release manifest, Electron license, Chromium/Node notice assets and non-empty `app.asar` after packaging on each runner.
+- Validation: the locally packaged macOS `out/` tree passed the new audit with six checks after `bun run release:gate -- --artifacts-dir out`; strict changed-file Fallow, Knip, typecheck and the focused distribution tests pass.
+- Evidence: ranged inspection of the macOS arm64, Windows x64 and Linux x64 preview artifacts from desktop-build run `34493649935` found the required runtime notice assets and parsed release manifests; details and hashes are in `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-packaged-runtime.json`.
+- Limitation: those artifacts predate this audit step, so the next post-change matrix run must execute the new gate; final transitive attribution, signing/notarization, publication and offline installation remain pending.

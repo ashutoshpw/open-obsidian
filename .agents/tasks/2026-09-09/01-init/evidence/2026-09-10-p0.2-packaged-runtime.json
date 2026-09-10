@@ -1,0 +1,54 @@
+{
+  "evidence_version": 1,
+  "captured_at": "2026-09-10",
+  "checkpoint": "P0.2",
+  "requirement_ids": ["D12", "RISK-009"],
+  "tested_source_tree": "2b85f4db19b3bee4afaf609174d7467795f4fd5d7f07ea827ea546b461cb7958",
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "workflow": {
+    "run_id": "34493649935",
+    "commit": "4d2fc5d35ff5d4f2134255c29a2edcfceb6b04f0",
+    "artifacts": [
+      {"platform": "macOS arm64", "name": "openobsidian-macOS-preview-4d2fc5d35ff5d4f2134255c29a2edcfceb6b04f0", "archive_bytes": 393947728, "central_directory_entries": 738},
+      {"platform": "Windows x64", "name": "openobsidian-Windows-preview-4d2fc5d35ff5d4f2134255c29a2edcfceb6b04f0", "archive_bytes": 161463460, "central_directory_entries": 74},
+      {"platform": "Linux x64", "name": "openobsidian-Linux-preview-4d2fc5d35ff5d4f2134255c29a2edcfceb6b04f0", "archive_bytes": 124510188, "central_directory_entries": 74}
+    ],
+    "method": "Read ZIP central directories and ranged file payloads without extracting or executing a user vault."
+  },
+  "runtime_notice_assets": [
+    {
+      "platform": "macOS arm64",
+      "electron_license": {"path": "mac-arm64/OpenObsidian.app/Contents/Resources/LICENSE.electron.txt", "bytes": 1096, "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d", "contains_electron": true},
+      "chromium_notice": {"path": "mac-arm64/OpenObsidian.app/Contents/Resources/LICENSES.chromium.html", "bytes": 20111209, "sha256": "a62dabd1c6ef1327365b2a3fdffb806222684a746dcb8f4afd1c1f690eba5535", "contains_chromium": true, "contains_node": true},
+      "app_asar": {"path": "mac-arm64/OpenObsidian.app/Contents/Resources/app.asar", "bytes": 405031, "sha256": "515bbfc7f61be3d9ed6ccdc32082d1e5aa01b16786ff337811c3c70ef198e49e", "file_count": 9, "contains_package_and_renderer": true},
+      "release_manifest": {"bytes": 65575, "sha256": "19f9072c45d156b3e1bb405a147aa06500f3429c21dec5bdc5fb35b6dbe80e31", "schema_version": 1, "files": 259}
+    },
+    {
+      "platform": "Windows x64",
+      "electron_license": {"path": "win-unpacked/LICENSE.electron.txt", "bytes": 1096, "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d", "contains_electron": true},
+      "chromium_notice": {"path": "win-unpacked/LICENSES.chromium.html", "bytes": 20472830, "sha256": "7b328b8c7463ac9bfc7dc648c751533517c8441a0b5b21047d6c0b2620e60d70", "contains_chromium": true, "contains_node": true},
+      "app_asar": {"path": "win-unpacked/resources/app.asar", "bytes": 405031, "sha256": "515bbfc7f61be3d9ed6ccdc32082d1e5aa01b16786ff337811c3c70ef198e49e", "file_count": 9, "contains_package_and_renderer": true},
+      "release_manifest": {"bytes": 12148, "sha256": "4f0310ab234b4d403f22bcf96e3a687e649a363ee39594b2895b6016ed56eb23", "schema_version": 1, "files": 73}
+    },
+    {
+      "platform": "Linux x64",
+      "electron_license": {"path": "linux-unpacked/LICENSE.electron.txt", "bytes": 1096, "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d", "contains_electron": true},
+      "chromium_notice": {"path": "linux-unpacked/LICENSES.chromium.html", "bytes": 20111209, "sha256": "a62dabd1c6ef1327365b2a3fdffb806222684a746dcb8f4afd1c1f690eba5535", "contains_chromium": true, "contains_node": true},
+      "app_asar": {"path": "linux-unpacked/resources/app.asar", "bytes": 405031, "sha256": "515bbfc7f61be3d9ed6ccdc32082d1e5aa01b16786ff337811c3c70ef198e49e", "file_count": 9, "contains_package_and_renderer": true},
+      "release_manifest": {"bytes": 12290, "sha256": "86ebfa70c64029977b25ec8dfea94312f8a4c04b9205340dbf07c0f031617981", "schema_version": 1, "files": 73}
+    }
+  ],
+  "checks": [
+    {"id": "electron-license-assets", "status": "passed", "detail": "All three platform artifacts contain LICENSE.electron.txt with Electron attribution."},
+    {"id": "chromium-node-license-assets", "status": "passed", "detail": "All three platform artifacts contain LICENSES.chromium.html with Chromium and Node.js attribution."},
+    {"id": "app-payload", "status": "passed", "detail": "All three platform artifacts contain a non-empty app.asar with package.json and the renderer entry."},
+    {"id": "release-manifests", "status": "passed", "detail": "All three artifact manifests parse as schema version 1 and enumerate the packaged files."},
+    {"id": "local-repeatable-audit", "status": "passed", "detail": "The new audit:packaged check passed against the locally packaged macOS out/ tree with six checks."}
+  ],
+  "limitations": [
+    "The recorded Actions artifacts were built before this audit command was added; the next matrix run must execute the new gate on each runner.",
+    "The final electron-builder transitive dependency graph and any runtime-provided notices beyond the shipped Electron assets still require release-owner reconciliation.",
+    "These are unsigned preview artifacts; signing, notarization, publication and offline install/rollback remain separate external gates."
+  ],
+  "result": "packaged runtime notice presence and content passed; transitive attribution remains pending"
+}

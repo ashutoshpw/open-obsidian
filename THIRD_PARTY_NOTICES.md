@@ -26,6 +26,9 @@ The direct package metadata and notice inventory is machine-checked with
 [`config/distribution-audit.json`](config/distribution-audit.json) by running
 `bun run verify:distribution`. The check confirms the package versions,
 declared licenses, local license files, HTTPS sources and notice entries. It
-does not close the release gates for Electron's bundled Chromium/Node notices
-or the final transitive dependency graph; those require inspection of each
-platform artifact after packaging.
+does not close the final transitive dependency attribution review. After
+packaging, run `bun run release:gate -- --artifacts-dir out` followed by
+`bun run audit:packaged -- --artifacts-dir out` for each platform artifact.
+That second check validates the release manifest and the Electron,
+Chromium/Node notice assets next to the shipped `app.asar`; the final
+transitive graph still requires release-owner reconciliation.

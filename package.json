@@ -27,6 +27,7 @@
     "verify:compatibility-pins": "bun scripts/verify-compatibility-pins.ts",
     "verify:primary-references": "bun scripts/verify-primary-references.ts",
     "verify:distribution": "bun scripts/verify-distribution.ts",
+    "audit:packaged": "bun scripts/audit-packaged-runtime.ts",
     "quality:program": "bun scripts/quality-program.ts",
     "release:gate": "bun scripts/release-gate.ts",
     "release:update-check": "bun scripts/update-rollback.ts",
