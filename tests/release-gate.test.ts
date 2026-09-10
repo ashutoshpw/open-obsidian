@@ -33,6 +33,9 @@ test("delivery workflow fixture and artifact hashes are explicit", () => {
   for (const workflow of [quality, desktop]) expect(workflow).toContain('tags: ["v*"]');
   for (const runner of fixture.runner_matrix) expect(desktop).toContain(runner);
   for (const contract of fixture.artifact_contract) expect(desktop).toContain(contract);
+  expect(desktop).toContain("Validate release gate before packaging");
+  expect(desktop).toContain("CSC_IDENTITY_AUTO_DISCOVERY");
+  expect(readFileSync(new URL("package.json", root), "utf8")).toContain("electron-builder --dir --publish never");
 
   const directory = mkdtempSync(join(tmpdir(), "openobsidian-release-test-"));
   try {

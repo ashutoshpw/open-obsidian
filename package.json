@@ -20,7 +20,7 @@
     "compile:preload": "bun build src/electron/preload.ts --target=node --outfile=dist/preload.js --external electron",
     "compile:renderer": "bun build src/renderer/renderer.ts --target=browser --outfile=dist/renderer.js",
     "start": "bun run compile && electron .",
-    "package:dir": "bun run compile && electron-builder --dir",
+    "package:dir": "bun run compile && electron-builder --dir --publish never",
     "validate:architecture": "bun scripts/validate-architecture.ts",
     "validate:contracts": "bun scripts/validate-contracts.ts",
     "verify:plugin-selection": "bun scripts/verify-plugin-selection.ts",
