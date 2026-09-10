@@ -1,4 +1,4 @@
-import {parseYamlMapping, type YamlValue} from "./yaml.js";
+import {parseYamlMapping, serializeYamlValue, yamlInlineCommentIndex, type YamlValue} from "./yaml.js";
 
 export type MarkdownLineEnding = "\r\n" | "\n" | "\r" | "mixed" | "none";
 
@@ -8,6 +8,7 @@ export type MarkdownProperty = {
   value: YamlValue | undefined;
   valueStart: number;
   valueEnd: number;
+  inlineComment?: string;
 };
 
 export type MarkdownDocument = {
@@ -58,9 +59,14 @@ function propertiesIn(text: string, bounds: FrontmatterBounds | null): {properti
     const line = match[0];
     const property = /^([A-Za-z0-9_-]+)([ \t]*):([ \t]*)([^\r\n]*)(?:\r\n|\n|\r|$)$/.exec(line);
     if (property) {
-      const prefix = `${property[1]}${property[2]}:${property[3]}`;
-      const valueStart = bounds.contentStart + offset + prefix.length;
-      properties.push({key: property[1], rawValue: property[4], value: parsed.value[property[1]], valueStart, valueEnd: valueStart + property[4].length});
+      const prefix = `${property[1]}${property[2]}:`;
+      const rawAfterColon = `${property[3]}${property[4]}`;
+      const commentIndex = yamlInlineCommentIndex(rawAfterColon);
+      const beforeComment = commentIndex < 0 ? rawAfterColon : rawAfterColon.slice(0, commentIndex);
+      const rawValue = beforeComment.trim();
+      const valueStart = bounds.contentStart + offset + prefix.length + (beforeComment.length - beforeComment.trimStart().length);
+      const inlineComment = commentIndex < 0 ? undefined : rawAfterColon.slice(commentIndex).trimEnd();
+      properties.push({key: property[1], rawValue, value: parsed.value[property[1]], valueStart, valueEnd: valueStart + rawValue.length, inlineComment});
     }
     offset += line.length;
     if (line.length === 0) break;
@@ -102,5 +108,19 @@ export function editMarkdownProperty(bytes: Uint8Array, key: string, rawValue: s
   const document = parseMarkdown(bytes);
   const property = document.properties.find((candidate) => candidate.key === key);
   if (!property) throw new Error(`Markdown property is not represented: ${key}`);
-  return replaceMarkdownSpan(bytes, property.valueStart, property.valueEnd, rawValue);
+  const separator = property.rawValue.length === 0 && property.inlineComment && rawValue.trim() && !/\s$/.test(rawValue) ? " " : "";
+  return replaceMarkdownSpan(bytes, property.valueStart, property.valueEnd, rawValue + separator);
+}
+
+/**
+ * Edit an existing single-line property with a typed value. Nested block
+ * properties are intentionally refused because replacing only their header
+ * would orphan child lines and risk source loss.
+ */
+export function editMarkdownPropertyValue(bytes: Uint8Array, key: string, value: YamlValue): Uint8Array {
+  const document = parseMarkdown(bytes);
+  const property = document.properties.find((candidate) => candidate.key === key);
+  if (!property) throw new Error(`Markdown property is not represented: ${key}`);
+  if (!property.rawValue.trim() || ["|", ">"].includes(property.rawValue.trim())) throw new Error(`Structured Markdown property edit requires an inline value: ${key}`);
+  return editMarkdownProperty(bytes, key, serializeYamlValue(value, {style: "flow"}));
 }

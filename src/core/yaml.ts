@@ -51,8 +51,12 @@ function isCommentStart(value: string, character: string, index: number): boolea
   return character === "#" && (index === 0 || /\s/.test(value[index - 1] ?? ""));
 }
 
+export function yamlInlineCommentIndex(value: string): number {
+  return scanTopLevel(value, (character, index) => isCommentStart(value, character, index));
+}
+
 function stripComment(value: string): string {
-  const comment = scanTopLevel(value, (character, index) => isCommentStart(value, character, index));
+  const comment = yamlInlineCommentIndex(value);
   return comment < 0 ? value.trimEnd() : value.slice(0, comment).trimEnd();
 }
 
@@ -169,6 +173,62 @@ function scalar(value: string, issues: string[], line: number): YamlValue {
     if (parsed !== undefined) return parsed;
   }
   return trimmed;
+}
+
+export type YamlSerializeStyle = "block" | "flow";
+export type YamlSerializeOptions = {indent?: number; style?: YamlSerializeStyle};
+
+function isYamlScalar(value: YamlValue): value is YamlScalar {
+  return value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+}
+
+function yamlKey(value: string): string {
+  return /^[A-Za-z0-9_.-]+$/.test(value) ? value : JSON.stringify(value);
+}
+
+function yamlScalar(value: YamlScalar): string {
+  if (value === null) return "null";
+  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (!Number.isFinite(value)) throw new TypeError("YAML numbers must be finite");
+  return Object.is(value, -0) ? "-0" : String(value);
+}
+
+function yamlFlow(value: YamlValue): string {
+  if (isYamlScalar(value)) return yamlScalar(value);
+  if (Array.isArray(value)) return `[${value.map(yamlFlow).join(", ")}]`;
+  return `{${Object.entries(value).map(([key, nested]) => `${yamlKey(key)}: ${yamlFlow(nested)}`).join(", ")}}`;
+}
+
+function yamlBlock(value: YamlValue, level: number, indent: number): string[] {
+  const prefix = " ".repeat(level * indent);
+  if (isYamlScalar(value)) return [prefix + yamlScalar(value)];
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [prefix + "[]"];
+    return value.flatMap((entry) => isYamlScalar(entry) ? [`${prefix}- ${yamlScalar(entry)}`] : [`${prefix}-`, ...yamlBlock(entry, level + 1, indent)]);
+  }
+  const entries = Object.entries(value);
+  if (entries.length === 0) return [prefix + "{}"];
+  return entries.flatMap(([key, nested]) => {
+    const label = `${prefix}${yamlKey(key)}:`;
+    return isYamlScalar(nested) ? [`${label} ${yamlScalar(nested)}`] : [label, ...yamlBlock(nested, level + 1, indent)];
+  });
+}
+
+function yamlIndent(options: YamlSerializeOptions): number {
+  const indent = options.indent ?? 2;
+  if (!Number.isInteger(indent) || indent < 1 || indent > 8) throw new RangeError("YAML indentation must be an integer from 1 to 8");
+  return indent;
+}
+
+/**
+ * Serialize only the same scalar, sequence and mapping values understood by
+ * the bounded reader. Callers editing Markdown must retain the original
+ * source spans and refuse unsupported YAML rather than round-tripping it.
+ */
+export function serializeYamlValue(value: YamlValue, options: YamlSerializeOptions = {}): string {
+  if (options.style === "flow") return yamlFlow(value);
+  return yamlBlock(value, 0, yamlIndent(options)).join("\n");
 }
 
 function isSequenceLine(line: YamlLine): boolean {
