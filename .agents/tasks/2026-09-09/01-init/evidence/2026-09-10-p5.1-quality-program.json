@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T12:45:00Z",
+  "checkpoint": "P5.1",
+  "requirements": ["D05", "GATE-005", "Q-001", "Q-004", "Q-009", "Q-012", "Q-013"],
+  "fixture_ids": ["fixture:quality-scorecard", "fixture:q-no-op", "fixture:q-reliability", "fixture:q-ai-grounding", "fixture:q-golden-corpus", "fixture:q-test-layers"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "1d8a2a7a87370c2b42ab8720508c504b5183ea11",
+    "tested_source_tree": "c24793ea4a1259d502c3bfb3f2683d0f4127c5ac575b029a880f12d077a0d575"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality:program", "exit_code": 0, "result": "The executable scorecard records byte-identical no-op open/index/close hashes, 25 warm-search runs at p95 0.027 ms and p99 0.094 ms against 150/300 ms budgets, one supported grounded claim, zero excluded-file disclosures, zero cross-vault disclosures and zero prompt-injection actions."},
+    {"command": "bun test", "exit_code": 0, "result": "82 tests pass with 468 expectations, including vault fault injection, recovery protection and retrieval exclusion/prompt-injection coverage."},
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution, typecheck, tests, scorecard harness, Electron compilation, Knip and report-only Fallow health pass; Fallow health is 88.1/A with only the pre-existing scripts/status.ts collectRow advisory."},
+    {"command": "bunx fallow audit --root . --base 625bb7c --format compact", "exit_code": 0, "result": "No issues in the executable quality-scorecard increment."}
+  ],
+  "implemented": [
+    "The quality scorecard freezes stock, plugin-equipped and OpenObsidian comparison profiles, find/synthesize/organize tasks, six corpus classes, privacy defaults and a disposition for every named automated or external test layer.",
+    "A Bun harness executes no-op fidelity, warm-search latency and grounded exclusion checks in a temporary synthetic vault and emits platform, metric, attempt and external-pending records.",
+    "Local fault-injection, retrieval grounding, corpus-manifest and test-layer evidence is connected to the scorecard without claiming human pilot, screen-reader, plugin-runtime, long-running resource or signed-artifact results."
+  ],
+  "limitations": [
+    "Startup, input-to-paint, watcher, resource and plugin-artifact certification still require pinned platform/reference/runtime runs.",
+    "The comparison scorecard is defined but the stock/plugin-equipped human pilot remains external-pending; no practical-advantage claim is made.",
+    "The local Electron runtime is unavailable for visible end-to-end and accessibility validation."
+  ]
+}

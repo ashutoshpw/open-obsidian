@@ -192,3 +192,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled implementation: committed as `71952ba366ebd4cf25791944384ab9752e5d118b` with marker `[openobsidian P4.3 work] Add provider contracts`, pushed `main`, and recorded tested source tree `ba27dca04792f677829c7f46aaf1aec6fefabf20dd63e00dbe547d5ac0f7e942` across 90 included paths.
 - Limitations: no live managed/BYOK/local provider or model runtime was contacted; provider retention, billing, hardware/performance and network behavior remain external-pending. The local Electron binary is unavailable, so visible UI/accessibility-tree, cross-platform and reference-Obsidian round-trip validation remain pending. MCP/CLI adapters and managed operations remain explicitly deferred.
 - Next operation: complete visible Electron/accessibility, cross-platform and reference-Obsidian checks; then continue P2.2/P2.3/P3.1 compatibility and P5 release suites.
+
+## 2026-09-10T12:45:00Z — P5.1 automated quality program reconciled
+
+- Completed: pushed source commit `1d8a2a7a87370c2b42ab8720508c504b5183ea11` with marker `[openobsidian P5.1] Add executable quality scorecard`.
+- Completed: added `fixtures/quality-scorecard.json`, `scripts/quality-program.ts`, `tests/quality-program.test.ts`, and `quality:program` in package scripts.
+- Validation: `bun run quality:program` passed no-op fidelity, 25 warm-search runs (p95 0.027 ms, p99 0.094 ms), grounded exclusion safety and local privacy defaults; `bun test` passes 82 tests with 468 expectations; Knip and changed-file Fallow are clean; report-only Fallow health 88.1/A with only the inherited status-validator advisory.
+- Reconciled: marked D05, GATE-005, Q-001, Q-004, Q-009, Q-012 and Q-013 implemented with local automated evidence; kept human pilot, screen-reader, plugin runtime, startup/input/watcher/resource and signing/update layers pending or external-pending.
+- Tested source tree: `c24793ea...` across 101 included paths.
+- Next operation: continue P5.2 privacy/accessibility hardening and P6 workflow gates while preserving reference/runtime and human handoffs.
