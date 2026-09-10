@@ -3,7 +3,10 @@ import { expect, test } from "bun:test";
 const root = new URL("..", import.meta.url).pathname;
 
 function runStatus(...args: string[]): { code: number; output: string } {
-  const result = Bun.spawnSync([process.execPath, "scripts/status.ts", ...args], {cwd: root});
+  const command = process.platform === "win32"
+    ? [process.env.ComSpec ?? "cmd.exe", "/d", "/s", "/c", `bun scripts/status.ts ${args.join(" ")}`]
+    : [process.execPath, "scripts/status.ts", ...args];
+  const result = Bun.spawnSync(command, {cwd: root});
   return {
     code: result.exitCode,
     output: `${result.stdout.toString()}${result.stderr.toString()}`,
