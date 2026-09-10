@@ -387,3 +387,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: quality run `34522702258` and desktop-build run `34522702294` passed on macOS, Ubuntu and Windows for `18d9f462cffd0455a9050975843c7a93e52dcbbc`.
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-outgoing-links.json` records source tree `9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9` across 146 included paths.
 - Limitation: visible accessibility-tree, IME/RTL, popout, cross-platform, reference Obsidian reopen and the remaining C10 workflow checks remain pending.
+
+## 2026-09-10T20:03:34Z — P7.1 expansion handoff pushed
+
+- Completed: committed and pushed `414ab5bbc2e95fd36bfecbb61027dad8b4431453` with marker `[openobsidian P7.1] Record expansion handoff`.
+- Completed: expanded the outside-v1 handoff into separate Mobile/future Expo, own encrypted sync, scoped autonomy, collaboration and publishing records.
+- Completed: each expansion now has a separate decision, prerequisites, security/release gates and verification procedure; the handoff explicitly authorizes no P7 implementation in the v1 desktop release.
+- Safety: the document preserves the current desktop-only scope, requires explicit authorization and threat modeling for every expansion, and keeps possible future shared-contract reuse informational rather than introducing mobile code.
+- Validation: `bun run quality`, `bun run audit:source-tree`, `bun run audit:fallow:strict` and `git diff --check` passed before the handoff commit; source tree is `9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9` across 146 included paths.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p7.1-expansion-handoff.json` records the handoff inspection, local gates and limitations.
+- Next: continue the active P6.2/P0.2/P1-P5 implementation and external-validation gates; do not implement P7 without a separate decision.

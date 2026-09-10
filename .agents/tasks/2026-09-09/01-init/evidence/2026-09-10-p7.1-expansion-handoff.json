@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T20:03:34Z",
+  "checkpoint": "P7.1",
+  "requirements": ["P7-001"],
+  "fixture_ids": ["fixture:p7-expansion-handoff"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "414ab5bbc2e95fd36bfecbb61027dad8b4431453",
+    "tested_source_tree": "9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "procedure": "Inspect release-handoff.md P7 expansion handoff",
+      "result": "Five separately headed expansion records are present for Mobile/future Expo client, Own encrypted sync service, Scoped autonomy, Collaboration and Publishing. Each record contains a separate decision, prerequisites, security/release gates and verification procedure, and the section explicitly keeps all expansions outside v1.",
+      "status": "passed"
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "The implementation source tree digest is 9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9 across 146 included paths."
+    },
+    {
+      "command": "bun run quality",
+      "exit_code": 0,
+      "result": "The repository quality gate passed before the handoff metadata reconciliation, including state/contract/architecture/distribution checks, 112 tests with 631 expectations, Electron compilation, Knip and report-only Fallow health at 88.9/A with only the inherited scripts/status.ts collectRow advisory."
+    },
+    {
+      "command": "bun run audit:fallow:strict",
+      "exit_code": 0,
+      "result": "No issues were reported in the one changed handoff file."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "No whitespace errors."
+    }
+  ],
+  "implemented": [
+    "Documented a separate future-Expo/mobile decision and explicitly limited v1 to the desktop runtime while preserving a possible future evaluation of platform-neutral shared contracts.",
+    "Documented independent own-sync, autonomy, collaboration and publishing decisions with prerequisites, security gates and verification procedures.",
+    "Kept the handoff operationally actionable without adding mobile, own-sync, autonomy, collaboration or publishing code to the v1 desktop scope."
+  ],
+  "limitations": [
+    "This handoff does not authorize or certify any P7 implementation, live service, device, security, store, hosting or publication work.",
+    "All P7 expansion decisions, implementations and release validations remain future work requiring separate authorization and evidence."
+  ]
+}
