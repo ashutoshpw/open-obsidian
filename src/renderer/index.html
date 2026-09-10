@@ -221,21 +221,156 @@
       #status { min-height: 54px; padding: 16px 28px; border-top: 1px solid #ffffff12; color: #9da3b5; font-size: 12px; overflow-wrap: anywhere; }
       @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; } }
       @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid #ffffff16; } .workspace { min-height: 58vh; } .workspace-header { align-items: flex-start; padding: 14px 18px; } .workspace-actions { justify-content: flex-start; } .note-tabs { padding-left: 18px; padding-right: 18px; } .tool-panel { padding: 16px 18px; } .editor-wrap { padding: 16px 18px 18px; } .editor-stage[data-split="true"] { grid-template-columns: 1fr; } .context-pane { max-height: 220px; } #status { padding: 12px 18px; } }
+
+      /* Obsidian-compatible shell baseline: compact chrome, ribbon, file pane, tab strip and split workspace. */
+      :root { --chrome: #202020; --chrome-raised: #262626; --panel: #1e1e1e; --panel-border: #ffffff12; --accent: #a78bfa; }
+      body { background: var(--panel); color: #d9d9d9; }
+      .app-shell { grid-template-columns: 44px 300px minmax(0, 1fr); height: 100vh; min-height: 0; background: var(--panel); }
+      .ribbon { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 0; padding: 8px 6px; border-right: 1px solid var(--panel-border); background: #1b1b1b; }
+      .ribbon-spacer { flex: 1 1 auto; }
+      .ribbon-button { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #9a9a9a; font-size: 0; }
+      .ribbon-button::before { content: attr(data-icon); font-size: 16px; line-height: 1; }
+      .ribbon-button:hover, .ribbon-button:focus-visible { border-color: #ffffff18; background: #ffffff0b; color: #e6e6e6; }
+      .sidebar { gap: 0; min-height: 0; padding: 0; border-right: 1px solid var(--panel-border); background: var(--chrome); backdrop-filter: none; }
+      .brand { flex: 0 0 42px; min-height: 42px; padding: 6px 8px; border-bottom: 1px solid var(--panel-border); }
+      .brand-heading { display: flex; align-items: center; min-width: 0; gap: 8px; }
+      .brand-symbol { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid #ffffff22; border-radius: 5px; color: #c6baff; font-size: 12px; font-weight: 800; }
+      .brand h1 { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+      .brand p { display: none; }
+      .primary-action { width: 28px; height: 28px; padding: 0; border: 1px solid #ffffff1c; border-radius: 5px; background: transparent; color: #bcbcbc; font-size: 0; }
+      .primary-action::before { content: "+"; font-size: 18px; font-weight: 400; line-height: 1; }
+      .primary-action:hover, .primary-action:focus-visible { border-color: #ffffff36; background: #ffffff0c; color: #f0f0f0; }
+      .search-wrap { flex: 0 0 auto; gap: 0; padding: 8px 10px 6px; }
+      .search-wrap label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      #vault-search { height: 30px; padding: 6px 9px; border-color: #ffffff16; border-radius: 5px; background: #1a1a1a; color: #d9d9d9; font-size: 12px; }
+      #vault-search::placeholder { color: #777; }
+      #vault-mode { margin: 2px 10px 6px; border: 0; border-radius: 3px; padding: 4px 5px; color: #858585; font-size: 10px; }
+      #vault-mode[data-state="dirty"] { color: #e7bb72; }
+      #file-list { flex: 1 1 auto; align-content: start; gap: 1px; padding: 0 5px 8px; }
+      .file-row { border-radius: 4px; padding: 6px 8px; color: #bdbdbd; }
+      .file-row:hover:not(:disabled) { background: #ffffff0b; }
+      .file-row[data-selected="true"] { background: #ffffff12; color: #f0f0f0; }
+      .file-name { font-size: 12px; }
+      .file-preview { display: none; }
+      .empty-list { margin: 8px 10px; color: #777; font-size: 11px; }
+      .sidebar-footer { display: grid; gap: 2px; flex: 0 0 42px; padding: 7px 10px; border-top: 1px solid var(--panel-border); background: #1b1b1b; }
+      .sidebar-footer strong { overflow: hidden; color: #bdbdbd; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+      .sidebar-footer span { overflow: hidden; color: #777; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+      .workspace { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); }
+      .workspace-header { flex: 0 0 40px; min-height: 40px; padding: 0 10px; border-bottom: 1px solid var(--panel-border); background: var(--chrome); }
+      .workspace-header > div:first-child { min-width: 0; }
+      .eyebrow { display: none; }
+      #editor-path { max-width: min(48vw, 520px); color: #c9c9c9; font-size: 12px; }
+      .workspace-actions { flex-wrap: nowrap; gap: 2px; min-width: 0; overflow: hidden; }
+      .tool-action, .save-action { flex: 0 0 30px; width: 30px; height: 28px; overflow: hidden; border: 1px solid transparent; border-radius: 5px; padding: 0; background: transparent; color: #9a9a9a; font-size: 0; }
+      .tool-action::before, .save-action::before { content: attr(data-icon); display: grid; place-items: center; height: 100%; font-size: 15px; line-height: 1; }
+      .tool-action:not(:disabled):hover, .tool-action:not(:disabled):focus-visible, .save-action:not(:disabled):hover, .save-action:not(:disabled):focus-visible { border-color: #ffffff18; background: #ffffff0b; color: #eeeeee; }
+      .note-tabs { flex: 0 0 34px; min-height: 34px; gap: 0; padding: 0 4px; border-bottom: 1px solid var(--panel-border); background: var(--chrome); }
+      .note-tab { height: 33px; max-width: 220px; border: 0; border-right: 1px solid var(--panel-border); border-radius: 0; padding: 0 12px; color: #858585; font-size: 12px; }
+      .note-tab:hover { background: #ffffff08; }
+      .note-tab[data-active="true"] { border-bottom: 2px solid var(--accent); background: var(--panel); color: #e2e2e2; }
+      .tool-panel { flex: 0 0 auto; max-height: 38vh; padding: 14px 20px; border-bottom: 1px solid var(--panel-border); border-radius: 0; background: #232323; }
+      .editor-wrap { flex: 1 1 auto; grid-template-rows: 34px minmax(0, 1fr); gap: 0; min-height: 0; padding: 0; }
+      .editor-toolbar { min-height: 34px; padding: 0 10px; border-bottom: 1px solid var(--panel-border); background: var(--chrome); }
+      .view-switch { gap: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+      .view-button { height: 30px; border-radius: 0; padding: 0 9px; color: #777; font-size: 11px; }
+      .view-button[data-active="true"] { border-bottom: 2px solid var(--accent); background: transparent; color: #d4d4d4; }
+      .context-toggle { width: 30px; height: 27px; overflow: hidden; border: 1px solid transparent; border-radius: 5px; padding: 0; background: transparent; color: #858585; font-size: 0; }
+      .context-toggle::before { content: "⋮"; font-size: 17px; }
+      .context-toggle:hover, .context-toggle:focus-visible { border-color: #ffffff18; background: #ffffff0b; color: #eee; }
+      .editor-stage { grid-template-columns: minmax(0, 1fr); gap: 0; background: var(--panel); }
+      .editor-stage[data-split="true"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .note-surface { padding: 22px 38px; background: var(--panel); }
+      #note-editor, #note-preview { border: 0; border-radius: 0; padding: 4px 0; background: transparent; color: #d8d8d8; font-size: 14px; line-height: 1.7; }
+      #note-editor:focus { border: 0; box-shadow: none; }
+      #empty-state { width: min(520px, 100%); padding: 28px; border: 1px solid #ffffff12; border-radius: 8px; background: #232323; }
+      #empty-state h2 { font-size: 18px; }
+      .context-pane { border: 0; border-left: 1px solid var(--panel-border); border-radius: 0; padding: 14px 16px; background: var(--chrome); }
+      .context-pane h2 { margin-bottom: 8px; color: #bdbdbd; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+      .context-group + .context-group { margin-top: 18px; }
+      .context-item { border-radius: 4px; padding: 5px 6px; color: #919191; }
+      .context-item:hover { background: #ffffff0b; color: #ddd; }
+      #status { flex: 0 0 28px; min-height: 28px; padding: 6px 10px; border-top: 1px solid var(--panel-border); background: var(--chrome); color: #777; font-size: 10px; }
+      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; } .ribbon { display: none; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid var(--panel-border); } .workspace { min-height: 58vh; } .workspace-header { align-items: center; padding: 0 8px; } .workspace-actions { justify-content: flex-start; } .note-tabs { padding-left: 0; padding-right: 0; } .tool-panel { padding: 14px 16px; } .note-surface { padding: 18px 20px; } .editor-stage[data-split="true"] { grid-template-columns: 1fr; } .context-pane { max-height: 220px; border-top: 1px solid var(--panel-border); border-left: 0; } #status { padding: 6px 8px; } }
+      /* Reference-first macOS titlebar: native traffic lights sit over this shared navigation band. */
+      .app-shell { grid-template-columns: var(--layout-ribbon-width, 44px) var(--layout-sidebar-width, 300px) minmax(0, 1fr); }
+      .app-shell { grid-template-rows: var(--layout-titlebar-height, 40px) minmax(0, 1fr); }
+      .titlebar-nav { display: flex; grid-column: 1 / -1; grid-row: 1; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; height: var(--layout-titlebar-height, 40px); padding: 0 8px 0 78px; border-bottom: 1px solid var(--panel-border); background: var(--chrome); color: #9a9a9a; -webkit-app-region: drag; }
+      .titlebar-leading, .titlebar-trailing { display: flex; align-items: center; gap: 2px; min-width: 0; }
+      .titlebar-leading { flex: 0 0 calc(var(--layout-ribbon-width, 44px) + var(--layout-sidebar-width, 300px) - 78px); }
+      .titlebar-trailing { flex: 0 0 auto; }
+      .titlebar-trailing { justify-content: flex-end; }
+      .titlebar-title { display: flex; flex: 0 1 auto; align-items: baseline; gap: 6px; min-width: 0; max-width: 36vw; overflow: hidden; color: #bdbdbd; font-size: 11px; font-weight: 600; text-align: center; text-overflow: ellipsis; white-space: nowrap; -webkit-app-region: drag; }
+      .titlebar-subtitle { overflow: hidden; color: #777; font-size: 10px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+      .titlebar-button { display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 5px; padding: 0; background: transparent; color: #929292; font-size: 0; -webkit-app-region: no-drag; }
+      .titlebar-button::before { content: attr(data-icon); font-size: 16px; line-height: 1; }
+      .titlebar-button:hover, .titlebar-button:focus-visible { border-color: #ffffff18; background: #ffffff0b; color: #eeeeee; }
+      .titlebar-button[aria-pressed="false"] { color: #666; }
+      .titlebar-divider { width: 1px; height: 18px; margin: 0 5px; background: var(--panel-border); }
+      .titlebar-leading .titlebar-divider { margin-left: auto; }
+      .ribbon { grid-column: 1; grid-row: 2; }
+      .sidebar { grid-column: 2; grid-row: 2; min-width: 0; }
+      .workspace { grid-column: 3; grid-row: 2; }
+      .app-shell[data-left-sidebar="false"] { grid-template-columns: var(--layout-ribbon-width, 44px) 0 minmax(0, 1fr); }
+      .app-shell[data-left-sidebar="false"] .sidebar { visibility: hidden; overflow: hidden; border-right: 0; pointer-events: none; }
+      .note-tabs { order: 1; }
+      .workspace-header { order: 2; }
+      .tool-panel { order: 3; }
+      .editor-wrap { order: 4; }
+      #status { order: 5; }
+      .workspace-header { flex-basis: var(--layout-workspace-header-height, 40px); min-height: var(--layout-workspace-header-height, 40px); }
+      .note-tabs { flex-basis: var(--layout-tab-strip-height, 34px); min-height: var(--layout-tab-strip-height, 34px); }
+      .editor-wrap { grid-template-rows: var(--layout-editor-toolbar-height, 34px) minmax(0, 1fr); }
+      #status { flex-basis: var(--layout-status-footer-height, 28px); min-height: var(--layout-status-footer-height, 28px); }
+      @media (max-width: 760px) {
+        .app-shell { grid-template-columns: 1fr; grid-template-rows: var(--layout-titlebar-height, 40px) auto minmax(0, 1fr); height: auto; min-height: 100vh; }
+        .titlebar-nav { grid-column: 1; grid-row: 1; padding-left: 78px; }
+        .titlebar-leading { flex: 1 1 0; }
+        .titlebar-title { max-width: 30vw; }
+        .ribbon { display: none; }
+        .sidebar { grid-column: 1; grid-row: 2; }
+        .workspace { grid-column: 1; grid-row: 3; min-height: 58vh; }
+        .app-shell[data-left-sidebar="false"] { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-shell" data-layout="obsidian-compatible">
+      <header class="titlebar-nav" aria-label="Workspace navigation">
+        <div class="titlebar-leading">
+          <button class="titlebar-button" data-ui-action="open-vault" data-action-target="select-vault" data-icon="▣" aria-label="Open vault" title="Open vault" type="button">Open vault</button>
+          <button class="titlebar-button" data-ui-action="quick-switcher" data-action-target="open-quick-switcher" data-icon="⌕" aria-label="Quick switcher" title="Quick switcher" type="button">Quick switcher</button>
+          <button class="titlebar-button" data-ui-action="command-palette" data-action-target="open-command-palette" data-icon="⌘" aria-label="Command palette" title="Command palette" type="button">Command palette</button>
+          <span class="titlebar-divider" aria-hidden="true"></span>
+          <button class="titlebar-button" id="toggle-left-sidebar" data-ui-action="toggle-left-sidebar" data-icon="◧" aria-label="Hide left sidebar" aria-pressed="true" title="Hide left sidebar" type="button">Toggle left sidebar</button>
+        </div>
+        <div class="titlebar-title" id="window-title" aria-live="polite"><span>OpenObsidian</span><span class="titlebar-subtitle">Local knowledge workspace</span></div>
+        <div class="titlebar-trailing">
+          <button class="titlebar-button" data-ui-action="toggle-right-sidebar" data-action-target="toggle-context" data-icon="◨" aria-label="Hide right sidebar" aria-pressed="true" title="Hide right sidebar" type="button">Toggle right sidebar</button>
+          <button class="titlebar-button" data-ui-action="settings" data-action-target="toggle-settings" data-icon="⚙" aria-label="Settings" title="Settings" type="button">Settings</button>
+        </div>
+      </header>
+      <aside class="ribbon" aria-label="Workspace ribbon">
+        <button class="ribbon-button" data-action-target="select-vault" data-icon="+" aria-label="Open vault" title="Open vault" type="button">Open vault</button>
+        <button class="ribbon-button" data-action-target="open-command-palette" data-icon="⌘" aria-label="Command palette" title="Command palette" type="button">Command palette</button>
+        <button class="ribbon-button" data-action-target="open-quick-switcher" data-icon="⌕" aria-label="Quick switcher" title="Quick switcher" type="button">Quick switcher</button>
+        <button class="ribbon-button" data-action-target="open-graph" data-icon="◌" aria-label="Graph" title="Graph" type="button">Graph</button>
+        <button class="ribbon-button" data-action-target="toggle-settings" data-icon="⚙" aria-label="Settings" title="Settings" type="button">Settings</button>
+        <span class="ribbon-spacer"></span>
+        <button class="ribbon-button" data-action-target="show-history" data-icon="◷" aria-label="History" title="History" type="button">History</button>
+      </aside>
       <aside class="sidebar" aria-label="Vault navigation">
         <div class="brand">
-          <div><h1>OpenObsidian</h1><p>Local knowledge workspace</p></div>
-          <button class="primary-action" id="select-vault" data-message-key="openVault" type="button">Open vault</button>
+          <div class="brand-heading"><span class="brand-symbol" aria-hidden="true">O</span><div><h1>OpenObsidian</h1><p>Local knowledge workspace</p></div></div>
+          <button class="primary-action" id="select-vault" data-message-key="openVault" aria-label="Open vault" title="Open vault" type="button">Open vault</button>
         </div>
         <div class="search-wrap"><label for="vault-search">Find in vault</label><input id="vault-search" type="search" placeholder="Search notes…" autocomplete="off" /></div>
         <div id="vault-mode" aria-label="Vault mode">No vault</div>
         <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
+        <footer class="sidebar-footer" aria-label="Vault identity"><strong id="vault-name">No vault open</strong><span id="vault-branch">Local workspace</span></footer>
       </aside>
       <main class="workspace">
-        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-command-palette" type="button">Commands</button><button class="tool-action" id="open-quick-switcher" type="button">Quick switcher</button><button class="tool-action" id="open-retrieval" type="button" disabled>Grounded search</button><button class="tool-action" id="open-ai-review" type="button" disabled>AI review</button><button class="tool-action" id="open-graph" type="button" disabled>Graph</button><button class="tool-action" id="open-canvas" type="button" disabled>Canvas</button><button class="tool-action" id="open-base" type="button" disabled>Bases</button><button class="tool-action" id="toggle-settings" data-message-key="settings" type="button">Settings</button><button class="tool-action" id="review-changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" type="button" disabled>History</button><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
+        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-command-palette" data-icon="⌘" aria-label="Commands" title="Commands" type="button">Commands</button><button class="tool-action" id="open-quick-switcher" data-icon="⌕" aria-label="Quick switcher" title="Quick switcher" type="button">Quick switcher</button><button class="tool-action" id="open-retrieval" data-icon="⌗" aria-label="Grounded search" title="Grounded search" type="button" disabled>Grounded search</button><button class="tool-action" id="open-ai-review" data-icon="✦" aria-label="AI review" title="AI review" type="button" disabled>AI review</button><button class="tool-action" id="open-graph" data-icon="◌" aria-label="Graph" title="Graph" type="button" disabled>Graph</button><button class="tool-action" id="open-canvas" data-icon="▧" aria-label="Canvas" title="Canvas" type="button" disabled>Canvas</button><button class="tool-action" id="open-base" data-icon="▦" aria-label="Bases" title="Bases" type="button" disabled>Bases</button><button class="tool-action" id="toggle-settings" data-icon="⚙" data-message-key="settings" aria-label="Settings" title="Settings" type="button">Settings</button><button class="tool-action" id="review-changes" data-icon="✓" aria-label="Review changes" title="Review changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" data-icon="◷" aria-label="History" title="History" type="button" disabled>History</button><button class="save-action" id="save-note" data-icon="↓" aria-label="Save note" title="Save · ⌘/Ctrl S" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
         <nav class="note-tabs" id="note-tabs" aria-label="Open notes"></nav>
         <section class="tool-panel" id="settings-panel" aria-label="Workspace settings" hidden>
           <div class="panel-header"><h2>Workspace settings</h2><button class="panel-close" id="close-settings" type="button">Close</button></div>

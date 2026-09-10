@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T00:00:00+05:30",
+  "checkpoint": "P0.2",
+  "requirements": ["RESEARCH-005", "D14"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "reference_baseline": "Obsidian 1.13.7"
+  },
+  "observations": [
+    {
+      "command": "bun run verify:plugin-selection",
+      "exit_code": 1,
+      "result": "The live upstream selection data drifted from the frozen snapshot. The expected ranking/order was retained, but the stats and registry hashes and every cumulative download count changed. The frozen snapshot was not silently refreshed."
+    },
+    {
+      "command": "bun run verify:compatibility-pins",
+      "exit_code": 0,
+      "result": "27 artifacts and 83 release assets match their recorded SHA-256 hashes and byte counts."
+    }
+  ],
+  "frozen_snapshot": {
+    "stats_sha256": "99c0b10ab6b02d01a9ed7474585d599511638706f35eda00582ad1e3eb997c37",
+    "registry_sha256": "76fe1fa4957b03eac436123a27e4818e2efb3cd8259a3cb95b741991423766e7"
+  },
+  "live_snapshot": {
+    "stats_sha256": "9f397fd41c4ec66074c9d63732191dc34db1c28437c9bedfa76e5687c1754d97",
+    "registry_sha256": "84ab4eb520361199aa1a03cf94a4b6973999cf933541f31c6f1bc158d9b0d3be",
+    "download_count_changes": {
+      "obsidian-excalidraw-plugin": [7837439, 7866786],
+      "templater-obsidian": [5545597, 5556352],
+      "dataview": [4931109, 4937623],
+      "obsidian-tasks-plugin": [4203635, 4211231],
+      "table-editor-obsidian": [3180678, 3183037],
+      "obsidian-git": [3119400, 3124084],
+      "calendar": [3085881, 3089416],
+      "obsidian-style-settings": [2665411, 2668579],
+      "obsidian-kanban": [2644322, 2649644],
+      "remotely-save": [2216022, 2218858],
+      "obsidian-icon-folder": [2213970, 2215673],
+      "quickadd": [2089718, 2093225],
+      "realclaudian": [2053650, 2065127],
+      "editing-toolbar": [1860031, 1866066],
+      "omnisearch": [1850420, 1856416],
+      "copilot": [1845334, 1852766],
+      "obsidian-minimal-settings": [1792641, 1794469],
+      "obsidian-importer": [1647030, 1651547],
+      "tasknotes": [1422632, 1441943],
+      "obsidian-outliner": [1395484, 1397623],
+      "homepage": [1319450, 1322113],
+      "smart-connections": [1192397, 1193904],
+      "recent-files-obsidian": [1183033, 1184051],
+      "tag-wrangler": [1083951, 1085547],
+      "obsidian-linter": [1046498, 1047572]
+    }
+  },
+  "disposition": "Keep the frozen P0.2 selection until a deliberate, reviewed snapshot update records the upstream retrieval time and its consequences. Compatibility artifact pins remain independently verified."
+}

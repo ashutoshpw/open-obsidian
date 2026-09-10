@@ -1,6 +1,7 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {parseMarkdownPreview, type MarkdownPreviewBlock} from "../core/markdown-preview.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
+import {OPEN_OBSIDIAN_THEME, workspaceAction, type WorkspaceActionId} from "../shared/ui/index.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -11,6 +12,11 @@ const selectButton = document.querySelector<HTMLButtonElement>("#select-vault");
 const searchInput = document.querySelector<HTMLInputElement>("#vault-search");
 const fileList = document.querySelector<HTMLElement>("#file-list");
 const vaultMode = document.querySelector<HTMLElement>("#vault-mode");
+const vaultName = document.querySelector<HTMLElement>("#vault-name");
+const vaultBranch = document.querySelector<HTMLElement>("#vault-branch");
+const appShell = document.querySelector<HTMLElement>(".app-shell");
+const toggleLeftSidebarButton = document.querySelector<HTMLButtonElement>("#toggle-left-sidebar");
+const toggleRightSidebarButton = document.querySelector<HTMLButtonElement>("[data-ui-action=\"toggle-right-sidebar\"]");
 const editorPath = document.querySelector<HTMLElement>("#editor-path");
 const editor = document.querySelector<HTMLTextAreaElement>("#note-editor");
 const emptyState = document.querySelector<HTMLElement>("#empty-state");
@@ -144,6 +150,7 @@ let contextRequestId = 0;
 let paletteRequestId = 0;
 let selectedConflict: VaultHistoryRecord | null = null;
 let workspaceStateReady: Promise<void> = Promise.resolve();
+let leftSidebarVisible = true;
 let vaultFiles: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>> = [];
 let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
@@ -210,6 +217,45 @@ function setDisabled(element: HTMLButtonElement | HTMLTextAreaElement | null, va
 
 function setHidden(element: HTMLElement | null, value: boolean): void {
   if (element) element.hidden = value;
+}
+
+function applySharedDesignTokens(): void {
+  const {colors, metrics, radii, spacing} = OPEN_OBSIDIAN_THEME;
+  const tokens: Record<string, string> = {
+    "--chrome": colors.chrome,
+    "--chrome-raised": colors.chromeRaised,
+    "--panel": colors.panel,
+    "--rail": colors.rail,
+    "--panel-border": colors.border,
+    "--text": colors.text,
+    "--text-muted": colors.textMuted,
+    "--accent": colors.accent,
+    "--layout-titlebar-height": `${metrics.titlebarHeight}px`,
+    "--layout-ribbon-width": `${metrics.ribbonWidth}px`,
+    "--layout-sidebar-width": `${metrics.sidebarWidth}px`,
+    "--layout-workspace-header-height": `${metrics.workspaceHeaderHeight}px`,
+    "--layout-tab-strip-height": `${metrics.tabStripHeight}px`,
+    "--layout-editor-toolbar-height": `${metrics.editorToolbarHeight}px`,
+    "--layout-status-footer-height": `${metrics.statusFooterHeight}px`,
+    "--space-xs": `${spacing.xs}px`,
+    "--space-sm": `${spacing.sm}px`,
+    "--space-md": `${spacing.md}px`,
+    "--space-lg": `${spacing.lg}px`,
+    "--radius-control": `${radii.control}px`,
+    "--radius-panel": `${radii.panel}px`,
+  };
+  Object.entries(tokens).forEach(([name, value]) => document.documentElement.style.setProperty(name, value));
+}
+
+function applySharedActionMetadata(): void {
+  document.querySelectorAll<HTMLElement>("[data-ui-action]").forEach((element) => {
+    const id = element.dataset.uiAction as WorkspaceActionId | undefined;
+    if (!id) return;
+    const action = workspaceAction(id);
+    element.dataset.icon = action.icon;
+    element.title = action.label;
+    element.setAttribute("aria-label", action.label);
+  });
 }
 
 function appendPreviewInline(element: HTMLElement, value: string): void {
@@ -336,8 +382,14 @@ function renderEditorMode(): void {
 
 function renderContextSplit(): void {
   editorStage?.setAttribute("data-split", String(workspaceSettings.splitView));
-  setHidden(contextPane, !workspaceSettings.splitView || !selectedPath);
+  // Keep the right workspace pane present in the empty state so the initial
+  // shell matches the reference app's split layout before a note is opened.
+  setHidden(contextPane, !workspaceSettings.splitView);
   toggleContextButton?.replaceChildren(document.createTextNode(contextButtonLabel()));
+  const rightSidebarLabel = workspaceSettings.splitView ? "Hide right sidebar" : "Show right sidebar";
+  toggleRightSidebarButton?.setAttribute("aria-label", rightSidebarLabel);
+  toggleRightSidebarButton?.setAttribute("title", rightSidebarLabel);
+  toggleRightSidebarButton?.setAttribute("aria-pressed", String(workspaceSettings.splitView));
 }
 
 function contextButtonLabel(): string {
@@ -561,6 +613,19 @@ function setSplitView(enabled: boolean): void {
   void persistWorkspaceSettings();
 }
 
+function renderLeftSidebar(): void {
+  appShell?.setAttribute("data-left-sidebar", String(leftSidebarVisible));
+  const label = leftSidebarVisible ? "Hide left sidebar" : "Show left sidebar";
+  toggleLeftSidebarButton?.setAttribute("aria-label", label);
+  toggleLeftSidebarButton?.setAttribute("title", label);
+  toggleLeftSidebarButton?.setAttribute("aria-pressed", String(leftSidebarVisible));
+}
+
+function setLeftSidebarVisible(visible: boolean): void {
+  leftSidebarVisible = visible;
+  renderLeftSidebar();
+}
+
 function setHistoryPolicy(policy: HistoryPolicy): void {
   workspaceSettings = {...workspaceSettings, historyPolicy: policy};
   applyWorkspaceSettings(workspaceSettings);
@@ -640,10 +705,25 @@ function modeDetail(git: VaultSummary["git"]): string {
   return git.branch ? ` · ${git.branch}` : "";
 }
 
+function vaultDisplayName(root: string): string {
+  return root.split(/[\\/]/).filter(Boolean).at(-1) ?? "Vault";
+}
+
+function vaultBranchLabel(git: VaultSummary["git"]): string {
+  if (git.vaultType !== "chronicle") return "Standard vault";
+  return `${git.branch ?? "unborn"}${git.dirty ? " · dirty" : " · clean"}`;
+}
+
+function renderVaultIdentity(summary: VaultSummary): void {
+  setText(vaultName, vaultDisplayName(summary.root));
+  setText(vaultBranch, vaultBranchLabel(summary.git));
+}
+
 function renderMode(summary: VaultSummary): void {
   if (!vaultMode) return;
   vaultMode.textContent = `${gitSummaryMessage(summary.git)}${modeDetail(summary.git)}`;
   vaultMode.dataset.state = summary.git.dirty ? "dirty" : "clean";
+  renderVaultIdentity(summary);
   updateChronicleControls();
 }
 
@@ -659,6 +739,7 @@ function fileButton(path: string, kind: "file" | "symlink", preview?: string, op
   button.type = "button";
   button.className = "file-row";
   button.dataset.path = path;
+  button.dataset.selected = String(path === selectedPath);
   const name = document.createElement("span");
   name.className = "file-name";
   name.textContent = path;
@@ -671,6 +752,12 @@ function fileButton(path: string, kind: "file" | "symlink", preview?: string, op
   }
   configureFileButton(button, path, kind, openable);
   return button;
+}
+
+function markSelectedFile(): void {
+  fileList?.querySelectorAll<HTMLButtonElement>(".file-row").forEach((button) => {
+    button.dataset.selected = String(button.dataset.path === selectedPath);
+  });
 }
 
 function supportedWorkspaceFile(path: string): boolean {
@@ -809,6 +896,7 @@ function restoreTab(tab: NoteTab): void {
   if (editor) editor.value = tab.content;
   renderNotePreview(tab.content);
   updateEditorState();
+  markSelectedFile();
   renderTabs();
   void loadNoteContext(tab.path);
   void persistWorkspaceState();
@@ -2126,6 +2214,7 @@ function applyReadResponse(response: Awaited<ReturnType<OpenObsidianAPI["readFil
   if (editor) editor.value = tab.content;
   renderNotePreview(tab.content);
   updateEditorState();
+  markSelectedFile();
   renderTabs();
   void loadNoteContext(response.relativePath);
   if (pendingCitation?.relativePath === response.relativePath) {
@@ -2275,6 +2364,8 @@ function resetEditor(): void {
 
 function showNoVault(): void {
   setText(vaultMode, "No vault");
+  setText(vaultName, "No vault open");
+  setText(vaultBranch, "Local workspace");
   if (fileList) fileList.replaceChildren();
   setHidden(changePanel, true);
   setHidden(historyPanel, true);
@@ -2336,6 +2427,12 @@ function searchVault(query: string): void {
 }
 
 if (api && selectButton) selectButton.addEventListener("click", () => void openSelectedVault(api, selectButton));
+document.querySelectorAll<HTMLButtonElement>("[data-action-target]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const target = button.dataset.actionTarget ? document.getElementById(button.dataset.actionTarget) : null;
+    target?.click();
+  });
+});
 if (openCommandPaletteButton) openCommandPaletteButton.addEventListener("click", openCommandPalette);
 if (closeCommandPaletteButton) closeCommandPaletteButton.addEventListener("click", () => commandPalette?.close());
 if (commandQuery) {
@@ -2381,6 +2478,7 @@ editorModeButtons.forEach((button) => button.addEventListener("click", () => {
   if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);
 }));
 if (toggleContextButton) toggleContextButton.addEventListener("click", () => setSplitView(!workspaceSettings.splitView));
+if (toggleLeftSidebarButton) toggleLeftSidebarButton.addEventListener("click", () => setLeftSidebarVisible(!leftSidebarVisible));
 if (toggleSettingsButton) toggleSettingsButton.addEventListener("click", () => {
   if (!settingsPanel) return;
   const visible: boolean = settingsPanel.hidden === true;
@@ -2435,6 +2533,9 @@ function handleKeydown(event: KeyboardEvent): void {
 }
 
 document.addEventListener("keydown", handleKeydown);
+applySharedDesignTokens();
+applySharedActionMetadata();
+renderLeftSidebar();
 applyLocale();
 updateEditorState();
 workspaceStateReady = loadWorkspaceSettings().then(() => loadWorkspaceState()).then(() => loadProviderConfiguration());

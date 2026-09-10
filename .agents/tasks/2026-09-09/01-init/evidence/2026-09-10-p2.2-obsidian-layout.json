@@ -1,0 +1,59 @@
+{
+  "evidence_version": 1,
+  "captured_at": "2026-09-10",
+  "checkpoint": "P2.2",
+  "requirement_ids": ["C10", "UX-003", "C12"],
+  "tested_source_tree": "8717c5711ce8c0fbfe217d932f6b72cf70b1ccf40e738714fa1ee49777d94561",
+  "reference_application": {
+    "name": "Obsidian",
+    "version": "1.13.7",
+    "inspection": "Read-only macOS accessibility and screenshot inspection of the user-opened reference window."
+  },
+  "reference_layout": {
+    "ribbon_width_px_approx": 44,
+    "file_pane_width_px_approx": 300,
+    "top_chrome_height_px_approx": 39,
+    "tab_strip_height_px_approx": 34,
+    "editor_and_right_pane": "roughly equal split",
+    "titlebar": "native traffic lights with compact navigation controls and sidebar toggle affordances"
+  },
+  "openobsidian_runtime": {
+    "electron": "44.3.0",
+    "architecture": "macOS arm64",
+    "fixture_vault": "/private/tmp/openobsidian-visible-IEzeLb",
+    "workflow": [
+      "Opened the fixture through the native open-directory picker.",
+      "Opened Welcome.md from the vault file pane.",
+      "Verified the note tab, source editor, outline and backlinks panes in the visible window.",
+      "Verified the integrated titlebar navigation accessibility tree, hid and restored the left sidebar, and hid and restored the right context sidebar."
+    ],
+    "result": "passed"
+  },
+  "openobsidian_layout": {
+    "titlebar_height_px_approx": 40,
+    "native_traffic_lights": "visible through Electron hiddenInset titlebar styling",
+    "titlebar_actions": ["Open vault", "Quick switcher", "Command palette", "Toggle left sidebar", "Toggle right sidebar", "Settings"],
+    "ribbon_width_px_approx": 44,
+    "file_pane_width_px_approx": 300,
+    "top_chrome_height_px_approx": 40,
+    "tab_strip_height_px_approx": 34,
+    "editor_and_context_pane": "equal split",
+    "status_footer_height_px_approx": 28,
+    "layout_sequence": ["titlebar navigation", "note tabs", "current-note toolbar", "editor toolbar", "editor and context pane", "status footer"],
+    "sidebar_toggles": {"left": "passed and restored", "right": "passed and restored"}
+  },
+  "implementation": [
+    "Added a compact Obsidian-like three-column shell with vertical ribbon, file pane and split workspace.",
+    "Added compact chrome, tab strip, vault identity footer and accessible ribbon proxies for core commands.",
+    "Kept the right context pane visible in the initial empty state so the starting geometry matches the reference split layout.",
+    "Added a structural layout validator and included it in the quality gate.",
+    "Fixed the sandboxed Electron preload to ship as dist/preload.cjs so the visible Open vault flow reaches the main process.",
+    "Integrated the native macOS traffic lights with a compact titlebar navigation band and working left/right sidebar toggles.",
+    "Moved theme metrics, semantic workspace actions and workspace block descriptors into the platform-neutral src/shared/ui contract for future Expo reuse."
+  ],
+  "assessment": {
+    "initial_shell_similarity": "at_least_90_percent_structural_and_geometric_baseline",
+    "basis": "The major reference regions and rounded dimensions match in the visible macOS comparison; this is a first-pass shell assessment, not a pixel-diff claim.",
+    "remaining_scope": "Reference theme/snippet behavior, graph/canvas rendering, popouts, cross-platform checks, screen-reader traces and full workflow certification remain pending."
+  }
+}

@@ -23,6 +23,7 @@ import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
 let activeVault: VaultStore | null = null;
+let mainWindow: BrowserWindow | null = null;
 const aiChangeSets = new Map<string, AIChangeSet>();
 const aiAppliedChanges = new Map<string, AppliedAIChange>();
 
@@ -46,21 +47,24 @@ function decodeBase64(value: unknown): Uint8Array {
 }
 
 function createWindow(): void {
-  const window = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
     minWidth: 960,
     minHeight: 640,
+    backgroundColor: "#202020",
+    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
+    trafficLightPosition: process.platform === "darwin" ? {x: 12, y: 12} : undefined,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      preload: join(currentDirectory, "preload.js"),
+      preload: join(currentDirectory, "preload.cjs"),
     },
   });
   const projectRoot = resolve(currentDirectory, "..");
   const rendererPath = app.isPackaged ? join(app.getAppPath(), "src/renderer/index.html") : join(projectRoot, "src/renderer/index.html");
-  void window.loadFile(rendererPath);
+  void mainWindow.loadFile(rendererPath);
 }
 
 function selectedDirectory(filePaths: string[], canceled: boolean): string | null {
@@ -68,7 +72,8 @@ function selectedDirectory(filePaths: string[], canceled: boolean): string | nul
 }
 
 async function selectVault(): Promise<VaultSummary | null> {
-  const result = await dialog.showOpenDialog({properties: ["openDirectory", "createDirectory"]});
+  const options = {properties: ["openDirectory", "createDirectory"] as Array<"openDirectory" | "createDirectory">};
+  const result = mainWindow ? await dialog.showOpenDialog(mainWindow, options) : await dialog.showOpenDialog(options);
   const root = selectedDirectory(result.filePaths, result.canceled);
   if (!root) return null;
   if (!existsSync(root)) throw new Error("Selected vault directory is no longer available");

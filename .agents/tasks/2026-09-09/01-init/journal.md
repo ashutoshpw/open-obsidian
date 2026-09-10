@@ -229,3 +229,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: marked D18, D19, Q-014, Q-016, DEL-004 and RISK-010 implemented with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p6.2-final-audit.json`; tested source tree is `a43e4e964802c33a70be389bd9c1fa222ce3645a2a77f159a224541ae430ba06` across 119 included paths.
 - Current audit: 25 passing, 106 implemented, 59 pending, six external-pending, zero failing and 165 mandatory rows not release-passing; origin matches `https://github.com/ashutoshpw/open-obsidian.git`, verified final Actions runs are `34483202011` and `34483199617`, and no release tag was created.
 - Limitations: C14 reference-vault round trips, human validation, managed service, signed/notarized artifacts, staging/publication, plugin-runtime certification and updater installation/downgrade remain external-pending; production publication stays blocked.
+
+## 2026-09-10T00:00:00+05:30 — P2.2 initial Obsidian layout parity baseline
+
+- Completed: inspected the user-opened Obsidian 1.13.7 window read-only and aligned OpenObsidian's first-run shell to its major geometry: vertical ribbon, approximately 300px vault pane, compact top chrome and tabs, equal editor/context split, and status footer.
+- Completed: opened a disposable fixture vault through the visible native directory picker, opened `Welcome.md`, and verified the shell, tab, source editor, outline/backlinks context pane and status readback in the running Electron app.
+- Fixed: compiled the sandboxed preload as `dist/preload.cjs` and pointed the main process at it so the visible Open vault workflow reaches the native IPC boundary under the repository's ESM package configuration.
+- Added: `bun run validate:layout` checks the required structural regions, dimensions and ribbon action targets; evidence is recorded in `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-obsidian-layout.json`.
+- Added: an integrated titlebar navigation band with Open vault, quick switcher, command palette, settings, and working left/right sidebar toggles; the native macOS traffic lights now sit in the same compact chrome band as the reference window.
+- Added: the platform-neutral `src/shared/ui` contract for reusable theme tokens, workspace blocks, semantic actions and visibility state; future Expo code can map these contracts to native `View`, `Pressable` and `Text` components without importing Electron or DOM code.
+- Validation: the visible fixture smoke test confirmed both sidebar toggles hide and restore their panes, `bun run validate:layout` passes 22 structural checks, and mobile CSS keeps the titlebar controls fluid below 760px.
+- Validation: `bun run quality` passes 93 tests with 557 expectations; Knip is clean, strict changed-file Fallow reports no issues, and the tested source tree is `8717c571...` across 128 included paths.
+- Limitation: this is an initial structural/geometric 90-percent baseline, not a pixel-diff or full Obsidian compatibility certification; theme/snippet, plugin view, cross-platform, screen-reader, input and reference-vault round-trip checks remain pending.

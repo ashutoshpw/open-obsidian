@@ -1,5 +1,6 @@
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
+import {auditActionTargets, runHtmlAudit} from "./html-audit.js";
 
 export type AccessibilityAuditResult = {failures: string[]; checks: string[]};
 
@@ -96,12 +97,10 @@ export function auditRendererHtml(html = readFileSync(join(root, "src/renderer/i
   checks.push(...styleAudit.checks);
   failures.push(...auditDialogs(html, ids));
   checks.push("dialog-labels");
+  auditActionTargets(html, ids, checks, failures);
   return {failures, checks: [...new Set(checks)]};
 }
 
 if (import.meta.main) {
-  const result = auditRendererHtml();
-  result.failures.forEach((failure) => console.error(`ACCESSIBILITY ERROR: ${failure}`));
-  if (result.failures.length > 0) process.exit(1);
-  console.log(`ACCESSIBILITY CHECK: passed; ${result.checks.length} static checks`);
+  runHtmlAudit(auditRendererHtml, "ACCESSIBILITY");
 }
