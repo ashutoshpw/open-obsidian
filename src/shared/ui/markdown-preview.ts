@@ -15,6 +15,7 @@ export type MarkdownPreviewBlock =
   | {kind: "list"; ordered: boolean; items: string[]}
   | {kind: "quote"; text: string}
   | {kind: "code"; language: string; text: string}
+  | {kind: "base"; text: string}
   | {kind: "table"; headers: string[]; rows: string[][]}
   | {kind: "thematic-break"}
   | {kind: "unsupported"; syntax: "footnote" | "math" | "diagram" | "html"; text: string};
@@ -86,6 +87,7 @@ function codeParser(lines: string[], index: number): ParsedBlock | null {
     next += 1;
   }
   if (next < lines.length) next += 1;
+  if (fence.language.toLocaleLowerCase() === "base") return {block: {kind: "base", text: content.join("\n")}, next};
   const diagram = /^(?:mermaid|plantuml|dot|excalidraw|dataview|dataviewjs)$/i.test(fence.language);
   return diagram ? {block: {kind: "unsupported", syntax: "diagram", text: content.join("\n")}, next} : {block: {kind: "code", language: fence.language, text: content.join("\n")}, next};
 }

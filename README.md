@@ -26,7 +26,7 @@ The recurring audit commands are also available separately:
 - `bun run validate:state` keeps the implementation ledger honest and reports incomplete work instead of turning it into a release pass.
 - `bun run validate:surfaces` checks `fixtures/ux-surfaces.json` against the renderer and requires an owner/prerequisite handoff for every external-pending surface.
 
-For focused compatibility work, `bun run test:bases` runs the JSON and native YAML `.base` fixture tests without running the entire suite. The Bases reader accepts the bounded Obsidian-native YAML view shape, normalizes supported filters/order/grouping/limits into the platform-neutral evaluator, preserves the original YAML source for read-only round trips, and exposes unsupported expressions as compatibility issues.
+For focused compatibility work, `bun run test:bases` runs the JSON, native YAML `.base` and embedded Markdown `base` fixture tests without running the entire suite. The Bases reader accepts the bounded Obsidian-native YAML view shape, normalizes supported filters/order/grouping/limits into the platform-neutral evaluator, preserves the original YAML source for read-only round trips, and exposes unsupported expressions as compatibility issues. Embedded definitions retain their source spans and remain inert in Markdown preview until a host explicitly requests the safe structured projection.
 
 ## Reusable UI boundary
 

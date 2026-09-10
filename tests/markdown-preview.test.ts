@@ -22,6 +22,10 @@ test("Markdown dialect fixture renders supported blocks and labels unsafe or uns
     "```ts",
     "const value = 1;",
     "```",
+    "```base",
+    "views:",
+    "  - type: table",
+    "```",
     "```mermaid",
     "graph TD;",
     "```",
@@ -35,14 +39,15 @@ test("Markdown dialect fixture renders supported blocks and labels unsafe or uns
   expect(fixture.visible_unsupported_blocks).toEqual(["footnotes", "math", "diagrams", "raw-html"]);
   expect(Object.entries(fixture.invariants).filter(([key]) => key !== "code_and_diagram_execution").every(([, value]) => value)).toBe(true);
   expect(fixture.invariants.code_and_diagram_execution).toBe(false);
-  expect(blocks.map((block) => block.kind)).toEqual(["heading", "list", "list", "table", "quote", "code", "unsupported", "unsupported", "unsupported", "unsupported"]);
+  expect(blocks.map((block) => block.kind)).toEqual(["heading", "list", "list", "table", "quote", "code", "base", "unsupported", "unsupported", "unsupported", "unsupported"]);
   expect(blocks[0]).toMatchObject({kind: "heading", level: 1, text: "Title ==highlight=="});
   expect(blocks[1]).toMatchObject({kind: "list", ordered: false, items: ["one", "two"]});
   expect(blocks[2]).toMatchObject({kind: "list", ordered: true, items: ["first", "second"]});
   expect(blocks[3]).toMatchObject({kind: "table", headers: ["Name", "Status"], rows: [["Note", "open"]]});
   expect(blocks[4]).toMatchObject({kind: "quote", text: "NOTE: Read-only callout"});
   expect(blocks[5]).toMatchObject({kind: "code", language: "ts", text: "const value = 1;"});
-  expect(blocks.slice(6).map((block) => block.kind === "unsupported" ? block.syntax : "")).toEqual(["diagram", "footnote", "math", "html"]);
+  expect(blocks[6]).toMatchObject({kind: "base", text: "views:\n  - type: table"});
+  expect(blocks.slice(7).map((block) => block.kind === "unsupported" ? block.syntax : "")).toEqual(["diagram", "footnote", "math", "html"]);
   expect(source).toContain("<script>unsafe()</script>");
 });
 
@@ -63,6 +68,15 @@ test("Markdown preview groups richer blocks without rewriting their source text"
     {kind: "quote", text: "first line\n\nsecond line"},
     {kind: "thematic-break"},
     {kind: "code", language: "ts", text: "const value = 1;"},
+  ]);
+});
+
+test("Markdown preview keeps embedded Base definitions as inert source blocks", () => {
+  const blocks = parseMarkdownPreview("Before\n\n~~~base\nviews:\n  - type: list\n~~~\n\nAfter");
+  expect(blocks).toEqual([
+    {kind: "paragraph", text: "Before"},
+    {kind: "base", text: "views:\n  - type: list"},
+    {kind: "paragraph", text: "After"},
   ]);
 });
 

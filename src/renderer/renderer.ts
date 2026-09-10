@@ -387,6 +387,16 @@ function previewCode(block: Extract<MarkdownPreviewBlock, {kind: "code"}>): HTML
   return pre;
 }
 
+function previewBase(block: Extract<MarkdownPreviewBlock, {kind: "base"}>): HTMLElement {
+  const pre = document.createElement("pre");
+  pre.className = "markdown-base";
+  const code = document.createElement("code");
+  code.dataset.language = "base · read-only";
+  code.textContent = block.text;
+  pre.append(code);
+  return pre;
+}
+
 function previewTableCell(value: string, header: boolean): HTMLElement {
   const cell = document.createElement(header ? "th" : "td");
   appendPreviewInline(cell, value);
@@ -429,6 +439,7 @@ const previewBuilders: {[K in MarkdownPreviewBlock["kind"]]: (block: Extract<Mar
   list: previewList,
   quote: previewQuote,
   code: previewCode,
+  base: previewBase,
   table: previewTable,
   "thematic-break": previewThematicBreak,
   unsupported: previewUnsupported,

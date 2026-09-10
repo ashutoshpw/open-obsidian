@@ -1,5 +1,6 @@
 import {expect, test} from "bun:test";
 import {encodeBase, evaluateBase, parseBase} from "../src/core/bases.js";
+import {parseEmbeddedBases} from "../src/core/embedded-base.js";
 
 const fixture = await Bun.file(new URL("../fixtures/derived-surfaces.json", import.meta.url)).json() as {schema_version: number; bases: {view_types: string[]; preserve: string[]}; invariants: Record<string, boolean>};
 const nativeFixture = await Bun.file(new URL("../fixtures/bases-native.yaml", import.meta.url)).text();
@@ -68,4 +69,23 @@ test("unsupported native Bases expressions remain visible and are not partially 
 
   expect(result.rows).toHaveLength(1);
   expect(result.issues).toEqual([{kind: "invalid-filter", message: 'Native Bases filter is outside the supported comparison subset: file.hasTag("open")'}]);
+});
+
+test("embedded Base definitions retain spans, source and compatibility issues", () => {
+  const source = "# Notes\n\n```base\nviews:\n  - type: list\n    name: Notes\n```\n\n~~~base\nfilters: file.hasTag(\"open\")\nviews:\n  - type: table\n~~~\n";
+  const definitions = parseEmbeddedBases(source);
+
+  expect(definitions).toHaveLength(2);
+  expect(definitions[0]?.document?.views[0]?.name).toBe("Notes");
+  expect(definitions[0]?.issues).toEqual([]);
+  expect(definitions[0] ? source.slice(definitions[0].start, definitions[0].end) : "").toBe("views:\n  - type: list\n    name: Notes\n");
+  expect(definitions[1]?.document?.views[0]?.type).toBe("table");
+  expect(definitions[1]?.issues).toEqual([{kind: "invalid-filter", message: 'Native Bases filter is outside the supported comparison subset: file.hasTag("open")'}]);
+});
+
+test("unclosed embedded Base definitions are visible without evaluation", () => {
+  const [definition] = parseEmbeddedBases("~~~base\nviews:\n  - type: list\n");
+
+  expect(definition?.document).toBeUndefined();
+  expect(definition?.issues).toEqual([{kind: "invalid-source", message: "Embedded base fence is not closed"}]);
 });
