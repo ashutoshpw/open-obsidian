@@ -70,3 +70,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: the focused Windows-sensitive status tests pass locally; typecheck, Knip and strict Fallow also pass. The preceding multi-OS run passed Ubuntu/macOS quality, all desktop builds, and failed only the Windows status harness before this fix.
 - Completed: committed the fix as `e9b47ce4f8d0ba51fa54d5f94c9eb4e94ce97748` with marker `[openobsidian P0.2] Fix Windows Bun test spawning`, pushed `main`, and reconciled durable state to that head.
 - Next operation: verify the new multi-OS quality run; if green, retain the original failed run as historical evidence of the portability fix.
+
+## 2026-09-10T07:42:53Z — Windows CLI launch fix reconciled and pushed
+
+- Completed: updated the status CLI tests to use `cmd.exe` resolution on Windows and direct Bun execution on POSIX; local status tests, typecheck, Knip and strict Fallow pass.
+- Completed: committed the fix as `934161c6be2f7f9068ecfa0d582f14817ca2f606` with marker `[openobsidian P0.2] Resolve Windows CLI test launch`, pushed `main`, and reconciled durable state to that head.
+- Next operation: verify the latest quality and desktop-build runs; this is the final expected Windows portability adjustment for the current gate.
