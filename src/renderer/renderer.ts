@@ -1,7 +1,7 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
-import {OPEN_OBSIDIAN_THEME, vaultPane, workspaceAction, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
+import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, uninstallCleanupOption, vaultPane, workspaceAction, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -103,6 +103,8 @@ const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-se
 const settingsSearch = document.querySelector<HTMLInputElement>("#settings-search");
 const settingsSearchStatus = document.querySelector<HTMLElement>("#settings-search-status");
 const settingsSections = [...document.querySelectorAll<HTMLElement>("[data-settings-section]")];
+const uninstallCleanupChoices = [...document.querySelectorAll<HTMLInputElement>("[data-uninstall-choice]")];
+const uninstallCleanupSummary = document.querySelector<HTMLElement>("#uninstall-cleanup-summary");
 const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-editor-mode");
 const splitView = document.querySelector<HTMLInputElement>("#split-view");
 const historyAgeDays = document.querySelector<HTMLInputElement>("#history-age-days");
@@ -264,6 +266,34 @@ function settingsSearchMessage(query: string, visible: number): string {
 function renderSettingsSearch(): void {
   const query = settingsQueryValue();
   setText(settingsSearchStatus, settingsSearchMessage(query, visibleSettingsSectionCount(query)));
+}
+
+function selectedUninstallCleanupLabels(): string[] {
+  return uninstallCleanupChoices.flatMap((choice) => {
+    const id = choice.dataset.uninstallChoice as UninstallCleanupOptionId | undefined;
+    return choice.checked && id ? [uninstallCleanupOption(id).label] : [];
+  });
+}
+
+function renderUninstallCleanupSummary(): void {
+  const labels = selectedUninstallCleanupLabels();
+  setText(uninstallCleanupSummary, labels.length ? `Selected local cleanup: ${labels.join(", ")}. The vault remains preserved.` : "No local cleanup selected; the vault remains preserved.");
+}
+
+function applyUninstallCleanupMetadata(): void {
+  const knownIds = new Set(UNINSTALL_CLEANUP_OPTIONS.map((option) => option.id));
+  uninstallCleanupChoices.forEach((choice) => {
+    const id = choice.dataset.uninstallChoice as UninstallCleanupOptionId | undefined;
+    if (!id || !knownIds.has(id)) {
+      choice.disabled = true;
+      return;
+    }
+    const option = uninstallCleanupOption(id);
+    choice.title = option.description;
+    choice.defaultChecked = option.defaultSelected;
+    choice.addEventListener("change", renderUninstallCleanupSummary);
+  });
+  renderUninstallCleanupSummary();
 }
 
 function openSettingsPanel(): void {
@@ -2762,6 +2792,7 @@ document.addEventListener("keydown", handleKeydown);
 applySharedDesignTokens();
 applySharedActionMetadata();
 applySharedVaultPaneMetadata();
+applyUninstallCleanupMetadata();
 setVaultPane(activeVaultPane);
 renderLeftSidebar();
 renderSettingsSearch();

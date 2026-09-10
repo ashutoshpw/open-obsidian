@@ -27,6 +27,7 @@ export function auditRendererLayout(html = readFileSync(join(root, "src/renderer
   requiredRegion(html, "split editor stage", /class=["'][^"']*\beditor-stage\b[^"']*["'][^>]*\bid=["']editor-stage["']/i, checks, failures);
   requiredRegion(html, "note context pane", /id=["']context-pane["'][^>]*aria-label=["']Note context["']/i, checks, failures);
   requiredRegion(html, "workspace status footer", /id=["']status["'][^>]*role=["']status["'][^>]*aria-live=["']polite["']/i, checks, failures);
+  requiredRegion(html, "explicit uninstall cleanup choices", /data-ui-surface=["']uninstall-cleanup["'][\s\S]*data-uninstall-choice=["']app-cache["'][\s\S]*data-uninstall-choice=["']credentials["'][\s\S]*data-uninstall-choice=["']recovery-history["']/i, checks, failures);
   requiredRegion(html, "three-column shell sizing", /grid-template-columns:\s*44px\s+300px\s+minmax\(0,\s*1fr\)/i, checks, failures);
   requiredRegion(html, "shared layout token bridge", /var\(--layout-ribbon-width,\s*44px\)[^;]*var\(--layout-sidebar-width,\s*300px\)/i, checks, failures);
   requiredRegion(html, "shared icon size token", /var\(--layout-icon-size,\s*18px\)/i, checks, failures);

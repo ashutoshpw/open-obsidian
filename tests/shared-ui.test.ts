@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readdirSync, readFileSync} from "node:fs";
-import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, resolveKeyboardCommand, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
+import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, UNINSTALL_CLEANUP_OPTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, resolveKeyboardCommand, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type UninstallCleanupOptionId, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, uninstallCleanupOption, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
 
 test("shared workspace UI contract exposes reusable blocks and semantic actions", () => {
   const firstBlock: WorkspaceBlock = WORKSPACE_BLOCKS[0]!;
@@ -42,4 +42,12 @@ test("shared keyboard contract resolves primary-modifier commands", () => {
   expect(resolveKeyboardCommand({key: "p", ctrlKey: true})).toBe("quick-switcher");
   expect(resolveKeyboardCommand({key: "s", ctrlKey: true})).toBe("save-note");
   expect(resolveKeyboardCommand({key: "k"})).toBeUndefined();
+});
+
+test("shared uninstall cleanup choices always preserve the vault", () => {
+  const ids: UninstallCleanupOptionId[] = ["app-cache", "credentials", "recovery-history"];
+  expect(UNINSTALL_CLEANUP_OPTIONS.map((option) => option.id)).toEqual(ids);
+  expect(UNINSTALL_CLEANUP_OPTIONS[0]?.vaultDisposition).toBe("preserve");
+  expect(UNINSTALL_CLEANUP_OPTIONS.every((option) => option.vaultDisposition === "preserve" && !option.defaultSelected)).toBe(true);
+  expect(uninstallCleanupOption("credentials")).toMatchObject({label: "Stored credentials", vaultDisposition: "preserve"});
 });

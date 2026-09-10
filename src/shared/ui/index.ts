@@ -3,3 +3,4 @@ export {OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, WORKSPACE_ACTIONS, workspaceActio
 export {KEYBOARD_SHORTCUTS, resolveKeyboardCommand, type KeyboardCommandId, type KeyboardInput, type KeyboardShortcut} from "./keyboard.js";
 export {parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "./markdown-preview.js";
 export {layoutGraph, type GraphLayoutOptions} from "./graph.js";
+export {UNINSTALL_CLEANUP_OPTIONS, uninstallCleanupOption, type UninstallCleanupOptionId} from "./uninstall.js";
