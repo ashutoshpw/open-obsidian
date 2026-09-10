@@ -124,3 +124,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Limitations: local Electron runtime is unavailable, so visible launch/accessibility automation remains pending; live preview, reading mode, tabs/splits, commands, settings, changes review, cross-platform UI and reference Obsidian reopen validation remain pending.
 - Reconciled: committed as `4aba0ade425e93158fbbe3ce79710895b28e85df` with marker `[openobsidian P2.2] Deliver workspace shell`, pushed `main`, and verified `origin/main` at the same SHA.
 - Next operation: inspect the new multi-OS quality/build runs, then continue P2.2 with live preview/reading mode, tabs/splits, command palette/quick switcher, outline/backlinks, settings persistence and changes review while keeping the remaining blockers explicit.
+
+## 2026-09-10T08:59:03Z — P2.3 recovery and Chronicle foundation pushed
+
+- Completed: replaced the Chronicle detector's Bun-only command path with a Node-safe Electron runner and added explicit initialization/adoption, diff, selected-file commit review, history, revision-aware restore, remote setup and injectable ff-only pull/push operations.
+- Completed: added protected conflict listing, stable identity persistence across rename/duplicate/replacement, verified watcher rescans after overflow/sleep/reconnect, retention cap warnings and evidence-backed macOS/Windows/Linux storage-protection probes.
+- Validation: `bun run quality` passes with 49 tests and 221 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 88.9/A; strict Fallow reports no issues in the 13-file increment.
+- Limitations: live remote/external-sync backends, pull/push conflict UI, retention/uninstall cleanup UI, cross-platform Git/filesystem behavior and reference Obsidian round trips remain pending; the local Electron runtime and packaged runtime notices remain pending.
+- Reconciled: committed as `d4d6fb8e3031a5bd3d2ee814f4c5c5ce81d75504` with marker `[openobsidian P2.3] Deliver recovery and Chronicle foundation`, pushed `main`, and verified `origin/main` at the same SHA.
+- Next operation: inspect the new multi-OS quality/build runs, then continue P2.2 workspace completion and P2.3 visible Chronicle/recovery controls while preserving the named external-sync and reference-validation blockers.
