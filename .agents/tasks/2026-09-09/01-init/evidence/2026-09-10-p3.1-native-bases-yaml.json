@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T18:03:03Z",
+  "checkpoints": ["P3.1"],
+  "requirements": ["C07", "C07.1"],
+  "fixture_ids": ["fixture:c07-bases", "fixture:c07-unsupported-formula"],
+  "reference_sources": [
+    {
+      "title": "Obsidian Bases syntax",
+      "url": "https://obsidian.md/help/bases/syntax",
+      "observation": "Native .base definitions are YAML documents with top-level filters, formulas, properties and views; views can declare filters, order, grouping and limits."
+    },
+    {
+      "title": "Obsidian Bases overview",
+      "url": "https://obsidian.md/help/bases",
+      "observation": "Bases are database-like views over Markdown properties and files, and can be stored in .base files or embedded in Markdown."
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "d0359bf3b3d4e770e900719cc58e65d94c4a256c",
+    "tested_source_tree": "602a2e87588712c1ebfadc27a5e6a0a8bf47bd9244fe050df72c1d0982d7eb98"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run test:bases", "exit_code": 0, "result": "5 focused Bases tests pass with 24 expectations, covering JSON preservation, native YAML filters/formulas/order/grouping/limit, exact source read-only round trip and unsupported-expression visibility."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes at the pushed commit: 104 tests with 598 expectations, state/contract/architecture/surface/accessibility/layout/typecheck checks, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes at the pushed commit: compile, distribution, quality-program, 104 tests with 598 expectations, Knip and report-only Fallow health."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 10-file native Bases/documentation increment."},
+    {"command": "bun run audit:fallow", "exit_code": 0, "result": "Repository health is 88.5:A; the only high-complexity finding is the inherited scripts/status.ts:128 collectRow advisory."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
+    {"command": "OpenObsidian quality / 34511798033", "exit_code": 0, "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for commit d0359bf3b3d4e770e900719cc58e65d94c4a256c."},
+    {"command": "OpenObsidian desktop build / 34511798038", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime notice audits passed."}
+  ],
+  "implemented": [
+    "Added a bounded native YAML .base adapter alongside the existing version-1 JSON grammar, retaining unknown source fields and the exact original YAML source for read-only encoding.",
+    "Normalized supported native and/or/not comparison filters, top-level plus view formulas, order, groupBy and limit fields into the platform-neutral Bases evaluator.",
+    "Added visible invalid-filter/invalid-source issue reporting and prevented unsupported native filters or executable expressions from being partially evaluated or executed.",
+    "Added a pinned native YAML fixture, focused Bun test command and documentation for the pure evaluator/adapter boundary that a future Expo host can reuse."
+  ],
+  "limitations": [
+    "Full Obsidian formula/filter semantics, all YAML dialect constructs, embedded Markdown base blocks and plugin-provided view layouts are not implemented by the bounded adapter.",
+    "Reference Obsidian reopen comparisons, cross-platform visible validation and structured native-YAML editing remain pending; the current native path is read-only and source-authoritative."
+  ]
+}

@@ -312,3 +312,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: pushed `589ea3213bfad2800cc0526e8c294a81100f9dd0` with `bun run audit:source-tree` and `scripts/README.md`, so routine gates, Fallow/Knip audits, evidence validation and source-tree digests have short documented entry points.
 - Validation: `bun run check:fast`, `bun run knip` and strict changed-file Fallow pass; the source-tree helper reports 141 included paths with digest `df86528d79a97d7de92564709b2fc8aa14ac4ea8d53fd3f93f60c113e87bf2d5`.
 - Limitation: script automation shortens repeatable local checks but does not replace cross-platform CI, packaged runtime checks, reference Obsidian comparison or human validation.
+
+## 2026-09-10T18:03:03Z — P3.1 native Bases YAML increment
+
+- Completed: pushed `d0359bf3b3d4e770e900719cc58e65d94c4a256c` with marker `[openobsidian P3.1] Add native Bases YAML adapter`; the source tree digest is `602a2e87588712c1ebfadc27a5e6a0a8bf47bd9244fe050df72c1d0982d7eb98` across 143 included paths.
+- Completed: added a bounded native `.base` YAML adapter that preserves unknown fields and exact source bytes, maps supported filters/formulas/order/grouping/limits into the pure evaluator, and reports unsupported filter or executable expressions without partial evaluation.
+- Completed: added `fixtures/bases-native.yaml`, `bun run test:bases`, documentation for the short audit/test commands, and an explicit pure evaluator/adapter boundary for future Expo/native consumers.
+- Validation: `bun run test:bases`, `bun run check:fast`, `bun run quality`, `bun run knip`, strict Fallow and report-only Fallow health pass locally; health remains 88.5/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
+- Validation: quality run `34511798033` and desktop-build run `34511798038` passed on macOS, Ubuntu and Windows for `d0359bf3b3d4e770e900719cc58e65d94c4a256c`.
+- Reconciled: C07 and C07.1 now point to `2026-09-10-p3.1-native-bases-yaml.json`; native YAML/JSON read and safe subset behavior are locally covered while embedded bases, full native semantics, reference reopen and cross-platform comparison remain pending.
