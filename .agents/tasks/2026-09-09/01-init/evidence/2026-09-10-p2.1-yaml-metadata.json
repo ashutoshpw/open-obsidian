@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T17:40:00Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C04", "C04.1"],
+  "fixture_ids": ["fixture:c04-properties", "fixture:c04-unknown-preservation"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "d45aeec81c31f73280d4f523bf89b2136f15b77a",
+    "tested_source_tree": "901ac92d8bebbb3a650714f6a9838d9702d846f70470103eaaec1295e969fe94"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/markdown.test.ts tests/bases.test.ts tests/yaml.test.ts", "exit_code": 0, "result": "9 focused tests pass with 33 expectations, covering nested maps, arrays, scalar types, unsupported block reporting, source-preserving Markdown edits and nested Bases values."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "The bounded YAML reader, Markdown property contract, Bases values and renderer formatting compile with strict TypeScript checking."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes at d45aeec: 102 tests with 588 expectations, state/contract/architecture/surface/accessibility/layout/typecheck checks, Knip and changed-file Fallow."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local gate passes: 102 tests with 588 expectations, compilation, distribution, quality-program, Knip and report-only Fallow health."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 13-file YAML/Markdown/Bases/renderer increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, exports or dependencies reported."},
+    {"command": "OpenObsidian quality / 34509334716", "exit_code": 0, "result": "GitHub Actions completed successfully on macOS, Windows and Ubuntu for d45aeec81c31f73280d4f523bf89b2136f15b77a."},
+    {"command": "OpenObsidian desktop build / 34509334708", "exit_code": 0, "result": "GitHub Actions packaged successfully on macOS, Windows and Ubuntu; release-manifest and packaged Electron runtime notice audits passed."}
+  ],
+  "implemented": [
+    "Added a bounded, read-only YAML mapping reader for nested maps, sequences, flow collections, quoted values, booleans, numbers and nulls.",
+    "Extended MarkdownProperty and the Markdown document read contract with typed values and explicit YAML issues while retaining raw source spans as the write authority.",
+    "Used typed nested Markdown values when building Bases rows and recursively rendered nested Base values without adding a DOM or Electron dependency to the core contract.",
+    "Kept unsupported literal/folded YAML blocks source-only and reported them instead of attempting an unsafe serializer or rewriting vault bytes."
+  ],
+  "limitations": [
+    "This increment adds read fidelity only; structured YAML editing/serialization is intentionally not implemented, and unsupported YAML constructs remain source-only.",
+    "Reference Obsidian open-edit-save-reopen comparison, full YAML dialect coverage and cross-platform visible validation remain pending."
+  ]
+}

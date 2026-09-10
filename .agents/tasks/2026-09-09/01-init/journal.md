@@ -297,3 +297,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: C05 and C05.1 now point to `2026-09-10-p3.1-graph-layout.json`; Graph spatial layout is implemented locally while reference Obsidian and cross-platform visual validation remain pending.
 - Tested source tree: `e477a9ed589632cc8ec6756593224179f894497b28515e2a716273bf4dffb46f` across 137 included paths.
 - Limitation: the spatial map is read-only; navigation remains in the keyboard-accessible list and no vault writes occur when building or opening graph state.
+
+## 2026-09-10T17:40:00Z — P2.1 bounded YAML metadata increment
+
+- Completed: pushed `d45aeec81c31f73280d4f523bf89b2136f15b77a` with marker `[openobsidian P2.1] Add bounded YAML metadata`; the source tree digest is `901ac92d8bebbb3a650714f6a9838d9702d846f70470103eaaec1295e969fe94` across 139 included paths.
+- Completed: added the bounded read-only YAML mapping reader for nested maps, sequences, flow collections and scalar types; Markdown retains raw property spans as the write authority and reports unsupported literal/folded blocks as issues.
+- Completed: connected typed nested Markdown values to Bases row construction and recursive display, with a shared recursive BaseValue contract and focused regression coverage.
+- Validation: `bun run check:fast` and `bun run quality` pass locally with 102 tests and 588 expectations; `bun run knip` and strict changed-file Fallow pass; report-only Fallow health is 88.5/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
+- Validation: quality run `34509334716` and desktop-build run `34509334708` passed on macOS, Ubuntu and Windows for `d45aeec`.
+- Reconciled: C04 and C04.1 now point to `2026-09-10-p2.1-yaml-metadata.json`; P2.1 remains in progress because structured YAML serialization, full dialect coverage, reference Obsidian round trips and cross-platform validation remain pending.
