@@ -201,3 +201,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: marked D05, GATE-005, Q-001, Q-004, Q-009, Q-012 and Q-013 implemented with local automated evidence; kept human pilot, screen-reader, plugin runtime, startup/input/watcher/resource and signing/update layers pending or external-pending.
 - Tested source tree: `c24793ea...` across 101 included paths.
 - Next operation: continue P5.2 privacy/accessibility hardening and P6 workflow gates while preserving reference/runtime and human handoffs.
+
+## 2026-09-10T13:20:00Z — P5.2 privacy and P6.1 delivery gates pushed
+
+- Completed: pushed source commit `819d283152512704c5d1af244bea5db29d347a2f` with marker `[openobsidian P5.2/P6.1] Add privacy and release gates`.
+- Completed: added local-only diagnostics through the validated preload boundary, privacy defaults and operational documentation; added static accessibility checks, English/Hindi/Arabic direction-aware messages, and Unicode fixtures.
+- Completed: added calendar-validated `vYYYY-MM-DD` release gates, explicit unsigned-preview/blocked-production behavior, packaged-file SHA-256 manifests, tag-aware three-runner workflows and artifact upload only after a successful gate.
+- Validation: `bun run quality` passes with 88 tests and 520 expectations; Knip is clean; report-only Fallow health is 88.2/A with only the inherited `scripts/status.ts` advisory; changed-file Fallow reports no issues in the 19-file implementation increment.
+- Reconciled: marked D17, D20, UX-004, UX-005, Q-011, Q-015, Q-017 and Q-018 implemented with local fixture and contract evidence; screen-reader, visible Electron, cross-platform interaction, signing, staging, updater, rollback and publication gates remain pending or external-pending.
+- Tested source tree: `4fb71710...` across 112 included paths.
+- Next operation: verify the pushed matrix on Actions, then continue P5.2 visible/human handoffs and P6.2 final-audit evidence without creating a release tag.
