@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T18:39:46Z",
+  "checkpoint": "P0.2",
+  "requirements": ["BASE-005"],
+  "fixture_ids": ["fixture:primary-references", "fixture:electron-security-reference"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "35db46160762e4cfb84e9b9f33a3d4ec7f4ab522",
+    "tested_source_tree": "e12771138844284f4bd3d196f5908716e05809d9906c12c1f7d323101bfe8c0c"
+  },
+  "observations": [
+    {
+      "command": "git ls-remote https://github.com/electron/electron.git refs/tags/v44.3.0 refs/tags/v44.3.0^{}",
+      "exit_code": 0,
+      "result": "Electron v44.3.0 resolves to commit 07e460719c75b2ec5ee4893f7d2192ef31c7b8c2."
+    },
+    {
+      "command": "bun -e <direct immutable Electron source fetch>",
+      "exit_code": 0,
+      "result": "The official raw security guide at the resolved commit returned HTTP 200, content type text/plain; charset=utf-8, 32586 bytes and SHA-256 cc0a31ed8b68e5004b194e68616a8eb85725e5fbb154d11d886edda96478f5c5."
+    },
+    {
+      "command": "bun run verify:primary-references",
+      "exit_code": 0,
+      "result": "All eight primary references passed HTTP status, content-type, byte-count and SHA-256 verification after replacing the mutable Electron documentation URL with the immutable v44.3.0 source commit."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "Source-tree digest e12771138844284f4bd3d196f5908716e05809d9906c12c1f7d323101bfe8c0c across 144 included paths."
+    }
+  ],
+  "implemented": [
+    "Primary-reference metadata now records the Electron v44.3.0 immutable source commit, retrieval shape and content hash rather than a mutable latest-docs page."
+  ],
+  "limitations": [
+    "The official community-plugin stats and registry snapshots remain intentionally frozen from the earlier selection decision; live mutable download counts still require a deliberate reviewed snapshot refresh before selection verification can pass."
+  ]
+}

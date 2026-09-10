@@ -337,3 +337,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: direct official fetches returned stats SHA-256 `9f397fd41c4ec66074c9d63732191dc34db1c28437c9bedfa76e5687c1754d97` and registry SHA-256 `973e2b116d930d7615a45d1fb9d9f05d49a1ed4b1dc3f3223da8c516bfe633d9`; `bun run verify:primary-references` also found the mutable Electron security page changed to SHA-256 `9221c933ae48e72a2e153fd8eb74bc0b4c70e8880a81b9d1ab15f046eb2330e8`.
 - Validation: a live `bun run verify:compatibility-pins` attempt was interrupted after more than five minutes of bounded network retries; no release manifest or pin changed, and the prior successful 27-artifact/83-asset verification remains recorded in `2026-09-10-p0.2-selection-drift.json`.
 - Reconciled: added `2026-09-10-p0.2-live-source-drift.json`; frozen selection, stable Obsidian 1.13.7 baseline and immutable release assets remain unchanged pending a deliberate reviewed provenance refresh.
+
+## 2026-09-10T18:40:52Z — P0.2 immutable Electron reference
+
+- Completed: committed `35db46160762e4cfb84e9b9f33a3d4ec7f4ab522` with marker `[openobsidian P0.2] Pin Electron security reference`; Electron v44.3.0 now resolves to source commit `07e460719c75b2ec5ee4893f7d2192ef31c7b8c2`.
+- Completed: replaced the mutable Electron latest-docs URL in `config/primary-references.json` with the official raw source at that immutable commit and recorded its content type, byte count and SHA-256.
+- Validation: `bun run verify:primary-references` passed all eight references; `bun run check:fast` passed 107 tests with 608 expectations, Knip and changed-file Fallow; the source tree digest is `e12771138844284f4bd3d196f5908716e05809d9906c12c1f7d323101bfe8c0c` across 144 included paths.
+- Reconciled: `BASE-005` and P0.2 now point to the immutable Electron evidence; live community-plugin selection counts remain frozen and explicitly drift-pending, while no plugin release pins were changed.
