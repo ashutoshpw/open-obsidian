@@ -1,27 +1,24 @@
 import { expect, test } from "bun:test";
+import { runStatus } from "../scripts/status.js";
 
-const root = new URL("..", import.meta.url).pathname;
-
-function runStatus(...args: string[]): { code: number; output: string } {
-  const command = process.platform === "win32"
-    ? [process.env.ComSpec ?? "cmd.exe", "/d", "/s", "/c", `bun scripts/status.ts ${args.join(" ")}`]
-    : [process.execPath, "scripts/status.ts", ...args];
-  const result = Bun.spawnSync(command, {cwd: root});
+function executeStatus(...args: string[]): { code: number; output: string } {
+  const lines: string[] = [];
+  const code = runStatus(args, (message) => lines.push(message), (message) => lines.push(message));
   return {
-    code: result.exitCode,
-    output: `${result.stdout.toString()}${result.stderr.toString()}`,
+    code,
+    output: lines.join("\n"),
   };
 }
 
 test("status validator accepts the initialized progress structure", () => {
-  const result = runStatus("--validate");
+  const result = executeStatus("--validate");
   expect(result.code).toBe(0);
   expect(result.output).toContain("STRUCTURE CHECK: passed");
   expect(result.output).toContain("196 total");
 });
 
 test("release check refuses incomplete implementation honestly", () => {
-  const result = runStatus("--release");
+  const result = executeStatus("--release");
   expect(result.code).toBe(2);
   expect(result.output).toContain("RELEASE CHECK: incomplete");
   expect(result.output).toContain("165 mandatory acceptance rows");

@@ -4,6 +4,7 @@ import { join, relative, resolve } from "node:path";
 
 type JsonRecord = Record<string, unknown>;
 type ErrorList = string[];
+type Reporter = (message: string) => void;
 
 const root = resolve(import.meta.dir, "..");
 const taskRoot = join(root, ".agents/tasks/2026-09-09/01-init");
@@ -205,23 +206,23 @@ function count(rows: JsonRecord[], status: string): number {
   return rows.filter((row) => row.status === status).length;
 }
 
-function printSummary(state: JsonRecord, checkpoints: JsonRecord | null, rows: JsonRecord[], mandatoryRows: JsonRecord[]): number {
+function printSummary(state: JsonRecord, checkpoints: JsonRecord | null, rows: JsonRecord[], mandatoryRows: JsonRecord[], log: Reporter): number {
   const complete = checkpoints ? Object.values(checkpoints).filter((raw) => asRecord(raw)?.status === "complete").length : 0;
   const incomplete = mandatoryRows.filter((row) => row.status !== "passing" && row.status !== "unsupported_security").length;
-  console.log(`OpenObsidian progress: ${complete}/${checkpointIds.length} checkpoints complete`);
-  console.log(`Acceptance rows: ${rows.length} total; ${count(rows, "passing")} passing; ${count(rows, "implemented")} implemented; ${count(rows, "pending")} pending; ${count(rows, "failing")} failing; ${count(rows, "blocked")} blocked`);
-  console.log(`Separate counts: ${count(rows, "unsupported_security")} unsupported-security; ${count(rows, "external_pending")} external-pending; ${incomplete} mandatory rows not release-passing`);
-  if (state.status !== "complete") console.log(`STATUS: goal status is ${String(state.status)}, not complete`);
-  if (incomplete > 0) console.log(`STATUS: release completion remains blocked by ${incomplete} mandatory acceptance rows`);
+  log(`OpenObsidian progress: ${complete}/${checkpointIds.length} checkpoints complete`);
+  log(`Acceptance rows: ${rows.length} total; ${count(rows, "passing")} passing; ${count(rows, "implemented")} implemented; ${count(rows, "pending")} pending; ${count(rows, "failing")} failing; ${count(rows, "blocked")} blocked`);
+  log(`Separate counts: ${count(rows, "unsupported_security")} unsupported-security; ${count(rows, "external_pending")} external-pending; ${incomplete} mandatory rows not release-passing`);
+  if (state.status !== "complete") log(`STATUS: goal status is ${String(state.status)}, not complete`);
+  if (incomplete > 0) log(`STATUS: release completion remains blocked by ${incomplete} mandatory acceptance rows`);
   return incomplete;
 }
 
-function main(): number {
-  const args = new Set(Bun.argv.slice(2));
+export function runStatus(args: string[], log: Reporter = console.log, error: Reporter = console.error): number {
+  const flags = new Set(args);
   const errors: ErrorList = [];
   const paths = specPaths();
   if (!reportMissingArtifacts(errors)) {
-    console.error(errors.join("\n"));
+    error(errors.join("\n"));
     return 1;
   }
   const state = readJson(join(taskRoot, "state.json"));
@@ -233,21 +234,21 @@ function main(): number {
   validateCheckpointEvidence(checkpoints, inventory.rowMap, errors);
   validateEvidenceRefs(inventory.evidenceRefs, errors);
   validateGitMarkers(checkpoints, errors);
-  const incomplete = printSummary(state, checkpoints, inventory.rows, inventory.mandatoryRows);
+  const incomplete = printSummary(state, checkpoints, inventory.rows, inventory.mandatoryRows, log);
   if (errors.length > 0) {
-    console.error(errors.join("\n"));
+    error(errors.join("\n"));
     return 1;
   }
-  if (args.has("--release") && incomplete > 0) {
-    console.error("RELEASE CHECK: incomplete; mandatory implementation work or required evidence remains.");
+  if (flags.has("--release") && incomplete > 0) {
+    error("RELEASE CHECK: incomplete; mandatory implementation work or required evidence remains.");
     return 2;
   }
-  if (args.has("--release") && state.status !== "complete") {
-    console.error(`RELEASE CHECK: incomplete; state.status is ${String(state.status)}.`);
+  if (flags.has("--release") && state.status !== "complete") {
+    error(`RELEASE CHECK: incomplete; state.status is ${String(state.status)}.`);
     return 2;
   }
-  if (args.has("--validate")) console.log("STRUCTURE CHECK: passed");
+  if (flags.has("--validate")) log("STRUCTURE CHECK: passed");
   return 0;
 }
 
-process.exit(main());
+if (import.meta.main) process.exit(runStatus(Bun.argv.slice(2)));
