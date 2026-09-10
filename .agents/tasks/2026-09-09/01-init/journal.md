@@ -397,3 +397,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run quality`, `bun run audit:source-tree`, `bun run audit:fallow:strict` and `git diff --check` passed before the handoff commit; source tree is `9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9` across 146 included paths.
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p7.1-expansion-handoff.json` records the handoff inspection, local gates and limitations.
 - Next: continue the active P6.2/P0.2/P1-P5 implementation and external-validation gates; do not implement P7 without a separate decision.
+
+## 2026-09-10T20:38:50Z — P0.2 transitive attribution audit
+
+- Completed: pushed `db36b5ec1b9a75186caf7ea09c28cc72fdf2c540` with marker `[openobsidian P0.2 work] Add transitive attribution audit`; added `bun run audit:dependencies -- --artifacts-dir out` to the documented Bun playbook and every desktop-build matrix job.
+- Completed: the audit walks the installed dependency graph, records license/source metadata and explicit type/build/audit/install/runtime scopes, then inspects each packaged `app.asar` for unknown or non-runtime package paths.
+- Validation: local attribution, packaged-runtime and release-manifest audits passed; the graph contained 306 dependency records, one bundled Electron runtime record with local license/source evidence, zero non-runtime packages under `app.asar/node_modules` and zero unrecognized archive package paths. The 55 platform-specific optional/peer gaps are warnings only.
+- Validation: quality run `34526554733` and desktop-build run `34526555303` passed on macOS, Windows and Ubuntu; local Knip, strict Fallow, typecheck, focused distribution tests and full quality also pass.
+- Reconciled: the `transitive-package-attribution` release gate, D12 and RISK-009 are now `passing` for the implemented license/source and redistribution-audit criteria; source tree digest is `8922052677828f36167694a5fb6f8a30c3c4e6aa809c5d073c511c1c1ed7b5a6` across 147 included paths.
+- Limitation: optional/peer platform gaps, brand/legal approval, signing/notarization, publication, offline installation, cross-platform/reference-vault UX and the remaining implementation rows stay explicit release or validation handoffs.

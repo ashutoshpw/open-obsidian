@@ -25,10 +25,14 @@ redistribution review before a release status can become `passing`.
 The direct package metadata and notice inventory is machine-checked with
 [`config/distribution-audit.json`](config/distribution-audit.json) by running
 `bun run verify:distribution`. The check confirms the package versions,
-declared licenses, local license files, HTTPS sources and notice entries. It
-does not close the final transitive dependency attribution review. After
-packaging, run `bun run release:gate -- --artifacts-dir out` followed by
-`bun run audit:packaged -- --artifacts-dir out` for each platform artifact.
-That second check validates the release manifest and the Electron,
-Chromium/Node notice assets next to the shipped `app.asar`; the final
-transitive graph still requires release-owner reconciliation.
+declared licenses, local license files, HTTPS sources and notice entries. After
+packaging, run `bun run release:gate -- --artifacts-dir out`, followed by
+`bun run audit:packaged -- --artifacts-dir out` and
+`bun run audit:dependencies -- --artifacts-dir out` for each platform artifact.
+The packaged checks validate the release manifest, Electron/Chromium/Node
+notice assets and the `app.asar` dependency boundary. The transitive audit
+records license/source metadata for the installed graph, treats Electron's
+runtime separately from install-only tooling edges, and requires every
+package path inside `app.asar` to be represented by that graph. Unsigned
+preview validation does not replace per-artifact brand/legal review,
+signing/notarization, publication or offline installation gates.

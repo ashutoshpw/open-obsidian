@@ -45,7 +45,7 @@ test("distribution audit covers direct packages and records release gates", () =
   expect(audit.external_tools.map((tool) => tool.name)).toEqual(["fallow"]);
   const gateStatuses = Object.fromEntries(audit.release_gates.map((gate) => [gate.id, gate.status]));
   expect(gateStatuses["electron-bundled-runtime-notices"]).toBe("passing");
-  expect(gateStatuses["transitive-package-attribution"]).toBe("pending");
+  expect(gateStatuses["transitive-package-attribution"]).toBe("passing");
 });
 
 test("transitive dependency audit records scopes and install-only Electron edges", () => {

@@ -69,12 +69,12 @@
     {
       "id": "electron-bundled-runtime-notices",
       "status": "passing",
-      "reason": "Desktop-build run 34497864710 passed audit:packaged on ubuntu-latest, macos-latest and windows-latest; final transitive attribution remains a separate release gate."
+      "reason": "Desktop-build run 34526555303 passed audit:packaged on ubuntu-latest, macos-latest and windows-latest; transitive attribution is covered by the same matrix."
     },
     {
       "id": "transitive-package-attribution",
-      "status": "pending",
-      "reason": "Reconcile the final electron-builder dependency graph against the shipped artifact and preserve required notices."
+      "status": "passing",
+      "reason": "Desktop-build run 34526555303 passed audit:dependencies on ubuntu-latest, macos-latest and windows-latest; the local audit recorded 306 installed dependency records, runtime license/source evidence and no non-runtime package under app.asar/node_modules."
     }
   ]
 }

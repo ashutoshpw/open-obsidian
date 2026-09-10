@@ -1,0 +1,62 @@
+{
+  "evidence_version": 1,
+  "captured_at": "2026-09-10T20:33:33Z",
+  "checkpoint": "P0.2",
+  "requirement_ids": ["D12", "RISK-009"],
+  "tested_source_tree": "8922052677828f36167694a5fb6f8a30c3c4e6aa809c5d073c511c1c1ed7b5a6",
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "commit_sha": "db36b5ec1b9a75186caf7ea09c28cc72fdf2c540",
+  "workflow": {
+    "name": "OpenObsidian desktop build",
+    "run_id": 34526555303,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {"platform": "ubuntu-latest", "job_id": 103036767789, "conclusion": "success", "attribution_step": "success"},
+      {"platform": "macos-latest", "job_id": 103036768015, "conclusion": "success", "attribution_step": "success"},
+      {"platform": "windows-latest", "job_id": 103036768162, "conclusion": "success", "attribution_step": "success"}
+    ]
+  },
+  "quality_workflow": {
+    "name": "OpenObsidian quality",
+    "run_id": 34526554733,
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {"platform": "ubuntu-latest", "job_id": 103036766432, "conclusion": "success"},
+      {"platform": "macos-latest", "job_id": 103036766422, "conclusion": "success"},
+      {"platform": "windows-latest", "job_id": 103036766113, "conclusion": "success"}
+    ]
+  },
+  "local_audit": {
+    "commands": [
+      {"command": "bun run audit:dependencies -- --artifacts-dir out", "exit_code": 0},
+      {"command": "bun run audit:packaged -- --artifacts-dir out", "exit_code": 0},
+      {"command": "bun run release:gate -- --artifacts-dir out", "exit_code": 0},
+      {"command": "bun run quality", "exit_code": 0},
+      {"command": "bunx tsc --noEmit", "exit_code": 0},
+      {"command": "bun test tests/distribution.test.ts", "exit_code": 0},
+      {"command": "bunx fallow audit --root . --base HEAD --format compact", "exit_code": 0}
+    ],
+    "observations": {
+      "installed_dependency_records": 306,
+      "bundled_runtime_records": 1,
+      "optional_or_peer_edges_not_installed_warning_count": 55,
+      "app_asar_archives": 1,
+      "non_runtime_packages_under_app_asar_node_modules": 0,
+      "unrecognized_app_asar_package_paths": 0
+    }
+  },
+  "checks": [
+    {"id": "dependency-graph-resolution", "status": "passed", "detail": "All required dependency edges resolved from the installed graph; platform-specific optional/peer gaps were reported as warnings."},
+    {"id": "dependency-license-metadata", "status": "passed", "detail": "306 installed dependency records contained license metadata."},
+    {"id": "shipped-package-license-files", "status": "passed", "detail": "The bundled Electron runtime record had local license-file evidence."},
+    {"id": "shipped-package-sources", "status": "passed", "detail": "The bundled Electron runtime record had source metadata."},
+    {"id": "artifact-excludes-non-runtime-packages", "status": "passed", "detail": "No type-only, build-only, install-only or audit-only package was present under app.asar/node_modules."},
+    {"id": "artifact-package-attribution", "status": "passed", "detail": "Every package path under app.asar/node_modules was represented in the installed dependency graph."}
+  ],
+  "limitations": [
+    "Optional and peer dependency edges not installed for the current platform remain warnings and are not required shipped edges.",
+    "The audit covers unsigned preview artifacts; per-artifact brand/legal review, signing/notarization, publication and offline installation remain separate release handoffs."
+  ]
+}
