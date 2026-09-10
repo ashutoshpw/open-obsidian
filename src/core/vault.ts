@@ -51,7 +51,7 @@ export type RecoveryRecord = {
   capturedAt: string;
 };
 
-export type VaultFaultStage = "after-temp-write" | "before-replace";
+export type VaultFaultStage = "before-temp-write" | "after-temp-write" | "before-replace";
 
 export type VaultStoreOptions = {
   faultHook?: (stage: VaultFaultStage, relativePath: string) => void;
@@ -108,19 +108,54 @@ function hashEntries(entries: VaultEntry[]): string {
 function normalizeRelativePath(relativePath: string): string {
   const normalized = relativePath.replaceAll("\\", "/");
   const segments = normalized.split("/");
-  if (!normalized || normalized.startsWith("/") || normalized.includes("\0") || segments.includes("..") || segments.includes("")) {
+  if (!normalized || normalized.startsWith("/") || normalized.includes("\0") || segments.includes("..") || segments.includes("") || segments.includes(".")) {
     throw new VaultSafetyError(`Vault path must be a non-empty relative path: ${relativePath}`);
   }
+  if (process.platform === "win32" && segments.some((segment) => windowsReservedSegment(segment))) {
+    throw new VaultSafetyError(`Vault path uses a Windows-reserved name: ${relativePath}`);
+  }
   return normalized;
+}
+
+const windowsReservedNames = new Set(["CON", "PRN", "AUX", "NUL", ...Array.from({length: 9}, (_, index) => `COM${index + 1}`), ...Array.from({length: 9}, (_, index) => `LPT${index + 1}`)]);
+
+function windowsReservedSegment(segment: string): boolean {
+  if (segment.includes(":")) return true;
+  const trimmed = segment.replace(/[ .]+$/, "");
+  return windowsReservedNames.has((trimmed.split(".", 1)[0] ?? "").toUpperCase());
+}
+
+function assertInsideRoot(root: string, candidate: string, relativePath: string): void {
+  const distance = relative(root, candidate);
+  if (distance.startsWith("..") || distance.startsWith("/")) throw new VaultSafetyError(`Vault path escapes the selected root: ${relativePath}`);
+}
+
+function inspectExistingSegment(path: string, candidate: string, relativePath: string): boolean {
+  try {
+    const stats = lstatSync(path);
+    if (stats.isSymbolicLink()) throw new VaultSafetyError(`Refusing to traverse a vault symlink: ${relativePath}`);
+    if (path !== candidate && !stats.isDirectory()) throw new VaultSafetyError(`Vault path contains a non-directory parent: ${relativePath}`);
+    return true;
+  } catch (error) {
+    if (error instanceof VaultSafetyError) throw error;
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+function assertSafeSegments(root: string, normalized: string, candidate: string, relativePath: string): void {
+  let current = root;
+  for (const segment of normalized.split("/")) {
+    current = join(current, segment);
+    if (!inspectExistingSegment(current, candidate, relativePath)) break;
+  }
 }
 
 function pathInside(root: string, relativePath: string): string {
   const normalized = normalizeRelativePath(relativePath);
   const candidate = resolve(root, ...normalized.split("/"));
-  const distance = relative(root, candidate);
-  if (distance.startsWith("..") || distance.startsWith("/")) {
-    throw new VaultSafetyError(`Vault path escapes the selected root: ${relativePath}`);
-  }
+  assertInsideRoot(root, candidate, relativePath);
+  assertSafeSegments(root, normalized, candidate, relativePath);
   return candidate;
 }
 
@@ -327,6 +362,7 @@ export class VaultStore {
     mkdirSync(dirname(targetPath), {recursive: true});
     const temporaryPath = join(dirname(targetPath), `.${basename(targetPath)}.${randomUUID()}.tmp`);
     try {
+      this.options.faultHook?.("before-temp-write", relativePath);
       writeFileSync(temporaryPath, bytes);
       this.options.faultHook?.("after-temp-write", relativePath);
       this.options.faultHook?.("before-replace", relativePath);

@@ -1,5 +1,5 @@
 import {afterEach, expect, test} from "bun:test";
-import {mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync} from "node:fs";
+import {mkdtempSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {RevisionConflict, VaultSafetyError, VaultStore, snapshotVault} from "../src/core/vault.js";
@@ -116,6 +116,26 @@ test("an interrupted temporary replacement preserves both old and incoming bytes
   expect(readdirSync(fixture.root).some((name) => name.endsWith(".tmp"))).toBe(false);
 });
 
+test("pre-write and replace failures preserve incoming bytes as failed history", () => {
+  for (const [stage, message] of [["before-temp-write", "injected disk full"], ["before-replace", "injected permission loss"]] as const) {
+    const fixture = createFixture();
+    const original = readFileSync(join(fixture.root, "note.md"));
+    const incoming = Buffer.from(`${message}\n`, "utf8");
+    const store = new VaultStore(fixture.root, fixture.appData, {faultHook: (faultStage) => {
+      if (faultStage === stage) throw new Error(message);
+    }});
+
+    expect(() => store.write({relativePath: "note.md", expectedRevision: store.read("note.md").revision, bytes: incoming})).toThrow(message);
+    expect(readFileSync(join(fixture.root, "note.md"))).toEqual(original);
+    expect(readFileSync(store.listFailedWrites("note.md")[0]!.path)).toEqual(incoming);
+    expect(readdirSync(fixture.root).some((name) => name.endsWith(".tmp"))).toBe(false);
+    temporaryRoots.splice(temporaryRoots.indexOf(fixture.root), 1);
+    temporaryRoots.splice(temporaryRoots.indexOf(fixture.appData), 1);
+    rmSync(fixture.root, {recursive: true, force: true});
+    rmSync(fixture.appData, {recursive: true, force: true});
+  }
+});
+
 test("a failed multi-file write journals the batch and preserves each version", () => {
   const fixture = createFixture();
   writeFileSync(join(fixture.root, "second.md"), "second original\n");
@@ -150,3 +170,82 @@ test("symlinks are recorded but never followed for file operations", () => {
   expect(() => store.read("outside.txt")).toThrow(VaultSafetyError);
   expect(() => store.write({relativePath: "outside.txt", expectedRevision: null, bytes: Buffer.from("blocked") })).toThrow(VaultSafetyError);
 });
+
+test("intermediate symlinks are never traversed", () => {
+  const fixture = createFixture();
+  const outsideDirectory = join(fixture.appData, "outside-directory");
+  mkdirSync(outsideDirectory);
+  writeFileSync(join(outsideDirectory, "secret.md"), "secret\n");
+  symlinkSync(outsideDirectory, join(fixture.root, "linked-directory"));
+  const store = new VaultStore(fixture.root, fixture.appData);
+
+  expect(() => store.read("linked-directory/secret.md")).toThrow(VaultSafetyError);
+  expect(() => store.write({relativePath: "linked-directory/new.md", expectedRevision: null, bytes: Buffer.from("blocked") })).toThrow(VaultSafetyError);
+  expect(readFileSync(join(outsideDirectory, "secret.md"))).toEqual(Buffer.from("secret\n"));
+});
+
+test("delete-versus-edit and rename-versus-edit preserve incoming bytes", () => {
+  const fixture = createFixture();
+  const store = new VaultStore(fixture.root, fixture.appData);
+  const original = store.read("note.md");
+  const deletedIncoming = Buffer.from("edit after delete\n");
+  unlinkSync(join(fixture.root, "note.md"));
+
+  expect(() => store.write({relativePath: "note.md", expectedRevision: original.revision, bytes: deletedIncoming})).toThrow(RevisionConflict);
+  const deletedConflict = store.listRecovery().find((record) => record.relativePath === "note.md");
+  expect(deletedConflict).toBeUndefined();
+  const deletedPath = readdirSync(join(fixture.appData, "conflicts")).find((name) => name.endsWith(".incoming"));
+  expect(deletedPath).toBeDefined();
+  expect(readFileSync(join(fixture.appData, "conflicts", deletedPath!))).toEqual(deletedIncoming);
+
+  writeFileSync(join(fixture.root, "note.md"), Buffer.from(original.bytes));
+  const renamedBase = store.read("note.md");
+  const renamedIncoming = Buffer.from("edit after rename\n");
+  renameSync(join(fixture.root, "note.md"), join(fixture.root, "renamed.md"));
+
+  expect(() => store.write({relativePath: "note.md", expectedRevision: renamedBase.revision, bytes: renamedIncoming})).toThrow(RevisionConflict);
+  expect(readFileSync(join(fixture.root, "renamed.md"))).toEqual(Buffer.from(original.bytes));
+  const conflictFiles = readdirSync(join(fixture.appData, "conflicts")).filter((name) => name.endsWith(".incoming"));
+  expect(conflictFiles).toHaveLength(2);
+  expect(conflictFiles.map((name) => readFileSync(join(fixture.appData, "conflicts", name)))).toContainEqual(renamedIncoming);
+});
+
+test("case-only renames and Unicode source bytes remain observable", () => {
+  const fixture = createFixture();
+  const casePath = join(fixture.root, "CaseOnly.md");
+  const lowerPath = join(fixture.root, "caseonly.md");
+  const unicodeBytes = Buffer.from("na\u0069\u0308ve\r\n", "utf8");
+  writeFileSync(casePath, "case\n");
+  writeFileSync(join(fixture.root, "unicode.md"), unicodeBytes);
+  const store = new VaultStore(fixture.root, fixture.appData);
+  const before = snapshotVault(fixture.root);
+  renameSync(casePath, lowerPath);
+  const after = snapshotVault(fixture.root);
+
+  expect(diffPaths(before, after)).toContain("CaseOnly.md");
+  expect(diffPaths(before, after)).toContain("caseonly.md");
+  expect(store.read("unicode.md").bytes).toEqual(unicodeBytes);
+});
+
+test("the safety failure matrix names every required non-destructive outcome", () => {
+  const matrix = JSON.parse(readFileSync(join(import.meta.dir, "../fixtures/vault-safety-failure-matrix.json"), "utf8")) as {
+    schema_version: number;
+    scenarios: Array<{id: string; expected_outcome: string}>;
+  };
+  const expected = ["disk-full", "permission-loss", "concurrent-edit", "delete-versus-edit", "rename-versus-edit", "partial-sync", "cloud-placeholder", "symlink", "case-only-rename", "windows-reserved-name", "unicode-normalization"];
+
+  expect(matrix.schema_version).toBe(1);
+  expect(matrix.scenarios.map((scenario) => scenario.id)).toEqual(expected);
+  expect(matrix.scenarios.every((scenario) => scenario.expected_outcome.length > 0)).toBe(true);
+  if (process.platform === "win32") {
+    const fixture = createFixture();
+    const store = new VaultStore(fixture.root, fixture.appData);
+    expect(() => store.read("CON")).toThrow("Windows-reserved");
+  }
+});
+
+function diffPaths(before: ReturnType<typeof snapshotVault>, after: ReturnType<typeof snapshotVault>): string[] {
+  const beforePaths = new Set(before.entries.map((entry) => entry.relativePath));
+  const afterPaths = new Set(after.entries.map((entry) => entry.relativePath));
+  return [...new Set([...beforePaths, ...afterPaths])].filter((path) => beforePaths.has(path) !== afterPaths.has(path)).sort();
+}

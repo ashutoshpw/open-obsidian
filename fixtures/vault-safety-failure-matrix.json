@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "purpose": "Portable failure classes and their non-destructive VaultStore outcomes.",
+  "scenarios": [
+    {"id": "disk-full", "fault_stage": "before-temp-write", "expected_outcome": "preserve-incoming-as-failed-history"},
+    {"id": "permission-loss", "fault_stage": "before-replace", "expected_outcome": "preserve-incoming-as-failed-history"},
+    {"id": "concurrent-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
+    {"id": "delete-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
+    {"id": "rename-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
+    {"id": "partial-sync", "fault_stage": null, "expected_outcome": "journal-batch-and-preserve-failed-version"},
+    {"id": "cloud-placeholder", "fault_stage": null, "expected_outcome": "do-not-follow-unknown-link"},
+    {"id": "symlink", "fault_stage": null, "expected_outcome": "record-link-and-deny-traversal"},
+    {"id": "case-only-rename", "fault_stage": null, "expected_outcome": "observe-path-change-without-content-rewrite"},
+    {"id": "windows-reserved-name", "fault_stage": null, "expected_outcome": "deny-on-windows"},
+    {"id": "unicode-normalization", "fault_stage": null, "expected_outcome": "preserve-original-bytes"}
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T08:12:47Z",
+  "checkpoint": "P1.1",
+  "requirements": ["SYNC-004", "C01.2", "C02.2", "SYNC-002", "RISK-004"],
+  "fixture_ids": ["fixture:sync-failure-matrix", "fixture:c01-no-op", "fixture:c02-byte-roundtrip", "fixture:sync-atomic-write", "fixture:risk-normalization"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "142122d7a6fbc02fded2c4174f16016d371c7de310119f747dfd5f436f7faa61"
+  },
+  "observations": [
+    {"command": "bun test tests/vault.test.ts", "exit_code": 0, "result": "12 tests and 61 expectations pass, including pre-write disk-full and pre-replace permission-loss fault injection, intermediate symlink denial, delete-versus-edit, rename-versus-edit, case-only rename and Unicode byte preservation."},
+    {"command": "bunx tsc --noEmit", "exit_code": 0, "result": "Strict TypeScript checking passes after adding the safe-segment traversal and pre-write fault stage."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the three changed files relative to a263b6c27108f0c289a8672503aa9b06eb26d151."}
+  ],
+  "implemented": [
+    "Vault path resolution now rejects dot/dot-dot aliases, Windows-reserved segments on Windows, intermediate symlink traversal and non-directory parents.",
+    "VaultStore exposes a pre-temp-write fault seam so disk-full and permission-loss simulations preserve the original file, incoming bytes and failed-write metadata.",
+    "The portable vault-safety failure matrix records non-destructive outcomes for disk, permission, concurrency, deletion, rename, partial sync, placeholder, symlink, case and Unicode classes."
+  ],
+  "limitations": [
+    "The fault hooks simulate disk-full and permission loss; real filesystem quota, ACL and power-loss behavior remains platform-specific and pending.",
+    "Only macOS arm64 ran locally; Windows/Linux matrix execution and reference Obsidian reopen/differential tests remain pending.",
+    "Cloud placeholder behavior is represented as a do-not-follow safety outcome but has not been exercised against a real cloud-provider placeholder."
+  ]
+}
