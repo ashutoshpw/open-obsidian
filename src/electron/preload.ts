@@ -3,6 +3,8 @@ import {CHANNELS, type OpenObsidianAPI, type VaultWriteRequest} from "../shared/
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
+  listFiles: () => ipcRenderer.invoke(CHANNELS.listFiles),
+  search: (query) => ipcRenderer.invoke(CHANNELS.search, query),
   readFile: (relativePath) => ipcRenderer.invoke(CHANNELS.readFile, relativePath),
   writeFile: (request: VaultWriteRequest) => ipcRenderer.invoke(CHANNELS.writeFile, request),
 };

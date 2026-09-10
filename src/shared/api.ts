@@ -1,5 +1,7 @@
 export const CHANNELS = {
   selectVault: "vault:select",
+  listFiles: "vault:list-files",
+  search: "vault:search",
   readFile: "vault:read",
   writeFile: "vault:write",
 } as const;
@@ -15,6 +17,19 @@ export type VaultGitSummary = {
   remoteCount: number;
   authorConfigured: boolean;
   remoteContacted: false;
+};
+
+export type VaultFileSummary = {
+  relativePath: string;
+  kind: "file" | "symlink";
+  bytes: number;
+  sha256: string;
+};
+
+export type VaultSearchResult = {
+  relativePath: string;
+  score: number;
+  preview: string;
 };
 
 export type VaultSummary = {
@@ -54,6 +69,8 @@ export function validateVaultWriteRequest(value: unknown): VaultWriteRequest {
 
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
+  listFiles: () => Promise<VaultFileSummary[]>;
+  search: (query: string) => Promise<VaultSearchResult[]>;
   readFile: (relativePath: string) => Promise<VaultReadResponse>;
   writeFile: (request: VaultWriteRequest) => Promise<VaultReadResponse>;
 };

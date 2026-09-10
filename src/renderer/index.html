@@ -3,29 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpenObsidian</title>
+    <title>OpenObsidian · Local knowledge workspace</title>
     <style>
-      :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      body { margin: 0; min-height: 100vh; background: #171717; color: #f4f4f5; }
-      main { box-sizing: border-box; display: grid; min-height: 100vh; place-items: center; padding: 40px; }
-      section { width: min(680px, 100%); padding: 42px; border: 1px solid #3f3f46; border-radius: 18px; background: #202023; box-shadow: 0 24px 80px #0006; }
-      h1 { margin: 0 0 12px; letter-spacing: -0.03em; }
-      p { color: #a1a1aa; line-height: 1.6; }
-      button { margin-top: 18px; border: 0; border-radius: 10px; padding: 12px 18px; background: #a78bfa; color: #18181b; cursor: pointer; font: inherit; font-weight: 700; }
-      button:disabled { cursor: progress; opacity: 0.7; }
-      #status { min-height: 24px; margin-top: 22px; color: #d4d4d8; overflow-wrap: anywhere; }
-      code { color: #c4b5fd; }
+      :root { color-scheme: light dark; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #111318; color: #eef0f6; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 75% 0%, #2b2347 0, transparent 38%), #111318; }
+      button, input, textarea { font: inherit; }
+      button { border: 0; cursor: pointer; }
+      button:disabled { cursor: not-allowed; opacity: 0.48; }
+      .app-shell { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 100vh; }
+      .sidebar { display: flex; flex-direction: column; gap: 18px; padding: 22px 16px; border-right: 1px solid #ffffff16; background: #15171dce; backdrop-filter: blur(18px); }
+      .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .brand h1 { margin: 0; font-size: 20px; letter-spacing: -0.04em; }
+      .brand p { margin: 4px 0 0; color: #9da3b5; font-size: 12px; }
+      .primary-action { border-radius: 9px; padding: 9px 12px; background: #a78bfa; color: #17131f; font-size: 12px; font-weight: 800; }
+      .search-wrap { display: grid; gap: 7px; }
+      .search-wrap label { color: #8f96a9; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+      #vault-search { width: 100%; border: 1px solid #ffffff18; border-radius: 8px; padding: 10px 11px; outline: none; background: #0f1116; color: #eef0f6; }
+      #vault-search:focus { border-color: #a78bfa; box-shadow: 0 0 0 3px #a78bfa22; }
+      #vault-mode { align-self: flex-start; border: 1px solid #ffffff1b; border-radius: 999px; padding: 5px 9px; color: #c9c1ff; font-size: 11px; }
+      #vault-mode[data-state="dirty"] { color: #ffd28b; border-color: #e9a43b66; }
+      #file-list { display: grid; gap: 4px; min-height: 0; overflow: auto; }
+      .file-row { display: grid; gap: 4px; width: 100%; border-radius: 8px; padding: 9px 10px; text-align: left; background: transparent; color: #d8dbe5; }
+      .file-row:hover:not(:disabled) { background: #ffffff0d; }
+      .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+      .file-preview { overflow: hidden; color: #858b9c; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+      .empty-list { margin: 8px 10px; color: #858b9c; font-size: 12px; }
+      .workspace { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-width: 0; min-height: 100vh; }
+      .workspace-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 68px; padding: 18px 28px; border-bottom: 1px solid #ffffff16; }
+      .eyebrow { margin: 0 0 4px; color: #858b9c; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+      #editor-path { overflow: hidden; max-width: min(65vw, 760px); color: #eef0f6; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+      .save-action { border: 1px solid #ffffff1e; border-radius: 8px; padding: 8px 12px; background: #ffffff0b; color: #eef0f6; font-size: 12px; font-weight: 700; }
+      .save-action:not(:disabled):hover { border-color: #a78bfa99; background: #a78bfa22; }
+      .editor-wrap { display: grid; min-height: 0; padding: 28px clamp(20px, 6vw, 90px); }
+      #note-editor { width: 100%; min-height: 0; resize: none; border: 1px solid #ffffff18; border-radius: 12px; padding: 24px; outline: none; background: #0e1015aa; color: #e8eaf0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; line-height: 1.7; }
+      #note-editor:focus { border-color: #a78bfa88; box-shadow: 0 0 0 3px #a78bfa18; }
+      #empty-state { align-self: center; justify-self: center; width: min(580px, 100%); padding: 42px; border: 1px solid #ffffff15; border-radius: 16px; background: #ffffff06; }
+      #empty-state[hidden] { display: none; }
+      #empty-state h2 { margin: 0 0 10px; font-size: 22px; letter-spacing: -0.04em; }
+      #empty-state p { margin: 0; color: #9da3b5; line-height: 1.6; }
+      #status { min-height: 54px; padding: 16px 28px; border-top: 1px solid #ffffff12; color: #9da3b5; font-size: 12px; overflow-wrap: anywhere; }
+      @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid #ffffff16; } .workspace { min-height: 58vh; } .workspace-header { padding: 14px 18px; } .editor-wrap { padding: 18px; } #status { padding: 12px 18px; } }
     </style>
   </head>
   <body>
-    <main>
-      <section>
-        <h1>OpenObsidian</h1>
-        <p>Open an existing vault in place. The first shell keeps the selected folder authoritative while the vault core proves byte-safe operations.</p>
-        <button id="select-vault" type="button">Open existing vault</button>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Vault navigation">
+        <div class="brand">
+          <div><h1>OpenObsidian</h1><p>Local knowledge workspace</p></div>
+          <button class="primary-action" id="select-vault" type="button">Open vault</button>
+        </div>
+        <div class="search-wrap"><label for="vault-search">Find in vault</label><input id="vault-search" type="search" placeholder="Search notes…" autocomplete="off" /></div>
+        <div id="vault-mode" aria-label="Vault mode">No vault</div>
+        <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
+      </aside>
+      <main class="workspace">
+        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><button class="save-action" id="save-note" type="button" disabled>Save · ⌘/Ctrl S</button></header>
+        <section class="editor-wrap" aria-label="Note editor"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></section>
         <div id="status" role="status" aria-live="polite">No vault selected.</div>
-      </section>
-    </main>
+      </main>
+    </div>
     <script type="module" src="../../dist/renderer.js"></script>
   </body>
 </html>

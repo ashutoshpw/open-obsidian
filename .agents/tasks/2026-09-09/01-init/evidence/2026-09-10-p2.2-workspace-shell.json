@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T08:30:45Z",
+  "checkpoint": "P2.2",
+  "requirements": ["PROD-007", "C02", "UX-001"],
+  "fixture_ids": ["fixture:journey-adopt", "fixture:c02-markdown", "fixture:ux-workspace"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "14ff91f348c1739ef03e18e2cc7ca1f9f52741a4ba756a4085e7df0c9ff9c69e"
+  },
+  "observations": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "The shared list/search/read/write API and Electron preload/main wiring pass strict TypeScript checking."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile; the renderer bundle includes the in-place file list, search, Markdown editor and revision-aware save flow."},
+    {"command": "bun test", "exit_code": 0, "result": "42 tests and 177 expectations pass across vault safety, Git inspection, core models, API validation and provenance audits."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the five changed workspace files relative to 60a55213db2d1061e1254c7c3ae7336c5d912833."}
+  ],
+  "implemented": [
+    "Vault selection scans in place, exposes read-only Standard/Chronicle state, lists Markdown and unsupported/symlink entries and requires no account.",
+    "The isolated renderer can search indexed Markdown, open a note, edit source text and save through the revision-aware IPC writer; Ctrl/Cmd-S is supported.",
+    "Unsupported regular files remain visible and disabled instead of being silently hidden or decoded as editor content."
+  ],
+  "limitations": [
+    "The Electron binary is not installed locally, so the UI was verified by strict typecheck, bundle compilation, static review and CI builds rather than a visible local runtime launch.",
+    "Live preview, reading mode, tabs/splits, command palette, quick switcher, outline/backlinks, settings persistence and dedicated changes review remain P2.2 work.",
+    "Reference Obsidian reopen/differential behavior, accessibility automation and cross-platform visible UI checks remain pending."
+  ]
+}

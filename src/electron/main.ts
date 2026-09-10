@@ -4,8 +4,9 @@ import {existsSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
 import {inspectVaultGitState} from "../core/chronicle.js";
+import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, validateVaultWriteRequest, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, validateVaultWriteRequest, type VaultFileSummary, type VaultSearchResult, type VaultSummary, type VaultWriteRequest} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -80,6 +81,15 @@ async function selectVault(): Promise<VaultSummary | null> {
   };
 }
 
+function listFiles(): VaultFileSummary[] {
+  return requireVault().scan().after.entries.map((entry) => ({relativePath: entry.relativePath, kind: entry.kind, bytes: entry.bytes, sha256: entry.sha256}));
+}
+
+function searchFiles(_event: Electron.IpcMainInvokeEvent, query: unknown): VaultSearchResult[] {
+  if (typeof query !== "string") throw new Error("Search query must be a string");
+  return searchVaultIndex(buildVaultIndex(requireVault()), query.slice(0, 200)).slice(0, 50);
+}
+
 function readFile(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): object {
   if (!isString(relativePath)) throw new Error("Vault path must be a string");
   const read = requireVault().read(relativePath);
@@ -98,6 +108,8 @@ function writeFile(_event: Electron.IpcMainInvokeEvent, value: unknown): object 
 
 function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.selectVault, selectVault);
+  ipcMain.handle(CHANNELS.listFiles, listFiles);
+  ipcMain.handle(CHANNELS.search, searchFiles);
   ipcMain.handle(CHANNELS.readFile, readFile);
   ipcMain.handle(CHANNELS.writeFile, writeFile);
 }
