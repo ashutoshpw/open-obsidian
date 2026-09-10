@@ -115,3 +115,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - CI: quality run `34454170838` and desktop-build run `34454170892` for the preceding safety reconciliation passed on Ubuntu, macOS and Windows; the current Chronicle commit has a new matrix run queued.
 - Reconciled: marked `PROD-005` implemented with explicit mutation/reference limitations, committed as `38ae8290036731ac16d9563a286638b377fe9b65`, pushed `main`, and verified `origin/main` at the same SHA.
 - Next operation: continue the P1.1 cross-platform/reference round trips and move Chronicle mutations to P2.3 only after the vault UI and recovery interfaces are ready; continue P1.2/P1.3 runtime feasibility.
+
+## 2026-09-10T08:35:08Z — P2.2 workspace shell increment pushed
+
+- Completed: added an in-place Electron workspace shell with vault adoption, Standard/Chronicle status, searchable file listing, Markdown open/read/edit/save through the revision-aware IPC broker, and visible disabled entries for unsupported files and symlinks.
+- Completed: added the renderer-facing list/search/read/write contract and kept the workspace free of AI behavior; keyboard save and basic accessible labels/status messaging are present.
+- Validation: `bun run quality` passes with 42 tests and 177 expectations; Knip reports no unused files, dependencies or exports; report-only Fallow health is 88.8/A; strict Fallow reports no issues in the eight-file increment.
+- Limitations: local Electron runtime is unavailable, so visible launch/accessibility automation remains pending; live preview, reading mode, tabs/splits, commands, settings, changes review, cross-platform UI and reference Obsidian reopen validation remain pending.
+- Reconciled: committed as `4aba0ade425e93158fbbe3ce79710895b28e85df` with marker `[openobsidian P2.2] Deliver workspace shell`, pushed `main`, and verified `origin/main` at the same SHA.
+- Next operation: inspect the new multi-OS quality/build runs, then continue P2.2 with live preview/reading mode, tabs/splits, command palette/quick switcher, outline/backlinks, settings persistence and changes review while keeping the remaining blockers explicit.
