@@ -31,6 +31,10 @@ export const CHANNELS = {
   applyAIChange: "ai:apply-change",
   undoAIChange: "ai:undo-change",
   organizationSuggestions: "ai:organization-suggestions",
+  loadProviderSettings: "ai:load-provider-settings",
+  saveProviderSettings: "ai:save-provider-settings",
+  saveProviderCredential: "ai:save-provider-credential",
+  providerStatus: "ai:provider-status",
 } as const;
 
 export type VaultGitSummary = {
@@ -225,6 +229,16 @@ export type OrganizationSuggestionKind = "link" | "property" | "duplicate" | "re
 export type OrganizationSuggestion = {id: string; kind: OrganizationSuggestionKind; relativePath: string; targetPath?: string; summary: string; detail: string; status: "awaiting-approval" | "denied-security"; safeAlternative?: string};
 export type AIOrganizationResponse = {provider: "none"; scope: RetrievalScope; suggestions: OrganizationSuggestion[]; warnings: string[]; safety: AIChangeSafety};
 
+export type ProviderMode = "managed" | "byok" | "local";
+export type ProviderId = "openrouter-proxy" | "openai-compatible" | "local-openai-compatible";
+export type ProviderUsageCaps = {maxRequests: number; maxInputTokens: number; maxOutputTokens: number; maxCostCents: number};
+export type ProviderSettings = {mode: ProviderMode; providerId: ProviderId; model: string; endpoint: string; credentialRef: string | null; caps: ProviderUsageCaps};
+export type ProviderCredentialState = "not-required" | "stored" | "missing";
+export type ProviderAvailability = "ready" | "setup-required" | "offline" | "quota-exhausted" | "unavailable";
+export type ProviderUsageSnapshot = ProviderUsageCaps & {requestCount: number; inputTokens: number; outputTokens: number; costCents: number};
+export type ProviderStatus = {mode: ProviderMode; providerId: ProviderId; model: string; endpoint: string; destination: string; credentialState: ProviderCredentialState; availability: ProviderAvailability; fallback: "none"; reason: string; usage: ProviderUsageSnapshot};
+export type ProviderCredentialRequest = {credentialRef: string; secret: string};
+
 export type WorkspaceSettings = {
   editorMode: EditorMode;
   splitView: boolean;
@@ -242,6 +256,15 @@ export type WorkspaceState = {
 };
 
 export const DEFAULT_WORKSPACE_STATE: WorkspaceState = {settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: null, openTabs: [], activePath: null, navigationHistory: []};
+
+export const DEFAULT_PROVIDER_SETTINGS: ProviderSettings = {
+  mode: "local",
+  providerId: "local-openai-compatible",
+  model: "unset",
+  endpoint: "http://127.0.0.1:11434/v1",
+  credentialRef: null,
+  caps: {maxRequests: 20, maxInputTokens: 100000, maxOutputTokens: 16000, maxCostCents: 1000},
+};
 
 export type NoteHeading = {
   text: string;
@@ -435,6 +458,75 @@ export function validateAIOrganizationScope(value: unknown): RetrievalScope | un
   return value === undefined ? undefined : validateRetrievalScope(value);
 }
 
+function validateProviderCap(value: unknown, label: string, minimum: number): number {
+  if (!Number.isSafeInteger(value) || (value as number) < minimum) throw new Error(`Invalid provider usage cap: ${label}`);
+  return value as number;
+}
+
+function validateProviderCaps(value: unknown): ProviderUsageCaps {
+  if (!isRecord(value)) throw new Error("Invalid provider usage caps");
+  return {maxRequests: validateProviderCap(value.maxRequests, "requests", 1), maxInputTokens: validateProviderCap(value.maxInputTokens, "input tokens", 1), maxOutputTokens: validateProviderCap(value.maxOutputTokens, "output tokens", 1), maxCostCents: validateProviderCap(value.maxCostCents, "cost", 0)};
+}
+
+function providerUrl(value: unknown): URL {
+  if (typeof value !== "string") throw new Error("Invalid provider endpoint");
+  if (value.length === 0 || value.length > 2048) throw new Error("Invalid provider endpoint");
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error("Invalid provider endpoint");
+  }
+  return url;
+}
+
+function providerEndpointAllowed(url: URL, mode: ProviderMode): void {
+  if (mode === "local" && !["http:", "https:"].includes(url.protocol)) throw new Error("Invalid local provider endpoint");
+  if (mode === "local" && !["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname)) throw new Error("Local provider endpoint must use loopback");
+  if (mode !== "local" && url.protocol !== "https:") throw new Error("Remote provider endpoint must use HTTPS");
+}
+
+function validateProviderEndpoint(value: unknown, mode: ProviderMode): string {
+  const url = providerUrl(value);
+  providerEndpointAllowed(url, mode);
+  return url.toString().replace(/\/$/, "");
+}
+
+function validCredentialRef(value: unknown): value is string {
+  return typeof value === "string" && /^[a-z0-9][a-z0-9._-]{0,99}$/i.test(value);
+}
+
+function validateCredentialRef(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (!validCredentialRef(value)) throw new Error("Invalid provider credential reference");
+  return value;
+}
+
+function validateProviderMode(value: unknown): ProviderMode {
+  if (value === "managed" || value === "byok" || value === "local") return value;
+  throw new Error("Invalid provider settings");
+}
+
+function validateProviderModel(value: unknown): string {
+  if (typeof value !== "string" || value.trim().length === 0 || value.length > 200) throw new Error("Invalid provider model");
+  return value.trim();
+}
+
+export function validateProviderSettings(value: unknown): ProviderSettings {
+  if (!isRecord(value)) throw new Error("Invalid provider settings");
+  const mode = validateProviderMode(value.mode);
+  const providerId = value.providerId;
+  const expectedProvider = {managed: "openrouter-proxy", byok: "openai-compatible", local: "local-openai-compatible"}[mode];
+  if (providerId !== expectedProvider) throw new Error("Provider id does not match provider mode");
+  return {mode, providerId: providerId as ProviderId, model: validateProviderModel(value.model), endpoint: validateProviderEndpoint(value.endpoint, mode), credentialRef: validateCredentialRef(value.credentialRef), caps: validateProviderCaps(value.caps)};
+}
+
+export function validateProviderCredentialRequest(value: unknown): ProviderCredentialRequest {
+  if (!isRecord(value) || !validCredentialRef(value.credentialRef)) throw new Error("Invalid provider credential request");
+  if (typeof value.secret !== "string" || value.secret.length === 0 || value.secret.length > 4096) throw new Error("Invalid provider credential request");
+  return {credentialRef: value.credentialRef, secret: value.secret};
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   listFiles: () => Promise<VaultFileSummary[]>;
@@ -468,4 +560,8 @@ export type OpenObsidianAPI = {
   applyAIChange: (request: AIApplyChangeRequest) => Promise<AIApplyChangeResponse>;
   undoAIChange: (request: AIUndoChangeRequest) => Promise<AIUndoChangeResponse>;
   organizationSuggestions: (scope?: RetrievalScope) => Promise<AIOrganizationResponse>;
+  loadProviderSettings: () => Promise<ProviderSettings>;
+  saveProviderSettings: (settings: ProviderSettings) => Promise<ProviderSettings>;
+  saveProviderCredential: (request: ProviderCredentialRequest) => Promise<ProviderStatus>;
+  providerStatus: () => Promise<ProviderStatus>;
 };

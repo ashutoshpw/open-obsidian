@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -33,6 +33,21 @@ test("workspace settings validation keeps editor modes and split state explicit"
   expect(() => validateWorkspaceSettings({editorMode: "wysiwyg", splitView: true})).toThrow("Invalid workspace settings");
   expect(() => validateWorkspaceSettings({editorMode: "source", splitView: "yes"})).toThrow("Invalid workspace settings");
   expect(validateWorkspaceSettings({editorMode: "source", splitView: true, historyPolicy: {maxAgeDays: 7, maxBytes: 1048576}}).historyPolicy).toEqual({maxAgeDays: 7, maxBytes: 1048576});
+});
+
+test("provider IPC validation keeps destination, credential and caps explicit", () => {
+  expect(validateProviderSettings(DEFAULT_PROVIDER_SETTINGS)).toEqual(DEFAULT_PROVIDER_SETTINGS);
+  expect(validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, mode: "managed", providerId: "openrouter-proxy", model: "managed-model", endpoint: "https://proxy.example.test/v1", credentialRef: "managed-key"})).toMatchObject({mode: "managed", providerId: "openrouter-proxy", endpoint: "https://proxy.example.test/v1", credentialRef: "managed-key"});
+  expect(validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, mode: "byok", providerId: "openai-compatible", model: "byok-model", endpoint: "https://api.example.test/v1", credentialRef: "user-key"}).mode).toBe("byok");
+  expect(validateProviderCredentialRequest({credentialRef: "user-key", secret: "secret-value"})).toEqual({credentialRef: "user-key", secret: "secret-value"});
+});
+
+test("provider IPC validation rejects unsafe endpoints, modes, caps and credentials", () => {
+  expect(() => validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, mode: "byok", providerId: "openrouter-proxy", endpoint: "https://api.example.test/v1"})).toThrow("Provider id does not match provider mode");
+  expect(() => validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, mode: "byok", providerId: "openai-compatible", endpoint: "http://api.example.test/v1"})).toThrow("Remote provider endpoint must use HTTPS");
+  expect(() => validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, endpoint: "http://192.168.1.10:11434/v1"})).toThrow("Local provider endpoint must use loopback");
+  expect(() => validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, caps: {...DEFAULT_PROVIDER_SETTINGS.caps, maxRequests: 0}})).toThrow("Invalid provider usage cap");
+  expect(() => validateProviderCredentialRequest({credentialRef: "bad ref", secret: "secret-value"})).toThrow("Invalid provider credential request");
 });
 
 test("history and conflict IPC validation keeps destructive actions explicit", () => {

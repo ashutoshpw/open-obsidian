@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "name": "local-model-lifecycle",
+  "states": ["missing", "invalid", "stale", "offline", "ready"],
+  "invariants": {
+    "sha256_manifest_required": true,
+    "model_change_reindexes": true,
+    "source_notes_are_not_deleted_with_derivatives": true,
+    "conversation_export_is_portable": true,
+    "offline_cloud_fallback": false
+  },
+  "external_pending": ["model-download-runtime", "hardware-benchmark", "provider-retention-terms"]
+}

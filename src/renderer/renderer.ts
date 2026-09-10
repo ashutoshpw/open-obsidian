@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -89,6 +89,19 @@ const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-ed
 const splitView = document.querySelector<HTMLInputElement>("#split-view");
 const historyAgeDays = document.querySelector<HTMLInputElement>("#history-age-days");
 const historyMaxMiB = document.querySelector<HTMLInputElement>("#history-max-mib");
+const providerMode = document.querySelector<HTMLSelectElement>("#provider-mode");
+const providerModel = document.querySelector<HTMLInputElement>("#provider-model");
+const providerEndpoint = document.querySelector<HTMLInputElement>("#provider-endpoint");
+const providerCredentialRef = document.querySelector<HTMLInputElement>("#provider-credential-ref");
+const providerSecret = document.querySelector<HTMLInputElement>("#provider-secret");
+const providerMaxRequests = document.querySelector<HTMLInputElement>("#provider-max-requests");
+const providerMaxInput = document.querySelector<HTMLInputElement>("#provider-max-input");
+const providerMaxOutput = document.querySelector<HTMLInputElement>("#provider-max-output");
+const providerMaxCost = document.querySelector<HTMLInputElement>("#provider-max-cost");
+const saveProviderButton = document.querySelector<HTMLButtonElement>("#save-provider");
+const saveProviderCredentialButton = document.querySelector<HTMLButtonElement>("#save-provider-credential");
+const refreshProviderButton = document.querySelector<HTMLButtonElement>("#refresh-provider");
+const providerStatusOutput = document.querySelector<HTMLElement>("#provider-status");
 const openGraphButton = document.querySelector<HTMLButtonElement>("#open-graph");
 const openCanvasButton = document.querySelector<HTMLButtonElement>("#open-canvas");
 const openBaseButton = document.querySelector<HTMLButtonElement>("#open-base");
@@ -121,6 +134,7 @@ let requestId = 0;
 let changeReview: Awaited<ReturnType<OpenObsidianAPI["reviewChanges"]>> | null = null;
 let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS, historyPolicy: {...DEFAULT_HISTORY_POLICY}};
 let workspaceState: WorkspaceState = {...DEFAULT_WORKSPACE_STATE, settings: workspaceSettings, openTabs: [], navigationHistory: []};
+let providerSettings: ProviderSettings = DEFAULT_PROVIDER_SETTINGS;
 let tabStates: NoteTab[] = [];
 let contextRequestId = 0;
 let paletteRequestId = 0;
@@ -134,6 +148,8 @@ let retrievalData: RetrievalResponse | null = null;
 let pendingCitation: RetrievalCitation | null = null;
 let aiChangeSet: AIChangeSet | null = null;
 let aiUndoId: string | null = null;
+
+const providerIds: Record<ProviderMode, ProviderSettings["providerId"]> = {managed: "openrouter-proxy", byok: "openai-compatible", local: "local-openai-compatible"};
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -246,6 +262,114 @@ function applyWorkspaceSettings(settings: WorkspaceSettings): void {
   setInputValue(historyMaxMiB, String(Math.max(1, Math.round(settings.historyPolicy.maxBytes / (1024 * 1024)))));
   renderEditorMode();
   renderContextSplit();
+}
+
+function applyProviderSettings(settings: ProviderSettings): void {
+  providerSettings = settings;
+  setInputValue(providerMode, settings.mode);
+  setInputValue(providerModel, settings.model);
+  setInputValue(providerEndpoint, settings.endpoint);
+  setInputValue(providerCredentialRef, settings.credentialRef ?? "");
+  setInputValue(providerMaxRequests, String(settings.caps.maxRequests));
+  setInputValue(providerMaxInput, String(settings.caps.maxInputTokens));
+  setInputValue(providerMaxOutput, String(settings.caps.maxOutputTokens));
+  setInputValue(providerMaxCost, String(settings.caps.maxCostCents));
+}
+
+function providerCapsFromInputs(): ProviderUsageCaps | null {
+  const maxRequests = inputWholeNumber(providerMaxRequests, 1);
+  const maxInputTokens = inputWholeNumber(providerMaxInput, 1);
+  const maxOutputTokens = inputWholeNumber(providerMaxOutput, 1);
+  const maxCostCents = inputWholeNumber(providerMaxCost, 0);
+  if ([maxRequests, maxInputTokens, maxOutputTokens, maxCostCents].some((value) => value === null)) return null;
+  return {maxRequests: maxRequests!, maxInputTokens: maxInputTokens!, maxOutputTokens: maxOutputTokens!, maxCostCents: maxCostCents!};
+}
+
+function selectedProviderMode(): ProviderMode | null {
+  return providerModeValue(providerMode?.value);
+}
+
+function providerControlValue(element: HTMLInputElement | HTMLSelectElement | null): string {
+  return element?.value.trim() ?? "";
+}
+
+function providerSecretValue(): string {
+  return providerSecret?.value ?? "";
+}
+
+function providerCredentialFromInputs(): {credentialRef: string; secret: string} | null {
+  const credentialRef = providerControlValue(providerCredentialRef);
+  const secret = providerSecretValue();
+  if (!credentialRef || !secret) return null;
+  return {credentialRef, secret};
+}
+
+function providerModeValue(value: string | undefined): ProviderMode | null {
+  if (value === "managed") return value;
+  if (value === "byok") return value;
+  if (value === "local") return value;
+  return null;
+}
+
+function providerSettingsFromInputs(): ProviderSettings | null {
+  const mode = selectedProviderMode();
+  if (!mode) return null;
+  const caps = providerCapsFromInputs();
+  if (!caps) return null;
+  return {mode, providerId: providerIds[mode], model: providerControlValue(providerModel), endpoint: providerControlValue(providerEndpoint), credentialRef: providerControlValue(providerCredentialRef) || null, caps};
+}
+
+function renderProviderStatus(value: ProviderStatus): void {
+  setText(providerStatusOutput, `${value.mode} · ${value.availability} · ${value.model} · ${value.destination} · credential ${value.credentialState} · fallback ${value.fallback} · ${value.reason} · usage ${value.usage.requestCount}/${value.usage.maxRequests} requests`);
+}
+
+async function loadProviderConfiguration(): Promise<void> {
+  const client = api;
+  if (!client) return;
+  try {
+    applyProviderSettings(await client.loadProviderSettings());
+    renderProviderStatus(await client.providerStatus());
+  } catch (error) {
+    setStatus(errorText(error, "Unable to load provider settings; provider remains unavailable."));
+  }
+}
+
+async function saveProviderConfiguration(): Promise<void> {
+  const client = api;
+  const settings = providerSettingsFromInputs();
+  if (!client || !settings) {
+    setStatus("Provider settings require a valid mode, model, endpoint and whole-number caps.");
+    applyProviderSettings(providerSettings);
+    return;
+  }
+  try {
+    applyProviderSettings(await client.saveProviderSettings(settings));
+    renderProviderStatus(await client.providerStatus());
+    setStatus("Provider settings saved; no request was dispatched.");
+  } catch (error) {
+    setStatus(errorText(error, "Unable to save provider settings."));
+  }
+}
+
+async function storeProviderCredential(client: OpenObsidianAPI, credential: {credentialRef: string; secret: string}): Promise<void> {
+  try {
+    renderProviderStatus(await client.saveProviderCredential(credential));
+    if (providerSecret) providerSecret.value = "";
+    setStatus("Credential stored by the main process; the secret was cleared from the form.");
+  } catch (error) {
+    setStatus(errorText(error, "Unable to store the provider credential."));
+  }
+}
+
+async function saveProviderCredential(): Promise<void> {
+  const client = api;
+  if (!client) return;
+  const credential = providerCredentialFromInputs();
+  if (!credential) {
+    setStatus("Enter a credential reference and secret before storing the credential.");
+    return;
+  }
+  await storeProviderCredential(client, credential);
 }
 
 function setInputValue(element: HTMLInputElement | HTMLSelectElement | null, value: string): void {
@@ -2160,6 +2284,9 @@ if (defaultEditorMode) defaultEditorMode.addEventListener("change", () => {
 if (splitView) splitView.addEventListener("change", () => setSplitView(splitView.checked));
 if (historyAgeDays) historyAgeDays.addEventListener("change", updateHistoryPolicyFromInputs);
 if (historyMaxMiB) historyMaxMiB.addEventListener("change", updateHistoryPolicyFromInputs);
+if (saveProviderButton) saveProviderButton.addEventListener("click", () => void saveProviderConfiguration());
+if (saveProviderCredentialButton) saveProviderCredentialButton.addEventListener("click", () => void saveProviderCredential());
+if (refreshProviderButton) refreshProviderButton.addEventListener("click", () => void loadProviderConfiguration());
 if (reviewRetentionButton) reviewRetentionButton.addEventListener("click", () => void retentionPlanRequest());
 if (cleanupHistoryButton) cleanupHistoryButton.addEventListener("click", () => void cleanupHistoryRequest());
 if (closeConflictButton) closeConflictButton.addEventListener("click", closeConflict);
@@ -2198,4 +2325,4 @@ function handleKeydown(event: KeyboardEvent): void {
 
 document.addEventListener("keydown", handleKeydown);
 updateEditorState();
-workspaceStateReady = loadWorkspaceSettings().then(() => loadWorkspaceState());
+workspaceStateReady = loadWorkspaceSettings().then(() => loadWorkspaceState()).then(() => loadProviderConfiguration());

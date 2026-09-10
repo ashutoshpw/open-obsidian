@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type RetrievalProgress, type RetrievalScope, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -33,6 +33,10 @@ const api: OpenObsidianAPI = {
   applyAIChange: (request: AIApplyChangeRequest) => ipcRenderer.invoke(CHANNELS.applyAIChange, request),
   undoAIChange: (request: AIUndoChangeRequest) => ipcRenderer.invoke(CHANNELS.undoAIChange, request),
   organizationSuggestions: (scope?: RetrievalScope) => ipcRenderer.invoke(CHANNELS.organizationSuggestions, scope),
+  loadProviderSettings: () => ipcRenderer.invoke(CHANNELS.loadProviderSettings),
+  saveProviderSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveProviderSettings, settings),
+  saveProviderCredential: (request: ProviderCredentialRequest) => ipcRenderer.invoke(CHANNELS.saveProviderCredential, request),
+  providerStatus: () => ipcRenderer.invoke(CHANNELS.providerStatus),
   onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgress) => listener(progress);
     ipcRenderer.on(CHANNELS.retrievalProgress, handler);

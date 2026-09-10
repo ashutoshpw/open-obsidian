@@ -4,6 +4,7 @@ import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {dirname, join, resolve} from "node:path";
 import {applyAIChangeSet, draftLocalAIChange, organizationSuggestions, undoAIChange, type AppliedAIChange} from "../core/ai-changes.js";
+import {describeProvider} from "../core/providers.js";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
 import {createNoteFromTextNode, editCanvasTextNode, parseCanvas} from "../core/canvas.js";
 import {evaluateBase, parseBase, type BaseRow, type BaseValue} from "../core/bases.js";
@@ -15,7 +16,8 @@ import {retrieveVault} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {ElectronCredentialStore} from "./provider-credentials.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -332,6 +334,39 @@ function saveSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): Work
   return settings;
 }
 
+function providerSettingsPath(): string {
+  return join(app.getPath("userData"), "provider-settings.json");
+}
+
+function providerCredentialStore(): ElectronCredentialStore {
+  return new ElectronCredentialStore(join(app.getPath("userData"), "provider-credentials.json"));
+}
+
+function loadProviderSettings(): ProviderSettings {
+  try {
+    return validateProviderSettings(JSON.parse(readFileSync(providerSettingsPath(), "utf8")));
+  } catch {
+    return DEFAULT_PROVIDER_SETTINGS;
+  }
+}
+
+function saveProviderSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): ProviderSettings {
+  const settings = validateProviderSettings(value);
+  mkdirSync(app.getPath("userData"), {recursive: true});
+  writeFileSync(providerSettingsPath(), `${JSON.stringify(settings, null, 2)}\n`);
+  return settings;
+}
+
+function providerStatus(): ProviderStatus {
+  return describeProvider(loadProviderSettings(), providerCredentialStore());
+}
+
+function saveProviderCredential(_event: Electron.IpcMainInvokeEvent, value: unknown): ProviderStatus {
+  const request = validateProviderCredentialRequest(value);
+  providerCredentialStore().write(request.credentialRef, request.secret);
+  return providerStatus();
+}
+
 function workspaceStatePath(): string {
   return join(app.getPath("userData"), "workspace-state.json");
 }
@@ -386,6 +421,10 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.noteContext, noteContext);
   ipcMain.handle(CHANNELS.loadSettings, loadSettings);
   ipcMain.handle(CHANNELS.saveSettings, saveSettings);
+  ipcMain.handle(CHANNELS.loadProviderSettings, loadProviderSettings);
+  ipcMain.handle(CHANNELS.saveProviderSettings, saveProviderSettings);
+  ipcMain.handle(CHANNELS.saveProviderCredential, saveProviderCredential);
+  ipcMain.handle(CHANNELS.providerStatus, providerStatus);
   ipcMain.handle(CHANNELS.loadWorkspaceState, loadWorkspaceState);
   ipcMain.handle(CHANNELS.saveWorkspaceState, saveWorkspaceState);
 }
