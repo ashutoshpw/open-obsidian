@@ -37,6 +37,7 @@ const api: OpenObsidianAPI = {
   saveProviderSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveProviderSettings, settings),
   saveProviderCredential: (request: ProviderCredentialRequest) => ipcRenderer.invoke(CHANNELS.saveProviderCredential, request),
   providerStatus: () => ipcRenderer.invoke(CHANNELS.providerStatus),
+  diagnosticManifest: () => ipcRenderer.invoke(CHANNELS.diagnosticManifest),
   onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgress) => listener(progress);
     ipcRenderer.on(CHANNELS.retrievalProgress, handler);

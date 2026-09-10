@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "workflows": [".github/workflows/quality.yml", ".github/workflows/desktop-build.yml"],
+  "push_branches": ["main"],
+  "tag_pattern": "vYYYY-MM-DD",
+  "runner_matrix": ["ubuntu-latest", "macos-latest", "windows-latest"],
+  "artifact_contract": ["release-manifest.json", "sha256", "upload-artifact@v4"],
+  "preview_without_signing": "unsigned-preview",
+  "production_without_signing": "blocked",
+  "release_tag_created_by_goal": false,
+  "staging_handoff": "required-for-production"
+}

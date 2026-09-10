@@ -1,5 +1,6 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {parseMarkdownPreview, type MarkdownPreviewBlock} from "../core/markdown-preview.js";
+import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -103,6 +104,8 @@ const saveProviderButton = document.querySelector<HTMLButtonElement>("#save-prov
 const saveProviderCredentialButton = document.querySelector<HTMLButtonElement>("#save-provider-credential");
 const refreshProviderButton = document.querySelector<HTMLButtonElement>("#refresh-provider");
 const providerStatusOutput = document.querySelector<HTMLElement>("#provider-status");
+const showDiagnosticsButton = document.querySelector<HTMLButtonElement>("#show-diagnostics");
+const diagnosticsOutput = document.querySelector<HTMLElement>("#diagnostics-output");
 const openGraphButton = document.querySelector<HTMLButtonElement>("#open-graph");
 const openCanvasButton = document.querySelector<HTMLButtonElement>("#open-canvas");
 const openBaseButton = document.querySelector<HTMLButtonElement>("#open-base");
@@ -149,6 +152,7 @@ let retrievalData: RetrievalResponse | null = null;
 let pendingCitation: RetrievalCitation | null = null;
 let aiChangeSet: AIChangeSet | null = null;
 let aiUndoId: string | null = null;
+const uiLocale = normalizeLocale(navigator.language);
 
 const providerIds: Record<ProviderMode, ProviderSettings["providerId"]> = {managed: "openrouter-proxy", byok: "openai-compatible", local: "local-openai-compatible"};
 
@@ -189,6 +193,15 @@ function encodeBase64(value: string): string {
 
 function setText(element: HTMLElement | null, value: string): void {
   if (element) element.textContent = value;
+}
+
+function applyLocale(): void {
+  document.documentElement.lang = uiLocale;
+  document.documentElement.dir = localeDirection(uiLocale);
+  document.querySelectorAll<HTMLElement>("[data-message-key]").forEach((element) => {
+    const key = element.dataset.messageKey as MessageKey | undefined;
+    if (key) element.textContent = message(uiLocale, key);
+  });
 }
 
 function setDisabled(element: HTMLButtonElement | HTMLTextAreaElement | null, value: boolean): void {
@@ -409,6 +422,18 @@ async function loadProviderConfiguration(): Promise<void> {
     renderProviderStatus(await client.providerStatus());
   } catch (error) {
     setStatus(errorText(error, "Unable to load provider settings; provider remains unavailable."));
+  }
+}
+
+async function loadDiagnosticManifest(): Promise<void> {
+  const client = api;
+  if (!client || !diagnosticsOutput) return;
+  try {
+    diagnosticsOutput.textContent = JSON.stringify(await client.diagnosticManifest(), null, 2);
+    setHidden(diagnosticsOutput, false);
+    setStatus("Local diagnostics loaded; note content and provider secrets were excluded.");
+  } catch (error) {
+    setStatus(errorText(error, "Unable to load local diagnostics."));
   }
 }
 
@@ -2372,6 +2397,7 @@ if (historyMaxMiB) historyMaxMiB.addEventListener("change", updateHistoryPolicyF
 if (saveProviderButton) saveProviderButton.addEventListener("click", () => void saveProviderConfiguration());
 if (saveProviderCredentialButton) saveProviderCredentialButton.addEventListener("click", () => void saveProviderCredential());
 if (refreshProviderButton) refreshProviderButton.addEventListener("click", () => void loadProviderConfiguration());
+if (showDiagnosticsButton) showDiagnosticsButton.addEventListener("click", () => void loadDiagnosticManifest());
 if (reviewRetentionButton) reviewRetentionButton.addEventListener("click", () => void retentionPlanRequest());
 if (cleanupHistoryButton) cleanupHistoryButton.addEventListener("click", () => void cleanupHistoryRequest());
 if (closeConflictButton) closeConflictButton.addEventListener("click", closeConflict);
@@ -2409,5 +2435,6 @@ function handleKeydown(event: KeyboardEvent): void {
 }
 
 document.addEventListener("keydown", handleKeydown);
+applyLocale();
 updateEditorState();
 workspaceStateReady = loadWorkspaceSettings().then(() => loadWorkspaceState()).then(() => loadProviderConfiguration());

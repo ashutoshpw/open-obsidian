@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "name": "renderer-accessibility-contract",
+  "automated_checks": ["interactive-names", "form-labels", "button-types", "focus-visible", "reduced-motion", "live-status", "dialog-labels"],
+  "input_cases": ["keyboard", "ime-devanagari", "unicode", "rtl-arabic", "popout-external"],
+  "manual_external_pending": ["screen-reader-run", "visible-electron-focus-run", "high-contrast-and-scale-run"]
+}

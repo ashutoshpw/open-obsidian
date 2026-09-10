@@ -35,6 +35,7 @@ export const CHANNELS = {
   saveProviderSettings: "ai:save-provider-settings",
   saveProviderCredential: "ai:save-provider-credential",
   providerStatus: "ai:provider-status",
+  diagnosticManifest: "workspace:diagnostic-manifest",
 } as const;
 
 export type VaultGitSummary = {
@@ -565,4 +566,5 @@ export type OpenObsidianAPI = {
   saveProviderSettings: (settings: ProviderSettings) => Promise<ProviderSettings>;
   saveProviderCredential: (request: ProviderCredentialRequest) => Promise<ProviderStatus>;
   providerStatus: () => Promise<ProviderStatus>;
+  diagnosticManifest: () => Promise<import("../core/privacy.js").DiagnosticManifest>;
 };

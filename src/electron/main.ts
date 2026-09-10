@@ -12,6 +12,7 @@ import {buildVaultGraph} from "../core/graph.js";
 import {cleanupHistory, DEFAULT_HISTORY_POLICY, historyRecordsFromStore, planHistoryRetention} from "../core/history.js";
 import {parseMarkdown} from "../core/markdown.js";
 import {buildNoteContext} from "../core/note-context.js";
+import {createDiagnosticManifest, type DiagnosticManifest} from "../core/privacy.js";
 import {retrieveVault} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
@@ -361,6 +362,22 @@ function providerStatus(): ProviderStatus {
   return describeProvider(loadProviderSettings(), providerCredentialStore());
 }
 
+function diagnosticManifest(): DiagnosticManifest {
+  const provider = providerStatus();
+  const vault = activeVault;
+  const scan = vault?.scan();
+  return createDiagnosticManifest({
+    applicationVersion: app.getVersion(),
+    platform: process.platform,
+    architecture: process.arch,
+    vaultFileCount: scan?.after.entries.length,
+    vaultKind: vault ? inspectVaultGitState(vault.root).vaultType : "none",
+    providerMode: provider.mode,
+    providerId: provider.providerId,
+    providerCredentialState: provider.credentialState,
+  });
+}
+
 function saveProviderCredential(_event: Electron.IpcMainInvokeEvent, value: unknown): ProviderStatus {
   const request = validateProviderCredentialRequest(value);
   providerCredentialStore().write(request.credentialRef, request.secret);
@@ -425,6 +442,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.saveProviderSettings, saveProviderSettings);
   ipcMain.handle(CHANNELS.saveProviderCredential, saveProviderCredential);
   ipcMain.handle(CHANNELS.providerStatus, providerStatus);
+  ipcMain.handle(CHANNELS.diagnosticManifest, diagnosticManifest);
   ipcMain.handle(CHANNELS.loadWorkspaceState, loadWorkspaceState);
   ipcMain.handle(CHANNELS.saveWorkspaceState, saveWorkspaceState);
 }

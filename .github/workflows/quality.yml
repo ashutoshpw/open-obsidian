@@ -3,6 +3,7 @@ name: OpenObsidian quality
 on:
   push:
     branches: [main]
+    tags: ["v????-??-??"]
   pull_request:
   schedule:
     - cron: "17 3 * * 1"
@@ -42,10 +43,14 @@ jobs:
         run: bun run validate:architecture
       - name: Verify distribution metadata
         run: bun run verify:distribution
+      - name: Check renderer accessibility contract
+        run: bun run check:accessibility
       - name: Type-check source
         run: bun run typecheck
       - name: Run tests
         run: bun test
+      - name: Run executable quality scorecard
+        run: bun run quality:program
       - name: Compile Electron shell
         run: bun run compile
       - name: Run Knip audit

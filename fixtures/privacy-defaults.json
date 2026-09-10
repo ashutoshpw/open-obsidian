@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "name": "local-first-privacy-defaults",
+  "defaults": {
+    "privateVaultUpload": false,
+    "noteContentTelemetry": false,
+    "providerSecretTelemetry": false,
+    "diagnosticsDestination": "local-export-only"
+  },
+  "redacted_fields": ["note_content", "provider_secret", "absolute_paths"],
+  "controls": ["show-local-manifest", "safe-mode", "extension-bisect"],
+  "external_pending": ["packaged-crash-reporter-review", "managed-operations-retention-review"]
+}

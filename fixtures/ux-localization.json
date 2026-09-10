@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "locales": [
+    {"id": "en", "direction": "ltr", "sample": "Review 🧭"},
+    {"id": "hi", "direction": "ltr", "sample": "नमस्ते 🧭"},
+    {"id": "ar", "direction": "rtl", "sample": "مرحبا 🧭"}
+  ],
+  "guarantees": ["message-lookup-from-catalog", "unicode-round-trip", "direction-explicit", "no-default-network-translation"]
+}
