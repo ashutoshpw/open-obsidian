@@ -115,7 +115,7 @@
       .context-empty { margin: 0; color: #858b9c; font-size: 11px; line-height: 1.5; }
       .settings-grid { display: grid; gap: 10px; max-width: 520px; }
       .settings-grid label { display: flex; align-items: center; gap: 8px; color: #c5c9d4; font-size: 12px; }
-      .settings-grid select { width: min(280px, 100%); border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
+      .settings-grid select, .settings-grid input[type="number"] { width: min(280px, 100%); border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
       .settings-grid input[type="checkbox"] { accent-color: #a78bfa; }
       #quick-switcher { width: min(620px, calc(100vw - 36px)); border: 1px solid #ffffff1e; border-radius: 14px; padding: 0; background: #171923; color: #eef0f6; box-shadow: 0 24px 70px #0009; }
       #quick-switcher::backdrop { background: #07080dcc; }
@@ -147,7 +147,7 @@
         <nav class="note-tabs" id="note-tabs" aria-label="Open notes"></nav>
         <section class="tool-panel" id="settings-panel" aria-label="Workspace settings" hidden>
           <div class="panel-header"><h2>Workspace settings</h2><button class="panel-close" id="close-settings" type="button">Close</button></div>
-          <div class="settings-grid"><label for="default-editor-mode">Editor mode</label><select id="default-editor-mode"><option value="source">Source</option><option value="live-preview">Live preview</option><option value="reading">Reading</option></select><label><input id="split-view" type="checkbox" /> Show outline and backlinks</label></div>
+          <div class="settings-grid"><label for="default-editor-mode">Editor mode</label><select id="default-editor-mode"><option value="source">Source</option><option value="live-preview">Live preview</option><option value="reading">Reading</option></select><label><input id="split-view" type="checkbox" /> Show outline and backlinks</label><label for="history-age-days">Recovery history (days)</label><input id="history-age-days" type="number" min="0" step="1" inputmode="numeric" /><label for="history-max-mib">Recovery history cap (MiB)</label><input id="history-max-mib" type="number" min="1" step="1" inputmode="numeric" /></div>
         </section>
         <section class="tool-panel" id="change-panel" aria-label="Chronicle change review" hidden>
           <div class="panel-header"><h2>Review Chronicle changes</h2><button class="panel-close" id="close-changes" type="button">Close</button></div>

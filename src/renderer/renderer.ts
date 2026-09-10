@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, type EditorMode, type NoteContext, type OpenObsidianAPI, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type EditorMode, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -58,17 +58,21 @@ const toggleSettingsButton = document.querySelector<HTMLButtonElement>("#toggle-
 const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-settings");
 const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-editor-mode");
 const splitView = document.querySelector<HTMLInputElement>("#split-view");
+const historyAgeDays = document.querySelector<HTMLInputElement>("#history-age-days");
+const historyMaxMiB = document.querySelector<HTMLInputElement>("#history-max-mib");
 let selectedSummary: VaultSummary | null = null;
 let selectedPath: string | null = null;
 let selectedRevision: string | null = null;
 let dirty = false;
 let requestId = 0;
 let changeReview: Awaited<ReturnType<OpenObsidianAPI["reviewChanges"]>> | null = null;
-let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS};
+let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS, historyPolicy: {...DEFAULT_HISTORY_POLICY}};
+let workspaceState: WorkspaceState = {...DEFAULT_WORKSPACE_STATE, settings: workspaceSettings, openTabs: [], navigationHistory: []};
 let tabStates: NoteTab[] = [];
 let contextRequestId = 0;
 let paletteRequestId = 0;
 let selectedConflict: VaultHistoryRecord | null = null;
+let workspaceStateReady: Promise<void> = Promise.resolve();
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
@@ -174,16 +178,28 @@ function contextButtonLabel(): string {
 
 function applyWorkspaceSettings(settings: WorkspaceSettings): void {
   workspaceSettings = settings;
-  if (defaultEditorMode) defaultEditorMode.value = settings.editorMode;
-  if (splitView) splitView.checked = settings.splitView;
+  workspaceState = {...workspaceState, settings};
+  setInputValue(defaultEditorMode, settings.editorMode);
+  setInputChecked(splitView, settings.splitView);
+  setInputValue(historyAgeDays, String(settings.historyPolicy.maxAgeDays));
+  setInputValue(historyMaxMiB, String(Math.max(1, Math.round(settings.historyPolicy.maxBytes / (1024 * 1024)))));
   renderEditorMode();
   renderContextSplit();
+}
+
+function setInputValue(element: HTMLInputElement | HTMLSelectElement | null, value: string): void {
+  if (element) element.value = value;
+}
+
+function setInputChecked(element: HTMLInputElement | null, value: boolean): void {
+  if (element) element.checked = value;
 }
 
 async function persistWorkspaceSettings(): Promise<void> {
   if (!api) return;
   try {
     applyWorkspaceSettings(await api.saveSettings(workspaceSettings));
+    await persistWorkspaceState();
   } catch (error) {
     setStatus(errorText(error, "Unable to save workspace settings."));
   }
@@ -198,6 +214,52 @@ async function loadWorkspaceSettings(): Promise<void> {
   }
 }
 
+async function loadWorkspaceState(): Promise<void> {
+  if (!api) return;
+  try {
+    const state = await api.loadWorkspaceState();
+    workspaceState = state;
+    applyWorkspaceSettings(state.settings);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to load workspace state; using default workspace settings."));
+  }
+}
+
+function workspaceNavigation(selected: string | null): string[] {
+  if (!selected) return workspaceState.navigationHistory;
+  return [...workspaceState.navigationHistory.filter((path) => path !== selected), selected].slice(-100);
+}
+
+async function persistWorkspaceState(): Promise<void> {
+  const client = api;
+  if (!client) return;
+  const next = buildWorkspaceState();
+  workspaceState = next;
+  try {
+    workspaceState = await client.saveWorkspaceState(next);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to save workspace state."));
+  }
+}
+
+function buildWorkspaceState(): WorkspaceState {
+  const openTabs = loadedTabPaths();
+  const activePath = activeWorkspacePath(openTabs);
+  return {...workspaceState, settings: workspaceSettings, vaultRoot: workspaceVaultRoot(), openTabs, activePath, navigationHistory: workspaceNavigation(activePath)};
+}
+
+function loadedTabPaths(): string[] {
+  return tabStates.filter((tab) => tab.loaded).map((tab) => tab.path).slice(-50);
+}
+
+function activeWorkspacePath(openTabs: string[]): string | null {
+  return selectedPath && openTabs.includes(selectedPath) ? selectedPath : null;
+}
+
+function workspaceVaultRoot(): string | null {
+  return selectedSummary?.root ?? workspaceState.vaultRoot;
+}
+
 function setEditorMode(mode: EditorMode): void {
   workspaceSettings = {...workspaceSettings, editorMode: mode};
   renderEditorMode();
@@ -209,6 +271,49 @@ function setSplitView(enabled: boolean): void {
   workspaceSettings = {...workspaceSettings, splitView: enabled};
   renderContextSplit();
   void persistWorkspaceSettings();
+}
+
+function setHistoryPolicy(policy: HistoryPolicy): void {
+  workspaceSettings = {...workspaceSettings, historyPolicy: policy};
+  applyWorkspaceSettings(workspaceSettings);
+  void persistWorkspaceSettings();
+}
+
+function updateHistoryPolicyFromInputs(): void {
+  const policy = historyPolicyFromInputs();
+  if (!policy) {
+    setStatus("History retention must use whole non-negative days and at least 1 MiB.");
+    applyWorkspaceSettings(workspaceSettings);
+    return;
+  }
+  setHistoryPolicy(policy);
+}
+
+function historyPolicyFromInputs(): HistoryPolicy | null {
+  const maxAgeDays = inputWholeNumber(historyAgeDays, 0);
+  if (maxAgeDays === null) return null;
+  const maxBytes = inputHistoryBytes(historyMaxMiB);
+  if (maxBytes === null) return null;
+  return {maxAgeDays, maxBytes};
+}
+
+function inputWholeNumber(element: HTMLInputElement | null, minimum: number): number | null {
+  return wholeNumber(Number(element?.value), minimum);
+}
+
+function inputHistoryBytes(element: HTMLInputElement | null): number | null {
+  return historyBytes(Number(element?.value));
+}
+
+function historyBytes(value: number): number | null {
+  const maxMiB = wholeNumber(value, 1);
+  if (maxMiB === null) return null;
+  const maxBytes = maxMiB * 1024 * 1024;
+  return Number.isSafeInteger(maxBytes) ? maxBytes : null;
+}
+
+function wholeNumber(value: number, minimum: number): number | null {
+  return Number.isSafeInteger(value) && value >= minimum ? value : null;
 }
 
 function updateChronicleControls(): void {
@@ -340,6 +445,7 @@ function restoreTab(tab: NoteTab): void {
   updateEditorState();
   renderTabs();
   void loadNoteContext(tab.path);
+  void persistWorkspaceState();
   setStatus(`Switched to ${tab.path}${tab.dirty ? " · unsaved changes" : ""}.`);
 }
 
@@ -668,7 +774,7 @@ function renderRetentionSummary(plan: Awaited<ReturnType<OpenObsidianAPI["histor
 async function retentionPlanRequest(): Promise<void> {
   if (!api || !selectedSummary) return;
   try {
-    renderRetentionSummary(await api.historyPlan(DEFAULT_HISTORY_POLICY));
+    renderRetentionSummary(await api.historyPlan(workspaceSettings.historyPolicy));
   } catch (error) {
     setText(retentionSummary, errorText(error, "Unable to review recovery retention."));
     setDisabled(cleanupHistoryButton, true);
@@ -704,7 +810,7 @@ async function cleanupHistoryRequest(): Promise<void> {
   setDisabled(cleanupHistoryButton, true);
   setStatus("Removing only expired or over-cap non-conflict recovery records…");
   try {
-    const result = await api.cleanupHistory(DEFAULT_HISTORY_POLICY);
+    const result = await api.cleanupHistory(workspaceSettings.historyPolicy);
     await historyRequest();
     setStatus(cleanupSuccessMessage(result.removed.length));
   } catch (error) {
@@ -901,23 +1007,57 @@ async function readFileRequest(client: OpenObsidianAPI, path: string, currentReq
   try {
     const response = await client.readFile(path);
     if (currentRequest !== requestId) return;
-    const tab = rememberTab(response.relativePath);
-    selectedPath = response.relativePath;
-    selectedRevision = response.revision;
-    dirty = false;
-    tab.revision = response.revision;
-    tab.content = decodeBase64(response.base64);
-    tab.dirty = false;
-    tab.loaded = true;
-    if (editor) editor.value = tab.content;
-    renderNotePreview(tab.content);
-    updateEditorState();
-    renderTabs();
-    void loadNoteContext(response.relativePath);
+    applyReadResponse(response);
+    void persistWorkspaceState();
     setStatus(`Opened ${response.relativePath} · revision ${response.revision.slice(0, 12)}…`);
   } catch (error) {
     setStatus(errorText(error, "Unable to open the note."));
   }
+}
+
+function applyReadResponse(response: Awaited<ReturnType<OpenObsidianAPI["readFile"]>>): void {
+  const tab = rememberTab(response.relativePath);
+  selectedPath = response.relativePath;
+  selectedRevision = response.revision;
+  dirty = false;
+  tab.revision = response.revision;
+  tab.content = decodeBase64(response.base64);
+  tab.dirty = false;
+  tab.loaded = true;
+  if (editor) editor.value = tab.content;
+  renderNotePreview(tab.content);
+  updateEditorState();
+  renderTabs();
+  void loadNoteContext(response.relativePath);
+}
+
+async function restoreWorkspaceTabs(client: OpenObsidianAPI): Promise<void> {
+  if (!sameWorkspaceVault()) return;
+  await Promise.all(workspaceState.openTabs.slice(0, 50).map((path) => restoreTabFromPath(client, path)));
+  restoreActiveWorkspaceTab(workspaceActivePath());
+  void persistWorkspaceState();
+}
+
+function sameWorkspaceVault(): boolean {
+  return Boolean(selectedSummary && workspaceState.vaultRoot === selectedSummary.root);
+}
+
+async function restoreTabFromPath(client: OpenObsidianAPI, path: string): Promise<void> {
+  try {
+    applyReadResponse(await client.readFile(path));
+  } catch {
+    // A note may have been deleted or moved since the last session; keep the rest of the state recoverable.
+  }
+}
+
+function workspaceActivePath(): string | undefined {
+  const candidates = [workspaceState.activePath, ...tabStates.filter((tab) => tab.loaded).map((tab) => tab.path)].filter((path): path is string => typeof path === "string");
+  return candidates.find((path) => tabStates.some((tab) => tab.path === path && tab.loaded));
+}
+
+function restoreActiveWorkspaceTab(path: string | undefined): void {
+  const tab = path ? tabStates.find((candidate) => candidate.path === path) : undefined;
+  if (tab) restoreTab(tab);
 }
 
 function beginFileRead(client: OpenObsidianAPI, path: string): void {
@@ -954,6 +1094,7 @@ async function writeNoteRequest(client: OpenObsidianAPI, path: string, revision:
       tab.loaded = true;
     }
     renderTabs();
+    void persistWorkspaceState();
     updateEditorState();
     setStatus(`Saved ${response.relativePath} · revision ${response.revision.slice(0, 12)}…`);
   } catch (error) {
@@ -1015,6 +1156,7 @@ function showNoVault(): void {
 
 async function openVaultRequest(client: OpenObsidianAPI): Promise<void> {
   try {
+    await workspaceStateReady;
     selectedSummary = await client.selectVault();
     resetEditor();
     if (!selectedSummary) {
@@ -1023,6 +1165,7 @@ async function openVaultRequest(client: OpenObsidianAPI): Promise<void> {
     }
     renderMode(selectedSummary);
     await listFilesRequest(client);
+    await restoreWorkspaceTabs(client);
     setStatus(summaryMessage(selectedSummary));
   } catch (error) {
     setStatus(errorText(error, "Unable to open the vault."));
@@ -1067,6 +1210,8 @@ if (defaultEditorMode) defaultEditorMode.addEventListener("change", () => {
   if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);
 });
 if (splitView) splitView.addEventListener("change", () => setSplitView(splitView.checked));
+if (historyAgeDays) historyAgeDays.addEventListener("change", updateHistoryPolicyFromInputs);
+if (historyMaxMiB) historyMaxMiB.addEventListener("change", updateHistoryPolicyFromInputs);
 if (reviewRetentionButton) reviewRetentionButton.addEventListener("click", () => void retentionPlanRequest());
 if (cleanupHistoryButton) cleanupHistoryButton.addEventListener("click", () => void cleanupHistoryRequest());
 if (closeConflictButton) closeConflictButton.addEventListener("click", closeConflict);
@@ -1085,6 +1230,7 @@ if (editor) editor.addEventListener("input", () => {
   syncActiveTab();
   renderNotePreview(editor.value);
   renderTabs();
+  void persistWorkspaceState();
   updateEditorState();
   setStatus("Unsaved changes · save to create a recoverable revision.");
 });
@@ -1106,4 +1252,4 @@ function handleKeydown(event: KeyboardEvent): void {
 
 document.addEventListener("keydown", handleKeydown);
 updateEditorState();
-void loadWorkspaceSettings();
+workspaceStateReady = loadWorkspaceSettings().then(() => loadWorkspaceState());

@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings} from "../src/shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -28,10 +28,11 @@ test("Chronicle IPC validation rejects unsafe action shapes before the broker", 
 });
 
 test("workspace settings validation keeps editor modes and split state explicit", () => {
-  expect(DEFAULT_WORKSPACE_SETTINGS).toEqual({editorMode: "source", splitView: true});
-  expect(validateWorkspaceSettings({editorMode: "reading", splitView: false})).toEqual({editorMode: "reading", splitView: false});
+  expect(DEFAULT_WORKSPACE_SETTINGS).toEqual({editorMode: "source", splitView: true, historyPolicy: DEFAULT_HISTORY_POLICY});
+  expect(validateWorkspaceSettings({editorMode: "reading", splitView: false})).toEqual({editorMode: "reading", splitView: false, historyPolicy: DEFAULT_HISTORY_POLICY});
   expect(() => validateWorkspaceSettings({editorMode: "wysiwyg", splitView: true})).toThrow("Invalid workspace settings");
   expect(() => validateWorkspaceSettings({editorMode: "source", splitView: "yes"})).toThrow("Invalid workspace settings");
+  expect(validateWorkspaceSettings({editorMode: "source", splitView: true, historyPolicy: {maxAgeDays: 7, maxBytes: 1048576}}).historyPolicy).toEqual({maxAgeDays: 7, maxBytes: 1048576});
 });
 
 test("history and conflict IPC validation keeps destructive actions explicit", () => {
@@ -41,4 +42,10 @@ test("history and conflict IPC validation keeps destructive actions explicit", (
   expect(() => validateHistoryPolicy({maxAgeDays: -1, maxBytes: 10})).toThrow("Invalid history policy");
   expect(() => validateHistoryPolicy({maxAgeDays: 30, maxBytes: Number.POSITIVE_INFINITY})).toThrow("Invalid history policy");
   expect(() => validateConflictResolutionRequest({id: "conflict-id", relativePath: "note.md", action: "delete"})).toThrow("Invalid conflict resolution request");
+});
+
+test("workspace state validation restores only bounded relative note navigation", () => {
+  expect(validateWorkspaceState({settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: "/tmp/vault", openTabs: ["one.md", "folder/two.md"], activePath: "folder/two.md", navigationHistory: ["one.md", "folder/two.md"]})).toMatchObject({activePath: "folder/two.md", openTabs: ["one.md", "folder/two.md"]});
+  expect(() => validateWorkspaceState({settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: null, openTabs: ["../outside.md"], activePath: null, navigationHistory: []})).toThrow("Invalid workspace tabs");
+  expect(() => validateWorkspaceState({settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: null, openTabs: ["one.md"], activePath: "two.md", navigationHistory: []})).toThrow("Invalid workspace active path");
 });

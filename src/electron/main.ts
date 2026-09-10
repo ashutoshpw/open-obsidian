@@ -9,7 +9,7 @@ import {buildNoteContext} from "../core/note-context.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
-import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, type ConflictReadResponse, type ConflictResolutionResponse, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings} from "../shared/api.js";
+import {CHANNELS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type ConflictReadResponse, type ConflictResolutionResponse, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -213,6 +213,25 @@ function saveSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): Work
   return settings;
 }
 
+function workspaceStatePath(): string {
+  return join(app.getPath("userData"), "workspace-state.json");
+}
+
+function loadWorkspaceState(): WorkspaceState {
+  try {
+    return validateWorkspaceState(JSON.parse(readFileSync(workspaceStatePath(), "utf8")));
+  } catch {
+    return DEFAULT_WORKSPACE_STATE;
+  }
+}
+
+function saveWorkspaceState(_event: Electron.IpcMainInvokeEvent, value: unknown): WorkspaceState {
+  const state = validateWorkspaceState(value);
+  mkdirSync(app.getPath("userData"), {recursive: true});
+  writeFileSync(workspaceStatePath(), `${JSON.stringify(state, null, 2)}\n`);
+  return state;
+}
+
 function noteContext(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): NoteContext {
   if (typeof relativePath !== "string") throw new Error("Note path must be a string");
   return buildNoteContext(requireVault(), relativePath);
@@ -238,6 +257,8 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.noteContext, noteContext);
   ipcMain.handle(CHANNELS.loadSettings, loadSettings);
   ipcMain.handle(CHANNELS.saveSettings, saveSettings);
+  ipcMain.handle(CHANNELS.loadWorkspaceState, loadWorkspaceState);
+  ipcMain.handle(CHANNELS.saveWorkspaceState, saveWorkspaceState);
 }
 
 app.whenReady().then(() => {

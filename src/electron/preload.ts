@@ -21,6 +21,8 @@ const api: OpenObsidianAPI = {
   readConflict: (request) => ipcRenderer.invoke(CHANNELS.readConflict, request),
   resolveConflict: (request) => ipcRenderer.invoke(CHANNELS.resolveConflict, request),
   syncTools: () => ipcRenderer.invoke(CHANNELS.syncTools),
+  loadWorkspaceState: () => ipcRenderer.invoke(CHANNELS.loadWorkspaceState),
+  saveWorkspaceState: (state) => ipcRenderer.invoke(CHANNELS.saveWorkspaceState, state),
 };
 
 contextBridge.exposeInMainWorld("openObsidian", api);

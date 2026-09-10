@@ -18,6 +18,8 @@ export const CHANNELS = {
   readConflict: "vault:read-conflict",
   resolveConflict: "vault:resolve-conflict",
   syncTools: "workspace:sync-tools",
+  loadWorkspaceState: "workspace:load-state",
+  saveWorkspaceState: "workspace:save-state",
 } as const;
 
 export type VaultGitSummary = {
@@ -166,9 +168,20 @@ export type EditorMode = "source" | "live-preview" | "reading";
 export type WorkspaceSettings = {
   editorMode: EditorMode;
   splitView: boolean;
+  historyPolicy: HistoryPolicy;
 };
 
-export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {editorMode: "source", splitView: true};
+export const DEFAULT_WORKSPACE_SETTINGS: WorkspaceSettings = {editorMode: "source", splitView: true, historyPolicy: DEFAULT_HISTORY_POLICY};
+
+export type WorkspaceState = {
+  settings: WorkspaceSettings;
+  vaultRoot: string | null;
+  openTabs: string[];
+  activePath: string | null;
+  navigationHistory: string[];
+};
+
+export const DEFAULT_WORKSPACE_STATE: WorkspaceState = {settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: null, openTabs: [], activePath: null, navigationHistory: []};
 
 export type NoteHeading = {
   text: string;
@@ -221,7 +234,7 @@ export function validateChronicleRestoreRequest(value: unknown): ChronicleRestor
 
 export function validateWorkspaceSettings(value: unknown): WorkspaceSettings {
   if (!isRecord(value) || !["source", "live-preview", "reading"].includes(value.editorMode as string) || typeof value.splitView !== "boolean") throw new Error("Invalid workspace settings");
-  return {editorMode: value.editorMode as EditorMode, splitView: value.splitView};
+  return {editorMode: value.editorMode as EditorMode, splitView: value.splitView, historyPolicy: value.historyPolicy === undefined ? DEFAULT_HISTORY_POLICY : validateHistoryPolicy(value.historyPolicy)};
 }
 
 export function validateHistoryPolicy(value: unknown): HistoryPolicy {
@@ -237,6 +250,25 @@ export function validateConflictReadRequest(value: unknown): {id: string; relati
 export function validateConflictResolutionRequest(value: unknown): ConflictResolutionRequest {
   if (!isRecord(value) || typeof value.id !== "string" || value.id.length === 0 || typeof value.relativePath !== "string" || value.relativePath.length === 0 || (value.action !== "keep-current" && value.action !== "keep-incoming")) throw new Error("Invalid conflict resolution request");
   return {id: value.id, relativePath: value.relativePath, action: value.action};
+}
+
+function validateWorkspacePath(value: unknown, label: string): string {
+  if (typeof value !== "string" || value.length === 0 || value.length > 500 || value.startsWith("/") || value.includes("\\") || value.includes("\0") || value.split("/").some((segment) => !segment || segment === "." || segment === "..")) throw new Error(`Invalid workspace ${label}`);
+  return value;
+}
+
+function validateWorkspacePaths(value: unknown, label: string, limit: number): string[] {
+  if (!Array.isArray(value) || value.length > limit) throw new Error(`Invalid workspace ${label}`);
+  return value.map((path) => validateWorkspacePath(path, label));
+}
+
+export function validateWorkspaceState(value: unknown): WorkspaceState {
+  if (!isRecord(value) || !isRecord(value.settings) || (value.vaultRoot !== null && typeof value.vaultRoot !== "string") || (value.activePath !== null && value.activePath !== undefined && typeof value.activePath !== "string")) throw new Error("Invalid workspace state");
+  const openTabs = validateWorkspacePaths(value.openTabs, "tabs", 50);
+  const navigationHistory = validateWorkspacePaths(value.navigationHistory, "navigation history", 100);
+  const activePath = value.activePath === null || value.activePath === undefined ? null : validateWorkspacePath(value.activePath, "active path");
+  if (activePath && !openTabs.includes(activePath)) throw new Error("Invalid workspace active path");
+  return {settings: validateWorkspaceSettings(value.settings), vaultRoot: value.vaultRoot as string | null, openTabs, activePath, navigationHistory};
 }
 
 export type OpenObsidianAPI = {
@@ -259,4 +291,6 @@ export type OpenObsidianAPI = {
   readConflict: (request: {id: string; relativePath: string}) => Promise<ConflictReadResponse>;
   resolveConflict: (request: ConflictResolutionRequest) => Promise<ConflictResolutionResponse>;
   syncTools: () => Promise<SyncToolDisposition[]>;
+  loadWorkspaceState: () => Promise<WorkspaceState>;
+  saveWorkspaceState: (state: WorkspaceState) => Promise<WorkspaceState>;
 };
