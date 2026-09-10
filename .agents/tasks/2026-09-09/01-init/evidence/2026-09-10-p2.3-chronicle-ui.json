@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T09:16:11Z",
+  "checkpoint": "P2.3",
+  "requirements": ["D21", "PROD-004", "PROD-006", "C13", "C15", "C15.1", "ARCH-006", "UX-001"],
+  "fixture_ids": ["fixture:chronicle-vault", "fixture:chronicle-exclusions", "fixture:c15-git-safety", "fixture:recovery-history", "fixture:workspace-review"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "59d7278737441e95b6a0ee87da1b75e19cf86f6ac942ed89ea4026a798fcd513"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 52 tests with 230 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 88.9/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the 9 changed implementation/test files relative to ab6ad3131de7111f8eff63e96fa037197e9ca5ea."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run typecheck && bun run compile", "exit_code": 0, "result": "The shared IPC contract, Node main process, sandboxed preload and browser renderer compile with strict TypeScript checking."},
+    {"command": "bun run start", "exit_code": 130, "result": "The local Electron package attempted to download electron-v44.3.0-darwin-arm64.zip and reached 9%; it was interrupted before a visible window opened, so visible launch/accessibility automation remains pending."}
+  ],
+  "implemented": [
+    "Added shared, validated IPC contracts for Chronicle review, read-only diff, Git history, local recovery records, revision-aware restore and selective commit.",
+    "Registered the Chronicle/recovery handlers in Electron main and exposed them through the context-isolated, sandboxed preload without granting renderer filesystem access.",
+    "Added visible workspace controls for Review changes, path selection, staged/working diff inspection, read-only history, current-note restore and explicit selected-path commit.",
+    "Preserved Git porcelain status columns at the command boundary so modified paths retain their first character, and added regression coverage for sorted changed-path review and app-private exclusion.",
+    "Kept the local-first visual system disciplined with sentence-case labels, visible keyboard focus, responsive tool panels and reduced-motion handling."
+  ],
+  "limitations": [
+    "The Electron binary was unavailable locally, so no visible launch, accessibility-tree or cross-platform UI automation was completed.",
+    "Live remote pull/push, pull conflict resolution, retention-file deletion wiring, uninstall cleanup UI, named external sync-tool certification and reference Obsidian reopen tests remain pending.",
+    "P2.2 live preview/reading mode, tabs/splits, command palette, quick switcher, outline/backlinks and settings persistence remain pending."
+  ]
+}

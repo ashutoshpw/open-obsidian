@@ -133,3 +133,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Limitations: live remote/external-sync backends, pull/push conflict UI, retention/uninstall cleanup UI, cross-platform Git/filesystem behavior and reference Obsidian round trips remain pending; the local Electron runtime and packaged runtime notices remain pending.
 - Reconciled: committed as `d4d6fb8e3031a5bd3d2ee814f4c5c5ce81d75504` with marker `[openobsidian P2.3] Deliver recovery and Chronicle foundation`, pushed `main`, and verified `origin/main` at the same SHA.
 - Next operation: inspect the new multi-OS quality/build runs, then continue P2.2 workspace completion and P2.3 visible Chronicle/recovery controls while preserving the named external-sync and reference-validation blockers.
+
+## 2026-09-10T09:16:11Z — P2.3 Chronicle controls pushed
+
+- Completed: added validated shared IPC contracts and sandboxed preload handlers for Chronicle review, read-only diff, Git history, local recovery records, revision-aware restore and selective commit.
+- Completed: added visible workspace panels for selected-path review, staged/working diff inspection, read-only history, current-note restore and explicit Chronicle commit; preserved Git status columns so modified paths are not truncated.
+- Validation: `bun run quality` passes with 52 tests and 230 expectations; Knip reports no unused files or exports; report-only Fallow health is 88.9/A with only the pre-existing status-script advisory; strict Fallow reports no issues in the nine-file increment.
+- Limitation: the local Electron binary download reached 9% but did not complete, so visible launch/accessibility automation remains pending; remote/sync, cleanup, cross-platform and reference-validation blockers remain explicit.
+- Reconciled implementation: committed as `ae833448ecc19227c0b074edaab202f3d7739616` with marker `[openobsidian P2.3] Wire Chronicle recovery controls`, pushed `main`, and verified the exact-head quality/build runs for the preceding metadata commit are green.
+- Next operation: reconcile this evidence and state against `ae83344`, then continue P2.2 editor modes/navigation and P2.3 retention/conflict/external-tool work.
