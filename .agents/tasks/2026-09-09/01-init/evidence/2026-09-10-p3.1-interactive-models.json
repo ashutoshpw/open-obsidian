@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T10:28:54Z",
+  "checkpoint": "P3.1",
+  "requirements": ["PROD-010", "C05", "C05.1", "C06", "C06.1", "C07", "C07.1"],
+  "fixture_ids": ["fixture:journey-organize", "fixture:journey-canvas", "fixture:c05-graph", "fixture:c05-graph-no-write", "fixture:c06-canvas", "fixture:c06-text-card", "fixture:c07-bases", "fixture:c07-unsupported-formula"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "ac637ea33db97da2c4bd3d3309d23b6e1dbb25cb",
+    "tested_source_tree": "fd9051446f97de83ed417172a61636b037147d50d592c9accdda31b416eae4ff"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, distribution metadata, strict typecheck, 60 tests with 261 expectations, Electron compilation, Knip and report-only Fallow health all pass; Fallow health is 89.0/A with only the pre-existing scripts/status.ts collectRow moderate advisory and documented distribution warnings."},
+    {"command": "bunx fallow audit --root . --base 0f0fa7571752eddf6cb75a137a4a71c773190aaa --format compact", "exit_code": 0, "result": "No issues in the 9 changed implementation/test files for this Graph/Canvas/Bases increment."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun test", "exit_code": 0, "result": "60 tests with 261 expectations pass, including graph derivation, unknown-field-preserving Canvas edits, explicit text-card note creation, safe Bases evaluation and revision-aware Canvas IPC validation."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload and renderer bundles compile with Graph, Canvas and Bases IPC and workspace controls."}
+  ],
+  "implemented": [
+    "Added derived Graph IPC and a keyboard-reachable explorer with node/edge filters, unresolved-link visibility and safe note navigation without vault writes.",
+    "Added Canvas IPC that reads source-preserving nodes/edges, revision-checks text-card edits and creates a note only after an explicit user action.",
+    "Added Bases IPC that evaluates supported version-1 views over indexed Markdown properties, exposes table/list/card results and surfaces unsupported formulas as visible issues."
+  ],
+  "limitations": [
+    "The Electron binary is unavailable locally, so visible UI launch, accessibility-tree automation and cross-platform runtime checks were not completed.",
+    "Graph spatial layout controls, reference Obsidian Graph/Canvas/Bases reopen comparisons, reference YAML/embedded Bases fixtures and full dialect parity remain pending.",
+    "The Bases property projection intentionally covers the existing safe scalar frontmatter contract; unsupported or richer source constructs remain read-only and explicitly unclaimed."
+  ]
+}
