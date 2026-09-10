@@ -330,3 +330,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run test:bases`, `bun run check:fast`, `bun run quality`, `bun run knip` and strict Fallow pass locally; report-only Fallow health is 88.9/A with only the inherited `scripts/status.ts:128 collectRow` advisory.
 - Validation: quality run `34512991125` and desktop-build run `34512991166` passed on macOS, Ubuntu and Windows for `28540eca552457c2bb85c9adbb1b03707f7b6c17`.
 - Reconciled: C07 and C07.1 now point to the native and embedded Bases evidence artifacts; embedded source handling is locally covered while interactive embedded views, full native semantics, reference reopen and cross-platform comparison remain pending.
+
+## 2026-09-10T18:36:00Z — P0.2 live provenance drift audit
+
+- Validation: `bun run verify:plugin-selection` failed because the official community stats/registry snapshots and cumulative download counts drifted from the frozen selection; no ranking or repository mismatch was reported, so the stable top-25 selection was retained.
+- Validation: direct official fetches returned stats SHA-256 `9f397fd41c4ec66074c9d63732191dc34db1c28437c9bedfa76e5687c1754d97` and registry SHA-256 `973e2b116d930d7615a45d1fb9d9f05d49a1ed4b1dc3f3223da8c516bfe633d9`; `bun run verify:primary-references` also found the mutable Electron security page changed to SHA-256 `9221c933ae48e72a2e153fd8eb74bc0b4c70e8880a81b9d1ab15f046eb2330e8`.
+- Validation: a live `bun run verify:compatibility-pins` attempt was interrupted after more than five minutes of bounded network retries; no release manifest or pin changed, and the prior successful 27-artifact/83-asset verification remains recorded in `2026-09-10-p0.2-selection-drift.json`.
+- Reconciled: added `2026-09-10-p0.2-live-source-drift.json`; frozen selection, stable Obsidian 1.13.7 baseline and immutable release assets remain unchanged pending a deliberate reviewed provenance refresh.

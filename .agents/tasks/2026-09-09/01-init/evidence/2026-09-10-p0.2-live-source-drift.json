@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T18:36:00Z",
+  "checkpoint": "P0.2",
+  "requirements": ["BASE-005", "RESEARCH-005"],
+  "fixture_ids": ["fixture:primary-references", "fixture:plugin-catalog"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "91de3a2e2306faf68d72444d53ce45809587a635ca394a9df174ef47cbcd7e62"
+  },
+  "observations": [
+    {
+      "command": "bun run verify:plugin-selection",
+      "exit_code": 1,
+      "result": "The frozen selection verifier rejected live stats/registry hash drift and cumulative-download changes. The output did not report a ranking or repository mismatch, so the frozen top-25 ordering was retained rather than silently refreshed."
+    },
+    {
+      "command": "bun -e <direct official snapshot fetch>",
+      "exit_code": 0,
+      "result": "The official stats snapshot returned HTTP 200 with 2225364 bytes and SHA-256 9f397fd41c4ec66074c9d63732191dc34db1c28437c9bedfa76e5687c1754d97; the registry snapshot returned HTTP 200 with 2218664 bytes and SHA-256 973e2b116d930d7615a45d1fb9d9f05d49a1ed4b1dc3f3223da8c516bfe633d9."
+    },
+    {
+      "command": "bun run verify:primary-references",
+      "exit_code": 1,
+      "result": "Seven recorded references passed; electron-security remained HTTP 200 with 170321 bytes but its SHA-256 changed from 282670ba3be0773a4ef933ad9bd42feaf33e4be83916f7e405b7ba2da2bc5a9f to 9221c933ae48e72a2e153fd8eb74bc0b4c70e8880a81b9d1ab15f046eb2330e8."
+    },
+    {
+      "command": "bun -e <direct Electron security page fetch>",
+      "exit_code": 0,
+      "result": "The Electron security URL returned HTTP 200, content type text/html, 170321 bytes and SHA-256 9221c933ae48e72a2e153fd8eb74bc0b4c70e8880a81b9d1ab15f046eb2330e8."
+    },
+    {
+      "command": "bun run verify:compatibility-pins",
+      "exit_code": 130,
+      "result": "A live 27-artifact network verification was interrupted after more than five minutes of bounded fetch retries; no manifest or release pin was changed. The earlier successful pinned-asset verification remains in 2026-09-10-p0.2-selection-drift.json."
+    }
+  ],
+  "disposition": "Keep the frozen plugin-selection snapshot, stable Obsidian 1.13.7 baseline and immutable release-asset pins until a deliberate reviewed refresh records the new retrieval time and consequences. Treat the mutable Electron documentation hash drift as a provenance follow-up, not as permission to weaken the reference gate."
+}
