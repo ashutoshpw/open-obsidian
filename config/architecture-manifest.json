@@ -42,6 +42,9 @@
     {"name": "Graph contract", "path": "src/core/graph.ts", "purpose": "derived resolved and unresolved link graph"},
     {"name": "Bases contract", "path": "src/core/bases.ts", "purpose": "versioned safe filter, sort and formula evaluation"},
     {"name": "Vault index", "path": "src/core/vault-index.ts", "purpose": "rebuildable search and link index outside the vault"},
+    {"name": "History policy", "path": "src/core/history.ts", "purpose": "non-destructive retention planning with protected conflicts"},
+    {"name": "Three-way merge", "path": "src/core/merge.ts", "purpose": "conservative text reconciliation with explicit conflict output"},
+    {"name": "Watcher reconciliation", "path": "src/core/watcher.ts", "purpose": "filesystem hints followed by authoritative snapshot reconciliation"},
     {"name": "IPC contract", "path": "src/shared/api.ts", "purpose": "schema validation for renderer vault requests"},
     {"name": "PreviewBroker", "path": "src/plugins/policy.ts", "purpose": "stage plugin changes before explicit approval"}
   ],

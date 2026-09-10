@@ -74,6 +74,31 @@ test("concurrent edits preserve incoming bytes as a conflict", () => {
   expect(readFileSync(join(fixture.root, "note.md"))).toEqual(external);
 });
 
+test("three-way merge writes disjoint edits and preserves overlapping conflicts", () => {
+  const fixture = createFixture();
+  const mergePath = join(fixture.root, "merge.md");
+  const base = Buffer.from("one\ntwo\nthree\n", "utf8");
+  writeFileSync(mergePath, base);
+  const store = new VaultStore(fixture.root, fixture.appData);
+
+  writeFileSync(mergePath, Buffer.from("one\ntwo\nTHREE\n", "utf8"));
+  const merged = store.mergeWrite("merge.md", new Uint8Array(base), Buffer.from("ONE\ntwo\nthree\n", "utf8"), "test-merge");
+
+  expect(merged.merge.status).toBe("merged");
+  expect(readFileSync(mergePath)).toEqual(Buffer.from("ONE\ntwo\nTHREE\n", "utf8"));
+  expect(merged.written?.revision).toBe(store.read("merge.md").revision);
+
+  const current = Buffer.from("CURRENT\ntwo\nTHREE\n", "utf8");
+  writeFileSync(mergePath, current);
+  const conflictIncoming = Buffer.from("LOCAL\ntwo\nTHREE\n", "utf8");
+  const conflict = store.mergeWrite("merge.md", Buffer.from("ONE\ntwo\nTHREE\n", "utf8"), conflictIncoming);
+
+  expect(conflict.merge.status).toBe("conflict");
+  expect(conflict.preservedIncomingPath).toBeDefined();
+  expect(readFileSync(mergePath)).toEqual(current);
+  expect(readFileSync(conflict.preservedIncomingPath!)).toEqual(conflictIncoming);
+});
+
 test("an interrupted temporary replacement preserves both old and incoming bytes", () => {
   const fixture = createFixture();
   const original = readFileSync(join(fixture.root, "note.md"));

@@ -42,3 +42,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Completed: committed the staged P1.1/P1.2/P1.3/P3.1 feasibility increment as `eda8ab914b092dccb5eb63fb6aa4cbfbe0731eec` with marker `[openobsidian P1.1 work] Add feasibility contracts`; verified the worktree was clean and pushed `main` to `origin/main` at the same SHA.
 - CI handoff: GitHub Actions runs were created for the push: quality run `34449244274` (`https://github.com/ashutoshpw/open-obsidian/actions/runs/34449244274`, in progress at reconciliation) and desktop-build run `34449244503` (`https://github.com/ashutoshpw/open-obsidian/actions/runs/34449244503`, queued at reconciliation).
 - Next operation: monitor those runs to completion while implementing the next dependency-ready foundation slice; retain any cross-platform failure as an explicit blocker and do not mark a checkpoint complete from local evidence alone.
+
+## 2026-09-10T07:29:41Z — P2.1 foundation increment
+
+- Completed: added conservative UTF-8 line-based three-way merge and integrated it with `VaultStore.mergeWrite`; disjoint edits are merged, overlapping/binary/structural edits return explicit conflicts, and incoming bytes are preserved outside the vault. Added history retention planning and watcher-hint reconciliation contracts.
+- Validation: `bun run quality` exits 0; this includes state, contracts, architecture, strict typecheck, Bun compilation, Knip and report-only Fallow health. `bun test` passes 33 tests with 129 expectations. Strict Fallow reports no issues in 11 changed files. Report-only Fallow health is 98.6/A, with existing complexity advisories in `scripts/status.ts`.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.1-foundation-slice.json` records tested source tree `fea875702740dfdb2cfeb5646dc28ba54fa27910a40eb78046aac125607815d5` and the local merge/reconciliation results.
+- Reconciled: marked `SYNC-001` implemented with the local concurrent-edit fixture; P2.1 remains in progress and release status remains honest at 1/19 checkpoints complete, 32 implemented rows and 165 mandatory rows not release-passing.
+- Limitations: merge is intentionally conservative and does not yet handle structural edits; stable identities, watcher overflow/sleep recovery, full nested YAML fidelity, Standard/Chronicle workflows, cross-platform runs and reference Obsidian validation remain pending.
+- Next operation: stage and review this increment, run the final quality gate before commit, push `main`, then monitor the resulting Actions quality/build runs.

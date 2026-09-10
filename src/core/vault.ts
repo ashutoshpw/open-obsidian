@@ -1,6 +1,7 @@
 import {createHash, randomUUID} from "node:crypto";
 import {existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, renameSync, unlinkSync, writeFileSync} from "node:fs";
 import {basename, dirname, join, relative, resolve} from "node:path";
+import {threeWayMergeBytes, type MergeResult} from "./merge.js";
 
 export type VaultEntryKind = "file" | "symlink";
 
@@ -38,6 +39,8 @@ export type VaultWrite = {
   bytes: Uint8Array;
   operationId?: string;
 };
+
+export type VaultMergeResult = {merge: MergeResult; written?: VaultRead; preservedIncomingPath?: string};
 
 export type RecoveryRecord = {
   id: string;
@@ -150,7 +153,7 @@ export function snapshotVault(root: string): VaultSnapshot {
   return {root: resolvedRoot, capturedAt: new Date().toISOString(), entries, sha256: hashEntries(entries)};
 }
 
-function changedSnapshotPaths(before: VaultSnapshot, after: VaultSnapshot): string[] {
+export function diffVaultSnapshots(before: VaultSnapshot, after: VaultSnapshot): string[] {
   const beforeEntries = new Map(before.entries.map((entry) => [entry.relativePath, entry]));
   const afterEntries = new Map(after.entries.map((entry) => [entry.relativePath, entry]));
   const paths = new Set([...beforeEntries.keys(), ...afterEntries.keys()]);
@@ -160,7 +163,7 @@ function changedSnapshotPaths(before: VaultSnapshot, after: VaultSnapshot): stri
 function scanVault(root: string): VaultScan {
   const before = snapshotVault(root);
   const after = snapshotVault(root);
-  return {before, after, unchanged: before.sha256 === after.sha256, changedPaths: changedSnapshotPaths(before, after)};
+  return {before, after, unchanged: before.sha256 === after.sha256, changedPaths: diffVaultSnapshots(before, after)};
 }
 
 export class VaultStore {
@@ -219,6 +222,16 @@ export class VaultStore {
       this.appendJournal({...journalBase, state: "failed", recordedAt: new Date().toISOString(), error: error instanceof Error ? error.message : String(error)});
       throw error;
     }
+  }
+
+  mergeWrite(relativePath: string, baseBytes: Uint8Array, incomingBytes: Uint8Array, operationId?: string): VaultMergeResult {
+    const current = this.read(relativePath);
+    const merge = threeWayMergeBytes(baseBytes, incomingBytes, current.bytes);
+    if (merge.status === "conflict") {
+      return {merge, preservedIncomingPath: this.preserveConflict(relativePath, new Uint8Array(incomingBytes), hashBytes(baseBytes), current.revision)};
+    }
+    if (!merge.bytes || hashBytes(merge.bytes) === current.revision) return {merge};
+    return {merge, written: this.write({relativePath, expectedRevision: current.revision, bytes: merge.bytes, operationId})};
   }
 
   writeBatch(requests: VaultWrite[], operationId: string = randomUUID()): VaultRead[] {

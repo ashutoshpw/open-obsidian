@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-10T07:29:41Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C01", "C01.1", "C03", "C03.1", "C04", "C08", "C08.1", "C09", "ARCH-004", "SYNC-001"],
+  "fixture_ids": ["fixture:c01-arbitrary-files", "fixture:c03-links", "fixture:c03-link-forms", "fixture:c04-properties", "fixture:c08-attachments", "fixture:c08-unknown-binary", "fixture:c09-configuration", "fixture:arch-storage-layout"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "fea875702740dfdb2cfeb5646dc28ba54fa27910a40eb78046aac125607815d5"
+  },
+  "observations": [
+    {"command": "bun test", "exit_code": 0, "result": "33 tests and 129 expectations pass across VaultStore, conservative three-way merge, Markdown source spans, links, attachments, configuration discovery, rebuildable index behavior, history retention and watcher reconciliation."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "The foundation contracts compile with strict TypeScript checking."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed foundation files."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run quality", "exit_code": 0, "result": "State, contracts, architecture, strict typecheck, tests, Bun compilation, Knip and report-only Fallow health all pass; Fallow health reports 98.6/A with legacy status-script complexity advisories."}
+  ],
+  "implemented": [
+    "Arbitrary regular-file bytes and symlink metadata are retained in authoritative snapshots; derived indexes write only to app data.",
+    "Wikilinks, Markdown links and embeds retain aliases/subpaths and resolve resolved, ambiguous, unresolved and external targets.",
+    "Markdown property edits are span-based and preserve BOM, line endings and unrepresented source; attachments retain original binary paths and hashes.",
+    "Configuration discovery reads .obsidian and .obsidian-* JSON without writing the vault; watcher hints are followed by snapshot reconciliation.",
+    "History retention is a non-destructive plan and never schedules protected conflicts for deletion.",
+    "The VaultStore merge seam combines disjoint same-length UTF-8 line edits and preserves incoming bytes for overlapping or binary conflicts."
+  ],
+  "limitations": [
+    "Properties parsing currently represents simple top-level YAML-like fields; full nested YAML editing and reference Obsidian behavior remain pending.",
+    "Stable identity mapping, watcher overflow/sleep recovery and Standard/Chronicle Git workflows remain pending; structural merge edits are conservatively reported as conflicts.",
+    "Only local macOS arm64 tests ran; cross-platform and reference-application checks remain pending."
+  ]
+}
