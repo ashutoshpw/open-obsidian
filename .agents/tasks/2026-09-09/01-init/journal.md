@@ -83,3 +83,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: local `bun run quality` passes with 33 tests and 129 expectations; Knip and Fallow remain clean for the changed files.
 - Completed: committed the seam as `40d3b34e25bed22743c63f4b98f14d46358ef624` with marker `[openobsidian P0.2] Make status validation testable`, pushed `main`, and reconciled durable state to that head.
 - Next operation: inspect the latest Actions quality/build runs and close out the CI portability loop.
+
+## 2026-09-10T07:46:38Z — multi-OS quality loop green
+
+- Completed: quality run `34451550393` for reconciliation head `0832f47723ce103e9b6ddf641e87176af7ca29da` passed on Ubuntu, macOS and Windows, including state/contracts/architecture validation, typecheck, tests, compile, Knip, report-only Fallow health and the changed-code Fallow review gate.
+- Completed: desktop-build run `34451550421` for the same head passed on Ubuntu, macOS and Windows.
+- Finding retained: GitHub Actions emits a non-blocking Node.js 20 deprecation annotation for `actions/checkout@v4`; no job failed from it.
+- Next operation: keep the weekly quality schedule and per-change Knip/Fallow checks in place while proceeding to the next dependency-ready implementation slice.
