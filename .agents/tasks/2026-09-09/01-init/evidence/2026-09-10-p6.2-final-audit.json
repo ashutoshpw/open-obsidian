@@ -11,8 +11,8 @@
     "branch": "main",
     "origin": "https://github.com/ashutoshpw/open-obsidian.git",
     "bun_version": "1.4.2",
-    "implementation_commit": "7b5dd04230575acf9dfbffc3e973f8996d259eea",
-    "tested_source_tree": "9b57e96d9d55ca9f65cbf922cc31e3afb08318b04e3a216d4d9d661626acc301"
+    "implementation_commit": "2356b49d31abd9460b0451c6bb1f1610d8361c0b",
+    "tested_source_tree": "a43e4e964802c33a70be389bd9c1fa222ce3645a2a77f159a224541ae430ba06"
   },
   "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus NUL separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
   "observations": [
@@ -21,7 +21,7 @@
     {"command": "bun run quality", "exit_code": 0, "result": "92 tests pass with 547 expectations; state, final audit, update/rollback, contracts, architecture, distribution, accessibility, typecheck, compile, Knip and report-only Fallow health pass. Fallow health is 88.3/A with only the inherited scripts/status.ts collectRow advisory."},
     {"command": "bunx fallow audit --root . --base 08f764f --format compact", "exit_code": 0, "result": "No issues in the 10-file P6.1/P6.2 source increment."},
     {"command": "actionlint .github/workflows/quality.yml .github/workflows/desktop-build.yml", "exit_code": 0, "result": "Workflow syntax is valid and both workflows run the update/rollback contract."},
-    {"command": "GitHub Actions runs 34480078768 and 34480078771", "exit_code": 0, "result": "Quality and desktop-build matrices passed on macOS, Ubuntu and Windows; preview artifacts were packaged, hashed and uploaded after their gates."}
+    {"command": "GitHub Actions runs 34483202011 and 34483199617", "exit_code": 0, "result": "Quality and desktop-build matrices for source commit 2356b49 passed on macOS, Ubuntu and Windows; preview artifacts were packaged, hashed and uploaded after their gates."}
   ],
   "implementation_audit": {
     "phase_count": 19,
@@ -29,7 +29,7 @@
     "p62": {"status": "in-progress", "implemented": 5, "pending": 1, "external_pending": 5},
     "release_ready": false,
     "handoff_count": 7,
-    "verified_run_ids": [34480078768, 34480078771],
+    "verified_run_ids": [34483202011, 34483199617],
     "no_release_tag_created_by_goal": true
   },
   "implemented": [
