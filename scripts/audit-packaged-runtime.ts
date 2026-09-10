@@ -12,7 +12,7 @@ export type PackagedRuntimeAudit = {checks: PackagedRuntimeCheck[]; failures: st
 
 const sha256Pattern = /^[a-f0-9]{64}$/;
 
-function filesUnder(directory: string): string[] {
+export function filesUnder(directory: string): string[] {
   return readdirSync(directory, {withFileTypes: true}).flatMap((entry) => {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) return filesUnder(path);
@@ -123,7 +123,7 @@ export function auditPackagedRuntime(directory: string): PackagedRuntimeAudit {
   return result;
 }
 
-function option(name: string): string | undefined {
+export function option(name: string): string | undefined {
   const index = Bun.argv.indexOf(name);
   return index >= 0 ? Bun.argv[index + 1] : undefined;
 }

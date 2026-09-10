@@ -63,6 +63,8 @@ jobs:
         run: bun run release:gate -- --artifacts-dir out
       - name: Audit packaged Electron runtime notices
         run: bun run audit:packaged -- --artifacts-dir out
+      - name: Audit transitive dependency attribution
+        run: bun run audit:dependencies -- --artifacts-dir out
       - name: Upload platform artifact
         if: success()
         uses: actions/upload-artifact@v4

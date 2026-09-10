@@ -13,6 +13,7 @@ bun run validate:surfaces # verify named UX surfaces and external handoffs
 bun run quality          # phase boundary or release-candidate gate
 bun run audit:fallow     # repository health report
 bun run audit:packaged -- --artifacts-dir out  # packaged artifact notice audit
+bun run audit:dependencies -- --artifacts-dir out  # transitive dependency/package-scope audit
 ```
 
 `check:fast` runs state, contract, architecture, named-UX-surface, accessibility, layout, typecheck, tests, Knip and the changed-file Fallow audit. It intentionally skips Electron compilation, the quality scorecard, packaging and the full release audit. Run `bun run quality` before a phased checkpoint commit or when changing build/release code.
@@ -39,5 +40,8 @@ Keep platform-specific code in `src/electron` and `src/renderer`. Keep reusable 
 The Markdown core keeps raw property spans authoritative while exposing a bounded, read-only YAML mapping for nested arrays and maps. Unsupported YAML constructs are reported to callers and are never serialized back over the vault source.
 
 ## Packaging
+
+After packaging, run the transitive dependency attribution audit to verify that
+only explicitly shipped runtime packages are present in each app.asar archive.
 
 `bun run package:dir` creates an unsigned unpacked preview under `out`. The desktop-build workflow runs the packaged runtime notice audit on Ubuntu, macOS and Windows. Signing, staging, updater installation and production publication remain explicit release handoffs.

@@ -1,9 +1,10 @@
 import {expect, test} from "bun:test";
 import {mkdtempSync, mkdirSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join, resolve} from "node:path";
 import {createHash} from "node:crypto";
 import {auditPackagedRuntime} from "../scripts/audit-packaged-runtime.js";
+import {auditInstalledDependencyGraph} from "../scripts/audit-dependency-attribution.js";
 import {auditDistribution, readDistributionAudit} from "../scripts/verify-distribution.js";
 
 function sha256(bytes: string): string {
@@ -45,4 +46,13 @@ test("distribution audit covers direct packages and records release gates", () =
   const gateStatuses = Object.fromEntries(audit.release_gates.map((gate) => [gate.id, gate.status]));
   expect(gateStatuses["electron-bundled-runtime-notices"]).toBe("passing");
   expect(gateStatuses["transitive-package-attribution"]).toBe("pending");
+});
+
+test("transitive dependency audit records scopes and install-only Electron edges", () => {
+  const result = auditInstalledDependencyGraph(resolve(import.meta.dir, ".."));
+  expect(result.failures).toEqual([]);
+  expect(result.packages.length).toBeGreaterThan(6);
+  expect(result.packages.find((record) => record.name === "electron")?.scopes).toContain("bundled-runtime");
+  expect(result.packages.find((record) => record.name === "@electron-internal/extract-zip")?.scopes).toContain("install-only");
+  expect(result.checks.every((check) => check.status === "passed")).toBe(true);
 });

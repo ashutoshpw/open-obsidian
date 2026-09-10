@@ -1,5 +1,9 @@
 # Bun script playbook
 
+The packaging-only dependency audit is:
+
+    bun run audit:dependencies -- --artifacts-dir out
+
 Use the shortest command that matches the change. All scripts are repository-local Bun entry points, so evidence and CI use the same implementation.
 
 | Command | Use |
