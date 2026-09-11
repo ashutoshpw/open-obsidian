@@ -1,0 +1,48 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T13:00:32Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "SYNC-004", "RISK-004"],
+  "implementation_commit": "91a3f21c05c12b6f82785e3f39f869f62979374d",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "01fe20583fb6226f235a1d6f4aa9c35419727bb7e7f4d4c705ae3f1bc4a492ab",
+    "source_tree_paths": 202,
+    "source_tree_definition": "bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out"
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34601633065,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34601633065",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103270084770, "conclusion": "success", "host_round_trip": {"platform": "linux", "architecture": "x64", "no_op_scan": true, "no_op_app_data": true, "bom_crlf_round_trip": true, "normalized_backslash_path": "nested/note.md", "atomic_write_and_reopen": true, "recovery_snapshot": true, "unrelated_binary_preserved": true, "temporary_files_removed": true, "symlink_boundary": "denied", "windows_reserved_name": {"outcome": "denied-other", "host_enforced": false}}},
+      "macos-latest": {"job_id": 103270085016, "conclusion": "success", "host_round_trip": {"platform": "darwin", "architecture": "arm64", "no_op_scan": true, "no_op_app_data": true, "bom_crlf_round_trip": true, "normalized_backslash_path": "nested/note.md", "atomic_write_and_reopen": true, "recovery_snapshot": true, "unrelated_binary_preserved": true, "temporary_files_removed": true, "symlink_boundary": "denied", "windows_reserved_name": {"outcome": "denied-other", "host_enforced": false}}},
+      "windows-latest": {"job_id": 103270085049, "conclusion": "success", "host_round_trip": {"platform": "win32", "architecture": "x64", "no_op_scan": true, "no_op_app_data": true, "bom_crlf_round_trip": true, "normalized_backslash_path": "nested/note.md", "atomic_write_and_reopen": true, "recovery_snapshot": true, "unrelated_binary_preserved": true, "temporary_files_removed": true, "symlink_boundary": "denied", "windows_reserved_name": {"outcome": "denied-reserved-name", "host_enforced": true}}}
+    },
+    "result": "The host vault round-trip report passed on Ubuntu/Linux x64, macOS/darwin arm64 and Windows/win32 x64."
+  },
+  "desktop": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34601632933,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34601632933",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103270598413, "conclusion": "success"},
+      "macos-latest": {"job_id": 103270597196, "conclusion": "success"},
+      "windows-latest": {"job_id": 103270635865, "conclusion": "success"}
+    },
+    "result": "All three desktop packaging jobs passed release-gate, manifest, Electron runtime notice, transitive attribution and artifact upload steps; signing remained skipped because credentials were unavailable."
+  },
+  "retry": {
+    "initial_macos_job_id": 103270084932,
+    "initial_failure": "electron-builder received HTTP 500 while downloading Electron during the macOS arm64 unpacked build",
+    "rerun": "The failed desktop job was rerun without source changes and passed as macOS job 103270597196."
+  },
+  "limitations": [
+    "The quality matrix proves the report on the three hosted runners, not reference Obsidian reopen behavior, disk-full, ACL/permission-loss, cloud-placeholder or power-loss behavior.",
+    "The desktop matrix validates packaging and attribution only; it does not certify signing, publication, same-user OS isolation, human accessibility or release readiness. The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The host round-trip implementation and its three-runner quality evidence are green; the transient macOS packaging download failure was cleared by one unchanged retry, and the final desktop matrix is green."
+}

@@ -753,3 +753,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Traceability: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-vault-roundtrip.json`; C01.2, C02.2, SYNC-004 and RISK-004 now reference the host report while retaining real quota/ACL/cloud-placeholder and reference Obsidian blockers.
 - Limitation: this is host Linux filesystem evidence, not reference Obsidian compatibility, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run the full local validation set, commit and push the scoped P1.1 increment, inspect the three host report outputs in quality CI, then reconcile the observed work SHA before continuing reference-vault procedures.
+
+## 2026-09-11T13:00:32Z — P1.1 host vault round-trip reconciliation
+
+- Reconciled pushed work commit `91a3f21c05c12b6f82785e3f39f869f62979374d` on `main`; local `main` and `origin/main` match.
+- Quality run `34601633065` passed on Ubuntu, macOS and Windows. The host report passed on Linux x64, darwin arm64 and win32 x64 with no-op/app-data cleanliness, byte preservation, normalized separators, atomic reopen, recovery, cleanup and symlink denial; Windows enforced the reserved-name check while Linux/macOS recorded the host-dependent result.
+- Desktop-build run `34601632933` passed on all three platforms after an unchanged macOS rerun cleared a transient Electron download HTTP 500. Packaging, release-manifest, Electron runtime notice, transitive-attribution and artifact-upload steps passed; signing remained skipped because credentials were unavailable.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-vault-roundtrip-ci.json`; `state.json` now records the work SHA as `last_reconciled_head` and `recent_increment` with CI runs `34601633065` and `34601632933`.
+- Limitation: these hosted reports validate the bounded host fixture and packaging contracts, not reference Obsidian reopen behavior, disk-full/ACL/cloud-placeholder behavior, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: continue the earliest dependency-ready reference/cross-platform vault procedures and unchanged-plugin lifecycle work while retaining the explicit external gates.
