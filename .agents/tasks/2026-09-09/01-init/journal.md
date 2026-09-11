@@ -457,3 +457,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Safety: the selected `/home/ashutosh/Obsidian` vault was not opened, read or modified; popouts, templates and daily notes remain deferred, and visible/reference/cross-platform validation remains pending.
 - Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-workflow-indexes.json` with source tree `bceaeacc2fd49edffb65878149c0a6a21729f574aa05391e53291ff31c1e8ca9` across 160 included paths and updated the C10/P2.2 ledger.
 - Next: run the visible accessibility, cross-platform and reference Obsidian reopen checks, then continue the remaining C10 handoffs without relabeling deferred workflows.
+
+## 2026-09-11T06:09:59Z — P2.2 template and daily-note workflow increment
+
+- Completed: pushed source commit `5816c366147bdeec46eee218340fbc9a2c60f160` with marker `[openobsidian P2.2] Implement template and daily-note workflows`.
+- Completed: added platform-neutral template/daily-note contracts, read-only configured Markdown template indexing, safe date-path planning and revision-aware daily-note creation through the existing VaultStore.
+- Safety: only `.obsidian/templates.json`, `.obsidian/daily-notes.json` and configured Markdown templates are read; only `{{date}}`, `{{time}}` and `{{title}}` are expanded; unknown variables stay literal and plugin/template scripts are never executed.
+- Completed: wired validated Electron IPC/preload/renderer controls and updated the C10 inventory to 15 implemented workflows with one explicitly deferred popout workflow.
+- Validation: `bun run check:fast` passes with 129 tests and 705 expectations; `bun run quality` passes with Knip clean and Fallow health 89.0/A, retaining only the existing `scripts/status.ts:128 collectRow` advisory; strict changed-file Fallow reports no issues.
+- CI: quality run `34568632972` and desktop-build run `34568632993` passed on Ubuntu, macOS and Windows.
+- Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-template-daily-notes.json` with source tree `ac23f3ae05c894a2b55f07ec7517e0136b5c915f16fed8d264db3f20a9129899` across 163 included paths and updated the C10/P2.2 ledger.
+- Safety: the selected `/home/ashutosh/Obsidian` vault was not opened, read or modified; visible accessibility/input/IME, cross-platform, reference Obsidian and end-to-end human validation remain pending, and popouts remain deferred.
+- Next: run the visible accessibility, cross-platform and reference Obsidian reopen checks; assess popouts only with a safe multi-window host/IPC handoff.

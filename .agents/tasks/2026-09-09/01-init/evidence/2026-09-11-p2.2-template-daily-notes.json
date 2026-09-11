@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T06:09:59Z",
+  "checkpoint": "P2.2",
+  "requirements": [
+    "C10"
+  ],
+  "fixture_ids": [
+    "fixture:c10-core-workflows"
+  ],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "bun_version": "1.4.2",
+    "implementation_commit": "5816c366147bdeec46eee218340fbc9a2c60f160",
+    "tested_source_tree": "ac23f3ae05c894a2b55f07ec7517e0136b5c915f16fed8d264db3f20a9129899"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "command": "bun run validate:workflows",
+      "exit_code": 0,
+      "result": "The C10 inventory passes with 15 implemented workflows, zero incomplete entries and one deferred popout workflow with an explicit owner/prerequisite handoff."
+    },
+    {
+      "command": "bun test tests/note-workflows.test.ts tests/core-workflows.test.ts tests/workflows.test.ts tests/api.test.ts tests/shared-ui.test.ts",
+      "exit_code": 0,
+      "result": "24 focused tests pass with 117 expectations, covering template indexing, daily-note planning/creation, bookmark/tag/task transforms, read-only vault indexing, revision-aware task writes, IPC validation and shared-UI portability."
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "129 tests pass with 705 expectations; state, contracts, architecture, surfaces, version baseline, differential fixtures, workflows, accessibility, layout, TypeScript, Knip and changed-file Fallow checks pass."
+    },
+    {
+      "command": "bun run quality",
+      "exit_code": 0,
+      "result": "Full quality gate passes; Electron compilation, distribution metadata, Knip and report-only Fallow health pass at 89.0/A with the existing scripts/status.ts advisory retained."
+    },
+    {
+      "command": "bun run knip",
+      "exit_code": 0,
+      "result": "Knip reports no unused files, exports, dependencies or binaries."
+    },
+    {
+      "command": "bunx fallow audit --root . --base HEAD --format compact",
+      "exit_code": 0,
+      "result": "No issues reported in the 14-file changed source increment before the source commit."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "Digest ac23f3ae05c894a2b55f07ec7517e0136b5c915f16fed8d264db3f20a9129899 across 163 included paths."
+    },
+    {
+      "command": "GitHub Actions runs 34568632972 and 34568632993",
+      "exit_code": 0,
+      "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows; validators, accessibility/layout checks, compilation, Knip, Fallow and packaged dependency/runtime audits passed."
+    }
+  ],
+  "implemented": [
+    "Added platform-neutral TemplateItem, TemplateIndex, DailyNotePlan and plain-text template expansion contracts in src/shared/ui/note-workflows.ts; unsafe paths/configuration are rejected and unknown variables remain literal.",
+    "Added src/core/note-workflows.ts for read-only template indexing, configured daily-note path planning and revision-aware creation through VaultStore; plugin/template scripts are never executed.",
+    "Added validated templates and daily-note IPC/preload handlers plus renderer controls that report configuration issues and refresh workflow indexes after a new daily note is created.",
+    "Added focused note-workflow tests, expanded the C10 inventory to 15 implemented workflows and one deferred popout, and documented the reusable shared UI/core boundary for a future Expo host."
+  ],
+  "limitations": [
+    "Template reads are limited to .obsidian/templates.json and Markdown files in the configured folder; only date/time/title plain-text variables are expanded, unknown variables stay literal, and plugin/template scripts are never executed.",
+    "Popouts remain deferred because a safe multi-window host/IPC handoff and reference behavior capture are not yet available.",
+    "Visible focus/input/IME, screen-reader, cross-platform, reference Obsidian and end-to-end human validation remain pending.",
+    "The selected vault /home/ashutosh/Obsidian was not opened, read or modified during this repository operation."
+  ],
+  "ci_runs": [
+    34568632972,
+    34568632993
+  ]
+}
