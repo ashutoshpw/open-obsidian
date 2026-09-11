@@ -6,6 +6,7 @@ export const QUICK_CHECKS: readonly QuickCheck[] = [
   {id: "state", args: ["run", "validate:state"]},
   {id: "contracts", args: ["run", "validate:contracts"]},
   {id: "plugin-matrix", args: ["run", "validate:plugin-matrix"]},
+  {id: "plugin-d15", args: ["run", "validate:plugin-d15"]},
   {id: "architecture", args: ["run", "validate:architecture"]},
   {id: "surfaces", args: ["run", "validate:surfaces"]},
   {id: "version-baseline", args: ["run", "verify:version-baseline"]},

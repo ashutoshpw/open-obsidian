@@ -1,0 +1,891 @@
+{
+  "schema_version": 1,
+  "id": "fixture:d15-exception-contract",
+  "checkpoint": "P3.2",
+  "decision_id": "D15",
+  "boundary": "electron-renderer",
+  "source_artifact_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json",
+  "candidate_artifact_ids": [
+    "PC01",
+    "PC02",
+    "PC03",
+    "PC04",
+    "PC05",
+    "PC06",
+    "PC08",
+    "PC09",
+    "PC10",
+    "PC11",
+    "PC12",
+    "PC13",
+    "PC14",
+    "PC15",
+    "PC16",
+    "PC17",
+    "PC18",
+    "PC19",
+    "PC20",
+    "PC22",
+    "PC24",
+    "PC25",
+    "PC-DEP-TEXT-EXTRACTOR"
+  ],
+  "workflow_records": [
+    {
+      "artifact_id": "PC01",
+      "workflow_id": "workflow:pc01",
+      "workflow_description": "Open/edit existing drawing files, preserve linked assets, follow note links, embed drawings, export and reopen in Obsidian; exercise the frozen release scripting interface.",
+      "reproduction": "Unchanged PC01 reached the renderer denial while exercising workflow:pc01; denied capabilities: network.request, process.spawn, dom.privileged, native.abi; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC01",
+        "workflow_id": "workflow:pc01",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC01:workflow:pc01",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC02",
+      "workflow_id": "workflow:pc02",
+      "workflow_description": "Execute existing templates, dynamic values, prompts, includes and user scripts; create/move notes and preserve cursor/output behavior; explicitly test system-command integration.",
+      "reproduction": "Unchanged PC02 reached the renderer denial while exercising workflow:pc02; denied capabilities: network.request, process.spawn, credentials.read, dom.privileged, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC02",
+        "workflow_id": "workflow:pc02",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC02:workflow:pc02",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC03",
+      "workflow_id": "workflow:pc03",
+      "workflow_description": "Render existing DQL and DataviewJS queries from frontmatter/inline fields; validate links, tasks and refresh after external edits.",
+      "reproduction": "Unchanged PC03 reached the renderer denial while exercising workflow:pc03; denied capabilities: network.request, process.spawn, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC03",
+        "workflow_id": "workflow:pc03",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC03:workflow:pc03",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC04",
+      "workflow_id": "workflow:pc04",
+      "workflow_description": "Query, filter, group, create and complete tasks; retain existing date/status/recurrence syntax and correct source-note updates.",
+      "reproduction": "Unchanged PC04 reached the renderer denial while exercising workflow:pc04; denied capabilities: process.spawn, dom.privileged, code.dynamic; D15 denied process.spawn",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC04",
+        "workflow_id": "workflow:pc04",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC04:workflow:pc04",
+        "capability": "process.spawn",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC05",
+      "workflow_id": "workflow:pc05",
+      "workflow_description": "Navigate, edit and format Markdown tables using the plugin commands; validate calculations supported by the pinned version and intended serialization.",
+      "reproduction": "Unchanged PC05 reached the renderer denial while exercising workflow:pc05; denied capabilities: process.spawn, dom.privileged, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC05",
+        "workflow_id": "workflow:pc05",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC05:workflow:pc05",
+        "capability": "process.spawn",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC06",
+      "workflow_id": "workflow:pc06",
+      "workflow_description": "Use an existing repository for status, diff, commit, pull/push and conflicts; preserve credential-helper behavior and scheduled operations on each OS.",
+      "reproduction": "Unchanged PC06 reached the renderer denial while exercising workflow:pc06; denied capabilities: filesystem.direct, network.request, process.spawn, credentials.read, dom.privileged, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC06",
+        "workflow_id": "workflow:pc06",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC06:workflow:pc06",
+        "capability": "filesystem.direct",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC08",
+      "workflow_id": "workflow:pc08",
+      "workflow_description": "Load theme/snippet/plugin setting definitions, change CSS variables/classes, persist values and render consistently across windows.",
+      "reproduction": "Unchanged PC08 reached the renderer denial while exercising workflow:pc08; denied capabilities: process.spawn, dom.privileged; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC08",
+        "workflow_id": "workflow:pc08",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC08:workflow:pc08",
+        "capability": "process.spawn",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC09",
+      "workflow_id": "workflow:pc09",
+      "workflow_description": "Open existing Markdown boards; move/edit cards and lanes, preserve metadata/links and reopen in Obsidian without board conversion.",
+      "reproduction": "Unchanged PC09 reached the renderer denial while exercising workflow:pc09; denied capabilities: process.spawn, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC09",
+        "workflow_id": "workflow:pc09",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC09:workflow:pc09",
+        "capability": "process.spawn",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC10",
+      "workflow_id": "workflow:pc10",
+      "workflow_description": "Use existing supported backend configuration; authenticate, sync, resume interrupted transfer and preserve compatible encryption/conflict behavior. Test two-device text/binary/rename/delete cases.",
+      "reproduction": "Unchanged PC10 reached the renderer denial while exercising workflow:pc10; denied capabilities: network.request, process.spawn, credentials.read, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC10",
+        "workflow_id": "workflow:pc10",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC10:workflow:pc10",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC11",
+      "workflow_id": "workflow:pc11",
+      "workflow_description": "Retain existing file/folder icon assignments and rules; validate renames, restart, sidebar/tab rendering and configured icon assets.",
+      "reproduction": "Unchanged PC11 reached the renderer denial while exercising workflow:pc11; denied capabilities: network.request, process.spawn, dom.privileged, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC11",
+        "workflow_id": "workflow:pc11",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC11:workflow:pc11",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC12",
+      "workflow_id": "workflow:pc12",
+      "workflow_description": "Run existing capture/template/macro choices, including linked automation scripts; verify generated files and prompt/command ordering.",
+      "reproduction": "Unchanged PC12 reached the renderer denial while exercising workflow:pc12; denied capabilities: network.request, process.spawn, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC12",
+        "workflow_id": "workflow:pc12",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC12:workflow:pc12",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC13",
+      "workflow_id": "workflow:pc13",
+      "workflow_description": "Discover configured agent CLI, open a session, stream responses, provide selected context and preserve session/settings; test tool approvals, file changes and process cancellation.",
+      "reproduction": "Unchanged PC13 reached the renderer denial while exercising workflow:pc13; denied capabilities: filesystem.direct, network.request, process.spawn, credentials.read, dom.privileged, native.abi, code.dynamic; D15 denied filesystem.direct",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC13",
+        "workflow_id": "workflow:pc13",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC13:workflow:pc13",
+        "capability": "filesystem.direct",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC14",
+      "workflow_id": "workflow:pc14",
+      "workflow_description": "Load configured toolbar, apply editing commands to selections, persist customization and verify source/live-preview/popout behavior.",
+      "reproduction": "Unchanged PC14 reached the renderer denial while exercising workflow:pc14; denied capabilities: network.request, process.spawn, dom.privileged, native.abi; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC14",
+        "workflow_id": "workflow:pc14",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC14:workflow:pc14",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC15",
+      "workflow_id": "workflow:pc15",
+      "workflow_description": "Run relevance/typo/phrase search and keyboard navigation, insert links and refresh the index; include Text Extractor for PDF/image/document search.",
+      "reproduction": "Unchanged PC15 reached the renderer denial while exercising workflow:pc15; denied capabilities: network.request, process.spawn, dom.privileged, native.abi; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC15",
+        "workflow_id": "workflow:pc15",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC15:workflow:pc15",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC16",
+      "workflow_id": "workflow:pc16",
+      "workflow_description": "Run the pinned release documented AI/agent workflows with existing supported configuration, context and history; test provider failure/cancellation and file-change controls.",
+      "reproduction": "Unchanged PC16 reached the renderer denial while exercising workflow:pc16; denied capabilities: filesystem.direct, network.request, process.spawn, credentials.read, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC16",
+        "workflow_id": "workflow:pc16",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC16:workflow:pc16",
+        "capability": "filesystem.direct",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC17",
+      "workflow_id": "workflow:pc17",
+      "workflow_description": "With Minimal theme active, apply existing font/color/layout settings and hotkeys; persist values and verify both light and dark modes.",
+      "reproduction": "Unchanged PC17 reached the renderer denial while exercising workflow:pc17; denied capabilities: dom.privileged; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "dom.privileged"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC17",
+        "workflow_id": "workflow:pc17",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC17:workflow:pc17",
+        "capability": "dom.privileged",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC18",
+      "workflow_id": "workflow:pc18",
+      "workflow_description": "Run imports supported by the pinned release on applicable OS; preserve attachments/links, handle collisions, and avoid modifying unrelated existing notes.",
+      "reproduction": "Unchanged PC18 reached the renderer denial while exercising workflow:pc18; denied capabilities: network.request, process.spawn, credentials.read, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC18",
+        "workflow_id": "workflow:pc18",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC18:workflow:pc18",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC19",
+      "workflow_id": "workflow:pc19",
+      "workflow_description": "Create/update note-backed tasks and dates/recurrence; render configured Bases views and calendar/time-tracking workflows; preserve YAML and references.",
+      "reproduction": "Unchanged PC19 reached the renderer denial while exercising workflow:pc19; denied capabilities: network.request, process.spawn, dom.privileged, native.abi, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC19",
+        "workflow_id": "workflow:pc19",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC19:workflow:pc19",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC20",
+      "workflow_id": "workflow:pc20",
+      "workflow_description": "Move/indent/outdent nested list blocks and use configured shortcuts; preserve child hierarchy and validate editor undo.",
+      "reproduction": "Unchanged PC20 reached the renderer denial while exercising workflow:pc20; denied capabilities: process.spawn, dom.privileged, code.dynamic; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC20",
+        "workflow_id": "workflow:pc20",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC20:workflow:pc20",
+        "capability": "process.spawn",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC22",
+      "workflow_id": "workflow:pc22",
+      "workflow_description": "Build/use the pinned release semantic related-note index, retrieve relevant excerpts and reflect edited/deleted notes; verify configured local-model and exclusion behavior.",
+      "reproduction": "Unchanged PC22 reached the renderer denial while exercising workflow:pc22; denied capabilities: filesystem.direct, network.request, process.spawn, dom.privileged, native.abi; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC22",
+        "workflow_id": "workflow:pc22",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC22:workflow:pc22",
+        "capability": "filesystem.direct",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC24",
+      "workflow_id": "workflow:pc24",
+      "workflow_description": "Rename/merge hierarchical tags through plugin commands; update intended occurrences without corrupting unrelated text/properties.",
+      "reproduction": "Unchanged PC24 reached the renderer denial while exercising workflow:pc24; denied capabilities: process.spawn, dom.privileged, native.abi; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC24",
+        "workflow_id": "workflow:pc24",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC24:workflow:pc24",
+        "capability": "process.spawn",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC25",
+      "workflow_id": "workflow:pc25",
+      "workflow_description": "Apply existing enabled rules to explicit test notes; preserve configured lint-on-save behavior and predictable YAML/Markdown output; no first-open bulk linting.",
+      "reproduction": "Unchanged PC25 reached the renderer denial while exercising workflow:pc25; denied capabilities: network.request, process.spawn, dom.privileged, native.abi; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC25",
+        "workflow_id": "workflow:pc25",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC25:workflow:pc25",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    },
+    {
+      "artifact_id": "PC-DEP-TEXT-EXTRACTOR",
+      "workflow_id": "workflow:pc-dep-text-extractor",
+      "workflow_description": "Extract text from PDF/image/document fixtures for the Omnisearch workflow without sending excluded contents to remote providers.",
+      "reproduction": "Unchanged PC-DEP-TEXT-EXTRACTOR reached the renderer denial while exercising workflow:pc-dep-text-extractor; denied capabilities: network.request, process.spawn, dom.privileged; D15 denied dom.privileged",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged"
+      ],
+      "safe_alternatives_attempted": [
+        "mediated vault read",
+        "preview broker",
+        "workflow disabled"
+      ],
+      "visible_compatibility_entry": {
+        "artifact_id": "PC-DEP-TEXT-EXTRACTOR",
+        "workflow_id": "workflow:pc-dep-text-extractor",
+        "catalog_path": "fixtures/plugin-catalog.json",
+        "matrix_source": "src/plugins/compatibility-matrix.ts",
+        "status": "pending-runtime",
+        "visible": true
+      },
+      "disabled_path_test": {
+        "id": "d15-disabled:PC-DEP-TEXT-EXTRACTOR:workflow:pc-dep-text-extractor",
+        "capability": "network.request",
+        "method": "synthetic denied-capability contract",
+        "status": "passed",
+        "artifact_execution": "not-executed"
+      },
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    }
+  ],
+  "disabled_path_checks": [
+    {
+      "capability": "network.request",
+      "source": "fetch('/network')",
+      "status": "passed",
+      "marker_capability": "network.request"
+    },
+    {
+      "capability": "process.spawn",
+      "source": "process.spawn('git')",
+      "status": "passed",
+      "marker_capability": "process.spawn"
+    },
+    {
+      "capability": "dom.privileged",
+      "source": "document.body",
+      "status": "passed",
+      "marker_capability": "dom.privileged"
+    },
+    {
+      "capability": "native.abi",
+      "source": "require('./native.node')",
+      "status": "passed",
+      "marker_capability": "native.abi"
+    },
+    {
+      "capability": "credentials.read",
+      "source": "process.env.SECRET",
+      "status": "passed",
+      "marker_capability": "credentials.read"
+    },
+    {
+      "capability": "code.dynamic",
+      "source": "eval('1')",
+      "status": "passed",
+      "marker_capability": "code.dynamic"
+    },
+    {
+      "capability": "filesystem.direct",
+      "source": "require('node:fs')",
+      "status": "passed",
+      "marker_capability": "filesystem.direct"
+    }
+  ],
+  "candidate_count": 23,
+  "unsupported_security_count": 0,
+  "all_runtime_dispositions_pending": true,
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "preview broker",
+    "workflow disabled"
+  ],
+  "visible_compatibility_entry": {
+    "artifact_id": "PC01",
+    "workflow_id": "workflow:pc01",
+    "catalog_path": "fixtures/plugin-catalog.json",
+    "matrix_source": "src/plugins/compatibility-matrix.ts",
+    "status": "pending-runtime",
+    "visible": true
+  },
+  "external_pending": [
+    "macOS and Windows renderer/OS enforcement",
+    "reference Obsidian workflow behavior",
+    "unchanged artifact settings, views, combinations and lifecycle certification"
+  ],
+  "limitation": "The generated records prove the local renderer denial contract and synthetic disabled paths only. They keep every candidate pending-runtime and do not certify an unsupported-security exception."
+}
+

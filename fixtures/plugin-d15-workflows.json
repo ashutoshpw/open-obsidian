@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "id": "fixture:d15-exception-contract",
+  "checkpoint": "P3.2",
+  "decision_id": "D15",
+  "boundary": "electron-renderer",
+  "required_record_fields": [
+    "artifact_id",
+    "workflow_id",
+    "reproduction",
+    "denied_capabilities",
+    "safe_alternatives_attempted",
+    "visible_compatibility_entry",
+    "disabled_path_test",
+    "disposition",
+    "runtime_disposition"
+  ],
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "preview broker",
+    "workflow disabled"
+  ],
+  "disabled_path_sources": {
+    "filesystem.direct": "require('node:fs')",
+    "network.request": "fetch('/network')",
+    "process.spawn": "process.spawn('git')",
+    "credentials.read": "process.env.SECRET",
+    "dom.privileged": "document.body",
+    "native.abi": "require('./native.node')",
+    "code.dynamic": "eval('1')"
+  },
+  "visible_entry": {
+    "catalog_path": "fixtures/plugin-catalog.json",
+    "matrix_source": "src/plugins/compatibility-matrix.ts",
+    "status": "pending-runtime",
+    "visible": true
+  },
+  "status_policy": {
+    "candidate_disposition": "candidate-denial",
+    "runtime_disposition": "pending-runtime",
+    "unsupported_security_requires": [
+      "artifact-specific workflow evidence",
+      "cross-platform enforcement evidence",
+      "reference compatibility decision"
+    ],
+    "ordinary_failures_are_not_security_exceptions": true
+  },
+  "external_pending": [
+    "macOS and Windows renderer/OS enforcement",
+    "reference Obsidian workflow behavior",
+    "unchanged artifact settings, views, combinations and lifecycle certification"
+  ],
+  "limitation": "The generated records prove the local renderer denial contract and synthetic disabled paths only. They keep every candidate pending-runtime and do not certify an unsupported-security exception."
+}
