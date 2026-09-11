@@ -1,0 +1,72 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T16:14:45Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "ARCH-008", "RISK-003"],
+  "implementation_commit": "534dba4270c1e8a5dae7ea252742b47678385285",
+  "reconciled_head": "af8faada9d567e40ac90beb5c024632a487e0eea",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c",
+    "source_tree_paths": 211,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34620551709,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34620551709",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103333160654, "conclusion": "success"},
+        "macos-latest": {"job_id": 103333160909, "conclusion": "success"},
+        "windows-latest": {"job_id": 103333161186, "conclusion": "success"}
+      },
+      "checks": [
+        "state and contract validation",
+        "host vault round trip",
+        "accessibility contract",
+        "typecheck",
+        "tests",
+        "quality program",
+        "Electron compile",
+        "sandbox-helper setup",
+        "packaged vault audit",
+        "synthetic renderer lifecycle/workflow audit",
+        "Knip",
+        "Fallow"
+      ],
+      "result": "All quality matrix jobs passed on Ubuntu, macOS and Windows, including the synthetic lifecycle/workflow audit."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34620551655,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34620551655",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103333160634, "conclusion": "success"},
+        "macos-latest": {"job_id": 103333160903, "conclusion": "success"},
+        "windows-latest": {"job_id": 103333161049, "conclusion": "success"}
+      },
+      "checks": [
+        "release gate",
+        "update/rollback manifest",
+        "unpacked desktop build",
+        "release-manifest sha256 hashes",
+        "Electron runtime notices",
+        "transitive dependency attribution",
+        "artifact upload"
+      ],
+      "result": "All desktop matrix jobs passed packaging and attribution checks; production signing was skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "These hosted matrices validate repository contracts and packaging for the synthetic workflow source tree; they do not certify unchanged-plugin lifecycle, settings, views, combinations, restart/update/uninstall or return-to-Obsidian behavior.",
+    "The synthetic renderer trace remains Linux x64 implementation-boundary evidence; cross-platform renderer enforcement, same-user OS isolation, reference Obsidian behavior and human accessibility/input remain pending.",
+    "Signing, publication, updater rollback and release readiness remain pending; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The synthetic renderer workflow reconciliation is green on the hosted quality and desktop-build matrices at reconciled head af8faada9d567e40ac90beb5c024632a487e0eea. No unchanged-artifact runtime or release-passing status was promoted."
+}

@@ -20,12 +20,12 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-    "last_reconciled_head": "534dba4270c1e8a5dae7ea252742b47678385285",
-    "updated_at": "2026-09-11T16:10:18Z",
+    "last_reconciled_head": "af8faada9d567e40ac90beb5c024632a487e0eea",
+    "updated_at": "2026-09-11T16:14:45Z",
   "status": "active",
     "current_checkpoint": "P3.3",
     "next_action": "Continue the earliest dependency-ready implementation work: reference/cross-platform vault round trips, unchanged-plugin lifecycle/DOM evidence and selected theme/popout/accessibility traces; keep external release gates explicit.",
-    "recent_increment": {"checkpoint":"P1.2","commit":"534dba4270c1e8a5dae7ea252742b47678385285","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow.json","tested_source_tree":"668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c","ci_runs":[34619709868,34619710025]},
+    "recent_increment": {"checkpoint":"P1.2","commit":"af8faada9d567e40ac90beb5c024632a487e0eea","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow-ci.json","tested_source_tree":"668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c","ci_runs":[34620551709,34620551655]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",
@@ -116,7 +116,8 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all-ci.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-refresh.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-lifecycle.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow.json"
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow-ci.json"
       ],
       "commit_marker": "[openobsidian P1.2 work] Add synthetic renderer workflow trace",
       "validated_source_tree": "668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c",
