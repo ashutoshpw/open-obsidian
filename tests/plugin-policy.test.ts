@@ -21,13 +21,32 @@ afterEach(() => {
 
 test("D15 denies direct plugin capabilities with visible records", () => {
   const policy = new PluginPolicy();
-  const denied: PluginCapability[] = ["vault.direct-write", "filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged"];
+  const denied: PluginCapability[] = ["vault.direct-write", "configuration.write", "filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged"];
   const decisions = denied.map((capability) => policy.evaluate({pluginId: "fixture-plugin", capability}));
 
   expect(decisions.every((decision) => decision.decision === "deny")).toBe(true);
   expect(policy.compatibilityRecords()).toHaveLength(denied.length);
   expect(policy.compatibilityRecords().every((record) => record.visible && record.status === "unsupported_security")).toBe(true);
   expect(policy.compatibilityRecords().every((record) => record.safeAlternativesAttempted.length > 0 && record.reproduction.length > 0)).toBe(true);
+});
+
+test("shared plugin configuration writes are denied until an explicit host policy exists", () => {
+  const policy = new PluginPolicy();
+  const decision = policy.evaluate({
+    pluginId: "fixture-plugin",
+    capability: "configuration.write",
+    target: ".obsidian/plugins/fixture-plugin/data.json",
+    detail: "plugin settings write requested during discovery",
+  });
+
+  expect(decision.decision).toBe("deny");
+  expect(decision.record).toMatchObject({
+    capability: "configuration.write",
+    visible: true,
+    status: "unsupported_security",
+    reproduction: "plugin settings write requested during discovery",
+  });
+  expect(decision.record?.safeAlternativesAttempted).toContain("workflow disabled");
 });
 
 test("plugin writes are staged and require explicit approval", () => {

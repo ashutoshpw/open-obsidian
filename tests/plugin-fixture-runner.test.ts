@@ -35,8 +35,8 @@ test("plugin fixture runner snapshots before automation and detects first-open w
 
 test("capability fixture runner records every denied privileged path", () => {
   const policy = new PluginPolicy();
-  const result = runCapabilityMatrix(policy, "fixture-plugin", ["filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged"]);
+  const result = runCapabilityMatrix(policy, "fixture-plugin", ["configuration.write", "filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged"]);
   expect(result.decisions.every((decision) => decision.decision === "deny")).toBe(true);
-  expect(result.deniedRecords).toBe(5);
+  expect(result.deniedRecords).toBe(6);
   expect(policy.compatibilityRecords().every((record) => record.visible && record.safeAlternativesAttempted.length >= 3)).toBe(true);
 });

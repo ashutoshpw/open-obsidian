@@ -5,6 +5,7 @@ export type PluginCapability =
   | "vault.read"
   | "vault.preview-write"
   | "vault.direct-write"
+  | "configuration.write"
   | "filesystem.direct"
   | "network.request"
   | "process.spawn"

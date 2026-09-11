@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T12:18:30Z",
+  "checkpoint": "P1.2",
+  "requirements": ["C09.1"],
+  "fixture_ids": ["fixture:plugin-isolation", "fixture:c09-plugin-config-policy"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "401cb629a3d6825a61e39f4896e93c4038457ff95a8a81a6a1cc68f05691624c"
+  },
+  "observations": [
+    {"command": "bun test tests/plugin-policy.test.ts tests/plugin-fixture-runner.test.ts tests/plugin-compatibility-matrix.test.ts", "exit_code": 0, "result": "Eight focused tests and 35 expectations pass; shared configuration writes are denied with a visible D15 record and the capability fixture runner records the denial."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passes with configuration.write in the explicit plugin capability contract."},
+    {"command": "bun run validate:plugin-matrix", "exit_code": 0, "result": "The 25-target plus dependency matrix remains structurally complete; runtime and lifecycle dispositions remain pending-runtime."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the four changed source, fixture and test files."}
+  ],
+  "implemented": [
+    "Named shared plugin configuration writes as an explicit PluginCapability instead of relying on an untyped fall-through denial.",
+    "Recorded configuration.write in the D15 denied capability fixture and exercised a discovery-time settings-write reproduction with a visible unsupported-security record.",
+    "Kept vault reads mediated and vault writes preview-staged; no shared plugin configuration file is written by the policy path."
+  ],
+  "limitations": [
+    "This is policy and fixture evidence, not unchanged-plugin execution; actual settings, enablement, restart/update and return-to-Obsidian lifecycle traces remain pending.",
+    "Per-OS enforcement and reference Obsidian behavior remain pending; no selected user vault was accessed or modified."
+  ]
+}

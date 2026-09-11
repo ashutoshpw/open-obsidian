@@ -703,3 +703,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-ci.json`; `state.json` now records the pushed work SHA, CI run IDs and `last_reconciled_head` without self-referencing this reconciliation commit.
 - P1.2 remains in progress: renderer preflight and D15 denial evidence are implementation progress, not unchanged-plugin lifecycle, OS-enforced isolation, reference Obsidian, human or signed-release certification. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: continue the earliest dependency-ready cross-platform/reference vault and unchanged-plugin lifecycle work while retaining PLUG-009 as `unsupported_security` and PLUG-002/PLUG-007 as pending.
+
+## 2026-09-11T12:18:30Z — P1.2 shared plugin configuration policy
+
+- Completed: named `configuration.write` in the plugin capability contract and denied it under D15 with a visible reproduction, safe alternatives and `unsupported_security` record. The isolation fixture and capability runner now exercise the discovery-time shared-settings write path.
+- Validation: focused plugin policy/runner/matrix tests pass (8 tests, 35 expectations), `bun run typecheck`, `bun run validate:plugin-matrix` and strict changed-file Fallow pass. C09.1 is now `implemented` with explicit pending-runtime blockers.
+- Limitation: this proves the host policy and denied path only; unchanged plugin settings/enablement, lifecycle, per-OS enforcement and reference Obsidian behavior remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: run full local gates, commit and push this scoped P1.2 work, inspect all available CI matrices, reconcile the observed work SHA, then resume reference/cross-platform vault round trips and unchanged-plugin lifecycle evidence.

@@ -13,7 +13,7 @@ test("final audit separates implementation readiness from external release readi
   expect(audit.repository.origin_matches).toBe(true);
   expect(audit.repository.branch).toBe("main");
   expect(audit.implementation_readiness.total_rows).toBe(196);
-  expect(audit.implementation_readiness.implemented).toBe(117);
+  expect(audit.implementation_readiness.implemented).toBe(118);
   expect(audit.implementation_readiness.mandatory_not_release_passing).toBe(161);
   expect(audit.release_readiness.release_ready).toBe(false);
   expect(audit.release_readiness.pending_mandatory_rows.length).toBe(161);
