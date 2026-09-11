@@ -645,3 +645,24 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 
 - Re-ran `bun run validate:state`, `bun run final:audit`, `bun run check:fast`, `bun run typecheck` and `bun run audit:fallow:strict`; all passed. The routine suite reports 152 tests and 821 expectations, while the final audit remains intentionally release-blocked by 162 mandatory rows.
 - Next operation: stage the eight task-owned P1.3 files, review the staged diff, and create the `[openobsidian P1.3 work]` commit; retain P1.3 in progress because packaged macOS/Windows and reference-extension runtime behavior remain unverified.
+
+## 2026-09-11T11:08:52Z — P1.3 push and available-CI failure
+
+- Pushed `[openobsidian P1.3 work] Record private-internal compatibility decisions` at `07114cb434f31bafb02cddb4511c77ab986c8915`; local and `origin/main` matched.
+- Desktop-build run `34592605333` passed on Ubuntu, macOS and Windows. Quality run `34592605335` failed only because `tests/benchmark.test.ts` hardcoded the Linux scope on macOS/Windows; Ubuntu passed. This was treated as an implementation CI failure, not deferred.
+
+## 2026-09-11T11:11:02Z — benchmark matrix repair attempt
+
+- Pushed `c8e065ca15cbb92055cfb31ae5fbbf707b9bd033` (`[openobsidian P5.1 work] Make benchmark contract platform-aware`) so the test asserts the explicit non-Linux synthetic scope outside Linux.
+- Quality run `34592779838` then passed Ubuntu/macOS but exposed a Windows-only absolute-path bug in `scripts/benchmark.ts`: a platform path was split only on `/` and rejected by the vault safety guard. Desktop-build run `34592779846` passed. The failed Windows trace is retained in `2026-09-11-p5.1-cross-platform-ci.json`.
+
+## 2026-09-11T11:12:40Z — benchmark path normalization and matrix success
+
+- Pushed `aaefdadf92f083a54ec91a4e28f068416de27348` (`[openobsidian P5.1 work] Normalize benchmark paths across platforms`) using `node:path basename` for the seeded prior note.
+- Local benchmark, `bun run check:fast`, typecheck and strict Fallow passed. Quality run `34592908501` passed on Ubuntu/macOS/Windows; desktop-build run `34592908593` passed packaging, release-manifest, runtime-notice and transitive-attribution audits on all three runners.
+- Recomputed the 193-path source tree as `d12e30272446c581eadce402a80c3f18fce41eacd8424fde5a2bb9b89dc6cb68`; added cross-platform CI evidence and updated Q-005 through Q-008/P5.1 traceability. The benchmark remains synthetic and external performance/reference gates remain pending.
+
+## 2026-09-11T11:14:14Z — reconciliation prepared
+
+- Updated `state.json` to observe `aaefdadf92f083a54ec91a4e28f068416de27348` as the latest reconciled work head, retain `current_checkpoint: P3.3` and `status: active`, and record quality/desktop run IDs `34592908501` and `34592908593`.
+- Next operation: validate the metadata JSON, stage only the evidence/requirements/state/journal updates, commit the reconciliation marker, push it, and verify clean `main` parity. Continue with the earliest dependency-ready work; do not claim reference vault, unchanged-plugin runtime, human or release gates complete.

@@ -1,0 +1,36 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T11:14:14Z",
+  "checkpoint": "P5.1",
+  "requirements": ["Q-005", "Q-006", "Q-007", "Q-008", "Q-013"],
+  "fixture_ids": ["fixture:performance-benchmark", "fixture:q-startup", "fixture:q-responsiveness", "fixture:q-search", "fixture:q-resources", "fixture:q-test-layers"],
+  "environment": {
+    "os": "Linux local plus GitHub Actions macOS/Windows/Linux runners",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "aaefdadf92f083a54ec91a4e28f068416de27348",
+    "tested_source_tree": "d12e30272446c581eadce402a80c3f18fce41eacd8424fde5a2bb9b89dc6cb68",
+    "source_tree_paths": 193
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "implementation": [
+    "Made the benchmark contract assert linux-core-synthetic on Linux and non-linux-core-synthetic on other hosts while retaining the explicit external cross-platform disposition.",
+    "Normalized the seeded prior-note path with node:path basename so Windows absolute paths cannot be mistaken for vault-relative paths or rejected as reserved segments."
+  ],
+  "checks": [
+    {"command": "bun test tests/benchmark.test.ts", "exit_code": 0, "result": "The focused benchmark contract passed locally with 12 expectations."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine local gates passed with 152 tests and 821 expectations; the benchmark contract passed on the Linux host."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow audit passed with no issues in the benchmark script."},
+    {"command": "gh run watch 34592779838 --repo ashutoshpw/open-obsidian --exit-status", "exit_code": 1, "result": "The first platform-aware assertion repair passed macOS/Linux but retained a Windows benchmark path failure; the failed attempt is preserved before the basename fix."},
+    {"command": "gh run watch 34592908501 --repo ashutoshpw/open-obsidian --exit-status", "exit_code": 0, "result": "Quality run passed on Ubuntu, macOS and Windows after the assertion and platform-native path fixes; run URL https://github.com/ashutoshpw/open-obsidian/actions/runs/34592908501."},
+    {"command": "gh run watch 34592908593 --repo ashutoshpw/open-obsidian --exit-status", "exit_code": 0, "result": "Desktop-build run passed packaging, release-manifest, runtime-notice and attribution audits on Ubuntu, macOS and Windows; run URL https://github.com/ashutoshpw/open-obsidian/actions/runs/34592908593."}
+  ],
+  "limitations": [
+    "The benchmark remains synthetic and release_eligible=false; pinned hardware, reference Obsidian vaults, Electron input-to-paint, long-running resource, human comparison and plugin/runtime certification remain pending.",
+    "The GitHub Actions green result proves the available matrix contract and packaging jobs, not reference-vault portability or human validation."
+  ],
+  "result": "The available macOS, Windows and Linux quality and desktop-build matrix is green for the benchmark portability repair, while the external performance and reference-vault gates remain explicitly pending."
+}
