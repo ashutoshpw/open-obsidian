@@ -863,3 +863,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 
 - Updated the renderer evidence, C10.1/UX-001/UX-003/Q-011 traceability and P2.2/P5.2 checkpoint records to source tree `96f8bd6cc95492d0bce1cfb75ed970d945fcf8a499e6be2d08ba906bae9ca349` across 211 included paths after the final-audit expectation was corrected from 120 to 121 implemented rows.
 - Final local gates pass: `bun run check:fast` (164 tests, 879 expectations), `bun run audit:fallow:strict`, `bun run audit:electron-vault` (14 checks true), and the source-tree digest. The goal remains active with 121 implemented, 40 pending and 161 mandatory rows not release-passing.
+
+## 2026-09-11T15:41:30Z — P2.2/P5.2 hosted renderer workflow reconciliation
+
+- Reconciled pushed commit `4b7b59dda1a3de3a6924d60856365213632c21d3` with quality run `34617428570` and desktop-build run `34617428692`; Ubuntu, macOS and Windows jobs passed. Quality logs show all 14 Electron-vault checks true on Linux x64, macOS arm64 and Windows x64, including launch-intent hydration, keyboard save, Unicode input and source/live-preview mode switching.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-electron-renderer-workflow-ci.json`, updated C10.1, UX-001, UX-003 and Q-011 traceability, and set the P2.2/P5.2 checkpoint/recent-increment metadata to the implementation SHA and source tree `96f8bd6cc95492d0bce1cfb75ed970d945fcf8a499e6be2d08ba906bae9ca349` across 211 included paths.
+- Hosted packaging signing remained skipped because credentials were unavailable. The matrices still do not certify reference Obsidian, unchanged-plugin lifecycle, same-user OS isolation, true OS IME, screen-reader or human focus/input, publication, updater rollback or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.

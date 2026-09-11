@@ -1,0 +1,101 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T15:41:30Z",
+  "checkpoint": "P2.2",
+  "requirements": ["C10.1", "UX-001", "UX-003", "Q-011"],
+  "implementation_commit": "4b7b59dda1a3de3a6924d60856365213632c21d3",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "96f8bd6cc95492d0bce1cfb75ed970d945fcf8a499e6be2d08ba906bae9ca349",
+    "source_tree_paths": 211,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "fixture_id": "fixture:electron-vault-roundtrip",
+  "local": {
+    "command": "bun run audit:electron-vault",
+    "platform": "linux",
+    "architecture": "x64",
+    "electron_version": "44.3.0",
+    "checks": {
+      "launch": true,
+      "existing_vault_opened": true,
+      "read_only_scan": true,
+      "read_preserved_bytes": true,
+      "revision_aware_write": true,
+      "unrelated_binary_preserved": true,
+      "process_restart": true,
+      "reopen_read": true,
+      "app_data_outside_vault": true,
+      "remote_contact_avoided": true,
+      "launch_intent_hydrated_renderer": true,
+      "renderer_keyboard_save": true,
+      "renderer_unicode_input": true,
+      "renderer_mode_switch": true
+    }
+  },
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34617428570,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34617428570",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103322728483, "conclusion": "success", "renderer_audit": "14 checks true; linux x64"},
+        "macos-latest": {"job_id": 103322728094, "conclusion": "success", "renderer_audit": "14 checks true; darwin arm64"},
+        "windows-latest": {"job_id": 103322728492, "conclusion": "success", "renderer_audit": "14 checks true; win32 x64"}
+      },
+      "checks": [
+        "progress state",
+        "frozen contracts",
+        "architecture",
+        "version baseline",
+        "vault differential fixture",
+        "host vault round trip",
+        "C10 workflow inventory",
+        "distribution metadata",
+        "update/rollback contract",
+        "accessibility contract",
+        "typecheck",
+        "tests",
+        "quality scorecard",
+        "Electron compile",
+        "Electron vault renderer workflow",
+        "synthetic plugin lifecycle",
+        "Knip",
+        "Fallow health",
+        "changed-code Fallow"
+      ],
+      "result": "All quality matrix jobs passed; the packaged Electron audit reported launch-intent hydration, keyboard save, Unicode input, source/live-preview mode switching and the existing broker round-trip checks true on all three hosted runners."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34617428692,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34617428692",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103322728658, "conclusion": "success"},
+        "macos-latest": {"job_id": 103322728494, "conclusion": "success"},
+        "windows-latest": {"job_id": 103322728669, "conclusion": "success"}
+      },
+      "checks": [
+        "release gate",
+        "update/rollback manifest",
+        "unpacked desktop build",
+        "release-manifest sha256 hashes",
+        "Electron runtime notices",
+        "transitive dependency attribution",
+        "artifact upload"
+      ],
+      "result": "All desktop matrix jobs passed packaging and attribution checks; production signing was skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "The CI and local traces exercise the disposable packaged Electron shell and mediated broker; they do not certify reference Obsidian reopen behavior, unchanged-plugin lifecycle, same-user OS isolation or human accessibility/input.",
+    "The CDP keyboard/input path is renderer evidence, not true OS IME or screen-reader certification; signing, publication, updater and release readiness remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The packaged renderer workflow increment is reconciled to 4b7b59d with green quality and desktop-build matrices on Ubuntu, macOS and Windows; local and hosted evidence remains bounded to the disposable Electron implementation boundary."
+}
