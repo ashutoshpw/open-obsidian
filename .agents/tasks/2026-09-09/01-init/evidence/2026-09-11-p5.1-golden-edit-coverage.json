@@ -10,6 +10,7 @@
     "bun_version": "1.4.2",
     "branch": "main",
     "implementation_commit_before_reconciliation": "4b7fcd11f9b2f40edbdc2eaa94310e7729018833",
+    "implementation_commit_after_reconciliation": "0113dd2d616fb9da8a122a4b80283f49a59bac68",
     "tested_source_tree": "f97e7d171ce7e9ed578c0477ecce25191289162c779223754f8a7e383a5433f0",
     "source_tree_paths": 220,
     "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
@@ -57,7 +58,12 @@
     "quality_run": 34625328995,
     "quality_conclusion": "failure",
     "quality_failure": "Windows audit:electron-vault cleanup failed with EBUSY while removing a temporary Electron user-data directory; Linux and macOS quality jobs passed their Electron step.",
-    "repair": "Pending a fresh quality run after Windows process-tree termination and retry cleanup hardening."
+    "repair": "Windows process-tree termination and retry cleanup hardening landed in 4b7fcd1.",
+    "final_quality_run": 34626288490,
+    "final_quality_conclusion": "success",
+    "final_desktop_build_run": 34626288319,
+    "final_desktop_build_conclusion": "success",
+    "final_platforms": ["Ubuntu", "macOS", "Windows"]
   },
   "limitations": [
     "A pinned reference Obsidian runtime and consented vault were unavailable, so reference reopen and reference-vault portability remain external-pending.",

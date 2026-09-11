@@ -1,0 +1,50 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T17:13:30Z",
+  "checkpoint": "P5.1",
+  "requirements": ["Q-002", "Q-003"],
+  "fixture_ids": ["fixture:q-edit-fidelity", "fixture:q-extension-matrix"],
+  "environment": {
+    "branch": "main",
+    "implementation_commit": "0113dd2d616fb9da8a122a4b80283f49a59bac68",
+    "tested_source_tree": "f97e7d171ce7e9ed578c0477ecce25191289162c779223754f8a7e383a5433f0",
+    "source_tree_paths": 220,
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "quality": {
+    "run_id": 34626288490,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34626288490",
+    "conclusion": "success",
+    "jobs": [
+      {"name": "ubuntu-latest", "job_id": 103352086022, "conclusion": "success"},
+      {"name": "macos-latest", "job_id": 103352085745, "conclusion": "success"},
+      {"name": "windows-latest", "job_id": 103352086016, "conclusion": "success"}
+    ],
+    "checks": "All quality matrix jobs passed progress/contracts, validation, tests, the focused golden-edit test, Electron round trips, synthetic plugin lifecycle, Knip and Fallow health."
+  },
+  "desktop_build": {
+    "run_id": 34626288319,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34626288319",
+    "conclusion": "success",
+    "jobs": [
+      {"name": "ubuntu-latest", "job_id": 103352084040, "conclusion": "success"},
+      {"name": "macos-latest", "job_id": 103352083706, "conclusion": "success"},
+      {"name": "windows-latest", "job_id": 103352083995, "conclusion": "success"}
+    ],
+    "checks": "Release gate, update/rollback manifest, unpacked desktop build, release-manifest hashes, packaged Electron notices and transitive attribution passed on all three platforms.",
+    "signing": "Production signing was skipped because credentials were unavailable."
+  },
+  "repair_reconciliation": {
+    "prior_quality_run": 34625328995,
+    "prior_quality_failure": "Windows temporary Electron user-data cleanup returned EBUSY.",
+    "repair_commit": "4b7fcd11f9b2f40edbdc2eaa94310e7729018833",
+    "repair": "Windows process-tree termination and retry cleanup removed the hosted lock failure; the subsequent three-OS quality matrix passed."
+  },
+  "limitations": [
+    "Hosted quality and packaging validate the repository and disposable Electron boundary; they do not certify reference Obsidian reopen, unchanged-plugin lifecycle, same-user OS isolation or human accessibility/input.",
+    "All 81 compatibility cells remain explicitly untested pending unchanged-artifact runtime, lifecycle, OS and reference evidence; no passing or unsupported-security claim is inferred.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The golden-edit and explicit compatibility-coverage implementation is reconciled to 0113dd2 with green quality and desktop-build matrices on Ubuntu, macOS and Windows. Reference reopen and plugin/runtime certification remain external-pending."
+}

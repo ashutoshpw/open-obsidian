@@ -922,3 +922,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `tests/golden-edit-fidelity.test.ts` so the hosted test matrix executes both exact local golden-edit cases and asserts the reference-reopen `external-pending` boundary.
 - Focused golden test, typecheck, `check:fast` (168 tests, 907 expectations), quality and strict Fallow passed locally. The tested source tree is now `f97e7d171ce7e9ed578c0477ecce25191289162c779223754f8a7e383a5433f0` across 220 included paths.
 - Next: commit and push the focused test, inspect the fresh three-OS quality and desktop-build runs, then append final CI evidence and reconcile the implementation SHA/state.
+
+## 2026-09-11T17:13:30Z — P5.1 final hosted reconciliation
+
+- Reconciled implementation commit `0113dd2d616fb9da8a122a4b80283f49a59bac68` on `main`; local `main` and `origin/main` match. The tested source tree is `f97e7d171ce7e9ed578c0477ecce25191289162c779223754f8a7e383a5433f0` across 220 included paths.
+- Quality run `34626288490` passed on Ubuntu (`103352086022`), macOS (`103352085745`) and Windows (`103352086016`). Desktop-build run `34626288319` passed on Ubuntu (`103352084040`), macOS (`103352083706`) and Windows (`103352083995`). The focused golden-edit test now runs inside the hosted test suite; production signing remained skipped.
+- The earlier Windows-only `EBUSY` run `34625328995` is retained as the repair trigger; `4b7fcd1` process-tree termination/retry cleanup resolved it. No reference Obsidian, consented vault, unchanged plugin runtime, provider, human or selected `/home/ashutosh/Obsidian` vault was accessed. The goal remains active with Q-002/Q-003 implemented but not release-passing.
