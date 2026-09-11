@@ -43,6 +43,7 @@ export type PluginCompatibilityCell = {
   platform: PluginPlatform;
   architectures: string[];
   workflows: CompatibilityWorkflow[];
+  workflowEvidence: Record<string, "pending-runtime">;
   combinations: string[];
   lifecycle: Record<PluginLifecycleCheck, "pending-runtime">;
   disposition: "pending-runtime";
@@ -76,6 +77,10 @@ function records(value: unknown): UnknownRecord[] {
 
 function lifecycle(): Record<PluginLifecycleCheck, "pending-runtime"> {
   return Object.fromEntries(PLUGIN_LIFECYCLE_CHECKS.map((check) => [check, "pending-runtime"])) as Record<PluginLifecycleCheck, "pending-runtime">;
+}
+
+function workflowEvidence(workflowsForEntry: CompatibilityWorkflow[]): Record<string, "pending-runtime"> {
+  return Object.fromEntries(workflowsForEntry.map((workflow) => [workflow.id, "pending-runtime"]));
 }
 
 function artifactAssets(artifact: UnknownRecord): CompatibilityAsset[] {
@@ -129,6 +134,10 @@ function missingWorkflowOutputs(cell: PluginCompatibilityCell): string | null {
   return cell.workflows.length > 0 && cell.workflows.every((workflow) => workflow.expectedOutputs.length > 0) ? null : `${cellLabel(cell)} is missing workflow outputs`;
 }
 
+function missingWorkflowEvidence(cell: PluginCompatibilityCell): string | null {
+  return cell.workflows.every((workflow) => cell.workflowEvidence[workflow.id] === "pending-runtime") ? null : `${cellLabel(cell)} is missing workflow evidence dispositions`;
+}
+
 function unreviewedDisposition(cell: PluginCompatibilityCell): string | null {
   return cell.disposition === "pending-runtime" ? null : `${cellLabel(cell)} has an unreviewed runtime disposition`;
 }
@@ -146,7 +155,7 @@ function invalidReleasePins(cell: PluginCompatibilityCell): string | null {
 }
 
 function validateCell(cell: PluginCompatibilityCell): string[] {
-  return [missingReleaseIdentity(cell), missingConfiguration(cell), missingWorkflowOutputs(cell), unreviewedDisposition(cell), incompleteLifecycle(cell), missingSecurityPolicy(cell), invalidReleasePins(cell)].filter((message): message is string => message !== null);
+  return [missingReleaseIdentity(cell), missingConfiguration(cell), missingWorkflowOutputs(cell), missingWorkflowEvidence(cell), unreviewedDisposition(cell), incompleteLifecycle(cell), missingSecurityPolicy(cell), invalidReleasePins(cell)].filter((message): message is string => message !== null);
 }
 
 export function buildPluginCompatibilityMatrix(catalog: UnknownRecord, manifest: UnknownRecord, isolation: UnknownRecord): PluginCompatibilityMatrix {
@@ -159,6 +168,7 @@ export function buildPluginCompatibilityMatrix(catalog: UnknownRecord, manifest:
     const artifact = artifacts.get(artifactId);
     if (!artifact) return [];
     const platforms = strings(entry.applicable_platforms).filter((platform): platform is PluginPlatform => PLUGIN_PLATFORMS.includes(platform as PluginPlatform));
+    const entryWorkflows = workflows(entry);
     return platforms.map((platform) => ({
       artifactId,
       pluginId: string(artifact.registry_id) || artifactId,
@@ -170,7 +180,8 @@ export function buildPluginCompatibilityMatrix(catalog: UnknownRecord, manifest:
       configurationFixtureId: string(entry.configuration_fixture_id),
       platform,
       architectures: strings(entry.architectures),
-      workflows: workflows(entry),
+      workflows: entryWorkflows,
+      workflowEvidence: workflowEvidence(entryWorkflows),
       combinations: combinationsFor(artifactId, combinations),
       lifecycle: lifecycle(),
       disposition: "pending-runtime" as const,

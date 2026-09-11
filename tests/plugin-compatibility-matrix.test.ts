@@ -18,5 +18,6 @@ test("runtime and lifecycle claims remain pending until unchanged artifacts exec
   expect(sample?.disposition).toBe("pending-runtime");
   expect(Object.keys(sample?.lifecycle ?? {})).toEqual([...PLUGIN_LIFECYCLE_CHECKS]);
   expect(Object.values(sample?.lifecycle ?? {}).every((status) => status === "pending-runtime")).toBe(true);
+  expect(Object.values(sample?.workflowEvidence ?? {}).every((status) => status === "pending-runtime")).toBe(true);
   expect(sample?.deniedCapabilities).toContain("process.spawn");
 });
