@@ -41,9 +41,35 @@ function deniedObject(capabilities, capability) {
 }
 
 function deniedFunction(capabilities, capability) {
-  return function deniedCall() {
+  const denied = function deniedCall() {
     return denyCapability(capabilities, capability);
   };
+  Object.defineProperty(denied, "prototype", {value: Function.prototype});
+  return denied;
+}
+
+function safeDomObject() {
+  return new Proxy({
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild(child) { return child; },
+    createEl() { return safeDomObject(); },
+    createDiv() { return safeDomObject(); },
+    createSpan() { return safeDomObject(); },
+    empty() {},
+    toggleClass() {},
+    addClass() {},
+    removeClass() {},
+    setText() {},
+    setAttr() {},
+    style: {},
+    classList: {add() {}, remove() {}, toggle() {}, contains() { return false; }},
+  }, {
+    get(target, property) {
+      if (property in target) return target[property];
+      return safeCallable(`dom.${String(property)}`);
+    },
+  });
 }
 
 function safeCallable(name) {
@@ -52,16 +78,27 @@ function safeCallable(name) {
     get(target, property) {
       if (property === "prototype") return target.prototype;
       if (property === Symbol.toStringTag) return "Function";
+      if (property === Symbol.toPrimitive) return () => name;
+      if (property === "toString" || property === "valueOf") return () => name;
+      if (property === "bind") return (...args) => safeCallable(`${name}.bound`);
       return safeCallable(`${name}.${String(property)}`);
     },
-    apply() {
-      return {};
+    apply(_target, _thisArg, args) {
+      if (/\.normalizePath$/.test(name)) return typeof args[0] === "string" ? args[0].replaceAll("\\", "/") : "";
+      if (/\.debounce$/.test(name) && typeof args[0] === "function") return args[0];
+      if (/\.getLeavesOfType$/.test(name)) return [];
+      if (/\.getRightLeaf$/.test(name)) return {setViewState() {}, openFile() {}};
+      return safeCallable(`${name}()`);
     },
-    construct() {
-      return {};
+    construct(_target, args) {
+      return {app: args[0], containerEl: safeDomObject()};
     },
   });
 }
+
+const OBSIDIAN_EXPORT_NAMES = [
+  "App", "AbstractInputSuggest", "ButtonComponent", "ColorComponent", "Component", "ConfirmationModal", "DataAdapter", "DropdownComponent", "Editor", "EditorPosition", "EditorRange", "EditorSuggest", "Events", "FileSystemAdapter", "FileView", "FuzzySuggestModal", "ItemView", "Keymap", "MarkdownPostProcessorContext", "MarkdownRenderChild", "MarkdownRenderer", "MarkdownView", "Menu", "MenuItem", "MetadataCache", "Modal", "Notice", "Platform", "PluginSettingTab", "Scope", "SearchComponent", "Setting", "SettingGroup", "SettingPage", "SliderComponent", "SuggestModal", "TAbstractFile", "TFile", "TFolder", "TextAreaComponent", "TextComponent", "ToggleComponent", "Vault", "Workspace", "WorkspaceLeaf", "addIcon", "arrayBufferToBase64", "debounce", "getAllTags", "getFrontMatterInfo", "getLanguage", "normalizePath", "parseLinktext", "parseYaml", "prepareFuzzySearch", "requestUrl", "resolveSubpath", "setIcon", "stringifyYaml",
+];
 
 function cloneData(value) {
   if (value === undefined) return {};
@@ -79,6 +116,14 @@ function createObsidianApi() {
       if (command && typeof command.id === "string") this.app.commands.push(command.id);
     }
 
+    addRibbonIcon() {
+      return safeDomObject();
+    }
+
+    addStatusBarItem() {
+      return safeDomObject();
+    }
+
     registerView(type) {
       if (typeof type === "string") this.app.views.push(type);
     }
@@ -90,6 +135,24 @@ function createObsidianApi() {
     registerEvent(event) {
       if (event && typeof event.type === "string") this.app.registeredEvents.push(event.type);
     }
+
+    register() {}
+
+    registerDomEvent() {}
+
+    registerInterval() {}
+
+    registerCliHandler() {}
+
+    registerEditorExtension() {}
+
+    registerMarkdownCodeBlockProcessor() {}
+
+    registerHoverLinkSource() {}
+
+    registerObsidianProtocolHandler() {}
+
+    registerCustomCss() {}
 
     loadData() {
       this.app.persistence.push("loadData");
@@ -109,13 +172,129 @@ function createObsidianApi() {
       this.app.savedData = cloneData(value);
     }
   }
-  return new Proxy({Plugin}, {
+  const target = {Plugin};
+  return new Proxy(target, {
+    ownKeys() {
+      return [...new Set([...Reflect.ownKeys(target), ...OBSIDIAN_EXPORT_NAMES])];
+    },
+    getOwnPropertyDescriptor(_target, property) {
+      if (typeof property === "string" && OBSIDIAN_EXPORT_NAMES.includes(property)) return {configurable: true, enumerable: true, writable: true, value: safeCallable(`obsidian.${property}`)};
+      return Reflect.getOwnPropertyDescriptor(target, property);
+    },
     get(target, property) {
       if (property in target) return target[property];
       if (property === "__esModule") return false;
       return safeCallable(`obsidian.${String(property)}`);
     },
   });
+}
+
+function pluginConstructor(module) {
+  const exports = module.exports;
+  if (typeof exports === "function") return exports;
+  if (exports && typeof exports.default === "function") return exports.default;
+  return null;
+}
+
+function createPluginApp(events, dataStore) {
+  const event = (type) => ({type, off() {}});
+  const missingFile = () => {
+    const error = new Error("mediated vault path is unavailable");
+    error.code = "ENOENT";
+    throw error;
+  };
+  const adapter = {
+    exists: async () => false,
+    read: async () => "",
+    readBinary: async () => new Uint8Array(),
+    write: async () => undefined,
+    writeBinary: async () => undefined,
+    append: async () => undefined,
+    appendBinary: async () => undefined,
+    list: async () => ({files: [], folders: []}),
+    mkdir: async () => undefined,
+    rmdir: async (_path, _recursive) => undefined,
+    remove: async () => undefined,
+    stat: missingFile,
+    getBasePath: () => "",
+    getFullPath: (path) => path,
+    getResourcePath: (path) => path,
+    readFile: async () => "",
+    writeFile: async () => undefined,
+    readdir: async () => [],
+    unlink: async () => undefined,
+    lstat: missingFile,
+    readlink: async () => "",
+    symlink: async () => undefined,
+    cp: async () => undefined,
+    rm: async () => undefined,
+  };
+  const vault = {
+    on(type) { return event(type); },
+    off() {},
+    offref() {},
+    getConfig() { return undefined; },
+    getAbstractFileByPath() { return null; },
+    getFileByPath() { return null; },
+    getFolderByPath() { return null; },
+    getAllLoadedFiles() { return []; },
+    read: async () => "",
+    cachedRead: async () => "",
+    create: async () => ({}),
+    createBinary: async () => ({}),
+    createFolder: async () => ({}),
+    modify: async () => undefined,
+    modifyBinary: async () => undefined,
+    delete: async () => undefined,
+    adapter,
+  };
+  const workspace = {
+    layoutReady: true,
+    on(type) { return event(type); },
+    off() {},
+    offref() {},
+    onLayoutReady(callback) { if (typeof callback === "function") callback(); },
+    getLeavesOfType() { return []; },
+    getRightLeaf() { return {setViewState() {}, openFile: async () => undefined}; },
+    getActiveFile() { return null; },
+    getActiveViewOfType() { return null; },
+    getActiveFileView() { return null; },
+    getLeaf() { return {openFile: async () => undefined, setViewState() {}}; },
+    getMostRecentLeaf() { return null; },
+    openLinkText: async () => undefined,
+    iterateAllLeaves() {},
+    trigger() {},
+  };
+  return {
+    events,
+    commands: [],
+    views: [],
+    settings: [],
+    registeredEvents: [],
+    persistence: [],
+    dataStore,
+    vault,
+    workspace,
+    metadataCache: {},
+    fileManager: {trashFile: async () => undefined},
+    commandsManager: {},
+    plugins: {enabledPlugins: new Set(), plugins: {}, getPlugin() { return null; }},
+    internalPlugins: {plugins: {}},
+    app: null,
+  };
+}
+
+function pluginApiSummary(pluginApp) {
+  return {
+    events: [...pluginApp.events],
+    commands: [...pluginApp.commands],
+    views: [...pluginApp.views],
+    settings: [...pluginApp.settings],
+    registeredEvents: [...pluginApp.registeredEvents],
+    persistence: [...pluginApp.persistence],
+    loadedData: cloneData(pluginApp.loadedData),
+    savedData: cloneData(pluginApp.savedData),
+  };
 }
 
 function createSafeRequire(capabilities, requiredModules) {
@@ -155,6 +334,7 @@ function createEvaluationArguments(capabilities, requiredModules) {
     undefined,
     TextEncoder,
     TextDecoder,
+    safeCallable("activeWindow"),
   ];
 }
 
@@ -163,7 +343,7 @@ function evaluateSource(source, capabilities, requiredModules) {
   const factory = new Function(
     "module", "exports", "require", "document", "window", "globalThis", "self", "navigator", "location",
     "process", "fetch", "WebSocket", "XMLHttpRequest", "keytar", "WebAssembly", "setTimeout", "setInterval",
-    "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder",
+    "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder", "activeWindow",
     `"use strict";\n${source}\n`,
   );
   factory(module, module.exports, ...createEvaluationArguments(capabilities, requiredModules));
@@ -200,39 +380,49 @@ function failedResult(error, requiredModules, deniedCapabilities) {
   };
 }
 
+function exposeBoundedApp() {
+  const boundedApp = createPluginApp([], undefined);
+  boundedApp.app = boundedApp;
+  globalThis.app = boundedApp;
+}
+
 function rendererProbe(source) {
   const deniedCapabilities = [];
   const requiredModules = [];
   try {
+    exposeBoundedApp();
     return loadedResult(evaluateSource(source, deniedCapabilities, requiredModules), requiredModules, deniedCapabilities);
   } catch (error) {
     return failedResult(error, requiredModules, deniedCapabilities);
   }
 }
 
-function lifecycleCall(instance, name, events) {
+async function lifecycleCall(instance, name, events) {
   if (typeof instance[name] !== "function") return;
-  instance[name]();
+  await instance[name]();
   events.push(name);
 }
 
 function lifecycleInstance(module, lifecycle) {
-  if (typeof module.exports !== "function") throw new Error("lifecycle fixture did not export a plugin class");
+  const Constructor = pluginConstructor(module);
+  if (!Constructor) throw new Error("lifecycle fixture did not export a plugin class");
   lifecycle.supported = true;
-  const pluginApp = {events: lifecycle.events, commands: [], views: [], settings: [], registeredEvents: [], persistence: []};
-  const instance = new module.exports(pluginApp, {id: "renderer-lifecycle-fixture", version: "1"});
-  lifecycle.api = pluginApp;
+  const pluginApp = createPluginApp(lifecycle.events);
+  const instance = new Constructor(pluginApp, {id: "renderer-lifecycle-fixture", version: "1"});
+  Object.defineProperty(lifecycle, "_pluginApp", {configurable: true, value: pluginApp});
+  lifecycle.api = pluginApiSummary(pluginApp);
   lifecycle.events.push("constructed");
   return instance;
 }
 
-function workflowInstance(module, workflow, dataStore, phase, version) {
-  if (typeof module.exports !== "function") throw new Error("workflow fixture did not export a plugin class");
-  const pluginApp = {events: [], commands: [], views: [], settings: [], registeredEvents: [], persistence: [], dataStore};
-  const instance = new module.exports(pluginApp, {id: "renderer-workflow-fixture", version});
+async function workflowInstance(module, workflow, dataStore, phase, version) {
+  const Constructor = pluginConstructor(module);
+  if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
+  const pluginApp = createPluginApp([], dataStore);
+  const instance = new Constructor(pluginApp, {id: "renderer-workflow-fixture", version});
   const events = ["constructed"];
-  lifecycleCall(instance, "onload", events);
-  lifecycleCall(instance, "onunload", events);
+  await lifecycleCall(instance, "onload", events);
+  await lifecycleCall(instance, "onunload", events);
   const registered = {
     commands: [...pluginApp.commands],
     views: [...pluginApp.views],
@@ -272,17 +462,18 @@ function lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, wo
   };
 }
 
-function rendererLifecycleWorkflowProbe(source) {
+async function rendererLifecycleWorkflowProbe(source) {
   const deniedCapabilities = [];
   const requiredModules = [];
   const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, activeAfterUninstall: true};
   try {
+    exposeBoundedApp();
     const module = evaluateSource(source, deniedCapabilities, requiredModules);
     workflow.supported = true;
     const dataStore = {value: {}, writes: 0};
-    workflowInstance(module, workflow, dataStore, "install", "1.0.0");
-    workflowInstance(module, workflow, dataStore, "restart", "1.0.0");
-    workflowInstance(module, workflow, dataStore, "update", "1.1.0");
+    await workflowInstance(module, workflow, dataStore, "install", "1.0.0");
+    await workflowInstance(module, workflow, dataStore, "restart", "1.0.0");
+    await workflowInstance(module, workflow, dataStore, "update", "1.1.0");
     workflow.pluginDataWrites = dataStore.writes;
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
@@ -314,15 +505,17 @@ function lifecycleFailure(error, requiredModules, deniedCapabilities, lifecycle)
   };
 }
 
-function rendererLifecycleProbe(source) {
+async function rendererLifecycleProbe(source) {
   const deniedCapabilities = [];
   const requiredModules = [];
   const lifecycle = {supported: false, events: []};
   try {
+    exposeBoundedApp();
     const module = evaluateSource(source, deniedCapabilities, requiredModules);
     const instance = lifecycleInstance(module, lifecycle);
-    lifecycleCall(instance, "onload", lifecycle.events);
-    lifecycleCall(instance, "onunload", lifecycle.events);
+    await lifecycleCall(instance, "onload", lifecycle.events);
+    await lifecycleCall(instance, "onunload", lifecycle.events);
+    lifecycle.api = pluginApiSummary(lifecycle._pluginApp);
     return {
       status: "loaded",
       enforcement: "electron-context-isolated-sandbox",
@@ -339,19 +532,25 @@ function rendererLifecycleProbe(source) {
 
 function rendererScript(source, mode = "probe") {
   const runtime = [
+    `const OBSIDIAN_EXPORT_NAMES = ${JSON.stringify(OBSIDIAN_EXPORT_NAMES)};`,
     remember,
     denyCapability,
     deniedObject,
     deniedFunction,
+    safeDomObject,
     safeCallable,
     cloneData,
     createObsidianApi,
+    pluginConstructor,
+    createPluginApp,
+    pluginApiSummary,
     createSafeRequire,
     createEvaluationArguments,
     evaluateSource,
     exportKind,
     loadedResult,
     failedResult,
+    exposeBoundedApp,
     rendererProbe,
     lifecycleCall,
     lifecycleInstance,

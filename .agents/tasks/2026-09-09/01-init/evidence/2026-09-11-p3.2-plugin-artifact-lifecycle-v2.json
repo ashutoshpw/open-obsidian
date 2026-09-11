@@ -1,0 +1,505 @@
+{
+  "evidence_version": 2,
+  "recorded_at": "2026-09-11T19:30:48.830Z",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "PC01",
+    "PC02",
+    "PC03",
+    "PC04",
+    "PC05",
+    "PC06",
+    "PC07",
+    "PC08",
+    "PC09",
+    "PC10",
+    "PC11",
+    "PC12",
+    "PC13",
+    "PC14",
+    "PC15",
+    "PC16",
+    "PC17",
+    "PC18",
+    "PC19",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24",
+    "PC25",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005"
+  ],
+  "decision_id": "D15",
+  "fixture_id": "fixture:plugin-artifact-lifecycle",
+  "prior_attempt": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle.json",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "head_before_commit": "7e4602bc9f03a3cd8ff988e177f6a7e559fa4049",
+    "tested_source_tree": "367c2c28a6cbfdc510b4c051ee92e68d74373accb7178fdc983f7df007d5158e",
+    "source_tree_paths": 221,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "command": "bun run audit:plugin-artifact-lifecycle",
+  "execution_policy": "The unchanged release main.js bytes are loaded only in a hidden Electron BrowserWindow with contextIsolation, sandbox and nodeIntegration disabled. Host filesystem, network, process, credential, native and privileged-DOM calls are replaced with denying capabilities. This audit mode never enables an artifact in the application.",
+  "result": {
+    "exit_code": 0,
+    "integrity_passed": 26,
+    "not_applicable": [
+      "PC-DEP-MINIMAL"
+    ],
+    "artifact_counts": {
+      "renderer-denied": 23,
+      "renderer-loaded": 4,
+      "renderer-failed": 0,
+      "not-applicable": 1
+    },
+    "synthetic_wrapper": "renderer-loaded",
+    "unchanged_loaded": [
+      "PC07",
+      "PC21",
+      "PC23"
+    ],
+    "ordinary_failures": [],
+    "resolved_from_prior_attempt": [
+      "PC02",
+      "PC06",
+      "PC07",
+      "PC09",
+      "PC17",
+      "PC21",
+      "PC22",
+      "PC23"
+    ],
+    "coverage": "electron-sandboxed-renderer-lifecycle",
+    "summary": "All 26 pinned main.js assets passed integrity; the isolated wrapper recorded 23 capability denials, three unchanged artifacts that completed the bounded lifecycle call, the synthetic wrapper, and no ordinary renderer failures."
+  },
+  "artifact_results": [
+    {
+      "artifact_id": "fixture:renderer-mediated-source",
+      "status": "renderer-loaded",
+      "denied_capabilities": [],
+      "error": null,
+      "lifecycle_events": [
+        "constructed",
+        "onload",
+        "onunload"
+      ]
+    },
+    {
+      "artifact_id": "PC01",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC02",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC03",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC04",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "error": "D15 denied process.spawn",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC05",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC06",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC07",
+      "status": "renderer-loaded",
+      "denied_capabilities": [
+        "dom.privileged"
+      ],
+      "error": null,
+      "lifecycle_events": [
+        "constructed",
+        "onload",
+        "onunload"
+      ]
+    },
+    {
+      "artifact_id": "PC08",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC09",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC10",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC11",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC12",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC13",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied filesystem.direct",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC14",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC15",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC16",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC17",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "dom.privileged"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": [
+        "constructed"
+      ]
+    },
+    {
+      "artifact_id": "PC18",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "credentials.read",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC19",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC20",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "code.dynamic"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": [
+        "constructed"
+      ]
+    },
+    {
+      "artifact_id": "PC21",
+      "status": "renderer-loaded",
+      "denied_capabilities": [
+        "dom.privileged"
+      ],
+      "error": null,
+      "lifecycle_events": [
+        "constructed",
+        "onload",
+        "onunload"
+      ]
+    },
+    {
+      "artifact_id": "PC22",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "filesystem.direct",
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": [
+        "constructed"
+      ]
+    },
+    {
+      "artifact_id": "PC23",
+      "status": "renderer-loaded",
+      "denied_capabilities": [
+        "dom.privileged"
+      ],
+      "error": null,
+      "lifecycle_events": [
+        "constructed",
+        "onload"
+      ]
+    },
+    {
+      "artifact_id": "PC24",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC25",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged",
+        "native.abi"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC-DEP-MINIMAL",
+      "status": "not-applicable",
+      "denied_capabilities": [],
+      "error": null,
+      "lifecycle_events": []
+    },
+    {
+      "artifact_id": "PC-DEP-TEXT-EXTRACTOR",
+      "status": "renderer-denied",
+      "denied_capabilities": [
+        "network.request",
+        "process.spawn",
+        "dom.privileged"
+      ],
+      "error": "D15 denied dom.privileged",
+      "lifecycle_events": []
+    }
+  ],
+  "interpretation": {
+    "d15_candidate_denials": [
+      "PC01",
+      "PC02",
+      "PC03",
+      "PC04",
+      "PC05",
+      "PC06",
+      "PC08",
+      "PC09",
+      "PC10",
+      "PC11",
+      "PC12",
+      "PC13",
+      "PC14",
+      "PC15",
+      "PC16",
+      "PC17",
+      "PC18",
+      "PC19",
+      "PC20",
+      "PC22",
+      "PC24",
+      "PC25",
+      "PC-DEP-TEXT-EXTRACTOR"
+    ],
+    "ordinary_failures": [],
+    "loaded_artifact": [
+      "PC07",
+      "PC21",
+      "PC23"
+    ],
+    "no_status_rows_changed": true,
+    "d15_disposition_policy": "Denied artifacts are candidates for per-workflow D15 review only; this evidence does not certify an unsupported-security exception until workflow-specific reproduction, safe alternatives, visible compatibility entries and disabled-path tests are recorded. Ordinary failures are resolved for this host attempt but unchanged workflows remain pending."
+  },
+  "checks": [
+    {
+      "command": "bun run audit:plugin-artifact-lifecycle",
+      "exit_code": 0,
+      "result": "26 pinned main.js assets passed integrity; the isolated lifecycle wrapper recorded 23 denied, 4 loaded including the synthetic fixture and 0 ordinary failures."
+    },
+    {
+      "command": "bun run audit:plugin-lifecycle",
+      "exit_code": 0,
+      "result": "Linux x64 Electron 44.3.0 synthetic lifecycle/workflow audit passed all 24 checks, including registration, persistence, restart/update restoration, cleanup, zero vault writes and privileged-DOM denial before onload completion."
+    },
+    {
+      "command": "bun test tests/plugin-renderer-probe.test.ts tests/plugin-renderer-lifecycle.test.ts",
+      "exit_code": 0,
+      "result": "Four focused tests passed with 31 expectations."
+    },
+    {
+      "command": "bun run typecheck",
+      "exit_code": 0,
+      "result": "TypeScript typecheck passed."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "Source tree digest 367c2c28a6cbfdc510b4c051ee92e68d74373accb7178fdc983f7df007d5158e across 221 included paths."
+    }
+  ],
+  "limitations": [
+    "This is Linux x64 artifact-specific lifecycle evidence, not macOS/Windows renderer or OS-enforcement certification.",
+    "The bounded host supplies mediated Obsidian API and vault stubs; loaded unchanged artifacts have not completed workflow-specific settings, views, combinations, durable storage, restart/update/uninstall or return-to-Obsidian certification.",
+    "Static markers and denied wrapper calls are capability evidence, not by themselves complete D15 exceptions; no artifact row is relabeled passing or unsupported-security by this attempt.",
+    "No provider endpoint, reference Obsidian instance, human reviewer, signing credential or selected /home/ashutosh/Obsidian vault was accessed."
+  ],
+  "result_interpretation": "The host wrapper now resolves the eight prior ordinary renderer/API gaps (missing Obsidian export, mediated adapter bind surface, primitive conversion, workspace cleanup, global app, async lifecycle and Plugin registration surfaces) without granting denied capabilities. Candidate denials remain pending workflow-specific D15 evidence."
+}
