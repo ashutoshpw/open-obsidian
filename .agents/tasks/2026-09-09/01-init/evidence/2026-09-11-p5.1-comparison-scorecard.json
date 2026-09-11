@@ -1,0 +1,74 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T16:27:15Z",
+  "checkpoint": "P5.1",
+  "requirements": ["PROD-002", "BASE-003"],
+  "fixture_id": "fixture:comparison-scorecard",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "branch": "main",
+    "implementation_commit": "8822a13433d6a735411f28b55b1b7466a24e64f1",
+    "tested_source_tree": "fbd5dd6eace956ed62989d26ec2ef8c5bd676adf7cb580961cb521943c21a830",
+    "source_tree_paths": 214,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "report": {
+    "protocol_version": "2026-09-11.p5.1",
+    "profiles": ["stock-obsidian", "plugin-equipped-obsidian", "openobsidian"],
+    "tasks": ["find", "synthesize", "organize"],
+    "corpus_profiles": ["smoke-edge-cases", "medium-10k", "large-100k", "canvas-bases", "conflict-recovery", "ai-grounding"],
+    "model_conditions": ["local-deterministic", "provider-backed"],
+    "repetitions": 1,
+    "runs": 108,
+    "identical_inputs": true,
+    "counterbalanced": true,
+    "validation": {
+      "passed": true,
+      "profile_balance": true,
+      "task_balance": true,
+      "corpus_balance": true,
+      "model_condition_balance": true,
+      "no_measurement_invention": true
+    },
+    "measurements": {
+      "completed": 0,
+      "pending": 108,
+      "accuracy_available": false,
+      "completion_time_available": false
+    },
+    "comparison_status": "defined_not_run",
+    "release_eligible": false
+  },
+  "checks": [
+    {
+      "command": "bun run audit:comparison-scorecard",
+      "exit_code": 0,
+      "result": "The 108-run matrix validated equal profile/task/corpus/model-condition coverage and counterbalanced profile order without fabricating accuracy or completion-time measurements."
+    },
+    {
+      "command": "bun test tests/comparison-scorecard.test.ts",
+      "exit_code": 0,
+      "result": "Two focused protocol tests passed with 11 expectations, including duplicate-identity rejection."
+    },
+    {
+      "command": "bun run typecheck",
+      "exit_code": 0,
+      "result": "TypeScript typecheck passed."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "Source tree digest fbd5dd6eace956ed62989d26ec2ef8c5bd676adf7cb580961cb521943c21a830 across 214 included paths."
+    }
+  ],
+  "limitations": [
+    "No stock Obsidian or plugin-equipped Obsidian runtime, consented comparison vault, provider credentials or human pilot was available; every run remains external-pending.",
+    "The protocol proves identical assignments and counterbalancing only. It does not measure practical advantage, accuracy, completion time, citation quality or reference portability and makes no superiority claim.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "P5.1 now has an executable counterbalanced comparison protocol for stock Obsidian, plugin-equipped Obsidian and OpenObsidian across identical tasks, corpora and model conditions. Measurements remain explicitly external-pending."
+}
