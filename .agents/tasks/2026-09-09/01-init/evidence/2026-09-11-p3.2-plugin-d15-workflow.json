@@ -4,6 +4,12 @@
   "checkpoint": "P3.2",
   "decision_id": "D15",
   "boundary": "electron-renderer",
+  "recorded_at": "2026-09-11T19:58:13Z",
+  "source_tree": {
+    "head": "f5ffd8dbbe7d6c0c8ea69febe0d2d4b025a92540",
+    "sha256": "df73ca3d9e89ee577aca8d35ff97e25eae05b6ac6572d23180c9eb4d52b08a3f",
+    "paths": 225
+  },
   "source_artifact_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json",
   "candidate_artifact_ids": [
     "PC01",
@@ -888,4 +894,3 @@
   ],
   "limitation": "The generated records prove the local renderer denial contract and synthetic disabled paths only. They keep every candidate pending-runtime and do not certify an unsupported-security exception."
 }
-
