@@ -1,0 +1,73 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T14:26:12Z",
+  "checkpoint": "P2.1",
+  "requirements": ["PROD-001"],
+  "implementation_commit": "83e3b4bb696bda63c7d5ed26c4b31841c010340e",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "37bec72127d8099a5d31f7844ed9f8f72111986ced7b492aa90b4e93e832aff8",
+    "source_tree_paths": 208,
+    "source_tree_definition": "bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out"
+  },
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34609898065,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34609898065",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103297459783, "conclusion": "success"},
+        "macos-latest": {"job_id": 103297459354, "conclusion": "success"},
+        "windows-latest": {"job_id": 103297459723, "conclusion": "success"}
+      },
+      "checks": [
+        "progress state",
+        "frozen contracts",
+        "architecture",
+        "version baseline",
+        "vault differential fixture",
+        "host vault round trip",
+        "C10 workflow inventory",
+        "distribution metadata",
+        "update/rollback contract",
+        "accessibility contract",
+        "typecheck",
+        "tests",
+        "quality scorecard",
+        "Electron compile",
+        "Knip",
+        "Fallow health"
+      ],
+      "result": "All quality matrix jobs passed on Ubuntu, macOS and Windows."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34609898068,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34609898068",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103297459646, "conclusion": "success"},
+        "macos-latest": {"job_id": 103297459987, "conclusion": "success"},
+        "windows-latest": {"job_id": 103297460312, "conclusion": "success"}
+      },
+      "checks": [
+        "release gate",
+        "update/rollback manifest",
+        "unpacked desktop build",
+        "release-manifest sha256 hashes",
+        "Electron runtime notices",
+        "transitive dependency attribution",
+        "artifact upload"
+      ],
+      "result": "All desktop matrix jobs passed packaging, release-manifest, Electron runtime notice, transitive attribution and artifact upload steps; production signing was skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "The CI matrices validate repository contracts and packaging on hosted Ubuntu, macOS and Windows runners; they do not execute the disposable Electron vault audit or certify reference Obsidian reopen behavior.",
+    "Reference Obsidian portability, AI additions, human accessibility/input, unchanged-plugin lifecycle, OS isolation, signing, publication and release readiness remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The packaged Electron vault implementation increment is reconciled to 83e3b4b with green three-runner quality and desktop-build CI; local Linux packaged open/read/write/restart evidence remains the runtime boundary."
+}

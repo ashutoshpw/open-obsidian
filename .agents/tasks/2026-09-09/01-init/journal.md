@@ -815,3 +815,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Traceability: PROD-001 is now `implemented` with `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-roundtrip.json`; the tested source tree is `37bec72127d8099a5d31f7844ed9f8f72111986ced7b492aa90b4e93e832aff8` across 208 included paths.
 - Limitation: this proves only the local packaged Electron broker/renderer boundary. Reference Obsidian portability, AI additions, macOS/Windows interactive launches, unchanged-plugin lifecycle, human accessibility/input, signing, publication and release readiness remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run the full local quality/checkpoint gates, commit and push this scoped P2.1 increment, inspect available CI, reconcile the observed SHA and keep the reference/plugin/human handoffs explicit.
+
+## 2026-09-11T14:26:12Z — P2.1 CI reconciliation
+
+- Pushed commit `83e3b4bb696bda63c7d5ed26c4b31841c010340e` to `origin/main`; local and remote refs match.
+- GitHub Actions quality run `34609898065` passed on Ubuntu, macOS and Windows, including progress/contracts/architecture, host vault round trip, accessibility, typecheck, tests, quality scorecard, Electron compile, Knip and Fallow health.
+- GitHub Actions desktop-build run `34609898068` passed on Ubuntu, macOS and Windows, including release gate, update/rollback manifest, unpacked packaging, release-manifest hashes, Electron runtime notices, transitive attribution and artifact upload. Production signing was skipped because credentials were unavailable.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-roundtrip-ci.json`; no reference Obsidian, personal-vault, human, signing, publication or release-readiness claim is made.
