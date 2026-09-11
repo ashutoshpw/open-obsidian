@@ -586,3 +586,8 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `fixtures/c10-input-matrix.json` and `bun run validate:input-matrix`, keeping keyboard-only, Devanagari insertion, Unicode, Arabic/RTL and popout cases separately visible with explicit evidence or handoffs; the validator is part of `check:fast` and `quality`.
 - Exercised the packaged Linux Electron renderer on a disposable vault through CDP. Focus remained on the labeled Markdown editor while keyboard End, Devanagari, Arabic, accented Latin, CJK and emoji insertion were accepted; Chromium exposed the editor as a textbox with the expected name and value.
 - Verified the fixture note SHA-256 was identical before and after because no save was issued. The trace is not OS IME, screen-reader, popout, cross-platform, reference or human validation; C10.1 remains pending and no requirement was promoted to passing.
+
+## 2026-09-11T09:27:11Z — P5.2 input-matrix reconciliation
+
+- Reconciled the input-matrix increment at `b7edeb778788efdeaea6f39b873981f03585acb3` and recorded its source-tree digest and evidence in `state.json`; no requirement status was promoted.
+- Kept the four local renderer/contract cases separate from the external popout, true IME, screen-reader, cross-platform, reference and human validation handoffs.
