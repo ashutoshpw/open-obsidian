@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T18:47:42Z",
+  "checkpoint": "P4.3",
+  "requirements": [
+    "D07",
+    "D13",
+    "A02",
+    "A02.1",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "AI-002",
+    "AI-003",
+    "AI-004",
+    "RISK-007"
+  ],
+  "implementation_commit": "84d147679df5a09d29262b70199e341a263158b8",
+  "reconciled_head": "918cb12673d69631db23756f86ab323de9aa2031",
+  "tested_source_tree": "b89c8fbbaf579d5d535875b31966cd219ccafb97be396afa5f4b7c6f9c13a969",
+  "source_tree_paths": 221,
+  "quality": {
+    "run_id": 34635152568,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34635152568",
+    "conclusion": "success",
+    "jobs": [
+      {"id": 103381122893, "platform": "ubuntu-latest", "conclusion": "success"},
+      {"id": 103381123260, "platform": "macos-latest", "conclusion": "success"},
+      {"id": 103381123210, "platform": "windows-latest", "conclusion": "success"}
+    ],
+    "covered_steps": [
+      "progress state",
+      "frozen contracts",
+      "architecture",
+      "version baseline",
+      "vault differential fixture",
+      "host vault round trip",
+      "C10 workflow inventory",
+      "distribution metadata",
+      "update/rollback contract",
+      "accessibility contract",
+      "typecheck",
+      "tests",
+      "quality scorecard",
+      "Electron compile",
+      "Electron vault/renderer/theme/popout trace",
+      "synthetic plugin lifecycle",
+      "Knip",
+      "Fallow health",
+      "changed-code Fallow"
+    ],
+    "test_result": "173 tests across 55 files passed on Ubuntu, macOS and Windows; 941 expectations on Ubuntu/macOS and 942 on Windows.",
+    "electron_trace": "All 20 mediated vault/renderer/retrieval/theme/popout checks were true on each runner, including the local source-only retrieval boundary.",
+    "synthetic_lifecycle": "The 24-check marker-free lifecycle and install/restart/update/uninstall trace passed on each runner with mediated data restoration, privileged DOM denial before onload completion and zero vault writes."
+  },
+  "desktop_build": {
+    "run_id": 34635152562,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34635152562",
+    "conclusion": "success",
+    "jobs": [
+      {"id": 103381123310, "platform": "ubuntu-latest", "conclusion": "success"},
+      {"id": 103381123400, "platform": "macos-latest", "conclusion": "success"},
+      {"id": 103381123022, "platform": "windows-latest", "conclusion": "success"}
+    ],
+    "signing": "skipped; production signing credentials were unavailable"
+  },
+  "observations": [
+    "The hosted matrices validate repository, packaged Electron and synthetic lifecycle behavior only; they do not certify live managed/BYOK/local provider inference, provider retention or billing.",
+    "Reference Obsidian grounding, unchanged-plugin lifecycle, same-user OS isolation, human accessibility/input, publication, updater installation/rollback and release readiness remain pending.",
+    "No provider endpoint, reference Obsidian instance, personal vault or selected /home/ashutosh/Obsidian vault was accessed."
+  ]
+}
