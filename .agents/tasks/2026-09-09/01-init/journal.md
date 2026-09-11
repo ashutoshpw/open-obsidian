@@ -528,3 +528,8 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-scoped-theme-preview.json` records the synthetic fixture, command results, scoped-rule readback and limitations. Source tree is `c234e1f373fe5c51da48425b622ed9cb8599b8434dd07128c1fcb8105b808606` across 174 included paths.
 - Safety: the fixture was synthetic; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified. Minimal/unchanged-plugin persistence, light/dark regression, plugin-view/popout, accessibility, cross-platform and reference certification remain pending; no requirement was promoted to passing.
 - Next: commit and push this coherent P3.3 implementation increment, then resume the earliest dependency-ready reference/plugin/runtime work while retaining the external release handoffs.
+
+## 2026-09-11T08:38:51Z — P3.3 commit reconciliation
+
+- Reconciled the scoped theme/snippet preview increment at `62821113ac50bf75d72bd91e91a934af8c1357ab` and pushed `main` to `origin/main`.
+- Updated `state.json` so `last_reconciled_head` and `recent_increment.commit` point to the pushed commit; no requirement status was promoted.
