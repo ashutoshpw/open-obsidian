@@ -65,8 +65,32 @@
     ],
     "signing": "skipped; production signing credentials were unavailable"
   },
+  "metadata_head_validation": {
+    "head": "8a9e3167a6021138e813411fab19032457eae20f",
+    "desktop_build": {
+      "run_id": 34635708944,
+      "conclusion": "success",
+      "jobs": [
+        {"id": 103382944997, "platform": "macos-latest", "conclusion": "success"},
+        {"id": 103382945251, "platform": "ubuntu-latest", "conclusion": "success"},
+        {"id": 103382945341, "platform": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "run_id": 34635708947,
+      "attempt_1": {"conclusion": "failure", "failed_jobs": ["ubuntu-latest", "macos-latest"], "failure": "Transient Electron retrieval-boundary timing failure after the local index-complete progress event."},
+      "attempt_2": {
+        "conclusion": "success",
+        "jobs": [
+          {"id": 103383600371, "platform": "ubuntu-latest", "conclusion": "success"},
+          {"id": 103383600645, "platform": "macos-latest", "conclusion": "success"},
+          {"id": 103383601132, "platform": "windows-latest", "conclusion": "success"}
+        ]
+      }
+    }
+  },
   "observations": [
-    "The hosted matrices validate repository, packaged Electron and synthetic lifecycle behavior only; they do not certify live managed/BYOK/local provider inference, provider retention or billing.",
+    "The hosted matrices validate repository, packaged Electron and synthetic lifecycle behavior only; they do not certify live managed/BYOK/local provider inference, provider retention or billing. A metadata-only quality attempt on head 8a9e316 transiently missed the retrieval boundary on Ubuntu/macOS; rerunning only the failed jobs passed all three runners.",
     "Reference Obsidian grounding, unchanged-plugin lifecycle, same-user OS isolation, human accessibility/input, publication, updater installation/rollback and release readiness remain pending.",
     "No provider endpoint, reference Obsidian instance, personal vault or selected /home/ashutosh/Obsidian vault was accessed."
   ]
