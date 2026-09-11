@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "name": "openobsidian-v1-c10-input-matrix",
+  "required_cases": ["keyboard-only", "ime-devanagari", "unicode", "rtl-arabic", "popout-external"],
+  "cases": [
+    {
+      "id": "keyboard-only",
+      "status": "implemented",
+      "runner": "shared-keyboard-contract",
+      "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-core-workflows.json"],
+      "note": "Primary-modifier command palette, quick switcher and save journeys are represented by the shared keyboard contract; visible focus and human keyboard review remain separate gates."
+    },
+    {
+      "id": "ime-devanagari",
+      "status": "implemented",
+      "runner": "linux-electron-cdp",
+      "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.2-input-matrix.json"],
+      "note": "The packaged Linux renderer accepted a Devanagari Input.insertText trace without a vault write; this is renderer insertion evidence, not an OS IME certification."
+    },
+    {
+      "id": "unicode",
+      "status": "implemented",
+      "runner": "linux-electron-cdp",
+      "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.2-input-matrix.json"],
+      "note": "The packaged Linux renderer retained accented Latin, CJK and emoji text in the editor without a vault write."
+    },
+    {
+      "id": "rtl-arabic",
+      "status": "implemented",
+      "runner": "linux-electron-cdp",
+      "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.2-input-matrix.json"],
+      "note": "The packaged Linux renderer retained Arabic text and exposed the labeled editor; directionality and bidirectional layout remain subject to visible platform review."
+    },
+    {
+      "id": "popout-external",
+      "status": "external-pending",
+      "owner": "product-ux",
+      "prerequisites": ["multi-window host and IPC handoff", "screen-reader and visible focus review", "macOS and Windows desktop runtimes"],
+      "verification": ["open an editor popout", "repeat keyboard/IME/RTL/Unicode cases", "verify source bytes before and after explicit save"],
+      "note": "No popout or cross-platform input trace is claimed in the local Linux fixture."
+    }
+  ],
+  "invariants": [
+    "Input traces must not write vault bytes without an explicit save action.",
+    "Renderer insertion evidence must not be labeled as OS IME certification.",
+    "Popout, screen-reader and cross-platform cases remain external-pending until their host prerequisites exist."
+  ]
+}

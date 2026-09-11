@@ -1,0 +1,74 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T09:21:06Z",
+  "checkpoint": "P5.2",
+  "requirements": ["C10.1", "Q-011"],
+  "fixture_ids": ["fixture:c10-input-matrix", "fixture:q-accessibility"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "implementation_commit": "d0200fea14bcd48fbbd6a262f88ffd000119c73f",
+    "tested_source_tree": "26262fc58987e8cd213db109ac51f7a3621e02fc620a84ac34a37dde4a69de34",
+    "source_tree_paths": 180
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "synthetic_fixture": {
+    "root": "/tmp/openobsidian-entry-vault.vRAyhY",
+    "note": "Deep.md",
+    "source_hash_before": "37827b481f42ddf2f887b63b2658fd6a189dc786ecc4647a13fb12a67daf488b",
+    "source_hash_after": "37827b481f42ddf2f887b63b2658fd6a189dc786ecc4647a13fb12a67daf488b"
+  },
+  "runtime": {
+    "launch": "xvfb-run -a out/linux-unpacked/openobsidian --no-sandbox --disable-gpu --user-data-dir=<temporary> --remote-debugging-port=9350 --vault=/tmp/openobsidian-entry-vault.vRAyhY --open=Deep.md",
+    "initial": {
+      "title": "OpenObsidian · Local knowledge workspace",
+      "editor_path": "Deep.md",
+      "editor_aria_label": "Markdown note editor",
+      "editor_disabled": false,
+      "document_direction": "ltr",
+      "editor_direction": "ltr"
+    },
+    "cases": {
+      "keyboard-only": {
+        "procedure": "Focused #note-editor and dispatched End keyDown/keyUp through CDP Input.",
+        "result": "Focus remained on note-editor and the selection moved to the end of the note."
+      },
+      "ime-devanagari": {
+        "procedure": "CDP Input.insertText with '\\nनमस्ते — IME fixture'.",
+        "result": "Text was accepted, focus remained on note-editor and the in-page elapsed trace was 8.4ms.",
+        "boundary": "Input.insertText is renderer insertion evidence, not an operating-system IME certification."
+      },
+      "rtl-arabic": {
+        "procedure": "CDP Input.insertText with '\\nمرحبا بالعالم — RTL fixture'.",
+        "result": "Arabic text was accepted, focus remained on note-editor and the in-page elapsed trace was 4.2ms.",
+        "boundary": "The editor remains ltr at the CSS level; bidirectional layout and platform direction settings require visible review."
+      },
+      "unicode": {
+        "procedure": "CDP Input.insertText with '\\nUnicode: café · 東京 · 🌍'.",
+        "result": "Accented Latin, CJK and emoji text were accepted, focus remained on note-editor and the in-page elapsed trace was 24.3ms."
+      }
+    },
+    "accessibility": {
+      "procedure": "CDP Accessibility.getFullAXTree after input insertion.",
+      "node_count": 583,
+      "editor": {"role": "textbox", "name": "Markdown note editor", "value_contains": ["नमस्ते", "مرحبا", "東京", "🌍"]}
+    },
+    "save_boundary": "The editor was not saved; Deep.md retained the identical before/after SHA-256."
+  },
+  "checks": [
+    {"command": "bun run validate:input-matrix", "exit_code": 0, "result": "Four local input cases and one explicit popout/cross-platform handoff pass the fixture validator."},
+    {"procedure": "Packaged Linux Electron 44.3.0 CDP input trace", "exit_code": 0, "result": "Keyboard focus, Devanagari, Arabic, accented Latin, CJK and emoji insertion remained in the labeled editor without a vault write."},
+    {"command": "sha256sum /tmp/openobsidian-entry-vault.vRAyhY/Deep.md", "exit_code": 0, "result": "37827b481f42ddf2f887b63b2658fd6a189dc786ecc4647a13fb12a67daf488b before and after the unsaved trace."}
+  ],
+  "limitations": [
+    "This is a Linux x64 packaged-renderer trace on a disposable synthetic vault; it does not certify macOS or Windows input behavior.",
+    "CDP Input.insertText is not an OS IME, screen-reader or human focus test; those remain pending.",
+    "No popout window, plugin-created view, reference Obsidian reopen or explicit save/reopen round trip was run.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The Linux packaged renderer accepts representative keyboard, Devanagari, Arabic, Unicode, CJK and emoji input without an implicit vault write; popout, true IME, screen-reader, cross-platform and reference gates remain open."
+}

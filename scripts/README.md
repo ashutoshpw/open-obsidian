@@ -23,6 +23,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run validate:entry-points` | Validates explicit `--vault`/`--open` CLI and `openobsidian://` deep-link cases, including fail-closed traversal and non-hijacking `obsidian://` cases. |
 | `bun run validate:paid-service-boundary` | Validates separate unsupported, contract-only, entitlement-free Sync and Publish dispositions and their visible renderer handoff. |
 | `bun run validate:workflows` | Validates the complete C10 core-workflow inventory, including local bookmark/tag/task/template/daily-note markers and keyboard journey handoffs. |
+| `bun run validate:input-matrix` | Validates the keyboard/IME/Unicode/RTL/popout input matrix and its local versus external dispositions. |
 | `bun run validate:layout` | Static Obsidian-shell geometry and navigation-marker checks. |
 | `bun run audit:theme-assets -- --root /path/to/vault` | Read-only appearance/theme/snippet audit; reports hashes, CSS variables, legacy layout contracts, mode/accessibility coverage and safe-preview issues without executing CSS. Add `--strict` to fail on any host-review item. |
 | `bun run verify:version-baseline` | Cross-checks the stable/early-access references and records per-artifact minimum-version, API and runtime verification status. |
