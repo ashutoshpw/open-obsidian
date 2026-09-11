@@ -20,6 +20,7 @@ type LoadedWorkflowFixture = {
 const root = resolve(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(root, "fixtures/plugin-loaded-workflows.json"), "utf8")) as LoadedWorkflowFixture;
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {scripts?: Record<string, string>};
+const workflow = readFileSync(join(root, ".github/workflows/plugin-loaded-workflows.yml"), "utf8");
 
 test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries explicit", () => {
   expect(fixture.schema_version).toBe(1);
@@ -32,6 +33,10 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
   expect(packageJson.scripts?.["audit:plugin-loaded-workflows"]).toBe("bun scripts/audit-plugin-loaded-workflows.ts");
+  expect(workflow).toContain("name: OpenObsidian loaded plugin workflows");
+  expect(workflow).toContain("os: [ubuntu-latest, macos-latest, windows-latest]");
+  expect(workflow).toContain("bun run audit:plugin-loaded-workflows");
+  expect(workflow).toContain("actions/upload-artifact@v4");
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];
