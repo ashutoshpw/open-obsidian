@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T05:10:47Z",
+  "checkpoint": "P2.2",
+  "requirements": ["C10"],
+  "fixture_ids": ["fixture:c10-core-workflows"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "bun_version": "1.4.2",
+    "implementation_commit": "fb7e83eefd8bf4fb8b509b9fa0566ded2ac93659",
+    "tested_source_tree": "272a91e29e4b8f58daa1bf712138a16a0936235affbefa98f696357c45c3577e"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run validate:workflows", "exit_code": 0, "result": "All 16 C10 workflows are present in order: 10 implemented locally, three incomplete with partial coverage, and three deferred with owner/prerequisite handoffs; the keyboard journey markers are present."},
+    {"command": "bun test tests/core-workflows.test.ts tests/check-fast.test.ts", "exit_code": 0, "result": "Two focused tests and eight expectations pass for the inventory and quick-check wiring."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checking passes for the validator and test."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the nine-file core-workflow increment."}
+  ],
+  "implemented": [
+    "Added a versioned C10 inventory covering file explorer, tabs, splits, popouts, command palette, quick switcher, bookmarks, outline, backlinks, outgoing links, templates, daily notes, note composition, history, tasks and tags.",
+    "Added local renderer-marker and test-disposition validation for implemented workflows, plus explicit owner/prerequisite handoffs for incomplete and deferred workflows.",
+    "Added a keyboard journey contract for command palette, quick switcher, note editing and primary-modifier save while retaining visible Electron, IME, screen-reader and reference validation handoffs.",
+    "Wired the inventory validator into the routine/full quality gates and documented the short Bun command."
+  ],
+  "limitations": [
+    "The inventory does not claim popout, template, daily-note, full bookmark, task or tag behavior; those remain incomplete/deferred as recorded.",
+    "Visible focus/input/IME, cross-platform, reference Obsidian and end-to-end human keyboard validation remain pending."
+  ]
+}

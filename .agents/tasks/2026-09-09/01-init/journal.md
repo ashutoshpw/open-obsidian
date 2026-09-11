@@ -431,3 +431,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Safety: all four reference comparisons remain `not-compared` and retain decision `D18`; no documentation-only behavior was promoted to a parity claim.
 - Validation: local differential validation, focused tests, full `check:fast`, TypeScript, Knip and strict Fallow passed; the local suite reports 121 tests and 667 expectations.
 - Reconciled: `BASE-006` is now `implemented` with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-differential-fixture.json`; cross-platform and reference-application observations remain pending, so the release gate remains open.
+
+## 2026-09-11T05:10:47Z — P2.2 core workflow inventory
+
+- Completed: pushed `fb7e83eefd8bf4fb8b509b9fa0566ded2ac93659` with marker `[openobsidian P2.2] Add core workflow inventory`.
+- Completed: added `fixtures/c10-core-workflows.json` and `bun run validate:workflows`; all 16 C10 workflow names are covered in order with local tests, renderer markers, or explicit incomplete/deferred handoffs.
+- Completed: the keyboard journey contract covers command palette, quick switcher, note editing and primary-modifier save while preserving visible Electron, IME, screen-reader and reference validation handoffs.
+- Safety: popouts, templates, daily notes and full bookmark/task/tag behavior remain explicitly incomplete or deferred; the inventory does not relabel those gaps as implemented.
+- Validation: local workflow validation, focused tests, TypeScript, Knip and strict Fallow passed; the source tree digest is `272a91e29e4b8f58daa1bf712138a16a0936235affbefa98f696357c45c3577e` across 157 included paths.
+- Next: continue visible/reference validation and implement the remaining P2.2 workflow surfaces only with their source-preservation and accessibility fixtures.
