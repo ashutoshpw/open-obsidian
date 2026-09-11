@@ -916,3 +916,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Hosted quality run `34625328995` passed Ubuntu and macOS but failed only on Windows during `bun run audit:electron-vault`: Electron left a descendant holding the temporary user-data directory, producing `EBUSY` during cleanup. Desktop-build run `34625329060` passed Ubuntu, macOS and Windows; production signing remained skipped.
 - Hardened `scripts/audit-electron-vault.ts` to terminate the Windows process tree with `taskkill /T /F` and retry transient `EBUSY`/`ENOTEMPTY`/`EPERM` temporary-directory cleanup. Linux x64 Electron audit passed all 14 checks after the repair; typecheck, full `check:fast`, quality and strict Fallow passed locally.
 - Updated the P5.1 evidence and Q-002/Q-003 traceability to source tree `50dffb988329dbecc68c9106769c744496cab186cf248b9b7b45352e596b3f6d` across 219 included paths. Next: commit and push the Windows repair, inspect its fresh quality and desktop-build matrices, then reconcile final CI evidence and implementation SHA.
+
+## 2026-09-11T17:10:15Z — P5.1 hosted golden-edit coverage
+
+- Added `tests/golden-edit-fidelity.test.ts` so the hosted test matrix executes both exact local golden-edit cases and asserts the reference-reopen `external-pending` boundary.
+- Focused golden test, typecheck, `check:fast` (168 tests, 907 expectations), quality and strict Fallow passed locally. The tested source tree is now `f97e7d171ce7e9ed578c0477ecce25191289162c779223754f8a7e383a5433f0` across 220 included paths.
+- Next: commit and push the focused test, inspect the fresh three-OS quality and desktop-build runs, then append final CI evidence and reconcile the implementation SHA/state.
