@@ -1,0 +1,83 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T07:37:40Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "PLUG-007", "PLUG-009", "ARCH-007", "ARCH-008", "ARCH-009", "RISK-003"],
+  "fixture_ids": ["fixture:hardest-plugin-spike", "fixture:plugin-isolation", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:arch-dom-compatibility", "fixture:risk-legacy-access"],
+  "commit_sha": "410c60cd3e02bfd5e5f76dc804e6b5609aa447a2",
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false,
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "node_version": "22.12.0",
+    "tested_source_tree": "01c3eb3c8d54bbecbcb6542588523407ecf8184a1a429ad6204d273347a421c3"
+  },
+  "attempts": [
+    {
+      "command": "bun run audit:plugin-runtime:all",
+      "base_commit": "278d931a22cbbb986411ad943363f50bc1808ee4",
+      "exit_code": 1,
+      "result": "The initial unconstrained concurrent run failed three downloads after retries: PC01, PC18 and PC19. No integrity or runtime conclusion was taken for those artifacts."
+    },
+    {
+      "command": "bun run audit:plugin-runtime:all",
+      "commit_sha": "410c60cd3e02bfd5e5f76dc804e6b5609aa447a2",
+      "exit_code": 0,
+      "result": "The bounded four-worker run completed all 27 manifest entries without download failures."
+    }
+  ],
+  "implementation": {
+    "command": "bun run audit:plugin-runtime:all",
+    "selection": "Every artifact in fixtures/compatibility-manifest.json, including the 25 mandatory plugins and two dependencies.",
+    "integrity": {"main_js_passed": 26, "not_applicable": ["PC-DEP-MINIMAL"], "failed": 0},
+    "probe_summary": {"loaded": 7, "denied": 15, "failed": 4, "timed_out": 0},
+    "loaded": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "denied": ["PC01", "PC03", "PC04", "PC05", "PC06", "PC08", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC19", "PC25", "PC-DEP-TEXT-EXTRACTOR"],
+    "failed": {
+      "PC02": "TypeError: Class extends value undefined is not a constructor or null",
+      "PC09": "ReferenceError: activeWindow is not defined",
+      "PC16": "Error: crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported",
+      "PC18": "ReferenceError: TransformStream is not defined"
+    },
+    "denied_capabilities": {
+      "PC01": ["dom.privileged"],
+      "PC03": ["dom.privileged"],
+      "PC04": ["process.spawn"],
+      "PC05": ["process.spawn"],
+      "PC06": ["dom.privileged"],
+      "PC08": ["dom.privileged"],
+      "PC10": ["process.spawn", "dom.privileged"],
+      "PC11": ["process.spawn"],
+      "PC12": ["dom.privileged"],
+      "PC13": ["filesystem.direct"],
+      "PC14": ["dom.privileged"],
+      "PC15": ["dom.privileged"],
+      "PC19": ["dom.privileged"],
+      "PC25": ["dom.privileged"],
+      "PC-DEP-TEXT-EXTRACTOR": ["dom.privileged"]
+    },
+    "coverage": "module-load-only",
+    "enforcement": "node-permission-model",
+    "runtime_dispositions": "All artifact runtime dispositions remain pending-runtime.",
+    "security_boundary": "The subprocess has no host module, DOM, network, process or credential access; the fallback and probe do not certify Electron or OS isolation.",
+    "no_app_process_or_vault_access": true
+  },
+  "checks": [
+    {"command": "bun run typecheck", "exit_code": 0},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "State, contracts, architecture, surfaces, version baseline, differential, workflows, accessibility, layout, tests, Knip and changed-file Fallow passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0},
+    {"command": "bun run quality", "exit_code": 0, "result": "138 tests, 735 expectations; Knip, compile and report-only Fallow pass."},
+    {"command": "GitHub Actions runs 34575107853 and 34575107851", "exit_code": 0, "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows."}
+  ],
+  "ci_runs": [34575107853, 34575107851],
+  "limitations": [
+    "Module loading is not Electron renderer/API, lifecycle, workflow, restart/update or return-to-Obsidian certification.",
+    "Ordinary compatibility failures are not D15 security denials; all four remain pending-runtime.",
+    "Windows/Linux OS-enforced bypass tests, renderer DOM traces and reference Obsidian comparisons remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed."
+  ]
+}

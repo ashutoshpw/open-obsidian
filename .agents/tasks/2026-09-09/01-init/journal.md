@@ -478,6 +478,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Safety: the selected `/home/ashutosh/Obsidian` vault was not opened, read or modified; visible accessibility/input/IME, cross-platform, reference Obsidian and end-to-end human validation remain pending, and popouts remain deferred.
 - Next: run the visible accessibility, cross-platform and reference Obsidian reopen checks; assess popouts only with a safe multi-window host/IPC handoff.
 
+## 2026-09-11T07:37:40Z — P1.2 full pinned-plugin runtime audit
+
+- Completed: pushed source commit `410c60cd3e02bfd5e5f76dc804e6b5609aa447a2` with the repeatable `bun run audit:plugin-runtime:all` command, bounded four-worker downloads and retry backoff.
+- Failed attempt recorded: the initial unconstrained full run failed downloads for PC01, PC18 and PC19 after retries; no conclusions were taken from those missing artifacts.
+- Completed: the bounded rerun covered all 27 manifest entries; 26 `main.js` assets passed byte/hash integrity, the Minimal theme dependency was not-applicable for module loading, and probes recorded 7 loaded, 15 denied, 4 ordinary compatibility failures and 0 timeouts.
+- Safety: all runtime dispositions remain `pending-runtime`; ordinary failures are not D15 denials, and the module-load subprocess does not certify Electron renderer/API or OS isolation. The selected `/home/ashutosh/Obsidian` vault was untouched.
+- Validation: local quality/check-fast/typecheck/Knip/strict Fallow passed; GitHub Actions quality run `34575107853` and desktop-build run `34575107851` passed on Ubuntu, macOS and Windows.
+- Next: use a compatible Electron/renderer host for lifecycle, DOM, workflow and cross-platform evidence; keep the full audit command as the repeatable baseline.
+
 ## 2026-09-11T06:21:24Z — P1.2 pinned plugin manifest gate
 
 - Completed: pushed source commit `3bd91dbebcce996b588d03cb1c1e3d901406498e` with marker `[openobsidian P1.2] Verify pinned plugin manifests`.
