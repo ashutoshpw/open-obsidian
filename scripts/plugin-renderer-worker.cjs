@@ -23,13 +23,20 @@ function remember(list, value) {
   if (!list.includes(value)) list.push(value);
 }
 
-function denyCapability(capabilities, capability) {
+function rememberDeniedPath(capabilities, path) {
+  if (typeof path !== "string" || path.length === 0) return;
+  if (!Array.isArray(capabilities.deniedPaths)) capabilities.deniedPaths = [];
+  remember(capabilities.deniedPaths, path);
+}
+
+function denyCapability(capabilities, capability, path = capability) {
   remember(capabilities, capability);
+  rememberDeniedPath(capabilities, path);
   throw new Error(`D15 denied ${capability}`);
 }
 
-function deniedObject(capabilities, capability) {
-  const fail = () => denyCapability(capabilities, capability);
+function deniedObject(capabilities, capability, path = capability) {
+  const fail = () => denyCapability(capabilities, capability, path);
   return new Proxy(Object.create(null), {
     get: fail,
     set: fail,
@@ -40,9 +47,9 @@ function deniedObject(capabilities, capability) {
   });
 }
 
-function deniedFunction(capabilities, capability) {
+function deniedFunction(capabilities, capability, path = capability) {
   const denied = function deniedCall() {
-    return denyCapability(capabilities, capability);
+    return denyCapability(capabilities, capability, path);
   };
   Object.defineProperty(denied, "prototype", {value: Function.prototype});
   return denied;
@@ -79,17 +86,22 @@ function safeDomObject() {
   });
 }
 
-function safeDocumentObject(capabilities, allowSyntheticDocument = false) {
+function safeDocumentObject(capabilities, allowSyntheticDocument = false, root = "document") {
   const target = {body: safeDomObject()};
   if (allowSyntheticDocument) {
     target.createDocumentFragment = () => safeDomObject();
     target.createElement = () => safeDomObject();
     target.createTextNode = () => safeDomObject();
+    target.getElementsByClassName = () => safeCollection([]);
+    target.addEventListener = () => undefined;
+    target.removeEventListener = () => undefined;
+    target.on = () => undefined;
+    target.off = () => undefined;
   }
   return new Proxy(target, {
     get(current, property) {
       if (property in current) return current[property];
-      return denyCapability(capabilities, "dom.privileged");
+      return denyCapability(capabilities, "dom.privileged", `${root}.${String(property)}`);
     },
   });
 }
@@ -171,23 +183,55 @@ function boundedMoment(value) {
   return moment;
 }
 
-function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false) {
-  const document = safeDocumentObject(capabilities, allowSyntheticDocument);
+function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false, root = "window") {
+  const document = safeDocumentObject(capabilities, allowSyntheticDocument, `${root}.document`);
   const moment = (value) => boundedMoment(value);
   moment.weekdays = () => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   moment.months = () => ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const target = {app: runtimeApp || null, document, moment};
+  let boundedTimerCalls = 0;
+  const boundedTimer = allowSyntheticDocument
+    ? (callback) => {
+      if (++boundedTimerCalls > 32) return 0;
+      if (typeof callback === "function") Promise.resolve().then(callback);
+      return 0;
+    }
+    : () => denyCapability(capabilities, "resource.unbounded", `${root}.setTimeout`);
+  const target = {
+    app: runtimeApp || null,
+    document,
+    moment,
+    CodeMirrorAdapter: null,
+    setTimeout: boundedTimer,
+    setInterval: (callback) => {
+      if (!allowSyntheticDocument) return denyCapability(capabilities, "resource.unbounded", `${root}.setInterval`);
+      let calls = 0;
+      const tick = () => {
+        if (++calls > 32) return;
+        if (typeof callback === "function") callback();
+        if (calls < 32) Promise.resolve().then(tick);
+      };
+      Promise.resolve().then(tick);
+      return 0;
+    },
+    clearTimeout() {},
+    clearInterval() {},
+  };
+  if (allowSyntheticDocument) {
+    target.smart_env = null;
+    target.smart_env_configs = Object.create(null);
+    target.all_envs = [];
+  }
   return new Proxy(target, {
     get(current, property) {
       if (property in current) return current[property];
-      return denyCapability(capabilities, "dom.privileged");
+      return denyCapability(capabilities, "dom.privileged", `${root}.${String(property)}`);
     },
     set(current, property, value) {
-      if (property === "app") {
-        current.app = value;
+      if (property === "app" || (allowSyntheticDocument && ["smart_env", "smart_env_configs", "all_envs"].includes(property))) {
+        current[property] = value;
         return true;
       }
-      return denyCapability(capabilities, "dom.privileged");
+      return denyCapability(capabilities, "dom.privileged", `${root}.${String(property)}`);
     },
   });
 }
@@ -347,6 +391,8 @@ function createObsidianApi() {
   class PluginSettingTab {
     constructor(pluginApp) {
       this.app = pluginApp;
+      this.name = "";
+      this.icon = "";
       this.containerEl = safeDomObject();
     }
   }
@@ -374,7 +420,7 @@ function pluginConstructor(module) {
   return null;
 }
 
-function createPluginApp(events, dataStore, workflowContext = {}) {
+function createPluginApp(events, dataStore, workflowContext = {}, capabilities = []) {
   const context = workflowContext && typeof workflowContext === "object" ? workflowContext : {};
   const files = new Map();
   const fileEntries = Array.isArray(context.files) ? context.files : [];
@@ -403,6 +449,7 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     metrics.vaultWrites += 1;
     metrics.vaultOperations.push({operation, path: pathValue(path)});
   };
+  const denyVaultWrite = (operation, path) => denyCapability(capabilities, "vault.direct-write", `vault.${operation}:${pathValue(path)}`);
   const event = (type, callback) => ({type, callback, off() {}, ref: null});
   const missingFile = () => {
     const error = new Error("mediated vault path is unavailable");
@@ -418,6 +465,7 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
   const writePath = async (path, value, operation = "modify") => {
     const target = pathValue(path);
     if (!target) return undefined;
+    denyVaultWrite(operation, target);
     files.set(target, typeof value === "string" ? value : new TextDecoder().decode(value));
     recordWrite(operation, target);
     return fileRecord(target) || {path: target};
@@ -433,7 +481,7 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     list: async () => ({files: [...files.keys()].map(fileRecord).filter(Boolean), folders: []}),
     mkdir: async () => undefined,
     rmdir: async () => undefined,
-    remove: async (path) => { files.delete(pathValue(path)); recordWrite("adapter.remove", path); },
+    remove: async (path) => { denyVaultWrite("adapter.remove", path); files.delete(pathValue(path)); recordWrite("adapter.remove", path); },
     stat: async (path) => fileRecord(pathValue(path)) || missingFile(),
     getBasePath: () => "",
     getFullPath: (path) => path,
@@ -441,12 +489,12 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     readFile: readPath,
     writeFile: (path, value) => writePath(path, value, "adapter.writeFile"),
     readdir: async () => [...files.keys()],
-    unlink: async (path) => { files.delete(pathValue(path)); recordWrite("adapter.unlink", path); },
+    unlink: async (path) => { denyVaultWrite("adapter.unlink", path); files.delete(pathValue(path)); recordWrite("adapter.unlink", path); },
     lstat: async (path) => fileRecord(pathValue(path)) || missingFile(),
     readlink: async () => "",
     symlink: async () => undefined,
     cp: async (source, target) => writePath(target, await readPath(source), "adapter.cp"),
-    rm: async (path) => { files.delete(pathValue(path)); recordWrite("adapter.rm", path); },
+    rm: async (path) => { denyVaultWrite("adapter.rm", path); files.delete(pathValue(path)); recordWrite("adapter.rm", path); },
   };
   const vault = {
     on(type, callback) { return event(type, callback); },
@@ -472,7 +520,7 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     createFolder: async () => undefined,
     modify: (file, value) => writePath(file, value, "vault.modify"),
     modifyBinary: (file, value) => writePath(file, value, "vault.modifyBinary"),
-    delete: async (file) => { files.delete(pathValue(file)); recordWrite("vault.delete", file); },
+    delete: async (file) => { denyVaultWrite("vault.delete", file); files.delete(pathValue(file)); recordWrite("vault.delete", file); },
     config: {defaultViewMode: "source", livePreview: false},
     adapter,
   };
@@ -522,6 +570,7 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     getActiveFile() { return activeFile; },
     getActiveViewOfType() { return context.active_view || null; },
     getActiveFileView() { return context.active_view || null; },
+    registerHoverLinkSource() {},
     getLeaf() { return createLeaf(); },
     getMostRecentLeaf() { return null; },
     openLinkText: async (_link, _sourcePath, _newLeaf) => undefined,
@@ -544,9 +593,18 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     dataStore,
     vault,
     workspace,
-    metadataCache: {getFileCache() { return {}; }, getFirstLinkpathDest(path) { return fileRecord(path) || activeFile; }},
+    metadataCache: {
+      getFileCache() { return {}; },
+      getFirstLinkpathDest(path) { return fileRecord(path) || activeFile; },
+      getCachedFiles() { return []; },
+      getCache() { return {}; },
+      getTags() { return {}; },
+      on(type, callback) { return event(type, callback); },
+      off() {},
+      offref() {},
+    },
     config: {defaultViewMode: "source", livePreview: false},
-    fileManager: {trashFile: async (file) => { files.delete(pathValue(file)); recordWrite("fileManager.trashFile", file); }},
+    fileManager: {trashFile: async (file) => { denyVaultWrite("fileManager.trashFile", file); files.delete(pathValue(file)); recordWrite("fileManager.trashFile", file); }},
     commandsManager: {},
     plugins: {enabledPlugins: new Set(), plugins: context.plugins || {}, getPlugin(id) { return this.plugins[id] || null; }},
     internalPlugins: {plugins: {}, getEnabledPluginById() { return null; }},
@@ -585,6 +643,26 @@ function createSafeRequire(capabilities, requiredModules) {
 
 function createEvaluationArguments(capabilities, requiredModules, runtime = {}) {
   const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true));
+  let boundedTimerCalls = 0;
+  const boundedTimer = runtime.allowSyntheticDocument
+    ? (callback) => {
+      if (++boundedTimerCalls > 32) return 0;
+      if (typeof callback === "function") Promise.resolve().then(callback);
+      return 0;
+    }
+    : deniedFunction(capabilities, "resource.unbounded");
+  const boundedInterval = runtime.allowSyntheticDocument
+    ? (callback) => {
+      let calls = 0;
+      const tick = () => {
+        if (++calls > 32) return;
+        if (typeof callback === "function") callback();
+        if (calls < 32) Promise.resolve().then(tick);
+      };
+      Promise.resolve().then(tick);
+      return 0;
+    }
+    : deniedFunction(capabilities, "resource.unbounded");
   return [
     createSafeRequire(capabilities, requiredModules),
     safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true),
@@ -599,11 +677,11 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     deniedFunction(capabilities, "network.request"),
     deniedObject(capabilities, "credentials.read"),
     deniedObject(capabilities, "native.abi"),
-    deniedFunction(capabilities, "resource.unbounded"),
-    deniedFunction(capabilities, "resource.unbounded"),
+    boundedTimer,
+    boundedInterval,
     () => undefined,
     () => undefined,
-    deniedFunction(capabilities, "resource.unbounded"),
+    boundedTimer,
     deniedFunction(capabilities, "code.dynamic"),
     undefined,
     TextEncoder,
@@ -617,8 +695,8 @@ function evaluateSource(source, capabilities, requiredModules, runtime = {}) {
   if (typeof Array.prototype.contains !== "function") {
     Object.defineProperty(Array.prototype, "contains", {configurable: true, value(value) { return this.includes(value); }});
   }
-  globalThis.activeDocument = safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true);
-  globalThis.DOMParser = class { parseFromString() { return safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true); } };
+  globalThis.activeDocument = safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true, "activeDocument");
+  globalThis.DOMParser = class { parseFromString() { return safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true, "DOMParser.document"); } };
   globalThis.createDiv = () => safeDomObject();
   globalThis.createEl = () => safeDomObject();
   const factory = new Function(
@@ -645,6 +723,7 @@ function loadedResult(module, requiredModules, deniedCapabilities) {
     exportKind: exportKind(module.exports),
     requiredModules,
     deniedCapabilities,
+    deniedPaths: Array.isArray(deniedCapabilities.deniedPaths) ? [...deniedCapabilities.deniedPaths] : [],
   };
 }
 
@@ -657,12 +736,13 @@ function failedResult(error, requiredModules, deniedCapabilities) {
     exportKind: "undefined",
     requiredModules,
     deniedCapabilities,
+    deniedPaths: Array.isArray(deniedCapabilities.deniedPaths) ? [...deniedCapabilities.deniedPaths] : [],
     error: message.slice(0, 600),
   };
 }
 
-function exposeBoundedApp() {
-  const boundedApp = createPluginApp([], undefined);
+function exposeBoundedApp(capabilities = []) {
+  const boundedApp = createPluginApp([], undefined, {}, capabilities);
   boundedApp.app = boundedApp;
   globalThis.app = boundedApp;
   return boundedApp;
@@ -672,7 +752,7 @@ function rendererProbe(source) {
   const deniedCapabilities = [];
   const requiredModules = [];
   try {
-    const boundedApp = exposeBoundedApp();
+    const boundedApp = exposeBoundedApp(deniedCapabilities);
     return loadedResult(evaluateSource(source, deniedCapabilities, requiredModules, {app: boundedApp}), requiredModules, deniedCapabilities);
   } catch (error) {
     return failedResult(error, requiredModules, deniedCapabilities);
@@ -685,11 +765,11 @@ async function lifecycleCall(instance, name, events) {
   events.push(name);
 }
 
-function lifecycleInstance(module, lifecycle, runtime = {}) {
+function lifecycleInstance(module, lifecycle, runtime = {}, capabilities = []) {
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("lifecycle fixture did not export a plugin class");
   lifecycle.supported = true;
-  const pluginApp = createPluginApp(lifecycle.events);
+  const pluginApp = createPluginApp(lifecycle.events, undefined, {}, capabilities);
   if (runtime.window) runtime.window.app = pluginApp;
   const instance = new Constructor(pluginApp, {id: "renderer-lifecycle-fixture", version: "1"});
   Object.defineProperty(lifecycle, "_pluginApp", {configurable: true, value: pluginApp});
@@ -703,7 +783,19 @@ function actionError(error) {
 }
 
 async function awaitAction(value) {
-  if (value && typeof value.then === "function") await value;
+  if (!value || typeof value.then !== "function") return;
+  const timeoutMs = 1000;
+  let timer;
+  try {
+    await Promise.race([
+      value,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`bounded action timeout after ${timeoutMs}ms`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 async function exerciseRegistrations(pluginApp) {
@@ -750,10 +842,10 @@ async function exerciseRegistrations(pluginApp) {
   return actions;
 }
 
-async function workflowInstance(module, workflow, dataStore, phase, version, workflowContext = {}, manifestId = "renderer-workflow-fixture", runtime = {}) {
+async function workflowInstance(module, workflow, dataStore, phase, version, workflowContext = {}, manifestId = "renderer-workflow-fixture", runtime = {}, capabilities = []) {
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
-  const pluginApp = createPluginApp([], dataStore, workflowContext);
+  const pluginApp = createPluginApp([], dataStore, workflowContext, capabilities);
   const instance = new Constructor(pluginApp, {id: manifestId, version});
   pluginApp.plugins.plugins[manifestId] = instance;
   if (runtime.window) runtime.window.app = pluginApp;
@@ -799,7 +891,9 @@ function lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, wo
     exportKind: "undefined",
     requiredModules,
     deniedCapabilities,
+    deniedPaths: Array.isArray(deniedCapabilities.deniedPaths) ? [...deniedCapabilities.deniedPaths] : [],
     workflow,
+    errorStack: error instanceof Error && typeof error.stack === "string" ? error.stack.slice(0, 1600) : undefined,
     error: message.slice(0, 600),
   };
 }
@@ -812,13 +906,14 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
   try {
     const dataStore = {value: cloneData(workflowConfig.initial_data), writes: 0};
-    const initialApp = createPluginApp([], dataStore, workflowContext);
+    const initialApp = createPluginApp([], dataStore, workflowContext, deniedCapabilities);
     const runtime = {app: initialApp, allowSyntheticDocument: true};
-    const module = evaluateSource(source, deniedCapabilities, requiredModules, runtime);
+    const evaluatePhase = () => evaluateSource(source, deniedCapabilities, requiredModules, runtime);
+    const module = evaluatePhase();
     workflow.supported = true;
-    await workflowInstance(module, workflow, dataStore, "install", "1.0.0", workflowContext, workflow.artifactId, runtime);
-    await workflowInstance(module, workflow, dataStore, "restart", "1.0.0", workflowContext, workflow.artifactId, runtime);
-    await workflowInstance(module, workflow, dataStore, "update", "1.1.0", workflowContext, workflow.artifactId, runtime);
+    await workflowInstance(module, workflow, dataStore, "install", "1.0.0", workflowContext, workflow.artifactId, runtime, deniedCapabilities);
+    await workflowInstance(evaluatePhase(), workflow, dataStore, "restart", "1.0.0", workflowContext, workflow.artifactId, runtime, deniedCapabilities);
+    await workflowInstance(evaluatePhase(), workflow, dataStore, "update", "1.1.0", workflowContext, workflow.artifactId, runtime, deniedCapabilities);
     workflow.pluginDataWrites = dataStore.writes;
     workflow.vaultWrites = metrics.vaultWrites;
     workflow.vaultOperations = metrics.vaultOperations;
@@ -847,6 +942,7 @@ function lifecycleFailure(error, requiredModules, deniedCapabilities, lifecycle)
     exportKind: "undefined",
     requiredModules,
     deniedCapabilities,
+    deniedPaths: Array.isArray(deniedCapabilities.deniedPaths) ? [...deniedCapabilities.deniedPaths] : [],
     lifecycle,
     error: message.slice(0, 600),
   };
@@ -857,10 +953,10 @@ async function rendererLifecycleProbe(source) {
   const requiredModules = [];
   const lifecycle = {supported: false, events: []};
   try {
-    const boundedApp = exposeBoundedApp();
+    const boundedApp = exposeBoundedApp(deniedCapabilities);
     const runtime = {app: boundedApp};
     const module = evaluateSource(source, deniedCapabilities, requiredModules, runtime);
-    const instance = lifecycleInstance(module, lifecycle, runtime);
+    const instance = lifecycleInstance(module, lifecycle, runtime, deniedCapabilities);
     await lifecycleCall(instance, "onload", lifecycle.events);
     await lifecycleCall(instance, "onunload", lifecycle.events);
     lifecycle.api = pluginApiSummary(lifecycle._pluginApp);
@@ -882,6 +978,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
   const runtime = [
     `const OBSIDIAN_EXPORT_NAMES = ${JSON.stringify(OBSIDIAN_EXPORT_NAMES)};`,
     remember,
+    rememberDeniedPath,
     denyCapability,
     deniedObject,
     deniedFunction,

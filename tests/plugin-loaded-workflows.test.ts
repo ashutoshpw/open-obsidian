@@ -21,6 +21,7 @@ const root = resolve(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(root, "fixtures/plugin-loaded-workflows.json"), "utf8")) as LoadedWorkflowFixture;
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {scripts?: Record<string, string>};
 const workflow = readFileSync(join(root, ".github/workflows/plugin-loaded-workflows.yml"), "utf8");
+const rendererWorker = readFileSync(join(root, "scripts/plugin-renderer-worker.cjs"), "utf8");
 
 test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries explicit", () => {
   expect(fixture.schema_version).toBe(1);
@@ -41,6 +42,12 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(workflow).toContain('node "$electron_package_dir/install.js"');
   expect(workflow).toContain('test -f "$sandbox_helper"');
   expect(workflow).toContain('sudo chmod 4755 "$sandbox_helper"');
+  expect(rendererWorker).toContain("deniedPaths");
+  expect(rendererWorker).toContain('"vault.direct-write"');
+  expect(rendererWorker).toContain("bounded action timeout");
+  expect(rendererWorker).toContain("evaluatePhase");
+  expect(rendererWorker).toContain("getElementsByClassName");
+  expect(rendererWorker).toContain("registerHoverLinkSource() {}");
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];
