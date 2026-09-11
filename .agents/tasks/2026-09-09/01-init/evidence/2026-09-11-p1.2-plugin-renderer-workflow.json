@@ -1,0 +1,103 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T16:03:30Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "ARCH-008", "RISK-003"],
+  "fixture_id": "fixture:plugin-renderer-lifecycle",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "branch": "main",
+    "implementation_commit": "534dba4270c1e8a5dae7ea252742b47678385285",
+    "tested_source_tree": "668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c",
+    "source_tree_paths": 211,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "report": {
+    "status": "passed",
+    "fixture_id": "fixture:plugin-renderer-lifecycle",
+    "coverage": "electron-sandboxed-renderer-lifecycle-workflow",
+    "checks": {
+      "safe_lifecycle_loaded": true,
+      "safe_lifecycle_boundary": true,
+      "safe_onload_then_onunload": true,
+      "safe_command_registered": true,
+      "safe_view_registered": true,
+      "safe_settings_registered": true,
+      "safe_event_registered": true,
+      "safe_persistence_boundary": true,
+      "dom_lifecycle_denied": true,
+      "dom_lifecycle_boundary": true,
+      "dom_privileged_capability_denied": true,
+      "dom_denied_before_onload_completion": true,
+      "workflow_loaded": true,
+      "workflow_boundary": true,
+      "workflow_phase_order": true,
+      "workflow_version_progression": true,
+      "workflow_restart_restores_data": true,
+      "workflow_update_restores_data": true,
+      "workflow_persistence_order": true,
+      "workflow_registration_cleanup": true,
+      "workflow_uninstall_clears_registrations": true,
+      "workflow_plugin_data_persistence": true,
+      "workflow_no_vault_writes": true,
+      "workflow_returns_to_obsidian": true
+    },
+    "workflow_phases": [
+      {"phase": "install", "version": "1.0.0", "registered_resources": 4, "registrations_after_cleanup": 0},
+      {"phase": "restart", "version": "1.0.0", "registered_resources": 4, "registrations_after_cleanup": 0},
+      {"phase": "update", "version": "1.1.0", "registered_resources": 4, "registrations_after_cleanup": 0}
+    ],
+    "plugin_data_writes": 3,
+    "vault_writes": 0,
+    "uninstall": {"registrations_cleared": true, "return_to_obsidian": true},
+    "dom_denied_capabilities": ["dom.privileged"],
+    "display": "xvfb-run"
+  },
+  "checks": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun test tests/plugin-renderer-lifecycle.test.ts tests/plugin-renderer-probe.test.ts", "exit_code": 0, "result": "Four focused tests passed with 31 expectations; the fixture now covers synthetic lifecycle/API ordering, workflow persistence and cleanup contracts."},
+    {"command": "bun run audit:plugin-lifecycle", "exit_code": 0, "result": "A Linux x64 Electron 44.3.0 sandboxed renderer passed 24 synthetic lifecycle/API/DOM/workflow checks, including restart data restoration, versioned update, registration cleanup, uninstall return boundary and zero vault writes."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "The fast repository gate passed with 164 tests and 882 expectations; implementation and unchanged-artifact runtime dispositions remain separate."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the five-file workflow increment."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout bundles compiled successfully."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c across 211 included paths."}
+  ],
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34619709868,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34619709868",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103330340102, "conclusion": "success"},
+        "macos-latest": {"job_id": 103330340357, "conclusion": "success"},
+        "windows-latest": {"job_id": 103330340440, "conclusion": "success"}
+      },
+      "result": "State, contract, host-round-trip, accessibility, typecheck, tests, quality-program, Electron compile, sandbox-helper setup, packaged vault audit, synthetic lifecycle/workflow audit, Knip and Fallow checks passed on all three hosted runners."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34619710025,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34619710025",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103330340149, "conclusion": "success"},
+        "macos-latest": {"job_id": 103330340142, "conclusion": "success"},
+        "windows-latest": {"job_id": 103330339787, "conclusion": "success"}
+      },
+      "result": "All three packaging jobs passed release-gate, manifest, Electron runtime notice, transitive attribution and artifact-upload steps; production signing was skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "The workflow trace uses only a synthetic marker-free plugin class and a mediated in-memory plugin-data store; it does not certify unchanged plugin settings, views, durable storage, combinations or actual uninstall/update behavior.",
+    "No unchanged pinned plugin was executed through this lifecycle workflow; PLUG-002 remains pending for artifact-specific lifecycle, workflow, restart/update/uninstall and return-to-Obsidian evidence or a complete D15 denial.",
+    "The renderer wrapper is Linux x64 synthetic Electron evidence; macOS/Windows renderer and OS enforcement, reference Obsidian compatibility, human accessibility/input, signing, publication and release readiness remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Synthetic Electron lifecycle and workflow boundaries are directly exercised locally. The marker-free fixture preserved mediated plugin data across install/restart/update, cleared registrations on teardown, returned to an inactive Obsidian-compatible boundary and issued zero vault writes; the privileged DOM fixture remained denied before onload completion. Unchanged-artifact runtime certification remains pending."
+}

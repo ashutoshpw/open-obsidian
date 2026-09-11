@@ -20,12 +20,12 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-    "last_reconciled_head": "4b7b59dda1a3de3a6924d60856365213632c21d3",
-    "updated_at": "2026-09-11T15:47:09Z",
+    "last_reconciled_head": "534dba4270c1e8a5dae7ea252742b47678385285",
+    "updated_at": "2026-09-11T16:10:18Z",
   "status": "active",
     "current_checkpoint": "P3.3",
     "next_action": "Continue the earliest dependency-ready implementation work: reference/cross-platform vault round trips, unchanged-plugin lifecycle/DOM evidence and selected theme/popout/accessibility traces; keep external release gates explicit.",
-    "recent_increment": {"checkpoint":"P2.2","commit":"4b7b59dda1a3de3a6924d60856365213632c21d3","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-electron-renderer-workflow-ci.json","tested_source_tree":"96f8bd6cc95492d0bce1cfb75ed970d945fcf8a499e6be2d08ba906bae9ca349","ci_runs":[34617428570,34617428692]},
+    "recent_increment": {"checkpoint":"P1.2","commit":"534dba4270c1e8a5dae7ea252742b47678385285","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow.json","tested_source_tree":"668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c","ci_runs":[34619709868,34619710025]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",
@@ -97,7 +97,8 @@
         "Verified the full-renderer-preflight evidence update in quality and desktop-build matrices on Ubuntu, macOS and Windows; runtime certification remains pending.",
         "Refreshed the all-artifact Electron renderer preflight on the current P3.3 source tree; 26 main.js assets passed integrity and fail-closed D15 denial, including PC17 dom.privileged, while only the synthetic mediated fixture loaded.",
         "Added a Linux x64 Electron lifecycle probe for a synthetic marker-free plugin class; onload/onunload completed in order, while a synthetic privileged DOM access was denied before onload completion. Unchanged artifact lifecycle, settings, views, restart/update/uninstall and cross-platform/reference behavior remain pending.",
-        "Extended the synthetic renderer fixture with mediated command/view/settings/event registration and loadData/saveData ordering checks; configured the Linux Electron sandbox helper after download and passed the quality and desktop-build matrices on Ubuntu, macOS and Windows without changing unchanged-artifact runtime dispositions."
+        "Extended the synthetic renderer fixture with mediated command/view/settings/event registration and loadData/saveData ordering checks; configured the Linux Electron sandbox helper after download and passed the quality and desktop-build matrices on Ubuntu, macOS and Windows without changing unchanged-artifact runtime dispositions.",
+        "Extended the synthetic renderer fixture with install/restart/update/uninstall workflow phases, mediated plugin-data restoration, registration cleanup, zero vault writes and return-to-Obsidian boundary checks; unchanged-artifact runtime dispositions remain pending."
       ],
       "next_action": "Use a compatible Electron/renderer host to exercise lifecycle, DOM and workflow combinations for unchanged artifacts; record artifact-specific D15 denials or passing evidence while retaining the module-load probe as feasibility data.",
       "evidence": [
@@ -114,14 +115,15 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all-ci.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-refresh.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-lifecycle.json"
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-lifecycle.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow.json"
       ],
-      "commit_marker": "[openobsidian P1.2 work] Extend renderer lifecycle API trace",
-      "validated_source_tree": "fa256894900e7b6206e063e6a8479915d2b3259f6bdca250a511760a9ae4b7a0",
+      "commit_marker": "[openobsidian P1.2 work] Add synthetic renderer workflow trace",
+      "validated_source_tree": "668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c",
       "blockers": [
         "Frozen release pins and manifest metadata are verified; Linux x64 permission-restricted and Electron renderer preflights record integrity-checked unchanged-artifact denials, while the Minimal theme has no main.js; unchanged-artifact lifecycle certification is not claimed.",
         "The permission-restricted probe is module-load evidence only and does not prove Electron or OS isolation; ordinary compatibility failures remain pending rather than D15 denials.",
-        "The renderer preflight loads only a synthetic marker-free mediated fixture; its lifecycle/API trace passes locally and across the hosted quality runners, but unchanged plugin lifecycle, settings, views, restart/update/uninstall, combinations and return-to-Obsidian remain pending.",
+        "The renderer preflight loads only synthetic marker-free mediated fixtures; lifecycle/API and install/restart/update/uninstall workflow traces pass locally and across the hosted quality runners, but unchanged plugin lifecycle, settings, views, combinations and return-to-Obsidian remain pending.",
         "The DOM fixture and renderer preflight record fail-closed D15 decisions; synthetic API/DOM ordering passes on the hosted matrix, while unchanged renderer/OS-enforced lifecycle bypass tests, same-user OS enforcement and reference behavior remain pending.",
         "The matrix is executable and complete as a preflight, but all lifecycle, workflow and combination evidence remains pending until unchanged artifacts can run safely.",
         "The scoped theme/snippet preview is implemented and exercised on synthetic Linux fixtures; cross-platform, popout and plugin-view evidence remains pending."

@@ -873,3 +873,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 ## 2026-09-11T15:47:09Z — Evidence wording correction
 
 - Narrowed the P2.2 checkpoint blocker to distinguish the hosted launch/editor renderer trace from the separate local C10 bookmark, tag, task, template, daily-note and popout workflow evidence; no capability or readiness status changed.
+
+## 2026-09-11T16:10:18Z — P1.2 synthetic renderer workflow trace
+
+- Completed: extended `fixture:plugin-renderer-lifecycle` and the Electron sandbox worker with a marker-free install/restart/update workflow. Each phase records mediated command/view/settings/event registration, `loadData`/`saveData` ordering, data restoration across restart and version update, unload cleanup and a zero-vault-write boundary; teardown records return to an inactive Obsidian-compatible surface.
+- Completed: retained the separate privileged-DOM fixture and fail-closed denial before `onload` completion. The audit now passes 24 synthetic lifecycle/API/DOM/workflow checks; unchanged pinned plugin behavior and the reference runtime remain explicitly pending.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-workflow.json` records source tree `668a2fdc65cfc94e1912f35b57b83c953f0fe9e5d60cd7174b1372b2dc15da3c` across 211 included paths, local typecheck/fast/Fallow/compile gates, and successful quality run `34619709868` plus desktop-build run `34619710025` on Ubuntu, macOS and Windows. Signing remained skipped.
+- Traceability: updated D15, PLUG-002, ARCH-008 and RISK-003 with the workflow evidence and kept PLUG-002 pending because no unchanged artifact has completed lifecycle, settings, views, combinations, restart/update/uninstall or return-to-Obsidian certification. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: use a compatible reference/plugin runtime for unchanged-artifact lifecycle and combination evidence; retain the synthetic workflow as implementation-boundary evidence only.
