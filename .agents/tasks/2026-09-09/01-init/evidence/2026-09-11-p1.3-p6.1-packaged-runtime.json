@@ -1,0 +1,43 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T08:08:00Z",
+  "checkpoints": ["P1.3", "P6.1"],
+  "requirements": ["D01", "ARCH-001", "ARCH-003", "Q-014", "Q-017", "Q-018"],
+  "fixture_ids": ["fixture:electron-shell", "fixture:arch-electron-security", "fixture:q-distribution", "fixture:q-actions", "fixture:q-signing-gate"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "builder_version": "26.16.1",
+    "tested_source_tree": "6cb91a87459e29091471b935003096ac1d32c9e63d4c7eae0b79e4b9848cf3c9",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "build_command": "bun run package:dir",
+    "release_manifest_command": "bun run release:gate -- --artifacts-dir out",
+    "directory": "out/linux-unpacked",
+    "release_manifest": {"path": "out/release-manifest.json", "sha256": "04d3779fd29119efacea75fa402d8a171cf1406623e783f9ce7078ba358eed2b"},
+    "app_asar": {"path": "out/linux-unpacked/resources/app.asar", "sha256": "6ed8bda7e2f7bc724b7bcfd4ded9fe450e6210f77b70e62eab98ee911263d5a5"},
+    "electron_license": {"path": "out/linux-unpacked/LICENSE.electron.txt", "sha256": "5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d"},
+    "chromium_notice": {"path": "out/linux-unpacked/LICENSES.chromium.html", "sha256": "a62dabd1c6ef1327365b2a3fdffb806222684a746dcb8f4afd1c1f690eba5535"}
+  },
+  "checks": [
+    {"command": "bun test", "exit_code": 0, "result": "141 tests pass with 753 expectations after installing the pinned lockfile dependencies."},
+    {"command": "bun run validate:architecture", "exit_code": 0, "result": "Electron boundaries, domain interfaces and preliminary estimate disclaimers validate."},
+    {"command": "bun run check:accessibility", "exit_code": 0, "result": "14 static renderer accessibility checks pass."},
+    {"command": "bun run validate:layout", "exit_code": 0, "result": "30 static layout checks pass."},
+    {"command": "bun run release:update-check", "exit_code": 0, "result": "Manifest, version transition and rollback checks pass; offline installation remains external-pending."},
+    {"command": "bun run audit:packaged -- --artifacts-dir out", "exit_code": 0, "result": "Release manifest, Electron license, Chromium/Node notices, paired app.asar and payload checks pass."},
+    {"command": "bun run audit:dependencies -- --artifacts-dir out", "exit_code": 0, "result": "308 installed dependency records and one packaged archive pass graph, license/source, archive attribution and non-runtime exclusion checks; 53 optional platform edges are warnings only."},
+    {"procedure": "xvfb-run -a out/linux-unpacked/openobsidian --no-sandbox --disable-gpu --remote-debugging-port=9341; CDP Runtime.evaluate", "result": {"title": "OpenObsidian · Local knowledge workspace", "process": "undefined", "require": "undefined", "api": "object", "selectVault": "function", "accessibleButtons": 62}, "exit_code": 0}
+  ],
+  "limitations": [
+    "This is a Linux x64 unsigned preview launch; macOS and Windows packaged runtime launch traces remain covered by the Actions build matrix but were not interactively launched in this environment.",
+    "The renderer smoke test verifies the packaged page and preload exposure, not reference Obsidian round trips, human accessibility, plugin lifecycle compatibility, signing, staging or publication.",
+    "The release manifest is generated at the artifact-root level by the release gate and is audited before upload; the ignored local out/ tree is reproducible with the commands above."
+  ],
+  "result": "Pinned Electron package, notices, dependency attribution, static contracts and a real packaged renderer/preload launch passed on Linux; cross-platform, reference-runtime and release-owner gates remain separate."
+}

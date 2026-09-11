@@ -508,3 +508,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - CI: quality run `34576518941` and desktop-build run `34576519154` passed on Ubuntu, macOS and Windows.
 - Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-theme-contract.json`, updated C09 and C12 evidence/source-tree references and moved P3.3 to `in_progress` without promoting pending visible theme, popout, accessibility, PC17 or cross-platform certification.
 - Next: apply the safe analyzed contract in a visible renderer/theme adapter and capture light/dark, plugin-view, popout and accessibility traces when the compatible desktop/reference environments are available.
+
+## 2026-09-11T08:10:00Z — Linux packaged Electron runtime smoke
+
+- Checkpoint: P1.3/P6.1 work increment; the checkout remained on `main` and the selected `/home/ashutosh/Obsidian` vault was not accessed.
+- Completed: installed the locked Bun dependencies after the initial dependency-absent test failure, built the pinned Electron 44.3.0 Linux x64 unpacked artifact, generated its release manifest and recorded artifact hashes.
+- Completed: `bun test` passes with 141 tests and 753 expectations; architecture, static accessibility, layout, update/rollback, packaged-runtime and transitive dependency attribution checks pass. The only attribution output is 53 optional platform edges reported as warnings.
+- Completed: launched `out/linux-unpacked/openobsidian` under `xvfb-run` with CDP. The packaged page title is `OpenObsidian · Local knowledge workspace`; `process` and `require` are undefined in the renderer while the allowlisted `openObsidian.selectVault` API is exposed and 62 accessible buttons are present.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.3-p6.1-packaged-runtime.json` records commands, source tree `6cb91a87459e29091471b935003096ac1d32c9e63d4c7eae0b79e4b9848cf3c9`, release-manifest/app.asar/runtime-notice hashes and limitations.
+- Failed attempt retained: auditing `out/linux-unpacked` before running the release gate correctly failed because the artifact-root `release-manifest.json` had not yet been generated; `bun run release:gate -- --artifacts-dir out` generated it and the rerun passed.
+- Next: continue the earliest unfinished P1/P2/P3 compatibility and reference-vault operations; obtain macOS/Windows interactive traces and reference-extension/vault runtimes when available, and keep signing, staging, updater, publication and human gates external-pending.
