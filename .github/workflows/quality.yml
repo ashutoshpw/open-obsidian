@@ -35,6 +35,11 @@ jobs:
           bun-version-file: package.json
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
+      - name: Configure Electron Linux sandbox helper
+        if: runner.os == 'Linux'
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: Validate progress state
         run: bun run validate:state
       - name: Validate frozen contracts
