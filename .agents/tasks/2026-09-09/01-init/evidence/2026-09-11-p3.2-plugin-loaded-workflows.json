@@ -1,0 +1,187 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-evidence",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC21", "PC23"],
+  "decision_id": "D14",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-11T20:34:06.677Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "c63535b95d823f592b10442cbda5e1604c4f10dc",
+    "sha256": "97f25727adc75fd8b64784c644c1e80d0ff9bdd423d140cf85556d7649f618b5",
+    "paths": 228
+  },
+  "execution": {
+    "target_ids": ["PC07", "PC21", "PC23"],
+    "required_phases": ["install", "restart", "update"],
+    "integrity_checked": true,
+    "unchanged_main_js": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "vault_writes": 0,
+    "no_plugin_promoted": true
+  },
+  "artifact_results": [
+    {
+      "artifact_id": "PC07",
+      "name": "Calendar",
+      "version": "1.5.10",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "partial",
+      "denied_capabilities": ["dom.privileged"],
+      "checks": {
+        "loaded": true,
+        "workflow_supported": true,
+        "required_phases": true,
+        "version_progression": true,
+        "lifecycle_started": true,
+        "settings_registration_recorded": true,
+        "views_registration_recorded": true,
+        "command_attempts_recorded": true,
+        "settings_attempts_recorded": true,
+        "views_attempts_recorded": true,
+        "restart_restores_data": true,
+        "update_restores_data": true,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true,
+        "no_vault_writes": true
+      },
+      "action_failures": {
+        "count_across_phases": 12,
+        "representative": [
+          {"id": "open-weekly-note", "error": "Cannot read properties of undefined (reading 'openOrCreateWeeklyNote')"},
+          {"id": "reveal-active-note", "error": "Cannot read properties of undefined (reading 'revealActiveNote')"},
+          {"type": "calendar", "error": "this.registerEvent is not a function"},
+          {"id": "CalendarSettingsTab", "error": "D15 denied dom.privileged"}
+        ]
+      },
+      "disposition": "bounded-workflow-evidence-pending-runtime"
+    },
+    {
+      "artifact_id": "PC21",
+      "name": "Homepage",
+      "version": "4.5.0",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "partial",
+      "denied_capabilities": ["dom.privileged"],
+      "checks": {
+        "loaded": true,
+        "workflow_supported": true,
+        "required_phases": true,
+        "version_progression": true,
+        "lifecycle_started": true,
+        "settings_registration_recorded": true,
+        "views_registration_recorded": true,
+        "command_attempts_recorded": true,
+        "settings_attempts_recorded": true,
+        "views_attempts_recorded": true,
+        "restart_restores_data": true,
+        "update_restores_data": true,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true,
+        "no_vault_writes": true
+      },
+      "action_failures": {
+        "count_across_phases": 6,
+        "representative": [
+          {"id": "copy-debug-info", "error": "D15 denied dom.privileged"},
+          {"id": "open-homepage", "error": "D15 denied dom.privileged"}
+        ]
+      },
+      "disposition": "bounded-workflow-evidence-pending-runtime"
+    },
+    {
+      "artifact_id": "PC23",
+      "name": "Recent Files",
+      "version": "1.7.10",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "persistence": "not-proven",
+      "action_status": "partial",
+      "denied_capabilities": [],
+      "checks": {
+        "loaded": true,
+        "workflow_supported": true,
+        "required_phases": true,
+        "version_progression": true,
+        "lifecycle_started": true,
+        "settings_registration_recorded": true,
+        "views_registration_recorded": true,
+        "command_attempts_recorded": true,
+        "settings_attempts_recorded": true,
+        "views_attempts_recorded": true,
+        "restart_restores_data": false,
+        "update_restores_data": false,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true,
+        "no_vault_writes": true
+      },
+      "action_failures": {
+        "count_across_phases": 3,
+        "representative": [
+          {"type": "recent-files", "error": "s.getEnabledFeatures(...).contains is not a function"}
+        ]
+      },
+      "disposition": "bounded-workflow-evidence-pending-runtime"
+    }
+  ],
+  "combination": {
+    "id": "combination:pc07-pc21-pc23",
+    "target_ids": ["PC07", "PC21", "PC23"],
+    "bounded_lifecycle": "complete",
+    "persistence": "not-proven",
+    "checks": {
+      "loaded": true,
+      "workflow_supported": true,
+      "required_phases": true,
+      "version_progression": true,
+      "lifecycle_started": true,
+      "settings_registration_recorded": true,
+      "views_registration_recorded": true,
+      "command_attempts_recorded": true,
+      "settings_attempts_recorded": true,
+      "views_attempts_recorded": true,
+      "restart_restores_data": false,
+      "update_restores_data": true,
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "no_vault_writes": true
+    },
+    "phase_registrations_cleaned": true,
+    "disposition": "bounded-combination-evidence-pending-runtime"
+  },
+  "checks": {
+    "all_artifact_lifecycle_traces_complete": true,
+    "combination_lifecycle_trace_complete": true,
+    "all_bounded_traces_complete": false,
+    "all_artifacts_integrity_checked": true,
+    "no_plugin_promoted": true
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It records bounded settings/view/command registrations, mediated action attempts, restart/update data restoration, cleanup and return-to-Obsidian state; it does not certify stock Obsidian or human behavior.",
+  "result": "All three unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces; persisted-data gaps and settings/view/command action failures remain recorded as pending-runtime limitations."
+}
