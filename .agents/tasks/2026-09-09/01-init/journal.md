@@ -601,3 +601,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-local-benchmark.json`; final rerun tested source tree `29bc87c6c6f6e8aa21e5c9df45dd1f4e115be8b5e5ca61ef6d2ee071c34853f4`.
 - Limitations: this is not reference Obsidian, Electron input-to-paint, pinned hardware, battery, 100k long-running, cross-platform, plugin-runtime or human evidence. The selected `/home/ashutosh/Obsidian` vault was not accessed.
 - Next: commit this coherent P5.1 work increment, push `main`, reconcile the observed SHA and then resume the earliest dependency-ready reference/plugin/popout/accessibility work with all external gates visible.
+
+## 2026-09-11T09:54:10Z — P5.1 benchmark scope hardening
+
+- Corrected the benchmark report scope to derive from the host (`linux-core-synthetic` on this run and a distinct non-Linux local scope elsewhere) instead of hardcoding Linux labels. Non-Linux, renderer, reference and human results remain release-ineligible and externally pending.
+- Reran the 1k/10k Linux synthetic benchmark after the scope change; evidence and Q-005 through Q-008 tested-tree references now use `d606c42bf0ca4f6b6c494d4767c34769be04eccaf877fa3a5995c20da8e14af7`.
+- Validation: typecheck, focused benchmark test and strict changed-file Fallow pass. Next operation is commit, push and SHA reconciliation for this small hardening follow-up.

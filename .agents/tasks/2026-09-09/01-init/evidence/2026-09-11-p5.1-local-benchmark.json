@@ -1,5 +1,5 @@
 {
-  "recorded_at": "2026-09-11T09:50:10Z",
+  "recorded_at": "2026-09-11T09:54:10Z",
   "checkpoint": "P5.1",
   "requirements": ["Q-005", "Q-006", "Q-007", "Q-008"],
   "fixture_ids": ["fixture:performance-benchmark", "fixture:q-startup", "fixture:q-responsiveness", "fixture:q-search", "fixture:q-resources"],
@@ -10,7 +10,7 @@
     "branch": "main",
     "bun_version": "1.4.2",
     "implementation_commit_before_reconciliation": "5805e515a0749f9b5e201e1c02817931d3402431",
-    "tested_source_tree": "29bc87c6c6f6e8aa21e5c9df45dd1f4e115be8b5e5ca61ef6d2ee071c34853f4"
+    "tested_source_tree": "d606c42bf0ca4f6b6c494d4767c34769be04eccaf877fa3a5995c20da8e14af7"
   },
   "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
   "frozen_budgets": {
@@ -26,21 +26,21 @@
       "profile": "synthetic-1000",
       "notes": 1000,
       "scope": "linux-core-synthetic",
-      "startup": {"prior_note_read_p95_ms": 0.474, "indexing_p95_ms": 33.004, "editable_before_indexing": true, "budget_passed": true},
-      "input": {"normal_p95_ms": 0.002, "normal_p99_ms": 0.018, "large_file_p95_ms": 0.002, "large_file_p99_ms": 0.008, "budget_passed": true},
-      "search": {"runs": 25, "p95_ms": 4.681, "p99_ms": 4.95, "budget_passed": true},
-      "watcher": {"runs": 1, "p95_ms": 12.406, "observed": true, "budget_passed": true},
-      "resources": {"rss_p95_bytes": 78635008, "heap_used_p95_bytes": 6208181, "app_overhead_bytes": 47964160, "model_memory_bytes": 0, "cpu_user_ms": 95.22, "cpu_system_ms": 73.726}
+      "startup": {"prior_note_read_p95_ms": 0.497, "indexing_p95_ms": 36.623, "editable_before_indexing": true, "budget_passed": true},
+      "input": {"normal_p95_ms": 0.002, "normal_p99_ms": 0.02, "large_file_p95_ms": 0.002, "large_file_p99_ms": 0.006, "budget_passed": true},
+      "search": {"runs": 25, "p95_ms": 4.919, "p99_ms": 5.159, "budget_passed": true},
+      "watcher": {"runs": 1, "p95_ms": 13.651, "observed": true, "budget_passed": true},
+      "resources": {"rss_p95_bytes": 78102528, "heap_used_p95_bytes": 7454202, "app_overhead_bytes": 47702016, "model_memory_bytes": 0, "cpu_user_ms": 135.147, "cpu_system_ms": 39.704}
     },
     {
       "profile": "synthetic-10000",
       "notes": 10000,
       "scope": "linux-core-synthetic",
-      "startup": {"prior_note_read_p95_ms": 0.115, "indexing_p95_ms": 768.337, "editable_before_indexing": true, "budget_passed": true},
-      "input": {"normal_p95_ms": 0.006, "normal_p99_ms": 0.012, "large_file_p95_ms": 0, "large_file_p99_ms": 0.001, "budget_passed": true},
-      "search": {"runs": 25, "p95_ms": 13.656, "p99_ms": 14.154, "budget_passed": true},
-      "watcher": {"runs": 1, "p95_ms": 114.645, "observed": true, "budget_passed": true},
-      "resources": {"rss_p95_bytes": 123359232, "heap_used_p95_bytes": 19011569, "app_overhead_bytes": 47271936, "model_memory_bytes": 0, "cpu_user_ms": 1088.89, "cpu_system_ms": 286.188}
+      "startup": {"prior_note_read_p95_ms": 0.123, "indexing_p95_ms": 912.03, "editable_before_indexing": true, "budget_passed": true},
+      "input": {"normal_p95_ms": 0.012, "normal_p99_ms": 0.024, "large_file_p95_ms": 0, "large_file_p99_ms": 0.002, "budget_passed": true},
+      "search": {"runs": 25, "p95_ms": 27.171, "p99_ms": 32.215, "budget_passed": true},
+      "watcher": {"runs": 1, "p95_ms": 149.945, "observed": true, "budget_passed": true},
+      "resources": {"rss_p95_bytes": 120201216, "heap_used_p95_bytes": 21310358, "app_overhead_bytes": 48037888, "model_memory_bytes": 0, "cpu_user_ms": 1356.759, "cpu_system_ms": 279.725}
     }
   ],
   "commands": [

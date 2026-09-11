@@ -34,10 +34,12 @@ type MemoryDistribution = {
   max_bytes: number;
 };
 
+type BenchmarkScope = "linux-core-synthetic" | "non-linux-core-synthetic";
+
 export type BenchmarkProfileReport = {
   id: string;
   notes: number;
-  scope: "linux-core-synthetic";
+  scope: BenchmarkScope;
   startup: {prior_note_read: Distribution; indexing: Distribution; editable_before_indexing: boolean; passed: boolean};
   input: {normal: Distribution; large_file: Distribution; passed: boolean};
   search: Distribution & {passed: boolean};
@@ -56,7 +58,7 @@ export type BenchmarkReport = {
   schema_version: 1;
   protocol_version: string;
   recorded_at: string;
-  environment: {os: string; architecture: string; bun: string; scope: "linux-core-synthetic"};
+  environment: {os: string; architecture: string; bun: string; scope: BenchmarkScope};
   budgets: BenchmarkFixture["budgets"];
   profiles: BenchmarkProfileReport[];
   external_pending: BenchmarkFixture["external_pending"];
@@ -64,6 +66,10 @@ export type BenchmarkReport = {
 };
 
 const fixture = await Bun.file(new URL("../fixtures/performance-benchmark.json", import.meta.url)).json() as BenchmarkFixture;
+
+function localScope(): BenchmarkScope {
+  return process.platform === "linux" ? "linux-core-synthetic" : "non-linux-core-synthetic";
+}
 
 function distribution(values: number[]): Distribution {
   return {
@@ -247,7 +253,7 @@ async function benchmarkProfile(notes: number, options: BenchmarkOptions): Promi
     return {
       id: localProfileId(notes),
       notes,
-      scope: "linux-core-synthetic",
+      scope: localScope(),
       startup: {prior_note_read: distribution(indexed.priorReadSamples), indexing: distribution(indexed.indexSamples), editable_before_indexing: indexed.priorReadSamples.length === indexed.indexSamples.length && indexed.priorReadSamples.length > 0, passed: percentile(indexed.priorReadSamples, 0.95) <= fixture.budgets.startup_p95_ms},
       input: {normal: normalInput, large_file: largeInput, passed: inputPassed(normalInput, largeInput)},
       search: {...search, passed: searchPassed(search)},
@@ -264,7 +270,7 @@ export async function runBenchmark(noteCounts: readonly number[] = [100, 1000], 
   const settings: BenchmarkOptions = {indexRuns: options.indexRuns ?? 3, searchRuns: options.searchRuns ?? 25, inputRuns: options.inputRuns ?? 50};
   const profiles: BenchmarkProfileReport[] = [];
   for (const notes of noteCounts) profiles.push(await benchmarkProfile(notes, settings));
-  return {schema_version: 1, protocol_version: fixture.protocol_version, recorded_at: new Date().toISOString(), environment: {os: process.platform, architecture: process.arch, bun: Bun.version, scope: "linux-core-synthetic"}, budgets: fixture.budgets, profiles, external_pending: fixture.external_pending, release_eligible: false};
+  return {schema_version: 1, protocol_version: fixture.protocol_version, recorded_at: new Date().toISOString(), environment: {os: process.platform, architecture: process.arch, bun: Bun.version, scope: localScope()}, budgets: fixture.budgets, profiles, external_pending: fixture.external_pending, release_eligible: false};
 }
 
 if (import.meta.main) {
