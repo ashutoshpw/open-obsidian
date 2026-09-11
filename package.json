@@ -51,7 +51,8 @@
   "build": {
     "appId": "ai.openobsidian.desktop",
     "productName": "OpenObsidian",
-    "files": ["dist/main.js", "dist/preload.cjs", "dist/renderer.js", "src/renderer/**/*", "package.json"],
+    "icon": "assets/openobsidian-icon.png",
+    "files": ["assets/**/*", "dist/main.js", "dist/preload.cjs", "dist/renderer.js", "src/renderer/**/*", "package.json"],
     "directories": {"output": "out"},
     "mac": {"target": ["dmg"]},
     "win": {"target": ["nsis"]},

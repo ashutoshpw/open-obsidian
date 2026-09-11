@@ -46,6 +46,11 @@ function decodeBase64(value: unknown): Uint8Array {
   return new Uint8Array(Buffer.from(value, "base64"));
 }
 
+function applicationIconPath(): string {
+  const appRoot = app.isPackaged ? app.getAppPath() : resolve(currentDirectory, "..");
+  return join(appRoot, "assets", "openobsidian-icon.png");
+}
+
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -53,6 +58,7 @@ function createWindow(): void {
     minWidth: 960,
     minHeight: 640,
     backgroundColor: "#202020",
+    icon: applicationIconPath(),
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     trafficLightPosition: process.platform === "darwin" ? {x: 12, y: 12} : undefined,
     webPreferences: {
@@ -454,6 +460,7 @@ function registerVaultHandlers(): void {
 
 app.whenReady().then(() => {
   registerVaultHandlers();
+  if (process.platform === "darwin" && app.dock) app.dock.setIcon(applicationIconPath());
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
