@@ -770,3 +770,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip.json`; C01.2, C02.2, SYNC-002, SYNC-004 and RISK-004 now reference the local evidence and tested source tree `1a31ede4a536e6f8567775d65ff1c0aec27f9a61f713c08f9df9fc294890a2ba` across 202 included paths.
 - Limitation: this is a Linux disposable-directory permission result, not disk-full/quota/ACL variation, cloud-placeholder, reference Obsidian, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run the full local validation set, commit and push this scoped P1.1 increment, inspect quality/desktop CI host results, then reconcile the observed work SHA without changing the explicit pending gates.
+
+## 2026-09-11T13:23:55Z — P1.1 host permission-loss CI reconciliation
+
+- Reconciled pushed work commit `99fd598e2e186606e38e20de6ac12a2404f51ca8` on `main`; local `main` and `origin/main` match.
+- Quality run `34603868013` passed on Ubuntu, macOS and Windows. The permission-loss report recorded `denied-preserved` with `EACCES` and both preserved-version flags on Linux x64 and macOS arm64; Windows recorded `not-enforced` with the original bytes preserved and no failed-write history because the host did not enforce the chmod-based denial. The other host round-trip checks passed on all three runners.
+- Desktop-build run `34603867976` passed on Ubuntu, macOS and Windows for release-gate, manifest, Electron runtime notice, transitive-attribution and artifact-upload steps; signing remained skipped because credentials were unavailable. No retry or source change was needed.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip-ci.json`; `state.json` now records the reconciled SHA, source tree `1a31ede4a536e6f8567775d65ff1c0aec27f9a61f713c08f9df9fc294890a2ba` across 202 paths, and CI runs `34603868013` and `34603867976`.
+- Limitation: the matrix validates host behavior, not disk-full/quota/ACL variation, cloud-placeholder, reference Obsidian, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified. The Windows not-enforced result is not an OS-isolation claim.
+- Next: continue reference/cross-platform vault procedures and unchanged-plugin lifecycle work while retaining the explicit external gates.

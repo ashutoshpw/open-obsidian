@@ -1,0 +1,67 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T13:23:55Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "SYNC-002", "SYNC-004", "RISK-004"],
+  "implementation_commit": "99fd598e2e186606e38e20de6ac12a2404f51ca8",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "1a31ede4a536e6f8567775d65ff1c0aec27f9a61f713c08f9df9fc294890a2ba",
+    "source_tree_paths": 202,
+    "source_tree_definition": "bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out"
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34603868013,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34603868013",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {
+        "job_id": 103277468275,
+        "conclusion": "success",
+        "host_round_trip": {
+          "platform": "linux",
+          "architecture": "x64",
+          "permission_loss": {"status": "denied-preserved", "host_enforced": true, "original_preserved": true, "failed_write_preserved": true, "error_code": "EACCES"}
+        }
+      },
+      "macos-latest": {
+        "job_id": 103277468290,
+        "conclusion": "success",
+        "host_round_trip": {
+          "platform": "darwin",
+          "architecture": "arm64",
+          "permission_loss": {"status": "denied-preserved", "host_enforced": true, "original_preserved": true, "failed_write_preserved": true, "error_code": "EACCES"}
+        }
+      },
+      "windows-latest": {
+        "job_id": 103277468101,
+        "conclusion": "success",
+        "host_round_trip": {
+          "platform": "win32",
+          "architecture": "x64",
+          "permission_loss": {"status": "not-enforced", "host_enforced": false, "original_preserved": true, "failed_write_preserved": false}
+        }
+      }
+    },
+    "result": "The host vault round-trip report passed on Ubuntu/Linux x64, macOS/darwin arm64 and Windows/win32 x64; permission enforcement is host-dependent and the Windows report preserved the original bytes when the write was not denied."
+  },
+  "desktop": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34603867976,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34603867976",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103277467856, "conclusion": "success"},
+      "macos-latest": {"job_id": 103277468090, "conclusion": "success"},
+      "windows-latest": {"job_id": 103277468132, "conclusion": "success"}
+    },
+    "result": "All three desktop packaging jobs passed release-gate, manifest, Electron runtime notice, transitive attribution and artifact upload steps; signing remained skipped because credentials were unavailable."
+  },
+  "limitations": [
+    "The quality matrix validates the permission-loss fixture on hosted runners, not disk-full/quota/ACL variation, cloud-placeholder or reference Obsidian behavior.",
+    "The Windows host did not enforce the chmod-based permission loss; this is retained as host-dependent evidence rather than a security claim. The desktop matrix validates packaging and attribution only, not signing, publication, same-user OS isolation, human accessibility or release readiness; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The permission-loss implementation and three-runner quality/desktop CI are green; Linux and macOS preserved both versions after EACCES, while Windows recorded a host-not-enforced outcome with the original bytes preserved."
+}
