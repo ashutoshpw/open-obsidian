@@ -34,5 +34,17 @@
     "Reference Obsidian 1.13.7/1.14.1 back-and-forth reopen and human portability review remain external-pending.",
     "No personal or selected /home/ashutosh/Obsidian vault was accessed."
   ],
-  "result": "Local portability implementation is covered; C14 reference-runtime certification remains pending."
+  "result": "Local portability implementation is covered; C14 reference-runtime certification remains pending.",
+  "hosted_reconciliation": {
+    "implementation_commit": "cc3fe11479be680ccdad46832114da74bd1c14a3",
+    "reconciled_head": "180771da42647f85a10211c3998d81b739723ab3",
+    "quality_run": 34647808573,
+    "quality_conclusion": "success",
+    "quality_platforms": ["Ubuntu", "macOS", "Windows"],
+    "desktop_build_run": 34647808477,
+    "desktop_build_conclusion": "success",
+    "desktop_build_platforms": ["Ubuntu", "macOS", "Windows"],
+    "signing": "Production signing was skipped because credentials were unavailable."
+  },
+  "ci_runs": [34647808573, 34647808477]
 }
