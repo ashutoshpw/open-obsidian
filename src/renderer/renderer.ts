@@ -2460,14 +2460,20 @@ function openRetrievalPanel(): void {
   retrievalQuery?.focus();
 }
 
+function retrievalCompletionStatus(response: RetrievalResponse): string {
+  if (response.adjudication === "model") return `model adjudication ran via ${response.provider} (${response.model ?? "configured model"})`;
+  if (response.adjudication === "fallback") return "provider adjudication was unavailable; source-only evidence was retained";
+  return "no provider request was made";
+}
+
 async function performRetrieval(client: OpenObsidianAPI, request: RetrievalRequest): Promise<void> {
   setDisabled(runRetrievalButton, true);
-  setText(retrievalMeta, "Starting a local source index; no provider has received context…");
+  setText(retrievalMeta, "Starting a local source index; any configured provider receives only approved citations after local ranking…");
   setHidden(retrievalAnswer, true);
   try {
     retrievalData = await client.retrieve(request);
     renderRetrieval(retrievalData);
-    setStatus(`Grounded search found ${retrievalData.passages.length} source passage${retrievalData.passages.length === 1 ? "" : "s"}; no provider request was made.`);
+    setStatus(`Grounded search found ${retrievalData.passages.length} source passage${retrievalData.passages.length === 1 ? "" : "s"}; ${retrievalCompletionStatus(retrievalData)}.`);
   } catch (error) {
     setText(retrievalMeta, errorText(error, "Unable to run grounded search."));
   } finally {

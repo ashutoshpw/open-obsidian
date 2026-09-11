@@ -4,7 +4,7 @@ import {existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync} from "nod
 import {fileURLToPath} from "node:url";
 import {dirname, isAbsolute, join, resolve} from "node:path";
 import {applyAIChangeSet, draftLocalAIChange, organizationSuggestions, undoAIChange, type AppliedAIChange} from "../core/ai-changes.js";
-import {describeProvider} from "../core/providers.js";
+import {createFetchProviderTransport, createProviderRetrievalModel, describeProvider, ProviderUsageLedger} from "../core/providers.js";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
 import {createNoteFromTextNode, editCanvasTextNode, parseCanvas} from "../core/canvas.js";
 import {evaluateBase, parseBase, type BaseRow} from "../core/bases.js";
@@ -13,7 +13,7 @@ import {cleanupHistory, DEFAULT_HISTORY_POLICY, historyRecordsFromStore, planHis
 import {parseMarkdown} from "../core/markdown.js";
 import {buildNoteContext} from "../core/note-context.js";
 import {createDiagnosticManifest, type DiagnosticManifest} from "../core/privacy.js";
-import {retrieveVault} from "../core/retrieval.js";
+import {retrieveVaultWithModel} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
@@ -33,6 +33,8 @@ let rendererReady = false;
 let pendingLaunchIntent: LaunchIntent | null = null;
 const aiChangeSets = new Map<string, AIChangeSet>();
 const aiAppliedChanges = new Map<string, AppliedAIChange>();
+const providerTransport = createFetchProviderTransport();
+const providerLedgers = new Map<string, ProviderUsageLedger>();
 type PopoutSession = {window: BrowserWindow; webContentsId: number; vaultRoot: string; relativePath: string};
 const popoutWindows = new Map<string, PopoutSession>();
 const popoutSessionsByWebContentsId = new Map<number, PopoutSession>();
@@ -456,9 +458,17 @@ function baseRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): BaseR
   return {relativePath: read.relativePath, revision: read.revision, views: document.views.map((view) => baseEvaluationView(document, view, rows))};
 }
 
-function retrieveRequest(event: Electron.IpcMainInvokeEvent, value: unknown): RetrievalResponse {
+async function retrieveRequest(event: Electron.IpcMainInvokeEvent, value: unknown): Promise<RetrievalResponse> {
   const request = validateRetrievalRequest(value);
-  return retrieveVault(requireVault(), request, (progress) => event.sender.send(CHANNELS.retrievalProgress, progress));
+  const settings = loadProviderSettings();
+  const model = settings.model === "unset" ? null : createProviderRetrievalModel(settings, {
+    credentials: providerCredentialStore(),
+    ledger: providerLedger(settings),
+    online: true,
+    timeoutMs: 30_000,
+    transport: providerTransport,
+  });
+  return retrieveVaultWithModel(requireVault(), request, model, (progress) => event.sender.send(CHANNELS.retrievalProgress, progress));
 }
 
 function draftAIChangeRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): AIChangeSet {
@@ -564,6 +574,19 @@ function loadProviderSettings(): ProviderSettings {
   }
 }
 
+function providerLedgerKey(settings: ProviderSettings): string {
+  return JSON.stringify({mode: settings.mode, providerId: settings.providerId, model: settings.model, endpoint: settings.endpoint, caps: settings.caps});
+}
+
+function providerLedger(settings: ProviderSettings): ProviderUsageLedger {
+  const key = providerLedgerKey(settings);
+  const existing = providerLedgers.get(key);
+  if (existing) return existing;
+  const ledger = new ProviderUsageLedger(settings.caps);
+  providerLedgers.set(key, ledger);
+  return ledger;
+}
+
 function saveProviderSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): ProviderSettings {
   const settings = validateProviderSettings(value);
   mkdirSync(app.getPath("userData"), {recursive: true});
@@ -572,7 +595,8 @@ function saveProviderSettings(_event: Electron.IpcMainInvokeEvent, value: unknow
 }
 
 function providerStatus(): ProviderStatus {
-  return describeProvider(loadProviderSettings(), providerCredentialStore());
+  const settings = loadProviderSettings();
+  return describeProvider(settings, providerCredentialStore(), {online: true, transportConfigured: true, usage: providerLedger(settings).snapshot()});
 }
 
 function diagnosticManifest(): DiagnosticManifest {

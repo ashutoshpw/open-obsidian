@@ -44,6 +44,8 @@ export type ProviderUsage = {inputTokens: number; outputTokens: number; costCent
 export type ProviderResponse = {requestId: string; mode: ProviderMode; providerId: ProviderId; model: string; text: string; usage: ProviderUsage};
 export type ProviderRunOptions = {credentials: CredentialStore; transport?: ProviderTransport; ledger?: ProviderUsageLedger; signal?: AbortSignal; timeoutMs?: number; online?: boolean};
 
+type ProviderFetch = (input: string | URL, init?: RequestInit) => Promise<Response>;
+
 function providerError(error: unknown): string {
   return error instanceof Error ? error.message : "Invalid provider configuration";
 }
@@ -222,6 +224,72 @@ export class ProviderUsageLedger {
   }
 }
 
+function completionUrl(endpoint: string): string {
+  const url = new URL(endpoint);
+  const pathname = url.pathname.replace(/\/+$/, "");
+  if (!pathname.endsWith("/chat/completions")) url.pathname = `${pathname}/chat/completions` || "/chat/completions";
+  return url.toString();
+}
+
+function completionText(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (!Array.isArray(value)) return null;
+  const parts = value.flatMap((part) => {
+    if (part === null || typeof part !== "object" || Array.isArray(part)) return [];
+    const text = (part as Record<string, unknown>).text;
+    return typeof text === "string" ? [text] : [];
+  });
+  return parts.length > 0 ? parts.join("") : null;
+}
+
+function responseUsage(value: unknown): Pick<ProviderTransportResponse, "inputTokens" | "outputTokens" | "costCents"> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return {};
+  const usage = value as Record<string, unknown>;
+  const inputTokens = usage.prompt_tokens ?? usage.input_tokens;
+  const outputTokens = usage.completion_tokens ?? usage.output_tokens;
+  const costCents = usage.cost_cents;
+  return {
+    ...(typeof inputTokens === "number" ? {inputTokens} : {}),
+    ...(typeof outputTokens === "number" ? {outputTokens} : {}),
+    ...(typeof costCents === "number" ? {costCents} : {}),
+  };
+}
+
+function objectRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+function parseCompletionResponse(payload: unknown): ProviderTransportResponse {
+  const record = objectRecord(payload);
+  if (!record) throw new Error("Provider returned an invalid response");
+  const choices = record.choices;
+  if (!Array.isArray(choices) || choices.length === 0) throw new Error("Provider returned no completion choices");
+  const message = objectRecord(choices[0])?.message;
+  const text = completionText(objectRecord(message)?.content);
+  if (text === null) throw new Error("Provider returned no completion text");
+  return {text, ...responseUsage(record.usage)};
+}
+
+/**
+ * Build the explicit HTTP transport used by configured provider modes. The
+ * transport understands the OpenAI-compatible chat-completions response shape
+ * and never exposes response bodies or credentials in thrown errors.
+ */
+export function createFetchProviderTransport(fetchImpl: ProviderFetch = fetch): ProviderTransport {
+  return async (request) => {
+    const headers: Record<string, string> = {accept: "application/json", "content-type": "application/json"};
+    if (request.credential) headers.authorization = `Bearer ${request.credential}`;
+    const response = await fetchImpl(completionUrl(request.endpoint), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({model: request.model, messages: [{role: "user", content: request.prompt}], max_tokens: request.maxOutputTokens}),
+      signal: request.signal,
+    });
+    if (!response.ok) throw new Error(`Provider returned HTTP ${response.status}`);
+    return parseCompletionResponse(await response.json());
+  };
+}
+
 function destination(settings: ProviderSettings): string {
   if (settings.mode === "managed") return `Managed OpenRouter proxy · ${settings.endpoint}`;
   if (settings.mode === "byok") return `BYOK provider endpoint · ${settings.endpoint}`;
@@ -243,11 +311,11 @@ function availability(settings: ProviderSettings, state: "not-required" | "store
   return candidates.find((candidate) => candidate.when) ?? {availability: "ready", reason: "The selected provider and model are configured explicitly."};
 }
 
-export function describeProvider(settingsInput: ProviderSettings, credentials: CredentialStore, options: {online?: boolean; transportConfigured?: boolean} = {}): ProviderStatus {
+export function describeProvider(settingsInput: ProviderSettings, credentials: CredentialStore, options: {online?: boolean; transportConfigured?: boolean; usage?: ProviderUsageSnapshot} = {}): ProviderStatus {
   const settings = checkedSettings(settingsInput);
   const state = credentialState(settings, credentials);
   const stateInfo = availability(settings, state, {online: options.online ?? false, transportConfigured: options.transportConfigured ?? false});
-  return {mode: settings.mode, providerId: settings.providerId, model: settings.model, endpoint: settings.endpoint, destination: destination(settings), credentialState: state, availability: stateInfo.availability, fallback: "none", reason: stateInfo.reason, usage: new ProviderUsageLedger(settings.caps).snapshot()};
+  return {mode: settings.mode, providerId: settings.providerId, model: settings.model, endpoint: settings.endpoint, destination: destination(settings), credentialState: state, availability: stateInfo.availability, fallback: "none", reason: stateInfo.reason, usage: options.usage ?? new ProviderUsageLedger(settings.caps).snapshot()};
 }
 
 export async function runProviderRequest(settingsInput: ProviderSettings, input: ProviderInput, options: ProviderRunOptions): Promise<ProviderResponse> {

@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {DEFAULT_PROVIDER_SETTINGS, type ProviderMode, type ProviderSettings} from "../src/shared/api.js";
 import {MemoryCredentialStore} from "../src/core/credentials.js";
-import {createProviderRetrievalModel, describeProvider, ProviderError, ProviderUsageLedger, providerInput, runProviderRequest, type ProviderTransportRequest} from "../src/core/providers.js";
+import {createFetchProviderTransport, createProviderRetrievalModel, describeProvider, ProviderError, ProviderUsageLedger, providerInput, runProviderRequest, type ProviderTransportRequest} from "../src/core/providers.js";
 import {createLocalModelManifest, derivativeDeletionPlan, exportPortableConversation, inspectLocalModel, modelChangeRequiresReindex} from "../src/core/model-lifecycle.js";
 
 const providerFixture = JSON.parse(readFileSync(new URL("../fixtures/provider-modes.json", import.meta.url), "utf8")) as {schema_version: number; modes: Array<{id: string; fallback: string}>};
@@ -54,6 +54,22 @@ test("provider requests use only the selected mode, enforce context and record h
   await expect(runProviderRequest(settings("local"), input(), {credentials, online: false, transport: async () => ({text: "should not fallback"})})).rejects.toMatchObject({code: "offline"});
   await expect(runProviderRequest(settings("managed"), input(), {credentials, online: true, transport: async () => ({text: "should not dispatch"})})).rejects.toMatchObject({code: "credential-missing"});
   await expect(runProviderRequest(settings("local"), input(), {credentials, online: true})).rejects.toMatchObject({code: "unavailable"});
+});
+
+test("HTTP provider transport targets chat completions and keeps response usage explicit", async () => {
+  let seenUrl = "";
+  let seenInit: RequestInit | undefined;
+  const transport = createFetchProviderTransport(async (input, init) => {
+    seenUrl = String(input);
+    seenInit = init;
+    return new Response(JSON.stringify({choices: [{message: {content: [{type: "text", text: "approved"}]}}], usage: {prompt_tokens: 8, completion_tokens: 2, cost_cents: 3}}), {status: 200, headers: {"content-type": "application/json"}});
+  });
+  const result = await transport({requestId: "request-1", mode: "byok", providerId: "openai-compatible", model: "test-model", endpoint: "https://provider.example.test/v1/", credential: "secret-token", prompt: "Use only selected excerpts.", maxOutputTokens: 20, signal: new AbortController().signal});
+  expect(seenUrl).toBe("https://provider.example.test/v1/chat/completions");
+  expect(seenInit?.method).toBe("POST");
+  expect((seenInit?.headers as Record<string, string>).authorization).toBe("Bearer secret-token");
+  expect(JSON.parse(String(seenInit?.body))).toMatchObject({model: "test-model", max_tokens: 20, messages: [{role: "user", content: "Use only selected excerpts."}]});
+  expect(result).toEqual({text: "approved", inputTokens: 8, outputTokens: 2, costCents: 3});
 });
 
 test("provider timeout, cancellation, quota and error redaction are explicit", async () => {
