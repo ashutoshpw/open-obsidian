@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T20:07:05Z",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "D15",
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PC01",
+    "PC02",
+    "PC03",
+    "PC04",
+    "PC05",
+    "PC06",
+    "PC07",
+    "PC08",
+    "PC09",
+    "PC10",
+    "PC11",
+    "PC12",
+    "PC13",
+    "PC14",
+    "PC15",
+    "PC16",
+    "PC17",
+    "PC18",
+    "PC19",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24",
+    "PC25",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005"
+  ],
+  "implementation_commit": "ceb6758a2511f3599c5130b71f98fc3f3bb292b6",
+  "tested_source_tree": "df73ca3d9e89ee577aca8d35ff97e25eae05b6ac6572d23180c9eb4d52b08a3f",
+  "source_tree_paths": 225,
+  "quality": {
+    "run_id": 34642353186,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34642353186",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 103404887441,
+        "platform": "ubuntu-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 103404887151,
+        "platform": "macos-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 103404887334,
+        "platform": "windows-latest",
+        "conclusion": "success"
+      }
+    ],
+    "covered_steps": [
+      "progress state",
+      "frozen contracts",
+      "architecture",
+      "version baseline",
+      "vault differential fixture",
+      "host vault round trip",
+      "C10 workflow inventory",
+      "distribution metadata",
+      "update/rollback contract",
+      "renderer accessibility contract",
+      "typecheck",
+      "tests",
+      "quality scorecard",
+      "Electron compile",
+      "Electron vault round trip",
+      "synthetic plugin lifecycle",
+      "Knip",
+      "Fallow health"
+    ],
+    "synthetic_lifecycle": "The repository's synthetic plugin lifecycle audit passed on Ubuntu, macOS and Windows."
+  },
+  "desktop_build": {
+    "run_id": 34642353200,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34642353200",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 103404886840,
+        "platform": "ubuntu-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 103404887022,
+        "platform": "macos-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 103404887009,
+        "platform": "windows-latest",
+        "conclusion": "success"
+      }
+    ],
+    "checks": "Release gate, update/rollback manifest, unpacked desktop build, release-manifest hashes, packaged Electron notices and transitive attribution passed on all three platforms.",
+    "signing": "Production signing was skipped because credentials were unavailable."
+  },
+  "observations": [
+    "The hosted matrices validate repository contracts, synthetic plugin lifecycle behavior and desktop packaging at implementation head ceb6758; they do not execute the opt-in unchanged-artifact D15 lifecycle audit or the local D15 validator.",
+    "The Linux D15 record remains the source of the 23 renderer-denied workflow candidates, seven synthetic denied-capability checks and pending-runtime dispositions. No plugin row is promoted to passing or unsupported-security.",
+    "Reference Obsidian behavior, unchanged artifact settings/views/combinations and restart/update/uninstall/return-to-Obsidian workflows, same-user OS enforcement, human validation, signing, publication, updater installation/rollback and release readiness remain pending.",
+    "No provider endpoint, reference Obsidian instance, personal vault or selected /home/ashutosh/Obsidian vault was accessed."
+  ],
+  "result": "Quality and desktop-build matrices are green on Ubuntu, macOS and Windows for the reconciled P3.2 source tree; this validates the available repository and packaging gates without changing P3.2 compatibility dispositions."
+}
