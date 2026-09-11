@@ -13,7 +13,7 @@ export const OPEN_OBSIDIAN_THEME = {
     titlebarHeight: 40,
     ribbonWidth: 44,
     sidebarWidth: 300,
-    iconSize: 20,
+    iconSize: 24,
     workspaceHeaderHeight: 40,
     tabStripHeight: 34,
     editorToolbarHeight: 34,
