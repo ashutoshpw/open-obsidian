@@ -1,0 +1,61 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-matrix-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "decision_id": "D14",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-loaded-workflows-current.json",
+  "implementation_commit": "83d83e4a858628a08de79b6f20d4f26a625a550a",
+  "source_tree": {
+    "sha256": "fbdf12059c0ebe35cac8db49daba4855ca80762058ab02121019c12be51611a5",
+    "paths": 232,
+    "definition": "Clean checkout digest from bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "workflow": {
+    "name": "OpenObsidian loaded plugin workflows",
+    "run_id": 34651648162,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34651648162",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103434936770, "conclusion": "success", "recorded_status": "partial", "artifact": "loaded-plugin-workflows-Linux-83d83e4a858628a08de79b6f20d4f26a625a550a", "artifact_sha256": "f19891e10209654cca7133b312674cd223ddb23e94da3566a41db6d559210444", "audit_source_tree_sha256": "ba928e00be01b2bd9037bf4168d7a7b786b781a07f85dce204a63c1f4bd667e7", "audit_source_tree_paths": 233},
+      "macos-latest": {"job_id": 103434936540, "conclusion": "success", "recorded_status": "partial", "artifact": "loaded-plugin-workflows-macOS-83d83e4a858628a08de79b6f20d4f26a625a550a", "artifact_sha256": "c9732d4122a3fcd2a0859badf762e5fa303265346b867ed3e2e9db1fd2fce3b6", "audit_source_tree_sha256": "0ec149c5f5321c667fcf63e044bd8583bb5c8d66801df7d08df494de0a6d33b2", "audit_source_tree_paths": 233},
+      "windows-latest": {"job_id": 103434936807, "conclusion": "success", "recorded_status": "partial", "artifact": "loaded-plugin-workflows-Windows-83d83e4a858628a08de79b6f20d4f26a625a550a", "artifact_sha256": "4096008ee76669ea85ab9cbcf7cd30adc5c468c1a7a7fcc59adf6f18c6e74cb9", "audit_source_tree_sha256": "ed64bd1d2af1e31ec47721437e10bcabfd01c93c800365cc6496abe2dd183bf1", "audit_source_tree_paths": 233}
+    }
+  },
+  "failed_attempt": {
+    "run_id": 34651287993,
+    "head": "79f156f7916965c33eac6671351877ce1139fe65",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103433802989, "conclusion": "failure", "failed_step": "Configure Electron Linux sandbox helper", "error": "chown: cannot access 'node_modules/electron/dist/chrome-sandbox': No such file or directory"},
+      "macos-latest": {"job_id": 103433802926, "conclusion": "success"},
+      "windows-latest": {"job_id": 103433802702, "conclusion": "success"}
+    },
+    "linux_artifact": "not-uploaded because the failed step ran before audit output existed"
+  },
+  "remediation": "Commit 83d83e4 resolves electron/package.json, runs the idempotent Electron installer, asserts dist/chrome-sandbox exists, then applies root ownership and mode 4755; no failure was masked.",
+  "audit_scope": {
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "zero_vault_writes": true,
+    "no_plugin_promoted": true,
+    "all_os_jobs_uploaded_partial_audit_evidence": true
+  },
+  "quality": {
+    "run_id": 34651648124,
+    "conclusion": "success",
+    "jobs": {"ubuntu-latest": 103434936416, "macos-latest": 103434936429, "windows-latest": 103434936150},
+    "checks": "All Ubuntu, macOS and Windows quality jobs passed state/contracts, tests, typecheck, compile, Electron vault round trip, synthetic plugin lifecycle, Knip and Fallow."
+  },
+  "desktop_build": {
+    "run_id": 34651648141,
+    "conclusion": "success",
+    "jobs": {"ubuntu-latest": 103434936458, "macos-latest": 103434936105, "windows-latest": 103434936427},
+    "checks": "All Ubuntu, macOS and Windows packaging, release-manifest and attribution jobs passed; production signing was skipped because credentials were unavailable."
+  },
+  "interpretation": "The loaded-workflow matrix now runs unchanged pinned artifacts on Ubuntu, macOS and Windows after deterministic Linux Electron setup. The audit remains partial: D15 denials, action gaps and persistence gaps are preserved, so this evidence does not certify stock Obsidian, human behavior, reference behavior, signed release, publication or updater installation/rollback and does not promote any plugin row. The per-job audit source-tree digest includes the transient redirected output path (233 paths); the clean source digest is recorded separately above (232 paths).",
+  "selected_vault_accessed": false,
+  "result": "passed matrix infrastructure with partial loaded-workflow outcomes"
+}

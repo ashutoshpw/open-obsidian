@@ -1,0 +1,68 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-current",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "decision_id": "D14",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-11T21:57:39.858Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "83d83e4a858628a08de79b6f20d4f26a625a550a",
+    "sha256": "fbdf12059c0ebe35cac8db49daba4855ca80762058ab02121019c12be51611a5",
+    "paths": 232,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "execution": {
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "vault_writes": 0,
+    "no_plugin_promoted": true
+  },
+  "artifact_results": [
+    {"artifact_id": "PC07", "name": "Calendar", "version": "1.5.10", "bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "partial", "action_failure_count": 12, "denied_capabilities": ["dom.privileged"], "vault_writes": 0},
+    {"artifact_id": "PC17", "name": "Minimal Theme Settings", "version": "9.0.0", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "action_failure_count": 0, "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0},
+    {"artifact_id": "PC20", "name": "Outliner", "version": "4.10.2", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "action_failure_count": 0, "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0},
+    {"artifact_id": "PC21", "name": "Homepage", "version": "4.5.0", "bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "partial", "action_failure_count": 6, "denied_capabilities": ["dom.privileged"], "vault_writes": 0},
+    {"artifact_id": "PC22", "name": "Smart Connections", "version": "4.7.2", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "action_failure_count": 0, "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0},
+    {"artifact_id": "PC23", "name": "Recent Files", "version": "1.7.10", "bounded_lifecycle": "complete", "persistence": "not-proven", "action_status": "partial", "action_failure_count": 3, "denied_capabilities": [], "vault_writes": 0},
+    {"artifact_id": "PC24", "name": "Tag Wrangler", "version": "0.6.5", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "action_failure_count": 0, "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0}
+  ],
+  "combination": {
+    "id": "combination:pc07-pc21-pc23",
+    "target_ids": ["PC07", "PC21", "PC23"],
+    "bounded_lifecycle": "complete",
+    "persistence": "not-proven",
+    "restart_restores_data": false,
+    "update_restores_data": true,
+    "cleanup_after_each_phase": true,
+    "uninstall_clears_registrations": true,
+    "return_to_obsidian": true,
+    "no_vault_writes": true
+  },
+  "checks": {
+    "all_artifact_lifecycle_traces_complete": false,
+    "combination_lifecycle_trace_complete": true,
+    "all_bounded_traces_complete": false,
+    "all_artifacts_integrity_checked": true,
+    "no_plugin_promoted": true
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": ["reference Obsidian settings, view rendering and return-to-Obsidian comparison", "same-user macOS/Windows OS enforcement", "human accessibility/input review", "provider-backed or subscription-backed plugin behavior", "signed release and updater installation/rollback"],
+  "limitation": "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It records bounded settings/view/command registrations, mediated action attempts, restart/update data restoration, cleanup and return-to-Obsidian state; it does not certify stock Obsidian or human behavior.",
+  "result": "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted."
+}
