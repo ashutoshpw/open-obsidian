@@ -623,3 +623,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-popout-theme-preview.json` records source tree `0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd` across 192 included paths.
 - Limitations: this is a synthetic Linux fixture only; unchanged Minimal/Minimal Theme Settings, plugin-created views, macOS/Windows/reference behavior, true OS IME, screen-reader, contrast/scale, human focus and cross-platform input remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run the full local gates, commit this P3.3 work increment, reconcile its pushed SHA in state, and retain the external certification handoffs.
+
+## 2026-09-11T10:56:32Z — P3.3 popout theme-preview reconciliation
+
+- Reconciled the popout theme-preview implementation at `6ece8f5a672ac12223c05088b0d318a5f3d50608`; the source commit is ready to push from `main`.
+- Updated `state.json` so `last_reconciled_head` and `recent_increment` point to the P3.3 work commit, with source tree `0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd` across 192 included paths.
+- Kept C10.1, C12 and RISK-002 pending: Minimal/unchanged-plugin, plugin-created views, true OS IME, screen-reader, human focus, macOS/Windows/reference and other external certification remain open.

@@ -11,7 +11,7 @@
     "branch": "main",
     "bun_version": "1.4.2",
     "electron_version": "44.3.0",
-    "implementation_commit_before_reconciliation": "a446ab62a92293c8936195bcc940e4869c05560d",
+    "implementation_commit_before_reconciliation": "6ece8f5a672ac12223c05088b0d318a5f3d50608",
     "tested_source_tree": "0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd",
     "source_tree_paths": 192
   },
