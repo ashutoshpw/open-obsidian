@@ -1,0 +1,58 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T14:17:32Z",
+  "checkpoint": "P2.1",
+  "requirements": ["PROD-001"],
+  "fixture_id": "fixture:electron-vault-roundtrip",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "branch": "main",
+    "implementation_commit_before_reconciliation": "eceeee20c7533ba8242d4e2e77ea3553c2456857",
+    "tested_source_tree": "37bec72127d8099a5d31f7844ed9f8f72111986ced7b492aa90b4e93e832aff8",
+    "source_tree_paths": 208,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "command": "bun run audit:electron-vault",
+  "report": {
+    "status": "passed",
+    "fixture_id": "fixture:electron-vault-roundtrip",
+    "platform": "linux",
+    "architecture": "x64",
+    "display": ":471",
+    "vault_file_count": 3,
+    "checks": {
+      "launch": true,
+      "existing_vault_opened": true,
+      "read_only_scan": true,
+      "read_preserved_bytes": true,
+      "revision_aware_write": true,
+      "unrelated_binary_preserved": true,
+      "process_restart": true,
+      "reopen_read": true,
+      "app_data_outside_vault": true,
+      "remote_contact_avoided": true
+    },
+    "before_sha256": "d0c1d5e4c8debd0db83b1eb1e7100016132ddf519025f1ebc9f36333e00cbb84",
+    "after_sha256": "fb10f6f7dd970e616c07689fa8c816e6519fc994965a202e378bcfac024edcc9",
+    "first_revision": "f30b0a9e78ee3de0a049db0d7b51ece062ffd82c833fe23dfc26431aa1528aab",
+    "edited_revision": "f82ea87e531bd223a1983f817f150951ce16e4dbabcf0429b89caca8f5a5cdf5"
+  },
+  "checks": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun run audit:electron-vault", "exit_code": 0, "result": "Packaged Electron opened a disposable existing vault, preserved the initial BOM/CRLF bytes, wrote through revision-checked IPC, preserved an unrelated binary and read the edited note after a fresh process restart."},
+    {"command": "bun test tests/electron-vault-audit.test.ts", "exit_code": 0, "result": "The Electron audit fixture contract test passed without launching a runtime."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No blocking changed-file Fallow findings; one bounded output-helper duplication warning remains report-only."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 37bec72127d8099a5d31f7844ed9f8f72111986ced7b492aa90b4e93e832aff8 across 208 included paths."}
+  ],
+  "limitations": [
+    "This is a disposable Linux packaged Electron trace; macOS and Windows interactive launches, reference Obsidian reopen behavior, AI portability and human accessibility/input review remain separate gates.",
+    "The trace proves the local broker and renderer boundary only; it does not certify unchanged plugin lifecycle, OS isolation, signing, publication or release readiness.",
+    "No personal vault was accessed; the selected /home/ashutosh/Obsidian vault was not used."
+  ],
+  "result": "Local packaged Electron open/read/write/restart behavior passed; PROD-001 is implemented locally while reference portability, AI additions and external platform/human gates remain pending."
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "fixture:electron-vault-roundtrip",
+  "checkpoint": "P2.1",
+  "purpose": "Packaged Electron open-in-place, mediated read/write and process-restart persistence on a disposable existing vault.",
+  "phases": [
+    "launch",
+    "open-existing-vault",
+    "read-only-scan",
+    "revision-aware-write",
+    "process-restart",
+    "reopen-read"
+  ],
+  "paths": ["Note.md", "assets/blob.bin", ".obsidian/app.json"],
+  "assertions": [
+    "opening an existing directory reports an unchanged scan",
+    "read bytes and revisions come from the selected vault",
+    "writes require the read revision and survive a fresh process",
+    "unrelated binary bytes remain unchanged",
+    "vault files remain outside Electron user-data storage"
+  ],
+  "external_pending": [
+    "reference Obsidian reopen and back-to-back portability",
+    "macOS and Windows interactive runtime traces",
+    "human accessibility and input review",
+    "signing, publication and release readiness"
+  ]
+}
