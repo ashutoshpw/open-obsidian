@@ -51,10 +51,25 @@ export type PluginCompatibilityCell = {
   deniedCapabilities: string[];
 };
 
+export type PluginBypassTest = {
+  id: string;
+  capability: string;
+  expected: string;
+};
+
+export type PluginFeasibilityPlan = {
+  scope: string;
+  corpusSource: string;
+  corpusCount: number;
+  hardestTargets: string[];
+  bypassTests: PluginBypassTest[];
+};
+
 export type PluginCompatibilityMatrix = {
   targets: PluginCompatibilityCell[];
   mandatoryTargetIds: string[];
   dependencyTargetIds: string[];
+  feasibility: PluginFeasibilityPlan;
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -81,6 +96,23 @@ function lifecycle(): Record<PluginLifecycleCheck, "pending-runtime"> {
 
 function workflowEvidence(workflowsForEntry: CompatibilityWorkflow[]): Record<string, "pending-runtime"> {
   return Object.fromEntries(workflowsForEntry.map((workflow) => [workflow.id, "pending-runtime"]));
+}
+
+function feasibilityPlan(isolation: UnknownRecord): PluginFeasibilityPlan {
+  const plan = record(isolation.feasibility);
+  const bypassTests = records(plan?.bypass_tests).flatMap((bypassTest) => {
+    const id = string(bypassTest.id);
+    const capability = string(bypassTest.capability);
+    const expected = string(bypassTest.expected);
+    return id && capability && expected ? [{id, capability, expected}] : [];
+  });
+  return {
+    scope: string(plan?.scope),
+    corpusSource: string(plan?.corpus_source),
+    corpusCount: typeof plan?.corpus_count === "number" ? plan.corpus_count : 0,
+    hardestTargets: strings(plan?.hardest_targets),
+    bypassTests,
+  };
 }
 
 function artifactAssets(artifact: UnknownRecord): CompatibilityAsset[] {
@@ -158,11 +190,22 @@ function validateCell(cell: PluginCompatibilityCell): string[] {
   return [missingReleaseIdentity(cell), missingConfiguration(cell), missingWorkflowOutputs(cell), missingWorkflowEvidence(cell), unreviewedDisposition(cell), incompleteLifecycle(cell), missingSecurityPolicy(cell), invalidReleasePins(cell)].filter((message): message is string => message !== null);
 }
 
+function validateFeasibilityPlan(matrix: PluginCompatibilityMatrix, targetIds: string[]): string[] {
+  const plan = matrix.feasibility;
+  const failures: string[] = [];
+  if (!plan.scope || !plan.corpusSource) failures.push("feasibility plan is missing scope or corpus source");
+  if (plan.corpusCount !== targetIds.length) failures.push(`feasibility plan corpus count ${plan.corpusCount} does not match ${targetIds.length} matrix targets`);
+  if (plan.hardestTargets.length === 0 || plan.hardestTargets.some((id) => !targetIds.includes(id))) failures.push("feasibility plan has an unknown or empty hardest-target set");
+  if (plan.bypassTests.length < 8 || plan.bypassTests.some((test) => !test.id || !test.capability || !test.expected)) failures.push("feasibility plan must declare eight complete bypass tests");
+  return failures;
+}
+
 export function buildPluginCompatibilityMatrix(catalog: UnknownRecord, manifest: UnknownRecord, isolation: UnknownRecord): PluginCompatibilityMatrix {
   const entries = records(catalog.entries);
   const artifacts = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
   const combinations = records(catalog.combinations);
   const deniedCapabilities = strings(record(isolation.capabilities)?.denied);
+  const feasibility = feasibilityPlan(isolation);
   const targets = entries.flatMap((entry) => {
     const artifactId = string(entry.id);
     const artifact = artifacts.get(artifactId);
@@ -190,7 +233,7 @@ export function buildPluginCompatibilityMatrix(catalog: UnknownRecord, manifest:
     }));
   });
   const {mandatoryTargetIds, dependencyTargetIds} = mandatoryAndDependencies(catalog, entries);
-  return {targets, mandatoryTargetIds, dependencyTargetIds};
+  return {targets, mandatoryTargetIds, dependencyTargetIds, feasibility};
 }
 
 export function validatePluginCompatibilityMatrix(matrix: PluginCompatibilityMatrix): string[] {
@@ -208,5 +251,6 @@ export function validatePluginCompatibilityMatrix(matrix: PluginCompatibilityMat
   if (mandatory.size !== 25) failures.push(`expected 25 mandatory targets, found ${mandatory.size}`);
   if (dependencies.size !== 2) failures.push(`expected 2 dependency targets, found ${dependencies.size}`);
   [...mandatory, ...dependencies].filter((id) => !targetIds.includes(id)).forEach((id) => failures.push(`selection references missing matrix target ${id}`));
+  failures.push(...validateFeasibilityPlan(matrix, targetIds));
   return failures;
 }

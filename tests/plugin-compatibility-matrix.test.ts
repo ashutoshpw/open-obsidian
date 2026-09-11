@@ -9,6 +9,8 @@ test("compatibility matrix covers every pinned target on every desktop platform"
   expect(matrix.targets).toHaveLength(81);
   expect([...new Set(matrix.targets.map((target) => target.artifactId))]).toHaveLength(27);
   expect(new Set(matrix.targets.map((target) => target.platform))).toEqual(new Set(PLUGIN_PLATFORMS));
+  expect(matrix.feasibility.bypassTests).toHaveLength(8);
+  expect(matrix.feasibility.hardestTargets).toContain("PC03");
   expect(validatePluginCompatibilityMatrix(matrix)).toEqual([]);
 });
 

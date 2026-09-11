@@ -9,5 +9,21 @@
   },
   "required_record_fields": ["reproduction", "safeAlternativesAttempted", "scope", "visible"],
   "safe_alternatives": ["mediated vault read", "preview broker", "workflow disabled"],
-  "platforms": ["macOS", "Windows", "Linux"]
+  "platforms": ["macOS", "Windows", "Linux"],
+  "feasibility": {
+    "scope": "mandatory top-25 plugins plus Minimal and Text Extractor dependencies; wider 30-50 discovery research remains separate",
+    "corpus_source": "fixtures/plugin-catalog.json",
+    "corpus_count": 27,
+    "hardest_targets": ["PC03", "PC02", "PC01", "PC08", "PC06", "PC13", "PC10", "PC19"],
+    "bypass_tests": [
+      {"id": "direct-filesystem", "capability": "filesystem.direct", "expected": "deny"},
+      {"id": "native-abi", "capability": "native.abi", "expected": "deny-or-isolated"},
+      {"id": "cross-plugin", "capability": "plugin.cross-access", "expected": "deny-or-mediated"},
+      {"id": "monkey-patching", "capability": "dom.privileged", "expected": "deny-or-isolated"},
+      {"id": "process-spawn", "capability": "process.spawn", "expected": "deny"},
+      {"id": "key-access", "capability": "credentials.read", "expected": "deny"},
+      {"id": "resource-exhaustion", "capability": "resource.unbounded", "expected": "bounded-or-deny"},
+      {"id": "supply-chain", "capability": "artifact.mutation", "expected": "immutable-pin"}
+    ]
+  }
 }
