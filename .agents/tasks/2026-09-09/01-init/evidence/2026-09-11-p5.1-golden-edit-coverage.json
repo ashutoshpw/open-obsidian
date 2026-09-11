@@ -1,6 +1,6 @@
 {
   "evidence_version": 1,
-  "recorded_at": "2026-09-11T16:58:30Z",
+  "recorded_at": "2026-09-11T17:04:30Z",
   "checkpoint": "P5.1",
   "requirements": ["Q-002", "Q-003"],
   "fixture_ids": ["fixture:q-edit-fidelity", "fixture:q-extension-matrix"],
@@ -9,8 +9,8 @@
     "architecture": "x64",
     "bun_version": "1.4.2",
     "branch": "main",
-    "implementation_commit_before_reconciliation": "1d681e341868a6d120cb2130fbc7998712c18d43",
-    "tested_source_tree": "a9a13c97a3a2433da4be092a05cf682837cf9d03dba2bb66b86edc47901adc11",
+    "implementation_commit_before_reconciliation": "c7534d060a63edba81ed561bd7e5ffe27e09902d2",
+    "tested_source_tree": "50dffb988329dbecc68c9106769c744496cab186cf248b9b7b45352e596b3f6d",
     "source_tree_paths": 219,
     "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
     "selected_vault": "/home/ashutosh/Obsidian",
@@ -43,11 +43,21 @@
     {"command": "bun run audit:golden-edit-fidelity", "exit_code": 0, "result": "Two exact Markdown/Canvas approved edits passed, preserved unrelated/unknown fields and reopened locally with byte-identical output; reference Obsidian reopen stayed external-pending."},
     {"command": "bun run audit:compatibility-coverage", "exit_code": 0, "result": "All 81 target/platform cells were enumerated, including 75 mandatory cells; all pending runtime cells were explicitly classified as untested and counts remained separate."},
     {"command": "bun test tests/compatibility-coverage.test.ts", "exit_code": 0, "result": "The focused compatibility coverage test passed with one test and nine expectations."},
+    {"command": "bun run audit:electron-vault", "exit_code": 0, "result": "The disposable Linux Electron broker/renderer audit passed all 14 checks after hardening Windows process-tree termination and transient temporary-directory cleanup."},
     {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
     {"command": "bun run check:fast", "exit_code": 0, "result": "The routine state, contract, audit, typecheck, test, Knip and changed-file checks passed; the honest audit remains active with 125 implemented rows and 161 mandatory rows not release-passing."},
     {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow passed with no dead-code, complexity or duplication findings."},
-    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest a9a13c97a3a2433da4be092a05cf682837cf9d03dba2bb66b86edc47901adc11 across 219 included paths."}
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 50dffb988329dbecc68c9106769c744496cab186cf248b9b7b45352e596b3f6d across 219 included paths."}
   ],
+  "hosted_reconciliation": {
+    "desktop_build_run": 34625329060,
+    "desktop_build_conclusion": "success",
+    "desktop_build_platforms": ["Ubuntu", "macOS", "Windows"],
+    "quality_run": 34625328995,
+    "quality_conclusion": "failure",
+    "quality_failure": "Windows audit:electron-vault cleanup failed with EBUSY while removing a temporary Electron user-data directory; Linux and macOS quality jobs passed their Electron step.",
+    "repair": "Pending a fresh quality run after Windows process-tree termination and retry cleanup hardening."
+  },
   "limitations": [
     "A pinned reference Obsidian runtime and consented vault were unavailable, so reference reopen and reference-vault portability remain external-pending.",
     "Plugin unchanged-artifact lifecycle, settings, views, combinations, restart/update/uninstall, return-to-Obsidian and OS enforcement remain runtime-pending for all 81 cells; untested is not passing or unsupported-security.",

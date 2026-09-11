@@ -122,8 +122,26 @@ async function startXvfb(): Promise<{display: string; process: Child | null}> {
 
 async function stopProcess(child: Child | null): Promise<void> {
   if (!child) return;
-  child.kill();
+  if (platform() === "win32" && child.pid) {
+    Bun.spawnSync(["taskkill", "/PID", String(child.pid), "/T", "/F"], {stdout: "ignore", stderr: "ignore"});
+  } else {
+    child.kill();
+  }
   await Promise.race([child.exited, Bun.sleep(3_000)]);
+}
+
+async function removeTemporaryDirectory(path: string): Promise<void> {
+  const attempts = platform() === "win32" ? 12 : 1;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      rmSync(path, {recursive: true, force: true});
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (platform() !== "win32" || !["EBUSY", "ENOTEMPTY", "EPERM"].includes(code ?? "") || attempt === attempts - 1) throw error;
+      await Bun.sleep(250);
+    }
+  }
 }
 
 class CdpClient {
@@ -437,10 +455,10 @@ export async function runElectronVaultAudit(): Promise<ElectronVaultAuditReport>
     return buildElectronReport(fixtureData, displayRuntime.display, first, second, ui);
   } finally {
     await stopProcess(displayRuntime.process);
-    rmSync(fixtureData.vaultRoot, {recursive: true, force: true});
-    rmSync(fixtureData.userData, {recursive: true, force: true});
-    rmSync(uiFixture.vaultRoot, {recursive: true, force: true});
-    rmSync(uiFixture.userData, {recursive: true, force: true});
+    await removeTemporaryDirectory(fixtureData.vaultRoot);
+    await removeTemporaryDirectory(fixtureData.userData);
+    await removeTemporaryDirectory(uiFixture.vaultRoot);
+    await removeTemporaryDirectory(uiFixture.userData);
   }
 }
 
