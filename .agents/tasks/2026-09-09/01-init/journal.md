@@ -896,3 +896,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-comparison-scorecard.json`, source tree `fbd5dd6eace956ed62989d26ec2ef8c5bd676adf7cb580961cb521943c21a830` across 214 included paths. PROD-002 and BASE-003 now have implementation evidence but remain non-passing until reference runtimes, consented vaults, provider conditions and human runs are available.
 - Validation: comparison audit, focused tests, typecheck, full `check:fast` (166 tests, 893 expectations) and strict Fallow passed; no stock/plugin runtime, provider, human or selected `/home/ashutosh/Obsidian` vault was accessed.
 - Next: run the full local quality gate, commit/push this P5.1 work, reconcile hosted CI, then continue the earliest available vault/plugin/accessibility implementation work without claiming comparison superiority.
+
+## 2026-09-11T16:40:33Z — P5.1 comparison protocol CI reconciliation
+
+- Reconciled implementation commit `8822a13433d6a735411f28b55b1b7466a24e64f1` on `main` at head `ea1f12f6570e7e4cb7d1f195ca811e9459c2adc8`; the tested source tree remains `fbd5dd6eace956ed62989d26ec2ef8c5bd676adf7cb580961cb521943c21a830` across 214 included paths.
+- Quality run `34623187396` passed on Ubuntu, macOS and Windows (jobs `103341868383`, `103341868639`, `103341868623`). Desktop-build run `34623187399` passed on Ubuntu, macOS and Windows (jobs `103341868136`, `103341868311`, `103341868344`); production signing remained skipped because credentials were unavailable.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-comparison-scorecard-ci.json` and retained the explicit boundary: hosted matrices validate repository/packaging behavior, while all 108 comparison measurements remain `external-pending` and `defined_not_run` with no superiority claim.
+- The selected `/home/ashutosh/Obsidian` vault was not accessed or modified. Next: continue only with available local work; reference/plugin runtime, consented vault, provider, human, accessibility, pinned hardware, long-running resource and signed-release handoffs remain pending.

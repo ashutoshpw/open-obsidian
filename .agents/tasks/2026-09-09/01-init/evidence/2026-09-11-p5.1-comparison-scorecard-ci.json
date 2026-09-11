@@ -1,0 +1,46 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T16:40:33Z",
+  "checkpoint": "P5.1",
+  "requirements": ["PROD-002", "BASE-003"],
+  "fixture_id": "fixture:comparison-scorecard",
+  "environment": {
+    "branch": "main",
+    "implementation_commit": "8822a13433d6a735411f28b55b1b7466a24e64f1",
+    "reconciled_head": "ea1f12f6570e7e4cb7d1f195ca811e9459c2adc8",
+    "tested_source_tree": "fbd5dd6eace956ed62989d26ec2ef8c5bd676adf7cb580961cb521943c21a830",
+    "source_tree_paths": 214,
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "quality": {
+    "run_id": 34623187396,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34623187396",
+    "conclusion": "success",
+    "jobs": [
+      {"name": "ubuntu-latest", "job_id": 103341868383, "conclusion": "success"},
+      {"name": "macos-latest", "job_id": 103341868639, "conclusion": "success"},
+      {"name": "windows-latest", "job_id": 103341868623, "conclusion": "success"}
+    ],
+    "checks": "Progress, contracts, architecture, version baseline, differential fixture, host round trip, workflows, distribution, update/rollback, accessibility, typecheck, tests, quality scorecard, Electron compile, Electron vault round trip, synthetic plugin lifecycle, Knip and Fallow health all passed on each matrix job.",
+    "changed_code_review": "Skipped by the push-triggered workflow; local strict Fallow audit passed before commit."
+  },
+  "desktop_build": {
+    "run_id": 34623187399,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34623187399",
+    "conclusion": "success",
+    "jobs": [
+      {"name": "ubuntu-latest", "job_id": 103341868136, "conclusion": "success"},
+      {"name": "macos-latest", "job_id": 103341868311, "conclusion": "success"},
+      {"name": "windows-latest", "job_id": 103341868344, "conclusion": "success"}
+    ],
+    "checks": "Release gate, update/rollback manifest, unpacked desktop build, release-manifest hashes, packaged Electron notices and transitive attribution passed on each platform.",
+    "signing": "Production signing was skipped because credentials were unavailable."
+  },
+  "limitations": [
+    "Hosted matrices validate repository and packaging behavior only; they do not run stock Obsidian, plugin-equipped Obsidian, provider-backed comparison, consented vault, human, screen-reader, pinned-hardware, Linux arm64, long-running resource or signed-artifact measurements.",
+    "The 108-run comparison remains defined_not_run with 108 external-pending measurements and makes no superiority claim.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows for the counterbalanced comparison protocol; comparison measurements and release certification remain external-pending."
+}
