@@ -12,6 +12,7 @@
     "origin": "https://github.com/ashutoshpw/open-obsidian.git",
     "bun_version": "1.4.2",
     "implementation_commit": "dbf7d648154e8041bef38eef9c1f6498257a4199",
+    "ci_runs": [34564557241, 34564557207],
     "tested_source_tree": "53aff71d5b63438efe6777ec2b75ad7a322a44d3fcb66d00e8bdb097cd3f9144"
   },
   "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
@@ -20,7 +21,8 @@
     {"command": "bun test tests/vault-differential.test.ts", "exit_code": 0, "result": "Five tests and 17 expectations pass against the real VaultStore and Markdown property writer: no-op byte read, source-preserving property edit, stale-write conflict preservation and symlink boundary denial."},
     {"command": "bun run check:fast", "exit_code": 0, "result": "Routine source gate passes with 121 tests and 667 expectations; the differential validator, Knip and changed-file Fallow are included."},
     {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
-    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the ten-file differential-fixture increment."}
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the ten-file differential-fixture increment."},
+    {"command": "GitHub Actions runs 34564557241 and 34564557207", "exit_code": 0, "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows; the differential contract ran in quality and packaged attribution ran in desktop-build."}
   ],
   "implemented": [
     "Added fixtures/vault-differential.json with stable 1.13.7 and early-access 1.14.1 reference tracks, deterministic local expectations and explicit reference capture procedures.",

@@ -25,7 +25,7 @@
   "status": "active",
     "current_checkpoint": "P6.2",
     "next_action": "Run the explicit C14 reference-vault round trips and external release handoffs when their runtimes, fixtures, credentials and owners are available; keep production publication blocked.",
-    "recent_increment": {"checkpoint":"P1.1","commit":"dbf7d648154e8041bef38eef9c1f6498257a4199","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-differential-fixture.json","tested_source_tree":"53aff71d5b63438efe6777ec2b75ad7a322a44d3fcb66d00e8bdb097cd3f9144","ci_runs":[]},
+    "recent_increment": {"checkpoint":"P1.1","commit":"dbf7d648154e8041bef38eef9c1f6498257a4199","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-differential-fixture.json","tested_source_tree":"53aff71d5b63438efe6777ec2b75ad7a322a44d3fcb66d00e8bdb097cd3f9144","ci_runs":[34564557241,34564557207]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",
