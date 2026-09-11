@@ -2,8 +2,10 @@ import {expect, test} from "bun:test";
 import {mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {DEFAULT_RETRIEVAL_EXCLUSIONS, retrieveVault} from "../src/core/retrieval.js";
+import {DEFAULT_RETRIEVAL_EXCLUSIONS, DETERMINISTIC_EMBEDDING_MODEL, retrieveVault, retrieveVaultWithModel, type RetrievalModelInput} from "../src/core/retrieval.js";
 import {VaultStore} from "../src/core/vault.js";
+
+const retrievalModelFixture = JSON.parse(readFileSync(new URL("../fixtures/retrieval-model.json", import.meta.url), "utf8")) as {schema_version: number; embedding: {id: string; dimensions: number}; fallback: {provider: string; silent_cloud_dispatch: boolean; cross_vault_context: boolean}};
 
 class CountingVaultStore extends VaultStore {
   readonly reads: string[] = [];
@@ -126,5 +128,91 @@ test("grounding marks conflicting evidence and treats prompt injection as untrus
     rmSync(otherRoot, {recursive: true, force: true});
     rmSync(appData, {recursive: true, force: true});
     rmSync(otherAppData, {recursive: true, force: true});
+  }
+});
+
+test("retrieval accepts a provider-neutral embedding model without widening the source boundary", () => {
+  const root = mkdtempSync(join(tmpdir(), "openobsidian-embedding-vault-"));
+  const appData = mkdtempSync(join(tmpdir(), "openobsidian-embedding-app-"));
+  try {
+    writeFileSync(join(root, "alpha.md"), "Alpha semantic anchor.\n");
+    writeFileSync(join(root, "beta.md"), "Beta semantic anchor.\n");
+    const calls: string[] = [];
+    const embedding = {
+      id: "fixture-embedding-v1",
+      dimensions: 2,
+      embed(text: string): readonly number[] {
+        calls.push(text);
+        return text.toLocaleLowerCase().includes("alpha") ? [1, 0] : [0, 1];
+      },
+    };
+    const result = retrieveVault(new VaultStore(root, appData), {query: "alpha", scope: {paths: ["alpha.md"]}}, {embeddingModel: embedding});
+    expect(retrievalModelFixture.schema_version).toBe(1);
+    expect(retrievalModelFixture.embedding).toMatchObject({id: "deterministic-hash-v1", dimensions: 64});
+    expect(DETERMINISTIC_EMBEDDING_MODEL.id).toBe(retrievalModelFixture.embedding.id);
+    expect(result.embeddingModel).toBe("fixture-embedding-v1");
+    expect(result.provider).toBe("none");
+    expect(result.passages.map((passage) => passage.relativePath)).toEqual(["alpha.md"]);
+    expect(calls.length).toBeGreaterThan(0);
+    expect(result.safety).toMatchObject({excludedContentDisclosed: false, vaultBoundary: "selected-vault-only"});
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+    rmSync(appData, {recursive: true, force: true});
+  }
+});
+
+test("model adjudication receives only approved citations and preserves their revisions", async () => {
+  const root = mkdtempSync(join(tmpdir(), "openobsidian-adjudication-vault-"));
+  const appData = mkdtempSync(join(tmpdir(), "openobsidian-adjudication-app-"));
+  try {
+    writeFileSync(join(root, "policy.md"), "# Retention\nThe retention period is 30 days.\n");
+    writeFileSync(join(root, "private.md"), "# Retention\nThe excluded private value is 999 days.\n");
+    let seen: RetrievalModelInput | undefined;
+    const model = {
+      provider: "openai-compatible" as const,
+      model: "fixture-adjudicator-v1",
+      async adjudicate(input: RetrievalModelInput) {
+        seen = input;
+        return {answer: "The approved retention period is 30 days.", citationIds: [input.citations[0]!.id], warnings: ["Fixture model output was reviewed."]};
+      },
+    };
+    const result = await retrieveVaultWithModel(new VaultStore(root, appData), {query: "retention", scope: {excludedPaths: ["private.md"]}}, model);
+    expect(seen?.citations.map((citation) => citation.relativePath)).toEqual(["policy.md"]);
+    expect(seen?.safety.sourceDataUntrusted).toBe(true);
+    expect(result.adjudication).toBe("model");
+    expect(result.provider).toBe("openai-compatible");
+    expect(result.model).toBe("fixture-adjudicator-v1");
+    expect(result.answer.answer).toContain("30 days");
+    expect(result.answer.inference).toContain("openai-compatible");
+    expect(result.answer.citations[0]?.revision).toBe(new VaultStore(root, appData).read("policy.md").revision);
+    expect(result.answer.warnings).toContain("Fixture model output was reviewed.");
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+    rmSync(appData, {recursive: true, force: true});
+  }
+});
+
+test("invalid model citations become an explicit local fallback without provider chaining", async () => {
+  const root = mkdtempSync(join(tmpdir(), "openobsidian-adjudication-fallback-vault-"));
+  const appData = mkdtempSync(join(tmpdir(), "openobsidian-adjudication-fallback-app-"));
+  try {
+    writeFileSync(join(root, "policy.md"), "The retention period is 30 days.\n");
+    const result = await retrieveVaultWithModel(new VaultStore(root, appData), {query: "retention"}, {
+      provider: "openai-compatible",
+      model: "fixture-invalid-v1",
+      async adjudicate() {
+        return {answer: "Unsupported claim", citationIds: ["not-an-approved-citation"]};
+      },
+    });
+    expect(retrievalModelFixture.fallback).toEqual({provider: "none", silent_cloud_dispatch: false, cross_vault_context: false});
+    expect(result.adjudication).toBe("fallback");
+    expect(result.provider).toBe("none");
+    expect(result.model).toBeNull();
+    expect(result.answer.inference).toContain("No model inference was completed");
+    expect(result.answer.warnings.join(" ")).toContain("source-only answer was retained");
+    expect(result.answer.citations[0]?.relativePath).toBe("policy.md");
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+    rmSync(appData, {recursive: true, force: true});
   }
 });

@@ -21,7 +21,8 @@
     "vault files remain outside Electron user-data storage",
     "a --vault/--open launch intent hydrates the visible editor",
     "keyboard save persists Unicode input through the revision-aware broker",
-    "source and live-preview mode controls switch without changing source bytes"
+    "source and live-preview mode controls switch without changing source bytes",
+    "visible grounded retrieval reports the deterministic embedding and explicit no-provider boundary"
   ],
   "external_pending": [
     "reference Obsidian reopen and back-to-back portability",

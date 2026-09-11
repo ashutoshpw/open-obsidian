@@ -4,12 +4,74 @@ import {join} from "node:path";
 import {parseMarkdown, type MarkdownProperty} from "./markdown.js";
 import {normalizeScopePath, scopePathMatches} from "./path-scope.js";
 import {snapshotVault, VaultStore, type VaultEntry} from "./vault.js";
-import type {GroundedAnswer, RetrievalCitation, RetrievalProgress, RetrievalRequest, RetrievalResponse, RetrievalSafety, RetrievalScope} from "../shared/api.js";
+import type {GroundedAnswer, ProviderId, RetrievalCitation, RetrievalProgress, RetrievalRequest, RetrievalResponse, RetrievalSafety, RetrievalScope} from "../shared/api.js";
 
 export const DEFAULT_RETRIEVAL_EXCLUSIONS = [".obsidian", ".git", ".trash"] as const;
 
 const vectorSize = 64;
 const stopWords = new Set(["a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "how", "in", "is", "it", "of", "on", "or", "that", "the", "this", "to", "was", "what", "when", "where", "which", "who", "with"]);
+
+/**
+ * A synchronous, provider-neutral embedding seam used by the local index.
+ * Provider-backed embedding adapters can implement this contract after their
+ * async lifecycle has materialized a verified vector; retrieval itself never
+ * needs to know which provider produced the vector.
+ */
+export type RetrievalEmbeddingModel = {
+  readonly id: string;
+  readonly dimensions: number;
+  embed: (text: string) => readonly number[];
+};
+
+export type RetrievalModelInput = {
+  readonly query: string;
+  readonly scope: RetrievalScope;
+  readonly citations: readonly RetrievalCitation[];
+  readonly safety: RetrievalSafety;
+};
+
+export type RetrievalModelOutput = {
+  readonly answer: string;
+  readonly citationIds: readonly string[];
+  readonly conflicts?: readonly string[];
+  readonly warnings?: readonly string[];
+};
+
+/**
+ * Provider-neutral answer adjudication. The broker supplies only approved
+ * citations and validates the returned citation IDs before exposing a model
+ * answer to the renderer.
+ */
+export type RetrievalModel = {
+  readonly provider: ProviderId;
+  readonly model: string;
+  readonly adjudicate: (input: RetrievalModelInput, signal?: AbortSignal) => Promise<RetrievalModelOutput>;
+};
+
+export type RetrievalOptions = {embeddingModel?: RetrievalEmbeddingModel};
+export type RetrievalRunOptions = RetrievalOptions & {signal?: AbortSignal};
+export type ProgressListener = (progress: RetrievalProgress) => void;
+
+export const DETERMINISTIC_EMBEDDING_MODEL: RetrievalEmbeddingModel = Object.freeze({
+  id: "deterministic-hash-v1",
+  dimensions: vectorSize,
+  embed: (text: string): readonly number[] => {
+    const result = Array.from({length: vectorSize}, () => 0);
+    tokens(text).forEach((token) => {
+      const hash = hashToken(token);
+      result[hash % vectorSize]! += 1;
+      result[(hash >>> 8) % vectorSize]! += 0.5;
+    });
+    return result;
+  },
+});
+
+class RetrievalModelError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RetrievalModelError";
+  }
+}
 
 type Passage = {
   relativePath: string;
@@ -21,7 +83,6 @@ type Passage = {
 };
 
 type ScoredPassage = {passage: Passage; keywordScore: number; semanticScore: number; score: number};
-type ProgressListener = (progress: RetrievalProgress) => void;
 type RetrievalIndexEntry = {relativePath: string; revision: string; modifiedAt: string; tags: string[]; passages: Passage[]};
 type RetrievalIndex = {schema_version: 1; vaultRoot: string; sourceSnapshot: string; entries: RetrievalIndexEntry[]};
 
@@ -124,16 +185,6 @@ function hashToken(value: string): number {
   return hash >>> 0;
 }
 
-function vector(value: string[]): number[] {
-  const result = Array.from({length: vectorSize}, () => 0);
-  value.forEach((token) => {
-    const hash = hashToken(token);
-    result[hash % vectorSize]! += 1;
-    result[(hash >>> 8) % vectorSize]! += 0.5;
-  });
-  return result;
-}
-
 function cosine(left: number[], right: number[]): number {
   const dot = left.reduce((total, value, index) => total + value * right[index]!, 0);
   const leftMagnitude = Math.sqrt(left.reduce((total, value) => total + value * value, 0));
@@ -154,13 +205,19 @@ function occurrenceCount(text: string, query: string): number {
   return count;
 }
 
-function scorePassage(query: string, passage: Passage): ScoredPassage {
+function embeddingVector(model: RetrievalEmbeddingModel, text: string): number[] {
+  if (!model.id.trim() || !Number.isSafeInteger(model.dimensions) || model.dimensions <= 0) throw new RetrievalModelError("Embedding model metadata is invalid");
+  const values = [...model.embed(text)];
+  if (values.length !== model.dimensions || values.some((value) => !Number.isFinite(value))) throw new RetrievalModelError(`Embedding model ${model.id} returned an invalid vector`);
+  return values;
+}
+
+function scorePassage(query: string, passage: Passage, embeddingModel: RetrievalEmbeddingModel, queryVector?: number[]): ScoredPassage {
   const queryTokens = tokens(query);
-  const passageTokens = tokens(passage.text);
   const normalizedQuery = query.toLocaleLowerCase();
   const normalizedText = passage.text.toLocaleLowerCase();
   const keywordScore = queryTokens.reduce((total, token) => total + occurrenceCount(normalizedText, token), 0) + (normalizedText.includes(normalizedQuery) ? queryTokens.length : 0);
-  const semanticScore = cosine(vector(queryTokens), vector(passageTokens));
+  const semanticScore = cosine(queryVector ?? embeddingVector(embeddingModel, query), embeddingVector(embeddingModel, passage.text));
   return {passage, keywordScore, semanticScore, score: keywordScore + semanticScore};
 }
 
@@ -327,11 +384,12 @@ function indexCandidate(store: VaultStore, entry: VaultEntry, entries: Map<strin
   return {current, scopedOut: Boolean(current && !inScope(path, scope, current.tags, current.modifiedAt))};
 }
 
-function scopedPassages(entries: Map<string, RetrievalIndexEntry>, scope: RetrievalScope, query: string): ScoredPassage[] {
-  return [...entries.values()].filter((entry) => inScope(entry.relativePath, scope, entry.tags, entry.modifiedAt)).flatMap((entry) => entry.passages.map((passage) => scorePassage(query, passage)));
+function scopedPassages(entries: Map<string, RetrievalIndexEntry>, scope: RetrievalScope, query: string, embeddingModel: RetrievalEmbeddingModel): ScoredPassage[] {
+  const queryVector = embeddingVector(embeddingModel, query);
+  return [...entries.values()].filter((entry) => inScope(entry.relativePath, scope, entry.tags, entry.modifiedAt)).flatMap((entry) => entry.passages.map((passage) => scorePassage(query, passage, embeddingModel, queryVector)));
 }
 
-function indexCandidates(store: VaultStore, candidates: VaultEntry[], snapshotRevision: string, scope: RetrievalScope, exclusions: string[], query: string, excludedFiles: string[], listener?: ProgressListener): {index: RetrievalIndex; passages: ScoredPassage[]; scopedOutFiles: string[]; processed: number} {
+function indexCandidates(store: VaultStore, candidates: VaultEntry[], snapshotRevision: string, scope: RetrievalScope, exclusions: string[], query: string, excludedFiles: string[], embeddingModel: RetrievalEmbeddingModel, listener?: ProgressListener): {index: RetrievalIndex; passages: ScoredPassage[]; scopedOutFiles: string[]; processed: number} {
   const previous = loadRetrievalIndex(store);
   const entries = new Map(previous?.entries.map((entry) => [entry.relativePath, entry]) ?? []);
   const candidatePaths = new Set(candidates.map((entry) => entry.relativePath));
@@ -347,17 +405,25 @@ function indexCandidates(store: VaultStore, candidates: VaultEntry[], snapshotRe
   }
   const index = {schema_version: 1 as const, vaultRoot: store.root, sourceSnapshot: snapshotRevision, entries: [...entries.values()].filter((entry) => candidatePaths.has(entry.relativePath)).sort((left, right) => left.relativePath.localeCompare(right.relativePath))};
   saveRetrievalIndex(store, index);
-  return {index, passages: scopedPassages(entries, scope, query), scopedOutFiles, processed};
+  return {index, passages: scopedPassages(entries, scope, query, embeddingModel), scopedOutFiles, processed};
 }
 
-export function retrieveVault(store: VaultStore, request: RetrievalRequest, listener?: ProgressListener): RetrievalResponse {
+function retrievalArguments(listenerOrOptions: ProgressListener | RetrievalOptions | undefined, options: RetrievalOptions | undefined): {listener?: ProgressListener; options: RetrievalOptions} {
+  if (typeof listenerOrOptions === "function") return {listener: listenerOrOptions, options: options ?? {}};
+  return {listener: undefined, options: listenerOrOptions ?? {}};
+}
+
+export function retrieveVault(store: VaultStore, request: RetrievalRequest, listenerOrOptions?: ProgressListener | RetrievalOptions, options?: RetrievalOptions): RetrievalResponse {
+  const argumentsValue = retrievalArguments(listenerOrOptions, options);
+  const listener = argumentsValue.listener;
+  const embeddingModel = argumentsValue.options.embeddingModel ?? DETERMINISTIC_EMBEDDING_MODEL;
   const scope = retrievalScope(request.scope);
   const exclusions = [...DEFAULT_RETRIEVAL_EXCLUSIONS, ...(scope.excludedPaths ?? [])];
   const snapshot = snapshotVault(store.root);
   const candidates = candidateFiles(snapshot.entries);
   const explicitlyExcluded = snapshot.entries.filter((entry) => excludedPath(entry.relativePath, exclusions)).map((entry) => entry.relativePath).sort();
   report(listener, candidateProgress(0, candidates.length, 0, explicitlyExcluded.length));
-  const indexed = indexCandidates(store, candidates, snapshot.sha256, scope, exclusions, request.query, explicitlyExcluded, listener);
+  const indexed = indexCandidates(store, candidates, snapshot.sha256, scope, exclusions, request.query, explicitlyExcluded, embeddingModel, listener);
   const {passages, scopedOutFiles, processed} = indexed;
   // A semantic feature collision must never turn into grounded evidence by itself. Exact term overlap is the local safety anchor; the deterministic vector score only reranks anchored passages.
   const ranked = passages.filter((result) => result.keywordScore > 0).sort((left, right) => right.score - left.score || left.passage.relativePath.localeCompare(right.passage.relativePath) || left.passage.lineStart - right.passage.lineStart).slice(0, request.limit ?? 10);
@@ -368,6 +434,9 @@ export function retrieveVault(store: VaultStore, request: RetrievalRequest, list
     query: request.query,
     mode: "local-hybrid",
     scope,
+    model: null,
+    adjudication: "local",
+    embeddingModel: embeddingModel.id,
     passages: ranked.map((result, index) => ({...citations[index]!, score: result.score, keywordScore: result.keywordScore, semanticScore: result.semanticScore})),
     answer: groundedAnswer(request.query, citations),
     safety: answerSafety(citations),
@@ -377,4 +446,81 @@ export function retrieveVault(store: VaultStore, request: RetrievalRequest, list
     progress,
     provider: "none",
   };
+}
+
+function boundedModelStrings(values: readonly string[] | undefined, label: string): string[] {
+  if (values === undefined) return [];
+  if (!Array.isArray(values) || values.length > 32 || values.some((value) => typeof value !== "string" || value.trim().length === 0 || value.length > 2_000)) throw new RetrievalModelError(`Model returned invalid ${label}`);
+  return [...new Set(values.map((value) => value.trim()))];
+}
+
+function approvedModelCitations(local: RetrievalResponse, citationIds: readonly string[]): RetrievalCitation[] {
+  if (!Array.isArray(citationIds) || citationIds.length > 32 || citationIds.some((id) => typeof id !== "string" || id.length === 0)) throw new RetrievalModelError("Model returned invalid citation IDs");
+  const citationsById = new Map(local.answer.citations.map((citation) => [citation.id, citation]));
+  const uniqueIds = [...new Set(citationIds)];
+  if (uniqueIds.length !== citationIds.length || uniqueIds.some((id) => !citationsById.has(id))) throw new RetrievalModelError("Model returned a citation outside the approved source set");
+  return uniqueIds.map((id) => citationsById.get(id)!);
+}
+
+function modelAnswerStatus(citations: readonly RetrievalCitation[], conflicts: readonly string[]): GroundedAnswer["status"] {
+  if (citations.length === 0) return "missing-evidence";
+  if (conflicts.length > 0) return "conflicting-evidence";
+  return "grounded";
+}
+
+function modelAnswer(local: RetrievalResponse, model: RetrievalModel, output: RetrievalModelOutput): RetrievalResponse {
+  if (typeof output.answer !== "string" || output.answer.trim().length === 0 || output.answer.length > 20_000) throw new RetrievalModelError("Model returned an empty or oversized answer");
+  const citations = approvedModelCitations(local, output.citationIds);
+  const conflicts = boundedModelStrings(output.conflicts, "conflicts");
+  const modelWarnings = boundedModelStrings(output.warnings, "warnings");
+  const missingCitationWarning = citations.length === 0 ? ["The model returned no approved citation; this answer is marked as missing evidence."] : [];
+  const warnings = [...new Set([...local.answer.warnings, ...modelWarnings, ...missingCitationWarning])];
+  return {
+    ...local,
+    provider: model.provider,
+    model: model.model,
+    adjudication: "model",
+    answer: {
+      status: modelAnswerStatus(citations, conflicts),
+      answer: output.answer.trim(),
+      inference: `Model inference ran via ${model.provider} (${model.model}). Approved citations remain source revisions; review them before relying on the answer.`,
+      conflicts,
+      warnings,
+      citations,
+    },
+  };
+}
+
+function localFallback(local: RetrievalResponse, error: unknown): RetrievalResponse {
+  const reason = error instanceof RetrievalModelError ? error.message : "the model request was unavailable";
+  const warning = `Model adjudication unavailable (${reason}); the source-only answer was retained and no provider fallback was attempted.`;
+  return {
+    ...local,
+    provider: "none",
+    model: null,
+    adjudication: "fallback",
+    answer: {
+      ...local.answer,
+      warnings: [...new Set([...local.answer.warnings, warning])],
+      inference: "No model inference was completed. This local answer contains source excerpts only; inspect a citation before relying on it.",
+    },
+  };
+}
+
+/**
+ * Run local retrieval first, then optionally ask an injected model to
+ * adjudicate only the approved citations. Invalid, unavailable or cancelled
+ * model runs are explicit source-only fallbacks; they never dispatch another
+ * provider or widen the selected vault scope.
+ */
+export async function retrieveVaultWithModel(store: VaultStore, request: RetrievalRequest, model: RetrievalModel | null | undefined, listenerOrOptions?: ProgressListener | RetrievalRunOptions, options?: RetrievalRunOptions): Promise<RetrievalResponse> {
+  const retrieval = retrieveVault(store, request, listenerOrOptions, options);
+  if (!model || retrieval.answer.citations.length === 0) return retrieval;
+  try {
+    if (options?.signal?.aborted) throw new RetrievalModelError("model adjudication was cancelled before dispatch");
+    const output = await model.adjudicate({query: request.query, scope: retrieval.scope, citations: retrieval.answer.citations, safety: retrieval.safety}, options?.signal);
+    return modelAnswer(retrieval, model, output);
+  } catch (error) {
+    return localFallback(retrieval, error);
+  }
 }

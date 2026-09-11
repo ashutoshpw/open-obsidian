@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {DEFAULT_PROVIDER_SETTINGS, type ProviderMode, type ProviderSettings} from "../src/shared/api.js";
 import {MemoryCredentialStore} from "../src/core/credentials.js";
-import {describeProvider, ProviderError, ProviderUsageLedger, providerInput, runProviderRequest, type ProviderTransportRequest} from "../src/core/providers.js";
+import {createProviderRetrievalModel, describeProvider, ProviderError, ProviderUsageLedger, providerInput, runProviderRequest, type ProviderTransportRequest} from "../src/core/providers.js";
 import {createLocalModelManifest, derivativeDeletionPlan, exportPortableConversation, inspectLocalModel, modelChangeRequiresReindex} from "../src/core/model-lifecycle.js";
 
 const providerFixture = JSON.parse(readFileSync(new URL("../fixtures/provider-modes.json", import.meta.url), "utf8")) as {schema_version: number; modes: Array<{id: string; fallback: string}>};
@@ -76,6 +76,32 @@ test("provider timeout, cancellation, quota and error redaction are explicit", a
   }
   expect(failure?.code).toBe("transport");
   expect(failure?.message).not.toContain("secret-token");
+});
+
+test("provider retrieval adapter sends only selected untrusted citations and requires structured output", async () => {
+  const credentials = new MemoryCredentialStore();
+  credentials.write("byok-credential", "test-secret");
+  const citationId = "citation-1";
+  let seen: ProviderTransportRequest | undefined;
+  const model = createProviderRetrievalModel({...settings("byok"), caps: {...caps, maxInputTokens: 1_000}}, {
+    credentials,
+    online: true,
+    transport: async (request) => {
+      seen = request;
+      return {text: JSON.stringify({answer: "Approved answer", citationIds: [citationId], conflicts: [], warnings: []}), outputTokens: 4};
+    },
+  });
+  const result = await model.adjudicate({
+    query: "retention",
+    scope: {folders: ["Projects"], excludedPaths: ["Projects/private.md"]},
+    citations: [{id: citationId, kind: "source", relativePath: "Projects/policy.md", revision: "revision-1", heading: "Retention", lineStart: 1, lineEnd: 2, snippet: "The retention period is 30 days."}],
+    safety: {sourceDataUntrusted: true, promptInjectionDetected: false, excludedContentDisclosed: false, vaultBoundary: "selected-vault-only"},
+  });
+  expect(result).toMatchObject({answer: "Approved answer", citationIds: [citationId]});
+  expect(seen?.credential).toBe("test-secret");
+  expect(seen?.prompt).toContain("sourceDataUntrusted");
+  expect(seen?.prompt).toContain(citationId);
+  expect(seen?.prompt).not.toContain("Projects/private.md");
 });
 
 test("model lifecycle verifies bytes, detects stale versions and exports portable history", () => {

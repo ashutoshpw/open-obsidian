@@ -48,6 +48,7 @@ export type ElectronVaultAuditReport = {
     renderer_keyboard_save: boolean;
     renderer_unicode_input: boolean;
     renderer_mode_switch: boolean;
+    renderer_local_retrieval_boundary: boolean;
   };
   details: JsonRecord;
   limitations: string[];
@@ -386,8 +387,10 @@ type ElectronUiTrace = {
   keyboardSave: boolean;
   unicodeInput: boolean;
   modeSwitch: boolean;
+  localRetrievalBoundary: boolean;
   initial: JsonRecord;
   savedStatus: string;
+  retrievalMeta: string;
   theme: ElectronThemeTrace;
 };
 
@@ -478,6 +481,16 @@ async function runUiProcess(fixtureData: ElectronUiFixture, display: string): Pr
       source.click();
       return previewVisible && document.querySelector('#note-editor')?.hidden === false;
     })()`);
+    await runtime.client.evaluate(`(() => {
+      const open = document.querySelector('#open-retrieval');
+      const query = document.querySelector('#retrieval-query');
+      const form = document.querySelector('#retrieval-form');
+      if (!(open instanceof HTMLButtonElement) || !(query instanceof HTMLInputElement) || !(form instanceof HTMLFormElement)) throw new Error('Visible retrieval controls are unavailable');
+      open.click();
+      query.value = 'Original';
+      form.dispatchEvent(new SubmitEvent('submit', {bubbles: true, cancelable: true}));
+    })()`);
+    const retrievalMeta = await waitForRenderer<string>(runtime.client, "document.querySelector('#retrieval-meta')?.textContent ?? ''", (value) => value.includes('provider destination: none') && value.includes('embedding: deterministic-hash-v1') && value.includes('local source-only answer'), "local retrieval boundary");
     const theme = await runThemeTrace(runtime, fixtureData.vaultRoot);
     requireCondition(Object.entries(theme).filter(([key]) => key !== "details").every(([, value]) => value === true), `Electron theme trace failed: ${JSON.stringify(theme)}`);
     return {
@@ -485,8 +498,10 @@ async function runUiProcess(fixtureData: ElectronUiFixture, display: string): Pr
       keyboardSave: savedStatus.startsWith("Saved Note.md"),
       unicodeInput: state.value === new TextDecoder().decode(fixtureData.editedNote),
       modeSwitch,
+      localRetrievalBoundary: retrievalMeta.includes("provider destination: none") && retrievalMeta.includes("embedding: deterministic-hash-v1") && retrievalMeta.includes("local source-only answer"),
       initial,
       savedStatus,
+      retrievalMeta,
       theme,
     };
   } finally {
@@ -530,6 +545,7 @@ function buildElectronReport(fixtureData: ElectronFixture, display: string, firs
     renderer_keyboard_save: ui.keyboardSave,
     renderer_unicode_input: ui.unicodeInput,
     renderer_mode_switch: ui.modeSwitch,
+    renderer_local_retrieval_boundary: ui.localRetrievalBoundary,
     renderer_theme_dark_preview: ui.theme.mainDarkPreview,
     renderer_theme_light_preview: ui.theme.mainLightPreview,
     renderer_theme_screenshots: ui.theme.mainScreenshot,

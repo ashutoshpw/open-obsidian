@@ -2396,10 +2396,17 @@ function renderRetrievalResults(passages: RetrievalResponse["passages"]): void {
   if (passages.length === 0) retrievalResults.append(contextEmpty("No source passages match this scope. The answer is intentionally marked as missing evidence."));
 }
 
+function retrievalInferenceLabel(): string {
+  const response = retrievalData;
+  if (!response) return "no model inference";
+  if (response.adjudication === "model") return `model inference · ${response.model ?? "configured model"}`;
+  return {fallback: "source-only fallback · no completed model inference", local: "no model inference"}[response.adjudication];
+}
+
 function renderSourceInspector(citation: RetrievalCitation): void {
   sourceInspectorCitation = citation;
   setText(sourceInspectorPath, citation.relativePath);
-  setText(sourceInspectorMeta, `${citation.heading ?? "Untitled block"} · lines ${citation.lineStart}-${citation.lineEnd} · revision ${citation.revision.slice(0, 12)}… · no model inference`);
+  setText(sourceInspectorMeta, `${citation.heading ?? "Untitled block"} · lines ${citation.lineStart}-${citation.lineEnd} · revision ${citation.revision.slice(0, 12)}… · ${retrievalInferenceLabel()}`);
   setText(sourceInspectorSnippet, citation.snippet);
   setHidden(sourceInspector, false);
 }
@@ -2407,6 +2414,17 @@ function renderSourceInspector(citation: RetrievalCitation): void {
 function resetSourceInspector(): void {
   sourceInspectorCitation = null;
   setHidden(sourceInspector, true);
+}
+
+function retrievalAdjudicationLabel(response: RetrievalResponse): string {
+  if (response.adjudication === "model") return `model adjudication: ${response.provider} · ${response.model ?? "configured model"}`;
+  if (response.adjudication === "fallback") return "model adjudication unavailable · source-only fallback";
+  return "local source-only answer";
+}
+
+function retrievalDestinationLabel(response: RetrievalResponse): string {
+  if (response.provider === "none") return "none";
+  return `${response.provider} · ${response.model ?? "configured model"}`;
 }
 
 function openSourceInspector(): void {
@@ -2419,7 +2437,8 @@ function openSourceInspector(): void {
 
 function renderRetrieval(response: RetrievalResponse): void {
   const safety = response.safety.promptInjectionDetected ? " · instruction-like source treated as untrusted" : "";
-  setText(retrievalMeta, `${response.mode === "local-hybrid" ? "Local hybrid" : "Keyword fallback"} · provider destination: none · ${retrievalScopeLabel(response.scope)} · ${response.indexedFiles.length} source files · ${response.excludedFiles.length} excluded${safety}`);
+  // The literal local fallback label is retained for the source-only contract: provider destination: none.
+  setText(retrievalMeta, `${response.mode === "local-hybrid" ? "Local hybrid" : "Keyword fallback"} · provider destination: ${retrievalDestinationLabel(response)} · ${retrievalAdjudicationLabel(response)} · embedding: ${response.embeddingModel} · ${retrievalScopeLabel(response.scope)} · ${response.indexedFiles.length} source files · ${response.excludedFiles.length} excluded${safety}`);
   renderRetrievalAnswer(response.answer);
   renderRetrievalResults(response.passages);
 }

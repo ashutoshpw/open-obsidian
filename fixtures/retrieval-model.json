@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "embedding": {
+    "id": "deterministic-hash-v1",
+    "dimensions": 64,
+    "role": "local semantic reranking fallback",
+    "provider_context": "provider-neutral"
+  },
+  "adjudication": {
+    "input": "query, selected scope, untrusted approved citations and safety metadata",
+    "output": "answer plus citation IDs restricted to the supplied source set",
+    "invalid_output": "retain the source-only answer and mark explicit fallback"
+  },
+  "fallback": {
+    "provider": "none",
+    "silent_cloud_dispatch": false,
+    "cross_vault_context": false
+  },
+  "external_pending": [
+    "live-provider-inference",
+    "reference-obsidian-grounding",
+    "cross-platform-visible-model-run"
+  ]
+}
