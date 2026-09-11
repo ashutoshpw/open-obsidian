@@ -1,0 +1,44 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T13:55:00Z",
+  "checkpoint": "P3.3",
+  "requirements": ["C09", "C12", "PC17", "RISK-002"],
+  "implementation_commit": "64a1253569ed095f3ca54f8db928d5c8fba034a4",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6",
+    "source_tree_paths": 205,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34606887033,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34606887033",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103287389628, "conclusion": "success"},
+      "macos-latest": {"job_id": 103287389622, "conclusion": "success"},
+      "windows-latest": {"job_id": 103287389581, "conclusion": "success"}
+    },
+    "result": "State, contract, architecture, version, differential, workflow, distribution, update/rollback, accessibility, typecheck, tests, quality-program, compile, Knip and Fallow checks passed on all three hosted runners."
+  },
+  "desktop": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34606886970,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34606886970",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103287389713, "conclusion": "success"},
+      "macos-latest": {"job_id": 103287389503, "conclusion": "success"},
+      "windows-latest": {"job_id": 103287389762, "conclusion": "success"}
+    },
+    "result": "All three packaging jobs passed release-gate, manifest, Electron runtime notice, transitive attribution and artifact-upload steps; signing remained skipped because credentials were unavailable."
+  },
+  "limitations": [
+    "These hosted matrices validate repository contracts and packaging for the pushed source tree; they do not execute the unchanged Minimal Theme Settings plugin or certify its settings, commands, lifecycle, views, persistence or D15 runtime behavior.",
+    "The Minimal stylesheet's safe-preview URL withholding, reference Obsidian comparison, human accessibility/input review, same-user OS isolation, signing, publication and release readiness remain pending; the selected /home/ashutosh/Obsidian vault was not accessed or modified.",
+    "GitHub reported Node.js 20 deprecation annotations for forced Node.js 24 execution in checkout/upload actions; all jobs still concluded successfully."
+  ],
+  "result": "The P3.3 Minimal-pair implementation commit passed the hosted quality and desktop-build matrices on Ubuntu, macOS and Windows; static paired-artifact evidence remains implementation-only and runtime/reference/release gates remain pending."
+}
