@@ -928,3 +928,17 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled implementation commit `0113dd2d616fb9da8a122a4b80283f49a59bac68` on `main`; local `main` and `origin/main` match. The tested source tree is `f97e7d171ce7e9ed578c0477ecce25191289162c779223754f8a7e383a5433f0` across 220 included paths.
 - Quality run `34626288490` passed on Ubuntu (`103352086022`), macOS (`103352085745`) and Windows (`103352086016`). Desktop-build run `34626288319` passed on Ubuntu (`103352084040`), macOS (`103352083706`) and Windows (`103352083995`). The focused golden-edit test now runs inside the hosted test suite; production signing remained skipped.
 - The earlier Windows-only `EBUSY` run `34625328995` is retained as the repair trigger; `4b7fcd1` process-tree termination/retry cleanup resolved it. No reference Obsidian, consented vault, unchanged plugin runtime, provider, human or selected `/home/ashutosh/Obsidian` vault was accessed. The goal remains active with Q-002/Q-003 implemented but not release-passing.
+
+## 2026-09-11T17:28:42Z — P3.3 Electron theme and popout renderer trace
+
+- Extended `scripts/audit-electron-vault.ts` with CDP screenshot capture and a disposable appearance fixture containing a Minimal-like theme and focus snippet. The trace now verifies safe-preview application in dark and light main-window modes, distinct screenshot hashes, and configured appearance in a tracked Markdown popout.
+- The first attempt failed because a generated CDP expression contained TypeScript-only `as` syntax; the second failed because screenshot payloads are returned at the CDP response root; the third failed because the popout correctly follows the vault's configured dark mode rather than the main-window's temporary light selection. All three issues were corrected and the final Linux Electron audit passed with 19 checks.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-theme-renderer.json`, source tree `378429a881bb678614ef5eb120ca24acf8ac5e551c205e5008f45a5931117609` across 220 paths. C12 and RISK-002 now have implementation evidence; reference Obsidian, unchanged plugin/theme DOM, screen-reader/input, macOS/Windows interaction and cross-platform regression remain pending.
+- No personal vault, reference Obsidian, provider, human reviewer or release credential was accessed. Next: run the focused/local and full quality gates, then commit and reconcile the scoped P3.3 implementation evidence.
+
+## 2026-09-11T17:40:00Z — P3.3 local gate and digest reconciliation
+
+- Recomputed `bun run audit:source-tree` after the final-audit expectation and P3.3 metadata updates; the source tree remains 220 included paths with digest `2753624028b3e208ebdcc25508f09c2143730a148c905a881cba3e332188735e`.
+- `bun run validate:state`, `bun run final:audit`, `bun run compile && bun run audit:electron-vault`, and full `bun run quality` passed. The Electron trace reports all 19 mediated vault/renderer/theme/popout checks true; quality reports 168 tests and 907 expectations, with Knip clean and report-only Fallow at health score 88.7/A.
+- Updated C12, RISK-002, P3.3 state and the renderer evidence record to the reconciled source tree. The goal remains active with 127 implemented, 34 pending, 1 unsupported-security and 6 external-pending rows; no personal or reference vault was accessed.
+- Next: commit and push the scoped P3.3 increment, inspect hosted quality and desktop-build Actions, then reconcile CI evidence and implementation SHA.

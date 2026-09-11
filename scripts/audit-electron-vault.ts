@@ -1,4 +1,5 @@
 import {createRequire} from "node:module";
+import {createHash} from "node:crypto";
 import {createServer} from "node:net";
 import {arch, platform, tmpdir} from "node:os";
 import {mkdtempSync, mkdirSync, readFileSync, readdirSync, readFileSync as readJsonFile, rmSync, writeFileSync} from "node:fs";
@@ -23,7 +24,7 @@ function readJson(path: string): JsonRecord {
 
 type JsonRecord = Record<string, unknown>;
 type CdpTarget = {type?: string; url?: string; webSocketDebuggerUrl?: string};
-type CdpResponse = {id?: number; result?: {result?: {value?: unknown}; exceptionDetails?: unknown}; error?: {message?: string}};
+type CdpResponse = {id?: number; result?: {result?: {value?: unknown}; data?: string; exceptionDetails?: unknown}; error?: {message?: string}};
 type Child = ReturnType<typeof Bun.spawn>;
 
 export type ElectronVaultAuditReport = {
@@ -189,18 +190,38 @@ class CdpClient {
     return result.result?.result?.value as T;
   }
 
+  async captureScreenshot(): Promise<{data: string}> {
+    const id = this.nextId++;
+    const response = new Promise<CdpResponse>((resolveResponse, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`Electron CDP screenshot exceeded ${evaluationTimeoutMs}ms`));
+      }, evaluationTimeoutMs);
+      this.pending.set(id, (value) => {
+        clearTimeout(timer);
+        resolveResponse(value);
+      });
+    });
+    this.socket.send(JSON.stringify({id, method: "Page.captureScreenshot", params: {format: "png"}}));
+    const result = await response;
+    if (result.error?.message) throw new Error(result.error.message);
+    const data = result.result?.data;
+    if (typeof data !== "string" || data.length === 0) throw new Error("Electron CDP returned no screenshot data");
+    return {data};
+  }
+
   close(): void {
     this.socket.close();
   }
 }
 
-async function pageTarget(port: number, output: () => string): Promise<CdpTarget> {
+async function pageTarget(port: number, output: () => string, urlFragment = "renderer/index.html"): Promise<CdpTarget> {
   const deadline = Date.now() + startupTimeoutMs;
   while (Date.now() < deadline) {
     try {
       const response = await fetch(`http://127.0.0.1:${port}/json/list`);
       const targets = await response.json() as CdpTarget[];
-      const page = targets.find((target) => target.type === "page" && target.webSocketDebuggerUrl && target.url?.includes("renderer/index.html"));
+      const page = targets.find((target) => target.type === "page" && target.webSocketDebuggerUrl && target.url?.includes(urlFragment));
       if (page) return page;
     } catch {
       // Electron is still starting. The bounded deadline below reports a useful failure.
@@ -210,7 +231,11 @@ async function pageTarget(port: number, output: () => string): Promise<CdpTarget
   throw new Error(`Electron renderer did not become available: ${output()}`);
 }
 
-async function launchRenderer(userData: string, display: string, launchArguments: string[] = []): Promise<{child: Child; output: () => string; client: CdpClient; stop: () => Promise<void>}> {
+async function waitForPageTarget(port: number, output: () => string, urlFragment: string): Promise<CdpTarget> {
+  return pageTarget(port, output, urlFragment);
+}
+
+async function launchRenderer(userData: string, display: string, launchArguments: string[] = []): Promise<{child: Child; output: () => string; client: CdpClient; port: number; stop: () => Promise<void>}> {
   const port = await freePort();
   const child = Bun.spawn([electronBinary, "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${userData}`, ".", ...launchArguments], {
     cwd: root,
@@ -224,7 +249,7 @@ async function launchRenderer(userData: string, display: string, launchArguments
     const client = await CdpClient.connect(target.webSocketDebuggerUrl!);
     for (let attempt = 0; attempt < 100; attempt += 1) {
       if (await client.evaluate<boolean>("Boolean(window.openObsidian)")) {
-        return {child, output: output.get, client, stop: async () => {client.close(); await stopProcess(child);}};
+        return {child, output: output.get, client, port, stop: async () => {client.close(); await stopProcess(child);}};
       }
       await Bun.sleep(100);
     }
@@ -298,6 +323,17 @@ type ElectronUiFixture = {
   editedNote: Uint8Array;
 };
 
+type ScreenshotTrace = {bytes: number; sha256: string};
+
+type ElectronThemeTrace = {
+  mainDarkPreview: boolean;
+  mainLightPreview: boolean;
+  mainScreenshot: boolean;
+  popoutPreview: boolean;
+  popoutScreenshot: boolean;
+  details: JsonRecord;
+};
+
 type FirstProcessTrace = {
   summary: JsonRecord;
   read: JsonRecord;
@@ -325,8 +361,23 @@ function createElectronUiFixture(): ElectronUiFixture {
   const originalNote = Buffer.from("# UI fixture\nOriginal\n", "utf8");
   const editedNote = Buffer.from("# UI fixture\nEdited through keyboard save · नमस्ते · مرحبا · 東京 · 🌍\n", "utf8");
   mkdirSync(join(vaultRoot, ".obsidian"));
+  mkdirSync(join(vaultRoot, ".obsidian", "themes"));
+  mkdirSync(join(vaultRoot, ".obsidian", "snippets"));
   writeFileSync(join(vaultRoot, "Note.md"), originalNote);
-  writeFileSync(join(vaultRoot, ".obsidian", "app.json"), '{"theme":"minimal"}\n');
+  writeFileSync(join(vaultRoot, ".obsidian", "appearance.json"), `${JSON.stringify({cssTheme: "Minimal", mode: "dark", enabledCssSnippets: ["focus"], baseFontSize: 16})}\n`);
+  writeFileSync(join(vaultRoot, ".obsidian", "themes", "Minimal.css"), [
+    "body.theme-light { --fixture-surface: #f5f7fb; --fixture-ink: #172033; background: var(--fixture-surface); color: var(--fixture-ink); }",
+    "body.theme-dark { --fixture-surface: #1d2230; --fixture-ink: #edf1ff; background: var(--fixture-surface); color: var(--fixture-ink); }",
+    ".workspace { background: var(--fixture-surface); color: var(--fixture-ink); }",
+    ".workspace-leaf .view-header { border-bottom: 1px solid currentColor; }",
+    ".workspace-leaf-content.view-content { min-height: 120px; }",
+    ".nav-files-container .nav-file { color: var(--fixture-ink); }",
+    ".titlebar { min-height: 20px; }",
+    ".status-bar { font-size: 11px; }",
+    "body.mod-popout { --fixture-popout: 1; }",
+    ".app-shell :focus-visible { outline: 2px solid #bb86fc; outline-offset: 2px; }",
+  ].join("\n"));
+  writeFileSync(join(vaultRoot, ".obsidian", "snippets", "focus.css"), ".app-shell button:focus-visible, body.mod-popout textarea:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }");
   return {vaultRoot, userData, originalNote, editedNote};
 }
 
@@ -337,10 +388,63 @@ type ElectronUiTrace = {
   modeSwitch: boolean;
   initial: JsonRecord;
   savedStatus: string;
+  theme: ElectronThemeTrace;
 };
 
 type ElectronUiInitial = {path: string; disabled: boolean; value: string; direction: string};
 type ElectronUiInput = {focused: boolean; value: string; dirtyStatus: string};
+
+type AppearanceState = {mode: string; applied: number; safety: string; controlsDisabled: boolean};
+
+function screenshotTrace(data: string): ScreenshotTrace {
+  const bytes = Buffer.from(data, "base64");
+  return {bytes: bytes.byteLength, sha256: createHash("sha256").update(bytes).digest("hex")};
+}
+
+async function runThemeTrace(runtime: Awaited<ReturnType<typeof launchRenderer>>, vaultRoot: string): Promise<ElectronThemeTrace> {
+  const mainAppearance = `(() => ({
+    mode: document.querySelector('.app-shell')?.getAttribute('data-openobsidian-theme-mode') ?? '',
+    applied: document.querySelectorAll('style[data-openobsidian-style]').length,
+    safety: document.querySelector('#appearance-safety')?.textContent ?? '',
+    controlsDisabled: document.querySelector('#appearance-mode')?.disabled ?? true,
+  }))()`;
+  const dark = await waitForRenderer<AppearanceState>(runtime.client, mainAppearance, (value) => value.mode === "dark" && value.applied >= 2 && value.safety.includes("safe preview") && !value.controlsDisabled, "dark theme preview");
+  const darkScreenshot = screenshotTrace((await runtime.client.captureScreenshot()).data);
+  await runtime.client.evaluate(`(() => {
+    const control = document.querySelector('#appearance-mode');
+    if (!(control instanceof HTMLSelectElement)) throw new Error('Appearance mode control is unavailable');
+    control.value = 'light';
+    control.dispatchEvent(new Event('change', {bubbles: true}));
+  })()`);
+  const light = await waitForRenderer<AppearanceState>(runtime.client, mainAppearance, (value) => value.mode === "light" && value.applied >= 2 && value.safety.includes("safe preview"), "light theme preview");
+  const lightScreenshot = screenshotTrace((await runtime.client.captureScreenshot()).data);
+  let popoutClient: CdpClient | null = null;
+  let popoutState: JsonRecord = {};
+  let popoutScreenshot: ScreenshotTrace | null = null;
+  try {
+    const opened = asObject(await runtime.client.evaluate(`window.openObsidian.openPopout(${JSON.stringify({vaultRoot, relativePath: "Note.md"})})`), "openPopout");
+    const target = await waitForPageTarget(runtime.port, runtime.output, "popout.html");
+    popoutClient = await CdpClient.connect(target.webSocketDebuggerUrl!);
+    popoutState = await waitForRenderer<JsonRecord>(popoutClient, `(() => ({
+      mode: document.body?.dataset.openobsidianThemeMode ?? '',
+      path: document.querySelector('#popout-path')?.textContent ?? '',
+      editorDisabled: document.querySelector('#popout-editor')?.disabled ?? true,
+      applied: document.querySelectorAll('style[data-openobsidian-style]').length,
+      status: document.querySelector('#appearance-status')?.textContent ?? '',
+    }))()`, (value) => value.mode === "dark" && value.path === "Note.md" && value.editorDisabled === false && Number(value.applied) >= 2 && String(value.status).includes("safe preview"), "popout theme preview");
+    popoutScreenshot = screenshotTrace((await popoutClient.captureScreenshot()).data);
+    return {
+      mainDarkPreview: dark.mode === "dark" && dark.applied >= 2 && !dark.controlsDisabled,
+      mainLightPreview: light.mode === "light" && light.applied >= 2,
+      mainScreenshot: darkScreenshot.bytes > 0 && lightScreenshot.bytes > 0 && darkScreenshot.sha256 !== lightScreenshot.sha256,
+      popoutPreview: popoutState.mode === "dark" && popoutState.path === "Note.md" && popoutState.editorDisabled === false && Number(popoutState.applied) >= 2,
+      popoutScreenshot: popoutScreenshot.bytes > 0,
+      details: {dark, light, dark_screenshot: darkScreenshot, light_screenshot: lightScreenshot, opened, popout: popoutState, popout_screenshot: popoutScreenshot},
+    };
+  } finally {
+    popoutClient?.close();
+  }
+}
 
 async function runUiProcess(fixtureData: ElectronUiFixture, display: string): Promise<ElectronUiTrace> {
   const runtime = await launchRenderer(fixtureData.userData, display, [`--vault=${fixtureData.vaultRoot}`, "--open=Note.md"]);
@@ -374,6 +478,8 @@ async function runUiProcess(fixtureData: ElectronUiFixture, display: string): Pr
       source.click();
       return previewVisible && document.querySelector('#note-editor')?.hidden === false;
     })()`);
+    const theme = await runThemeTrace(runtime, fixtureData.vaultRoot);
+    requireCondition(Object.entries(theme).filter(([key]) => key !== "details").every(([, value]) => value === true), `Electron theme trace failed: ${JSON.stringify(theme)}`);
     return {
       launchIntentHydrated: initial.path === "Note.md" && initial.disabled === false,
       keyboardSave: savedStatus.startsWith("Saved Note.md"),
@@ -381,6 +487,7 @@ async function runUiProcess(fixtureData: ElectronUiFixture, display: string): Pr
       modeSwitch,
       initial,
       savedStatus,
+      theme,
     };
   } finally {
     await runtime.stop();
@@ -423,6 +530,11 @@ function buildElectronReport(fixtureData: ElectronFixture, display: string, firs
     renderer_keyboard_save: ui.keyboardSave,
     renderer_unicode_input: ui.unicodeInput,
     renderer_mode_switch: ui.modeSwitch,
+    renderer_theme_dark_preview: ui.theme.mainDarkPreview,
+    renderer_theme_light_preview: ui.theme.mainLightPreview,
+    renderer_theme_screenshots: ui.theme.mainScreenshot,
+    popout_theme_preview: ui.theme.popoutPreview,
+    popout_theme_screenshot: ui.theme.popoutScreenshot,
   };
   requireCondition(Object.entries(checks).every(([, value]) => value), `Electron audit checks failed: ${JSON.stringify(checks)}`);
   return {

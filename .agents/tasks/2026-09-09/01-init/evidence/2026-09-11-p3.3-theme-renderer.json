@@ -1,0 +1,42 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T17:28:42Z",
+  "checkpoint": "P3.3",
+  "requirements": ["C12", "RISK-002"],
+  "command": "bun run compile && bun run audit:electron-vault",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "Xvfb :456",
+    "branch": "main",
+    "tested_source_tree": "2753624028b3e208ebdcc25508f09c2143730a148c905a881cba3e332188735e",
+    "source_tree_paths": 220,
+    "source_tree_definition": "bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out"
+  },
+  "fixture": {
+    "id": "fixture:electron-vault-roundtrip",
+    "vault": "disposable temporary vault",
+    "appearance": "Minimal-like light/dark CSS plus focus snippet",
+    "windows": ["main-window", "tracked-popout-window"]
+  },
+  "checks": {
+    "renderer_theme_dark_preview": true,
+    "renderer_theme_light_preview": true,
+    "renderer_theme_screenshots": true,
+    "popout_theme_preview": true,
+    "popout_theme_screenshot": true
+  },
+  "trace": {
+    "main_dark": {"mode": "dark", "applied_styles": 2, "safety_state": "ready", "screenshot_bytes": 62105, "screenshot_sha256": "1539d6301031b425c30a5430eab8227161374674e5d901364e968d6eb2c32514"},
+    "main_light": {"mode": "light", "applied_styles": 2, "safety_state": "ready", "screenshot_bytes": 61800, "screenshot_sha256": "607f66b5cdf7a89a5c59fbb311f0eb98915ff10ce4fbc6f4b8c283d8e58a9f37"},
+    "popout": {"mode": "dark", "relative_path": "Note.md", "editor_enabled": true, "applied_styles": 2, "screenshot_bytes": 29177, "screenshot_sha256": "7938eaf62a923067c621b18314b5bf5a20def5cac10866fe678b2ac5a23c0f7c"}
+  },
+  "result": {"exit_code": 0, "status": "passed", "interpretation": "The disposable packaged Electron renderer applied the configured safe-preview theme and snippet in dark and light main-window modes, captured distinct screenshots, and applied the configured appearance in a tracked popout without changing vault appearance files."},
+  "limitations": [
+    "This validates OpenObsidian's renderer boundary and synthetic theme fixture only; it is not reference Obsidian, unchanged plugin, screen-reader, human, or cross-platform certification.",
+    "Raw CSS imports, URL assets and privileged selectors remain withheld by the existing safe-preview policy.",
+    "No personal vault was accessed; /home/ashutosh/Obsidian was not used."
+  ]
+}
