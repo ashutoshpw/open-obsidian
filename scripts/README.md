@@ -22,6 +22,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run validate:differential` | Validates the executable local vault probes and explicit reference-comparison decisions. |
 | `bun run validate:workflows` | Validates the complete C10 core-workflow inventory, including local bookmark/tag/task/template/daily-note markers and keyboard journey handoffs. |
 | `bun run validate:layout` | Static Obsidian-shell geometry and navigation-marker checks. |
+| `bun run audit:theme-assets -- --root /path/to/vault` | Read-only appearance/theme/snippet audit; reports hashes, CSS variables, legacy layout contracts, mode/accessibility coverage and safe-preview issues without executing CSS. Add `--strict` to fail on any host-review item. |
 | `bun run verify:version-baseline` | Cross-checks the stable/early-access references and records per-artifact minimum-version, API and runtime verification status. |
 | `bun run verify:compatibility-pins` | Downloads the frozen release assets and verifies SHA-256, byte counts and recorded plugin manifest metadata. |
 | `bun run audit:plugin-bundles` | Downloads pinned hardest-plugin `main.js` bundles (use `--all` for every applicable artifact), verifies bytes, and performs a non-executing privileged-API marker prescreen; runtime remains pending. |

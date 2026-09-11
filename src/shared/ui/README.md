@@ -11,6 +11,7 @@ This folder is deliberately platform-neutral. It contains no Electron, DOM or Re
 - `graph.ts` provides a deterministic, platform-neutral spatial layout for force, hierarchical and radial graph views. Hosts can render its point map with SVG on desktop or a native/canvas surface in Expo while retaining the keyboard/list alternative.
 - `workflows.ts` provides platform-neutral bookmark, tag-index and task-index contracts plus pure Markdown/configuration transforms. The Electron core supplies vault reads and revision-checked task writes; an Expo host can render the same rows and apply its own navigation and persistence adapter.
 - `note-workflows.ts` provides bounded template and daily-note settings, date-path formatting and plain-text variable expansion. Unknown variables stay literal and template scripts are never executed; hosts can reuse the plan/index data and choose a platform-specific safe action.
+- `themes.ts` parses appearance settings and CSS into variables, legacy layout contracts, plugin-view/popout selectors and accessibility hints. It never executes CSS, resolves imports or fetches URL assets; desktop and Expo hosts can apply an explicit preview policy to the same analysis.
 - `uninstall.ts` provides explicit app-data cleanup choices for desktop or Expo settings. Every choice declares `vaultDisposition: "preserve"`; hosts must keep the vault outside uninstall cleanup and require a separate destructive confirmation for any local app-data removal.
 - The pure `src/core/bases.ts` evaluator and `src/core/bases-native.ts` YAML adapter have no Electron, DOM or React Native imports. A future Expo host can consume the same typed rows, groups and compatibility issues and provide its own table/list/cards renderer.
 - `index.ts` is the stable import surface for the future design system package.
@@ -51,6 +52,13 @@ Graph layout follows the same boundary:
 
 ```tsx
 const positions = layoutGraph(nodes, edges, "radial", {width: 360, height: 240});
+```
+
+Theme compatibility follows the same boundary:
+
+```tsx
+const theme = parseThemeStylesheet(cssText);
+if (theme.safety.previewable) renderLegacySurface(theme.variables);
 ```
 
 The shared parser never creates elements, evaluates code or turns link targets into navigable URLs. A host renderer can add an explicit, allowlisted navigation policy later.

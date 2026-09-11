@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "purpose": "Safe, read-only theme and CSS snippet compatibility preflight",
+  "reference": "Obsidian 1.13.7 legacy workspace surface",
+  "required_contracts": [
+    "workspace-shell",
+    "workspace-leaf",
+    "view-header",
+    "file-explorer",
+    "titlebar",
+    "status-bar"
+  ],
+  "mode_matrix": ["light", "dark"],
+  "window_matrix": ["main-window", "popout-window"],
+  "accessibility_matrix": ["focus-visible", "reduced-motion", "high-contrast-or-semantic-controls", "font-scaling"],
+  "safety": {
+    "raw_css_execution": "not-executed",
+    "external_imports": "denied",
+    "remote_urls": "denied",
+    "privileged_selectors": "host-review-required",
+    "applicability": "analysis-only until visible renderer and reference traces pass"
+  },
+  "fixtures": [
+    {"id": "minimal-theme", "kind": "theme", "source": ".obsidian/themes/Minimal.css", "status": "preflight"},
+    {"id": "enabled-css-snippet", "kind": "snippet", "source": ".obsidian/snippets/enabled.css", "status": "preflight"}
+  ],
+  "pending": [
+    "visible light/dark renderer traces",
+    "plugin-created view traces",
+    "popout-window traces",
+    "screen-reader and cross-platform validation"
+  ]
+}

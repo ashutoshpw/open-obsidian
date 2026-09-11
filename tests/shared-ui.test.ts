@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readdirSync, readFileSync} from "node:fs";
-import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, UNINSTALL_CLEANUP_OPTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, resolveKeyboardCommand, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type UninstallCleanupOptionId, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, uninstallCleanupOption, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
+import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, UNINSTALL_CLEANUP_OPTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, parseAppearanceSettings, parseThemeStylesheet, resolveKeyboardCommand, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type ThemeMode, type ThemeStyleSafety, type UninstallCleanupOptionId, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, uninstallCleanupOption, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
 
 test("shared workspace UI contract exposes reusable blocks and semantic actions", () => {
   const firstBlock: WorkspaceBlock = WORKSPACE_BLOCKS[0]!;
@@ -50,4 +50,16 @@ test("shared uninstall cleanup choices always preserve the vault", () => {
   expect(UNINSTALL_CLEANUP_OPTIONS[0]?.vaultDisposition).toBe("preserve");
   expect(UNINSTALL_CLEANUP_OPTIONS.every((option) => option.vaultDisposition === "preserve" && !option.defaultSelected)).toBe(true);
   expect(uninstallCleanupOption("credentials")).toMatchObject({label: "Stored credentials", vaultDisposition: "preserve"});
+});
+
+test("shared theme contract is data-only and reusable across hosts", () => {
+  const appearance = parseAppearanceSettings({theme: "Minimal", themeMode: "system", enabledCssSnippets: ["focus", 3], baseFontSize: 16});
+  const mode: ThemeMode = appearance.mode;
+  expect(appearance).toEqual({mode: "system", cssTheme: "Minimal", enabledCssSnippets: ["focus"], accentColor: null, baseFontSize: 16});
+  const analysis = parseThemeStylesheet(".workspace { --icon-size: 24px; } .nav-file:focus-visible { color: red; }");
+  const safety: ThemeStyleSafety = analysis.safety;
+  expect(analysis.variables).toEqual({"--icon-size": "24px"});
+  expect(analysis.layoutContracts).toContain("workspace-shell");
+  expect(analysis.accessibilityContracts).toContain("focus-visible");
+  expect(safety.previewable).toBe(true);
 });
