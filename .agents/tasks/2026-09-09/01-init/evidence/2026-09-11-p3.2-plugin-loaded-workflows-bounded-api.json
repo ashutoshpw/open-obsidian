@@ -1,0 +1,148 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T22:22:16Z",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC17",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24"
+  ],
+  "decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "head": "8b92e74bd2d6630344d0e428fa581447e6d31f7e",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "bc04e3450df748d8dd05f7a68498d3e0e6bdb909025e856f2721af2e91b32613",
+    "paths": 232,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "bounded_renderer_api": [
+      "mediated window.app and bounded moment helpers",
+      "safe synthetic document only for loaded-workflow mode",
+      "bounded workspace leaves and view construction",
+      "bounded vault folders, recursive reads and safe collections",
+      "ItemView event registration and FileView shape"
+    ],
+    "security_boundary": "Lifecycle and module-probe modes still deny generic document access with D15 dom.privileged; loaded-workflow mode exposes only synthetic bounded objects and retains denied host capabilities.",
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "vault_writes": 0
+  },
+  "artifact_results": [
+    {
+      "id": "PC07",
+      "status": "loaded",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "partial",
+      "action_failures": [
+        "calendar view: D15 denied resource.unbounded",
+        "CalendarSettingsTab: D15 denied dom.privileged"
+      ],
+      "denied_capabilities": ["resource.unbounded", "dom.privileged"],
+      "vault_writes": 0
+    },
+    {
+      "id": "PC17",
+      "status": "denied",
+      "bounded_lifecycle": "partial",
+      "persistence": "preserved",
+      "action_status": "not-reached",
+      "denied_capabilities": ["dom.privileged"],
+      "error": "D15 denied dom.privileged",
+      "vault_writes": 0
+    },
+    {
+      "id": "PC20",
+      "status": "denied",
+      "bounded_lifecycle": "partial",
+      "persistence": "preserved",
+      "action_status": "not-reached",
+      "denied_capabilities": ["dom.privileged"],
+      "error": "D15 denied dom.privileged",
+      "vault_writes": 0
+    },
+    {
+      "id": "PC21",
+      "status": "loaded",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "partial",
+      "action_failures": [
+        "copy-debug-info: D15 denied dom.privileged",
+        "open-homepage: D15 denied dom.privileged"
+      ],
+      "denied_capabilities": ["dom.privileged"],
+      "vault_writes": 0
+    },
+    {
+      "id": "PC22",
+      "status": "denied",
+      "bounded_lifecycle": "partial",
+      "persistence": "preserved",
+      "action_status": "not-reached",
+      "denied_capabilities": ["dom.privileged"],
+      "error": "D15 denied dom.privileged",
+      "vault_writes": 0
+    },
+    {
+      "id": "PC23",
+      "status": "loaded",
+      "bounded_lifecycle": "complete",
+      "persistence": "not-proven",
+      "action_status": "partial",
+      "action_failures": ["settings display: D15 denied dom.privileged"],
+      "denied_capabilities": ["dom.privileged"],
+      "vault_writes": 0
+    },
+    {
+      "id": "PC24",
+      "status": "denied",
+      "bounded_lifecycle": "partial",
+      "persistence": "preserved",
+      "action_status": "not-reached",
+      "denied_capabilities": ["dom.privileged"],
+      "error": "D15 denied dom.privileged",
+      "vault_writes": 0
+    }
+  ],
+  "combination": {
+    "id": "combination:pc07-pc21-pc23",
+    "target_ids": ["PC07", "PC21", "PC23"],
+    "bounded_lifecycle": "complete",
+    "persistence": "not-proven",
+    "restart_restores_data": false,
+    "update_restores_data": true,
+    "cleanup_after_each_phase": true,
+    "uninstall_clears_registrations": true,
+    "return_to_obsidian": true,
+    "no_vault_writes": true
+  },
+  "result": "The bounded renderer API now executes Calendar command callbacks and the Recent Files view/command path while preserving zero mediated vault writes. Calendar and Homepage retain denied DOM/timer action gaps, Recent Files persistence remains unproven, and PC17/PC20/PC22/PC24 remain fail-closed D15 denials; no plugin was promoted.",
+  "limitations": [
+    "This executes unchanged pinned main.js only in the hidden Electron context-isolated sandbox; it is not stock Obsidian certification.",
+    "macOS and Windows same-user enforcement, reference Obsidian comparison, full plugin combinations, human accessibility/input, provider-backed behavior, signing, publication and updater installation/rollback remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}

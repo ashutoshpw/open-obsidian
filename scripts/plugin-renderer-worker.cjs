@@ -53,8 +53,10 @@ function safeDomObject() {
     addEventListener() {},
     removeEventListener() {},
     appendChild(child) { return child; },
+    addChild(child) { return child; },
     append() {},
     prepend() {},
+    appendText() {},
     createEl() { return safeDomObject(); },
     createDiv() { return safeDomObject(); },
     createSpan() { return safeDomObject(); },
@@ -64,7 +66,10 @@ function safeDomObject() {
     removeClass() {},
     setText() {},
     setAttr() {},
-    style: {},
+    setAttribute() {},
+    removeAttribute() {},
+    setChildrenInPlace() {},
+    style: {removeProperty() {}, setProperty() {}, getPropertyValue() { return ""; }},
     classList: {add() {}, remove() {}, toggle() {}, contains() { return false; }},
   }, {
     get(target, property) {
@@ -74,13 +79,117 @@ function safeDomObject() {
   });
 }
 
-function safeDocumentObject() {
-  return {
-    body: safeDomObject(),
-    createDocumentFragment() { return safeDomObject(); },
-    createElement() { return safeDomObject(); },
-    createTextNode() { return safeDomObject(); },
+function safeDocumentObject(capabilities, allowSyntheticDocument = false) {
+  const target = {body: safeDomObject()};
+  if (allowSyntheticDocument) {
+    target.createDocumentFragment = () => safeDomObject();
+    target.createElement = () => safeDomObject();
+    target.createTextNode = () => safeDomObject();
+  }
+  return new Proxy(target, {
+    get(current, property) {
+      if (property in current) return current[property];
+      return denyCapability(capabilities, "dom.privileged");
+    },
+  });
+}
+
+function safeCollection(values = []) {
+  const collection = [...values];
+  Object.defineProperty(collection, "first", {configurable: true, value: () => collection[0]});
+  Object.defineProperty(collection, "contains", {configurable: true, value: (value) => collection.includes(value)});
+  return collection;
+}
+
+function boundedMoment(value) {
+  const initial = value && typeof value === "object" && value._date instanceof Date
+    ? value._date
+    : value instanceof Date
+      ? value
+      : typeof value === "string" || typeof value === "number"
+        ? new Date(value)
+        : new Date();
+  const date = new Date(initial.getTime());
+  const moment = {
+    _date: date,
+    clone() { return boundedMoment(date); },
+    isValid() { return Number.isFinite(date.getTime()); },
+    add(amount, unit) {
+      if (unit === "d" || unit === "day" || unit === "days") date.setUTCDate(date.getUTCDate() + Number(amount));
+      if (unit === "w" || unit === "week" || unit === "weeks") date.setUTCDate(date.getUTCDate() + Number(amount) * 7);
+      if (unit === "M" || unit === "month" || unit === "months") date.setUTCMonth(date.getUTCMonth() + Number(amount));
+      if (unit === "y" || unit === "year" || unit === "years") date.setUTCFullYear(date.getUTCFullYear() + Number(amount));
+      return moment;
+    },
+    set(values, value) {
+      if (typeof values === "string") values = {[values]: value};
+      if (values && typeof values === "object") {
+        if (values.year !== undefined) date.setUTCFullYear(Number(values.year));
+        if (values.month !== undefined) date.setUTCMonth(Number(values.month));
+        if (values.date !== undefined || values.day !== undefined) date.setUTCDate(Number(values.date ?? values.day));
+        if (values.hour !== undefined) date.setUTCHours(Number(values.hour));
+        if (values.minute !== undefined) date.setUTCMinutes(Number(values.minute));
+        if (values.second !== undefined) date.setUTCSeconds(Number(values.second));
+      }
+      return moment;
+    },
+    startOf(unit) {
+      if (unit === "day") date.setUTCHours(0, 0, 0, 0);
+      if (unit === "week") {
+        const day = date.getUTCDay();
+        date.setUTCDate(date.getUTCDate() - day);
+        date.setUTCHours(0, 0, 0, 0);
+      }
+      if (unit === "month") {
+        date.setUTCDate(1);
+        date.setUTCHours(0, 0, 0, 0);
+      }
+      return moment;
+    },
+    weekday(value) {
+      if (value === undefined) return date.getUTCDay();
+      date.setUTCDate(date.getUTCDate() + Number(value) - date.getUTCDay());
+      return moment;
+    },
+    format(pattern = "YYYY-MM-DD") {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      const firstDay = new Date(Date.UTC(year, 0, 1));
+      const week = String(Math.ceil((((date - firstDay) / 86400000) + firstDay.getUTCDay() + 1) / 7)).padStart(2, "0");
+      return String(pattern)
+        .replace(/\[([^\]]+)\]/g, "$1")
+        .replace(/GGGG/g, String(year))
+        .replace(/YYYY/g, String(year))
+        .replace(/MM/g, month)
+        .replace(/DD/g, day)
+        .replace(/WW/g, week)
+        .replace(/ww/g, week);
+    },
+    localeData() { return {_week: {dow: 0}}; },
   };
+  return moment;
+}
+
+function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false) {
+  const document = safeDocumentObject(capabilities, allowSyntheticDocument);
+  const moment = (value) => boundedMoment(value);
+  moment.weekdays = () => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  moment.months = () => ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const target = {app: runtimeApp || null, document, moment};
+  return new Proxy(target, {
+    get(current, property) {
+      if (property in current) return current[property];
+      return denyCapability(capabilities, "dom.privileged");
+    },
+    set(current, property, value) {
+      if (property === "app") {
+        current.app = value;
+        return true;
+      }
+      return denyCapability(capabilities, "dom.privileged");
+    },
+  });
 }
 
 function safeComponentObject() {
@@ -177,6 +286,8 @@ function createObsidianApi() {
 
     register() {}
 
+    addChild(child) { return child; }
+
     registerDomEvent() {}
 
     registerInterval() {}
@@ -216,6 +327,21 @@ function createObsidianApi() {
       this.leaf = leaf;
       this.app = leaf?.app;
       this.containerEl = leaf?.containerEl ?? safeDomObject();
+      this.contentEl = this.containerEl;
+    }
+
+    registerEvent(event) {
+      if (event && typeof event.type === "string" && this.app) {
+        this.app.registeredEvents.push(event.type);
+      }
+      return event;
+    }
+  }
+  class FileView {
+    constructor(leaf) {
+      this.leaf = leaf;
+      this.app = leaf?.app;
+      this.file = leaf?.file || null;
     }
   }
   class PluginSettingTab {
@@ -224,7 +350,7 @@ function createObsidianApi() {
       this.containerEl = safeDomObject();
     }
   }
-  const target = {Plugin, ItemView, PluginSettingTab};
+  const target = {Plugin, ItemView, FileView, PluginSettingTab};
   return new Proxy(target, {
     ownKeys() {
       return [...new Set([...Reflect.ownKeys(target), ...OBSIDIAN_EXPORT_NAMES])];
@@ -266,6 +392,11 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     const name = parts.at(-1) || path;
     const dot = name.lastIndexOf(".");
     return {path, name, basename: dot > 0 ? name.slice(0, dot) : name, extension: dot > 0 ? name.slice(dot + 1) : "", stat: {size: new TextEncoder().encode(files.get(path)).byteLength}};
+  };
+  const folderRecord = (path) => {
+    const normalized = pathValue(path).replace(/\\/g, "/").replace(/\/$/, "");
+    const prefix = normalized ? `${normalized}/` : "";
+    return {path: normalized, name: normalized.split("/").at(-1) || normalized, children: [...files.keys()].filter((candidate) => candidate.startsWith(prefix)).map(fileRecord).filter(Boolean)};
   };
   const pathValue = (value) => typeof value === "string" ? value : value && typeof value.path === "string" ? value.path : "";
   const recordWrite = (operation, path) => {
@@ -324,9 +455,16 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     getConfig() { return context.vault_config; },
     getAbstractFileByPath(path) { return fileRecord(pathValue(path)); },
     getFileByPath(path) { return fileRecord(pathValue(path)); },
-    getFolderByPath() { return null; },
-    getFiles() { return [...files.keys()].map(fileRecord).filter(Boolean); },
-    getAllLoadedFiles() { return [...files.keys()].map(fileRecord).filter(Boolean); },
+    getFolderByPath(path) { return folderRecord(path); },
+    getFiles() { return safeCollection([...files.keys()].map(fileRecord).filter(Boolean)); },
+    getAllLoadedFiles() { return safeCollection([...files.keys()].map(fileRecord).filter(Boolean)); },
+    recurseChildren(folder, callback) {
+      const normalized = pathValue(folder).replace(/\\/g, "/").replace(/\/$/, "");
+      const prefix = normalized ? `${normalized}/` : "";
+      for (const candidate of files.keys()) {
+        if (candidate.startsWith(prefix) && typeof callback === "function") callback(fileRecord(candidate));
+      }
+    },
     read: readPath,
     cachedRead: readPath,
     create: (path, value) => writePath(path, value, "vault.create"),
@@ -339,21 +477,52 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     adapter,
   };
   const activeFile = fileRecord(activePath);
-  const leaves = Array.isArray(context.leaves) ? context.leaves : [];
+  const leaves = safeCollection(Array.isArray(context.leaves) ? context.leaves : []);
+  const activeLeaf = {app: null, file: activeFile, view: context.active_view || null, containerEl: safeDomObject()};
+  const createLeaf = () => {
+    const leaf = {
+      app: pluginApp,
+      file: activeFile,
+      view: null,
+      type: "empty",
+      containerEl: safeDomObject(),
+      getViewState() { return {type: leaf.type}; },
+      setViewState: async (state = {}) => {
+        leaf.type = typeof state.type === "string" ? state.type : leaf.type;
+        const factory = pluginApp.viewFactories.find((candidate) => candidate.type === leaf.type);
+        if (factory) {
+          leaf.view = factory.creator(leaf);
+          if (leaf.view && typeof leaf.view.onOpen === "function") await awaitAction(leaf.view.onOpen());
+        }
+        if (!leaves.includes(leaf)) leaves.push(leaf);
+        activeLeaf.view = leaf.view;
+        return leaf;
+      },
+      openFile: async (file) => {
+        leaf.file = file;
+        activeLeaf.file = file;
+        activeLeaf.view = {file};
+      },
+    };
+    return leaf;
+  };
   const workspace = {
     layoutReady: true,
+    activeLeaf,
     on(type, callback) { return event(type, callback); },
     off() {},
     offref() {},
     onLayoutReady(callback) { if (typeof callback === "function") callback(); },
-    getLeavesOfType(type) { return leaves.filter((leaf) => leaf && leaf.type === type); },
-    getRightLeaf() { return {app: pluginApp, view: {containerEl: safeDomObject()}, setViewState() {}, openFile: async (file) => { pluginApp.activeFile = file; }}; },
-    getLeftLeaf() { return {app: pluginApp, view: {containerEl: safeDomObject()}, setViewState() {}, openFile: async (file) => { pluginApp.activeFile = file; }}; },
+    getLeavesOfType(type) { return safeCollection(leaves.filter((leaf) => leaf && leaf.type === type)); },
+    getRightLeaf() { return createLeaf(); },
+    getLeftLeaf() { return createLeaf(); },
+    getUnpinnedLeaf() { return createLeaf(); },
+    splitActiveLeaf() { return createLeaf(); },
     getLayout() { return {type: "split", children: []}; },
     getActiveFile() { return activeFile; },
     getActiveViewOfType() { return context.active_view || null; },
     getActiveFileView() { return context.active_view || null; },
-    getLeaf() { return {app: pluginApp, view: {containerEl: safeDomObject()}, openFile: async (file) => { pluginApp.activeFile = file; }, setViewState() {}}; },
+    getLeaf() { return createLeaf(); },
     getMostRecentLeaf() { return null; },
     openLinkText: async (_link, _sourcePath, _newLeaf) => undefined,
     revealLeaf: async () => undefined,
@@ -384,6 +553,8 @@ function createPluginApp(events, dataStore, workflowContext = {}) {
     app: null,
     activeFile,
   };
+  pluginApp.app = pluginApp;
+  activeLeaf.app = pluginApp;
   return pluginApp;
 }
 
@@ -412,16 +583,16 @@ function createSafeRequire(capabilities, requiredModules) {
   };
 }
 
-function createEvaluationArguments(capabilities, requiredModules) {
-  const safeGlobal = deniedObject(capabilities, "dom.privileged");
+function createEvaluationArguments(capabilities, requiredModules, runtime = {}) {
+  const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true));
   return [
     createSafeRequire(capabilities, requiredModules),
-    deniedObject(capabilities, "dom.privileged"),
-    safeGlobal,
-    safeGlobal,
-    safeGlobal,
-    safeGlobal,
-    safeGlobal,
+    safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true),
+    safeWindow,
+    safeWindow,
+    safeWindow,
+    safeWindow,
+    safeWindow,
     deniedObject(capabilities, "process.spawn"),
     deniedFunction(capabilities, "network.request"),
     deniedFunction(capabilities, "network.request"),
@@ -441,19 +612,22 @@ function createEvaluationArguments(capabilities, requiredModules) {
   ];
 }
 
-function evaluateSource(source, capabilities, requiredModules) {
+function evaluateSource(source, capabilities, requiredModules, runtime = {}) {
   const module = {exports: {}};
-  globalThis.activeDocument = safeDocumentObject();
-  globalThis.DOMParser = class { parseFromString() { return safeDocumentObject(); } };
+  if (typeof Array.prototype.contains !== "function") {
+    Object.defineProperty(Array.prototype, "contains", {configurable: true, value(value) { return this.includes(value); }});
+  }
+  globalThis.activeDocument = safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true);
+  globalThis.DOMParser = class { parseFromString() { return safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true); } };
   globalThis.createDiv = () => safeDomObject();
   globalThis.createEl = () => safeDomObject();
   const factory = new Function(
     "module", "exports", "require", "document", "window", "globalThis", "self", "navigator", "location",
     "process", "fetch", "WebSocket", "XMLHttpRequest", "keytar", "WebAssembly", "setTimeout", "setInterval",
-    "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder", "activeWindow",
+    "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder", "activeWindow", "app",
     `"use strict";\n${source}\n`,
   );
-  factory(module, module.exports, ...createEvaluationArguments(capabilities, requiredModules));
+  factory(module, module.exports, ...createEvaluationArguments(capabilities, requiredModules, runtime), runtime.window?.app || null);
   return module;
 }
 
@@ -491,14 +665,15 @@ function exposeBoundedApp() {
   const boundedApp = createPluginApp([], undefined);
   boundedApp.app = boundedApp;
   globalThis.app = boundedApp;
+  return boundedApp;
 }
 
 function rendererProbe(source) {
   const deniedCapabilities = [];
   const requiredModules = [];
   try {
-    exposeBoundedApp();
-    return loadedResult(evaluateSource(source, deniedCapabilities, requiredModules), requiredModules, deniedCapabilities);
+    const boundedApp = exposeBoundedApp();
+    return loadedResult(evaluateSource(source, deniedCapabilities, requiredModules, {app: boundedApp}), requiredModules, deniedCapabilities);
   } catch (error) {
     return failedResult(error, requiredModules, deniedCapabilities);
   }
@@ -510,11 +685,12 @@ async function lifecycleCall(instance, name, events) {
   events.push(name);
 }
 
-function lifecycleInstance(module, lifecycle) {
+function lifecycleInstance(module, lifecycle, runtime = {}) {
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("lifecycle fixture did not export a plugin class");
   lifecycle.supported = true;
   const pluginApp = createPluginApp(lifecycle.events);
+  if (runtime.window) runtime.window.app = pluginApp;
   const instance = new Constructor(pluginApp, {id: "renderer-lifecycle-fixture", version: "1"});
   Object.defineProperty(lifecycle, "_pluginApp", {configurable: true, value: pluginApp});
   lifecycle.api = pluginApiSummary(pluginApp);
@@ -574,11 +750,13 @@ async function exerciseRegistrations(pluginApp) {
   return actions;
 }
 
-async function workflowInstance(module, workflow, dataStore, phase, version, workflowContext = {}, manifestId = "renderer-workflow-fixture") {
+async function workflowInstance(module, workflow, dataStore, phase, version, workflowContext = {}, manifestId = "renderer-workflow-fixture", runtime = {}) {
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
   const pluginApp = createPluginApp([], dataStore, workflowContext);
   const instance = new Constructor(pluginApp, {id: manifestId, version});
+  pluginApp.plugins.plugins[manifestId] = instance;
+  if (runtime.window) runtime.window.app = pluginApp;
   const events = ["constructed"];
   await lifecycleCall(instance, "onload", events);
   const actions = await exerciseRegistrations(pluginApp);
@@ -633,13 +811,14 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const workflowContext = {...workflowConfig, metrics};
   const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
   try {
-    exposeBoundedApp();
-    const module = evaluateSource(source, deniedCapabilities, requiredModules);
-    workflow.supported = true;
     const dataStore = {value: cloneData(workflowConfig.initial_data), writes: 0};
-    await workflowInstance(module, workflow, dataStore, "install", "1.0.0", workflowContext, workflow.artifactId);
-    await workflowInstance(module, workflow, dataStore, "restart", "1.0.0", workflowContext, workflow.artifactId);
-    await workflowInstance(module, workflow, dataStore, "update", "1.1.0", workflowContext, workflow.artifactId);
+    const initialApp = createPluginApp([], dataStore, workflowContext);
+    const runtime = {app: initialApp, allowSyntheticDocument: true};
+    const module = evaluateSource(source, deniedCapabilities, requiredModules, runtime);
+    workflow.supported = true;
+    await workflowInstance(module, workflow, dataStore, "install", "1.0.0", workflowContext, workflow.artifactId, runtime);
+    await workflowInstance(module, workflow, dataStore, "restart", "1.0.0", workflowContext, workflow.artifactId, runtime);
+    await workflowInstance(module, workflow, dataStore, "update", "1.1.0", workflowContext, workflow.artifactId, runtime);
     workflow.pluginDataWrites = dataStore.writes;
     workflow.vaultWrites = metrics.vaultWrites;
     workflow.vaultOperations = metrics.vaultOperations;
@@ -678,9 +857,10 @@ async function rendererLifecycleProbe(source) {
   const requiredModules = [];
   const lifecycle = {supported: false, events: []};
   try {
-    exposeBoundedApp();
-    const module = evaluateSource(source, deniedCapabilities, requiredModules);
-    const instance = lifecycleInstance(module, lifecycle);
+    const boundedApp = exposeBoundedApp();
+    const runtime = {app: boundedApp};
+    const module = evaluateSource(source, deniedCapabilities, requiredModules, runtime);
+    const instance = lifecycleInstance(module, lifecycle, runtime);
     await lifecycleCall(instance, "onload", lifecycle.events);
     await lifecycleCall(instance, "onunload", lifecycle.events);
     lifecycle.api = pluginApiSummary(lifecycle._pluginApp);
@@ -707,6 +887,9 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     deniedFunction,
     safeDomObject,
     safeDocumentObject,
+    safeCollection,
+    boundedMoment,
+    safeWindowObject,
     safeComponentObject,
     safeCallable,
     cloneData,
