@@ -28,6 +28,7 @@
     "validate:surfaces": "bun scripts/validate-ux-surfaces.ts",
     "verify:plugin-selection": "bun scripts/verify-plugin-selection.ts",
     "verify:compatibility-pins": "bun scripts/verify-compatibility-pins.ts",
+    "audit:plugin-bundles": "bun scripts/audit-plugin-bundles.ts",
     "validate:plugin-matrix": "bun scripts/validate-plugin-matrix.ts",
     "verify:version-baseline": "bun scripts/verify-version-baseline.ts",
     "validate:differential": "bun scripts/validate-differential-fixtures.ts",
