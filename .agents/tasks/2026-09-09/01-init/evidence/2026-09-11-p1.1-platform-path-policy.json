@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T12:27:00Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "SYNC-004", "RISK-004"],
+  "fixture_ids": ["fixture:c01-no-op", "fixture:c02-byte-roundtrip", "fixture:sync-failure-matrix", "fixture:risk-normalization"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4"
+  },
+  "observations": [
+    {"command": "bun test tests/vault.test.ts tests/vault-differential.test.ts", "exit_code": 0, "result": "22 tests and 104 expectations pass, including Windows-reserved-name denial through an injected win32 policy and backslash separator normalization."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passes with the platform-aware VaultStore option."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine state/contracts/architecture/differential/workflow/accessibility/layout/type/test/Knip/Fallow checks pass; 159 tests and 853 expectations pass."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the two changed source/test files."}
+  ],
+  "implemented": [
+    "VaultStore now carries an explicit platform safety policy, defaulting to the host while permitting deterministic fixture coverage.",
+    "Windows-reserved path checks can be exercised on a non-Windows host without changing the selected vault, and normalized backslash paths retain canonical vault-relative source paths."
+  ],
+  "limitations": [
+    "The injected platform policy is a deterministic safety fixture, not proof of Windows filesystem, ACL, case-folding, cloud-placeholder or power-loss behavior.",
+    "Reference Obsidian reopen round trips and full macOS/Windows/Linux filesystem execution remain pending; no selected user vault was accessed or modified."
+  ]
+}

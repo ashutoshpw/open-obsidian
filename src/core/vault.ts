@@ -58,6 +58,8 @@ export type ConflictResolution = {id: string; relativePath: string; action: Conf
 export type VaultFaultStage = "before-temp-write" | "after-temp-write" | "before-replace";
 
 export type VaultStoreOptions = {
+  /** Override the host platform for deterministic safety-fixture coverage. */
+  platform?: NodeJS.Platform;
   faultHook?: (stage: VaultFaultStage, relativePath: string) => void;
 };
 
@@ -124,13 +126,13 @@ function hashEntries(entries: VaultEntry[]): string {
   return hashBytes(Buffer.from(JSON.stringify(entries)));
 }
 
-function normalizeRelativePath(relativePath: string): string {
+function normalizeRelativePath(relativePath: string, platform: NodeJS.Platform = process.platform): string {
   const normalized = relativePath.replaceAll("\\", "/");
   const segments = normalized.split("/");
   if (!normalized || normalized.startsWith("/") || normalized.includes("\0") || segments.includes("..") || segments.includes("") || segments.includes(".")) {
     throw new VaultSafetyError(`Vault path must be a non-empty relative path: ${relativePath}`);
   }
-  if (process.platform === "win32" && segments.some((segment) => windowsReservedSegment(segment))) {
+  if (platform === "win32" && segments.some((segment) => windowsReservedSegment(segment))) {
     throw new VaultSafetyError(`Vault path uses a Windows-reserved name: ${relativePath}`);
   }
   return normalized;
@@ -170,8 +172,8 @@ function assertSafeSegments(root: string, normalized: string, candidate: string,
   }
 }
 
-function pathInside(root: string, relativePath: string): string {
-  const normalized = normalizeRelativePath(relativePath);
+function pathInside(root: string, relativePath: string, platform: NodeJS.Platform = process.platform): string {
+  const normalized = normalizeRelativePath(relativePath, platform);
   const candidate = resolve(root, ...normalized.split("/"));
   assertInsideRoot(root, candidate, relativePath);
   assertSafeSegments(root, normalized, candidate, relativePath);
@@ -224,11 +226,13 @@ export class VaultStore {
   readonly root: string;
   readonly appDataRoot: string;
   readonly options: VaultStoreOptions;
+  readonly platform: NodeJS.Platform;
 
   constructor(root: string, appDataRoot: string, options: VaultStoreOptions = {}) {
     this.root = resolve(root);
     this.appDataRoot = resolve(appDataRoot);
     this.options = options;
+    this.platform = options.platform ?? process.platform;
   }
 
   scan(): VaultScan {
@@ -236,8 +240,8 @@ export class VaultStore {
   }
 
   read(relativePath: string): VaultRead {
-    const normalized = normalizeRelativePath(relativePath);
-    const filePath = pathInside(this.root, normalized);
+    const normalized = normalizeRelativePath(relativePath, this.platform);
+    const filePath = pathInside(this.root, normalized, this.platform);
     if (!existsSync(filePath)) throw new VaultSafetyError(`Vault file does not exist: ${normalized}`);
     if (lstatSync(filePath).isSymbolicLink()) throw new VaultSafetyError(`Refusing to read through a vault symlink: ${normalized}`);
     const bytes = readFileSync(filePath);
@@ -245,8 +249,8 @@ export class VaultStore {
   }
 
   write(request: VaultWrite): VaultRead {
-    const normalized = normalizeRelativePath(request.relativePath);
-    const targetPath = pathInside(this.root, normalized);
+    const normalized = normalizeRelativePath(request.relativePath, this.platform);
+    const targetPath = pathInside(this.root, normalized, this.platform);
     const current = this.currentRevision(targetPath);
     const nextBytes = new Uint8Array(request.bytes);
     const nextRevision = hashBytes(nextBytes);
@@ -358,7 +362,7 @@ export class VaultStore {
   private listJsonRecords<T extends {relativePath?: string; capturedAt?: string}>(directoryName: "recovery" | "failed" | "conflicts", relativePath?: string): T[] {
     const directory = join(this.appDataRoot, directoryName);
     if (!existsSync(directory)) return [];
-    const normalized = relativePath ? normalizeRelativePath(relativePath) : null;
+    const normalized = relativePath ? normalizeRelativePath(relativePath, this.platform) : null;
     return readdirSync(directory).filter((name) => name.endsWith(".json")).map((name) => JSON.parse(readFileSync(join(directory, name), "utf8")) as T).filter((record) => !normalized || record.relativePath === normalized).sort((left, right) => (left.capturedAt ?? "").localeCompare(right.capturedAt ?? ""));
   }
 
@@ -396,8 +400,8 @@ export class VaultStore {
   }
 
   private prepareBatchWrite(request: VaultWrite): VaultWrite {
-    const normalized = normalizeRelativePath(request.relativePath);
-    const targetPath = pathInside(this.root, normalized);
+    const normalized = normalizeRelativePath(request.relativePath, this.platform);
+    const targetPath = pathInside(this.root, normalized, this.platform);
     const current = this.currentRevision(targetPath);
     if (current !== request.expectedRevision) {
       const nextBytes = new Uint8Array(request.bytes);

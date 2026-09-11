@@ -717,3 +717,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Quality run `34598530346` and desktop-build run `34598530358` passed on Ubuntu, Windows and macOS. Desktop packaging, release-manifest, runtime-notice and transitive-attribution audits passed; signing remained correctly skipped as an external credential gate.
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-config-policy-ci.json`; `state.json` now records the pushed work SHA, source tree and CI IDs while retaining C09.1 as implementation-only and P1.2 in progress.
 - Next: continue the earliest dependency-ready reference/cross-platform vault round trips and unchanged-plugin lifecycle/DOM evidence; do not claim reference Obsidian, OS-enforced isolation, human or signed-release completion.
+
+## 2026-09-11T12:27:00Z — P1.1 portable vault path policy
+
+- Completed: made `VaultStore`'s platform safety policy injectable while retaining the host platform by default. Added deterministic Windows-reserved-name denial and backslash-separator normalization tests on Linux without changing vault bytes.
+- Validation: vault differential/safety tests pass (22 tests, 104 expectations), full `check:fast` passes (159 tests, 853 expectations), typecheck and strict Fallow pass. C01.2, C02.2, SYNC-004 and RISK-004 evidence now point to the new local trace while retaining cross-platform/reference blockers.
+- Limitation: the injected policy is not OS/filesystem proof. Real Windows/macOS/Linux filesystem behavior, ACL/quota/cloud placeholders and reference Obsidian reopen round trips remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: commit/push this P1.1 work, inspect the full matrix, then continue the reference/cross-platform vault procedures when the reference runtime is available.

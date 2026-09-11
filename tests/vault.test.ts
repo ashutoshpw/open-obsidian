@@ -256,6 +256,28 @@ test("case-only renames and Unicode source bytes remain observable", () => {
   expect(store.read("unicode.md").bytes).toEqual(unicodeBytes);
 });
 
+test("vault path policy can exercise Windows-reserved names on a non-Windows host", () => {
+  const fixture = createFixture();
+  writeFileSync(join(fixture.root, "CON"), "reserved-name-fixture\n");
+  const windowsStore = new VaultStore(fixture.root, fixture.appData, {platform: "win32"});
+
+  expect(windowsStore.platform).toBe("win32");
+  expect(() => windowsStore.read("CON")).toThrow("Windows-reserved");
+  expect(() => windowsStore.write({relativePath: "nested/COM1.txt", expectedRevision: null, bytes: Buffer.from("blocked") })).toThrow("Windows-reserved");
+  expect(readFileSync(join(fixture.root, "CON"), "utf8")).toBe("reserved-name-fixture\n");
+});
+
+test("vault paths normalize backslash separators without changing stored source paths", () => {
+  const fixture = createFixture();
+  mkdirSync(join(fixture.root, "nested"));
+  writeFileSync(join(fixture.root, "nested", "note.md"), "nested\n");
+  const store = new VaultStore(fixture.root, fixture.appData);
+
+  const read = store.read("nested\\note.md");
+  expect(read.relativePath).toBe("nested/note.md");
+  expect(readFileSync(join(fixture.root, "nested", "note.md"), "utf8")).toBe("nested\n");
+});
+
 test("the safety failure matrix names every required non-destructive outcome", () => {
   const matrix = JSON.parse(readFileSync(join(import.meta.dir, "../fixtures/vault-safety-failure-matrix.json"), "utf8")) as {
     schema_version: number;
