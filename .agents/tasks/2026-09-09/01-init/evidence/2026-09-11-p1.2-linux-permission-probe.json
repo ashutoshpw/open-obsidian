@@ -1,0 +1,65 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T08:49:00Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "PLUG-007", "PLUG-009", "RISK-003"],
+  "fixture_ids": ["fixture:hardest-plugin-spike", "fixture:plugin-isolation", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:risk-legacy-access"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "node_version": "22.22.2",
+    "node_path": "/home/ashutosh/.nvm/versions/node/v22.22.2/bin/node",
+    "tested_source_tree": "c234e1f373fe5c51da48425b622ed9cb8599b8434dd07128c1fcb8105b808606",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "implementation": {
+    "command": "PATH=/home/ashutosh/.nvm/versions/node/v22.22.2/bin:$PATH bun run audit:plugin-runtime:all",
+    "selection": "Every artifact in fixtures/compatibility-manifest.json, including the 25 mandatory plugins and two dependencies.",
+    "integrity": {"main_js_passed": 26, "not_applicable": ["PC-DEP-MINIMAL"], "failed": 0},
+    "probe_summary": {"loaded": 7, "denied": 15, "failed": 4, "timed_out": 0},
+    "loaded": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "denied": ["PC01", "PC03", "PC04", "PC05", "PC06", "PC08", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC19", "PC25", "PC-DEP-TEXT-EXTRACTOR"],
+    "failed": {
+      "PC02": "TypeError: Class extends value undefined is not a constructor or null",
+      "PC09": "ReferenceError: activeWindow is not defined",
+      "PC16": "Error: crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported",
+      "PC18": "ReferenceError: TransformStream is not defined"
+    },
+    "denied_capabilities": {
+      "PC01": ["dom.privileged"],
+      "PC03": ["dom.privileged"],
+      "PC04": ["process.spawn"],
+      "PC05": ["process.spawn"],
+      "PC06": ["dom.privileged"],
+      "PC08": ["dom.privileged"],
+      "PC10": ["process.spawn", "dom.privileged"],
+      "PC11": ["process.spawn"],
+      "PC12": ["dom.privileged"],
+      "PC13": ["filesystem.direct"],
+      "PC14": ["dom.privileged"],
+      "PC15": ["dom.privileged"],
+      "PC19": ["dom.privileged"],
+      "PC25": ["dom.privileged"],
+      "PC-DEP-TEXT-EXTRACTOR": ["dom.privileged"]
+    },
+    "coverage": "module-load-only",
+    "enforcement": "node-permission-model",
+    "runtime_dispositions": "All artifact runtime and lifecycle dispositions remain pending-runtime.",
+    "security_boundary": "The subprocess has no host module, DOM, network, process or credential access; this probe does not certify Electron or OS isolation."
+  },
+  "checks": [
+    {"command": "node --experimental-permission --no-addons -e 'console.log(\"permission-model\")'", "exit_code": 0, "result": "Node 22.22.2 accepted the enforced permission-model flags."},
+    {"command": "PATH=/home/ashutosh/.nvm/versions/node/v22.22.2/bin:$PATH bun run audit:plugin-runtime:all", "exit_code": 0, "result": "26 pinned main.js bundles passed integrity; 7 probes loaded, 15 denied, 4 ordinary compatibility failures and 0 timed out; all runtime dispositions remain pending-runtime."}
+  ],
+  "limitations": [
+    "This is unchanged-artifact module-load evidence, not Electron renderer compatibility, lifecycle/workflow/restart/update/uninstall certification or a reference Obsidian comparison.",
+    "The four ordinary compatibility failures remain failures, not D15 security denials; the seven loaded probes do not prove safe lifecycle behavior.",
+    "Windows/macOS OS-enforced bypass tests beyond the existing macOS record, renderer DOM traces, plugin-created views, combinations and return-to-Obsidian comparisons remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed."
+  ],
+  "result": "Linux x64 now has a permission-capable unchanged-bundle probe record with integrity, denied-capability and ordinary-failure evidence; lifecycle and renderer compatibility remain explicitly pending."
+}
