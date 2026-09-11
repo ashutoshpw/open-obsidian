@@ -17,7 +17,7 @@ test("final audit separates implementation readiness from external release readi
   expect(audit.implementation_readiness.mandatory_not_release_passing).toBe(161);
   expect(audit.release_readiness.release_ready).toBe(false);
   expect(audit.release_readiness.pending_mandatory_rows.length).toBe(161);
-  expect(audit.release_readiness.external_pending_rows.length).toBe(6);
+  expect(audit.release_readiness.external_pending_rows.length).toBe(7);
   expect(audit.phases).toHaveLength(19);
   expect(audit.phases.some((phase) => phase.id === "P6.2")).toBe(true);
   expect(fixture.handoffs.map((handoff) => handoff.id)).toEqual(expect.arrayContaining(["managed-service", "human-validation", "signed-artifacts", "publication", "reference-vault", "plugin-runtime", "updater-rollback"]));
