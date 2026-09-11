@@ -21,11 +21,11 @@
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
     "last_reconciled_head": "5821085f488ff8e576ec90f63fc738b551e7f60d",
-    "updated_at": "2026-09-11T06:42:45Z",
+    "updated_at": "2026-09-11T06:45:26Z",
   "status": "active",
     "current_checkpoint": "P6.2",
     "next_action": "Run the explicit C14 reference-vault round trips and external release handoffs when their runtimes, fixtures, credentials and owners are available; keep production publication blocked.",
-    "recent_increment": {"checkpoint":"P1.2","commit":"5821085f488ff8e576ec90f63fc738b551e7f60d","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-matrix.json","tested_source_tree":"bc62217d84c0a7cb2337bb507b4784a4a149f10c54df09510ea91a994c397db6","ci_runs":[]},
+    "recent_increment": {"checkpoint":"P1.2","commit":"5821085f488ff8e576ec90f63fc738b551e7f60d","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-matrix.json","tested_source_tree":"bc62217d84c0a7cb2337bb507b4784a4a149f10c54df09510ea91a994c397db6","ci_runs":[34571200687,34571200762]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",

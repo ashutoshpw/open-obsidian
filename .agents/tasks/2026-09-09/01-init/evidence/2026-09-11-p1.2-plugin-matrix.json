@@ -1,6 +1,6 @@
 {
   "evidence_version": 1,
-  "recorded_at": "2026-09-11T06:42:45Z",
+  "recorded_at": "2026-09-11T06:45:26Z",
   "checkpoint": "P1.2",
   "requirements": ["C11.1", "ARCH-009", "PLUG-002", "PLUG-007", "PLUG-009"],
   "fixture_ids": ["fixture:c11-certification-matrix", "fixture:feasibility-corpus", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:hardest-plugin-spike"],
@@ -27,8 +27,10 @@
     {"command": "bun test tests/plugin-compatibility-matrix.test.ts", "exit_code": 0, "result": "2 tests, 11 expectations"},
     {"command": "bun run typecheck", "exit_code": 0},
     {"command": "bun run audit:fallow:strict", "exit_code": 0},
-    {"command": "bun run quality", "exit_code": 0, "result": "133 tests, 720 expectations; Knip and report-only Fallow pass"}
+    {"command": "bun run quality", "exit_code": 0, "result": "133 tests, 720 expectations; Knip and report-only Fallow pass"},
+    {"command": "GitHub Actions runs 34571200687 and 34571200762", "exit_code": 0, "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows."}
   ],
+  "ci_runs": [34571200687, 34571200762],
   "limitations": [
     "This is an executable matrix and preflight contract, not plugin runtime certification.",
     "Unchanged upstream bundles have not been executed; lifecycle, DOM, combination, restart/update and return-to-Obsidian results remain pending-runtime.",
