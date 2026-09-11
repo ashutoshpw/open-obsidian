@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T05:52:08Z",
+  "checkpoint": "P2.2",
+  "requirements": [
+    "C10"
+  ],
+  "fixture_ids": [
+    "fixture:c10-core-workflows"
+  ],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "bun_version": "1.4.2",
+    "implementation_commit": "4b029f3a0211b61adacb6828fccc4b2a29d6aebb",
+    "tested_source_tree": "bceaeacc2fd49edffb65878149c0a6a21729f574aa05391e53291ff31c1e8ca9"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "command": "bun run validate:workflows",
+      "exit_code": 0,
+      "result": "The C10 inventory passes with 13 implemented workflows, zero incomplete entries and three deferred workflows with explicit owner/prerequisite handoffs."
+    },
+    {
+      "command": "bun test tests/workflows.test.ts tests/core-workflows.test.ts tests/api.test.ts tests/shared-ui.test.ts",
+      "exit_code": 0,
+      "result": "22 focused tests pass with 106 expectations, covering pure bookmark/tag/task transforms, read-only vault indexing, revision-aware task writes, IPC validation and shared-UI portability."
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "127 tests pass with 694 expectations; state, contracts, architecture, surfaces, version baseline, differential fixtures, workflows, accessibility, layout, TypeScript, Knip and changed-file Fallow checks pass."
+    },
+    {
+      "command": "bun run quality",
+      "exit_code": 0,
+      "result": "Full quality gate passes; Electron compilation, distribution metadata, Knip and report-only Fallow health pass at 89.0/A with the existing scripts/status.ts advisory retained."
+    },
+    {
+      "command": "bun run audit:fallow:strict",
+      "exit_code": 0,
+      "result": "No issues reported in the 15-file changed-source increment."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "Digest bceaeacc2fd49edffb65878149c0a6a21729f574aa05391e53291ff31c1e8ca9 across 160 included paths."
+    },
+    {
+      "command": "GitHub Actions runs 34567381243 and 34567381225",
+      "exit_code": 0,
+      "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows; the workflow validator, compilation, Knip, Fallow and packaged dependency/runtime audits passed."
+    }
+  ],
+  "implemented": [
+    "Added platform-neutral BookmarkItem, TagIndex and TaskItem contracts plus pure bookmark configuration parsing, Markdown tag extraction, task extraction and source-preserving checkbox toggling in src/shared/ui/workflows.ts.",
+    "Added src/core/workflows.ts for read-only bookmark/configuration, tag and task indices over the selected vault, with revision-checked task writes through VaultStore.",
+    "Added validated vault IPC/preload handlers and renderer surfaces for bookmarks, tags and tasks; task rows can open notes and toggle saved checkboxes without overwriting stale edits.",
+    "Added focused workflow/API tests, C10 fixture markers and documented Bun workflow/audit commands while preserving the shared UI boundary for a future Expo host."
+  ],
+  "limitations": [
+    "The implementation supports the bounded standard bookmark configuration and reports unsafe or unsupported entries instead of inferring targets; full Obsidian reference behavior remains pending.",
+    "Popouts, templates and daily notes remain deferred C10 handoffs; visible focus/input/IME, screen-reader, cross-platform, reference Obsidian and end-to-end human validation remain pending.",
+    "The selected vault /home/ashutosh/Obsidian was not opened, read or modified during this repository operation."
+  ],
+  "ci_runs": [
+    34567381243,
+    34567381225
+  ]
+}

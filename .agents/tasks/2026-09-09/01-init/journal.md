@@ -447,3 +447,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: GitHub Actions runs `34565083156` (quality) and `34565083178` (desktop-build) passed on Ubuntu, macOS and Windows; local `validate:state`, `check:fast` and changed-file Fallow all passed.
 - Safety: no vault path was opened or modified; the selected `/home/ashutosh/Obsidian` vault remains outside this repository operation.
 - Next: continue with visible accessibility/reference checks and the explicitly incomplete C10 workflow handoffs; do not relabel deferred behavior as implemented.
+
+## 2026-09-11T05:52:08Z — P2.2 bookmark, tag and task workflow increment
+
+- Completed: pushed source commit `4b029f3a0211b61adacb6828fccc4b2a29d6aebb` with marker `[openobsidian P2.2] Implement bookmark tag task workflows`; added reusable shared bookmark/tag/task contracts, read-only vault indices, renderer surfaces and revision-checked task toggles.
+- Completed: kept vault I/O in `src/core/workflows.ts` and pure parsing/transforms in `src/shared/ui/workflows.ts` so a future Expo host can reuse the data boundary without importing Electron or DOM code.
+- Validation: `bun run check:fast` passes with 127 tests and 694 expectations; `bun run quality` passes; Knip is clean; report-only Fallow health is 89.0/A with the existing `scripts/status.ts` advisory; strict changed-file Fallow reports no issues.
+- CI: quality run `34567381243` and desktop-build run `34567381225` passed on Ubuntu, macOS and Windows.
+- Safety: the selected `/home/ashutosh/Obsidian` vault was not opened, read or modified; popouts, templates and daily notes remain deferred, and visible/reference/cross-platform validation remains pending.
+- Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-workflow-indexes.json` with source tree `bceaeacc2fd49edffb65878149c0a6a21729f574aa05391e53291ff31c1e8ca9` across 160 included paths and updated the C10/P2.2 ledger.
+- Next: run the visible accessibility, cross-platform and reference Obsidian reopen checks, then continue the remaining C10 handoffs without relabeling deferred workflows.
