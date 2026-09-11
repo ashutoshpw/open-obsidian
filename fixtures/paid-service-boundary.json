@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "fixture:paid-service-boundary",
+  "purpose": "Keep local file compatibility separate from proprietary Sync and Publish access",
+  "surfaces": [
+    {
+      "id": "obsidian-sync",
+      "label": "Obsidian Sync",
+      "status": "unsupported",
+      "verification": "contract-only",
+      "remote_contacted": false,
+      "entitlement": "not-inferred"
+    },
+    {
+      "id": "obsidian-publish",
+      "label": "Obsidian Publish",
+      "status": "unsupported",
+      "verification": "contract-only",
+      "remote_contacted": false,
+      "entitlement": "not-inferred"
+    }
+  ],
+  "invariants": [
+    "Local Markdown/Canvas compatibility does not imply proprietary service access",
+    "No account, entitlement, billing or remote destination is inferred",
+    "Unsupported surfaces remain visible without starting a network action"
+  ]
+}
