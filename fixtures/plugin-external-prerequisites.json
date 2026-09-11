@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "fixture:external-prerequisites",
+  "source_catalog": "fixtures/plugin-catalog.json",
+  "status": "external_pending",
+  "live_access": {
+    "contacted": false,
+    "selected_vault_accessed": false,
+    "provider_contacted": false,
+    "artifact_modified": false
+  },
+  "entries": [
+    {"target_id":"PC01","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC02","prerequisites":["configured template scripts","system command prerequisite"],"status":"external_pending","setup":"Use a consented test fixture for the named prerequisites and keep credentials in OS storage.","verification":"Record redacted workflow results and upstream terms, then remove the test fixture."},
+    {"target_id":"PC03","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC04","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC05","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC06","prerequisites":["test Git repository","credential helper"],"status":"external_pending","setup":"Use a consented test repository and OS credential helper; never use the selected personal vault.","verification":"Record redacted Git and credential-helper results, then remove the test fixture."},
+    {"target_id":"PC07","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC08","prerequisites":["Minimal theme"],"status":"external_pending","setup":"Use the pinned Minimal theme in a consented isolated fixture.","verification":"Record the unchanged theme/settings result and preserve the pinned theme artifact hash."},
+    {"target_id":"PC09","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC10","prerequisites":["provisioned sync backend","test credentials"],"status":"external_pending","setup":"Provision only a consented test backend and OS-stored test credentials.","verification":"Record redacted sync results and terms, then remove credentials and the test fixture."},
+    {"target_id":"PC11","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC12","prerequisites":["configured QuickAdd choices"],"status":"external_pending","setup":"Use a consented fixture containing the configured QuickAdd choices.","verification":"Record the unchanged workflow result and remove the fixture after the run."},
+    {"target_id":"PC13","prerequisites":["configured agent CLI","test provider"],"status":"external_pending","setup":"Provision a consented test CLI/provider and keep credentials in OS storage.","verification":"Record redacted process/provider results and terms, then remove the test configuration."},
+    {"target_id":"PC14","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC15","prerequisites":["Text Extractor"],"status":"external_pending","setup":"Use the pinned Text Extractor dependency in a consented isolated fixture.","verification":"Record the unchanged dependency result and preserve its artifact hash."},
+    {"target_id":"PC16","prerequisites":["test provider","provider credentials"],"status":"external_pending","setup":"Provision only a consented test provider and OS-stored credentials.","verification":"Record redacted provider results and terms, then remove credentials and the fixture."},
+    {"target_id":"PC17","prerequisites":["Minimal theme"],"status":"external_pending","setup":"Use the pinned Minimal theme in a consented isolated fixture.","verification":"Record the unchanged theme/settings result and preserve the pinned theme artifact hash."},
+    {"target_id":"PC18","prerequisites":["source import fixture"],"status":"external_pending","setup":"Use a consented source-import fixture with no personal content.","verification":"Record the import result and remove the fixture after the run."},
+    {"target_id":"PC19","prerequisites":["Bases fixture"],"status":"external_pending","setup":"Use a consented Bases fixture with no personal content.","verification":"Record the unchanged TaskNotes/Bases result and remove the fixture after the run."},
+    {"target_id":"PC20","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC21","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC22","prerequisites":["configured local model"],"status":"external_pending","setup":"Provision a verified local model fixture without contacting a remote provider.","verification":"Record model integrity/locality results and remove derived model data after the run."},
+    {"target_id":"PC23","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC24","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC25","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC-DEP-MINIMAL","prerequisites":[],"status":"not-required","setup":"No external prerequisite is listed; run only the isolated fixture.","verification":"Record the local isolated result; do not infer paid, OAuth, executable or model access."},
+    {"target_id":"PC-DEP-TEXT-EXTRACTOR","prerequisites":["PDF/image fixtures"],"status":"external_pending","setup":"Use consented PDF/image fixtures with no personal content.","verification":"Record redacted extraction results and remove the fixture after the run."}
+  ],
+  "invariants": [
+    "Unavailable upstream subscriptions, executables, OAuth, model downloads and service terms remain external-pending.",
+    "Managed OpenObsidian AI access never substitutes for an upstream plugin entitlement or provider.",
+    "No live endpoint, account, credential, personal vault or artifact mutation is used by this contract validator."
+  ]
+}

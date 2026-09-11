@@ -35,6 +35,7 @@
     "audit:plugin-renderer": "bun scripts/audit-plugin-renderer.ts",
     "audit:plugin-artifact-lifecycle": "bun scripts/audit-plugin-renderer.ts --all --lifecycle",
     "validate:plugin-d15": "bun scripts/validate-plugin-d15.ts",
+    "validate:plugin-prerequisites": "bun scripts/validate-plugin-external-prerequisites.ts",
     "audit:plugin-lifecycle": "bun scripts/audit-plugin-lifecycle.ts",
     "audit:plugin-loaded-workflows": "bun scripts/audit-plugin-loaded-workflows.ts",
     "audit:vault-roundtrip": "bun scripts/vault-roundtrip.ts",
