@@ -1,7 +1,7 @@
 import {performance} from "node:perf_hooks";
 import {mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {basename, join} from "node:path";
 import {buildVaultIndex, searchVaultIndex, type VaultIndex} from "../src/core/vault-index.js";
 import {createVaultWatcher} from "../src/core/watcher.js";
 import {VaultStore} from "../src/core/vault.js";
@@ -202,7 +202,7 @@ function collectIndexMeasurements(store: VaultStore, priorPath: string, runs: nu
   let index: VaultIndex | null = null;
   for (let run = 0; run < runs; run += 1) {
     const readStarted = performance.now();
-    store.read(`Notes/${priorPath.split("/").at(-1) ?? "note-000000.md"}`);
+    store.read(`Notes/${basename(priorPath) || "note-000000.md"}`);
     priorReadSamples.push(performance.now() - readStarted);
     const indexStarted = performance.now();
     index = buildVaultIndex(store);
