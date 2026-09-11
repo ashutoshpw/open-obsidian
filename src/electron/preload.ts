@@ -23,6 +23,7 @@ const api: OpenObsidianAPI = {
   openDailyNote: () => ipcRenderer.invoke(CHANNELS.openDailyNote),
   loadSettings: () => ipcRenderer.invoke(CHANNELS.loadSettings),
   saveSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveSettings, settings),
+  loadAppearance: () => ipcRenderer.invoke(CHANNELS.loadAppearance),
   historyPlan: (policy) => ipcRenderer.invoke(CHANNELS.historyPlan, policy),
   cleanupHistory: (policy) => ipcRenderer.invoke(CHANNELS.cleanupHistory, policy),
   readConflict: (request) => ipcRenderer.invoke(CHANNELS.readConflict, request),

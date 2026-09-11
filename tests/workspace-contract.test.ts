@@ -16,4 +16,8 @@ test("workspace journey fixture covers keyboard commands and visible entry point
   expect(renderer).toContain("resolveKeyboardCommand");
   expect(renderer).toContain("openCommandPalette");
   expect(renderer).toContain("provider destination: none");
+  expect(html).toContain('id="appearance-settings"');
+  expect(html).toContain('id="appearance-theme"');
+  expect(renderer).toContain("loadAppearance");
+  expect(renderer).toContain("previewThemeAsset");
 });

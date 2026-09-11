@@ -22,6 +22,20 @@ export type ThemeStyleAnalysis = {
   issues: readonly string[];
 };
 
+/**
+ * A style asset is source data, not executable extension code. The renderer
+ * may use the source only after the analysis/safety contract has allowed a
+ * preview. Keeping the analysis beside the source makes that decision
+ * inspectable in the UI and in tests.
+ */
+export type ThemeStyleAsset = {
+  relativePath: string;
+  kind: ThemeStyleKind;
+  sha256: string;
+  source: string;
+  analysis: ThemeStyleAnalysis;
+};
+
 export type AppearanceSettings = {
   mode: ThemeMode;
   cssTheme: string | null;
@@ -29,6 +43,22 @@ export type AppearanceSettings = {
   accentColor: string | null;
   baseFontSize: number | null;
 };
+
+export type VaultAppearance = {
+  settingsPath: string | null;
+  settings: AppearanceSettings;
+  styles: readonly ThemeStyleAsset[];
+};
+
+export function themeStyleName(relativePath: string): string {
+  const file = relativePath.split("/").at(-1) ?? relativePath;
+  return file.toLowerCase().endsWith(".css") ? file.slice(0, -4) : file;
+}
+
+export function styleMatchesName(relativePath: string, requestedName: string | null): boolean {
+  if (!requestedName?.trim()) return false;
+  return themeStyleName(relativePath).toLocaleLowerCase() === requestedName.trim().toLocaleLowerCase();
+}
 
 function unique(values: readonly string[]): string[] {
   return [...new Set(values)];
@@ -109,7 +139,10 @@ export function parseThemeStylesheet(source: string): ThemeStyleAnalysis {
   ].filter(Boolean));
 
   const externalImports = /@import\b/i.test(clean);
-  const remoteUrls = /url\(\s*["']?(?:https?:|file:|data:|javascript:)/i.test(clean);
+  // A preview is rendered from an app-local surface. Even relative URLs can
+  // resolve outside the vault or trigger an unreviewed fetch, so all CSS URL
+  // assets remain denied until a host-specific review exists.
+  const remoteUrls = /url\s*\(/i.test(clean);
   const executableExpressions = /expression\s*\(|javascript:|-moz-binding|\bbehavior\s*:/i.test(clean);
   const privilegedSelectors = selectors.filter((selector) => /#(?:extension-trust|provider-mode|account-billing|model-management|safe-mode|source-inspector)\b/i.test(selector));
   const issues = [

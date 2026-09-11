@@ -18,11 +18,11 @@
     "external_imports": "denied",
     "remote_urls": "denied",
     "privileged_selectors": "host-review-required",
-    "applicability": "analysis-only until visible renderer and reference traces pass"
+    "applicability": "scoped renderer preview; visible and reference traces remain certification gates"
   },
   "fixtures": [
-    {"id": "minimal-theme", "kind": "theme", "source": ".obsidian/themes/Minimal.css", "status": "preflight"},
-    {"id": "enabled-css-snippet", "kind": "snippet", "source": ".obsidian/snippets/enabled.css", "status": "preflight"}
+    {"id": "minimal-theme", "kind": "theme", "source": ".obsidian/themes/Minimal.css", "status": "safe-preview"},
+    {"id": "enabled-css-snippet", "kind": "snippet", "source": ".obsidian/snippets/enabled.css", "status": "safe-preview"}
   ],
   "pending": [
     "visible light/dark renderer traces",

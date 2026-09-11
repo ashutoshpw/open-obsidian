@@ -1,4 +1,4 @@
-import type {BookmarkResponse, DailyNotePlan, TagIndex, TaskItem, TemplateIndex} from "./ui/index.js";
+import type {BookmarkResponse, DailyNotePlan, TagIndex, TaskItem, TemplateIndex, VaultAppearance} from "./ui/index.js";
 
 export const CHANNELS = {
   selectVault: "vault:select",
@@ -22,6 +22,7 @@ export const CHANNELS = {
   openDailyNote: "vault:open-daily-note",
   loadSettings: "workspace:load-settings",
   saveSettings: "workspace:save-settings",
+  loadAppearance: "workspace:load-appearance",
   historyPlan: "vault:history-plan",
   cleanupHistory: "vault:cleanup-history",
   readConflict: "vault:read-conflict",
@@ -581,6 +582,7 @@ export type OpenObsidianAPI = {
   openDailyNote: () => Promise<VaultReadResponse>;
   loadSettings: () => Promise<WorkspaceSettings>;
   saveSettings: (settings: WorkspaceSettings) => Promise<WorkspaceSettings>;
+  loadAppearance: () => Promise<VaultAppearance>;
   historyPlan: (policy?: HistoryPolicy) => Promise<HistoryPlanSummary>;
   cleanupHistory: (policy?: HistoryPolicy) => Promise<HistoryCleanupResult>;
   readConflict: (request: {id: string; relativePath: string}) => Promise<ConflictReadResponse>;

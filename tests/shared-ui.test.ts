@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {readdirSync, readFileSync} from "node:fs";
-import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, UNINSTALL_CLEANUP_OPTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, parseAppearanceSettings, parseThemeStylesheet, resolveKeyboardCommand, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type ThemeMode, type ThemeStyleSafety, type UninstallCleanupOptionId, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, uninstallCleanupOption, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
+import {DEFAULT_WORKSPACE_VISIBILITY, KEYBOARD_SHORTCUTS, OPEN_OBSIDIAN_THEME, TITLEBAR_ACTIONS, UNINSTALL_CLEANUP_OPTIONS, VAULT_PANES, WORKSPACE_ACTIONS, WORKSPACE_BLOCKS, layoutGraph, parseAppearanceSettings, parseThemeStylesheet, resolveKeyboardCommand, styleMatchesName, themeStyleName, type GraphLayoutOptions, type KeyboardInput, type KeyboardShortcut, type SharedWorkspaceAction, type ThemeMode, type ThemeStyleSafety, type UninstallCleanupOptionId, type WorkspaceAction, type WorkspaceBlock, type WorkspaceBlockId, type WorkspaceVisibility, uninstallCleanupOption, vaultPane, workspaceAction, workspaceBlock, workspaceColumns} from "../src/shared/ui/index.js";
 
 test("shared workspace UI contract exposes reusable blocks and semantic actions", () => {
   const firstBlock: WorkspaceBlock = WORKSPACE_BLOCKS[0]!;
@@ -62,4 +62,7 @@ test("shared theme contract is data-only and reusable across hosts", () => {
   expect(analysis.layoutContracts).toContain("workspace-shell");
   expect(analysis.accessibilityContracts).toContain("focus-visible");
   expect(safety.previewable).toBe(true);
+  expect(themeStyleName(".obsidian/themes/Minimal.css")).toBe("Minimal");
+  expect(styleMatchesName(".obsidian/themes/Minimal.css", "minimal")).toBe(true);
+  expect(styleMatchesName(".obsidian/themes/Minimal.css", "Other")).toBe(false);
 });

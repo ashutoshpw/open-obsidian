@@ -1,5 +1,5 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
-import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
+import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, parseThemeStylesheet, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type DailyNotePlan, type TagIndex, type TaskItem, type TemplateIndex, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
@@ -115,6 +115,12 @@ const closeSettingsButton = document.querySelector<HTMLButtonElement>("#close-se
 const settingsSearch = document.querySelector<HTMLInputElement>("#settings-search");
 const settingsSearchStatus = document.querySelector<HTMLElement>("#settings-search-status");
 const settingsSections = [...document.querySelectorAll<HTMLElement>("[data-settings-section]")];
+const appearanceTheme = document.querySelector<HTMLSelectElement>("#appearance-theme");
+const appearanceMode = document.querySelector<HTMLSelectElement>("#appearance-mode");
+const appearanceSnippets = document.querySelector<HTMLFieldSetElement>("#appearance-snippets");
+const appearanceSnippetsEmpty = document.querySelector<HTMLElement>("#appearance-snippets-empty");
+const appearanceSummary = document.querySelector<HTMLElement>("#appearance-summary");
+const appearanceSafety = document.querySelector<HTMLElement>("#appearance-safety");
 const uninstallCleanupChoices = [...document.querySelectorAll<HTMLInputElement>("[data-uninstall-choice]")];
 const uninstallCleanupSummary = document.querySelector<HTMLElement>("#uninstall-cleanup-summary");
 const defaultEditorMode = document.querySelector<HTMLSelectElement>("#default-editor-mode");
@@ -196,6 +202,8 @@ let pendingCitation: RetrievalCitation | null = null;
 let sourceInspectorCitation: RetrievalCitation | null = null;
 let aiChangeSet: AIChangeSet | null = null;
 let aiUndoId: string | null = null;
+let appearanceData: VaultAppearance | null = null;
+let appearanceStyleElements: HTMLStyleElement[] = [];
 const uiLocale = normalizeLocale(navigator.language);
 
 const providerIds: Record<ProviderMode, ProviderSettings["providerId"]> = {managed: "openrouter-proxy", byok: "openai-compatible", local: "local-openai-compatible"};
@@ -351,6 +359,244 @@ function applySharedDesignTokens(): void {
     "--radius-panel": `${radii.panel}px`,
   };
   Object.entries(tokens).forEach(([name, value]) => document.documentElement.style.setProperty(name, value));
+}
+
+type ThemePreviewResult = {style: HTMLStyleElement | null; issues: string[]};
+
+function effectiveThemeMode(mode: ThemeMode): "light" | "dark" {
+  if (mode === "light" || mode === "dark") return mode;
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "dark";
+  }
+}
+
+function themeScope(mode: "light" | "dark"): string {
+  return `.app-shell[data-openobsidian-theme-mode="${mode}"]`;
+}
+
+function scopedThemeSelector(selector: string, scope: string, mode: "light" | "dark"): string {
+  const trimmed = selector.trim();
+  const modeClass = `.theme-${mode}`;
+  if (trimmed === modeClass || trimmed.startsWith(`${modeClass} `)) return `${scope}${trimmed.slice(modeClass.length)}`;
+  if (trimmed.startsWith(`body${modeClass}`)) return `${scope}${trimmed.slice(`body${modeClass}`.length)}`;
+  if (/^(?:html|body|:root)(?:\s|$|[.#[:>+~])/.test(trimmed)) return `${scope}${trimmed.replace(/^(?:html|body|:root)/, "")}`;
+  return `${scope} ${trimmed}`;
+}
+
+function privilegedThemeSelector(selector: string): boolean {
+  return /#(?:extension-trust|provider-mode|account-billing|model-management|safe-mode|source-inspector)\b/i.test(selector);
+}
+
+function splitThemeSelectors(value: string): string[] {
+  const selectors: string[] = [];
+  let start = 0;
+  let depth = 0;
+  let quote: '"' | "'" | null = null;
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+    if (quote) {
+      if (character === quote && value[index - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === "(") depth += 1;
+    else if (character === ")") depth = Math.max(0, depth - 1);
+    else if (character === "," && depth === 0) {
+      const selector = value.slice(start, index).trim();
+      if (selector) selectors.push(selector);
+      start = index + 1;
+    }
+  }
+  const finalSelector = value.slice(start).trim();
+  if (finalSelector) selectors.push(finalSelector);
+  return selectors;
+}
+
+function sanitizeThemeRules(style: HTMLStyleElement, scope: string, mode: "light" | "dark"): string[] {
+  const sheet = style.sheet;
+  if (!sheet) return ["The browser did not expose a preview stylesheet"];
+  const issues: string[] = [];
+  type RuleOwner = {cssRules: CSSRuleList; deleteRule: (index: number) => void};
+  const visit = (owner: RuleOwner): void => {
+    for (let index = owner.cssRules.length - 1; index >= 0; index -= 1) {
+      const rule = owner.cssRules[index];
+      if (!rule) continue;
+      if (rule instanceof CSSStyleRule) {
+        const selectors = splitThemeSelectors(rule.selectorText);
+        if (selectors.some(privilegedThemeSelector)) {
+          owner.deleteRule(index);
+          issues.push("a rule targeting a privileged control was withheld");
+          continue;
+        }
+        try {
+          rule.selectorText = selectors.map((selector) => scopedThemeSelector(selector, scope, mode)).join(", ");
+        } catch {
+          owner.deleteRule(index);
+          issues.push("a selector could not be safely scoped and was withheld");
+        }
+        continue;
+      }
+      const nested = (rule as CSSRule & {cssRules?: CSSRuleList}).cssRules;
+      if (nested && typeof (rule as CSSRule & {deleteRule?: unknown}).deleteRule === "function") {
+        visit(rule as unknown as RuleOwner);
+        if (nested.length === 0) owner.deleteRule(index);
+        continue;
+      }
+      if (rule.type === CSSRule.IMPORT_RULE || rule.type === CSSRule.FONT_FACE_RULE || rule.type === CSSRule.PAGE_RULE) {
+        owner.deleteRule(index);
+        issues.push("an external or document-level rule was withheld");
+      }
+    }
+  };
+  visit(sheet);
+  return issues;
+}
+
+function previewThemeAsset(asset: ThemeStyleAsset, mode: "light" | "dark"): ThemePreviewResult {
+  const analysis = parseThemeStylesheet(asset.source);
+  if (!analysis.safety.previewable) return {style: null, issues: [...analysis.issues]};
+  const style = document.createElement("style");
+  style.dataset.openobsidianStyle = asset.relativePath;
+  // Keep the untrusted stylesheet inert while the browser parses it. Rules
+  // are scoped and unsafe rule kinds removed before it is enabled.
+  style.media = "not all";
+  style.textContent = asset.source;
+  document.head.append(style);
+  const issues = sanitizeThemeRules(style, themeScope(mode), mode);
+  if (issues.length > 0 && !style.sheet) {
+    style.remove();
+    return {style: null, issues};
+  }
+  style.media = "all";
+  return {style, issues};
+}
+
+function safeAppearanceColor(value: string | null): string | null {
+  if (!value) return null;
+  const normalized = value.trim();
+  return /^(?:#[0-9a-f]{3,8}|(?:rgb|hsl)a?\([\d\s,.%+-]+\))$/i.test(normalized) ? normalized : null;
+}
+
+function selectedAppearanceAssets(): ThemeStyleAsset[] {
+  if (!appearanceData) return [];
+  const themePath = appearanceTheme?.value ?? "";
+  const snippets = new Set([...document.querySelectorAll<HTMLInputElement>("#appearance-snippets input[data-appearance-snippet]")].filter((input) => input.checked).map((input) => input.value));
+  return appearanceData.styles.filter((asset) => (asset.kind === "theme" && asset.relativePath === themePath) || (asset.kind === "snippet" && snippets.has(asset.relativePath)));
+}
+
+function applySelectedAppearance(): void {
+  appearanceStyleElements.forEach((style) => style.remove());
+  appearanceStyleElements = [];
+  if (!appearanceData || !appShell) {
+    appShell?.removeAttribute("data-openobsidian-theme-mode");
+    return;
+  }
+  const mode = effectiveThemeMode((appearanceMode?.value as ThemeMode | undefined) ?? appearanceData.settings.mode);
+  appShell.dataset.openobsidianThemeMode = mode;
+  appShell.classList.toggle("theme-light", mode === "light");
+  appShell.classList.toggle("theme-dark", mode === "dark");
+  if (appearanceData.settings.baseFontSize && appearanceData.settings.baseFontSize >= 10 && appearanceData.settings.baseFontSize <= 32) appShell.style.fontSize = `${appearanceData.settings.baseFontSize}px`;
+  else appShell.style.removeProperty("font-size");
+  const accent = safeAppearanceColor(appearanceData.settings.accentColor);
+  if (accent) appShell.style.setProperty("--accent", accent);
+  else appShell.style.removeProperty("--accent");
+
+  const applied: string[] = [];
+  const blocked: string[] = [];
+  for (const asset of selectedAppearanceAssets()) {
+    if (!(asset.analysis.modeSupport[mode] ?? true)) {
+      blocked.push(`${themeStyleName(asset.relativePath)} (${mode} mode is not declared)`);
+      continue;
+    }
+    const result = previewThemeAsset(asset, mode);
+    if (result.style) {
+      appearanceStyleElements.push(result.style);
+      applied.push(themeStyleName(asset.relativePath));
+    }
+    if (result.issues.length > 0) blocked.push(`${themeStyleName(asset.relativePath)}: ${result.issues.join("; ")}`);
+  }
+  const summary = `${applied.length} safe preview style${applied.length === 1 ? "" : "s"} applied in ${mode} mode${blocked.length ? ` · ${blocked.length} withheld for review` : ""}. Vault appearance files remain read-only.`;
+  setText(appearanceSafety, blocked.length ? `${summary} ${blocked.join(" · ")}` : summary);
+  if (appearanceSafety) appearanceSafety.dataset.state = blocked.length ? "blocked" : "ready";
+}
+
+function renderAppearanceControls(): void {
+  if (!appearanceTheme || !appearanceMode || !appearanceSnippets || !appearanceData) {
+    appearanceTheme?.setAttribute("disabled", "true");
+    appearanceMode?.setAttribute("disabled", "true");
+    if (appearanceSnippets) appearanceSnippets.disabled = true;
+    return;
+  }
+  const themes = appearanceData.styles.filter((asset) => asset.kind === "theme");
+  appearanceTheme.replaceChildren(new Option("OpenObsidian base", ""), ...themes.map((asset) => new Option(themeStyleName(asset.relativePath), asset.relativePath)));
+  const configuredTheme = themes.find((asset) => styleMatchesName(asset.relativePath, appearanceData?.settings.cssTheme ?? null));
+  appearanceTheme.value = configuredTheme?.relativePath ?? "";
+  const mode = effectiveThemeMode(appearanceData.settings.mode);
+  appearanceMode.value = mode;
+  appearanceTheme.disabled = false;
+  appearanceMode.disabled = false;
+  appearanceSnippets.disabled = false;
+  appearanceSnippets.querySelectorAll(".appearance-snippet-option").forEach((node) => node.remove());
+  if (appearanceData.styles.every((asset) => asset.kind !== "snippet")) {
+    setHidden(appearanceSnippetsEmpty, false);
+  } else {
+    setHidden(appearanceSnippetsEmpty, true);
+    const configured = appearanceData.settings.enabledCssSnippets;
+    appearanceData.styles.filter((asset) => asset.kind === "snippet").forEach((asset) => {
+      const label = document.createElement("label");
+      label.className = "appearance-snippet-option";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.dataset.appearanceSnippet = "true";
+      input.value = asset.relativePath;
+      input.checked = configured.some((name) => styleMatchesName(asset.relativePath, name) || name === asset.relativePath);
+      input.addEventListener("change", applySelectedAppearance);
+      const text = document.createElement("span");
+      text.textContent = themeStyleName(asset.relativePath);
+      label.append(input, text);
+      appearanceSnippets.append(label);
+    });
+  }
+  setText(appearanceSummary, `${appearanceData.styles.length} CSS asset${appearanceData.styles.length === 1 ? "" : "s"} discovered${appearanceData.settingsPath ? ` from ${appearanceData.settingsPath}` : ""}. Selection is a renderer-only safe preview; no vault file is modified.`);
+  applySelectedAppearance();
+}
+
+function clearAppearance(): void {
+  appearanceStyleElements.forEach((style) => style.remove());
+  appearanceStyleElements = [];
+  appearanceData = null;
+  appShell?.removeAttribute("data-openobsidian-theme-mode");
+  appShell?.classList.remove("theme-light", "theme-dark");
+  appShell?.style.removeProperty("font-size");
+  appShell?.style.removeProperty("--accent");
+  if (appearanceTheme) {
+    appearanceTheme.replaceChildren(new Option("OpenObsidian base", ""));
+    appearanceTheme.value = "";
+    appearanceTheme.disabled = true;
+  }
+  if (appearanceMode) appearanceMode.disabled = true;
+  if (appearanceSnippets) {
+    appearanceSnippets.disabled = true;
+    appearanceSnippets.querySelectorAll(".appearance-snippet-option").forEach((node) => node.remove());
+  }
+  setText(appearanceSummary, "Open a vault to inspect its read-only appearance configuration.");
+  setText(appearanceSafety, "Raw CSS, imports, URL assets and privileged selectors are never applied.");
+  if (appearanceSafety) delete appearanceSafety.dataset.state;
+}
+
+async function loadAppearance(client: OpenObsidianAPI): Promise<void> {
+  try {
+    appearanceData = await client.loadAppearance();
+    renderAppearanceControls();
+  } catch (error) {
+    clearAppearance();
+    setStatus(errorText(error, "Unable to load appearance configuration; the base OpenObsidian theme remains active."));
+  }
 }
 
 function applySharedActionMetadata(): void {
@@ -3030,6 +3276,7 @@ async function listFilesRequest(client: OpenObsidianAPI): Promise<void> {
 }
 
 function resetWorkflowData(): void {
+  clearAppearance();
   vaultFiles = [];
   bookmarkData = null;
   tagData = null;
@@ -3091,6 +3338,7 @@ async function openVaultRequest(client: OpenObsidianAPI): Promise<void> {
       return;
     }
     renderMode(selectedSummary);
+    await loadAppearance(client);
     await listFilesRequest(client);
     await loadWorkflowIndexes(client);
     await restoreWorkspaceTabs(client);
@@ -3184,6 +3432,8 @@ if (toggleSettingsButton) toggleSettingsButton.addEventListener("click", () => {
 });
 if (closeSettingsButton) closeSettingsButton.addEventListener("click", () => setHidden(settingsPanel, true));
 if (settingsSearch) settingsSearch.addEventListener("input", renderSettingsSearch);
+if (appearanceTheme) appearanceTheme.addEventListener("change", applySelectedAppearance);
+if (appearanceMode) appearanceMode.addEventListener("change", applySelectedAppearance);
 if (defaultEditorMode) defaultEditorMode.addEventListener("change", () => {
   const mode = defaultEditorMode.value;
   if (mode === "source" || mode === "live-preview" || mode === "reading") setEditorMode(mode);

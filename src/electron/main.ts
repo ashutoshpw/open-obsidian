@@ -19,7 +19,9 @@ import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
 import {buildDailyNotePlan, buildTemplateIndex, openDailyNote} from "../core/note-workflows.js";
 import {buildBookmarkIndex, buildTagIndex, buildTaskIndex, toggleVaultTask} from "../core/workflows.js";
+import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
+import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
 import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
@@ -348,6 +350,22 @@ function saveSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): Work
   return settings;
 }
 
+function loadAppearance(): VaultAppearance {
+  const configuration = discoverVaultConfiguration(requireVault().root);
+  const settingsEntry = Object.entries(configuration.appearance)[0];
+  return {
+    settingsPath: settingsEntry?.[0] ?? null,
+    settings: settingsEntry?.[1] ?? parseAppearanceSettings({}),
+    styles: configuration.styles.map((style) => ({
+      relativePath: style.relativePath,
+      kind: style.kind,
+      sha256: style.sha256,
+      source: new TextDecoder().decode(style.bytes),
+      analysis: style.analysis,
+    })),
+  };
+}
+
 function providerSettingsPath(): string {
   return join(app.getPath("userData"), "provider-settings.json");
 }
@@ -489,6 +507,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.openDailyNote, openDailyNoteRequest);
   ipcMain.handle(CHANNELS.loadSettings, loadSettings);
   ipcMain.handle(CHANNELS.saveSettings, saveSettings);
+  ipcMain.handle(CHANNELS.loadAppearance, loadAppearance);
   ipcMain.handle(CHANNELS.loadProviderSettings, loadProviderSettings);
   ipcMain.handle(CHANNELS.saveProviderSettings, saveProviderSettings);
   ipcMain.handle(CHANNELS.saveProviderCredential, saveProviderCredential);

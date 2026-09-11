@@ -1,0 +1,68 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T08:33:29Z",
+  "checkpoint": "P3.3",
+  "requirements": ["RISK-002", "C12"],
+  "fixture_ids": ["fixture:risk-theme-parity", "fixture:c12-themes"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "builder_version": "26.16.1",
+    "tested_source_tree": "c234e1f373fe5c51da48425b622ed9cb8599b8434dd07128c1fcb8105b808606",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "synthetic_fixture": {
+    "root": "/tmp/openobsidian-theme-fixture.dM17TB",
+    "appearance": ".obsidian/appearance.json",
+    "theme": ".obsidian/themes/Fixture.css",
+    "snippet": ".obsidian/snippets/focus.css",
+    "source_content": "synthetic CSS only; no user vault or note content",
+    "audit": {
+      "command": "bun run audit:theme-assets -- --root /tmp/openobsidian-theme-fixture.dM17TB",
+      "exit_code": 0,
+      "result": "2 CSS assets discovered; both previewable; theme contracts include workspace-shell/workspace-leaf; snippet contracts include focus-visible; no URL/import/privileged selector issue."
+    },
+    "strict_audit": {
+      "command": "bun run audit:theme-assets -- --root /tmp/openobsidian-theme-fixture.dM17TB --strict",
+      "exit_code": 0,
+      "result": "No host-review safety issue was present in the synthetic fixture."
+    }
+  },
+  "implementation": {
+    "ipc": "workspace:load-appearance discovers appearance settings and CSS source through the main process; no renderer method writes vault configuration.",
+    "renderer": "The packaged renderer selects configured themes/snippets, resolves light/dark mode, scopes stylesheet selectors to .app-shell[data-openobsidian-theme-mode], removes document-level/import/font-face rules, withholds privileged selectors and reports the result visibly.",
+    "observed": {
+      "theme": ".obsidian/themes/Fixture.css",
+      "mode": "dark",
+      "enabled_snippets": [".obsidian/snippets/focus.css"],
+      "style_elements": 2,
+      "all_style_media": "all",
+      "safe_preview_status": "2 safe preview styles applied in dark mode. Vault appearance files remain read-only.",
+      "scoped_rule_examples": [
+        ".app-shell[data-openobsidian-theme-mode=\"dark\"] .workspace",
+        ".app-shell[data-openobsidian-theme-mode=\"dark\"] .nav-file:focus-visible"
+      ],
+      "accent_color": "#55aa77",
+      "appearance_controls_enabled": true
+    }
+  },
+  "checks": [
+    {"command": "bun test", "exit_code": 0, "result": "142 tests pass with 761 expectations."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "State, contracts, plugin matrix, architecture, surfaces, version baseline, differential, workflows, accessibility, layout, typecheck, tests, Knip and changed-file Fallow pass."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript compilation succeeds."},
+    {"command": "bun run package:dir", "exit_code": 0, "result": "Pinned Electron 44.3.0 Linux x64 unpacked preview rebuilt with the appearance IPC and renderer adapter."},
+    {"procedure": "xvfb-run -a out/linux-unpacked/openobsidian --no-sandbox --disable-gpu --remote-debugging-port=9342; native folder picker selected synthetic fixture; CDP Runtime.evaluate", "exit_code": 0, "result": "Packaged renderer opened the fixture and reported configured theme, dark mode, one enabled snippet, two scoped style elements, enabled appearance controls and read-only safety status."},
+    {"command": "git diff --check", "exit_code": 0, "result": "No whitespace errors."}
+  ],
+  "limitations": [
+    "Only Linux x64 packaged renderer behavior was observed in this increment; macOS and Windows interactive traces remain pending.",
+    "The fixture is synthetic and does not certify the unchanged Minimal Theme Settings plugin, Minimal theme, plugin-created views, popout windows, persistence, reference Obsidian reopening or screen-reader behavior.",
+    "Light-mode, popout and accessibility screenshot/interaction traces remain pending; this evidence does not promote RISK-002 or C12 to passing.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "A visible, read-only, scoped theme/snippet preview path is implemented and exercised in the packaged Linux renderer; compatibility and cross-platform certification remain open."
+}
