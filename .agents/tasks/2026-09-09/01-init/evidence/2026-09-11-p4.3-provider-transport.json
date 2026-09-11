@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T18:35:24Z",
+  "checkpoint": "P4.3",
+  "requirements": ["A05", "A06", "A07", "A08", "AI-003", "AI-004", "RISK-007"],
+  "fixture_ids": ["fixture:provider-modes", "fixture:retrieval-model", "fixture:model-lifecycle"],
+  "implementation_commit": "84d147679df5a09d29262b70199e341a263158b8",
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "b89c8fbbaf579d5d535875b31966cd219ccafb97be396afa5f4b7c6f9c13a969",
+    "source_tree_paths": 221,
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "implementation": [
+    "Added an explicit OpenAI-compatible chat-completions HTTP transport with endpoint normalization, authorization only for managed/BYOK credentials, structured response parsing and usage extraction.",
+    "Connected Electron retrieval to the configured provider mode only after local ranking; the provider receives approved citation metadata/snippets and invalid, unavailable or cancelled requests retain an explicit source-only fallback.",
+    "Kept provider usage ledgers scoped by selected settings and exposed accumulated request/token/cost state through provider status without adding a billing service or embedding proxy secrets in the bundle.",
+    "Updated the renderer status text to distinguish model adjudication, explicit source-only fallback and no-provider local retrieval."
+  ],
+  "checks": [
+    {"command": "bun test tests/providers.test.ts tests/retrieval.test.ts", "exit_code": 0, "result": "13 tests passed with 104 expectations; HTTP transport, provider boundaries, citation validation and source-only fallback passed."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passed."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout bundles compiled successfully."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "173 tests passed with 941 expectations; structural, contract, matrix, accessibility, Knip and changed-file Fallow gates passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the four changed implementation/test files; one inherited renderer complexity warning remains excluded by the changed-file gate."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest b89c8fbbaf579d5d535875b31966cd219ccafb97be396afa5f4b7c6f9c13a969 across 221 included paths."}
+  ],
+  "provider_boundary": {
+    "modes": ["managed", "byok", "local"],
+    "transport": "OpenAI-compatible POST /chat/completions",
+    "scope": "Local ranking selects citations before provider dispatch; excluded paths are not included in the prompt.",
+    "fallback": "No silent local-to-cloud fallback; invalid, unavailable, timeout and cancellation states retain source-only evidence.",
+    "live_status": "external-pending"
+  },
+  "limitations": [
+    "No managed, BYOK or local provider endpoint was contacted in this run; transport behavior is contract-tested with an injected response.",
+    "Provider retention, billing, hardware, network reliability and model lifecycle measurements remain external-pending.",
+    "Reference Obsidian grounding, human accessibility/input, signing and release readiness remain pending; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}

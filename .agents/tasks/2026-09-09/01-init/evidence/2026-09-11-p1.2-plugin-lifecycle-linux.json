@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T18:29:00Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "ARCH-008", "RISK-003"],
+  "fixture_id": "fixture:plugin-renderer-lifecycle",
+  "implementation_commit": "f7ce0c27e9ac1d97ca6eaa8f415cef9b14c35fa7",
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "tested_source_tree": "cbd07c627e47138abbd94ad9e381b35a1048263e9ac4539ffb746b53b907d358",
+    "source_tree_paths": 221,
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "command": "bun run audit:plugin-lifecycle",
+  "result": {
+    "exit_code": 0,
+    "status": "passed",
+    "checks": 24,
+    "all_checks_true": true,
+    "safe_lifecycle": "constructed → plugin-onload → onload → plugin-onunload → onunload",
+    "workflow_phases": ["install 1.0.0", "restart 1.0.0", "update 1.1.0"],
+    "restart_and_update_data_restored": true,
+    "registration_cleanup": true,
+    "plugin_data_writes": 3,
+    "vault_writes": 0,
+    "uninstall_registrations_cleared": true,
+    "return_to_obsidian_boundary": true,
+    "privileged_dom_denied_before_onload_completion": true
+  },
+  "limitations": [
+    "The trace uses synthetic marker-free fixtures and mediated in-memory plugin data; unchanged upstream lifecycle, settings, views, combinations and reference behavior remain pending-runtime.",
+    "Linux x64 only; macOS/Windows renderer and OS enforcement, human input/accessibility, signing, publication and release readiness remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}

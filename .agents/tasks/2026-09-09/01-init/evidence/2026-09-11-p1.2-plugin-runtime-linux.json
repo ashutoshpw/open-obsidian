@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T18:29:00Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "PLUG-007", "PLUG-009", "ARCH-007", "ARCH-008", "ARCH-009", "RISK-003"],
+  "fixture_ids": ["fixture:hardest-plugin-spike", "fixture:plugin-isolation", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:arch-dom-compatibility", "fixture:risk-legacy-access"],
+  "implementation_commit": "f7ce0c27e9ac1d97ca6eaa8f415cef9b14c35fa7",
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "tested_source_tree": "cbd07c627e47138abbd94ad9e381b35a1048263e9ac4539ffb746b53b907d358",
+    "source_tree_paths": 221,
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "command": "bun run audit:plugin-runtime:all",
+  "result": {
+    "exit_code": 0,
+    "pinned_entries": 27,
+    "main_js_integrity_passed": 26,
+    "not_applicable": ["PC-DEP-MINIMAL"],
+    "probe_coverage": "module-load-only",
+    "sandbox_probe": {"loaded": 7, "denied": 15, "ordinary_failures": 4, "timed_out": 0},
+    "loaded": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "denied": ["PC01", "PC03", "PC04", "PC05", "PC06", "PC08", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC19", "PC25", "PC-DEP-TEXT-EXTRACTOR"],
+    "ordinary_failures": {
+      "PC02": "TypeError: Class extends value undefined is not a constructor or null",
+      "PC09": "ReferenceError: activeWindow is not defined",
+      "PC16": "Error: crypto.getRandomValues() not supported",
+      "PC18": "ReferenceError: TransformStream is not defined"
+    }
+  },
+  "checks": [
+    {"command": "bun run audit:plugin-runtime:all", "exit_code": 0, "result": "All 27 pinned entries completed with retry-backed downloads; all 26 main.js hashes passed."},
+    {"command": "bun run validate:plugin-matrix", "exit_code": 0, "result": "25 mandatory targets plus two dependencies and 81 platform cells remain structurally complete with pending-runtime dispositions."}
+  ],
+  "security_boundary": "The restricted module-load probe is not Electron renderer/API, lifecycle or OS isolation proof; ordinary compatibility errors are not D15 denials.",
+  "limitations": [
+    "Unchanged upstream settings, commands, events, editor/view, hotkeys, vault writes, restart/update/uninstall, combinations and return-to-Obsidian behavior remain pending-runtime.",
+    "Linux x64 only; macOS/Windows OS-enforced bypass, renderer DOM lifecycle and reference Obsidian comparisons remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}
