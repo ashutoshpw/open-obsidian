@@ -575,3 +575,8 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: `bun run validate:paid-service-boundary`, focused sync-boundary tests, `bun run typecheck`, changed-file strict Fallow and the routine `check:fast` gate pass.
 - Reconciled: BASE-004 is now `implemented` with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-paid-service-boundary.json`; UX-003 is now `implemented` from its existing named-surface inventory and explicit external handoffs.
 - Limitation: live Sync/Publish interoperability, entitlement, cross-platform/reference behavior and human validation remain pending; local file compatibility is not treated as paid-service access.
+
+## 2026-09-11T09:17:02Z — P3.3 entry-point and service state reconciliation
+
+- Reconciled the entry-point and paid-service evidence at `707b852b15c48ced8f0e16dcd37be534aa3b409e` and recorded that observed head in `state.json`; no additional requirement status was promoted.
+- Retained the explicit pending boundary for Minimal/unchanged-plugin persistence, plugin views/popouts, screen-reader/input validation, macOS/Windows/reference behavior and live Sync/Publish interoperability.
