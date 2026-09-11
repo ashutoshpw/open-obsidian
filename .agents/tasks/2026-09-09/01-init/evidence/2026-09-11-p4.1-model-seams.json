@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T18:04:38Z",
+  "checkpoint": "P4.1",
+  "requirements": ["D05", "PROD-008", "A01", "A01.1", "A02", "A02.1", "A06", "RISK-006"],
+  "fixture_ids": ["fixture:retrieval-model", "fixture:grounded-local-retrieval", "fixture:electron-vault-roundtrip"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "implementation_commit": "66e6e79c6592dd17ef56d49da6199a5713e0f8ab",
+    "tested_source_tree": "cbd07c627e47138abbd94ad9e381b35a1048263e9ac4539ffb746b53b907d358",
+    "source_tree_paths": 221,
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/retrieval.test.ts tests/providers.test.ts", "exit_code": 0, "result": "12 focused tests and 98 expectations pass, including injected embedding vectors, selected-citation model adjudication, invalid-citation fallback, provider JSON parsing and excluded-path prompt boundaries."},
+    {"command": "bun test", "exit_code": 0, "result": "172 tests and 936 expectations pass."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checks pass."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout Electron bundles compile."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed files; the inherited renderer complexity warning remains excluded by the changed-file gate."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "State/contracts/matrix/accessibility/layout/typecheck/tests/Knip/Fallow fast checks pass; incomplete implementation and external rows remain honestly reported."},
+    {"command": "bun run audit:electron-vault", "exit_code": 0, "result": "Disposable Linux Electron trace passes the mediated vault/renderer checks plus visible local retrieval boundary, with provider destination none, deterministic embedding and local source-only answer labels."}
+  ],
+  "implemented": [
+    "Added a provider-neutral synchronous embedding contract with an injectable deterministic local model and explicit model identity in retrieval responses.",
+    "Added async provider-neutral model adjudication over approved source citations, with citation-ID provenance validation, conflict/missing-evidence derivation, model/fallback labels and source-only fallback on invalid, unavailable or cancelled runs.",
+    "Added a structured provider transport adapter that sends selected untrusted citation metadata/snippets only, requires JSON output and never includes excluded path content in the prompt.",
+    "Updated the visible retrieval panel/source inspector to distinguish local, model-adjudicated and explicit source-only fallback states.",
+    "Extended the Electron fixture with a visible deterministic-embedding/no-provider retrieval boundary check without touching a personal or reference vault."
+  ],
+  "limitations": [
+    "No live managed, BYOK or local provider transport was contacted; credentials and operated service terms remain P4.3/external-pending.",
+    "Embedding adapters remain synchronous at the retrieval seam; model download, async embedding lifecycle, stale derivative deletion and hardware measurements remain P4.3/A08 work.",
+    "The Electron trace is a disposable local fixture on Linux; hosted macOS/Windows/Linux reconciliation, reference Obsidian comparison, human accessibility/input review and release signing remain separate gates.",
+    "No personal or selected /home/ashutosh/Obsidian vault was accessed or modified."
+  ]
+}
