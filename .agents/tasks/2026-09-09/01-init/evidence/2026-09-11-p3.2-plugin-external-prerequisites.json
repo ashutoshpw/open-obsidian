@@ -1,0 +1,57 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-external-prerequisites",
+  "checkpoint": "P3.2",
+  "requirements": ["PLUG-006"],
+  "decision_id": "D18",
+  "fixture_id": "fixture:external-prerequisites",
+  "recorded_at": "2026-09-11T23:30:51Z",
+  "implementation_commit": "de3a32dbad17405c8b8dda0b089443500f1a9647",
+  "commands": {
+    "validator": "bun run validate:plugin-prerequisites",
+    "focused_test": "bun test tests/plugin-prerequisites.test.ts",
+    "typecheck": "bun run typecheck",
+    "knip": "bun run knip",
+    "strict_fallow": "bun run audit:fallow:strict",
+    "fast_checks": "bun run check:fast"
+  },
+  "source_tree": {
+    "head": "de3a32dbad17405c8b8dda0b089443500f1a9647",
+    "sha256": "aa80010cdc7dd6a17c0b97d4856376d0d56c0540fe8577c002d5a414b837afbf",
+    "paths": 235,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "catalog_parity": {
+    "source_catalog": "fixtures/plugin-catalog.json",
+    "catalog_targets": 27,
+    "fixture_rows": 27,
+    "external_pending_rows": 13,
+    "not_required_rows": 14,
+    "all_rows_have_setup_and_verification": true,
+    "all_rows_mirror_catalog_prerequisites": true
+  },
+  "live_access": {
+    "status": "external_pending",
+    "contacted": false,
+    "provider_contacted": false,
+    "account_accessed": false,
+    "credentials_accessed": false,
+    "selected_vault_accessed": false,
+    "artifact_modified": false,
+    "reference_obsidian_accessed": false
+  },
+  "validation": {
+    "validator": "passed",
+    "focused_test": {"passed": 1, "failed": 0, "expectations": 1},
+    "check_fast": {"passed": 178, "failed": 0, "expectations": 1028},
+    "typecheck": "passed",
+    "knip": "passed",
+    "strict_fallow": "passed"
+  },
+  "external_pending": [
+    "Provision only consented test fixtures, subscriptions, executables, OAuth credentials, provider accounts and model data named by each row.",
+    "Keep test credentials in OS-backed storage, redact results and remove temporary fixtures, credentials and derived model data after verification.",
+    "Do not treat managed OpenObsidian AI access as an upstream plugin entitlement or provider substitute."
+  ],
+  "result": "All 27 pinned catalog targets have explicit prerequisite rows with catalog parity, status classification and setup/verification instructions. Thirteen rows remain external_pending because their live prerequisites are unavailable; fourteen rows are explicitly not-required. No live endpoint, account, credential, reference Obsidian instance, personal vault or artifact was accessed, and no compatibility status was promoted."
+}
