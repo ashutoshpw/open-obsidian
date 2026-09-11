@@ -553,3 +553,8 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Safety: the probe remained module-load-only with no Electron DOM, app process, network, credential or vault access. Ordinary failures remain ordinary failures and every artifact disposition stays `pending-runtime`; no D15 or plugin-certification row was promoted.
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-linux-permission-probe.json` records the exact command, Node path, capability outcomes, integrity counts and limitations.
 - Next: use an approved compatible Electron/renderer host for unchanged-plugin lifecycle, DOM, workflow, combination and OS-enforced checks; retain the Linux probe as feasibility evidence only.
+
+## 2026-09-11T08:51:18Z — P1.2 Linux probe reconciliation
+
+- Reconciled the Linux permission-model plugin probe at `6e88ee60fbdd63b9cf3f3451ea1172342333eb51` and pushed `main` to `origin/main`.
+- Updated `state.json` so `last_reconciled_head` and `recent_increment.commit` point to the pushed P1.2 evidence commit; runtime/lifecycle dispositions remain pending.
