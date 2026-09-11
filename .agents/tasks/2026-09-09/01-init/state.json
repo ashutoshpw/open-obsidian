@@ -20,12 +20,12 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-    "last_reconciled_head": "9dc56026270ada8c12637c10f8724d4ff9a82fd0",
-    "updated_at": "2026-09-11T12:05:57Z",
+    "last_reconciled_head": "4b270060c7144ddbae4e2186475a40d6f96db43f",
+    "updated_at": "2026-09-11T12:10:44Z",
   "status": "active",
     "current_checkpoint": "P3.3",
     "next_action": "Continue the earliest dependency-ready implementation work: reference/cross-platform vault round trips, unchanged-plugin lifecycle/DOM evidence and selected theme/popout/accessibility traces; keep external release gates explicit.",
-    "recent_increment": {"checkpoint":"P1.2","commit":"9dc56026270ada8c12637c10f8724d4ff9a82fd0","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-dom-denial.json","tested_source_tree":"c13b7c525a15fc8903ade43009a7e743aedf66707a32f44c7eaaee5802c48036","ci_runs":[34594656722,34594656582]},
+    "recent_increment": {"checkpoint":"P1.2","commit":"4b270060c7144ddbae4e2186475a40d6f96db43f","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-ci.json","tested_source_tree":"cd403ccff04d141b1a5dee015ac5f8991dc53ca02a2f170cd3056350b1f8b850","ci_runs":[34597453226,34597453178]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",
@@ -102,7 +102,8 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-runtime-all.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-scoped-theme-preview.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-dom-denial.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-preflight.json"
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-preflight.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-ci.json"
       ],
       "commit_marker": "[openobsidian P1.2 work] Add renderer sandbox preflight",
       "validated_source_tree": "cd403ccff04d141b1a5dee015ac5f8991dc53ca02a2f170cd3056350b1f8b850",

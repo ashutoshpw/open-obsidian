@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "evidence:2026-09-11-p1.2-plugin-renderer-ci",
+  "generated_at": "2026-09-11T12:10:44Z",
+  "checkpoint": "P1.2",
+  "requirement_ids": ["PLUG-002", "PLUG-007", "PLUG-009"],
+  "work_commit": "4b270060c7144ddbae4e2186475a40d6f96db43f",
+  "tested_source_tree": "cd403ccff04d141b1a5dee015ac5f8991dc53ca02a2f170cd3056350b1f8b850",
+  "runs": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34597453226,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34597453226",
+      "head_sha": "4b270060c7144ddbae4e2186475a40d6f96db43f",
+      "conclusion": "success",
+      "runners": {"ubuntu-latest":"success","windows-latest":"success","macos-latest":"success"},
+      "checks": ["progress state","contracts","architecture","version baseline","differential fixture","core workflows","distribution metadata","update/rollback","accessibility","typecheck","tests","quality scorecard","Electron compile","Knip","Fallow health"]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34597453178,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34597453178",
+      "head_sha": "4b270060c7144ddbae4e2186475a40d6f96db43f",
+      "conclusion": "success",
+      "runners": {"ubuntu-latest":"success","windows-latest":"success","macos-latest":"success"},
+      "checks": ["release gate","update/rollback","unpacked desktop build","release manifest hashes","Electron runtime notices","transitive attribution","platform artifact upload"],
+      "signing_step": "skipped; signing credentials are an external release gate"
+    }
+  ],
+  "limitations": [
+    "CI confirms build and automated checks only; it does not certify unchanged-plugin lifecycle, reference Obsidian behavior, same-user OS isolation, human validation or signed release readiness.",
+    "The renderer preflight remains a Linux-hosted implementation evidence run; the matrix workflows do not execute the unchanged pinned plugins."
+  ]
+}

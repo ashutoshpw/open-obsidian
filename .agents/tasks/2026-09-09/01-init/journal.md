@@ -695,3 +695,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Traceability: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-preflight.json`, set PLUG-009 to `unsupported_security` under D15, and retained PLUG-002/PLUG-007 as pending because lifecycle, per-OS separation, views, restart/update, reference and human gates are not proved.
 - Tested source tree: `cd403ccff04d141b1a5dee015ac5f8991dc53ca02a2f170cd3056350b1f8b850` across 201 included paths. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run the full local validation set, review and commit only the renderer-preflight task paths with `[openobsidian P1.2 work] Add renderer sandbox preflight`, push `main`, inspect available CI, then create a separate reconciliation update for the observed SHA and run evidence.
+
+## 2026-09-11T12:10:44Z — P1.2 renderer preflight reconciliation
+
+- Reconciled pushed work commit `4b270060c7144ddbae4e2186475a40d6f96db43f` on `main`; local and `origin/main` matched before this metadata-only reconciliation.
+- Quality run `34597453226` and desktop-build run `34597453178` passed on Ubuntu, Windows and macOS. Quality covered state/contracts/architecture/version/differential/workflows/distribution/update/accessibility/typecheck/tests/scorecard/compile/Knip/Fallow; desktop build covered release gate, manifest hashes, packaged runtime notices, transitive attribution and artifact upload. Signing was correctly skipped as an external credential gate.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-ci.json`; `state.json` now records the pushed work SHA, CI run IDs and `last_reconciled_head` without self-referencing this reconciliation commit.
+- P1.2 remains in progress: renderer preflight and D15 denial evidence are implementation progress, not unchanged-plugin lifecycle, OS-enforced isolation, reference Obsidian, human or signed-release certification. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: continue the earliest dependency-ready cross-platform/reference vault and unchanged-plugin lifecycle work while retaining PLUG-009 as `unsupported_security` and PLUG-002/PLUG-007 as pending.
