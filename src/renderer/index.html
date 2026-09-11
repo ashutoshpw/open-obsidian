@@ -311,7 +311,16 @@
       .vault-index-row small { color: #777; }
       .task-index-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 5px; }
       .task-index-row input { margin: 1px 0 0; accent-color: var(--accent); }
+      .vault-workflows { display: grid; flex: 0 1 145px; gap: 5px; min-height: 0; overflow: auto; padding: 6px 10px 8px; border-top: 1px solid var(--panel-border); }
+      .vault-workflow-header { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+      .vault-workflow-header h2 { margin: 0; color: #858585; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+      .template-list { display: grid; gap: 2px; max-height: 58px; overflow: auto; margin: 0; padding: 0; list-style: none; }
+      .daily-note-control { display: grid; gap: 3px; }
+      .daily-note-control button { width: 100%; border-radius: 3px; padding: 4px 5px; background: #ffffff0b; color: #bdbdbd; font-size: 10px; text-align: left; }
+      .daily-note-control button:hover:not(:disabled), .daily-note-control button:focus-visible:not(:disabled) { background: #ffffff16; color: #eeeeee; }
+      .daily-note-control small { color: #777; font-size: 10px; }
       .sidebar[data-active-pane="bookmarks"] #file-list, .sidebar[data-active-pane="bookmarks"] .vault-indices { display: none; }
+      .sidebar[data-active-pane="bookmarks"] .vault-workflows { display: none; }
       .sidebar[data-active-pane="bookmarks"] #bookmarks-list { display: grid; }
       .search-wrap { flex: 0 0 auto; gap: 0; padding: 8px 10px 6px; }
       .search-wrap label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -450,6 +459,11 @@
         <section class="vault-indices" aria-label="Vault indices">
           <section class="vault-index"><h2>Tags <span class="workflow-summary" id="tag-summary">No tags indexed.</span></h2><nav class="vault-index-list" id="tag-list" aria-label="Tags"></nav></section>
           <section class="vault-index"><h2>Tasks <span class="workflow-summary" id="task-summary">No tasks indexed.</span></h2><nav class="vault-index-list" id="task-index-list" aria-label="Tasks"></nav></section>
+        </section>
+        <section class="vault-workflows" aria-label="Note workflows">
+          <div class="vault-workflow-header"><h2>Templates</h2><span class="workflow-summary" id="template-summary">No vault open.</span></div>
+          <nav class="template-list" id="template-list" aria-label="Templates"></nav>
+          <div class="daily-note-control"><button id="daily-note" type="button" disabled>Open today’s note</button><small id="daily-note-summary">Daily notes are not configured.</small></div>
         </section>
         <footer class="sidebar-footer" aria-label="Vault identity"><strong id="vault-name">No vault open</strong><span id="vault-branch">Local workspace</span></footer>
       </aside>

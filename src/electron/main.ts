@@ -17,6 +17,7 @@ import {retrieveVault} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
+import {buildDailyNotePlan, buildTemplateIndex, openDailyNote} from "../core/note-workflows.js";
 import {buildBookmarkIndex, buildTagIndex, buildTaskIndex, toggleVaultTask} from "../core/workflows.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
 import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
@@ -432,6 +433,19 @@ function tasksRequest() {
   return buildTaskIndex(requireVault());
 }
 
+function templatesRequest() {
+  return buildTemplateIndex(requireVault());
+}
+
+function dailyNoteRequest() {
+  return buildDailyNotePlan(requireVault());
+}
+
+function openDailyNoteRequest() {
+  const opened = openDailyNote(requireVault());
+  return {relativePath: opened.relativePath, base64: Buffer.from(opened.bytes).toString("base64"), revision: opened.revision};
+}
+
 function toggleTaskRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
   const request = validateTaskToggleRequest(value);
   const updated = toggleVaultTask(requireVault(), request.relativePath, request.expectedRevision, request.line, request.checked);
@@ -470,6 +484,9 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.tags, tagsRequest);
   ipcMain.handle(CHANNELS.tasks, tasksRequest);
   ipcMain.handle(CHANNELS.toggleTask, toggleTaskRequest);
+  ipcMain.handle(CHANNELS.templates, templatesRequest);
+  ipcMain.handle(CHANNELS.dailyNote, dailyNoteRequest);
+  ipcMain.handle(CHANNELS.openDailyNote, openDailyNoteRequest);
   ipcMain.handle(CHANNELS.loadSettings, loadSettings);
   ipcMain.handle(CHANNELS.saveSettings, saveSettings);
   ipcMain.handle(CHANNELS.loadProviderSettings, loadProviderSettings);

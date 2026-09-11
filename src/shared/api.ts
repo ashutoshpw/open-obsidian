@@ -1,4 +1,4 @@
-import type {BookmarkResponse, TagIndex, TaskItem} from "./ui/workflows.js";
+import type {BookmarkResponse, DailyNotePlan, TagIndex, TaskItem, TemplateIndex} from "./ui/index.js";
 
 export const CHANNELS = {
   selectVault: "vault:select",
@@ -17,6 +17,9 @@ export const CHANNELS = {
   tags: "vault:tags",
   tasks: "vault:tasks",
   toggleTask: "vault:toggle-task",
+  templates: "vault:templates",
+  dailyNote: "vault:daily-note",
+  openDailyNote: "vault:open-daily-note",
   loadSettings: "workspace:load-settings",
   saveSettings: "workspace:save-settings",
   historyPlan: "vault:history-plan",
@@ -573,6 +576,9 @@ export type OpenObsidianAPI = {
   tags: () => Promise<TagIndex>;
   tasks: () => Promise<TaskItem[]>;
   toggleTask: (request: ToggleTaskRequest) => Promise<VaultReadResponse>;
+  templates: () => Promise<TemplateIndex>;
+  dailyNote: () => Promise<DailyNotePlan>;
+  openDailyNote: () => Promise<VaultReadResponse>;
   loadSettings: () => Promise<WorkspaceSettings>;
   saveSettings: (settings: WorkspaceSettings) => Promise<WorkspaceSettings>;
   historyPlan: (policy?: HistoryPolicy) => Promise<HistoryPlanSummary>;

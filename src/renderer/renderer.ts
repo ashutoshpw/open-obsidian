@@ -1,7 +1,7 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
-import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type TagIndex, type TaskItem, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
+import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type DailyNotePlan, type TagIndex, type TaskItem, type TemplateIndex, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -25,6 +25,10 @@ const tagList = document.querySelector<HTMLElement>("#tag-list");
 const tagSummary = document.querySelector<HTMLElement>("#tag-summary");
 const taskIndexList = document.querySelector<HTMLElement>("#task-index-list");
 const taskSummary = document.querySelector<HTMLElement>("#task-summary");
+const templateList = document.querySelector<HTMLElement>("#template-list");
+const templateSummary = document.querySelector<HTMLElement>("#template-summary");
+const dailyNoteButton = document.querySelector<HTMLButtonElement>("#daily-note");
+const dailyNoteSummary = document.querySelector<HTMLElement>("#daily-note-summary");
 const editorPath = document.querySelector<HTMLElement>("#editor-path");
 const editor = document.querySelector<HTMLTextAreaElement>("#note-editor");
 const emptyState = document.querySelector<HTMLElement>("#empty-state");
@@ -182,6 +186,8 @@ let vaultFiles: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>> = [];
 let bookmarkData: BookmarkResponse | null = null;
 let tagData: TagIndex | null = null;
 let taskData: TaskItem[] = [];
+let templateData: TemplateIndex | null = null;
+let dailyNoteData: DailyNotePlan | null = null;
 let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
@@ -479,26 +485,34 @@ function renderBookmarks(data: BookmarkResponse | null): void {
 
 function tagSummaryText(data: TagIndex | null): string {
   if (!data) return "Open a vault.";
-  return `${data.tags.length} tag${data.tags.length === 1 ? "" : "s"} · ${data.filesScanned} files`;
+  return `${countLabel(data.tags.length, "tag")} · ${data.filesScanned} files`;
 }
 
-function tagIndexItem(tag: TagIndex["tags"][number]): HTMLLIElement {
+function countLabel(count: number, singular: string): string {
+  return `${count} ${singular}${count === 1 ? "" : "s"}`;
+}
+
+function vaultIndexItem(labelText: string, metaText: string, title: string, action: () => void): HTMLLIElement {
   const item = document.createElement("li");
   const button = document.createElement("button");
   button.type = "button";
   button.className = "vault-index-row";
   const label = document.createElement("span");
-  label.textContent = `#${tag.tag}`;
+  label.textContent = labelText;
   const count = document.createElement("small");
-  count.textContent = `${tag.files.length} file${tag.files.length === 1 ? "" : "s"}`;
+  count.textContent = metaText;
   button.append(label, count);
-  button.title = `${tag.count} occurrence${tag.count === 1 ? "" : "s"}`;
-  button.addEventListener("click", () => {
-    const first = tag.files[0];
-    if (first) openFile(first.relativePath);
-  });
+  button.title = title;
+  button.addEventListener("click", action);
   item.append(button);
   return item;
+}
+
+function tagIndexItem(tag: TagIndex["tags"][number]): HTMLLIElement {
+  const first = tag.files[0];
+  return vaultIndexItem(`#${tag.tag}`, countLabel(tag.files.length, "file"), countLabel(tag.count, "occurrence"), () => {
+    if (first) openFile(first.relativePath);
+  });
 }
 
 function renderTagIndex(data: TagIndex | null): void {
@@ -623,22 +637,137 @@ function renderTaskIndex(tasks: TaskItem[]): void {
   }
 }
 
+function templateSummaryText(data: TemplateIndex | null): string {
+  if (!data) return "No vault open.";
+  if (data.source === "missing") return "Not configured.";
+  const summary = countLabel(data.items.length, "template");
+  return data.issues.length > 0 ? `${summary} · ${countLabel(data.issues.length, "issue")}` : summary;
+}
+
+function templateIndexItem(template: TemplateIndex["items"][number]): HTMLLIElement {
+  return vaultIndexItem(template.title, template.relativePath, "Open template source; template scripts are not executed.", () => openFile(template.relativePath));
+}
+
+function renderTemplateIndex(data: TemplateIndex | null): void {
+  setText(templateSummary, templateSummaryText(data));
+  if (!templateList) return;
+  templateList.replaceChildren(...templateRows(data));
+}
+
+function templateRows(data: TemplateIndex | null): Node[] {
+  if (!data) return [workflowEmpty("No templates configured.")];
+  if (data.items.length === 0) return [workflowEmpty(data.issues[0] ?? "No templates configured.")];
+  return data.items.map(templateIndexItem);
+}
+
+function workflowEmpty(text: string): HTMLLIElement {
+  const empty = document.createElement("li");
+  empty.className = "workflow-summary";
+  empty.textContent = text;
+  return empty;
+}
+
+function dailyNoteIssue(data: DailyNotePlan, fallback: string): string {
+  return data.issues[0] ?? fallback;
+}
+
+function configuredDailyNoteSummary(data: DailyNotePlan): string {
+  const state = data.exists ? "ready" : "created on open";
+  const template = data.template ? " · plain-text template" : "";
+  return `${data.relativePath} · ${state}${template}`;
+}
+
+function dailyNoteSummaryText(data: DailyNotePlan | null): string {
+  if (!data) return "Daily notes are not configured.";
+  if (data.source === "missing") return dailyNoteIssue(data, "Daily notes are not configured.");
+  if (!data.relativePath) return dailyNoteIssue(data, "Daily-note path is unavailable.");
+  return configuredDailyNoteSummary(data);
+}
+
+function dailyNoteReady(data: DailyNotePlan | null): boolean {
+  if (!data) return false;
+  return [Boolean(selectedSummary), data.source === "obsidian-daily-notes", Boolean(data.relativePath), data.issues.length === 0].every(Boolean);
+}
+
+function dailyNoteButtonLabel(data: DailyNotePlan | null): string {
+  return data?.exists ? "Open today’s note" : "Create today’s note";
+}
+
+function dailyNoteButtonTitle(data: DailyNotePlan | null): string {
+  if (!data) return "Daily notes are not configured.";
+  return data.issues[0] ?? "Open or create today’s daily note with the configured plain-text template.";
+}
+
+function renderDailyNote(data: DailyNotePlan | null): void {
+  setText(dailyNoteSummary, dailyNoteSummaryText(data));
+  if (!dailyNoteButton) return;
+  setDisabled(dailyNoteButton, !dailyNoteReady(data));
+  dailyNoteButton.textContent = dailyNoteButtonLabel(data);
+  dailyNoteButton.title = dailyNoteButtonTitle(data);
+}
+
+function dailyNoteAvailabilityReason(): string | undefined {
+  const checks: Array<[boolean, string]> = [
+    [api === undefined, "Daily notes are not configured for this vault."],
+    [selectedSummary === null, "Open a vault before opening today’s daily note."],
+    [dailyNoteData === null, "Daily notes are not configured for this vault."],
+    [dailyNoteData?.relativePath === null, "Daily-note path is unavailable."],
+  ];
+  return checks.find(([invalid]) => invalid)?.[1];
+}
+
+function dailyNoteBlockReason(): string | undefined {
+  const unavailable = dailyNoteAvailabilityReason();
+  if (unavailable) return unavailable;
+  const plan = dailyNoteData!;
+  const checks: Array<[boolean, string]> = [
+    [plan.issues.length > 0, plan.issues[0] ?? "Daily-note configuration needs review."],
+    [dirty, "Save the current note before opening today’s daily note."],
+  ];
+  return checks.find(([blocked]) => blocked)?.[1];
+}
+
+async function openDailyNoteRequest(): Promise<void> {
+  const blocked = dailyNoteBlockReason();
+  if (blocked) {
+    setStatus(blocked);
+    return;
+  }
+  const client = api!;
+  const plan = dailyNoteData!;
+  setDisabled(dailyNoteButton, true);
+  setStatus(`Opening ${plan.relativePath} with a revision-checked write if it is new…`);
+  try {
+    applyReadResponse(await client.openDailyNote());
+    await loadWorkflowIndexes(client);
+    setStatus(`Opened ${plan.relativePath}; template scripts were not executed.`);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to open today’s daily note; the vault remains unchanged."));
+  } finally {
+    renderDailyNote(dailyNoteData);
+  }
+}
+
 function renderWorkflowIndexes(): void {
   renderBookmarks(bookmarkData);
   renderTagIndex(tagData);
   renderTaskIndex(taskData);
+  renderTemplateIndex(templateData);
+  renderDailyNote(dailyNoteData);
   renderTaskContext();
 }
 
 async function loadWorkflowIndexes(client: OpenObsidianAPI): Promise<void> {
   try {
-    const [bookmarks, tags, tasks] = await Promise.all([client.bookmarks(), client.tags(), client.tasks()]);
+    const [bookmarks, tags, tasks, templates, dailyNote] = await Promise.all([client.bookmarks(), client.tags(), client.tasks(), client.templates(), client.dailyNote()]);
     bookmarkData = bookmarks;
     tagData = tags;
     taskData = tasks;
+    templateData = templates;
+    dailyNoteData = dailyNote;
     renderWorkflowIndexes();
   } catch (error) {
-    setStatus(errorText(error, "Unable to load bookmarks, tags and tasks; source notes remain unchanged."));
+    setStatus(errorText(error, "Unable to load vault workflows; source notes remain unchanged."));
   }
 }
 
@@ -2905,6 +3034,8 @@ function resetWorkflowData(): void {
   bookmarkData = null;
   tagData = null;
   taskData = [];
+  templateData = null;
+  dailyNoteData = null;
   graphData = null;
   canvasData = null;
   baseData = null;
@@ -3005,6 +3136,7 @@ if (commandQuery) {
   commandQuery.addEventListener("keydown", commandQueryKeydown);
 }
 if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", () => openQuickSwitcher());
+if (dailyNoteButton) dailyNoteButton.addEventListener("click", () => void openDailyNoteRequest());
 if (openRetrievalButton) openRetrievalButton.addEventListener("click", openRetrievalPanel);
 if (openAIReviewButton) openAIReviewButton.addEventListener("click", openAIReviewPanel);
 if (closeAIPanelButton) closeAIPanelButton.addEventListener("click", () => setHidden(aiPanel, true));

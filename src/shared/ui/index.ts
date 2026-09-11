@@ -5,3 +5,4 @@ export {parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, t
 export {layoutGraph, type GraphLayoutOptions} from "./graph.js";
 export {UNINSTALL_CLEANUP_OPTIONS, uninstallCleanupOption, type UninstallCleanupOptionId} from "./uninstall.js";
 export {annotateBookmarks, buildTagSummaries, extractMarkdownTags, extractMarkdownTasks, parseBookmarkConfiguration, toggleMarkdownTaskSource, type BookmarkItem, type BookmarkResponse, type TagIndex, type TaskItem} from "./workflows.js";
+export {dailyNotePath, expandPlainTextTemplate, formatDailyNoteDate, parseDailyNoteConfiguration, parseTemplateConfiguration, templateTitle, type DailyNotePlan, type TemplateIndex, type TemplateItem} from "./note-workflows.js";
