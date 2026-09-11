@@ -10,7 +10,8 @@
   "required_record_fields": ["reproduction", "safeAlternativesAttempted", "scope", "visible"],
   "safe_alternatives": ["mediated vault read", "preview broker", "workflow disabled"],
   "runtime_probe": {
-    "command": "bun run audit:plugin-runtime",
+    "command": "bun run audit:plugin-runtime:all",
+    "hardest_targets_command": "bun run audit:plugin-runtime",
     "launcher": "node --experimental-permission --no-addons --disable-proto=throw",
     "coverage": "module-load-only",
     "allowed_host_modules": ["obsidian", "@codemirror/*", "@lezer/*", "codemirror", "luxon", "moment", "svelte", "yaml"],

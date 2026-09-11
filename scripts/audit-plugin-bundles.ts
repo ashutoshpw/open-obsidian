@@ -8,6 +8,7 @@ import {asArray, asRecord, asString, type JsonRecord} from "./json.js";
 const root = resolve(import.meta.dir, "..");
 const attempts = 3;
 const timeoutMs = 45_000;
+const auditConcurrency = 4;
 
 type BundleAudit = {
   artifactId: string;
@@ -57,7 +58,9 @@ async function downloadAttempt(url: string): Promise<DownloadAttempt> {
 async function download(url: string, attempt = 1): Promise<ArrayBuffer | null> {
   const result = await downloadAttempt(url);
   if (result.bytes) return result.bytes;
-  return result.retry && attempt < attempts ? download(url, attempt + 1) : null;
+  if (!result.retry || attempt >= attempts) return null;
+  await new Promise((resolveRetry) => setTimeout(resolveRetry, 500 * attempt));
+  return download(url, attempt + 1);
 }
 
 function mainAsset(artifact: JsonRecord): JsonRecord | null {
@@ -102,16 +105,31 @@ async function auditArtifact(artifact: JsonRecord, runtimeProbe: boolean): Promi
   return auditDownloadedBundle(artifact, asset, bytes, runtimeProbe);
 }
 
+async function auditWithConcurrency(ids: string[], byId: Map<string, JsonRecord>, runtimeProbe: boolean): Promise<BundleAudit[]> {
+  const results = new Array<BundleAudit>(ids.length);
+  let nextIndex = 0;
+  async function worker(): Promise<void> {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= ids.length) return;
+      const id = ids[index];
+      const artifact = byId.get(id);
+      results[index] = artifact
+        ? await auditArtifact(artifact, runtimeProbe)
+        : {artifactId: id, tag: "", status: "failed", integrity: "failed", runtime: "pending-runtime", markers: [], detail: "artifact is missing from compatibility manifest"};
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(auditConcurrency, ids.length)}, () => worker()));
+  return results;
+}
+
 async function main(): Promise<number> {
   const manifest = readJson("fixtures/compatibility-manifest.json");
   const isolation = readJson("fixtures/plugin-isolation.json");
   const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
   const ids = selectedIds(manifest, isolation);
   const runtimeProbe = process.argv.includes("--runtime-probe");
-  const audits: BundleAudit[] = await Promise.all(ids.map(async (id): Promise<BundleAudit> => {
-    const artifact = byId.get(id);
-    return artifact ? auditArtifact(artifact, runtimeProbe) : {artifactId: id, tag: "", status: "failed", integrity: "failed", runtime: "pending-runtime", markers: [], detail: "artifact is missing from compatibility manifest"};
-  }));
+  const audits = await auditWithConcurrency(ids, byId, runtimeProbe);
   const failures = audits.filter((audit) => audit.status === "failed");
   audits.forEach((audit) => console.log(JSON.stringify(audit)));
   if (failures.length > 0) {

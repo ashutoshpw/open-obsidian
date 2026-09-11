@@ -26,6 +26,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run verify:compatibility-pins` | Downloads the frozen release assets and verifies SHA-256, byte counts and recorded plugin manifest metadata. |
 | `bun run audit:plugin-bundles` | Downloads pinned hardest-plugin `main.js` bundles (use `--all` for every applicable artifact), verifies bytes, and performs a non-executing privileged-API marker prescreen; runtime remains pending. |
 | `bun run audit:plugin-runtime` | Opt-in loads the same unchanged pinned bundles in a separate Node permission-restricted subprocess with no host module/DOM/network/process access; this is module-load evidence only and does not certify Electron or OS isolation. |
+| `bun run audit:plugin-runtime:all` | Repeatable full-matrix variant that loads every pinned plugin/dependency `main.js` asset under the same restricted module-load probe; downloads are bounded to four concurrent assets with retry backoff, and results remain pending-runtime. |
 | `bun run validate:plugin-matrix` | Builds and validates the 25-plugin plus dependency matrix across macOS, Windows and Linux with release pins, workflows and pending lifecycle dispositions. |
 | `bun run verify:plugin-selection` | Rechecks live registry/download snapshots; intentional drift fails without changing the frozen selection. |
 | `bun run audit:packaged -- --artifacts-dir out` | Packaged runtime notice and artifact integrity audit after packaging. |
