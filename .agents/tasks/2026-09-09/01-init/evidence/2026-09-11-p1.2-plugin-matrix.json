@@ -1,9 +1,10 @@
 {
   "evidence_version": 1,
-  "recorded_at": "2026-09-11T06:37:10Z",
+  "recorded_at": "2026-09-11T06:42:45Z",
   "checkpoint": "P1.2",
   "requirements": ["C11.1", "ARCH-009", "PLUG-002", "PLUG-007", "PLUG-009"],
   "fixture_ids": ["fixture:c11-certification-matrix", "fixture:feasibility-corpus", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:hardest-plugin-spike"],
+  "commit_sha": "5821085f488ff8e576ec90f63fc738b551e7f60d",
   "environment": {
     "os": "macOS",
     "architecture": "arm64",
@@ -12,7 +13,7 @@
     "selected_vault_accessed": false,
     "branch": "main",
     "bun_version": "1.4.2",
-    "tested_source_tree": "2ff770b0402e1464d5dc1be9e0506eda2bad41b6e6261da592bea988efba3fab"
+    "tested_source_tree": "bc62217d84c0a7cb2337bb507b4784a4a149f10c54df09510ea91a994c397db6"
   },
   "implementation": {
     "command": "bun run validate:plugin-matrix",
