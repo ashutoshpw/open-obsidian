@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T18:10:00Z",
+  "checkpoint": "P4.1",
+  "requirements": ["D05", "PROD-008", "A01", "A01.1", "A02", "A02.1", "A06", "RISK-006"],
+  "implementation_commit": "66e6e79c6592dd17ef56d49da6199a5713e0f8ab",
+  "tested_source_tree": "cbd07c627e47138abbd94ad9e381b35a1048263e9ac4539ffb746b53b907d358",
+  "quality": {
+    "run_id": 34631652879,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34631652879",
+    "conclusion": "success",
+    "jobs": [
+      {"id": 103369659560, "platform": "ubuntu-latest", "conclusion": "success"},
+      {"id": 103369659220, "platform": "macos-latest", "conclusion": "success"},
+      {"id": 103369659498, "platform": "windows-latest", "conclusion": "success"}
+    ],
+    "covered_steps": ["typecheck", "tests", "quality-program", "compile", "electron-vault-audit", "plugin-lifecycle", "knip", "fallow"]
+  },
+  "desktop_build": {
+    "run_id": 34631652857,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34631652857",
+    "conclusion": "success",
+    "jobs": [
+      {"id": 103369659635, "platform": "ubuntu-latest", "conclusion": "success"},
+      {"id": 103369659935, "platform": "macos-latest", "conclusion": "success"},
+      {"id": 103369659949, "platform": "windows-latest", "conclusion": "success"}
+    ],
+    "signing": "skipped; credentials were unavailable"
+  },
+  "observations": [
+    "All hosted quality and desktop-build jobs passed against the pushed source/metadata tree; quality Electron logs include the visible retrieval boundary check on each runner.",
+    "The hosted matrices validate repository and packaging behavior only; they do not provide reference Obsidian, live provider, unchanged-plugin, human accessibility/input, signing or publication certification.",
+    "The selected /home/ashutosh/Obsidian vault and any personal vault were not accessed."
+  ]
+}
