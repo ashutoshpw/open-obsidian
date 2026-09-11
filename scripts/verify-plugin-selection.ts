@@ -93,4 +93,4 @@ async function main(): Promise<number> {
   return 0;
 }
 
-process.exit(await main());
+if (import.meta.main) process.exit(await main());

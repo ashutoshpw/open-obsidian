@@ -70,6 +70,34 @@ function checkAssetSize(artifactId: string, asset: JsonRecord, bytes: ArrayBuffe
   if (bytes.byteLength !== asset.bytes) failures.push(`${artifactId}/${name} size changed: expected ${String(asset.bytes)}, got ${bytes.byteLength}`);
 }
 
+type ManifestField = "id" | "name" | "version" | "minAppVersion";
+
+function manifestValue(value: unknown): string | null | undefined {
+  if (value === null || value === undefined) return value === null ? null : undefined;
+  return typeof value === "string" ? value : undefined;
+}
+
+export function checkManifestMetadata(artifactId: string, asset: JsonRecord, bytes: ArrayBuffer): string[] {
+  if (string(asset.name) !== "manifest.json") return [];
+  const expected = record(asset.manifest);
+  if (!expected) return [`${artifactId}/manifest.json is missing recorded manifest metadata`];
+  let actual: JsonRecord;
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+    const parsedRecord = record(parsed);
+    if (!parsedRecord) return [`${artifactId}/manifest.json does not contain a JSON object`];
+    actual = parsedRecord;
+  } catch {
+    return [`${artifactId}/manifest.json is not valid JSON`];
+  }
+  const fields: ManifestField[] = ["id", "name", "version", "minAppVersion"];
+  return fields.flatMap((field) => {
+    const expectedValue = manifestValue(expected[field]);
+    const actualValue = actual[field] === undefined && expectedValue === null ? null : manifestValue(actual[field]);
+    return expectedValue === actualValue ? [] : [`${artifactId}/manifest.json ${field} changed: expected ${String(expectedValue)}, got ${String(actualValue)}`];
+  });
+}
+
 type AssetCheck = {artifactId: string; asset: JsonRecord};
 
 async function verifyAsset(artifactId: string, asset: JsonRecord): Promise<void> {
@@ -77,6 +105,7 @@ async function verifyAsset(artifactId: string, asset: JsonRecord): Promise<void>
   if (!bytes) return;
   checkAssetHash(artifactId, asset, bytes);
   checkAssetSize(artifactId, asset, bytes);
+  failures.push(...checkManifestMetadata(artifactId, asset, bytes));
 }
 
 function checkAssetUrl(artifactId: string, asset: JsonRecord): void {
@@ -145,4 +174,4 @@ async function main(): Promise<number> {
   return 0;
 }
 
-process.exit(await main());
+if (import.meta.main) process.exit(await main());

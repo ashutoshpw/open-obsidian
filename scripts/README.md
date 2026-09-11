@@ -23,6 +23,8 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run validate:workflows` | Validates the complete C10 core-workflow inventory, including local bookmark/tag/task/template/daily-note markers and keyboard journey handoffs. |
 | `bun run validate:layout` | Static Obsidian-shell geometry and navigation-marker checks. |
 | `bun run verify:version-baseline` | Cross-checks the stable/early-access references and records per-artifact minimum-version, API and runtime verification status. |
+| `bun run verify:compatibility-pins` | Downloads the frozen release assets and verifies SHA-256, byte counts and recorded plugin manifest metadata. |
+| `bun run verify:plugin-selection` | Rechecks live registry/download snapshots; intentional drift fails without changing the frozen selection. |
 | `bun run audit:packaged -- --artifacts-dir out` | Packaged runtime notice and artifact integrity audit after packaging. |
 
 For a normal change, run `bun run check:fast`. Before a checkpoint commit, run `bun run quality` and `bun run audit:source-tree`; copy the latter's `sha256`, path count and `head` into the evidence record. Run `bunx fallow` through the repository scripts rather than hiding findings in ad-hoc output. Workflow smoke tests live in `tests/workflows.test.ts` and `tests/note-workflows.test.ts`; keep pure parsing and data contracts under `src/shared/ui`, and keep vault I/O in `src/core/workflows.ts` or `src/core/note-workflows.ts` so an Expo host can reuse the contracts.
