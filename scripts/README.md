@@ -20,6 +20,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run final:audit` | Origin/branch/marker check plus implementation versus release-readiness summary. |
 | `bun run validate:surfaces` | Named UX surface inventory and external handoff validation. |
 | `bun run validate:differential` | Validates the executable local vault probes and explicit reference-comparison decisions. |
+| `bun run validate:entry-points` | Validates explicit `--vault`/`--open` CLI and `openobsidian://` deep-link cases, including fail-closed traversal and non-hijacking `obsidian://` cases. |
 | `bun run validate:workflows` | Validates the complete C10 core-workflow inventory, including local bookmark/tag/task/template/daily-note markers and keyboard journey handoffs. |
 | `bun run validate:layout` | Static Obsidian-shell geometry and navigation-marker checks. |
 | `bun run audit:theme-assets -- --root /path/to/vault` | Read-only appearance/theme/snippet audit; reports hashes, CSS variables, legacy layout contracts, mode/accessibility coverage and safe-preview issues without executing CSS. Add `--strict` to fail on any host-review item. |

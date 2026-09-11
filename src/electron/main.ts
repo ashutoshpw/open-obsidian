@@ -1,8 +1,8 @@
 import {app, BrowserWindow, dialog, ipcMain} from "electron";
 import {createHash} from "node:crypto";
-import {existsSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
+import {existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
-import {dirname, join, resolve} from "node:path";
+import {dirname, isAbsolute, join, resolve} from "node:path";
 import {applyAIChangeSet, draftLocalAIChange, organizationSuggestions, undoAIChange, type AppliedAIChange} from "../core/ai-changes.js";
 import {describeProvider} from "../core/providers.js";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
@@ -21,6 +21,7 @@ import {buildDailyNotePlan, buildTemplateIndex, openDailyNote} from "../core/not
 import {buildBookmarkIndex, buildTagIndex, buildTaskIndex, toggleVaultTask} from "../core/workflows.js";
 import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
+import {parseLaunchArguments, parseDeepLinkIntent, type LaunchIntent} from "../shared/entry-points.js";
 import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
 import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
@@ -28,6 +29,8 @@ const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
 let activeVault: VaultStore | null = null;
 let mainWindow: BrowserWindow | null = null;
+let rendererReady = false;
+let pendingLaunchIntent: LaunchIntent | null = null;
 const aiChangeSets = new Map<string, AIChangeSet>();
 const aiAppliedChanges = new Map<string, AppliedAIChange>();
 
@@ -72,28 +75,69 @@ function createWindow(): void {
       preload: join(currentDirectory, "preload.cjs"),
     },
   });
+  rendererReady = false;
+  mainWindow.webContents.once("did-finish-load", () => {
+    rendererReady = true;
+    if (pendingLaunchIntent && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(CHANNELS.launchIntent, pendingLaunchIntent);
+      pendingLaunchIntent = null;
+    }
+  });
   const projectRoot = resolve(currentDirectory, "..");
   const rendererPath = app.isPackaged ? join(app.getAppPath(), "src/renderer/index.html") : join(projectRoot, "src/renderer/index.html");
   void mainWindow.loadFile(rendererPath);
 }
 
-function selectedDirectory(filePaths: string[], canceled: boolean): string | null {
-  return canceled ? null : filePaths[0] ?? null;
+function launchIntentFromArguments(args: readonly string[]): LaunchIntent | null {
+  try {
+    return parseLaunchArguments(args);
+  } catch (error) {
+    console.error(`Ignoring invalid OpenObsidian launch arguments: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
 }
 
-async function selectVault(): Promise<VaultSummary | null> {
-  const options = {properties: ["openDirectory", "createDirectory"] as Array<"openDirectory" | "createDirectory">};
-  const result = mainWindow ? await dialog.showOpenDialog(mainWindow, options) : await dialog.showOpenDialog(options);
-  const root = selectedDirectory(result.filePaths, result.canceled);
-  if (!root) return null;
-  if (!existsSync(root)) throw new Error("Selected vault directory is no longer available");
-  activeVault = new VaultStore(root, vaultAppData(root));
-  aiChangeSets.clear();
-  aiAppliedChanges.clear();
-  const scan = activeVault.scan();
-  const git = inspectVaultGitState(activeVault.root);
+function rendererCanReceiveLaunchIntent(): boolean {
+  if (!rendererReady || !mainWindow) return false;
+  return !mainWindow.isDestroyed();
+}
+
+function queueLaunchIntent(intent: LaunchIntent | null): void {
+  if (!intent) return;
+  if (!rendererCanReceiveLaunchIntent()) {
+    pendingLaunchIntent = intent;
+    return;
+  }
+  const window = mainWindow;
+  if (!window) return;
+  window.show();
+  window.focus();
+  window.webContents.send(CHANNELS.launchIntent, intent);
+}
+
+function requireLaunchCondition(condition: boolean, message: string): void {
+  if (!condition) throw new Error(message);
+}
+
+function assertVaultRoot(root: string, resolvedRoot: string): void {
+  requireLaunchCondition(isAbsolute(root), "Selected vault directory must be an absolute path");
+  requireLaunchCondition(existsSync(resolvedRoot), "Selected vault directory is no longer available");
+  const stats = lstatSync(resolvedRoot);
+  requireLaunchCondition(stats.isDirectory(), "Selected vault path must be a directory");
+  requireLaunchCondition(!stats.isSymbolicLink(), "Selected vault path must be a real directory");
+}
+
+function validatedVaultRoot(root: string): string {
+  const resolvedRoot = resolve(root);
+  assertVaultRoot(root, resolvedRoot);
+  return resolvedRoot;
+}
+
+function vaultSummary(store: VaultStore): VaultSummary {
+  const scan = store.scan();
+  const git = inspectVaultGitState(store.root);
   return {
-    root: activeVault.root,
+    root: store.root,
     fileCount: scan.after.entries.length,
     unchanged: scan.unchanged,
     sha256: scan.after.sha256,
@@ -110,6 +154,31 @@ async function selectVault(): Promise<VaultSummary | null> {
       remoteContacted: git.remoteContacted,
     },
   };
+}
+
+function activateVault(root: string): VaultSummary {
+  const resolvedRoot = validatedVaultRoot(root);
+  activeVault = new VaultStore(resolvedRoot, vaultAppData(resolvedRoot));
+  aiChangeSets.clear();
+  aiAppliedChanges.clear();
+  return vaultSummary(activeVault);
+}
+
+function selectedDirectory(filePaths: string[], canceled: boolean): string | null {
+  return canceled ? null : filePaths[0] ?? null;
+}
+
+async function selectVault(): Promise<VaultSummary | null> {
+  const options = {properties: ["openDirectory", "createDirectory"] as Array<"openDirectory" | "createDirectory">};
+  const result = mainWindow ? await dialog.showOpenDialog(mainWindow, options) : await dialog.showOpenDialog(options);
+  const root = selectedDirectory(result.filePaths, result.canceled);
+  if (!root) return null;
+  return activateVault(root);
+}
+
+function openVault(_event: Electron.IpcMainInvokeEvent, value: unknown): VaultSummary {
+  if (typeof value !== "string" || value.trim().length === 0 || value.includes("\0")) throw new Error("Vault path must be a non-empty filesystem path");
+  return activateVault(value);
 }
 
 function listFiles(): VaultFileSummary[] {
@@ -350,20 +419,24 @@ function saveSettings(_event: Electron.IpcMainInvokeEvent, value: unknown): Work
   return settings;
 }
 
+type DiscoveredStyle = ReturnType<typeof discoverVaultConfiguration>["styles"][number];
+
+function appearanceStyle(style: DiscoveredStyle): VaultAppearance["styles"][number] {
+  return {
+    relativePath: style.relativePath,
+    kind: style.kind,
+    sha256: style.sha256,
+    source: new TextDecoder().decode(style.bytes),
+    analysis: style.analysis,
+  };
+}
+
 function loadAppearance(): VaultAppearance {
   const configuration = discoverVaultConfiguration(requireVault().root);
   const settingsEntry = Object.entries(configuration.appearance)[0];
-  return {
-    settingsPath: settingsEntry?.[0] ?? null,
-    settings: settingsEntry?.[1] ?? parseAppearanceSettings({}),
-    styles: configuration.styles.map((style) => ({
-      relativePath: style.relativePath,
-      kind: style.kind,
-      sha256: style.sha256,
-      source: new TextDecoder().decode(style.bytes),
-      analysis: style.analysis,
-    })),
-  };
+  const settingsPath = settingsEntry ? settingsEntry[0] : null;
+  const settings = settingsEntry ? settingsEntry[1] : parseAppearanceSettings({});
+  return {settingsPath, settings, styles: configuration.styles.map(appearanceStyle)};
 }
 
 function providerSettingsPath(): string {
@@ -472,6 +545,7 @@ function toggleTaskRequest(_event: Electron.IpcMainInvokeEvent, value: unknown):
 
 function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.selectVault, selectVault);
+  ipcMain.handle(CHANNELS.openVault, openVault);
   ipcMain.handle(CHANNELS.listFiles, listFiles);
   ipcMain.handle(CHANNELS.search, searchFiles);
   ipcMain.handle(CHANNELS.readFile, readFile);
@@ -517,14 +591,33 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.saveWorkspaceState, saveWorkspaceState);
 }
 
-app.whenReady().then(() => {
-  registerVaultHandlers();
-  if (process.platform === "darwin" && app.dock) app.dock.setIcon(applicationIconPath());
-  createWindow();
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+const initialLaunchIntent = launchIntentFromArguments(process.argv.slice(1));
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", (_event, commandLine) => {
+    queueLaunchIntent(launchIntentFromArguments(commandLine.slice(1)));
   });
-});
+  app.on("open-url", (event, url) => {
+    event.preventDefault();
+    try {
+      queueLaunchIntent(parseDeepLinkIntent(url));
+    } catch (error) {
+      console.error(`Ignoring invalid OpenObsidian deep link: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  });
+  pendingLaunchIntent = initialLaunchIntent;
+  app.whenReady().then(() => {
+    registerVaultHandlers();
+    if (process.platform === "darwin" && app.dock) app.dock.setIcon(applicationIconPath());
+    createWindow();
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
+  });
+}
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

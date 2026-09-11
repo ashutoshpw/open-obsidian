@@ -1,4 +1,5 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import type {LaunchIntent} from "../shared/entry-points.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, parseThemeStylesheet, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type DailyNotePlan, type TagIndex, type TaskItem, type TemplateIndex, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
@@ -3348,6 +3349,29 @@ async function openVaultRequest(client: OpenObsidianAPI): Promise<void> {
   }
 }
 
+async function hydrateOpenedVault(client: OpenObsidianAPI, summary: VaultSummary, relativePath: string | null): Promise<void> {
+  selectedSummary = summary;
+  resetEditor();
+  renderMode(summary);
+  await loadAppearance(client);
+  await listFilesRequest(client);
+  await loadWorkflowIndexes(client);
+  await restoreWorkspaceTabs(client);
+  if (relativePath) openFile(relativePath);
+  setStatus(summaryMessage(summary));
+}
+
+async function openLaunchIntent(client: OpenObsidianAPI, intent: LaunchIntent): Promise<void> {
+  try {
+    await workspaceStateReady;
+    const summary = await client.openVault(intent.vaultPath);
+    await hydrateOpenedVault(client, summary, intent.relativePath);
+    if (intent.relativePath) setStatus(`Opened ${intent.relativePath} from the ${intent.source} entry point.`);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to open the requested launch vault."));
+  }
+}
+
 function openSelectedVault(client: OpenObsidianAPI, trigger: HTMLButtonElement): void {
   trigger.disabled = true;
   setStatus("Scanning selected vault without changing its files…");
@@ -3367,6 +3391,7 @@ function searchVault(query: string): void {
 }
 
 if (api && selectButton) selectButton.addEventListener("click", () => void openSelectedVault(api, selectButton));
+if (api) api.onLaunchIntent((intent) => void openLaunchIntent(api, intent));
 document.querySelectorAll<HTMLButtonElement>("[data-action-target]").forEach((button) => {
   button.addEventListener("click", () => {
     const target = button.dataset.actionTarget ? document.getElementById(button.dataset.actionTarget) : null;

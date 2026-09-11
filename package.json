@@ -34,6 +34,7 @@
     "validate:plugin-matrix": "bun scripts/validate-plugin-matrix.ts",
     "verify:version-baseline": "bun scripts/verify-version-baseline.ts",
     "validate:differential": "bun scripts/validate-differential-fixtures.ts",
+    "validate:entry-points": "bun scripts/validate-entry-points.ts",
     "validate:workflows": "bun scripts/validate-core-workflows.ts",
     "verify:primary-references": "bun scripts/verify-primary-references.ts",
     "verify:distribution": "bun scripts/verify-distribution.ts",

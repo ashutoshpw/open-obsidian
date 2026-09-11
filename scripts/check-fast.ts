@@ -10,6 +10,7 @@ export const QUICK_CHECKS: readonly QuickCheck[] = [
   {id: "surfaces", args: ["run", "validate:surfaces"]},
   {id: "version-baseline", args: ["run", "verify:version-baseline"]},
   {id: "differential", args: ["run", "validate:differential"]},
+  {id: "entry-points", args: ["run", "validate:entry-points"]},
   {id: "workflows", args: ["run", "validate:workflows"]},
   {id: "accessibility", args: ["run", "check:accessibility"]},
   {id: "layout", args: ["run", "validate:layout"]},

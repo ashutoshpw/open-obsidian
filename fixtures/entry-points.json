@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "fixture:entry-points",
+  "protocol": "openobsidian",
+  "purpose": "Explicit CLI and deep-link inputs without obsidian:// protocol hijacking",
+  "cases": [
+    {
+      "id": "cli-vault",
+      "args": ["--vault", "/tmp/openobsidian-vault"],
+      "expected": {"source": "cli", "vaultPath": "/tmp/openobsidian-vault", "relativePath": null}
+    },
+    {
+      "id": "cli-vault-note",
+      "args": ["--no-sandbox", "--vault=/tmp/openobsidian-vault", "--open", "Projects/Plan.md"],
+      "expected": {"source": "cli", "vaultPath": "/tmp/openobsidian-vault", "relativePath": "Projects/Plan.md"}
+    },
+    {
+      "id": "deep-link-note",
+      "args": ["openobsidian://open?vault=%2Ftmp%2Fopenobsidian-vault&file=Projects%2FPlan.md"],
+      "expected": {"source": "deep-link", "vaultPath": "/tmp/openobsidian-vault", "relativePath": "Projects/Plan.md"}
+    },
+    {
+      "id": "obsidian-protocol-is-not-owned",
+      "args": ["obsidian://open?vault=%2Ftmp%2Fopenobsidian-vault&file=Projects%2FPlan.md"],
+      "expected": null
+    },
+    {
+      "id": "electron-switches-only",
+      "args": ["--no-sandbox", "--disable-gpu", "--remote-debugging-port=9342"],
+      "expected": null
+    }
+  ],
+  "invalid_cases": [
+    {"id": "deep-link-missing-vault", "args": ["openobsidian://open?file=Plan.md"], "error": "Launch vault path must be non-empty"},
+    {"id": "deep-link-traversal", "args": ["openobsidian://open?vault=%2Ftmp%2Fopenobsidian-vault&file=..%2Foutside.md"], "error": "Launch file path must be a safe vault-relative path"},
+    {"id": "cli-open-without-vault", "args": ["--open", "Plan.md"], "error": "Launch file path requires --vault"}
+  ]
+}

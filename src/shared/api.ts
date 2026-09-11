@@ -1,7 +1,9 @@
 import type {BookmarkResponse, DailyNotePlan, TagIndex, TaskItem, TemplateIndex, VaultAppearance} from "./ui/index.js";
+import type {LaunchIntent} from "./entry-points.js";
 
 export const CHANNELS = {
   selectVault: "vault:select",
+  openVault: "vault:open",
   listFiles: "vault:list-files",
   search: "vault:search",
   readFile: "vault:read",
@@ -46,6 +48,7 @@ export const CHANNELS = {
   saveProviderCredential: "ai:save-provider-credential",
   providerStatus: "ai:provider-status",
   diagnosticManifest: "workspace:diagnostic-manifest",
+  launchIntent: "workspace:launch-intent",
 } as const;
 
 export type VaultGitSummary = {
@@ -562,6 +565,7 @@ export function validateProviderCredentialRequest(value: unknown): ProviderCrede
 
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
+  openVault: (root: string) => Promise<VaultSummary>;
   listFiles: () => Promise<VaultFileSummary[]>;
   search: (query: string) => Promise<VaultSearchResult[]>;
   readFile: (relativePath: string) => Promise<VaultReadResponse>;
@@ -606,4 +610,5 @@ export type OpenObsidianAPI = {
   saveProviderCredential: (request: ProviderCredentialRequest) => Promise<ProviderStatus>;
   providerStatus: () => Promise<ProviderStatus>;
   diagnosticManifest: () => Promise<import("../core/privacy.js").DiagnosticManifest>;
+  onLaunchIntent: (listener: (intent: LaunchIntent) => void) => () => void;
 };

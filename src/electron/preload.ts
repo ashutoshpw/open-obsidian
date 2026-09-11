@@ -3,6 +3,7 @@ import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoCha
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
+  openVault: (root: string) => ipcRenderer.invoke(CHANNELS.openVault, root),
   listFiles: () => ipcRenderer.invoke(CHANNELS.listFiles),
   search: (query) => ipcRenderer.invoke(CHANNELS.search, query),
   readFile: (relativePath) => ipcRenderer.invoke(CHANNELS.readFile, relativePath),
@@ -46,6 +47,11 @@ const api: OpenObsidianAPI = {
   saveProviderCredential: (request: ProviderCredentialRequest) => ipcRenderer.invoke(CHANNELS.saveProviderCredential, request),
   providerStatus: () => ipcRenderer.invoke(CHANNELS.providerStatus),
   diagnosticManifest: () => ipcRenderer.invoke(CHANNELS.diagnosticManifest),
+  onLaunchIntent: (listener) => {
+    const handler = (_event: Electron.IpcRendererEvent, intent: Parameters<typeof listener>[0]) => listener(intent);
+    ipcRenderer.on(CHANNELS.launchIntent, handler);
+    return () => ipcRenderer.removeListener(CHANNELS.launchIntent, handler);
+  },
   onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgress) => listener(progress);
     ipcRenderer.on(CHANNELS.retrievalProgress, handler);
