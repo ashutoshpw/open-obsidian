@@ -680,3 +680,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Decision: ARCH-008 is implemented as an explicit fail-closed D15 limitation, not as renderer compatibility. No unchanged plugin DOM code or Electron lifecycle was executed.
 - Limitations: DOM lifecycle ordering, plugin-created views, same-user OS bypasses, cross-plugin behavior, Windows/Linux lifecycle bypass tests and reference Obsidian traces remain pending-runtime; the goal remains active at `P3.3`.
 - Next: push the scoped ARCH-008 increment, inspect quality/desktop CI, reconcile the observed SHA and CI evidence, then continue the earliest dependency-ready renderer/lifecycle and reference/cross-platform work.
+
+## 2026-09-11T11:36:12Z — P1.2 DOM denial reconciliation
+
+- Pushed `[openobsidian P1.2 work] Record fail-closed DOM compatibility decision` at `9dc56026270ada8c12637c10f8724d4ff9a82fd0`; local `main` and `origin/main` match.
+- Quality run `34594656722` and desktop-build run `34594656582` passed on Ubuntu, macOS and Windows. The durable state now records this commit as `recent_increment` and `last_reconciled_head`, with source tree `c13b7c525a15fc8903ade43009a7e743aedf66707a32f44c7eaaee5802c48036` across 195 included paths.
+- ARCH-008 remains an implementation-only fail-closed D15 denial. Electron renderer/lifecycle, unchanged-plugin, same-user OS-bypass, reference Obsidian, human and signed-release gates remain pending; `current_checkpoint` stays `P3.3` and goal `status` stays `active`.
