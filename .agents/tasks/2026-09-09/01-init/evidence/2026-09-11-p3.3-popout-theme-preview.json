@@ -1,0 +1,80 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T10:53:10Z",
+  "checkpoint": "P3.3",
+  "requirements": ["RISK-002", "C12", "C10.1"],
+  "fixture_ids": ["fixture:risk-theme-parity", "fixture:c12-themes", "fixture:c10-input-matrix"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "implementation_commit_before_reconciliation": "a446ab62a92293c8936195bcc940e4869c05560d",
+    "tested_source_tree": "0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd",
+    "source_tree_paths": 192
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "implementation": {
+    "preview_policy": "The existing inert CSSOM preview policy is shared by the main renderer and popout renderer; CSS rules are parsed with media disabled, scoped to the host surface, and unsafe imports, URL assets, privileged selectors and document-level rules remain withheld.",
+    "popout_host": "The child window loads the vault appearance through the same read-only preload API, applies configured theme/snippet assets to a body.mod-popout workspace surface, preserves configured mode/accent/font-size values and exposes a live read-only appearance status.",
+    "sender_guard": "Appearance IPC validates tracked popout senders against the active vault before returning configuration; the main renderer retains its existing access path.",
+    "scope": "Popout theme selectors are scoped to body.mod-popout[data-openobsidian-theme-mode], and the child surface exposes workspace, workspace-leaf-content, view-content and view-header legacy contracts for compatibility review."
+  },
+  "runtime": {
+    "launch": "xvfb-run -a out/linux-unpacked/openobsidian --no-sandbox --disable-gpu --remote-debugging-port=9453 --user-data-dir=<temporary> --vault=<synthetic-vault> --open=Note.md",
+    "synthetic_fixture": {
+      "root": "/tmp/openobsidian-popout-theme-final/vault (removed after run)",
+      "appearance": ".obsidian/appearance.json",
+      "theme": ".obsidian/themes/Fixture.css",
+      "snippet": ".obsidian/snippets/focus.css",
+      "note": "Note.md",
+      "configured_mode": "dark",
+      "configured_theme": "Fixture",
+      "configured_snippet": "focus"
+    },
+    "main_window": {
+      "title": "OpenObsidian · Local knowledge workspace",
+      "editor_path": "Note.md",
+      "popout_button_enabled": true,
+      "appearance_mode": "dark",
+      "appearance_status": "2 safe preview styles applied in dark mode. Vault appearance files remain read-only.",
+      "appearance_styles": [".obsidian/themes/Fixture.css", ".obsidian/snippets/focus.css"]
+    },
+    "popout_window": {
+      "title": "OpenObsidian · Note.md",
+      "path_label": "Note.md",
+      "body_classes": "mod-popout theme-dark",
+      "appearance_mode": "dark",
+      "appearance_status": "2 safe preview styles applied in dark mode. Popout appearance is read-only.",
+      "editor_enabled_after_read": true,
+      "appearance_styles": [".obsidian/themes/Fixture.css", ".obsidian/snippets/focus.css"],
+      "scoped_css_rules": [
+        "body.mod-popout[data-openobsidian-theme-mode=\"dark\"]",
+        "body.mod-popout[data-openobsidian-theme-mode=\"dark\"] .workspace, body.mod-popout[data-openobsidian-theme-mode=\"dark\"] .workspace-leaf-content",
+        "body.mod-popout[data-openobsidian-theme-mode=\"dark\"] .view-header",
+        "body.mod-popout[data-openobsidian-theme-mode=\"dark\"] :focus-visible",
+        "body.mod-popout[data-openobsidian-theme-mode=\"dark\"] .view-content"
+      ],
+      "unscoped_theme_rules": []
+    }
+  },
+  "checks": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed after extracting the shared renderer-only preview helper and wiring the popout appearance path."},
+    {"command": "bun test tests/popout.test.ts tests/configuration.test.ts tests/workspace-contract.test.ts", "exit_code": 0, "result": "Eight focused tests passed with 89 expectations, including popout appearance IPC, host contracts, safe theme analysis and workspace markers."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow audit passed; one inherited updateEditorState warning remains excluded."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, sandboxed preload, renderer and popout bundles compiled; dist/popout.js was 18.1 KB."},
+    {"command": "bun run package:dir", "exit_code": 0, "result": "Electron 44.3.0 Linux x64 unpacked package built at out/linux-unpacked."},
+    {"procedure": "Packaged Electron CDP readback of the main renderer, click on #popout-note, child-page appearance status, body classes and CSSOM rules", "exit_code": 0, "result": "The configured dark theme and enabled snippet loaded in the child window; two style elements were applied, every observed rule was scoped to body.mod-popout[data-openobsidian-theme-mode=dark], the editor became enabled after the revision-aware read, and no unscoped theme rule was observed."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "151 tests passed with 815 expectations; state remains active with 2/19 checkpoints complete and 162 mandatory rows not release-passing."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd across 192 included paths."}
+  ],
+  "limitations": [
+    "This is Linux x64 packaged Electron evidence on a disposable synthetic vault; macOS, Windows, reference Obsidian and window-manager behavior remain pending.",
+    "The fixture uses a safe synthetic Fixture.css rather than the unchanged Minimal theme or Minimal Theme Settings artifact; PC17 and plugin lifecycle certification remain pending.",
+    "No plugin-created view, true OS IME, screen-reader, contrast/scale, human focus or cross-platform input trace was run; C10.1 remains pending.",
+    "The appearance path is read-only and no save or vault mutation was issued; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Configured theme/snippet preview now extends into tracked popout windows through the same scoped, inert policy. Linux packaged evidence confirms dark-mode assets, legacy popout selectors and accessibility status are visible without unscoped CSS; Minimal/plugin, cross-platform, reference and human certification remain open."
+}

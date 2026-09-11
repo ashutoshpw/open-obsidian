@@ -614,3 +614,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Updated C10's source digest and evidence references and retained C10.1 as `pending`; local popout save/conflict behavior is implemented, while true popout input/IME, screen-reader, cross-platform, reference Obsidian, plugin/theme parity and human validation remain external-pending.
 - State remains active at current checkpoint P3.3 with 2/19 checkpoints complete, 196 rows, 28 passing, 115 implemented, 47 pending, 6 external-pending and 162 mandatory rows not release-passing. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run `bun run validate:state`, `bun run final:audit`, `bun run check:fast` and `bun run audit:source-tree`, then commit/push this reconciliation and verify `main` SHA parity with a clean worktree.
+
+## 2026-09-11T10:34:41Z — P3.3 popout theme-preview increment
+
+- Completed: extracted the inert, CSSOM-scoped theme/snippet preview policy into a renderer-only helper shared by the main and popout windows. Preview parsing remains media-disabled until selectors are scoped; imports, URL assets, privileged selectors, font-face and page rules remain withheld.
+- Completed: tracked popouts now load the selected vault's read-only appearance settings through the guarded preload path, apply configured mode/accent/font-size/theme/snippet values to a legacy-contract popout surface, and expose a live appearance status without writing the vault.
+- Validation: `bun run typecheck`, focused popout/configuration tests (7 tests, 51 expectations), `bun run compile`, `bun run package:dir`, and a packaged Linux x64 CDP trace all passed. The trace observed dark mode, two scoped style sheets, workspace/view-header/view-content contracts and no unscoped theme rule.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-popout-theme-preview.json` records source tree `0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd` across 192 included paths.
+- Limitations: this is a synthetic Linux fixture only; unchanged Minimal/Minimal Theme Settings, plugin-created views, macOS/Windows/reference behavior, true OS IME, screen-reader, contrast/scale, human focus and cross-platform input remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: run the full local gates, commit this P3.3 work increment, reconcile its pushed SHA in state, and retain the external certification handoffs.

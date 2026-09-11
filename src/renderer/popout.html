@@ -24,9 +24,9 @@
       @media (max-width: 560px) { main { padding: 12px; } header { align-items: flex-start; flex-direction: column; } .actions { justify-content: flex-start; } }
     </style>
   </head>
-  <body>
-    <main aria-labelledby="popout-title">
-      <header>
+  <body class="mod-popout">
+    <main class="workspace workspace-leaf workspace-leaf-content view-content" aria-labelledby="popout-title">
+      <header class="view-header">
         <div>
           <h1 id="popout-title">Note popout</h1>
           <p id="popout-path">Waiting for the main workspace…</p>
@@ -37,6 +37,7 @@
         </div>
       </header>
       <textarea id="popout-editor" aria-label="Markdown note editor popout" spellcheck="false" disabled></textarea>
+      <p id="appearance-status" role="status" aria-live="polite">Vault appearance preview is not loaded.</p>
       <div id="status" role="status" aria-live="polite">Waiting for the note popout to initialize.</div>
     </main>
     <script type="module" src="../../dist/popout.js"></script>

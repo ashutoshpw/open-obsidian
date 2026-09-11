@@ -1,5 +1,7 @@
 import type {OpenObsidianAPI, PopoutIntent} from "../shared/api.js";
 import {decodeBase64, encodeBase64} from "../shared/base64.js";
+import {effectiveThemeMode, previewThemeAssets, safeAppearanceColor, safeAppearanceFontSize} from "./theme-preview.js";
+import {styleMatchesName, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
 
 type PopoutWindow = Window & {openObsidian?: OpenObsidianAPI};
 
@@ -10,6 +12,7 @@ const editor = document.querySelector<HTMLTextAreaElement>("#popout-editor");
 const saveButton = document.querySelector<HTMLButtonElement>("#save-popout");
 const reloadButton = document.querySelector<HTMLButtonElement>("#reload-note");
 const status = document.querySelector<HTMLElement>("#status");
+const appearanceStatus = document.querySelector<HTMLElement>("#appearance-status");
 
 let intent: PopoutIntent | null = null;
 let revision: string | null = null;
@@ -17,6 +20,9 @@ let dirty = false;
 let reading = false;
 let saving = false;
 let readRequest = 0;
+let appearanceRequest = 0;
+let appearanceData: VaultAppearance | null = null;
+let appearanceStyleElements: HTMLStyleElement[] = [];
 
 function errorText(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
@@ -24,6 +30,73 @@ function errorText(error: unknown, fallback: string): string {
 
 function setStatus(message: string): void {
   if (status) status.textContent = message;
+}
+
+function setAppearanceStatus(message: string): void {
+  if (appearanceStatus) appearanceStatus.textContent = message;
+}
+
+function popoutThemeScope(mode: "light" | "dark"): string {
+  return `body.mod-popout[data-openobsidian-theme-mode="${mode}"]`;
+}
+
+function configuredAppearanceAssets(data: VaultAppearance): ThemeStyleAsset[] {
+  const theme = data.styles.find((asset) => asset.kind === "theme" && styleMatchesName(asset.relativePath, data.settings.cssTheme));
+  const snippets = data.styles.filter((asset) => asset.kind === "snippet" && data.settings.enabledCssSnippets.some((name) => styleMatchesName(asset.relativePath, name) || name === asset.relativePath));
+  return theme ? [theme, ...snippets] : snippets;
+}
+
+function clearAppearance(): void {
+  appearanceStyleElements.forEach((style) => style.remove());
+  appearanceStyleElements = [];
+  appearanceData = null;
+  document.body.removeAttribute("data-openobsidian-theme-mode");
+  document.body.classList.remove("theme-light", "theme-dark");
+  document.body.style.removeProperty("font-size");
+  document.body.style.removeProperty("--accent");
+  setAppearanceStatus("Vault appearance preview is not loaded.");
+}
+
+function applyAppearanceSurface(data: VaultAppearance, mode: "light" | "dark"): void {
+  document.body.dataset.openobsidianThemeMode = mode;
+  document.body.classList.toggle("theme-light", mode === "light");
+  document.body.classList.toggle("theme-dark", mode === "dark");
+  const fontSize = safeAppearanceFontSize(data.settings.baseFontSize);
+  if (fontSize) document.body.style.fontSize = fontSize;
+  else document.body.style.removeProperty("font-size");
+  const accent = safeAppearanceColor(data.settings.accentColor);
+  if (accent) document.body.style.setProperty("--accent", accent);
+  else document.body.style.removeProperty("--accent");
+}
+
+function applyAppearance(data: VaultAppearance): void {
+  appearanceStyleElements.forEach((style) => style.remove());
+  appearanceStyleElements = [];
+  const mode = effectiveThemeMode(data.settings.mode);
+  applyAppearanceSurface(data, mode);
+  const preview = previewThemeAssets(configuredAppearanceAssets(data), mode, popoutThemeScope(mode));
+  appearanceStyleElements = preview.styles;
+  const summary = `${preview.applied.length} safe preview style${preview.applied.length === 1 ? "" : "s"} applied in ${mode} mode${preview.blocked.length ? ` · ${preview.blocked.length} withheld for review` : ""}. Popout appearance is read-only.`;
+  setAppearanceStatus(preview.blocked.length ? `${summary} ${preview.blocked.join(" · ")}` : summary);
+}
+
+function appearanceRequestIsCurrent(currentIntent: PopoutIntent, currentRequest: number): boolean {
+  return currentRequest === appearanceRequest && intent === currentIntent;
+}
+
+async function loadAppearance(client: OpenObsidianAPI, currentIntent: PopoutIntent, currentRequest: number): Promise<void> {
+  try {
+    const data = await client.loadAppearance();
+    if (appearanceRequestIsCurrent(currentIntent, currentRequest)) {
+      appearanceData = data;
+      applyAppearance(data);
+    }
+  } catch (error) {
+    if (appearanceRequestIsCurrent(currentIntent, currentRequest)) {
+      clearAppearance();
+      setAppearanceStatus(`Unable to load the vault appearance preview: ${errorText(error, "appearance access was rejected")}`);
+    }
+  }
 }
 
 function setDisabled(element: HTMLButtonElement | HTMLTextAreaElement | null, disabled: boolean): void {
@@ -132,10 +205,13 @@ async function saveNote(): Promise<void> {
 
 function handleIntent(next: PopoutIntent): void {
   intent = next;
+  appearanceRequest += 1;
+  clearAppearance();
   revision = null;
   dirty = false;
   if (title) title.textContent = "Note popout";
   if (pathLabel) pathLabel.textContent = next.relativePath;
+  void loadAppearance(api!, next, appearanceRequest);
   void readDiskVersion();
 }
 

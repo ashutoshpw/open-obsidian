@@ -29,6 +29,7 @@ test("popout host tracks one revision-aware child window per vault-relative note
   expect(preload).toContain("onPopoutIntent");
   expect(mainHtml).toContain('id="popout-note"');
   expect(renderer).toContain("target.client.openPopout");
+  expect(main).toContain("validateAppearanceEvent(event);");
 });
 
 test("popout renderer reads and writes only through revision-aware vault APIs", () => {
@@ -37,6 +38,12 @@ test("popout renderer reads and writes only through revision-aware vault APIs", 
   expect(popout).toContain("expectedRevision: revision");
   expect(popout).toContain("onPopoutIntent");
   expect(popout).toContain("event.metaKey || event.ctrlKey");
+  expect(popout).toContain("client.loadAppearance");
+  expect(popout).toContain("previewThemeAssets");
+  expect(popout).toContain("data-openobsidian-theme-mode");
+  expect(html).toContain('class="mod-popout"');
+  expect(html).toContain('class="workspace workspace-leaf workspace-leaf-content view-content"');
+  expect(html).toContain('id="appearance-status"');
   expect(html).toContain('aria-label="Markdown note editor popout"');
   expect(html).toContain('role="status" aria-live="polite"');
   expect(auditRendererHtml(html).failures).toEqual([]);

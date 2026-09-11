@@ -533,7 +533,14 @@ function appearanceStyle(style: DiscoveredStyle): VaultAppearance["styles"][numb
   };
 }
 
-function loadAppearance(): VaultAppearance {
+function validateAppearanceEvent(event?: Electron.IpcMainInvokeEvent): void {
+  if (!event) return;
+  if (!popoutSessionsByWebContentsId.has(event.sender.id)) return;
+  popoutSessionForEvent(event);
+}
+
+function loadAppearance(event?: Electron.IpcMainInvokeEvent): VaultAppearance {
+  validateAppearanceEvent(event);
   const configuration = discoverVaultConfiguration(requireVault().root);
   const settingsEntry = Object.entries(configuration.appearance)[0];
   const settingsPath = settingsEntry ? settingsEntry[0] : null;
