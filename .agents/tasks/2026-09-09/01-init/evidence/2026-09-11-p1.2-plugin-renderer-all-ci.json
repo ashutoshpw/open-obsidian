@@ -1,0 +1,36 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T12:42:57Z",
+  "checkpoint": "P1.2",
+  "requirements": ["PLUG-002", "PLUG-007", "PLUG-009"],
+  "implementation_commit": "780121412140ff5347a176e793176249dc11ba49",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4",
+    "source_tree_paths": 201
+  },
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34600239829,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34600239829",
+      "conclusion": "success",
+      "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"],
+      "result": "All quality matrix jobs passed state/contracts, typecheck, differential and full test, compile, Knip and Fallow checks for the renderer-preflight evidence update."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34600239770,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34600239770",
+      "conclusion": "success",
+      "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"],
+      "result": "All desktop matrix jobs passed packaging, release-manifest, Electron runtime notice and transitive attribution audits; signing remained skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "These Actions runs validate the repository contracts and packaging matrix; they do not rerun the Linux-only renderer preflight on macOS or Windows and do not certify unchanged-plugin lifecycle, views, settings, restart/update/uninstall or combinations.",
+    "Same-user OS enforcement, reference Obsidian behavior, human validation and signed-release gates remain pending; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The full-renderer-preflight evidence update is green in the available quality and desktop-build matrices while runtime certification remains explicitly pending."
+}

@@ -738,3 +738,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - All 26 pinned `main.js` assets passed recorded integrity checks and were denied before renderer execution by privileged static markers; the Minimal theme was not-applicable and only the synthetic mediated fixture loaded. No real unchanged artifact entered the marker-free execution path.
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all.json`; PLUG-009 remains `unsupported_security`, while PLUG-002 and PLUG-007 remain pending for lifecycle, views, settings, restart/update/uninstall, combinations, per-OS separation and reference behavior.
 - Limitation: this is Linux static-marker/module-load preflight evidence, not plugin lifecycle or OS isolation certification; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+
+## 2026-09-11T12:42:57Z — P1.2 full renderer preflight reconciliation
+
+- Reconciled pushed work commit `780121412140ff5347a176e793176249dc11ba49` on `main`; quality run `34600239829` and desktop-build run `34600239770` passed on Ubuntu, macOS and Windows.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all-ci.json` and retained the tested source tree `5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4` across 201 source paths.
+- The green matrix validates repository contracts and packaging metadata for this evidence update; it does not turn Linux static preflight into unchanged-plugin lifecycle, per-OS isolation, reference Obsidian, human or signed-release certification.
+- Next: validate and push this metadata-only reconciliation, then continue reference/cross-platform vault procedures and any bounded lifecycle evidence available without the reference runtime.
