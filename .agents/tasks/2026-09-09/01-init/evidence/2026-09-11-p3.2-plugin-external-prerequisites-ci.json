@@ -1,0 +1,73 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-external-prerequisites-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["PLUG-006"],
+  "decision_id": "D18",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-external-prerequisites.json",
+  "metadata_head": "472b9f1c137f2a62962bbb277497dea298313dfc",
+  "source_tree": {
+    "sha256": "a148bd3033c857f142436ebc7e65bbfe0cb08cd7b144312277489242a3a8d79b",
+    "paths": 235,
+    "definition": "Clean local digest from bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34658741492,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34658741492",
+    "conclusion": "success",
+    "jobs": {
+      "macos-latest": {"job_id": 103456626642, "conclusion": "success"},
+      "ubuntu-latest": {"job_id": 103456626760, "conclusion": "success"},
+      "windows-latest": {"job_id": 103456626762, "conclusion": "success"}
+    },
+    "checks": "All three jobs passed progress/contracts, tests, typecheck, compile, Electron vault round trip, synthetic lifecycle, Knip and Fallow; the final-audit contract now expects seven external-pending rows including PLUG-006."
+  },
+  "desktop_build": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34658741408,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34658741408",
+    "conclusion": "success",
+    "jobs": {
+      "windows-latest": {"job_id": 103456626248, "conclusion": "success"},
+      "macos-latest": {"job_id": 103456626361, "conclusion": "success"},
+      "ubuntu-latest": {"job_id": 103456626399, "conclusion": "success"}
+    },
+    "artifacts": [
+      {"name": "openobsidian-Windows-preview-472b9f1c137f2a62962bbb277497dea298313dfc", "size_in_bytes": 162987496},
+      {"name": "openobsidian-Linux-preview-472b9f1c137f2a62962bbb277497dea298313dfc", "size_in_bytes": 125928223},
+      {"name": "openobsidian-macOS-preview-472b9f1c137f2a62962bbb277497dea298313dfc", "size_in_bytes": 397377157}
+    ],
+    "checks": "All three packaging, release-manifest, Electron runtime notice and dependency-attribution jobs passed; production signing was skipped and artifacts remain unsigned previews."
+  },
+  "loaded_workflows": {
+    "workflow": "OpenObsidian loaded plugin workflows",
+    "run_id": 34658741472,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34658741472",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103456626619, "conclusion": "success"},
+      "macos-latest": {"job_id": 103456626723, "conclusion": "success"},
+      "windows-latest": {"job_id": 103456626795, "conclusion": "success"}
+    },
+    "artifacts": [
+      {"name": "loaded-plugin-workflows-Linux-472b9f1c137f2a62962bbb277497dea298313dfc", "sha256": "5075a696d4f2829869b5d0fa5087747da0f323f0193d4727b9236f289552b5e1", "source_tree_sha256": "1f2903c69bd816cfa15981d11d6063b9b35898261d6ee7830dc54baeef1540ff", "source_tree_paths": 236, "recorded_status": "partial"},
+      {"name": "loaded-plugin-workflows-macOS-472b9f1c137f2a62962bbb277497dea298313dfc", "sha256": "13984ddb2cbd06f696261a79b2e252c6a3272deede5372692debc3f061ebbe60", "source_tree_sha256": "d75d7fbff1c9d1d0e919123ee5af4cf91a5a4878f7ff5ef319a9579904f21dd0", "source_tree_paths": 236, "recorded_status": "partial"},
+      {"name": "loaded-plugin-workflows-Windows-472b9f1c137f2a62962bbb277497dea298313dfc", "sha256": "1333b4fc497b05f6f9c88da41b1ead872e7019818bdab0100d3ba7946a5fef23", "source_tree_sha256": "dbe1369f1adbbdd55bbbcfa6faecfc072dfde885170e7c734be891dc1f510429", "source_tree_paths": 236, "recorded_status": "partial"}
+    ],
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "checks": {
+      "all_jobs_uploaded_evidence": true,
+      "all_jobs_partial": true,
+      "zero_vault_writes": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "limitations": [
+    "Hosted quality and desktop-build jobs validate repository, synthetic lifecycle, packaging and cross-platform infrastructure; they do not provision or verify the live prerequisites named by PLUG-006.",
+    "Loaded-workflow reports execute unchanged pinned main.js bytes in the hidden Electron sandbox rather than stock Obsidian; their redirected setup output adds one transient path, so the clean local digest remains 235 paths while hosted reports show 236.",
+    "Reference Obsidian, same-user OS enforcement, human accessibility/input, provider-backed behavior, signing, publication, updater validation and all live accounts/credentials remain external-pending."
+  ],
+  "result": "Quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows for metadata head 472b9f1. The prerequisite validator is covered by the repository tests/check-fast path; all loaded-workflow reports remain partial with zero mediated vault writes and no plugin promotion. PLUG-006 remains external_pending until authorized, consented live prerequisites are provisioned and redacted verification is recorded."
+}

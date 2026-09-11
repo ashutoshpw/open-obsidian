@@ -1109,4 +1109,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 ## 2026-09-11T23:35:06Z — P3.2 hosted contract correction
 
 - The first push-triggered quality run `34658551826` stopped in `tests/final-audit.test.ts` because PLUG-006 correctly changed the external-pending handoff count from six to seven; desktop-build and loaded-workflow jobs were not affected by this assertion.
-- Updated the expectation in commit `f08ddc3b0b5e879a6cc13ebd1c6744f90a6dc0a5` and refreshed the PLUG-006 evidence/traceability digest to `a148bd3033c857f142436ebc7e65bbfe0cb08cd7b144312277489242a3a8d79b` across 235 paths. The focused final-audit test and strict Fallow check pass locally; the corrected source will be pushed for a fresh hosted reconciliation.
+- Updated the expectation in commit `f08ddc336c985c31858d4d89f54ab51610578d4f` and refreshed the PLUG-006 evidence/traceability digest to `a148bd3033c857f142436ebc7e65bbfe0cb08cd7b144312277489242a3a8d79b` across 235 paths. The focused final-audit test and strict Fallow check pass locally; the corrected source was pushed for a fresh hosted reconciliation.
+
+## 2026-09-11T23:41:47Z — P3.2 hosted prerequisite reconciliation
+
+- Reconciled metadata head `472b9f1c137f2a62962bbb277497dea298313dfc` with quality run `34658741492`, desktop-build run `34658741408` and loaded-workflow run `34658741472`; all Ubuntu, macOS and Windows jobs passed.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-external-prerequisites-ci.json`. Quality covered the prerequisite validator through tests/check-fast and the seven-row external-handoff count; desktop artifacts remained unsigned previews; loaded-workflow artifacts remained partial with zero mediated vault writes and no plugin promotion.
+- Hosted validation covers repository, synthetic lifecycle, packaging and cross-platform infrastructure only. PLUG-006 remains `external_pending` until authorized consented accounts, executables, OAuth, provider/model data and isolated fixtures are provisioned and verified; no live endpoint, account, credential, reference Obsidian instance, personal vault or selected `/home/ashutosh/Obsidian` vault was accessed.
