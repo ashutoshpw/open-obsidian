@@ -12,6 +12,7 @@ const downloadTimeoutMs = 45_000;
 const rendererTimeoutMs = 20_000;
 const workerPath = join(root, "scripts/plugin-renderer-worker.cjs");
 const electronBinary = createRequire(import.meta.url)("electron") as string;
+type RendererExecutionMode = "probe" | "lifecycle";
 const markerCapabilities: Record<string, string> = {
   filesystem: "filesystem.direct",
   network: "network.request",
@@ -74,10 +75,11 @@ function appendOutput(current: string, chunk: Uint8Array | string): string {
   return `${current}${value}`.slice(0, 16_384);
 }
 
-function spawnRendererWorker(sourceFile: string): Promise<ChildOutcome> {
+function spawnRendererWorker(sourceFile: string, mode: RendererExecutionMode): Promise<ChildOutcome> {
   const useXvfb = process.platform === "linux" && Bun.spawnSync(["sh", "-lc", "command -v xvfb-run"]).exitCode === 0;
   const command = useXvfb ? "xvfb-run" : electronBinary;
-  const electronArgs = ["--disable-gpu", "--disable-software-rasterizer", workerPath, `--source-file=${sourceFile}`];
+  const modeArgument = mode === "lifecycle" ? "--run-lifecycle" : "";
+  const electronArgs = ["--disable-gpu", "--disable-software-rasterizer", workerPath, `--source-file=${sourceFile}`, ...(modeArgument ? [modeArgument] : [])];
   const args = useXvfb ? ["-a", "--server-args=-screen 0 1280x720x24", electronBinary, ...electronArgs] : electronArgs;
   if (!useXvfb && process.platform === "linux" && !process.env.DISPLAY) throw new Error("Renderer preflight requires DISPLAY or xvfb-run on Linux");
   const child = spawn(command, args, {cwd: root, env: {PATH: process.env.PATH ?? "", DISPLAY: process.env.DISPLAY ?? "", NODE_NO_WARNINGS: "1"}, stdio: ["ignore", "pipe", "pipe"]});
@@ -122,7 +124,7 @@ function rendererResult(outcome: ChildOutcome): Record<string, unknown> {
   }
 }
 
-async function auditArtifact(artifact: JsonRecord, temporaryRoot: string): Promise<RendererProbeResult> {
+async function auditArtifact(artifact: JsonRecord, temporaryRoot: string, mode: RendererExecutionMode): Promise<RendererProbeResult> {
   const artifactId = string(artifact.id);
   const name = string(artifact.name);
   const version = string(artifact.tag);
@@ -136,13 +138,13 @@ async function auditArtifact(artifact: JsonRecord, temporaryRoot: string): Promi
   const source = new TextDecoder().decode(bytes);
   const decision = markerDecision(source);
   const {status: _boundaryStatus, ...boundary} = decision;
-  if (decision.status === "deny-before-renderer") return {artifactId, name, version, releaseUrl, status: "denied-security", integrity: "passed", ...boundary};
+  if (decision.status === "deny-before-renderer" && mode === "probe") return {artifactId, name, version, releaseUrl, status: "denied-security", integrity: "passed", ...boundary};
   const sourceFile = join(temporaryRoot, `${artifactId}.main.js`);
   writeFileSync(sourceFile, source, "utf8");
   try {
-    const result = rendererResult(await spawnRendererWorker(sourceFile));
+    const result = rendererResult(await spawnRendererWorker(sourceFile, mode));
     const status = result.status === "loaded" ? "renderer-loaded" : result.status === "denied" ? "renderer-denied" : "renderer-failed";
-    return {artifactId, name, version, releaseUrl, status, integrity: "passed", ...boundary, renderer: result};
+    return {artifactId, name, version, releaseUrl, status, integrity: "passed", ...boundary, execution: mode === "lifecycle" ? "renderer-wrapper" : boundary.execution, renderer: result};
   } catch (error) {
     return {artifactId, name, version, releaseUrl, status: "worker-error", integrity: "passed", ...boundary, detail: error instanceof Error ? error.message : String(error)};
   }
@@ -157,13 +159,13 @@ function missingArtifactResult(id: string): RendererProbeResult {
   return {artifactId: id, name: "", version: "", releaseUrl: "", status: "integrity-failed", integrity: "failed", execution: "not-executed", markers: [], deniedCapabilities: [], safeAlternativesAttempted: [], detail: "artifact is missing from compatibility manifest"};
 }
 
-async function auditTarget(id: string, byId: Map<string, JsonRecord>, temporaryRoot: string): Promise<RendererProbeResult> {
+async function auditTarget(id: string, byId: Map<string, JsonRecord>, temporaryRoot: string, mode: RendererExecutionMode): Promise<RendererProbeResult> {
   const artifact = byId.get(id);
-  return artifact ? auditArtifact(artifact, temporaryRoot) : missingArtifactResult(id);
+  return artifact ? auditArtifact(artifact, temporaryRoot, mode) : missingArtifactResult(id);
 }
 
-async function auditTargets(ids: string[], byId: Map<string, JsonRecord>, temporaryRoot: string): Promise<RendererProbeResult[]> {
-  return Promise.all(ids.map((id) => auditTarget(id, byId, temporaryRoot)));
+async function auditTargets(ids: string[], byId: Map<string, JsonRecord>, temporaryRoot: string, mode: RendererExecutionMode): Promise<RendererProbeResult[]> {
+  return Promise.all(ids.map((id) => auditTarget(id, byId, temporaryRoot, mode)));
 }
 
 function rendererFixtureResult(safeRenderer: Record<string, unknown>): RendererProbeResult {
@@ -183,15 +185,18 @@ function rendererFixtureResult(safeRenderer: Record<string, unknown>): RendererP
   };
 }
 
-async function collectResults(manifest: JsonRecord, fixture: JsonRecord): Promise<RendererProbeResult[]> {
+async function collectResults(manifest: JsonRecord, fixture: JsonRecord, mode: RendererExecutionMode): Promise<RendererProbeResult[]> {
   const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
   const ids = selectedIds(manifest, fixture);
   const temporaryRoot = mkdtempSync(join("/tmp", "openobsidian-renderer-probe-"));
   try {
     const safeSourceFile = join(temporaryRoot, "mediated-fixture.main.js");
-    writeFileSync(safeSourceFile, "module.exports = {name: 'mediated-fixture'};", "utf8");
-    const safeRenderer = rendererResult(await spawnRendererWorker(safeSourceFile));
-    return [rendererFixtureResult(safeRenderer), ...await auditTargets(ids, byId, temporaryRoot)];
+    const safeSource = mode === "lifecycle"
+      ? "module.exports = class MediatedFixture { onload() {} onunload() {} };"
+      : "module.exports = {name: 'mediated-fixture'};";
+    writeFileSync(safeSourceFile, safeSource, "utf8");
+    const safeRenderer = rendererResult(await spawnRendererWorker(safeSourceFile, mode));
+    return [rendererFixtureResult(safeRenderer), ...await auditTargets(ids, byId, temporaryRoot, mode)];
   } finally {
     rmSync(temporaryRoot, {recursive: true, force: true});
   }
@@ -205,11 +210,12 @@ function countStatuses(results: RendererProbeResult[], statuses: RendererProbeSt
 function summarizeResults(results: RendererProbeResult[]): {passed: boolean; denied: number; loaded: number; failed: number; notApplicable: number} {
   const infrastructureFailures = countStatuses(results, ["integrity-failed", "worker-error"]);
   const rendererWrapperFailed = results[0]?.status !== "renderer-loaded";
+  const failed = countStatuses(results, ["renderer-failed"]);
   return {
-    passed: infrastructureFailures === 0 && !rendererWrapperFailed,
+    passed: infrastructureFailures === 0 && !rendererWrapperFailed && failed === 0,
     denied: countStatuses(results, ["denied-security", "renderer-denied"]),
     loaded: countStatuses(results, ["renderer-loaded"]),
-    failed: countStatuses(results, ["renderer-failed"]),
+    failed,
     notApplicable: countStatuses(results, ["not-applicable"]),
   };
 }
@@ -217,10 +223,13 @@ function summarizeResults(results: RendererProbeResult[]): {passed: boolean; den
 async function main(): Promise<number> {
   const manifest = readJson(root, "fixtures/compatibility-manifest.json");
   const fixture = readJson(root, "fixtures/plugin-renderer-probe.json");
-  const results = await collectResults(manifest, fixture);
+  const mode: RendererExecutionMode = process.argv.includes("--lifecycle") ? "lifecycle" : "probe";
+  const results = await collectResults(manifest, fixture, mode);
   results.forEach((result) => console.log(JSON.stringify(result)));
   const summary = summarizeResults(results);
-  console.log(`PLUGIN RENDERER PREFLIGHT: ${summary.passed ? "passed" : "failed"}; ${summary.denied} denied, ${summary.loaded} loaded, ${summary.failed} ordinary renderer failures, ${summary.notApplicable} not-applicable; lifecycle and runtime dispositions remain pending-runtime`);
+  const modeLabel = mode === "lifecycle" ? "ARTIFACT LIFECYCLE" : "RENDERER PREFLIGHT";
+  const limitation = mode === "lifecycle" ? "artifact lifecycle is isolated and non-certifying; cross-platform/reference results remain pending" : "lifecycle and runtime dispositions remain pending-runtime";
+  console.log(`PLUGIN ${modeLabel}: ${summary.passed ? "passed" : "failed"}; ${summary.denied} denied, ${summary.loaded} loaded, ${summary.failed} ordinary renderer failures, ${summary.notApplicable} not-applicable; ${limitation}`);
   return summary.passed ? 0 : 1;
 }
 

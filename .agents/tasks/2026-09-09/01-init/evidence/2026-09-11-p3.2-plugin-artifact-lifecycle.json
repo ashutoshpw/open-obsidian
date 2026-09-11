@@ -1,0 +1,81 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T19:05:51Z",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "PC01", "PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005"],
+  "decision_id": "D15",
+  "fixture_id": "fixture:plugin-artifact-lifecycle",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "head_before_commit": "8d7371f1b532bc7a4da239aa25390f0aa97415f9",
+    "tested_source_tree": "eac9ab6b7abc18c625ff9763848a14e3ce6b5dcdd3ca2f018654b63c7a4d9691",
+    "source_tree_paths": 221,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "command": "bun run audit:plugin-artifact-lifecycle",
+  "execution_policy": "The unchanged release main.js bytes are loaded only in a hidden Electron BrowserWindow with contextIsolation, sandbox and nodeIntegration disabled. Host filesystem, network, process, credential, native and privileged-DOM calls are replaced with denying capabilities. This audit mode never enables a plugin in the application.",
+  "result": {
+    "exit_code": 1,
+    "integrity_passed": 26,
+    "not_applicable": ["PC-DEP-MINIMAL"],
+    "artifact_counts": {"renderer-denied": 17, "renderer-loaded": 1, "renderer-failed": 8, "not-applicable": 1},
+    "synthetic_wrapper": "renderer-loaded",
+    "coverage": "electron-sandboxed-renderer-lifecycle",
+    "failure_reason": "Eight unchanged artifacts produced ordinary renderer/lifecycle failures; the command intentionally exits nonzero so ordinary compatibility failures cannot be relabeled D15 security exceptions."
+  },
+  "artifact_results": [
+    {"artifact_id":"PC01","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC02","status":"renderer-failed","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","code.dynamic"],"error":"Class extends value undefined is not a constructor or null","lifecycle_events":[]},
+    {"artifact_id":"PC03","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC04","status":"renderer-denied","denied_capabilities":["process.spawn","dom.privileged","code.dynamic"],"error":"D15 denied process.spawn","lifecycle_events":[]},
+    {"artifact_id":"PC05","status":"renderer-denied","denied_capabilities":["process.spawn","dom.privileged","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC06","status":"renderer-failed","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","code.dynamic"],"error":"Function.prototype.bind called on incompatible undefined","lifecycle_events":[]},
+    {"artifact_id":"PC07","status":"renderer-failed","denied_capabilities":["dom.privileged"],"error":"Cannot read properties of undefined (reading 'getLeavesOfType')","lifecycle_events":["constructed","onload"]},
+    {"artifact_id":"PC08","status":"renderer-denied","denied_capabilities":["process.spawn","dom.privileged"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC09","status":"renderer-failed","denied_capabilities":["process.spawn","dom.privileged","native.abi","code.dynamic"],"error":"activeWindow is not defined","lifecycle_events":[]},
+    {"artifact_id":"PC10","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC11","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC12","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC13","status":"renderer-denied","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied filesystem.direct","lifecycle_events":[]},
+    {"artifact_id":"PC14","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC15","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC16","status":"renderer-denied","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC17","status":"renderer-failed","denied_capabilities":["dom.privileged"],"error":"lifecycle fixture did not export a plugin class","lifecycle_events":[]},
+    {"artifact_id":"PC18","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC19","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC20","status":"renderer-loaded","denied_capabilities":["process.spawn","dom.privileged","code.dynamic"],"error":null,"lifecycle_events":["constructed","onload","onunload"]},
+    {"artifact_id":"PC21","status":"renderer-failed","denied_capabilities":["dom.privileged"],"error":"lifecycle fixture did not export a plugin class","lifecycle_events":[]},
+    {"artifact_id":"PC22","status":"renderer-failed","denied_capabilities":["filesystem.direct","network.request","process.spawn","dom.privileged","native.abi"],"error":"lifecycle fixture did not export a plugin class","lifecycle_events":[]},
+    {"artifact_id":"PC23","status":"renderer-failed","denied_capabilities":["dom.privileged"],"error":"lifecycle fixture did not export a plugin class","lifecycle_events":[]},
+    {"artifact_id":"PC24","status":"renderer-denied","denied_capabilities":["process.spawn","dom.privileged","native.abi"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC25","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"],"error":"D15 denied dom.privileged","lifecycle_events":[]},
+    {"artifact_id":"PC-DEP-MINIMAL","status":"not-applicable","denied_capabilities":[],"error":null,"lifecycle_events":[]},
+    {"artifact_id":"PC-DEP-TEXT-EXTRACTOR","status":"renderer-denied","denied_capabilities":["network.request","process.spawn","dom.privileged"],"error":"D15 denied dom.privileged","lifecycle_events":[]}
+  ],
+  "interpretation": {
+    "d15_candidate_denials": ["PC01","PC03","PC04","PC05","PC08","PC10","PC11","PC12","PC13","PC14","PC15","PC16","PC18","PC19","PC24","PC25","PC-DEP-TEXT-EXTRACTOR"],
+    "ordinary_failures": ["PC02","PC06","PC07","PC09","PC17","PC21","PC22","PC23"],
+    "loaded_artifact": ["PC20"],
+    "no_status_rows_changed": true,
+    "d15_disposition_policy": "Denied artifacts are candidates for per-workflow D15 review only; this evidence does not certify an unsupported-security exception until workflow-specific reproduction, safe alternatives, visible compatibility entries and disabled-path tests are recorded. Ordinary failures remain implementation failures."
+  },
+  "checks": [
+    {"command":"bun run typecheck","exit_code":0,"result":"TypeScript typecheck passed after adding the explicit artifact-lifecycle mode."},
+    {"command":"bun test tests/plugin-renderer-probe.test.ts tests/plugin-renderer-lifecycle.test.ts","exit_code":0,"result":"Four focused tests passed with 31 expectations."},
+    {"command":"bun run audit:plugin-artifact-lifecycle","exit_code":1,"result":"26 pinned main.js assets passed integrity; the isolated lifecycle wrapper recorded 17 denied, 1 loaded and 8 ordinary failures, then failed intentionally on ordinary failures."}
+  ],
+  "limitations": [
+    "This is Linux x64 artifact-specific lifecycle/module evidence, not macOS/Windows renderer or OS-enforcement certification.",
+    "The runner supplies a bounded Obsidian API stub and does not prove plugin settings, views, editor mutations, workflow outputs, combinations, durable plugin storage, restart/update/uninstall, return-to-Obsidian or reference behavior.",
+    "Static markers and denied wrapper calls are capability evidence, not by themselves complete D15 exceptions; no ordinary failure is relabeled as security incompatibility.",
+    "No provider endpoint, reference Obsidian instance, human reviewer, signing credential or selected /home/ashutosh/Obsidian vault was accessed."
+  ],
+  "result": "The new audit mode makes unchanged artifact lifecycle attempts explicit and fail-closed. Integrity passed for 26 main.js assets; one unchanged artifact completed the minimal lifecycle wrapper, 17 hit denied capabilities, and eight exposed ordinary renderer/API gaps that remain implementation blockers."
+}
