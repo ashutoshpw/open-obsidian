@@ -1,0 +1,50 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T14:42:15Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "ARCH-008", "RISK-003"],
+  "fixture_id": "fixture:plugin-renderer-lifecycle",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "branch": "main",
+    "implementation_commit_before_reconciliation": "33534d5c5960e2d7b5f171e99a92d4a2997aa32d",
+    "tested_source_tree": "20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08",
+    "source_tree_paths": 211,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "report": {
+    "status": "passed",
+    "fixture_id": "fixture:plugin-renderer-lifecycle",
+    "checks": {
+      "safe_lifecycle_loaded": true,
+      "safe_lifecycle_boundary": true,
+      "safe_onload_then_onunload": true,
+      "dom_lifecycle_denied": true,
+      "dom_lifecycle_boundary": true,
+      "dom_privileged_capability_denied": true,
+      "dom_denied_before_onload_completion": true
+    },
+    "safe_lifecycle_events": ["constructed", "plugin-onload", "onload", "plugin-onunload", "onunload"],
+    "dom_denied_capabilities": ["dom.privileged"],
+    "display": "xvfb-run"
+  },
+  "checks": [
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun test tests/plugin-renderer-lifecycle.test.ts tests/plugin-renderer-probe.test.ts", "exit_code": 0, "result": "Four focused tests passed with 27 expectations; the fixture remains explicit about synthetic scope and D15 alternatives."},
+    {"command": "bun run audit:plugin-lifecycle", "exit_code": 0, "result": "A Linux x64 Electron 44.3.0 sandboxed renderer completed synthetic onload/onunload and denied a privileged DOM access before onload completed."},
+    {"command": "bun run audit:plugin-renderer", "exit_code": 0, "result": "The existing eight unchanged pinned targets passed integrity and fail-closed preflight: eight denied before renderer execution and the mediated fixture loaded; lifecycle/runtime dispositions remain pending."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the six-file lifecycle increment."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08 across 211 included paths."}
+  ],
+  "limitations": [
+    "The lifecycle trace uses only a synthetic marker-free plugin class and a synthetic privileged-DOM fixture; it does not certify any unchanged pinned plugin.",
+    "Plugin settings, views, workflow combinations, restart/update/uninstall, return-to-Obsidian behavior, macOS/Windows renderer enforcement and same-user OS isolation remain pending.",
+    "Reference Obsidian compatibility, human accessibility/input, signing, publication and release readiness remain pending; the selected /home/ashutosh/Obsidian vault was not accessed."
+  ],
+  "result": "Synthetic Electron lifecycle and DOM-boundary behavior is now directly exercised while unchanged-artifact lifecycle certification remains pending-runtime and fail-closed."
+}

@@ -10,6 +10,10 @@ function argumentValue(name) {
   return argument ? argument.slice(prefix.length) : "";
 }
 
+function hasArgument(name) {
+  return process.argv.includes(name);
+}
+
 function emit(result, exitCode = 0) {
   process.stdout.write(`${JSON.stringify(result)}\n`);
   app.exit(exitCode);
@@ -167,7 +171,58 @@ function rendererProbe(source) {
   }
 }
 
-function rendererScript(source) {
+function lifecycleCall(instance, name, events) {
+  if (typeof instance[name] !== "function") return;
+  instance[name]();
+  events.push(name);
+}
+
+function lifecycleInstance(module, lifecycle) {
+  if (typeof module.exports !== "function") throw new Error("lifecycle fixture did not export a plugin class");
+  lifecycle.supported = true;
+  const instance = new module.exports({events: lifecycle.events}, {id: "renderer-lifecycle-fixture", version: "1"});
+  lifecycle.events.push("constructed");
+  return instance;
+}
+
+function lifecycleFailure(error, requiredModules, deniedCapabilities, lifecycle) {
+  const message = error instanceof Error ? error.message : String(error);
+  return {
+    status: deniedCapabilities.length > 0 ? "denied" : "failed",
+    enforcement: "electron-context-isolated-sandbox",
+    coverage: "electron-sandboxed-renderer-lifecycle",
+    exportKind: "undefined",
+    requiredModules,
+    deniedCapabilities,
+    lifecycle,
+    error: message.slice(0, 600),
+  };
+}
+
+function rendererLifecycleProbe(source) {
+  const deniedCapabilities = [];
+  const requiredModules = [];
+  const lifecycle = {supported: false, events: []};
+  try {
+    const module = evaluateSource(source, deniedCapabilities, requiredModules);
+    const instance = lifecycleInstance(module, lifecycle);
+    lifecycleCall(instance, "onload", lifecycle.events);
+    lifecycleCall(instance, "onunload", lifecycle.events);
+    return {
+      status: "loaded",
+      enforcement: "electron-context-isolated-sandbox",
+      coverage: "electron-sandboxed-renderer-lifecycle",
+      exportKind: "function",
+      requiredModules,
+      deniedCapabilities,
+      lifecycle,
+    };
+  } catch (error) {
+    return lifecycleFailure(error, requiredModules, deniedCapabilities, lifecycle);
+  }
+}
+
+function rendererScript(source, lifecycleMode = false) {
   const runtime = [
     remember,
     denyCapability,
@@ -182,8 +237,13 @@ function rendererScript(source) {
     loadedResult,
     failedResult,
     rendererProbe,
+    lifecycleCall,
+    lifecycleInstance,
+    lifecycleFailure,
+    rendererLifecycleProbe,
   ].map((functionDefinition) => functionDefinition.toString()).join("\n");
-  return `(function(){${runtime};return rendererProbe(${JSON.stringify(source)});})()`;
+  const probe = lifecycleMode ? "rendererLifecycleProbe" : "rendererProbe";
+  return `(function(){${runtime};return ${probe}(${JSON.stringify(source)});})()`;
 }
 
 function createWindow() {
@@ -201,22 +261,22 @@ function destroyWindow(window) {
   if (!window.isDestroyed()) window.destroy();
 }
 
-async function executeRenderer(sourceFile) {
+async function executeRenderer(sourceFile, lifecycleMode = false) {
   const source = readFileSync(sourceFile, "utf8");
   const window = createWindow();
   try {
     await window.loadURL("data:text/html,<meta charset='utf-8'><title>OpenObsidian plugin preflight</title>");
-    return await window.webContents.executeJavaScript(rendererScript(source), true);
+    return await window.webContents.executeJavaScript(rendererScript(source, lifecycleMode), true);
   } finally {
     destroyWindow(window);
   }
 }
 
-function startupFailure(error) {
+function startupFailure(error, lifecycleMode = false) {
   return {
     status: "failed",
     enforcement: "electron-context-isolated-sandbox",
-    coverage: "electron-sandboxed-renderer-module-load-only",
+    coverage: lifecycleMode ? "electron-sandboxed-renderer-lifecycle" : "electron-sandboxed-renderer-module-load-only",
     exportKind: "undefined",
     requiredModules: [],
     deniedCapabilities: [],
@@ -230,7 +290,8 @@ function start(sourceFile) {
     app.whenReady().then(() => emit({status: "failed", error: "Missing --source-file"}, 2));
     return;
   }
-  app.whenReady().then(() => executeRenderer(sourceFile)).then(emit, (error) => emit(startupFailure(error), 1));
+  const lifecycleMode = hasArgument("--run-lifecycle");
+  app.whenReady().then(() => executeRenderer(sourceFile, lifecycleMode)).then(emit, (error) => emit(startupFailure(error, lifecycleMode), 1));
 }
 
 start(argumentValue("--source-file"));

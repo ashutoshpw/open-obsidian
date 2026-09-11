@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "fixture:plugin-renderer-lifecycle",
+  "checkpoint": "P1.2",
+  "decision_id": "D15",
+  "boundary": "electron-renderer",
+  "safe_source": "const {Plugin} = require('obsidian'); module.exports = class LifecycleFixture extends Plugin { onload() { this.app.events.push('plugin-onload'); } onunload() { this.app.events.push('plugin-onunload'); } };",
+  "dom_source": "const {Plugin} = require('obsidian'); module.exports = class DomFixture extends Plugin { onload() { document.createElement('div'); } onunload() {} };",
+  "expected": {
+    "safe_status": "loaded",
+    "safe_coverage": "electron-sandboxed-renderer-lifecycle",
+    "safe_lifecycle_events": ["constructed", "plugin-onload", "onload", "plugin-onunload", "onunload"],
+    "dom_status": "denied",
+    "dom_coverage": "electron-sandboxed-renderer-lifecycle",
+    "dom_denied_capability": "dom.privileged",
+    "dom_lifecycle_events": ["constructed"]
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "scoped renderer preview", "workflow disabled"],
+  "external_pending": [
+    "unchanged pinned plugin lifecycle and workflow execution",
+    "plugin settings, views, restart/update/uninstall and combinations",
+    "macOS and Windows renderer/OS enforcement",
+    "reference Obsidian compatibility and human validation"
+  ],
+  "limitation": "This fixture exercises only a synthetic marker-free lifecycle and a synthetic privileged-DOM denial in the Electron renderer wrapper; it does not certify any unchanged plugin or reference Obsidian behavior."
+}
