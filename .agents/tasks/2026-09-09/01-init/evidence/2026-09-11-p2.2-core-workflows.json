@@ -20,7 +20,8 @@
     {"command": "bun test tests/core-workflows.test.ts tests/check-fast.test.ts", "exit_code": 0, "result": "Two focused tests and eight expectations pass for the inventory and quick-check wiring."},
     {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checking passes for the validator and test."},
     {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
-    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the nine-file core-workflow increment."}
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the nine-file core-workflow increment."},
+    {"command": "GitHub Actions runs 34565083156 and 34565083178", "exit_code": 0, "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows; the workflow validator ran in quality and packaging/attribution gates ran in desktop-build."}
   ],
   "implemented": [
     "Added a versioned C10 inventory covering file explorer, tabs, splits, popouts, command palette, quick switcher, bookmarks, outline, backlinks, outgoing links, templates, daily notes, note composition, history, tasks and tags.",
@@ -31,5 +32,6 @@
   "limitations": [
     "The inventory does not claim popout, template, daily-note, full bookmark, task or tag behavior; those remain incomplete/deferred as recorded.",
     "Visible focus/input/IME, cross-platform, reference Obsidian and end-to-end human keyboard validation remain pending."
-  ]
+  ],
+  "ci_runs": [34565083156, 34565083178]
 }

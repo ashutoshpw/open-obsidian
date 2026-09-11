@@ -440,3 +440,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Safety: popouts, templates, daily notes and full bookmark/task/tag behavior remain explicitly incomplete or deferred; the inventory does not relabel those gaps as implemented.
 - Validation: local workflow validation, focused tests, TypeScript, Knip and strict Fallow passed; the source tree digest is `272a91e29e4b8f58daa1bf712138a16a0936235affbefa98f696357c45c3577e` across 157 included paths.
 - Next: continue visible/reference validation and implement the remaining P2.2 workflow surfaces only with their source-preservation and accessibility fixtures.
+
+## 2026-09-11T05:22:00Z — P2.2 workflow evidence reconciliation
+
+- Reconciled: updated `state.json` to include the C10 workflow inventory, its evidence record and CI results for the pushed `b45301dfe8329a60550ccc8e49338f8366465db8` checkpoint head.
+- Validation: GitHub Actions runs `34565083156` (quality) and `34565083178` (desktop-build) passed on Ubuntu, macOS and Windows; local `validate:state`, `check:fast` and changed-file Fallow all passed.
+- Safety: no vault path was opened or modified; the selected `/home/ashutosh/Obsidian` vault remains outside this repository operation.
+- Next: continue with visible accessibility/reference checks and the explicitly incomplete C10 workflow handoffs; do not relabel deferred behavior as implemented.
