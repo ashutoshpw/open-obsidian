@@ -32,6 +32,19 @@ function jsonFile(path: string): Record<string, unknown> | null {
   }
 }
 
+function configurationJsonFiles(folder: string, folderPath: string, relativeDirectory = ""): string[] {
+  const directoryPath = join(folderPath, relativeDirectory);
+  const entries = readdirSync(directoryPath, {withFileTypes: true});
+  return entries.flatMap((entry) => {
+    const relativePath = relativeDirectory ? `${relativeDirectory}/${entry.name}` : entry.name;
+    if (entry.isFile() && entry.name.endsWith(".json")) return [`${folder}/${relativePath}`];
+    // Plugin settings live below .obsidian/plugins/<id>/data.json. Do not
+    // follow symlinked directories while discovering configuration.
+    if (entry.isDirectory() && !entry.isSymbolicLink()) return configurationJsonFiles(folder, folderPath, relativePath);
+    return [];
+  }).sort();
+}
+
 function styleFiles(folder: string, folderPath: string): VaultStyle[] {
   const styles: VaultStyle[] = [];
   for (const [directory, kind] of [["themes", "theme"], ["snippets", "snippet"]] as const) {
@@ -63,12 +76,11 @@ export function discoverVaultConfiguration(root: string): VaultConfiguration {
   const styles: VaultStyle[] = [];
   for (const folder of folders) {
     const folderPath = join(resolvedRoot, folder);
-    for (const entry of readdirSync(folderPath, {withFileTypes: true}).filter((entry) => entry.isFile() && entry.name.endsWith(".json"))) {
-      const relativePath = `${folder}/${entry.name}`;
-      const parsed = jsonFile(join(folderPath, entry.name));
+    for (const relativePath of configurationJsonFiles(folder, folderPath)) {
+      const parsed = jsonFile(join(resolvedRoot, relativePath));
       if (parsed) {
         json[relativePath] = parsed;
-        if (entry.name === "appearance.json") appearance[relativePath] = parseAppearanceSettings(parsed);
+        if (relativePath.endsWith("/appearance.json")) appearance[relativePath] = parseAppearanceSettings(parsed);
       }
     }
     styles.push(...styleFiles(folder, folderPath));

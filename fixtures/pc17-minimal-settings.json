@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "fixture_id": "fixture:pc17-minimal-settings",
+  "plugin_artifact_id": "PC17",
+  "theme_artifact_id": "PC-DEP-MINIMAL",
+  "configuration_path": ".obsidian/plugins/obsidian-minimal-settings/data.json",
+  "required_modes": ["light", "dark"],
+  "required_theme_contracts": {
+    "layout": ["workspace-shell", "workspace-leaf", "view-header", "file-explorer", "titlebar", "status-bar"],
+    "plugin_views": ["data-view", "workspace-leaf-content", "view-content"],
+    "popout": ["popout-surface"],
+    "accessibility": ["focus-visible", "font-scaling"]
+  },
+  "settings_keys": [
+    "lightStyle",
+    "darkStyle",
+    "lightScheme",
+    "darkScheme",
+    "lineHeight",
+    "lineWidth",
+    "textNormal",
+    "textSmall"
+  ],
+  "command_ids": [
+    "increase-body-font-size",
+    "decrease-body-font-size",
+    "toggle-hidden-borders",
+    "toggle-colorful-headings"
+  ],
+  "persistence_policy": "Plugin direct configuration writes remain denied under D15; this fixture verifies read-only discovery and records the explicit preview/approval boundary for any future host-mediated write."
+}

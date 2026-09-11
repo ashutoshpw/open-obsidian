@@ -779,3 +779,17 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip-ci.json`; `state.json` now records the reconciled SHA, source tree `1a31ede4a536e6f8567775d65ff1c0aec27f9a61f713c08f9df9fc294890a2ba` across 202 paths, and CI runs `34603868013` and `34603867976`.
 - Limitation: the matrix validates host behavior, not disk-full/quota/ACL variation, cloud-placeholder, reference Obsidian, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified. The Windows not-enforced result is not an OS-isolation claim.
 - Next: continue reference/cross-platform vault procedures and unchanged-plugin lifecycle work while retaining the explicit external gates.
+
+## 2026-09-11T13:42:30Z — P3.3 Minimal pair static audit
+
+- Completed: added `fixtures/pc17-minimal-settings.json` and `bun run audit:minimal-theme`. The audit downloads the pinned Minimal 9.1.0 theme and Minimal Theme Settings 9.0.0 `main.js`, verifies recorded byte/hash pins, checks light/dark legacy layout, plugin-view, popout and accessibility contracts, finds the plugin settings/command/saveData markers, and records the D15 DOM denial before execution.
+- Improved configuration discovery to include nested `.obsidian` JSON settings such as `.obsidian/plugins/obsidian-minimal-settings/data.json` without following symlinked directories. The fixture confirms unknown values and source bytes remain unchanged during read-only discovery.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-minimal-pair.json`, tested source tree `a9e1a22ce2977e683d2589d217ca8e3e3ef70204f16c8bb09c7c11a6afb35d3e` across 205 included paths. The static audit passed; the actual unchanged plugin settings/lifecycle/runtime path remains pending and the Minimal CSS URL rules remain withheld by safe preview.
+- Validation: `bun run check:fast` passed with 162 tests and 865 expectations; typecheck and strict Fallow passed. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Traceability: PC17 is now `implemented` with verified paired artifact hashes but is not release-passing; C12 and RISK-002 remain pending for visible renderer, plugin-view, cross-platform, reference and human validation. The goal remains active at P3.3.
+- Next: review and commit the scoped Minimal/configuration increment with a `[openobsidian P3.3 work]` marker, push `main`, inspect quality and desktop-build CI, reconcile the observed SHA, then continue reference/cross-platform vault and unchanged-plugin lifecycle evidence.
+
+## 2026-09-11T13:46:01Z — P3.3 local quality reconciliation
+
+- `bun run quality` passed on Linux x64: state/final audit, contract and matrix validators, 162 tests with 865 expectations, quality-program, compile, Knip and Fallow health all completed successfully. The honest audit remains active with 196 rows, 119 implemented, 42 pending, 0 failing, 1 unsupported-security, 6 external-pending and 161 mandatory rows not release-passing.
+- Refreshed the P3.3 Minimal-pair evidence, C09/C12/PC17/RISK-002 traceability rows and P3.3 checkpoint state to source tree `c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6` across 205 included paths. No runtime or release claims changed; reference/cross-platform and unchanged-plugin lifecycle evidence remain pending.

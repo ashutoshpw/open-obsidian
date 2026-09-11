@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {resolveAttachment} from "../src/core/attachments.js";
@@ -64,6 +64,31 @@ test("configuration discovery maps theme and snippet CSS without modifying sourc
     expect(report.styles.map((style) => style.relativePath)).toEqual([".obsidian/snippets/focus.css", ".obsidian/themes/Minimal.css"]);
   } finally {
     rmSync(root, {recursive: true, force: true});
+  }
+});
+
+test("configuration discovery preserves nested plugin settings without following symlinked directories", () => {
+  const root = mkdtempSync(join(tmpdir(), "openobsidian-plugin-config-vault-"));
+  const outside = mkdtempSync(join(tmpdir(), "openobsidian-plugin-config-outside-"));
+  try {
+    mkdirSync(join(root, ".obsidian", "plugins", "obsidian-minimal-settings"), {recursive: true});
+    mkdirSync(join(outside, "plugins", "outside"), {recursive: true});
+    const settings = {lightStyle: "minimal-light", darkStyle: "minimal-dark", lineHeight: 1.5, textNormal: 16, unknownFutureKey: {preserve: true}};
+    writeFileSync(join(root, ".obsidian", "plugins", "obsidian-minimal-settings", "data.json"), `${JSON.stringify(settings)}\n`);
+    writeFileSync(join(outside, "plugins", "outside", "data.json"), '{"shouldNot":"be discovered"}\n');
+    try {
+      symlinkSync(join(outside, "plugins"), join(root, ".obsidian", "linked-plugins"), "dir");
+    } catch {
+      // Symlink creation can be unavailable on a restricted host; the nested
+      // configuration assertion remains valid without weakening discovery.
+    }
+
+    const discovered = discoverVaultConfiguration(root);
+    expect(discovered.json[".obsidian/plugins/obsidian-minimal-settings/data.json"]).toEqual(settings);
+    expect(Object.keys(discovered.json)).not.toContain(".obsidian/linked-plugins/outside/data.json");
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+    rmSync(outside, {recursive: true, force: true});
   }
 });
 

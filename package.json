@@ -53,6 +53,7 @@
     "check:accessibility": "bun scripts/check-accessibility.ts",
     "validate:layout": "bun scripts/validate-layout.ts",
     "audit:theme-assets": "bun scripts/audit-theme-assets.ts",
+    "audit:minimal-theme": "bun scripts/audit-minimal-theme.ts",
     "knip": "knip",
     "audit:fallow": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",

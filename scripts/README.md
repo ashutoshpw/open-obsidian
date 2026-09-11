@@ -27,6 +27,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run validate:input-matrix` | Validates the keyboard/IME/Unicode/RTL/popout input matrix and its local versus external dispositions. |
 | `bun run validate:layout` | Static Obsidian-shell geometry and navigation-marker checks. |
 | `bun run audit:theme-assets -- --root /path/to/vault` | Read-only appearance/theme/snippet audit; reports hashes, CSS variables, legacy layout contracts, mode/accessibility coverage and safe-preview issues without executing CSS. Add `--strict` to fail on any host-review item. |
+| `bun run audit:minimal-theme` | Downloads the pinned Minimal 9.1.0 theme and Minimal Theme Settings 9.0.0 assets, verifies their hashes, checks paired layout/settings/persistence contracts and records D15/runtime certification as pending. |
 | `bun run verify:version-baseline` | Cross-checks the stable/early-access references and records per-artifact minimum-version, API and runtime verification status. |
 | `bun run verify:compatibility-pins` | Downloads the frozen release assets and verifies SHA-256, byte counts and recorded plugin manifest metadata. |
 | `bun run audit:plugin-bundles` | Downloads pinned hardest-plugin `main.js` bundles (use `--all` for every applicable artifact), verifies bytes, and performs a non-executing privileged-API marker prescreen; runtime remains pending. |

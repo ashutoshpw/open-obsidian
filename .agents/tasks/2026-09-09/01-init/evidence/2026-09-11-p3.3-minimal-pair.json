@@ -1,0 +1,75 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T13:38:28Z",
+  "checkpoint": "P3.3",
+  "requirements": ["C09", "C12", "PC17", "RISK-002"],
+  "fixture_ids": ["fixture:pc17-minimal-settings", "fixture:c12-themes", "fixture:risk-theme-parity"],
+  "decision_ids": ["D03", "D14", "D15"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit_before_reconciliation": "4545db98028d5a67e6abd26b1c3c25acf9ab4b93",
+    "tested_source_tree": "c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6",
+    "source_tree_paths": 205,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "artifacts": {
+    "theme": {
+      "id": "PC-DEP-MINIMAL",
+      "version": "9.1.0",
+      "asset": "theme.css",
+      "integrity": "passed",
+      "sha256": "c95225a3653dcf600d006e9551c1038a06c336d03228a623bd5008b1561438a4",
+      "bytes": 265574,
+      "mode_support": {"light": true, "dark": true},
+      "layout_contracts": ["workspace-shell", "workspace-leaf", "view-header", "file-explorer", "titlebar", "status-bar"],
+      "plugin_view_contracts": ["data-view", "workspace-leaf-content", "view-content"],
+      "popout_contracts": ["popout-surface"],
+      "accessibility_contracts": ["focus-visible", "font-scaling"],
+      "preview_disposition": "withheld-for-review",
+      "withheld_reasons": ["remote, file and data URL assets are not fetched during a safe preview"]
+    },
+    "settings_plugin": {
+      "id": "PC17",
+      "version": "9.0.0",
+      "asset": "main.js",
+      "integrity": "passed",
+      "bytes": 26403,
+      "sha256": "f754e0ce6523e433bff8e7995a848f7d7fac205399f9ab3b1258430261fd90c4",
+      "prescreen": {"marker_ids": ["dom"], "denied_capabilities": ["dom.privileged"], "matched_patterns": ["document", "window", "editor-dom"]},
+      "settings_keys": ["lightStyle", "darkStyle", "lightScheme", "darkScheme", "lineHeight", "lineWidth", "textNormal", "textSmall"],
+      "command_ids": ["increase-body-font-size", "decrease-body-font-size", "toggle-hidden-borders", "toggle-colorful-headings"],
+      "save_data_calls": 54,
+      "runtime_disposition": "pending-runtime",
+      "d15_disposition": "denied-security"
+    }
+  },
+  "configuration_preservation": {
+    "path": ".obsidian/plugins/obsidian-minimal-settings/data.json",
+    "discovered": true,
+    "values_preserved": true,
+    "source_unchanged": true,
+    "policy": "Plugin direct configuration writes remain denied under D15; future host-mediated writes require an explicit preview and approval."
+  },
+  "checks": [
+    {"command": "bun run audit:minimal-theme", "exit_code": 0, "result": "Pinned Minimal 9.1.0 and Minimal Theme Settings 9.0.0 assets passed integrity and static paired-contract checks; report result was static-contract-passed-runtime-pending."},
+    {"command": "bun test tests/minimal-theme-audit.test.ts tests/configuration.test.ts", "exit_code": 0, "result": "7 focused tests passed with 34 expectations, including nested plugin-settings discovery, symlink non-following, Minimal contract analysis and D15 marker denial."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "162 tests passed with 865 expectations; state/contract/matrix/architecture/surface/version/differential/entry-point/workflow/input/accessibility/layout/typecheck/Knip/Fallow checks passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No changed-file Fallow findings."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local quality chain passed, including state/final audit, 162 tests with 865 expectations, quality-program, compile, Knip and Fallow health."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6 across 205 included paths."}
+  ],
+  "limitations": [
+    "The unchanged Minimal Theme Settings bundle was statically prescreened and denied before execution because it references privileged DOM surfaces; no plugin settings, commands, lifecycle, view, restart/update/uninstall or return-to-Obsidian workflow was executed.",
+    "The actual Minimal stylesheet contains URL assets; safe preview withholds those rules. The static parser found the required light/dark, legacy layout, plugin-view, popout and accessibility contracts, but this is not a visible renderer or reference comparison.",
+    "Configuration evidence proves nested read-only discovery and unknown-value preservation only; it is not plugin persistence certification or permission to write shared settings.",
+    "macOS/Windows renderer behavior, reference Obsidian, human accessibility/input review, signing, managed services and release readiness remain pending."
+  ],
+  "result": "Static Minimal/theme-pair contracts and configuration preservation passed; PC17 runtime/lifecycle and C12 visible/reference certification remain pending."
+}
