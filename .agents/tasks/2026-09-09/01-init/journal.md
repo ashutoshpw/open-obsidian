@@ -869,3 +869,7 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled pushed commit `4b7b59dda1a3de3a6924d60856365213632c21d3` with quality run `34617428570` and desktop-build run `34617428692`; Ubuntu, macOS and Windows jobs passed. Quality logs show all 14 Electron-vault checks true on Linux x64, macOS arm64 and Windows x64, including launch-intent hydration, keyboard save, Unicode input and source/live-preview mode switching.
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-electron-renderer-workflow-ci.json`, updated C10.1, UX-001, UX-003 and Q-011 traceability, and set the P2.2/P5.2 checkpoint/recent-increment metadata to the implementation SHA and source tree `96f8bd6cc95492d0bce1cfb75ed970d945fcf8a499e6be2d08ba906bae9ca349` across 211 included paths.
 - Hosted packaging signing remained skipped because credentials were unavailable. The matrices still do not certify reference Obsidian, unchanged-plugin lifecycle, same-user OS isolation, true OS IME, screen-reader or human focus/input, publication, updater rollback or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+
+## 2026-09-11T15:47:09Z — Evidence wording correction
+
+- Narrowed the P2.2 checkpoint blocker to distinguish the hosted launch/editor renderer trace from the separate local C10 bookmark, tag, task, template, daily-note and popout workflow evidence; no capability or readiness status changed.
