@@ -407,6 +407,14 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: the `transitive-package-attribution` release gate, D12 and RISK-009 are now `passing` for the implemented license/source and redistribution-audit criteria; source tree digest is `8922052677828f36167694a5fb6f8a30c3c4e6aa809c5d073c511c1c1ed7b5a6` across 147 included paths.
 - Limitation: optional/peer platform gaps, brand/legal approval, signing/notarization, publication, offline installation, cross-platform/reference-vault UX and the remaining implementation rows stay explicit release or validation handoffs.
 
+## 2026-09-11T07:22:10Z — P1.2 restricted plugin module-load probe
+
+- Completed: pushed source commits `54924eb3fd91b58b40bcc20e1262e98b32056e28` and `3be6b254926bae88b871f6d4f3710bbc44ab31c6`; added an opt-in permission-restricted module-load probe with an explicitly labeled VM-only fallback for older Node runners.
+- Completed: loaded eight unchanged pinned hardest-plugin bundles; every byte count and SHA-256 matched, with 0 loaded, 7 denied at explicit capabilities, 1 ordinary compatibility failure and 0 timeouts. No Electron app process or selected vault access occurred.
+- Safety: runtime dispositions remain `pending-runtime`; this is module-load feasibility evidence only, not Electron renderer compatibility or strong Electron/OS isolation proof, and it does not promote D15 or plugin acceptance rows.
+- Validation: local quality/check-fast/typecheck/Knip/strict Fallow passed; GitHub Actions quality run `34573811717` and desktop-build run `34573811677` passed on Ubuntu, macOS and Windows.
+- Next: use a compatible Electron/renderer host for lifecycle, DOM, workflow and cross-platform evidence; keep the selected `/home/ashutosh/Obsidian` vault untouched.
+
 ## 2026-09-10T20:45:49Z — P2.2 Obsidian chrome icon scale
 
 - Completed: pushed `484bca715d85f071383c6e509c9224b681555c08` with marker `[openobsidian P2.2 work] Increase chrome icon scale`.

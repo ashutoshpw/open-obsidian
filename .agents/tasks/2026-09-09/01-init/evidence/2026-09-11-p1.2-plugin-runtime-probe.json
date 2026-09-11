@@ -1,0 +1,55 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T07:22:10Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "PLUG-007", "PLUG-009", "ARCH-007", "ARCH-008", "ARCH-009", "RISK-003"],
+  "fixture_ids": ["fixture:hardest-plugin-spike", "fixture:plugin-isolation", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:arch-dom-compatibility", "fixture:risk-legacy-access"],
+  "commit_sha": "3be6b254926bae88b871f6d4f3710bbc44ab31c6",
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false,
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "node_version": "22.12.0",
+    "tested_source_tree": "4407acfac9c4de92926b587633a186426d465f80561cecd1276d8817d377ce50"
+  },
+  "implementation": {
+    "command": "bun run audit:plugin-runtime",
+    "selection": "The eight hardest unchanged targets recorded in fixtures/plugin-isolation.json; use --all for every applicable pinned artifact.",
+    "result": "8 pinned main.js bundles passed byte/hash integrity; 0 probes loaded, 7 were denied, 1 failed with an ordinary compatibility error and 0 timed out.",
+    "coverage": "module-load-only",
+    "enforcement": "node-permission-model",
+    "fallback_policy": "Older Node runners use the explicitly labeled vm-only-fallback because they do not support --experimental-permission; neither mode certifies Electron or OS isolation.",
+    "runtime_dispositions": "All artifact runtime dispositions remain pending-runtime.",
+    "no_app_process_or_vault_access": true,
+    "observations": {
+      "PC03": {"status": "denied", "denied_capabilities": ["dom.privileged"], "required_modules": ["obsidian", "@codemirror/state", "@codemirror/view", "@codemirror/language"]},
+      "PC02": {"status": "failed", "error": "TypeError: Class extends value undefined is not a constructor or null", "required_modules": ["obsidian"]},
+      "PC01": {"status": "denied", "denied_capabilities": ["dom.privileged"], "required_modules": ["obsidian", "@codemirror/commands", "@lezer/lr", "@lezer/highlight", "@codemirror/language", "@lezer/common", "@codemirror/state", "@codemirror/view"]},
+      "PC08": {"status": "denied", "denied_capabilities": ["dom.privileged"], "required_modules": ["obsidian"]},
+      "PC06": {"status": "denied", "denied_capabilities": ["dom.privileged"], "required_modules": ["obsidian"]},
+      "PC13": {"status": "denied", "denied_capabilities": ["filesystem.direct"], "required_modules": ["fs"]},
+      "PC10": {"status": "denied", "denied_capabilities": ["process.spawn", "dom.privileged"], "required_modules": ["obsidian"]},
+      "PC19": {"status": "denied", "denied_capabilities": ["dom.privileged"], "required_modules": ["obsidian", "@codemirror/autocomplete", "@codemirror/state", "@codemirror/view"]}
+    }
+  },
+  "checks": [
+    {"command": "bun test tests/bundle-prescreen.test.ts", "exit_code": 0, "result": "5 tests, 12 expectations"},
+    {"command": "bun run typecheck", "exit_code": 0},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0},
+    {"command": "bun run quality", "exit_code": 0, "result": "138 tests, 735 expectations; Knip and report-only Fallow pass"},
+    {"command": "bun run check:fast", "exit_code": 0},
+    {"command": "GitHub Actions runs 34573811717 and 34573811677", "exit_code": 0, "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows."}
+  ],
+  "ci_runs": [34573811717, 34573811677],
+  "limitations": [
+    "This is unchanged-artifact module-load evidence, not Electron renderer compatibility, lifecycle/workflow certification or an OS-enforced security proof.",
+    "The vm-only fallback available on older Node runners is not a strong isolation boundary and does not support D15 status promotion.",
+    "Upstream settings, commands, events, editor/view, hotkeys, vault, restart/update/uninstall and return-to-Obsidian combinations remain pending.",
+    "Windows/Linux OS-enforced bypass tests, renderer DOM traces and reference Obsidian reopen comparisons remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed."
+  ]
+}
