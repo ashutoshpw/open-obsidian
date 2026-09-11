@@ -822,3 +822,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - GitHub Actions quality run `34609898065` passed on Ubuntu, macOS and Windows, including progress/contracts/architecture, host vault round trip, accessibility, typecheck, tests, quality scorecard, Electron compile, Knip and Fallow health.
 - GitHub Actions desktop-build run `34609898068` passed on Ubuntu, macOS and Windows, including release gate, update/rollback manifest, unpacked packaging, release-manifest hashes, Electron runtime notices, transitive attribution and artifact upload. Production signing was skipped because credentials were unavailable.
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-roundtrip-ci.json`; no reference Obsidian, personal-vault, human, signing, publication or release-readiness claim is made.
+
+## 2026-09-11T14:49:30Z — P1.2 renderer lifecycle CI reconciliation
+
+- Reconciled pushed lifecycle commit `9d3b4f7c1b3670899cd27ef5e29b68a9e25905c9` on `main`; local `main` and `origin/main` match. The lifecycle evidence now records source tree `20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08` across 211 included paths.
+- Quality run `34611999701` passed on Ubuntu, macOS and Windows (jobs `103304527981`, `103304528435`, `103304528309`). Desktop-build run `34611999635` passed on Ubuntu, macOS and Windows (jobs `103304527094`, `103304526832`, `103304527296`); production signing was skipped because credentials were unavailable.
+- The Linux x64 synthetic renderer probe still records ordered `onload`/`onunload` events and privileged-DOM denial before `onload` completion. Hosted matrices validate repository contracts and packaging only; unchanged-plugin lifecycle/settings/views, cross-platform renderer enforcement, same-user OS isolation, reference Obsidian, human input/accessibility, signing, publication and release readiness remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Updated P1.2 traceability and state metadata to the lifecycle evidence and CI runs; no unsupported security or release-passing claim was promoted.
+- Next: continue the earliest dependency-ready reference/cross-platform vault procedures and unchanged-plugin lifecycle/settings/view evidence while retaining explicit external gates.

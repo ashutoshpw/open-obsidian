@@ -20,12 +20,12 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-    "last_reconciled_head": "83e3b4bb696bda63c7d5ed26c4b31841c010340e",
-    "updated_at": "2026-09-11T14:26:12Z",
+    "last_reconciled_head": "9d3b4f7c1b3670899cd27ef5e29b68a9e25905c9",
+    "updated_at": "2026-09-11T14:49:30Z",
   "status": "active",
     "current_checkpoint": "P3.3",
     "next_action": "Continue the earliest dependency-ready implementation work: reference/cross-platform vault round trips, unchanged-plugin lifecycle/DOM evidence and selected theme/popout/accessibility traces; keep external release gates explicit.",
-  "recent_increment": {"checkpoint":"P2.1","commit":"83e3b4bb696bda63c7d5ed26c4b31841c010340e","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-roundtrip-ci.json","tested_source_tree":"37bec72127d8099a5d31f7844ed9f8f72111986ced7b492aa90b4e93e832aff8","ci_runs":[34609898065,34609898068]},
+    "recent_increment": {"checkpoint":"P1.2","commit":"9d3b4f7c1b3670899cd27ef5e29b68a9e25905c9","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-lifecycle.json","tested_source_tree":"20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08","ci_runs":[34611999701,34611999635]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",
@@ -116,7 +116,7 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-lifecycle.json"
       ],
       "commit_marker": "[openobsidian P1.2 work] Add renderer sandbox preflight",
-      "validated_source_tree": "c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6",
+      "validated_source_tree": "20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08",
       "blockers": [
         "Frozen release pins and manifest metadata are verified; Linux x64 permission-restricted and Electron renderer preflights record integrity-checked unchanged-artifact denials, while the Minimal theme has no main.js; unchanged-artifact lifecycle certification is not claimed.",
         "The permission-restricted probe is module-load evidence only and does not prove Electron or OS isolation; ordinary compatibility failures remain pending rather than D15 denials.",

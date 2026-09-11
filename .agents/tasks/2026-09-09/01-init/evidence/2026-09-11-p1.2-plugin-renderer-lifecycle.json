@@ -10,7 +10,7 @@
     "bun_version": "1.4.2",
     "electron_version": "44.3.0",
     "branch": "main",
-    "implementation_commit_before_reconciliation": "33534d5c5960e2d7b5f171e99a92d4a2997aa32d",
+    "implementation_commit": "9d3b4f7c1b3670899cd27ef5e29b68a9e25905c9",
     "tested_source_tree": "20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08",
     "source_tree_paths": 211,
     "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
@@ -40,6 +40,32 @@
     {"command": "bun run audit:plugin-renderer", "exit_code": 0, "result": "The existing eight unchanged pinned targets passed integrity and fail-closed preflight: eight denied before renderer execution and the mediated fixture loaded; lifecycle/runtime dispositions remain pending."},
     {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the six-file lifecycle increment."},
     {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08 across 211 included paths."}
+  ],
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34611999701,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34611999701",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103304527981, "conclusion": "success"},
+        "macos-latest": {"job_id": 103304528435, "conclusion": "success"},
+        "windows-latest": {"job_id": 103304528309, "conclusion": "success"}
+      },
+      "result": "State, contract, host-round-trip, accessibility, typecheck, tests, quality-program, Electron compile, Knip and Fallow checks passed on all three hosted runners."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34611999635,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34611999635",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103304527094, "conclusion": "success"},
+        "macos-latest": {"job_id": 103304526832, "conclusion": "success"},
+        "windows-latest": {"job_id": 103304527296, "conclusion": "success"}
+      },
+      "result": "All three packaging jobs passed release-gate, manifest, Electron runtime notice, transitive attribution and artifact-upload steps; production signing was skipped because credentials were unavailable."
+    }
   ],
   "limitations": [
     "The lifecycle trace uses only a synthetic marker-free plugin class and a synthetic privileged-DOM fixture; it does not certify any unchanged pinned plugin.",
