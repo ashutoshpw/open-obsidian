@@ -1,0 +1,58 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-expanded",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "decision_id": "D14",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-11T21:16:07.452Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head_before_commit": "52539665837fab1ffc2299266f12ccb6260a5e16",
+    "sha256": "7a828c79c5be15a100e8b00dead183bd92d58af8279b8199aff935f9c6ae541b",
+    "paths": 231
+  },
+  "execution": {
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "no_plugin_promoted": true
+  },
+  "artifact_results": [
+    {"id": "PC07", "status": "loaded", "bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "partial", "denied_capabilities": ["dom.privileged"], "action_failure_count": 12, "vault_writes": 0},
+    {"id": "PC17", "status": "denied", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0},
+    {"id": "PC20", "status": "denied", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0},
+    {"id": "PC21", "status": "loaded", "bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "partial", "denied_capabilities": ["dom.privileged"], "action_failure_count": 6, "vault_writes": 0},
+    {"id": "PC22", "status": "denied", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0},
+    {"id": "PC23", "status": "loaded", "bounded_lifecycle": "complete", "persistence": "not-proven", "action_status": "partial", "denied_capabilities": [], "action_failure_count": 3, "vault_writes": 0},
+    {"id": "PC24", "status": "denied", "bounded_lifecycle": "partial", "persistence": "preserved", "action_status": "passed", "denied_capabilities": ["dom.privileged"], "error": "D15 denied dom.privileged", "vault_writes": 0}
+  ],
+  "checks": {
+    "all_artifacts_integrity_checked": true,
+    "loaded_artifact_lifecycle_traces_complete": false,
+    "combination_lifecycle_trace_complete": true,
+    "combination_persistence": "not-proven",
+    "all_bounded_traces_complete": false,
+    "no_vault_writes_observed": true,
+    "no_plugin_promoted": true
+  },
+  "limitations": [
+    "PC17, PC20, PC22 and PC24 reached the enforced D15 DOM denial before lifecycle completion; those records are evidence of the safe boundary, not compatibility certification.",
+    "PC07, PC21 and PC23 still have action-level API/DOM gaps; PC23 and the combination do not prove persisted-data recovery.",
+    "This Linux renderer trace does not certify macOS/Windows OS enforcement, reference Obsidian behavior, human accessibility/input, provider-backed behavior, signing or publication.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "The unchanged loaded-workflow fixture now exercises seven pinned artifacts and preserves the original PC07/PC21/PC23 combination boundary. Integrity and zero-vault-write checks pass; lifecycle/action gaps and D15 DOM denials remain explicitly pending-runtime, with no compatibility promotion."
+}

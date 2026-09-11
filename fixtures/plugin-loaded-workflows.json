@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC07", "PC21", "PC23"],
+  "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
   "scenarios": {
     "PC07": {
       "workflow_id": "workflow:pc07",
@@ -62,6 +62,57 @@
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
         {"path": "Archive/old-note.md", "content": "# Old\n"}
+      ]
+    },
+    "PC17": {
+      "workflow_id": "workflow:pc17",
+      "description": "Apply existing Minimal Theme Settings values and preserve the settings payload across restart and update phases.",
+      "initial_data": {
+        "settings": {},
+        "version": 1,
+        "activeStyle": "Minimal"
+      },
+      "active_file": "Daily/2026-09-11.md",
+      "files": [
+        {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
+        {"path": "Themes/Minimal.css", "content": ".workspace-tab-header-container { color: var(--text-normal); }\n"}
+      ]
+    },
+    "PC20": {
+      "workflow_id": "workflow:pc20",
+      "description": "Exercise Outliner registration and preserve a nested list note without granting direct filesystem or editor internals.",
+      "initial_data": {
+        "settings": {"foldOnListBullet": false},
+        "version": 1
+      },
+      "active_file": "Notes/Outline.md",
+      "files": [
+        {"path": "Notes/Outline.md", "content": "- Parent\n  - Child\n"}
+      ]
+    },
+    "PC22": {
+      "workflow_id": "workflow:pc22",
+      "description": "Exercise Smart Connections local-model configuration and preserve its bounded settings without remote fallback or vault writes.",
+      "initial_data": {
+        "settings": {"embeddingModel": "local", "excludedFolders": []},
+        "version": 4
+      },
+      "active_file": "Notes/Context.md",
+      "files": [
+        {"path": "Notes/Context.md", "content": "# Context\n\nA local note for related-note indexing.\n"},
+        {"path": "Notes/Related.md", "content": "# Related\n\nA second local note.\n"}
+      ]
+    },
+    "PC24": {
+      "workflow_id": "workflow:pc24",
+      "description": "Exercise Tag Wrangler registration against hierarchical tags while preserving unrelated Markdown and property text.",
+      "initial_data": {
+        "settings": {"tagsToIgnore": []},
+        "version": 1
+      },
+      "active_file": "Notes/Tags.md",
+      "files": [
+        {"path": "Notes/Tags.md", "content": "---\ntags:\n  - project/open\n---\n\n#project/open\n#keep\n"}
       ]
     }
   },

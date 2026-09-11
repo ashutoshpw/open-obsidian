@@ -98,6 +98,11 @@ function phaseRecords(workflow: JsonRecord): JsonRecord[] {
   return records(workflow.phases);
 }
 
+function combinationTargetIds(): string[] {
+  const combination = asRecord(fixture.combination);
+  return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
+}
+
 function workflowChecks(result: JsonRecord): Record<string, boolean> {
   const workflow = asRecord(result.workflow) ?? {};
   const phases = phaseRecords(workflow);
@@ -186,8 +191,14 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       });
       sources.push({id, source: downloaded.source});
     }
-    const combinationConfig = {artifact_id: "combination:pc07-pc21-pc23", ...scenario("PC07"), target_ids: targetIds};
-    const combinationResult = await runWorker(combinedSource(sources), combinationConfig, temporaryRoot, "combination-pc07-pc21-pc23");
+    const combinationIds = combinationTargetIds();
+    requireCondition(combinationIds.length > 0 && combinationIds.every((id) => targetIds.includes(id)), "loaded-plugin combination must reference audited target ids");
+    const combinationSources = sources.filter(({id}) => combinationIds.includes(id));
+    const combinationScenario = scenario(combinationIds[0]);
+    const combination = asRecord(fixture.combination) ?? {};
+    const combinationId = string(combination.id) || `combination:${combinationIds.map((id) => id.toLowerCase()).join("-")}`;
+    const combinationConfig = {artifact_id: combinationId, ...combinationScenario, target_ids: combinationIds};
+    const combinationResult = await runWorker(combinedSource(combinationSources), combinationConfig, temporaryRoot, `combination-${combinationIds.map((id) => id.toLowerCase()).join("-")}`);
     const combinationChecks = workflowChecks(combinationResult);
     const artifactLifecyclesComplete = artifactResults.every((entry) => entry.bounded_lifecycle === "complete");
     const combinationLifecycleComplete = checksPass(combinationChecks, boundedLifecycleChecks);
@@ -205,8 +216,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       source_tree: sourceTree(),
       artifact_results: artifactResults,
       combination: {
-        id: "combination:pc07-pc21-pc23",
-        target_ids: targetIds,
+        id: combinationId,
+        target_ids: combinationIds,
         result: combinationResult,
         checks: combinationChecks,
         bounded_lifecycle: combinationLifecycleComplete ? "complete" : "partial",

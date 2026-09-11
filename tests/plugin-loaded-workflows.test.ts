@@ -27,9 +27,10 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC07", "PC21", "PC23"]);
+  expect(fixture.target_ids).toEqual(["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
-  expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: fixture.target_ids});
+  expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
+  expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
   expect(packageJson.scripts?.["audit:plugin-loaded-workflows"]).toBe("bun scripts/audit-plugin-loaded-workflows.ts");
 
   for (const id of fixture.target_ids) {
