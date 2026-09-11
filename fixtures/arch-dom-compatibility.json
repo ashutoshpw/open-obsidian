@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "fixture:arch-dom-compatibility",
+  "checkpoint": "P1.2",
+  "decision_id": "D15",
+  "status": "denied-security",
+  "boundary": "plugin-runtime",
+  "target": "dom-dependent-legacy-fixture",
+  "probe": {
+    "source": "const leaf = document.createElement('div'); app.workspace.getLeavesOfType('markdown');",
+    "reproduction": "The unchanged-style source requests document and app.workspace internals that are not part of the mediated plugin contract.",
+    "marker": "dom",
+    "capability": "dom.privileged"
+  },
+  "expected": {
+    "prescreen_marker": "dom",
+    "policy_decision": "deny",
+    "record_status": "unsupported_security",
+    "visible": true
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "scoped renderer preview", "workflow disabled"],
+  "evidence": ["src/plugins/bundle-prescreen.ts", "src/plugins/policy.ts", "tests/architecture-dom-compatibility.test.ts"],
+  "limitation": "This fixture proves an explicit fail-closed boundary only; Electron renderer lifecycle, DOM ordering, same-user bypass and reference-extension behavior remain pending-runtime."
+}

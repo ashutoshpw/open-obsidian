@@ -1,0 +1,33 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T11:26:50Z",
+  "checkpoint": "P1.2",
+  "requirements": ["ARCH-008"],
+  "fixture_ids": ["fixture:arch-dom-compatibility"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "c13b7c525a15fc8903ade43009a7e743aedf66707a32f44c7eaaee5802c48036",
+    "source_tree_paths": 195
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "implementation": {
+    "fixture": "fixtures/arch-dom-compatibility.json records a synthetic unchanged-style DOM request, expected prescreen marker, D15 denial, visible unsupported-security record and mediated alternatives.",
+    "contract": "tests/architecture-dom-compatibility.test.ts runs the prescreen and PluginPolicy denial together; it does not execute plugin DOM or Electron lifecycle code.",
+    "decision": "ARCH-008 is implemented by an explicit fail-closed limitation rather than a compatibility claim."
+  },
+  "checks": [
+    {"command": "bun test tests/architecture-dom-compatibility.test.ts tests/bundle-prescreen.test.ts tests/plugin-policy.test.ts", "exit_code": 0, "result": "Nine tests passed with 29 expectations, including the DOM fixture marker and visible D15 denial."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow audit passed with no issues in the fixture/test files."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest c13b7c525a15fc8903ade43009a7e743aedf66707a32f44c7eaaee5802c48036 across 195 included paths."}
+  ],
+  "limitations": [
+    "The deny path is source/policy evidence only; no unchanged plugin was executed in an Electron renderer.",
+    "DOM lifecycle ordering, plugin-created views, same-user OS bypasses, cross-plugin behavior and reference Obsidian traces remain pending-runtime."
+  ],
+  "result": "ARCH-008 has an executable, visible D15 denial with reproducible limitation and safe alternatives; no DOM-dependent legacy workflow is silently certified."
+}

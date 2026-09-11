@@ -672,3 +672,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Created and pushed the separate reconciliation commit `78c023fb524acef5609e90111531f569b1649fb7`; local `main` and `origin/main` match and the worktree is clean.
 - Metadata-push quality run `34593613217` and desktop-build run `34593613224` both passed on Ubuntu, macOS and Windows. The durable state intentionally points `last_reconciled_head` at the latest work commit `aaefdadf92f083a54ec91a4e28f068416de27348`, not at this metadata commit.
 - Resume with the earliest dependency-ready implementation work recorded in `state.json`; P3.3 remains the current checkpoint and the goal remains active with reference/plugin runtime, human and release gates pending.
+
+## 2026-09-11T11:31:08Z — P1.2 DOM compatibility denial
+
+- Completed: added `fixtures/arch-dom-compatibility.json` and `tests/architecture-dom-compatibility.test.ts` for ARCH-008. The synthetic unchanged-style request is detected as `dom`, denied as `dom.privileged`, recorded visibly as `unsupported_security`, and paired with mediated vault/renderer alternatives.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-dom-denial.json` records source tree `c13b7c525a15fc8903ade43009a7e743aedf66707a32f44c7eaaee5802c48036` across 195 included paths. Focused DOM/policy tests pass with 9 tests and 29 expectations; typecheck, strict Fallow and source-tree audit pass.
+- Decision: ARCH-008 is implemented as an explicit fail-closed D15 limitation, not as renderer compatibility. No unchanged plugin DOM code or Electron lifecycle was executed.
+- Limitations: DOM lifecycle ordering, plugin-created views, same-user OS bypasses, cross-plugin behavior, Windows/Linux lifecycle bypass tests and reference Obsidian traces remain pending-runtime; the goal remains active at `P3.3`.
+- Next: push the scoped ARCH-008 increment, inspect quality/desktop CI, reconcile the observed SHA and CI evidence, then continue the earliest dependency-ready renderer/lifecycle and reference/cross-platform work.
