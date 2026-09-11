@@ -1,0 +1,97 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T08:43:15Z",
+  "checkpoint": "P3.3",
+  "requirements": ["RISK-002", "C12"],
+  "fixture_ids": ["fixture:risk-theme-parity", "fixture:c12-themes"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "tested_source_tree": "c234e1f373fe5c51da48425b622ed9cb8599b8434dd07128c1fcb8105b808606",
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "synthetic_fixture": {
+    "root": "/tmp/openobsidian-theme-fixture.dM17TB",
+    "appearance": ".obsidian/appearance.json",
+    "theme": ".obsidian/themes/Fixture.css",
+    "snippet": ".obsidian/snippets/focus.css",
+    "source_hashes_before": {
+      ".obsidian/appearance.json": "a225c5c46ba8e426af9a7ddc294392461883113a2d7462fdb45c823241059242",
+      ".obsidian/snippets/focus.css": "0a6c466e023d1c3cd5d7cf57efbc06b5d2dff94116b6f4f1a744b5f9840e640e",
+      ".obsidian/themes/Fixture.css": "309127155242e16737ed5ddebc641e03cc34714ec504aba273bb0b4d04a7b3c3",
+      "Note.md": "0aee8b53c7f0d538ddd512dd33ebe90c01ff300b345f6b4d5ca12b4520dde265"
+    },
+    "source_hashes_after": {
+      ".obsidian/appearance.json": "a225c5c46ba8e426af9a7ddc294392461883113a2d7462fdb45c823241059242",
+      ".obsidian/snippets/focus.css": "0a6c466e023d1c3cd5d7cf57efbc06b5d2dff94116b6f4f1a744b5f9840e640e",
+      ".obsidian/themes/Fixture.css": "309127155242e16737ed5ddebc641e03cc34714ec504aba273bb0b4d04a7b3c3",
+      "Note.md": "0aee8b53c7f0d538ddd512dd33ebe90c01ff300b345f6b4d5ca12b4520dde265"
+    }
+  },
+  "runtime": {
+    "launch": "Existing packaged Electron 44.3.0 Linux x64 preview at CDP port 9342; renderer was already opened on the synthetic fixture through the native folder picker.",
+    "dark": {
+      "mode": "dark",
+      "shell_mode": "dark",
+      "theme": ".obsidian/themes/Fixture.css",
+      "status": "2 safe preview styles applied in dark mode. Vault appearance files remain read-only.",
+      "accent": "#55aa77",
+      "style_count": 2,
+      "scoped_rules": [
+        ".app-shell[data-openobsidian-theme-mode=\"dark\"] .nav-file:focus-visible, .app-shell[data-openobsidian-theme-mode=\"dark\"] .view-header",
+        ".app-shell[data-openobsidian-theme-mode=\"dark\"] { --panel: #123456; }",
+        ".app-shell[data-openobsidian-theme-mode=\"dark\"] .workspace, .app-shell[data-openobsidian-theme-mode=\"dark\"] .workspace-leaf",
+        "@media (prefers-reduced-motion: reduce) { .app-shell[data-openobsidian-theme-mode=\"dark\"] .workspace { transition: none; } }"
+      ],
+      "unscoped_theme_rules": [],
+      "controls_enabled": true
+    },
+    "light": {
+      "mode": "light",
+      "shell_mode": "light",
+      "theme": ".obsidian/themes/Fixture.css",
+      "status": "1 safe preview style applied in light mode · 1 withheld for review. Vault appearance files remain read-only. Fixture (light mode is not declared)",
+      "accent": "#55aa77",
+      "style_count": 2,
+      "scoped_rules": [
+        ".app-shell[data-openobsidian-theme-mode=\"light\"] .nav-file:focus-visible, .app-shell[data-openobsidian-theme-mode=\"light\"] .view-header"
+      ],
+      "withheld": ["Fixture (light mode is not declared)"],
+      "controls_enabled": true
+    },
+    "accessibility": {
+      "procedure": "CDP Accessibility.enable, Accessibility.getFullAXTree after opening the settings panel",
+      "ax_node_count": 761,
+      "observed_roles_and_names": [
+        ["region", "Theme and CSS snippet settings"],
+        ["group", "Enabled CSS snippets (safe preview)"],
+        ["combobox", "Theme preview"],
+        ["combobox", "Effective mode"],
+        ["StaticText", "2 safe preview styles applied in dark mode. Vault appearance files remain read-only."]
+      ],
+      "appearance_controls": [
+        {"id": "appearance-theme", "disabled": false},
+        {"id": "appearance-mode", "disabled": false},
+        {"id": "", "disabled": false, "checked": true}
+      ]
+    }
+  },
+  "checks": [
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "174 paths; source tree c234e1f373fe5c51da48425b622ed9cb8599b8434dd07128c1fcb8105b808606."},
+    {"command": "find /tmp/openobsidian-theme-fixture.dM17TB -type f -print0 | sort -z | xargs -0 sha256sum", "exit_code": 0, "result": "Before and after mode changes have identical hashes for appearance.json, both CSS assets and Note.md."},
+    {"procedure": "CDP Runtime.evaluate sets #appearance-mode to dark and reads CSSOM rules", "exit_code": 0, "result": "Both assets applied; theme/snippet selectors and reduced-motion rule are scoped to the dark workspace shell; no unscoped theme rule observed."},
+    {"procedure": "CDP Runtime.evaluate sets #appearance-mode to light and reads renderer status/CSSOM rules", "exit_code": 0, "result": "Snippet applied; dark-only theme visibly withheld with an explicit mode explanation; controls remain enabled and accent remains read-only."},
+    {"procedure": "CDP Accessibility.getFullAXTree after opening #settings-panel", "exit_code": 0, "result": "Theme/CSS settings region, safe-preview group, labeled comboboxes and live status text are present in the accessibility tree."}
+  ],
+  "limitations": [
+    "This is Linux x64 packaged-renderer evidence on a synthetic fixture; it does not certify the unchanged Minimal theme, Minimal Theme Settings plugin or PC17 lifecycle.",
+    "The accessibility result is a Chromium accessibility-tree observation, not a screen-reader, keyboard/IME, contrast/scale or human usability certification.",
+    "No popout window or plugin-created view was opened; macOS, Windows, reference Obsidian reopening, persistence and cross-platform traces remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Both light and dark renderer mode transitions are observable and safe-preview scoped on Linux; light-mode incompatibility is withheld visibly, source bytes remain unchanged and appearance controls are accessible. Cross-platform, popout, reference and screen-reader gates remain open."
+}

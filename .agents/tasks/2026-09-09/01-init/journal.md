@@ -533,3 +533,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 
 - Reconciled the scoped theme/snippet preview increment at `62821113ac50bf75d72bd91e91a934af8c1357ab` and pushed `main` to `origin/main`.
 - Updated `state.json` so `last_reconciled_head` and `recent_increment.commit` point to the pushed commit; no requirement status was promoted.
+
+## 2026-09-11T08:43:15Z — P3.3 Linux mode and accessibility trace
+
+- Completed: exercised the packaged Linux renderer's appearance selector in both effective modes on the synthetic fixture. Dark mode applied the theme and snippet with scoped selectors and reduced-motion handling; light mode applied the compatible snippet and visibly withheld the dark-only theme with a mode explanation.
+- Completed: opened the settings surface and read the Chromium accessibility tree. The theme/CSS settings region, safe-preview group, labeled theme/mode comboboxes and live safety status were present; all fixture hashes were unchanged before and after the mode transitions.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-mode-accessibility.json` records the CDP procedures, observed rules, accessibility labels, source hashes and limitations.
+- Safety: this remains synthetic Linux evidence only. It does not certify Minimal, PC17/unchanged plugins, popouts, plugin-created views, screen readers, keyboard/IME, contrast/scale, other platforms or reference Obsidian reopening; C12 and RISK-002 remain pending.
+- Next: obtain the supported reference/plugin and platform runtimes for the remaining P3.3/P1.2 certification gates while retaining all external handoffs.
