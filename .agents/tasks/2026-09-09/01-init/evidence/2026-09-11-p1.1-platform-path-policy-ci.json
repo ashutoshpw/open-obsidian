@@ -1,0 +1,40 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T12:33:00Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "SYNC-004", "RISK-004"],
+  "fixture_ids": ["fixture:c01-no-op", "fixture:c02-byte-roundtrip", "fixture:sync-failure-matrix", "fixture:risk-normalization"],
+  "environment": {
+    "os": "GitHub Actions Ubuntu, macOS and Windows runners",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "3d2eeae80e0a57d895020edab0aeb1637c61ec0a",
+    "tested_source_tree": "5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4",
+    "source_tree_paths": 201
+  },
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34599276977,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34599276977",
+      "conclusion": "success",
+      "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"],
+      "result": "All quality matrix jobs passed state/contracts, typecheck, vault differential and full test, compile, Knip and Fallow checks for the platform-aware VaultStore policy."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34599277012,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34599277012",
+      "conclusion": "success",
+      "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"],
+      "result": "All desktop matrix jobs passed packaging, release-manifest, Electron runtime notice and transitive attribution audits; signing remained skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "The Actions matrix verifies the injectable path-policy contract and tests on three runners; it is not proof of every host filesystem, ACL, case-folding, quota, cloud-placeholder or power-loss behavior.",
+    "Reference Obsidian reopen round trips, real cross-platform filesystem fault execution, same-user OS isolation, human validation and signed-release gates remain pending; no selected user vault was accessed or modified."
+  ],
+  "result": "The available quality and desktop-build matrices are green for the P1.1 platform-policy increment while reference and host-filesystem evidence remains explicitly pending."
+}

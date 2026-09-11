@@ -724,3 +724,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: vault differential/safety tests pass (22 tests, 104 expectations), full `check:fast` passes (159 tests, 853 expectations), typecheck and strict Fallow pass. C01.2, C02.2, SYNC-004 and RISK-004 evidence now point to the new local trace while retaining cross-platform/reference blockers.
 - Limitation: the injected policy is not OS/filesystem proof. Real Windows/macOS/Linux filesystem behavior, ACL/quota/cloud placeholders and reference Obsidian reopen round trips remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: commit/push this P1.1 work, inspect the full matrix, then continue the reference/cross-platform vault procedures when the reference runtime is available.
+
+## 2026-09-11T12:33:00Z — P1.1 portable vault path policy reconciliation
+
+- Reconciled pushed work commit `3d2eeae80e0a57d895020edab0aeb1637c61ec0a` on `main`; quality run `34599276977` and desktop-build run `34599277012` passed on Ubuntu, macOS and Windows.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-platform-path-policy-ci.json` and updated C01.2, C02.2, SYNC-004 and RISK-004 to the tested source tree `5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4` across 201 source paths.
+- The green matrix verifies the platform-policy contract and packaging checks, not host filesystem semantics, reference Obsidian reopen round trips, same-user OS isolation, human validation or signed release; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: validate and push this metadata-only reconciliation, then continue the earliest dependency-ready reference/cross-platform vault and unchanged-plugin lifecycle work.
