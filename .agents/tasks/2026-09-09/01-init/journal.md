@@ -469,3 +469,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-template-daily-notes.json` with source tree `ac23f3ae05c894a2b55f07ec7517e0136b5c915f16fed8d264db3f20a9129899` across 163 included paths and updated the C10/P2.2 ledger.
 - Safety: the selected `/home/ashutosh/Obsidian` vault was not opened, read or modified; visible accessibility/input/IME, cross-platform, reference Obsidian and end-to-end human validation remain pending, and popouts remain deferred.
 - Next: run the visible accessibility, cross-platform and reference Obsidian reopen checks; assess popouts only with a safe multi-window host/IPC handoff.
+
+## 2026-09-11T06:21:24Z — P1.2 pinned plugin manifest gate
+
+- Completed: pushed source commit `3bd91dbebcce996b588d03cb1c1e3d901406498e` with marker `[openobsidian P1.2] Verify pinned plugin manifests`.
+- Completed: extended the frozen compatibility-pin verifier to check SHA-256, byte counts and downloaded `manifest.json` identity, display name, release version and nullable minimum-app-version metadata for all 27 pinned artifacts and 83 assets.
+- Completed: added offline malformed/changed/missing metadata tests, made the verifier entry points import-safe and documented the short Bun commands.
+- Validation: `bun run verify:compatibility-pins` passes; `bun run check:fast` passes with 131 tests and 710 expectations; `bun run quality` passes with Knip clean and Fallow health 89.0/A, retaining the existing `scripts/status.ts:128 collectRow` advisory.
+- Validation: `bun run verify:plugin-selection` fails as expected because the live stats/registry hashes and cumulative counts drifted; the frozen selection was not refreshed.
+- CI: quality run `34569458777` and desktop-build run `34569458767` passed on Ubuntu, macOS and Windows.
+- Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-pin-manifest.json` with source tree `243f9a4ebb40f6c8f0ee751d06db44282f3cfc2b9b2098bec7dfd02c5f197a08` across 164 included paths; updated P0.2/P1.2 and `RESEARCH-005` records.
+- Limitation: unchanged plugin bundles still have not run in a compatibility runtime; PC01-PC25 lifecycle/DOM/OS certification and the deliberate live selection refresh remain pending. The selected `/home/ashutosh/Obsidian` vault was not opened or modified.
+- Next: load unchanged pinned artifacts into the available isolated runtime, or record artifact-specific D15 denial evidence, while retaining the live-selection drift as a blocker.

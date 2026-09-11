@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T06:21:24Z",
+  "checkpoint": "P1.2",
+  "requirements": [
+    "RESEARCH-005",
+    "D14",
+    "PLUG-009",
+    "ARCH-009",
+    "RISK-003"
+  ],
+  "fixture_ids": [
+    "fixture:compatibility-manifest",
+    "fixture:plugin-isolation",
+    "fixture:hardest-plugin-spike"
+  ],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "bun_version": "1.4.2",
+    "implementation_commit": "3bd91dbebcce996b588d03cb1c1e3d901406498e",
+    "tested_source_tree": "243f9a4ebb40f6c8f0ee751d06db44282f3cfc2b9b2098bec7dfd02c5f197a08"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "command": "bun run verify:compatibility-pins",
+      "exit_code": 0,
+      "result": "27 frozen artifacts and 83 release assets match their recorded SHA-256 hashes and byte counts; every downloaded manifest.json also matches the recorded id, name, version and nullable minimum-app-version metadata."
+    },
+    {
+      "command": "bun run verify:plugin-selection",
+      "exit_code": 1,
+      "result": "The live upstream selection snapshot still drifts from the frozen record: stats hash expected 99c0b10ab6b02d01a9ed7474585d599511638706f35eda00582ad1e3eb997c37 but got 3f07526b9f19d1078ca7faa0d77aac84cb913133aaa83eaaca9118a59ac5af03; registry hash expected 76fe1fa4957b03eac436123a27e4818e2efb3cd8259a3cb95b741991423766e7 but got 49ecce2d16884903db4225165fa0ee07a5bebd6a4e1251c277faa668ac202c71. All current cumulative download counts changed. The frozen selection was not refreshed."
+    },
+    {
+      "command": "bun test tests/compatibility-pins.test.ts",
+      "exit_code": 0,
+      "result": "2 tests pass with 5 expectations for matching recorded manifests, rejecting changed metadata, malformed JSON and missing metadata."
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "131 tests pass with 710 expectations; state, contracts, architecture, surfaces, version baseline, differential fixtures, workflows, accessibility, layout, TypeScript, Knip and changed-file Fallow checks pass."
+    },
+    {
+      "command": "bun run quality",
+      "exit_code": 0,
+      "result": "Full quality gate passes; Electron compilation, distribution metadata, Knip and report-only Fallow health pass at 89.0/A with the existing scripts/status.ts advisory retained."
+    },
+    {
+      "command": "bunx fallow audit --root . --base HEAD --format compact",
+      "exit_code": 0,
+      "result": "No issues reported in the changed script/test increment before the source commit."
+    },
+    {
+      "command": "GitHub Actions runs 34569458777 and 34569458767",
+      "exit_code": 0,
+      "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows, including contract validation, compilation, Knip, Fallow and packaged dependency/runtime audits."
+    }
+  ],
+  "implemented": [
+    "Extended scripts/verify-compatibility-pins.ts to validate downloaded manifest.json identity, display name, release version and minimum-app-version metadata in addition to release URL, size and SHA-256 pin checks.",
+    "Added offline tests for matching, changed, malformed and missing manifest metadata, and made both selection/pin verifier entry points import-safe for future scripted checks.",
+    "Documented the frozen pin and live selection checks in scripts/README.md; the gate now gives a stronger pre-runtime artifact integrity result without executing untrusted plugin code."
+  ],
+  "limitations": [
+    "No unchanged upstream plugin bundle was executed in a compatibility runtime; PC01-PC25 runtime/lifecycle, renderer DOM and OS-specific bypass certification remain pending.",
+    "The live registry/stats snapshot drift is an intentional failed check; a deliberate reviewed selection refresh is still required before that verifier can pass.",
+    "The selected vault /home/ashutosh/Obsidian was not opened, read or modified during this repository operation."
+  ],
+  "ci_runs": [
+    34569458777,
+    34569458767
+  ]
+}
