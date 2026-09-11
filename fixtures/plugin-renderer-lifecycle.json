@@ -6,6 +6,7 @@
   "boundary": "electron-renderer",
   "safe_source": "const {Plugin} = require('obsidian'); module.exports = class LifecycleFixture extends Plugin { onload() { this.app.events.push('plugin-onload'); this.addCommand({id:'lifecycle-command'}); this.registerView('lifecycle-view', () => null); this.addSettingTab({id:'lifecycle-settings'}); this.registerEvent({type:'vault-change'}); this.loadData(); this.saveData({enabled:true}); } onunload() { this.app.events.push('plugin-onunload'); } };",
   "dom_source": "const {Plugin} = require('obsidian'); module.exports = class DomFixture extends Plugin { onload() { document.createElement('div'); } onunload() {} };",
+  "workflow_source": "const {Plugin} = require('obsidian'); module.exports = class WorkflowFixture extends Plugin { onload() { const previous = this.loadData(); this.app.events.push(`workflow-onload-${this.manifest.version}`); this.addCommand({id:`workflow-command-${this.manifest.version}`}); this.registerView(`workflow-view-${this.manifest.version}`, () => null); this.addSettingTab({id:`workflow-settings-${this.manifest.version}`}); this.registerEvent({type:`workflow-event-${this.manifest.version}`}); this.saveData({enabled:true,lastVersion:this.manifest.version,previousVersion:previous.lastVersion || null}); } onunload() { this.app.events.push(`workflow-onunload-${this.manifest.version}`); } };",
   "expected": {
     "safe_status": "loaded",
     "safe_coverage": "electron-sandboxed-renderer-lifecycle",
@@ -20,7 +21,16 @@
     "dom_status": "denied",
     "dom_coverage": "electron-sandboxed-renderer-lifecycle",
     "dom_denied_capability": "dom.privileged",
-    "dom_lifecycle_events": ["constructed"]
+    "dom_lifecycle_events": ["constructed"],
+    "workflow": {
+      "status": "loaded",
+      "coverage": "electron-sandboxed-renderer-lifecycle-workflow",
+      "phases": ["install", "restart", "update"],
+      "versions": ["1.0.0", "1.0.0", "1.1.0"],
+      "persistence": ["loadData", "saveData"],
+      "plugin_data_writes": 3,
+      "vault_writes": 0
+    }
   },
   "safe_alternatives_attempted": ["mediated vault read", "scoped renderer preview", "workflow disabled"],
   "external_pending": [

@@ -28,14 +28,66 @@ function strings(value: unknown): string[] {
   return asArray(value).filter((entry): entry is string => typeof entry === "string");
 }
 
+function records(value: unknown): JsonRecord[] {
+  return asArray(value).map((entry) => asRecord(entry)).filter((entry): entry is JsonRecord => Boolean(entry));
+}
+
 function sameStrings(actual: unknown, expected: unknown): boolean {
   return strings(actual).join("|") === strings(expected).join("|");
 }
 
-async function runSource(source: string, temporaryRoot: string, name: string): Promise<JsonRecord> {
+function sameJson(actual: unknown, expected: unknown): boolean {
+  return JSON.stringify(actual) === JSON.stringify(expected);
+}
+
+function phaseAt(phases: JsonRecord[], index: number): JsonRecord {
+  return phases[index] ?? {};
+}
+
+function lifecycleChecks(safe: JsonRecord, dom: JsonRecord, safeLifecycle: JsonRecord, domLifecycle: JsonRecord, expected: JsonRecord, safeApi: JsonRecord): Record<string, boolean> {
+  const expectedApi = record(expected.safe_api, "fixture safe API");
+  return {
+    safe_lifecycle_loaded: safe.status === expected.safe_status,
+    safe_lifecycle_boundary: safe.coverage === expected.safe_coverage,
+    safe_onload_then_onunload: sameStrings(safeLifecycle.events, expected.safe_lifecycle_events),
+    safe_command_registered: sameStrings(safeApi.commands, expectedApi.commands),
+    safe_view_registered: sameStrings(safeApi.views, expectedApi.views),
+    safe_settings_registered: sameStrings(safeApi.settings, expectedApi.settings),
+    safe_event_registered: sameStrings(safeApi.registeredEvents, expectedApi.events),
+    safe_persistence_boundary: sameStrings(safeApi.persistence, expectedApi.persistence),
+    dom_lifecycle_denied: dom.status === expected.dom_status,
+    dom_lifecycle_boundary: dom.coverage === expected.dom_coverage,
+    dom_privileged_capability_denied: strings(dom.deniedCapabilities).includes(string(expected.dom_denied_capability)),
+    dom_denied_before_onload_completion: sameStrings(domLifecycle.events, expected.dom_lifecycle_events),
+  };
+}
+
+function workflowChecks(workflow: JsonRecord, workflowData: JsonRecord, phases: JsonRecord[], expectedWorkflow: JsonRecord, uninstall: JsonRecord): Record<string, boolean> {
+  const firstPhase = phaseAt(phases, 0);
+  const restartPhase = phaseAt(phases, 1);
+  const updatePhase = phaseAt(phases, 2);
+  return {
+    workflow_loaded: workflow.status === expectedWorkflow.status,
+    workflow_boundary: workflow.coverage === expectedWorkflow.coverage,
+    workflow_phase_order: sameStrings(phases.map((phase) => string(phase.phase)), expectedWorkflow.phases),
+    workflow_version_progression: sameStrings(phases.map((phase) => string(phase.version)), expectedWorkflow.versions),
+    workflow_restart_restores_data: sameJson(restartPhase.loadedData, firstPhase.savedData),
+    workflow_update_restores_data: sameJson(updatePhase.loadedData, restartPhase.savedData),
+    workflow_persistence_order: phases.every((phase) => sameStrings(record(phase.registered, "workflow registration").persistence, expectedWorkflow.persistence)),
+    workflow_registration_cleanup: phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0),
+    workflow_uninstall_clears_registrations: uninstall.registrationsCleared === true,
+    workflow_plugin_data_persistence: workflowData.pluginDataWrites === expectedWorkflow.plugin_data_writes,
+    workflow_no_vault_writes: workflowData.vaultWrites === expectedWorkflow.vault_writes,
+    workflow_returns_to_obsidian: uninstall.returnToObsidian === true && workflowData.activeAfterUninstall === false,
+  };
+}
+
+type WorkerMode = "lifecycle" | "workflow";
+
+async function runSource(source: string, temporaryRoot: string, name: string, mode: WorkerMode = "lifecycle"): Promise<JsonRecord> {
   const sourcePath = join(temporaryRoot, `${name}.main.js`);
   writeFileSync(sourcePath, source, "utf8");
-  const {command, args} = workerCommand(sourcePath);
+  const {command, args} = workerCommand(sourcePath, mode);
   const child = Bun.spawn([command, ...args], {cwd: root, env: {...process.env, NODE_NO_WARNINGS: "1"}, stdout: "pipe", stderr: "pipe"});
   return parseWorkerOutput(await collectWorkerOutput(child));
 }
@@ -48,15 +100,15 @@ function assertDisplay(useXvfb: boolean): void {
   if (!useXvfb && platform() === "linux" && !process.env.DISPLAY) throw new Error("Plugin lifecycle audit requires DISPLAY or xvfb-run on Linux");
 }
 
-function workerArguments(sourcePath: string, useXvfb: boolean): string[] {
-  const electronArgs = ["--disable-gpu", "--disable-software-rasterizer", workerPath, `--source-file=${sourcePath}`, "--run-lifecycle"];
+function workerArguments(sourcePath: string, useXvfb: boolean, mode: WorkerMode): string[] {
+  const electronArgs = ["--disable-gpu", "--disable-software-rasterizer", workerPath, `--source-file=${sourcePath}`, `--run-${mode}`];
   return useXvfb ? ["-a", "--server-args=-screen 0 1280x720x24", electronBinary, ...electronArgs] : electronArgs;
 }
 
-function workerCommand(sourcePath: string): {command: string; args: string[]} {
+function workerCommand(sourcePath: string, mode: WorkerMode): {command: string; args: string[]} {
   const useXvfb = hasXvfb();
   assertDisplay(useXvfb);
-  return {command: useXvfb ? "xvfb-run" : electronBinary, args: workerArguments(sourcePath, useXvfb)};
+  return {command: useXvfb ? "xvfb-run" : electronBinary, args: workerArguments(sourcePath, useXvfb, mode)};
 }
 
 type WorkerOutput = [stdout: string, stderr: string, exitCode: number];
@@ -103,24 +155,18 @@ export async function runPluginLifecycleAudit(): Promise<JsonRecord> {
   try {
     const safe = await runSource(string(fixture.safe_source), temporaryRoot, "safe-lifecycle");
     const dom = await runSource(string(fixture.dom_source), temporaryRoot, "dom-denial");
+    const workflow = await runSource(string(fixture.workflow_source), temporaryRoot, "lifecycle-workflow", "workflow");
     const safeLifecycle = record(safe.lifecycle, "safe lifecycle");
     const domLifecycle = record(dom.lifecycle, "DOM lifecycle");
     const expected = record(fixture.expected, "fixture expected");
+    const expectedWorkflow = record(expected.workflow, "fixture workflow");
     const safeApi = record(safeLifecycle.api, "safe lifecycle API");
-    const expectedApi = record(expected.safe_api, "fixture safe API");
+    const workflowData = record(workflow.workflow, "workflow result");
+    const phases = records(workflowData.phases);
+    const uninstall = record(workflowData.uninstall, "workflow uninstall");
     const checks = {
-      safe_lifecycle_loaded: safe.status === expected.safe_status,
-      safe_lifecycle_boundary: safe.coverage === expected.safe_coverage,
-      safe_onload_then_onunload: sameStrings(safeLifecycle.events, expected.safe_lifecycle_events),
-      safe_command_registered: sameStrings(safeApi.commands, expectedApi.commands),
-      safe_view_registered: sameStrings(safeApi.views, expectedApi.views),
-      safe_settings_registered: sameStrings(safeApi.settings, expectedApi.settings),
-      safe_event_registered: sameStrings(safeApi.registeredEvents, expectedApi.events),
-      safe_persistence_boundary: sameStrings(safeApi.persistence, expectedApi.persistence),
-      dom_lifecycle_denied: dom.status === expected.dom_status,
-      dom_lifecycle_boundary: dom.coverage === expected.dom_coverage,
-      dom_privileged_capability_denied: strings(dom.deniedCapabilities).includes(string(expected.dom_denied_capability)),
-      dom_denied_before_onload_completion: sameStrings(domLifecycle.events, expected.dom_lifecycle_events),
+      ...lifecycleChecks(safe, dom, safeLifecycle, domLifecycle, expected, safeApi),
+      ...workflowChecks(workflow, workflowData, phases, expectedWorkflow, uninstall),
     };
     requireCondition(Object.values(checks).every(Boolean), `Plugin lifecycle checks failed: ${JSON.stringify(checks)}`);
     return {
@@ -134,9 +180,9 @@ export async function runPluginLifecycleAudit(): Promise<JsonRecord> {
         display: process.env.DISPLAY ? "existing" : "xvfb-run",
       },
       checks,
-      details: {safe, dom, safe_api: safeApi},
+      details: {safe, dom, workflow, safe_api: safeApi, workflow_phases: phases},
       limitations: asArray(fixture.external_pending).filter((entry): entry is string => typeof entry === "string"),
-      result: "The synthetic Electron renderer wrapper completed onload/onunload for a marker-free fixture and denied a privileged DOM request before onload completed; unchanged plugin and reference behavior remain pending.",
+      result: "The synthetic Electron renderer wrapper completed marker-free lifecycle and restart/update/uninstall workflow traces, preserved mediated plugin data across restart/update, denied a privileged DOM request before onload completed, and recorded zero vault writes; unchanged plugin and reference behavior remain pending.",
     };
   } finally {
     rmSync(temporaryRoot, {recursive: true, force: true});
