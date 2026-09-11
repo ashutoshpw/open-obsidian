@@ -1,0 +1,33 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1"],
+  "decision_id": "D15",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-loaded-workflows.json",
+  "head": "984f807d0ae4dcbaf786073fca837a571fea4e51",
+  "source_tree": {
+    "sha256": "97f25727adc75fd8b64784c644c1e80d0ff9bdd423d140cf85556d7649f618b5",
+    "paths": 228
+  },
+  "quality": {
+    "run_id": 34645630156,
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103415603323, "conclusion": "success"},
+      "macos-latest": {"job_id": 103415602709, "conclusion": "success"},
+      "windows-latest": {"job_id": 103415602742, "conclusion": "success"}
+    },
+    "checks": "All Ubuntu, macOS and Windows quality jobs passed, including contracts, tests, typecheck, compile, packaged Electron vault round trip, synthetic plugin lifecycle, Knip and Fallow."
+  },
+  "desktop_build": {
+    "run_id": 34645630174,
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103415602895, "conclusion": "success"},
+      "macos-latest": {"job_id": 103415602581, "conclusion": "success"},
+      "windows-latest": {"job_id": 103415602369, "conclusion": "success"}
+    },
+    "checks": "All Ubuntu, macOS and Windows packaging, release-manifest and attribution jobs passed; production signing was skipped because credentials were unavailable."
+  },
+  "interpretation": "Hosted CI validates repository, synthetic lifecycle and packaging boundaries at the reconciled metadata head. It does not execute the opt-in unchanged-artifact loaded-workflow audit, certify reference Obsidian or human behavior, or promote any plugin row.",
+  "result": "passed"
+}
