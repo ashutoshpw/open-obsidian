@@ -1,0 +1,40 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T11:07:47Z",
+  "checkpoint": "P1.3",
+  "requirements": ["RISK-001"],
+  "fixture_ids": ["fixture:risk-private-internals"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "tested_source_tree": "da7519bb17c356202a34211048118fa85b9a4f7b22c7f14f4c9d47f4503797b5",
+    "source_tree_paths": 193
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "implementation": {
+    "manifest": "config/architecture-manifest.json records four private-internals findings with source-backed reproduction, evidence paths, compatibility-runtime ownership, optimistic/likely/pessimistic cost ranges, D15 decision IDs, explicit decisions and pending-runtime status.",
+    "findings": ["dom-view-internals", "direct-filesystem-process-native", "network-credential-internals", "private-event-ordering"],
+    "policy": "The records preserve the distinction between safe mediated contracts, denied privileged capabilities and lifecycle behavior that still requires unchanged-artifact runtime evidence; no workflow was silently removed or promoted to compatible."
+  },
+  "checks": [
+    {"command": "bun run validate:architecture", "exit_code": 0, "result": "Architecture validation passed and required private-internals records were checked for reproduction, evidence, owner, cost, decision and pending-runtime status."},
+    {"command": "bun test tests/architecture-private-internals.test.ts tests/bundle-prescreen.test.ts tests/plugin-policy.test.ts", "exit_code": 0, "result": "Nine tests passed with 27 expectations, including source marker detection, restricted-probe denial, explicit preview approval and the private-internals manifest contract."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow audit passed with no issues in three changed source files."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest da7519bb17c356202a34211048118fa85b9a4f7b22c7f14f4c9d47f4503797b5 across 193 included paths."},
+    {"command": "bun run validate:state", "exit_code": 0, "result": "State structure passed; 196 rows remain honest at 28 passing, 116 implemented, 46 pending and 6 external-pending, with the active goal not marked complete."},
+    {"command": "bun run final:audit", "exit_code": 0, "result": "Final audit passed with origin/main parity at cdd99526d491fcf0d10eee46b8bac5be07f645aa and 162 mandatory rows not release-passing; release readiness remains false."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine state, contracts, plugin matrix, architecture, surfaces, baselines, differential fixtures, entry points, paid-service boundary, workflows, input, accessibility, layout, typecheck, 152 tests and changed-file audits passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow audit passed with no issues in eight changed files."}
+  ],
+  "limitations": [
+    "This is a source and restricted-probe architecture record, not unchanged-plugin Electron lifecycle certification.",
+    "Same-user OS bypass attempts, DOM/event ordering, cross-plugin combinations, reference Obsidian reopen behavior and macOS/Windows runtime traces remain pending.",
+    "No plugin bundle was modified, enabled or granted a trusted filesystem, process, network, credential or privileged-DOM path; the selected /home/ashutosh/Obsidian vault was not accessed."
+  ],
+  "result": "RISK-001 is implemented as an evidence-backed private-internals decision record with visible D15 boundaries and explicit runtime follow-up; it remains distinct from passing plugin certification."
+}

@@ -45,6 +45,51 @@ function interfaceChecks(raw: unknown): [boolean, string] {
   return [!path || !Bun.file(join(root, path)).size, `missing domain interface source: ${path}`];
 }
 
+function privateCostChecks(id: string, raw: unknown): Array<[boolean, string]> {
+  const cost = record(raw);
+  return [
+    [invalidPositive(cost?.optimistic_days), `${id} has an invalid optimistic private-internals cost`],
+    [invalidPositive(cost?.likely_days), `${id} has an invalid likely private-internals cost`],
+    [invalidPositive(cost?.pessimistic_days), `${id} has an invalid pessimistic private-internals cost`],
+  ];
+}
+
+function privateFindingIdentityChecks(id: string, finding: JsonRecord | null): Array<[boolean, string]> {
+  return [
+    [!string(finding?.surface), `${id} is missing a private-internals surface`],
+    [!string(finding?.reproduction), `${id} is missing a private-internals reproduction`],
+    [!string(finding?.owner), `${id} is missing a private-internals owner`],
+  ];
+}
+
+function privateFindingEvidenceChecks(id: string, finding: JsonRecord | null): Array<[boolean, string]> {
+  return [[!Array.isArray(finding?.evidence) || finding.evidence.length === 0, `${id} is missing private-internals evidence`]];
+}
+
+function privateFindingDecisionChecks(id: string, finding: JsonRecord | null): Array<[boolean, string]> {
+  return [
+    [!string(finding?.decision_id), `${id} is missing a private-internals decision ID`],
+    [!string(finding?.compatibility_decision), `${id} is missing a compatibility decision`],
+    [string(finding?.status) !== "pending-runtime", `${id} must remain pending-runtime until runtime evidence exists`],
+  ];
+}
+
+function privateFindingChecks(raw: unknown, index: number): Array<[boolean, string]> {
+  const finding = record(raw);
+  const id = string(finding?.id) || `private-internals-${index + 1}`;
+  return [...privateFindingIdentityChecks(id, finding), ...privateFindingEvidenceChecks(id, finding), ...privateFindingDecisionChecks(id, finding), ...privateCostChecks(id, finding?.cost)];
+}
+
+function privateInternalChecks(raw: unknown): Array<[boolean, string]> {
+  const findings = array(raw);
+  const ids = findings.map((finding) => string(record(finding)?.id)).filter(Boolean);
+  return [
+    [findings.length < 4, "architecture manifest must record at least four private-internals findings"],
+    [new Set(ids).size !== ids.length, "private-internals finding IDs must be unique"],
+    ...findings.flatMap(privateFindingChecks),
+  ];
+}
+
 function main(): number {
   const manifest = readManifest();
   const renderer = array(manifest.processes).map(record).find((process) => string(process?.name) === "renderer");
@@ -55,6 +100,7 @@ function main(): number {
     ...settingChecks(record(renderer?.settings)),
     ...array(manifest.effort_estimates).flatMap(estimateChecks),
     ...array(manifest.domain_interfaces).map(interfaceChecks),
+    ...privateInternalChecks(manifest.private_internal_findings),
   ];
   const errors = checks.filter(([failed]) => failed).map(([, message]) => message);
   if (errors.length > 0) {

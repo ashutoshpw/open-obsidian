@@ -629,3 +629,19 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled the popout theme-preview implementation at `6ece8f5a672ac12223c05088b0d318a5f3d50608`; the source commit is ready to push from `main`.
 - Updated `state.json` so `last_reconciled_head` and `recent_increment` point to the P3.3 work commit, with source tree `0004bddfdf250557e17fcf342a829db1db0dc69d57977db41b4cace2c400cdbd` across 192 included paths.
 - Kept C10.1, C12 and RISK-002 pending: Minimal/unchanged-plugin, plugin-created views, true OS IME, screen-reader, human focus, macOS/Windows/reference and other external certification remain open.
+
+## 2026-09-11T11:02:10Z — P1.3 private-internals decision record
+
+- Added four source-backed private-internals findings to `config/architecture-manifest.json`: DOM/view contracts, direct filesystem/process/native access, network/credential access and private lifecycle/event ordering. Each record includes reproduction, evidence paths, compatibility-runtime ownership, cost range, D15 decision and pending-runtime status.
+- Extended `bun run validate:architecture` and added `tests/architecture-private-internals.test.ts`; source marker, restricted-probe and explicit preview-approval tests remain separate from unchanged-plugin certification.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.3-private-internals.json` records source tree `9f1512c2d9778a1979ef76dbf892da0d1c9b18420a4e9dc6ce286c35fe2c299f` across 193 included paths. `RISK-001` is implemented, while OS-enforced lifecycle, DOM ordering, cross-plugin and reference behavior remain pending.
+
+## 2026-09-11T11:06:17Z — P1.3 source-tree reconciliation
+
+- Recomputed `bun run audit:source-tree` after the final-audit expectation update; the unchanged 193-path source tree now hashes to `da7519bb17c356202a34211048118fa85b9a4f7b22c7f14f4c9d47f4503797b5`.
+- Updated the P1.3 private-internals evidence, `RISK-001` requirement row and P1.3 checkpoint state to that digest. The earlier `9f1512c2…` record remains historical; no source or user-vault content changed during reconciliation.
+
+## 2026-09-11T11:07:47Z — P1.3 validation gate
+
+- Re-ran `bun run validate:state`, `bun run final:audit`, `bun run check:fast`, `bun run typecheck` and `bun run audit:fallow:strict`; all passed. The routine suite reports 152 tests and 821 expectations, while the final audit remains intentionally release-blocked by 162 mandatory rows.
+- Next operation: stage the eight task-owned P1.3 files, review the staged diff, and create the `[openobsidian P1.3 work]` commit; retain P1.3 in progress because packaged macOS/Windows and reference-extension runtime behavior remain unverified.

@@ -56,6 +56,52 @@
     {"id": "claim-ipc-schema-validation", "status": "implemented-locally", "evidence": ["src/shared/api.ts", "tests/api.test.ts"], "limitation": "packaged runtime launch is pending"},
     {"id": "claim-plugin-strong-isolation", "status": "unproven", "evidence": ["fixtures/plugin-isolation.json", "tests/plugin-policy.test.ts"], "limitation": "same-user legacy plugin bypass attempts must run on each OS"}
   ],
+  "private_internal_findings": [
+    {
+      "id": "dom-view-internals",
+      "surface": "Undocumented DOM and workspace-view internals",
+      "reproduction": "The bundle prescreen flags document, HTMLElement, CodeMirror and app.workspace access as dom.privileged; theme analysis separately records workspace, view and popout selector contracts.",
+      "evidence": ["src/plugins/bundle-prescreen.ts", "tests/bundle-prescreen.test.ts", "src/shared/ui/themes.ts"],
+      "owner": "compatibility-runtime",
+      "cost": {"optimistic_days": 3, "likely_days": 8, "pessimistic_days": 15},
+      "decision_id": "D15",
+      "compatibility_decision": "Mediate only documented and stable legacy surface contracts; deny privileged DOM access and keep the workflow visibly unsupported until renderer evidence exists.",
+      "status": "pending-runtime"
+    },
+    {
+      "id": "direct-filesystem-process-native",
+      "surface": "Direct filesystem, process and native-module internals",
+      "reproduction": "The restricted module probe denies fs, child_process, worker_threads, native addons and resource-unbounded execution while the capability policy records each denial.",
+      "evidence": ["src/plugins/runtime-probe.ts", "src/plugins/policy.ts", "tests/bundle-prescreen.test.ts", "tests/plugin-policy.test.ts"],
+      "owner": "compatibility-runtime",
+      "cost": {"optimistic_days": 5, "likely_days": 12, "pessimistic_days": 25},
+      "decision_id": "D15",
+      "compatibility_decision": "Use mediated vault reads and the preview broker for changes; deny direct filesystem/process/native access with no trusted legacy bypass.",
+      "status": "pending-runtime"
+    },
+    {
+      "id": "network-credential-internals",
+      "surface": "Network, keychain and provider-credential internals",
+      "reproduction": "The prescreen and restricted probe classify fetch/XHR/WebSocket, keytar/safeStorage and environment access as denied capabilities; provider credentials remain main-process scoped.",
+      "evidence": ["src/plugins/bundle-prescreen.ts", "src/plugins/runtime-probe.ts", "src/electron/main.ts", "tests/providers.test.ts"],
+      "owner": "compatibility-runtime",
+      "cost": {"optimistic_days": 4, "likely_days": 10, "pessimistic_days": 20},
+      "decision_id": "D15",
+      "compatibility_decision": "Keep credentials and provider transport outside plugin environments; deny direct network and credential access, and require a separately reviewed mediated adapter.",
+      "status": "pending-runtime"
+    },
+    {
+      "id": "private-event-ordering",
+      "surface": "Private event ordering, cross-plugin hooks and lifecycle assumptions",
+      "reproduction": "The compatibility matrix enumerates settings, commands, events, editor mutation, views, restart, update and return-to-Obsidian checks; no source-only probe can establish their ordering.",
+      "evidence": ["src/plugins/compatibility-matrix.ts", "fixtures/compatibility-manifest.json", "fixtures/plugin-catalog.json", "tests/plugin-compatibility-matrix.test.ts"],
+      "owner": "compatibility-runtime",
+      "cost": {"optimistic_days": 8, "likely_days": 20, "pessimistic_days": 45},
+      "decision_id": "D15",
+      "compatibility_decision": "Treat lifecycle and cross-plugin behavior as pending runtime certification; implement no silent compatibility claim and record ordinary failures separately from security denials.",
+      "status": "pending-runtime"
+    }
+  ],
   "effort_estimates": [
     {"workstream": "vault foundation", "optimistic_days": 12, "likely_days": 24, "pessimistic_days": 45, "dependencies": ["P1.1", "P1.3"], "status": "preliminary; not a calendar promise"},
     {"workstream": "compatibility runtime", "optimistic_days": 18, "likely_days": 40, "pessimistic_days": 90, "dependencies": ["P1.2", "P2.1", "P2.2"], "status": "preliminary; not a calendar promise"},
