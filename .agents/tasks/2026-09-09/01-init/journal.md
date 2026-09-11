@@ -745,3 +745,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all-ci.json` and retained the tested source tree `5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4` across 201 source paths.
 - The green matrix validates repository contracts and packaging metadata for this evidence update; it does not turn Linux static preflight into unchanged-plugin lifecycle, per-OS isolation, reference Obsidian, human or signed-release certification.
 - Next: validate and push this metadata-only reconciliation, then continue reference/cross-platform vault procedures and any bounded lifecycle evidence available without the reference runtime.
+
+## 2026-09-11T12:54:15Z — P1.1 host vault round trip
+
+- Completed: added `bun run audit:vault-roundtrip`, a bounded real temporary-directory report covering no-op scans and app-data cleanliness, BOM/CRLF and binary preservation, normalized backslash paths, atomic write/reopen, recovery snapshots, temporary-file cleanup and symlink denial. Windows reserved-name enforcement is recorded as host-dependent on Linux.
+- Validation: the Linux x64 report passed; `bun run typecheck`, `bun run check:fast` and `bun run audit:fallow:strict` pass. The quality workflow now runs the same report on Ubuntu, macOS and Windows. The tested source tree is `01fe20583fb6226f235a1d6f4aa9c35419727bb7e7f4d4c705ae3f1bc4a492ab` across 202 included paths.
+- Traceability: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-vault-roundtrip.json`; C01.2, C02.2, SYNC-004 and RISK-004 now reference the host report while retaining real quota/ACL/cloud-placeholder and reference Obsidian blockers.
+- Limitation: this is host Linux filesystem evidence, not reference Obsidian compatibility, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: run the full local validation set, commit and push the scoped P1.1 increment, inspect the three host report outputs in quality CI, then reconcile the observed work SHA before continuing reference-vault procedures.

@@ -45,6 +45,8 @@ jobs:
         run: bun run verify:version-baseline
       - name: Validate vault differential fixture contract
         run: bun run validate:differential
+      - name: Run host vault round-trip report
+        run: bun run audit:vault-roundtrip
       - name: Validate C10 core workflow inventory
         run: bun run validate:workflows
       - name: Verify distribution metadata

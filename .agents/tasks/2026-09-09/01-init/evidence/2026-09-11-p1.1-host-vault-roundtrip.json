@@ -1,0 +1,39 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T12:50:19Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "SYNC-004", "RISK-004"],
+  "fixture_id": "fixture:host-vault-roundtrip",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "branch": "main",
+    "implementation_commit": "982dfc1993a73d40e885c739bcb33a92271edb03",
+    "tested_source_tree": "01fe20583fb6226f235a1d6f4aa9c35419727bb7e7f4d4c705ae3f1bc4a492ab",
+    "source_tree_paths": 202
+  },
+  "command": "bun run audit:vault-roundtrip",
+  "report": {
+    "status": "passed",
+    "no_op_scan": true,
+    "no_op_app_data": true,
+    "bom_crlf_round_trip": true,
+    "normalized_backslash_path": "nested/note.md",
+    "atomic_write_and_reopen": true,
+    "recovery_snapshot": true,
+    "unrelated_binary_preserved": true,
+    "temporary_files_removed": true,
+    "symlink_boundary": {"status": "denied"},
+    "windows_reserved_name": {"outcome": "denied-other", "host_enforced": false},
+    "snapshots": {
+      "before_sha256": "c1b659947b61987c25744e625bc2e99d3440cd7df95d0f16fdefa0bc143aa1de",
+      "after_sha256": "77492f711812ade62e762b3b2be3e56a35937b1ba8de231a0a12856c8cc83d69",
+      "changed_by_approved_write": true
+    }
+  },
+  "limitations": [
+    "This is a real Linux temporary-directory host round trip; Windows/macOS host results are delegated to the quality matrix, while disk-full, ACL/permission-loss, cloud-placeholder, power-loss and reference Obsidian behavior remain separate gates.",
+    "The report does not certify same-user OS isolation, human accessibility or signed release behavior; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}

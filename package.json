@@ -33,6 +33,7 @@
     "audit:plugin-runtime": "bun scripts/audit-plugin-bundles.ts --runtime-probe",
     "audit:plugin-runtime:all": "bun scripts/audit-plugin-bundles.ts --all --runtime-probe",
     "audit:plugin-renderer": "bun scripts/audit-plugin-renderer.ts",
+    "audit:vault-roundtrip": "bun scripts/vault-roundtrip.ts",
     "validate:plugin-matrix": "bun scripts/validate-plugin-matrix.ts",
     "verify:version-baseline": "bun scripts/verify-version-baseline.ts",
     "validate:differential": "bun scripts/validate-differential-fixtures.ts",
