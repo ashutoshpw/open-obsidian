@@ -498,3 +498,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-pin-manifest.json` with source tree `243f9a4ebb40f6c8f0ee751d06db44282f3cfc2b9b2098bec7dfd02c5f197a08` across 164 included paths; updated P0.2/P1.2 and `RESEARCH-005` records.
 - Limitation: unchanged plugin bundles still have not run in a compatibility runtime; PC01-PC25 lifecycle/DOM/OS certification and the deliberate live selection refresh remain pending. The selected `/home/ashutosh/Obsidian` vault was not opened or modified.
 - Next: load unchanged pinned artifacts into the available isolated runtime, or record artifact-specific D15 denial evidence, while retaining the live-selection drift as a blocker.
+
+## 2026-09-11T07:53:32Z — P3.3 safe theme and snippet contract
+
+- Completed: pushed source commit `085ceca06be0650d252f77ffd80b4e296440d095` with read-only appearance/theme/snippet discovery, a platform-neutral CSS compatibility contract, the `fixtures/c12-themes.json` preflight and `bun run audit:theme-assets`.
+- Completed: configuration discovery now retains original CSS bytes and SHA-256 hashes for `.obsidian/themes/*.css` and `.obsidian/snippets/*.css`, maps alternate `appearance.json` files and exposes variables, selectors, legacy layout contracts, plugin-view/popout hooks and accessibility hints for desktop or a future Expo host.
+- Safety: CSS is never executed, imported or fetched during analysis; external URL assets, executable CSS expressions and selectors targeting privileged/AI controls are explicitly marked for host review. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Validation: local `bun run check:fast` and `bun run quality` pass with 141 tests; TypeScript, Knip and strict changed-file Fallow pass; report-only Fallow health is 88.9/A with the existing `scripts/status.ts:128 collectRow` complexity advisory.
+- CI: quality run `34576518941` and desktop-build run `34576519154` passed on Ubuntu, macOS and Windows.
+- Reconciled: added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-theme-contract.json`, updated C09 and C12 evidence/source-tree references and moved P3.3 to `in_progress` without promoting pending visible theme, popout, accessibility, PC17 or cross-platform certification.
+- Next: apply the safe analyzed contract in a visible renderer/theme adapter and capture light/dark, plugin-view, popout and accessibility traces when the compatible desktop/reference environments are available.

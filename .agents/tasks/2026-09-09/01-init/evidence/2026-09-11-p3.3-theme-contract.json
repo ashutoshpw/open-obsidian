@@ -1,0 +1,48 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T07:53:32Z",
+  "checkpoint": "P3.3",
+  "requirements": ["C09", "C12"],
+  "fixture_ids": ["fixture:c09-configuration", "fixture:c12-themes", "fixture:risk-theme-parity"],
+  "commit_sha": "085ceca06be0650d252f77ffd80b4e296440d095",
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false,
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "6cb91a87459e29091471b935003096ac1d32c9e63d4c7eae0b79e4b9848cf3c9",
+    "source_tree_paths": 174
+  },
+  "implementation": {
+    "configuration": [
+      "Read-only discovery now maps .obsidian and .obsidian-* appearance.json files into bounded appearance settings.",
+      "Read-only discovery now inventories .obsidian/themes/*.css and .obsidian/snippets/*.css with original bytes, relative paths, SHA-256 hashes and parsed analysis.",
+      "No CSS, appearance or app-owned settings are written during discovery."
+    ],
+    "shared_contract": [
+      "src/shared/ui/themes.ts is platform-neutral and exposes appearance parsing plus CSS variables, selectors, legacy layout contracts, plugin-view/popout hooks and accessibility hints.",
+      "Safe preview metadata explicitly refuses CSS execution, @import resolution, URL fetching and selectors targeting privileged or AI controls.",
+      "The 24px shared icon token remains part of the same reusable design-system boundary for desktop and a future Expo host."
+    ],
+    "repeatable_audit": "bun run audit:theme-assets -- --root /path/to/vault; add --strict to fail on host-review items. The command requires an explicit root and emits metadata only.",
+    "fixture_status": "The C12 fixture records light/dark, main/popout, accessibility and safety matrices; it is a preflight, not visible renderer certification."
+  },
+  "checks": [
+    {"command": "bun test tests/configuration.test.ts tests/shared-ui.test.ts", "exit_code": 0, "result": "9 focused tests and 51 expectations pass, including byte-preserving theme/snippet discovery and the repeatable audit report."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "State, contracts, plugin matrix, architecture, surfaces, version baseline, differential, workflows, accessibility, layout, typecheck, 141 tests, Knip and changed-file Fallow pass."},
+    {"command": "bun run quality", "exit_code": 0, "result": "Full local quality gate passes, including compile, Knip and report-only Fallow health."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the changed files before commit."},
+    {"command": "GitHub Actions quality run 34576518941", "exit_code": 0, "result": "Ubuntu, macOS and Windows quality jobs passed."},
+    {"command": "GitHub Actions desktop-build run 34576519154", "exit_code": 0, "result": "Ubuntu, macOS and Windows desktop build, packaging notice and dependency attribution jobs passed."},
+    {"command": "bun run audit:fallow:health", "exit_code": 0, "result": "health-score 88.9:A; dead files/exports and unused dependencies are zero; existing scripts/status.ts collectRow complexity advisory remains."}
+  ],
+  "limitations": [
+    "CSS is analyzed but not applied in the renderer; visible Minimal/theme/snippet light/dark comparison remains pending.",
+    "Plugin-created view, popout surface, screen-reader, cross-platform and reference Obsidian traces remain pending.",
+    "PC17 unchanged Minimal Theme Settings release certification remains pending because its runtime artifact and paired Minimal theme workflow are not certified.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}
