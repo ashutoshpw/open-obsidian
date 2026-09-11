@@ -37,6 +37,10 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(workflow).toContain("os: [ubuntu-latest, macos-latest, windows-latest]");
   expect(workflow).toContain("bun run audit:plugin-loaded-workflows");
   expect(workflow).toContain("actions/upload-artifact@v4");
+  expect(workflow).toContain("require.resolve('electron/package.json')");
+  expect(workflow).toContain('node "$electron_package_dir/install.js"');
+  expect(workflow).toContain('test -f "$sandbox_helper"');
+  expect(workflow).toContain('sudo chmod 4755 "$sandbox_helper"');
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];
