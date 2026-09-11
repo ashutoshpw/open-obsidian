@@ -1,5 +1,6 @@
 import {expect, test} from "bun:test";
 import {scanPluginBundle} from "../src/plugins/bundle-prescreen.js";
+import {probePluginBundle} from "../src/plugins/runtime-probe.js";
 
 test("bundle prescreen reports privileged markers without executing source", () => {
   const result = scanPluginBundle("const fs = require('fs'); fetch('/api'); process.spawn('git'); document.body; keytar.getPassword(); eval('1');");
@@ -12,4 +13,20 @@ test("bundle prescreen reports privileged markers without executing source", () 
 test("bundle prescreen stays quiet for a mediated read-only bundle", () => {
   expect(scanPluginBundle("export function readVault() { return api.vault.read('note.md'); }"))
     .toEqual({markers: [], markerIds: []});
+});
+
+test("restricted runtime probe loads a source-only module without host access", async () => {
+  const result = await probePluginBundle("module.exports = {name: 'fixture'};", {timeoutMs: 5_000});
+
+  expect(result.status).toBe("loaded");
+  expect(result.coverage).toBe("module-load-only");
+  expect(result.exportKind).toBe("object");
+  expect(result.deniedCapabilities).toEqual([]);
+});
+
+test("restricted runtime probe denies direct modules and dynamic code", async () => {
+  const result = await probePluginBundle("require('node:fs'); eval('1');", {timeoutMs: 5_000});
+
+  expect(result.status).toBe("denied");
+  expect(result.deniedCapabilities).toContain("filesystem.direct");
 });

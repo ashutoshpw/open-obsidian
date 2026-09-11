@@ -9,6 +9,14 @@
   },
   "required_record_fields": ["reproduction", "safeAlternativesAttempted", "scope", "visible"],
   "safe_alternatives": ["mediated vault read", "preview broker", "workflow disabled"],
+  "runtime_probe": {
+    "command": "bun run audit:plugin-runtime",
+    "launcher": "node --experimental-permission --no-addons --disable-proto=throw",
+    "coverage": "module-load-only",
+    "allowed_host_modules": ["obsidian", "@codemirror/*", "codemirror", "luxon", "moment", "svelte", "yaml"],
+    "denied_host_capabilities": ["filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged", "code.dynamic"],
+    "certification_policy": "Probe results never change pending-runtime dispositions; Electron renderer compatibility and OS-enforced isolation require separate evidence."
+  },
   "platforms": ["macOS", "Windows", "Linux"],
   "feasibility": {
     "scope": "mandatory top-25 plugins plus Minimal and Text Extractor dependencies; wider 30-50 discovery research remains separate",

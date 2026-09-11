@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {scanPluginBundle, type BundlePrescreen} from "../src/plugins/bundle-prescreen.js";
+import {probePluginBundle, type RuntimeProbeResult} from "../src/plugins/runtime-probe.js";
 import {asArray, asRecord, asString, type JsonRecord} from "./json.js";
 
 const root = resolve(import.meta.dir, "..");
@@ -15,6 +16,7 @@ type BundleAudit = {
   integrity: "passed" | "failed" | "not-applicable";
   runtime: "pending-runtime";
   markers: BundlePrescreen["markers"];
+  sandboxProbe?: RuntimeProbeResult;
   detail?: string;
 };
 
@@ -75,18 +77,29 @@ function integrityFailure(asset: JsonRecord, bytes: ArrayBuffer): string | null 
   return actualHash === expectedHash ? null : `hash expected ${expectedHash}, got ${actualHash}`;
 }
 
-async function auditArtifact(artifact: JsonRecord): Promise<BundleAudit> {
+function failedAudit(artifactId: string, tag: string, detail: string): BundleAudit {
+  return {artifactId, tag, status: "failed", integrity: "failed", runtime: "pending-runtime", markers: [], detail};
+}
+
+async function auditDownloadedBundle(artifact: JsonRecord, asset: JsonRecord, bytes: ArrayBuffer, runtimeProbe: boolean): Promise<BundleAudit> {
+  const artifactId = string(artifact.id);
+  const tag = string(artifact.tag);
+  const integrity = integrityFailure(asset, bytes);
+  if (integrity) return failedAudit(artifactId, tag, integrity);
+  const source = new TextDecoder().decode(bytes);
+  const scan = scanPluginBundle(source);
+  const sandboxProbe = runtimeProbe ? await probePluginBundle(source) : undefined;
+  return {artifactId, tag, status: "static-prescreened", integrity: "passed", runtime: "pending-runtime", markers: scan.markers, sandboxProbe};
+}
+
+async function auditArtifact(artifact: JsonRecord, runtimeProbe: boolean): Promise<BundleAudit> {
   const artifactId = string(artifact.id);
   const tag = string(artifact.tag);
   const asset = mainAsset(artifact);
   if (!asset) return {artifactId, tag, status: "not-applicable", integrity: "not-applicable", runtime: "pending-runtime", markers: [], detail: "no main.js release asset"};
-  const url = string(asset.url);
-  const bytes = await download(url);
-  if (!bytes) return {artifactId, tag, status: "failed", integrity: "failed", runtime: "pending-runtime", markers: [], detail: "download failed after retries"};
-  const integrity = integrityFailure(asset, bytes);
-  if (integrity) return {artifactId, tag, status: "failed", integrity: "failed", runtime: "pending-runtime", markers: [], detail: integrity};
-  const scan = scanPluginBundle(new TextDecoder().decode(bytes));
-  return {artifactId, tag, status: "static-prescreened", integrity: "passed", runtime: "pending-runtime", markers: scan.markers};
+  const bytes = await download(string(asset.url));
+  if (!bytes) return failedAudit(artifactId, tag, "download failed after retries");
+  return auditDownloadedBundle(artifact, asset, bytes, runtimeProbe);
 }
 
 async function main(): Promise<number> {
@@ -94,9 +107,10 @@ async function main(): Promise<number> {
   const isolation = readJson("fixtures/plugin-isolation.json");
   const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
   const ids = selectedIds(manifest, isolation);
-  const audits = await Promise.all(ids.map(async (id) => {
+  const runtimeProbe = process.argv.includes("--runtime-probe");
+  const audits: BundleAudit[] = await Promise.all(ids.map(async (id): Promise<BundleAudit> => {
     const artifact = byId.get(id);
-    return artifact ? auditArtifact(artifact) : {artifactId: id, tag: "", status: "failed" as const, integrity: "failed" as const, runtime: "pending-runtime" as const, markers: [], detail: "artifact is missing from compatibility manifest"};
+    return artifact ? auditArtifact(artifact, runtimeProbe) : {artifactId: id, tag: "", status: "failed", integrity: "failed", runtime: "pending-runtime", markers: [], detail: "artifact is missing from compatibility manifest"};
   }));
   const failures = audits.filter((audit) => audit.status === "failed");
   audits.forEach((audit) => console.log(JSON.stringify(audit)));
@@ -105,7 +119,8 @@ async function main(): Promise<number> {
     return 1;
   }
   const prescreened = audits.filter((audit) => audit.status === "static-prescreened").length;
-  console.log(`PLUGIN BUNDLE AUDIT: passed; ${prescreened} pinned main.js bundles statically prescreened; all runtime dispositions remain pending-runtime`);
+  const probeSummary = runtimeProbe ? `; sandbox module probes: ${audits.filter((audit) => audit.sandboxProbe?.status === "loaded").length} loaded, ${audits.filter((audit) => audit.sandboxProbe?.status === "denied").length} denied, ${audits.filter((audit) => audit.sandboxProbe?.status === "failed").length} failed, ${audits.filter((audit) => audit.sandboxProbe?.status === "timed-out").length} timed out` : "";
+  console.log(`PLUGIN BUNDLE AUDIT: passed; ${prescreened} pinned main.js bundles statically prescreened${probeSummary}; all runtime dispositions remain pending-runtime`);
   return 0;
 }
 

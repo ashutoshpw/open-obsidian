@@ -30,7 +30,7 @@
     {
       "name": "plugin-runtime",
       "trust": "unproven",
-      "responsibilities": ["future unchanged-artifact compatibility experiments"],
+      "responsibilities": ["future unchanged-artifact compatibility experiments", "permission-restricted module-load probes"],
       "claims": ["no trusted legacy mode", "D15 policy denies direct privileged capabilities"]
     }
   ],
@@ -47,7 +47,8 @@
     {"name": "Watcher reconciliation", "path": "src/core/watcher.ts", "purpose": "filesystem hints followed by authoritative snapshot reconciliation"},
     {"name": "IPC contract", "path": "src/shared/api.ts", "purpose": "schema validation for renderer vault requests"},
     {"name": "Shared UI and preview contract", "path": "src/shared/ui/index.ts", "purpose": "platform-neutral workspace blocks, actions, safe Markdown preview data and deterministic graph layout for desktop and future native hosts"},
-    {"name": "PreviewBroker", "path": "src/plugins/policy.ts", "purpose": "stage plugin changes before explicit approval"}
+    {"name": "PreviewBroker", "path": "src/plugins/policy.ts", "purpose": "stage plugin changes before explicit approval"},
+    {"name": "Restricted plugin module probe", "path": "src/plugins/runtime-probe.ts", "purpose": "load unchanged bundle modules in a separate permission-restricted process without certifying Electron or OS isolation"}
   ],
   "security_claims": [
     {"id": "claim-renderer-isolation", "status": "implemented-locally", "evidence": ["src/electron/main.ts", "src/electron/preload.ts"], "limitation": "packaged runtime launch is pending"},
