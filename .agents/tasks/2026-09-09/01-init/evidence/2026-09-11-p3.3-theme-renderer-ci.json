@@ -1,0 +1,77 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T17:42:06Z",
+  "checkpoint": "P3.3",
+  "requirements": ["C12", "RISK-002"],
+  "implementation_commit": "84a2545aadf5dc0c9384ea60d85b44155fe94afb",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "2753624028b3e208ebdcc25508f09c2143730a148c905a881cba3e332188735e",
+    "source_tree_paths": 220,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34629033941,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34629033941",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103361067166, "conclusion": "success", "renderer_theme_checks": "renderer_theme_dark_preview, renderer_theme_light_preview, renderer_theme_screenshots, popout_theme_preview and popout_theme_screenshot all true"},
+      "macos-latest": {"job_id": 103361066787, "conclusion": "success", "renderer_theme_checks": "renderer_theme_dark_preview, renderer_theme_light_preview, renderer_theme_screenshots, popout_theme_preview and popout_theme_screenshot all true"},
+      "windows-latest": {"job_id": 103361067094, "conclusion": "success", "renderer_theme_checks": "renderer_theme_dark_preview, renderer_theme_light_preview, renderer_theme_screenshots, popout_theme_preview and popout_theme_screenshot all true"}
+    },
+    "checks": [
+      "progress state",
+      "frozen contracts",
+      "architecture",
+      "version baseline",
+      "vault differential fixture",
+      "host vault round trip",
+      "C10 workflow inventory",
+      "distribution metadata",
+      "update/rollback contract",
+      "accessibility contract",
+      "typecheck",
+      "tests",
+      "quality scorecard",
+      "Electron compile",
+      "Electron vault round-trip/theme/popout trace",
+      "synthetic plugin lifecycle",
+      "Knip",
+      "Fallow health",
+      "changed-code Fallow"
+    ],
+    "result": "All quality matrix jobs passed on Ubuntu, macOS and Windows. The hosted Electron audit emitted all 19 mediated vault/renderer/theme/popout checks true on each runner."
+  },
+  "desktop": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34629033903,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34629033903",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103361066501, "conclusion": "success"},
+      "macos-latest": {"job_id": 103361066899, "conclusion": "success"},
+      "windows-latest": {"job_id": 103361066879, "conclusion": "success"}
+    },
+    "checks": [
+      "release gate",
+      "update/rollback manifest",
+      "unpacked desktop build",
+      "release-manifest sha256 hashes",
+      "Electron runtime notices",
+      "transitive dependency attribution",
+      "artifact upload"
+    ],
+    "result": "All desktop matrix jobs passed packaging and attribution checks; production signing was skipped because credentials were unavailable."
+  },
+  "limitations": [
+    "The hosted and local traces exercise OpenObsidian's disposable packaged Electron boundary; they do not certify reference Obsidian reopen behavior or unchanged plugin/theme DOM, settings, lifecycle or views.",
+    "CDP input and accessibility markers are implementation evidence, not true OS IME, screen-reader, human focus/contrast or consented-vault validation; publication, updater and release readiness remain pending.",
+    "GitHub reported Node.js 20 deprecation annotations for forced Node.js 24 execution in checkout/upload actions; all jobs still concluded successfully.",
+    "No personal vault was accessed; the selected /home/ashutosh/Obsidian vault was not used."
+  ],
+  "result": "Commit 84a2545 passed the hosted quality and desktop-build matrices on Ubuntu, macOS and Windows, extending implementation-boundary evidence for safe-preview theme/snippet rendering and tracked-popout appearance without promoting C12 or RISK-002 to release-passing status."
+}
