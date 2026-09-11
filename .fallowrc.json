@@ -1,0 +1,3 @@
+{
+  "entry": ["scripts/plugin-renderer-worker.cjs"]
+}

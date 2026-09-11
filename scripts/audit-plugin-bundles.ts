@@ -1,9 +1,8 @@
-import {createHash} from "node:crypto";
-import {readFileSync} from "node:fs";
-import {join, resolve} from "node:path";
+import {resolve} from "node:path";
 import {scanPluginBundle, type BundlePrescreen} from "../src/plugins/bundle-prescreen.js";
 import {probePluginBundle, type RuntimeProbeResult} from "../src/plugins/runtime-probe.js";
-import {asArray, asRecord, asString, type JsonRecord} from "./json.js";
+import {asArray, asRecord, type JsonRecord} from "./json.js";
+import {downloadPinnedAsset, integrityFailure, mainAsset, readJson, records, string} from "./plugin-audit-helpers.js";
 
 const root = resolve(import.meta.dir, "..");
 const attempts = 3;
@@ -21,63 +20,9 @@ type BundleAudit = {
   detail?: string;
 };
 
-function readJson(relativePath: string): JsonRecord {
-  const parsed = JSON.parse(readFileSync(join(root, relativePath), "utf8")) as unknown;
-  const value = asRecord(parsed);
-  if (!value) throw new Error(`${relativePath} must contain a JSON object`);
-  return value;
-}
-
-function records(value: unknown): JsonRecord[] {
-  return asArray(value).map(asRecord).filter((item): item is JsonRecord => item !== null);
-}
-
-function string(value: unknown): string {
-  return asString(value);
-}
-
-function sha256(bytes: ArrayBuffer): string {
-  return createHash("sha256").update(Buffer.from(bytes)).digest("hex");
-}
-
-function retryableStatus(status: number): boolean {
-  return status >= 500 || status === 408 || status === 429;
-}
-
-type DownloadAttempt = {bytes: ArrayBuffer | null; retry: boolean};
-
-async function downloadAttempt(url: string): Promise<DownloadAttempt> {
-  try {
-    const response = await fetch(url, {signal: AbortSignal.timeout(timeoutMs)});
-    return response.ok ? {bytes: await response.arrayBuffer(), retry: false} : {bytes: null, retry: retryableStatus(response.status)};
-  } catch {
-    return {bytes: null, retry: true};
-  }
-}
-
-async function download(url: string, attempt = 1): Promise<ArrayBuffer | null> {
-  const result = await downloadAttempt(url);
-  if (result.bytes) return result.bytes;
-  if (!result.retry || attempt >= attempts) return null;
-  await new Promise((resolveRetry) => setTimeout(resolveRetry, 500 * attempt));
-  return download(url, attempt + 1);
-}
-
-function mainAsset(artifact: JsonRecord): JsonRecord | null {
-  return records(artifact.release_assets).find((asset) => string(asset.name) === "main.js") ?? null;
-}
-
 function selectedIds(manifest: JsonRecord, isolation: JsonRecord): string[] {
   if (process.argv.includes("--all")) return records(manifest.artifacts).map((artifact) => string(artifact.id)).filter(Boolean);
   return asArray(asRecord(isolation.feasibility)?.hardest_targets).map(string).filter(Boolean);
-}
-
-function integrityFailure(asset: JsonRecord, bytes: ArrayBuffer): string | null {
-  const expectedBytes = asset.bytes;
-  const expectedHash = string(asset.sha256);
-  if (typeof expectedBytes !== "number" || bytes.byteLength !== expectedBytes) return `size expected ${String(expectedBytes)}, got ${bytes.byteLength}`;
-  const actualHash = sha256(bytes);
-  return actualHash === expectedHash ? null : `hash expected ${expectedHash}, got ${actualHash}`;
 }
 
 function failedAudit(artifactId: string, tag: string, detail: string): BundleAudit {
@@ -100,7 +45,7 @@ async function auditArtifact(artifact: JsonRecord, runtimeProbe: boolean): Promi
   const tag = string(artifact.tag);
   const asset = mainAsset(artifact);
   if (!asset) return {artifactId, tag, status: "not-applicable", integrity: "not-applicable", runtime: "pending-runtime", markers: [], detail: "no main.js release asset"};
-  const bytes = await download(string(asset.url));
+  const bytes = await downloadPinnedAsset(string(asset.url), {attempts, timeoutMs});
   if (!bytes) return failedAudit(artifactId, tag, "download failed after retries");
   return auditDownloadedBundle(artifact, asset, bytes, runtimeProbe);
 }
@@ -124,8 +69,8 @@ async function auditWithConcurrency(ids: string[], byId: Map<string, JsonRecord>
 }
 
 async function main(): Promise<number> {
-  const manifest = readJson("fixtures/compatibility-manifest.json");
-  const isolation = readJson("fixtures/plugin-isolation.json");
+  const manifest = readJson(root, "fixtures/compatibility-manifest.json");
+  const isolation = readJson(root, "fixtures/plugin-isolation.json");
   const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
   const ids = selectedIds(manifest, isolation);
   const runtimeProbe = process.argv.includes("--runtime-probe");

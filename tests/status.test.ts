@@ -21,5 +21,5 @@ test("release check refuses incomplete implementation honestly", () => {
   const result = executeStatus("--release");
   expect(result.code).toBe(2);
   expect(result.output).toContain("RELEASE CHECK: incomplete");
-  expect(result.output).toContain("162 mandatory acceptance rows");
+  expect(result.output).toContain("161 mandatory acceptance rows");
 });

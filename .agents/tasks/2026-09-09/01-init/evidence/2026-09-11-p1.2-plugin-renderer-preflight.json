@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "evidence:2026-09-11-p1.2-plugin-renderer-preflight",
+  "generated_at": "2026-09-11T12:05:51Z",
+  "checkpoint": "P1.2",
+  "requirement_ids": ["PLUG-002", "PLUG-007", "PLUG-009"],
+  "decision_id": "D15",
+  "command": "bun run audit:plugin-renderer",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "network": "pinned release assets downloaded and verified",
+    "source_tree": "cd403ccff04d141b1a5dee015ac5f8991dc53ca02a2f170cd3056350b1f8b850",
+    "source_tree_paths": 201,
+    "source_tree_definition": "bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out"
+  },
+  "fixture": {
+    "id": "fixture:renderer-mediated-source",
+    "status": "renderer-loaded",
+    "integrity": "passed",
+    "execution": "renderer-wrapper",
+    "enforcement": "electron-context-isolated-sandbox",
+    "coverage": "electron-sandboxed-renderer-module-load-only",
+    "denied_capabilities": []
+  },
+  "artifact_results": [
+    {"artifact_id":"PC03","name":"Dataview","version":"0.5.68","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC02","name":"Templater","version":"2.25.0","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC01","name":"Excalidraw","version":"2.27.3","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC08","name":"Style Settings","version":"1.0.9","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["process.spawn","dom.privileged"]},
+    {"artifact_id":"PC06","name":"Git","version":"2.39.0","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC13","name":"Claudian","version":"2.2.6","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC10","name":"Remotely Save","version":"0.5.25","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC19","name":"TaskNotes","version":"4.12.5","integrity":"passed","status":"denied-security","execution":"not-executed","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"]}
+  ],
+  "summary": {
+    "exit_code": 0,
+    "integrity_passed": 8,
+    "denied_security": 8,
+    "renderer_loaded": 1,
+    "ordinary_renderer_failures": 0,
+    "worker_errors": 0,
+    "safe_alternatives_attempted": ["mediated vault read", "preview broker", "workflow disabled"]
+  },
+  "interpretation": {
+    "PLUG-009": "unsupported_security",
+    "reason": "Each hardest pinned artifact has executable integrity/static-marker evidence and a fail-closed D15 decision before renderer execution; the marker-free mediated fixture proves only the wrapper path.",
+    "visible_compatibility_entry": "fixtures/plugin-isolation.json and the generated compatibility matrix retain the hardest target IDs, denied capabilities and D15 isolated-preview policy."
+  },
+  "limitations": [
+    "This is not unchanged-plugin execution or lifecycle certification.",
+    "Plugin settings, commands, events, editor mutation, view rendering, hotkeys, writes, restart, update, uninstall, combinations and return-to-Obsidian remain pending-runtime.",
+    "The Electron sandbox is not proof of same-user OS-enforced isolation, native-addon isolation or cross-platform behavior.",
+    "No reference Obsidian, human, signing, managed-service or publication gate is claimed."
+  ]
+}

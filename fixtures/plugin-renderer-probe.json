@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "fixture:plugin-renderer-preflight",
+  "checkpoint": "P1.2",
+  "decision_id": "D15",
+  "boundary": "electron-renderer",
+  "target_ids": ["PC03", "PC02", "PC01", "PC08", "PC06", "PC13", "PC10", "PC19"],
+  "marker_capabilities": {
+    "filesystem": "filesystem.direct",
+    "network": "network.request",
+    "process": "process.spawn",
+    "credentials": "credentials.read",
+    "dom": "dom.privileged",
+    "native": "native.abi",
+    "dynamic-code": "code.dynamic"
+  },
+  "policy": {
+    "privileged_markers": "deny-before-renderer",
+    "marker_free_source": "execute only in a hidden Electron BrowserWindow with contextIsolation, sandbox and nodeIntegration disabled",
+    "runtime_disposition": "pending-runtime"
+  },
+  "safe_fixture": {
+    "id": "fixture:renderer-mediated-source",
+    "source": "module.exports = {name: 'mediated-fixture'};",
+    "expected": "renderer-loaded",
+    "execution": "renderer-wrapper"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "preview broker", "workflow disabled"],
+  "coverage": "renderer-sandboxed-module-load-only",
+  "limitation": "This preflight records artifact-specific static D15 denials or ordinary marker-free module-load outcomes; it does not certify plugin lifecycle, views, settings, restart/update, same-user OS isolation, cross-plugin behavior or reference Obsidian compatibility."
+}
