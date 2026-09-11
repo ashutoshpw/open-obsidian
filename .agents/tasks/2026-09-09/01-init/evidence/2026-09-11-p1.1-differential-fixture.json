@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T05:01:16Z",
+  "checkpoint": "P1.1",
+  "requirements": ["BASE-006"],
+  "fixture_ids": ["fixture:reference-differential"],
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "bun_version": "1.4.2",
+    "implementation_commit": "dbf7d648154e8041bef38eef9c1f6498257a4199",
+    "tested_source_tree": "53aff71d5b63438efe6777ec2b75ad7a322a44d3fcb66d00e8bdb097cd3f9144"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run validate:differential", "exit_code": 0, "result": "The fixture contract validates four local probes, stable and early-access reference tracks, four pending reference observations and four retained comparison decisions."},
+    {"command": "bun test tests/vault-differential.test.ts", "exit_code": 0, "result": "Five tests and 17 expectations pass against the real VaultStore and Markdown property writer: no-op byte read, source-preserving property edit, stale-write conflict preservation and symlink boundary denial."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine source gate passes with 121 tests and 667 expectations; the differential validator, Knip and changed-file Fallow are included."},
+    {"command": "bun run knip", "exit_code": 0, "result": "No unused files, dependencies or exports reported."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the ten-file differential-fixture increment."}
+  ],
+  "implemented": [
+    "Added fixtures/vault-differential.json with stable 1.13.7 and early-access 1.14.1 reference tracks, deterministic local expectations and explicit reference capture procedures.",
+    "Added bun run validate:differential, a schema/decision validator that requires every unobserved comparison to remain not-compared with a decision ID and non-empty decision.",
+    "Added tests/vault-differential.test.ts so the local claims execute against the real vault safety and source-preserving writer paths rather than only validating JSON shape.",
+    "Wired the differential contract into check:fast, full quality, the quality workflow and the documented Bun script playbook."
+  ],
+  "limitations": [
+    "All four reference observations remain external-pending because the pinned reference application has not been run through the corresponding open/edit/conflict/symlink procedures on the supported desktop matrix.",
+    "No comparison is marked match or mismatch yet; any future discrepancy must be added to the fixture with an explicit decision before changing compatibility behavior."
+  ]
+}

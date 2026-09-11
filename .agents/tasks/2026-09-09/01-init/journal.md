@@ -422,3 +422,12 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Safety: minimum app-version declarations are explicitly not treated as API proof; PC06 Git remains undetermined because its released manifest declares no minimum, and PC-DEP-MINIMAL is assigned to early access because it declares 1.14.0.
 - Validation: local `bun run check:fast` and `bun run quality` pass with 116 tests and 650 expectations; TypeScript, Knip, compile and strict changed-file Fallow pass. Quality run `34529791728` and desktop-build run `34529791766` passed on Ubuntu, macOS and Windows.
 - Reconciled: `RESEARCH-005` is now `implemented` with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p0.2-version-baseline.json`; runtime certification remains pending for all 27 unchanged artifacts in P1.2, so the requirement is not marked passing.
+
+## 2026-09-11T05:01:16Z — P1.1 executable differential fixtures
+
+- Completed: pushed `dbf7d648154e8041bef38eef9c1f6498257a4199` with marker `[openobsidian P1.1] Add vault differential fixtures`.
+- Completed: added `fixtures/vault-differential.json` for stable Obsidian 1.13.7 and early-access 1.14.1, with four local no-op/edit/recovery/symlink probes and explicit reference capture procedures.
+- Completed: added `bun run validate:differential` and wired it into `check:fast`, full quality, the quality workflow and the script playbook; the local test suite executes the probes against the real VaultStore and Markdown writer.
+- Safety: all four reference comparisons remain `not-compared` and retain decision `D18`; no documentation-only behavior was promoted to a parity claim.
+- Validation: local differential validation, focused tests, full `check:fast`, TypeScript, Knip and strict Fallow passed; the local suite reports 121 tests and 667 expectations.
+- Reconciled: `BASE-006` is now `implemented` with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-differential-fixture.json`; cross-platform and reference-application observations remain pending, so the release gate remains open.
