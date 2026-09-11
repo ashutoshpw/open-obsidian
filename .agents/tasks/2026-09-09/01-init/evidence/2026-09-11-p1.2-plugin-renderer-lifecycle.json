@@ -1,6 +1,6 @@
 {
   "evidence_version": 1,
-  "recorded_at": "2026-09-11T14:42:15Z",
+  "recorded_at": "2026-09-11T15:17:00Z",
   "checkpoint": "P1.2",
   "requirements": ["D15", "ARCH-008", "RISK-003"],
   "fixture_id": "fixture:plugin-renderer-lifecycle",
@@ -10,8 +10,9 @@
     "bun_version": "1.4.2",
     "electron_version": "44.3.0",
     "branch": "main",
-    "implementation_commit": "9d3b4f7c1b3670899cd27ef5e29b68a9e25905c9",
-    "tested_source_tree": "20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08",
+    "implementation_commit": "2e3965b49a8649fcd42ea22c67e8a7dcdee6b348",
+    "lifecycle_api_commit": "9eb9b7baebd8adea7865df3a783fda1dce88676e",
+    "tested_source_tree": "fa256894900e7b6206e063e6a8479915d2b3259f6bdca250a511760a9ae4b7a0",
     "source_tree_paths": 211,
     "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
     "selected_vault": "/home/ashutosh/Obsidian",
@@ -24,53 +25,66 @@
       "safe_lifecycle_loaded": true,
       "safe_lifecycle_boundary": true,
       "safe_onload_then_onunload": true,
+      "safe_command_registered": true,
+      "safe_view_registered": true,
+      "safe_settings_registered": true,
+      "safe_event_registered": true,
+      "safe_persistence_boundary": true,
       "dom_lifecycle_denied": true,
       "dom_lifecycle_boundary": true,
       "dom_privileged_capability_denied": true,
       "dom_denied_before_onload_completion": true
     },
     "safe_lifecycle_events": ["constructed", "plugin-onload", "onload", "plugin-onunload", "onunload"],
+    "safe_api": {
+      "commands": ["lifecycle-command"],
+      "views": ["lifecycle-view"],
+      "settings": ["lifecycle-settings"],
+      "events": ["vault-change"],
+      "persistence": ["loadData", "saveData"]
+    },
     "dom_denied_capabilities": ["dom.privileged"],
     "display": "xvfb-run"
   },
   "checks": [
     {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
-    {"command": "bun test tests/plugin-renderer-lifecycle.test.ts tests/plugin-renderer-probe.test.ts", "exit_code": 0, "result": "Four focused tests passed with 27 expectations; the fixture remains explicit about synthetic scope and D15 alternatives."},
-    {"command": "bun run audit:plugin-lifecycle", "exit_code": 0, "result": "A Linux x64 Electron 44.3.0 sandboxed renderer completed synthetic onload/onunload and denied a privileged DOM access before onload completed."},
+    {"command": "bun test tests/plugin-renderer-lifecycle.test.ts tests/plugin-renderer-probe.test.ts", "exit_code": 0, "result": "Four focused tests passed with 28 expectations; the fixture covers synthetic lifecycle/API ordering and remains explicit about D15 alternatives."},
+    {"command": "bun run audit:plugin-lifecycle", "exit_code": 0, "result": "A Linux x64 Electron 44.3.0 sandboxed renderer passed 12 synthetic lifecycle/API/DOM checks, including command/view/settings/event registration and loadData/saveData ordering."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "The fast repository gate passed with 164 tests and 879 expectations; implementation and unchanged-artifact runtime dispositions remain separate."},
     {"command": "bun run audit:plugin-renderer", "exit_code": 0, "result": "The existing eight unchanged pinned targets passed integrity and fail-closed preflight: eight denied before renderer execution and the mediated fixture loaded; lifecycle/runtime dispositions remain pending."},
     {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues reported in the six-file lifecycle increment."},
-    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest 20f7e33b57f718d7b59d94be275fbe1e16d3814d0c3cb373fd60da402c14fe08 across 211 included paths."}
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest fa256894900e7b6206e063e6a8479915d2b3259f6bdca250a511760a9ae4b7a0 across 211 included paths."}
   ],
   "ci": [
     {
       "workflow": "OpenObsidian quality",
-      "run_id": 34611999701,
-      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34611999701",
+      "run_id": 34614769710,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34614769710",
       "conclusion": "success",
       "jobs": {
-        "ubuntu-latest": {"job_id": 103304527981, "conclusion": "success"},
-        "macos-latest": {"job_id": 103304528435, "conclusion": "success"},
-        "windows-latest": {"job_id": 103304528309, "conclusion": "success"}
+        "ubuntu-latest": {"job_id": 103313823022, "conclusion": "success"},
+        "macos-latest": {"job_id": 103313823343, "conclusion": "success"},
+        "windows-latest": {"job_id": 103313823323, "conclusion": "success"}
       },
-      "result": "State, contract, host-round-trip, accessibility, typecheck, tests, quality-program, Electron compile, Knip and Fallow checks passed on all three hosted runners."
+      "result": "State, contract, host-round-trip, accessibility, typecheck, tests, quality-program, Electron compile, sandbox-helper setup, packaged vault audit, synthetic lifecycle/API audit, Knip and Fallow checks passed on all three hosted runners."
     },
     {
       "workflow": "OpenObsidian desktop build",
-      "run_id": 34611999635,
-      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34611999635",
+      "run_id": 34614769165,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34614769165",
       "conclusion": "success",
       "jobs": {
-        "ubuntu-latest": {"job_id": 103304527094, "conclusion": "success"},
-        "macos-latest": {"job_id": 103304526832, "conclusion": "success"},
-        "windows-latest": {"job_id": 103304527296, "conclusion": "success"}
+        "ubuntu-latest": {"job_id": 103313821603, "conclusion": "success"},
+        "macos-latest": {"job_id": 103313821507, "conclusion": "success"},
+        "windows-latest": {"job_id": 103313821297, "conclusion": "success"}
       },
       "result": "All three packaging jobs passed release-gate, manifest, Electron runtime notice, transitive attribution and artifact-upload steps; production signing was skipped because credentials were unavailable."
     }
   ],
   "limitations": [
-    "The lifecycle trace uses only a synthetic marker-free plugin class and a synthetic privileged-DOM fixture; it does not certify any unchanged pinned plugin.",
-    "Plugin settings, views, workflow combinations, restart/update/uninstall, return-to-Obsidian behavior, macOS/Windows renderer enforcement and same-user OS isolation remain pending.",
+    "The lifecycle/API trace uses only a synthetic marker-free plugin class and a synthetic privileged-DOM fixture; registration and persistence ordering do not certify real settings UI, view rendering, event delivery or durable plugin data.",
+    "It does not certify any unchanged pinned plugin; plugin settings, views, workflow combinations, restart/update/uninstall, return-to-Obsidian behavior, same-user OS isolation and unchanged-artifact renderer enforcement remain pending.",
     "Reference Obsidian compatibility, human accessibility/input, signing, publication and release readiness remain pending; the selected /home/ashutosh/Obsidian vault was not accessed."
   ],
-  "result": "Synthetic Electron lifecycle and DOM-boundary behavior is now directly exercised while unchanged-artifact lifecycle certification remains pending-runtime and fail-closed."
+  "result": "Synthetic Electron lifecycle/API and DOM-boundary behavior is directly exercised locally and in the hosted quality matrix while unchanged-artifact lifecycle certification remains pending-runtime and fail-closed."
 }
