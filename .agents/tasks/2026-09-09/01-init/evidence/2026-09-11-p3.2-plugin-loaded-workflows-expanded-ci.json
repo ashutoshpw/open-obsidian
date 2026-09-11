@@ -6,7 +6,7 @@
   "decision_id": "D15",
   "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-loaded-workflows-expanded.json",
   "implementation_commit": "840b2fc4106ead0244d1de06bc33b9e49facc928",
-  "metadata_head": "653d7f78dff88ff3ab4937f8485508502f751b7b",
+  "metadata_head": "8fa417bfc54f941b826853686d03256fd1460cd5",
   "source_tree": {
     "sha256": "7a828c79c5be15a100e8b00dead183bd92d58af8279b8199aff935f9c6ae541b",
     "paths": 231,
@@ -14,25 +14,25 @@
   },
   "quality": {
     "workflow": "OpenObsidian quality",
-    "run_id": 34649914106,
-    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34649914106",
+    "run_id": 34650347571,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34650347571",
     "conclusion": "success",
     "jobs": {
-      "ubuntu-latest": {"job_id": 103429402924, "conclusion": "success"},
-      "macos-latest": {"job_id": 103429403148, "conclusion": "success"},
-      "windows-latest": {"job_id": 103429403149, "conclusion": "success"}
+      "ubuntu-latest": {"job_id": 103430781496, "conclusion": "success"},
+      "macos-latest": {"job_id": 103430781600, "conclusion": "success"},
+      "windows-latest": {"job_id": 103430781482, "conclusion": "success"}
     },
     "checks": "All Ubuntu, macOS and Windows quality jobs passed state/contracts, tests, typecheck, compile, packaged Electron vault round trip, synthetic plugin lifecycle, Knip and Fallow."
   },
   "desktop_build": {
     "workflow": "OpenObsidian desktop build",
-    "run_id": 34649914196,
-    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34649914196",
+    "run_id": 34650347506,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34650347506",
     "conclusion": "success",
     "jobs": {
-      "ubuntu-latest": {"job_id": 103429404097, "conclusion": "success"},
-      "macos-latest": {"job_id": 103429403960, "conclusion": "success"},
-      "windows-latest": {"job_id": 103429404190, "conclusion": "success"}
+      "ubuntu-latest": {"job_id": 103430781306, "conclusion": "success"},
+      "macos-latest": {"job_id": 103430781392, "conclusion": "success"},
+      "windows-latest": {"job_id": 103430781489, "conclusion": "success"}
     },
     "checks": "All Ubuntu, macOS and Windows packaging, release-manifest, Electron runtime notice and dependency-attribution jobs passed; production signing was skipped and artifacts were labeled unsigned-preview because credentials were unavailable."
   },
