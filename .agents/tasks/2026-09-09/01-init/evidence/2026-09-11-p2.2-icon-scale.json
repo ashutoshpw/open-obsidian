@@ -1,0 +1,29 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T06:53:34Z",
+  "checkpoint": "P2.2",
+  "requirement_ids": ["D06", "PROD-007", "C02", "C10", "UX-001", "UX-002", "UX-003"],
+  "tested_source_tree": "eaef74c43f8734d4027418c480f3af9f9825f413a8a57f1e6c19456bdbec9dd3",
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "commit_sha": "fcfc328003875f28688629ef3fcc2aef76dca158",
+  "change": {
+    "shared_icon_size_before": 20,
+    "shared_icon_size_after": 24,
+    "surfaces": ["titlebar", "ribbon", "sidebar tabs", "workspace toolbar", "context toggle"],
+    "implementation": "The renderer uses one OPEN_OBSIDIAN_THEME.metrics.iconSize token for the shared chrome glyphs, now 24px; CSS fallbacks and the static layout contract use the same value while compact hit areas remain unchanged."
+  },
+  "local_checks": [
+    {"command": "bun run validate:layout", "exit_code": 0, "result": "30 static checks"},
+    {"command": "bun test tests/shared-ui.test.ts tests/workspace-contract.test.ts", "exit_code": 0},
+    {"command": "bunx tsc --noEmit", "exit_code": 0},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0},
+    {"command": "bun run quality", "exit_code": 0, "result": "135 tests, 727 expectations"}
+  ],
+  "workflows": [
+    {"name": "OpenObsidian quality", "run_id": 34571787808, "conclusion": "success"},
+    {"name": "OpenObsidian desktop build", "run_id": 34571787742, "conclusion": "success"}
+  ],
+  "limitations": [
+    "This verifies the shared sizing contract, static layout and cross-platform builds; visual pixel comparison against the reference Obsidian window remains a separate human/reference-vault validation handoff."
+  ]
+}

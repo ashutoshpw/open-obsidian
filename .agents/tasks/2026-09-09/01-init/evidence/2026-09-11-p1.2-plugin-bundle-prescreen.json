@@ -1,0 +1,48 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T06:53:34Z",
+  "checkpoint": "P1.2",
+  "requirements": ["D15", "PLUG-002", "PLUG-007", "PLUG-009", "ARCH-008", "ARCH-009", "RISK-003"],
+  "fixture_ids": ["fixture:hardest-plugin-spike", "fixture:plugin-isolation", "fixture:plugin-lifecycle", "fixture:plugin-ai-separation", "fixture:arch-dom-compatibility", "fixture:risk-legacy-access"],
+  "commit_sha": "fcfc328003875f28688629ef3fcc2aef76dca158",
+  "environment": {
+    "os": "macOS",
+    "architecture": "arm64",
+    "working_directory": "/Users/ashutosh/Dev/DesktopApps/OpenObsidian",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false,
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "tested_source_tree": "eaef74c43f8734d4027418c480f3af9f9825f413a8a57f1e6c19456bdbec9dd3"
+  },
+  "implementation": {
+    "command": "bun run audit:plugin-bundles",
+    "selection": "The eight hardest targets recorded in fixtures/plugin-isolation.json; use --all for every applicable pinned artifact.",
+    "result": "8 pinned main.js bundles statically prescreened; every downloaded byte count and SHA-256 matched; no third-party source was executed.",
+    "runtime_policy": "Static markers are heuristic observations only. Runtime, lifecycle, workflow, DOM and security dispositions remain pending-runtime.",
+    "marker_summary": {
+      "PC03": ["network", "process", "dom", "native", "dynamic-code"],
+      "PC02": ["network", "process", "credentials", "dom", "dynamic-code"],
+      "PC01": ["network", "process", "dom", "native"],
+      "PC08": ["process", "dom"],
+      "PC06": ["filesystem", "network", "process", "credentials", "dom", "dynamic-code"],
+      "PC13": ["filesystem", "network", "process", "credentials", "dom", "native", "dynamic-code"],
+      "PC10": ["network", "process", "credentials", "dom", "native", "dynamic-code"],
+      "PC19": ["network", "process", "dom", "native", "dynamic-code"]
+    }
+  },
+  "checks": [
+    {"command": "bun test tests/bundle-prescreen.test.ts tests/plugin-compatibility-matrix.test.ts", "exit_code": 0, "result": "4 tests, 17 expectations"},
+    {"command": "bun run typecheck", "exit_code": 0},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0},
+    {"command": "bun run quality", "exit_code": 0, "result": "135 tests, 727 expectations; Knip and report-only Fallow pass"},
+    {"command": "bun run check:fast", "exit_code": 0},
+    {"command": "GitHub Actions runs 34571787808 and 34571787742", "exit_code": 0, "result": "Quality and desktop-build matrices passed on Ubuntu, macOS and Windows."}
+  ],
+  "ci_runs": [34571787808, 34571787742],
+  "limitations": [
+    "This is a non-executing static prescreen and integrity check, not plugin runtime certification or a security proof; marker matches can be false positives or miss behavior hidden behind indirection.",
+    "Unchanged upstream bundles remain unexecuted; lifecycle, DOM, combination, restart/update and return-to-Obsidian results remain pending-runtime.",
+    "Only local macOS arm64 denial probes have run; Windows/Linux bypass tests, renderer DOM traces and reference Obsidian comparisons remain pending."
+  ]
+}
