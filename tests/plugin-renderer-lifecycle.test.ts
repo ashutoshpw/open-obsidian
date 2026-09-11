@@ -14,6 +14,7 @@ type LifecycleFixture = {
     safe_status: string;
     safe_coverage: string;
     safe_lifecycle_events: string[];
+    safe_api: {commands: string[]; views: string[]; settings: string[]; events: string[]; persistence: string[]};
     dom_status: string;
     dom_coverage: string;
     dom_denied_capability: string;
@@ -34,6 +35,7 @@ test("renderer lifecycle fixture keeps synthetic execution and external plugin s
   expect(fixture.decision_id).toBe("D15");
   expect(fixture.boundary).toBe("electron-renderer");
   expect(fixture.expected.safe_lifecycle_events).toEqual(["constructed", "plugin-onload", "onload", "plugin-onunload", "onunload"]);
+  expect(fixture.expected.safe_api).toEqual({commands: ["lifecycle-command"], views: ["lifecycle-view"], settings: ["lifecycle-settings"], events: ["vault-change"], persistence: ["loadData", "saveData"]});
   expect(fixture.expected.dom_lifecycle_events).toEqual(["constructed"]);
   expect(fixture.expected.dom_denied_capability).toBe("dom.privileged");
   expect(fixture.safe_alternatives_attempted).toEqual(["mediated vault read", "scoped renderer preview", "workflow disabled"]);

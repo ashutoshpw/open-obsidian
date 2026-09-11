@@ -69,6 +69,31 @@ function createObsidianApi() {
       this.app = pluginApp;
       this.manifest = manifest;
     }
+
+    addCommand(command) {
+      if (command && typeof command.id === "string") this.app.commands.push(command.id);
+    }
+
+    registerView(type) {
+      if (typeof type === "string") this.app.views.push(type);
+    }
+
+    addSettingTab(tab) {
+      if (tab && typeof tab.id === "string") this.app.settings.push(tab.id);
+    }
+
+    registerEvent(event) {
+      if (event && typeof event.type === "string") this.app.registeredEvents.push(event.type);
+    }
+
+    loadData() {
+      this.app.persistence.push("loadData");
+      return {};
+    }
+
+    saveData() {
+      this.app.persistence.push("saveData");
+    }
   }
   return new Proxy({Plugin}, {
     get(target, property) {
@@ -180,7 +205,9 @@ function lifecycleCall(instance, name, events) {
 function lifecycleInstance(module, lifecycle) {
   if (typeof module.exports !== "function") throw new Error("lifecycle fixture did not export a plugin class");
   lifecycle.supported = true;
-  const instance = new module.exports({events: lifecycle.events}, {id: "renderer-lifecycle-fixture", version: "1"});
+  const pluginApp = {events: lifecycle.events, commands: [], views: [], settings: [], registeredEvents: [], persistence: []};
+  const instance = new module.exports(pluginApp, {id: "renderer-lifecycle-fixture", version: "1"});
+  lifecycle.api = pluginApp;
   lifecycle.events.push("constructed");
   return instance;
 }

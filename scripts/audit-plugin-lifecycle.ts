@@ -28,6 +28,10 @@ function strings(value: unknown): string[] {
   return asArray(value).filter((entry): entry is string => typeof entry === "string");
 }
 
+function sameStrings(actual: unknown, expected: unknown): boolean {
+  return strings(actual).join("|") === strings(expected).join("|");
+}
+
 async function runSource(source: string, temporaryRoot: string, name: string): Promise<JsonRecord> {
   const sourcePath = join(temporaryRoot, `${name}.main.js`);
   writeFileSync(sourcePath, source, "utf8");
@@ -92,11 +96,6 @@ function parseWorkerOutput([stdout, stderr, exitCode]: WorkerOutput): JsonRecord
   }
 }
 
-function expectedStrings(key: string): string[] {
-  const expected = record(fixture.expected, "fixture expected");
-  return strings(expected[key]);
-}
-
 export async function runPluginLifecycleAudit(): Promise<JsonRecord> {
   requireCondition(fixture.schema_version === 1, "plugin lifecycle fixture schema_version must be 1");
   requireCondition(string(fixture.id) === "fixture:plugin-renderer-lifecycle", "plugin lifecycle fixture id is invalid");
@@ -107,14 +106,21 @@ export async function runPluginLifecycleAudit(): Promise<JsonRecord> {
     const safeLifecycle = record(safe.lifecycle, "safe lifecycle");
     const domLifecycle = record(dom.lifecycle, "DOM lifecycle");
     const expected = record(fixture.expected, "fixture expected");
+    const safeApi = record(safeLifecycle.api, "safe lifecycle API");
+    const expectedApi = record(expected.safe_api, "fixture safe API");
     const checks = {
       safe_lifecycle_loaded: safe.status === expected.safe_status,
       safe_lifecycle_boundary: safe.coverage === expected.safe_coverage,
-      safe_onload_then_onunload: strings(safeLifecycle.events).join("|") === expectedStrings("safe_lifecycle_events").join("|"),
+      safe_onload_then_onunload: sameStrings(safeLifecycle.events, expected.safe_lifecycle_events),
+      safe_command_registered: sameStrings(safeApi.commands, expectedApi.commands),
+      safe_view_registered: sameStrings(safeApi.views, expectedApi.views),
+      safe_settings_registered: sameStrings(safeApi.settings, expectedApi.settings),
+      safe_event_registered: sameStrings(safeApi.registeredEvents, expectedApi.events),
+      safe_persistence_boundary: sameStrings(safeApi.persistence, expectedApi.persistence),
       dom_lifecycle_denied: dom.status === expected.dom_status,
       dom_lifecycle_boundary: dom.coverage === expected.dom_coverage,
       dom_privileged_capability_denied: strings(dom.deniedCapabilities).includes(string(expected.dom_denied_capability)),
-      dom_denied_before_onload_completion: strings(domLifecycle.events).join("|") === expectedStrings("dom_lifecycle_events").join("|"),
+      dom_denied_before_onload_completion: sameStrings(domLifecycle.events, expected.dom_lifecycle_events),
     };
     requireCondition(Object.values(checks).every(Boolean), `Plugin lifecycle checks failed: ${JSON.stringify(checks)}`);
     return {
@@ -128,7 +134,7 @@ export async function runPluginLifecycleAudit(): Promise<JsonRecord> {
         display: process.env.DISPLAY ? "existing" : "xvfb-run",
       },
       checks,
-      details: {safe, dom},
+      details: {safe, dom, safe_api: safeApi},
       limitations: asArray(fixture.external_pending).filter((entry): entry is string => typeof entry === "string"),
       result: "The synthetic Electron renderer wrapper completed onload/onunload for a marker-free fixture and denied a privileged DOM request before onload completed; unchanged plugin and reference behavior remain pending.",
     };
