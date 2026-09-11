@@ -762,3 +762,11 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-vault-roundtrip-ci.json`; `state.json` now records the work SHA as `last_reconciled_head` and `recent_increment` with CI runs `34601633065` and `34601632933`.
 - Limitation: these hosted reports validate the bounded host fixture and packaging contracts, not reference Obsidian reopen behavior, disk-full/ACL/cloud-placeholder behavior, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: continue the earliest dependency-ready reference/cross-platform vault procedures and unchanged-plugin lifecycle work while retaining the explicit external gates.
+
+## 2026-09-11T13:19:19Z — P1.1 host permission-loss round trip
+
+- Added a disposable-directory permission-loss fixture to `bun run audit:vault-roundtrip`. On Linux x64 it removes write permission from the nested vault directory, verifies `EACCES`, preserves the original bytes and stores the incoming bytes in failed-write history, then restores the directory mode.
+- The report is host-aware: macOS and Windows may record `not-enforced` or a skipped disposable permission change rather than claiming OS enforcement. The local run recorded `denied-preserved`, `host_enforced: true`, `original_preserved: true` and `failed_write_preserved: true`.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip.json`; C01.2, C02.2, SYNC-002, SYNC-004 and RISK-004 now reference the local evidence and tested source tree `1a31ede4a536e6f8567775d65ff1c0aec27f9a61f713c08f9df9fc294890a2ba` across 202 included paths.
+- Limitation: this is a Linux disposable-directory permission result, not disk-full/quota/ACL variation, cloud-placeholder, reference Obsidian, same-user OS isolation, human accessibility, signing or release readiness; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: run the full local validation set, commit and push this scoped P1.1 increment, inspect quality/desktop CI host results, then reconcile the observed work SHA without changing the explicit pending gates.

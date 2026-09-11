@@ -1,0 +1,36 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T13:10:44Z",
+  "checkpoint": "P1.1",
+  "requirements": ["C01.2", "C02.2", "SYNC-002", "SYNC-004", "RISK-004"],
+  "fixture_id": "fixture:host-permission-loss",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "branch": "main",
+    "implementation_commit": "a6f8c73c4748089737b3b1e09a49e103c57c6c16",
+    "tested_source_tree": "1a31ede4a536e6f8567775d65ff1c0aec27f9a61f713c08f9df9fc294890a2ba",
+    "source_tree_paths": 202
+  },
+  "command": "bun run audit:vault-roundtrip",
+  "report": {
+    "status": "passed",
+    "no_op_scan": true,
+    "bom_crlf_round_trip": true,
+    "recovery_snapshot": true,
+    "symlink_boundary": {"status": "denied"},
+    "windows_reserved_name": {"outcome": "denied-other", "host_enforced": false},
+    "permission_loss": {
+      "status": "denied-preserved",
+      "host_enforced": true,
+      "original_preserved": true,
+      "failed_write_preserved": true,
+      "error_code": "EACCES"
+    }
+  },
+  "limitations": [
+    "This is a real Linux temporary-directory permission-loss run; disk-full, ACL/quota variation, cloud-placeholder, power-loss and reference Obsidian behavior remain separate gates.",
+    "macOS and Windows permission outcomes are delegated to the quality matrix and may be reported as host-not-enforced; the selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}
