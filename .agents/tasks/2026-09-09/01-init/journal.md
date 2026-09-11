@@ -801,3 +801,9 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-minimal-pair-ci.json`; `state.json`, C09/C12/PC17/RISK-002 and the P3.3 checkpoint now point to the CI evidence and source tree `c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6` across 205 included paths.
 - The hosted matrices validate repository contracts and packaging only; unchanged Minimal/PC17 runtime, reference Obsidian, human accessibility/input, same-user OS isolation, signing, publication and release readiness remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: continue the earliest dependency-ready reference/cross-platform vault round trips and unchanged-plugin lifecycle/DOM evidence without broadening the explicit external handoffs.
+
+## 2026-09-11T13:58:30Z — P1.2 refreshed unchanged-plugin renderer preflight
+
+- Reran `bun run audit:plugin-renderer --all` on Linux x64 with Electron 44.3.0 against the current 205-path source tree `c9b2f3c58fbbab5cd5f688c41d0ef6b1c4344aa42dc33d676cee43bf720ceec6`. All 26 pinned `main.js` assets passed integrity and were denied before real renderer execution by privileged markers; PC17 specifically recorded `dom.privileged` denial, the Minimal theme dependency was not-applicable, and the synthetic mediated fixture loaded.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-refresh.json` and updated PLUG-002, PLUG-007, PLUG-009 plus the P1.2 checkpoint traceability to the refreshed evidence. This remains static/module-load preflight only; lifecycle, settings, views, restart/update/uninstall, combinations, OS enforcement and return-to-Obsidian remain pending.
+- The selected `/home/ashutosh/Obsidian` vault was not accessed or modified. No reference Obsidian, human, signing, managed-service, publication or release-readiness claim is made.
