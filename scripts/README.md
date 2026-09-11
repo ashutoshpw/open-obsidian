@@ -11,6 +11,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run check:fast` | Routine source/UI gate: state, contracts, architecture, named surfaces, version baseline, accessibility, layout, typecheck, tests, Knip and changed-file Fallow. |
 | `bun run test:bases` | Focused JSON/native-YAML Bases compatibility fixture tests. |
 | `bun run quality` | Phase-boundary gate: full local checks, compile, distribution, quality scorecard, Knip and report-only Fallow health. |
+| `bun run benchmark` | Measures Linux core-synthetic startup/indexing, edit-operation, search, watcher and resource distributions; use `--profiles=100,1000,10000` and optionally `--index-runs=1 --search-runs=25 --input-runs=25` for a bounded larger corpus. Renderer paint, pinned hardware, reference vaults, cross-platform and human comparison remain external-pending. |
 | `bun run knip` | Recurring unused files, exports and dependencies audit. |
 | `bun run audit:fallow` | Repository health score; inherited advisories stay visible. |
 | `bun run audit:fallow:changed` | Brief changed-file Fallow review for the current working tree. |

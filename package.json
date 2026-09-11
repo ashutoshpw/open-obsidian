@@ -43,6 +43,7 @@
     "audit:dependencies": "bun scripts/audit-dependency-attribution.ts",
     "audit:packaged": "bun scripts/audit-packaged-runtime.ts",
     "quality:program": "bun scripts/quality-program.ts",
+    "benchmark": "bun scripts/benchmark.ts",
     "release:gate": "bun scripts/release-gate.ts",
     "release:update-check": "bun scripts/update-rollback.ts",
     "final:audit": "bun scripts/final-audit.ts",

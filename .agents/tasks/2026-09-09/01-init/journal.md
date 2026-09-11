@@ -591,3 +591,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 
 - Reconciled the input-matrix increment at `b7edeb778788efdeaea6f39b873981f03585acb3` and recorded its source-tree digest and evidence in `state.json`; no requirement status was promoted.
 - Kept the four local renderer/contract cases separate from the external popout, true IME, screen-reader, cross-platform, reference and human validation handoffs.
+
+## 2026-09-11T09:45:30Z — P5.1 local benchmark harness
+
+- Completed: added `fixtures/performance-benchmark.json`, `scripts/benchmark.ts`, shared percentile metrics, the `bun run benchmark` entry point and focused contract coverage. The harness records Linux x64 core-synthetic prior-note reads before indexing, indexing, normal/large-file edit operations, warm search, `fs.watch` response, RSS/heap distributions, CPU time and zero loaded-model memory.
+- Completed: ran deterministic synthetic 1k and 10k profiles with one indexing run and 25 search/input samples. Prior-note reads were editable before indexing; local p95 checks passed for startup-read, input operation, search and watcher budgets. The report is explicitly `release_eligible=false`.
+- Reconciled requirement rows Q-005 through Q-008 from `pending` to `implemented` with the benchmark evidence while retaining pinned hardware, reference-vault, renderer input-to-paint, 100k, cross-platform, long-running and human comparison limitations.
+- Validation: `bun test tests/benchmark.test.ts`, `bun run typecheck` and strict changed-file Fallow pass. A first strict Fallow run failed on the monolithic benchmark complexity; the helper split was applied and the rerun passed. `bun run validate:state` reports 196 rows, 28 passing, 115 implemented, 47 pending, 6 external-pending and 162 mandatory rows not release-passing.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-local-benchmark.json`; final rerun tested source tree `29bc87c6c6f6e8aa21e5c9df45dd1f4e115be8b5e5ca61ef6d2ee071c34853f4`.
+- Limitations: this is not reference Obsidian, Electron input-to-paint, pinned hardware, battery, 100k long-running, cross-platform, plugin-runtime or human evidence. The selected `/home/ashutosh/Obsidian` vault was not accessed.
+- Next: commit this coherent P5.1 work increment, push `main`, reconcile the observed SHA and then resume the earliest dependency-ready reference/plugin/popout/accessibility work with all external gates visible.

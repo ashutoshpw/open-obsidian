@@ -5,6 +5,7 @@ import {join} from "node:path";
 import {buildVaultIndex, searchVaultIndex} from "../src/core/vault-index.js";
 import {retrieveVault} from "../src/core/retrieval.js";
 import {snapshotVault, VaultStore} from "../src/core/vault.js";
+import {percentile} from "./metrics.js";
 
 type Scorecard = {
   schema_version: number;
@@ -31,12 +32,6 @@ export type QualityProgramReport = {
 };
 
 const scorecard = await Bun.file(new URL("../fixtures/quality-scorecard.json", import.meta.url)).json() as Scorecard;
-
-function percentile(values: number[], percentage: number): number {
-  const sorted = [...values].sort((left, right) => left - right);
-  if (sorted.length === 0) return 0;
-  return Number((sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * percentage) - 1)] ?? 0).toFixed(3));
-}
 
 function seedVault(root: string): void {
   mkdirSync(join(root, "Projects"), {recursive: true});

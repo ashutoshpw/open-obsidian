@@ -1,0 +1,71 @@
+{
+  "recorded_at": "2026-09-11T09:50:10Z",
+  "checkpoint": "P5.1",
+  "requirements": ["Q-005", "Q-006", "Q-007", "Q-008"],
+  "fixture_ids": ["fixture:performance-benchmark", "fixture:q-startup", "fixture:q-responsiveness", "fixture:q-search", "fixture:q-resources"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit_before_reconciliation": "5805e515a0749f9b5e201e1c02817931d3402431",
+    "tested_source_tree": "29bc87c6c6f6e8aa21e5c9df45dd1f4e115be8b5e5ca61ef6d2ee071c34853f4"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus path separators and file bytes, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "frozen_budgets": {
+    "startup_p95_ms": 2000,
+    "input_p95_ms": 16,
+    "input_p99_ms": 50,
+    "search_p95_ms": 150,
+    "search_p99_ms": 300,
+    "watcher_p95_ms": 2000
+  },
+  "observations": [
+    {
+      "profile": "synthetic-1000",
+      "notes": 1000,
+      "scope": "linux-core-synthetic",
+      "startup": {"prior_note_read_p95_ms": 0.474, "indexing_p95_ms": 33.004, "editable_before_indexing": true, "budget_passed": true},
+      "input": {"normal_p95_ms": 0.002, "normal_p99_ms": 0.018, "large_file_p95_ms": 0.002, "large_file_p99_ms": 0.008, "budget_passed": true},
+      "search": {"runs": 25, "p95_ms": 4.681, "p99_ms": 4.95, "budget_passed": true},
+      "watcher": {"runs": 1, "p95_ms": 12.406, "observed": true, "budget_passed": true},
+      "resources": {"rss_p95_bytes": 78635008, "heap_used_p95_bytes": 6208181, "app_overhead_bytes": 47964160, "model_memory_bytes": 0, "cpu_user_ms": 95.22, "cpu_system_ms": 73.726}
+    },
+    {
+      "profile": "synthetic-10000",
+      "notes": 10000,
+      "scope": "linux-core-synthetic",
+      "startup": {"prior_note_read_p95_ms": 0.115, "indexing_p95_ms": 768.337, "editable_before_indexing": true, "budget_passed": true},
+      "input": {"normal_p95_ms": 0.006, "normal_p99_ms": 0.012, "large_file_p95_ms": 0, "large_file_p99_ms": 0.001, "budget_passed": true},
+      "search": {"runs": 25, "p95_ms": 13.656, "p99_ms": 14.154, "budget_passed": true},
+      "watcher": {"runs": 1, "p95_ms": 114.645, "observed": true, "budget_passed": true},
+      "resources": {"rss_p95_bytes": 123359232, "heap_used_p95_bytes": 19011569, "app_overhead_bytes": 47271936, "model_memory_bytes": 0, "cpu_user_ms": 1088.89, "cpu_system_ms": 286.188}
+    }
+  ],
+  "commands": [
+    {"command": "bun run benchmark -- --profiles=1000,10000 --index-runs=1 --search-runs=25 --input-runs=25", "exit_code": 0, "result": "The harness generated deterministic 1k and 10k synthetic Markdown corpora, measured prior-note reads before indexing, indexing, core text insertion for normal and large-file inputs, warm search, fs.watch response, RSS/heap distributions and CPU time, and emitted release_eligible=false."},
+    {"command": "bun test tests/benchmark.test.ts", "exit_code": 0, "result": "The focused contract test passed with 12 expectations, including the Linux-only scope, editable-before-indexing flag, resource/model separation and six explicit external dispositions."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript 7.0.2 strict typecheck passed."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 1, "result": "First run retained a moderate complexity finding for the monolithic benchmark profile function."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "After splitting collection/report helpers and sharing percentile math, strict changed-file Fallow passed with no issues."}
+  ],
+  "implemented": [
+    "Added a frozen performance-benchmark fixture with local synthetic profiles, budgets and named external dispositions.",
+    "Added an executable Bun benchmark that distinguishes prior-note editability from indexing, reports p50/p95/p99 distributions, records watcher observations and separates model memory (zero model loaded) from app RSS/heap overhead.",
+    "Added focused coverage, shared percentile metrics, package/script documentation and bounded CLI options without making platform or renderer claims."
+  ],
+  "limitations": [
+    "This is Linux x64 core/synthetic evidence only; no Electron input-to-paint, visible startup, screen-reader, cross-platform or pinned hardware result is claimed.",
+    "The 10k profile is generated synthetic content, not a reference Obsidian vault; the 100k profile, reference-vault round trip, long-running resource distribution, stock/plugin comparison and human practical-benefit pilot remain external-pending.",
+    "The reported budget_passed fields are local harness checks and do not promote Q-005 through Q-008 to passing acceptance status."
+  ],
+  "external_pending": [
+    "pinned-hardware",
+    "reference-vault-10000",
+    "reference-vault-100000",
+    "renderer-input-to-paint",
+    "cross-platform",
+    "human-comparison"
+  ]
+}

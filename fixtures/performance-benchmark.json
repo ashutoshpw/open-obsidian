@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "protocol_version": "2026-09-11.p5.1",
+  "scope": "local-core-synthetic",
+  "profiles": [
+    {"id": "smoke-100", "notes": 100, "disposition": "local-synthetic"},
+    {"id": "synthetic-1000", "notes": 1000, "disposition": "local-synthetic"},
+    {"id": "synthetic-10000", "notes": 10000, "disposition": "local-synthetic"},
+    {"id": "reference-10000", "notes": 10000, "disposition": "external-pending", "reason": "Pinned reference vault and reference desktop runtime are unavailable."},
+    {"id": "reference-100000", "notes": 100000, "disposition": "external-pending", "reason": "Pinned large reference vault, hardware and long-running runtime are unavailable."}
+  ],
+  "budgets": {
+    "startup_p95_ms": 2000,
+    "input_p95_ms": 16,
+    "input_p99_ms": 50,
+    "search_p95_ms": 150,
+    "search_p99_ms": 300,
+    "watcher_p95_ms": 2000
+  },
+  "external_pending": [
+    {"id": "pinned-hardware", "reason": "No pinned macOS, Windows or release-hardware benchmark host is available."},
+    {"id": "reference-vault-10000", "reason": "No reference Obsidian vault/runtime is available for the 10k-note acceptance run."},
+    {"id": "reference-vault-100000", "reason": "No 100k-note reference vault or long-running resource host is available."},
+    {"id": "renderer-input-to-paint", "reason": "Core text insertion is measured locally; Electron input-to-paint requires a visible desktop trace."},
+    {"id": "cross-platform", "reason": "This run records the current Linux host only; macOS, Windows and Linux arm64 remain pending."},
+    {"id": "human-comparison", "reason": "Stock/plugin-equipped comparison and practical-benefit measurements require a consented human pilot."}
+  ]
+}
