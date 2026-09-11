@@ -607,3 +607,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Corrected the benchmark report scope to derive from the host (`linux-core-synthetic` on this run and a distinct non-Linux local scope elsewhere) instead of hardcoding Linux labels. Non-Linux, renderer, reference and human results remain release-ineligible and externally pending.
 - Reran the 1k/10k Linux synthetic benchmark after the scope change; evidence and Q-005 through Q-008 tested-tree references now use `d606c42bf0ca4f6b6c494d4767c34769be04eccaf877fa3a5995c20da8e14af7`.
 - Validation: typecheck, focused benchmark test and strict changed-file Fallow pass. Next operation is commit, push and SHA reconciliation for this small hardening follow-up.
+
+## 2026-09-11T10:19:00Z — P2.2 tracked popout evidence reconciliation
+
+- Reconciled the tracked popout implementation from `2566f168a322534910ad2df35298efdce3d431d7` into the P2.2 and P5.2 ledgers. The new evidence records a sandboxed Linux x64 child window keyed to the selected vault root and `Note.md`, explicit save, preserved `RevisionConflict`, and explicit reload.
+- Updated C10's source digest and evidence references and retained C10.1 as `pending`; local popout save/conflict behavior is implemented, while true popout input/IME, screen-reader, cross-platform, reference Obsidian, plugin/theme parity and human validation remain external-pending.
+- State remains active at current checkpoint P3.3 with 2/19 checkpoints complete, 196 rows, 28 passing, 115 implemented, 47 pending, 6 external-pending and 162 mandatory rows not release-passing. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Next: run `bun run validate:state`, `bun run final:audit`, `bun run check:fast` and `bun run audit:source-tree`, then commit/push this reconciliation and verify `main` SHA parity with a clean worktree.
