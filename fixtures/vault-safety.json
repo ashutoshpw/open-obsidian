@@ -13,6 +13,11 @@
       "assertions": ["UTF-8 BOM survives", "CRLF line endings survive", "unrepresented properties and untouched spans survive"]
     },
     {
+      "id": "fixture:reference-differential",
+      "paths": ["note.md", "binary.bin", "outside.txt"],
+      "assertions": ["local probes record exact source outcomes", "reference observations are versioned by track and platform", "not-compared results retain an explicit decision until reference evidence exists"]
+    },
+    {
       "id": "fixture:revision-conflict",
       "paths": ["note.md"],
       "assertions": ["external bytes remain authoritative", "incoming bytes are preserved separately", "the stale write is rejected"]

@@ -19,6 +19,7 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run validate:state` | Progress artifact, requirement coverage and evidence-reference validation. |
 | `bun run final:audit` | Origin/branch/marker check plus implementation versus release-readiness summary. |
 | `bun run validate:surfaces` | Named UX surface inventory and external handoff validation. |
+| `bun run validate:differential` | Validates the executable local vault probes and explicit reference-comparison decisions. |
 | `bun run validate:layout` | Static Obsidian-shell geometry and navigation-marker checks. |
 | `bun run verify:version-baseline` | Cross-checks the stable/early-access references and records per-artifact minimum-version, API and runtime verification status. |
 | `bun run audit:packaged -- --artifacts-dir out` | Packaged runtime notice and artifact integrity audit after packaging. |

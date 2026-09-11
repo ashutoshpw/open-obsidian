@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "id": "fixture:reference-differential",
+  "purpose": "Record deterministic local vault probes beside versioned reference-application observations without mistaking documentation for parity proof.",
+  "reference_tracks": [
+    {
+      "id": "stable",
+      "product": "Obsidian Desktop",
+      "version": "1.13.7",
+      "status": "external-pending",
+      "applicable_platforms": ["macOS", "Windows", "Linux"]
+    },
+    {
+      "id": "early-access",
+      "product": "Obsidian Desktop",
+      "version": "1.14.1",
+      "status": "external-pending",
+      "applicable_platforms": ["macOS", "Windows", "Linux"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "markdown-read-no-op",
+      "surface": "markdown",
+      "operation": "open-index-close",
+      "input": {
+        "note_source": "\uFEFF---\r\nstatus: open\r\nunknown: [keep, me]\r\n---\r\nBody\r\n",
+        "binary_bytes": [0, 255, 7, 10, 128]
+      },
+      "local_test": "bun test tests/vault-differential.test.ts -t markdown-read-no-op",
+      "local_expectation": {
+        "status": "passed",
+        "scan_unchanged": true,
+        "read_source_exact": true,
+        "app_data_entries": 0
+      },
+      "reference_observation": {
+        "status": "external-pending",
+        "required_steps": ["Open the fixture in the pinned reference track", "wait for indexing", "close the vault without edits", "compare every fixture byte and symlink target"],
+        "tracks": ["stable", "early-access"],
+        "result": null
+      },
+      "comparison": {
+        "status": "not-compared",
+        "discrepancies": [],
+        "decision_id": "D18",
+        "decision": "Do not claim no-op parity until the reference trace is captured on each applicable desktop platform."
+      }
+    },
+    {
+      "id": "markdown-property-source-preservation",
+      "surface": "markdown-properties",
+      "operation": "edit-represented-property",
+      "input": {
+        "source": "\uFEFF---\r\nstatus: open\r\nunknown: [keep, me]\r\ncomment: # untouched\r\n---\r\nBody\r\n",
+        "property": "status",
+        "value": "done",
+        "expected": "\uFEFF---\r\nstatus: done\r\nunknown: [keep, me]\r\ncomment: # untouched\r\n---\r\nBody\r\n"
+      },
+      "local_test": "bun test tests/vault-differential.test.ts -t markdown-property-source-preservation",
+      "local_expectation": {
+        "status": "passed",
+        "edited_source_exact": true,
+        "bom_preserved": true,
+        "line_endings_preserved": true,
+        "unknown_property_preserved": true
+      },
+      "reference_observation": {
+        "status": "external-pending",
+        "required_steps": ["Edit the represented property in the pinned reference track", "save and close", "reopen in the reference track", "compare the source bytes and parsed unknown property"],
+        "tracks": ["stable", "early-access"],
+        "result": null
+      },
+      "comparison": {
+        "status": "not-compared",
+        "discrepancies": [],
+        "decision_id": "D18",
+        "decision": "Keep source-preserving local behavior as the candidate contract; any reference rewrite becomes a recorded discrepancy before changing the writer."
+      }
+    },
+    {
+      "id": "revision-conflict-preserves-incoming",
+      "surface": "vault-recovery",
+      "operation": "stale-write-after-external-edit",
+      "input": {
+        "original": "original\n",
+        "external": "external\n",
+        "incoming": "incoming\n"
+      },
+      "local_test": "bun test tests/vault-differential.test.ts -t revision-conflict-preserves-incoming",
+      "local_expectation": {
+        "status": "passed",
+        "stale_write_rejected": true,
+        "external_bytes_authoritative": true,
+        "incoming_bytes_preserved": true
+      },
+      "reference_observation": {
+        "status": "external-pending",
+        "required_steps": ["Open the original note in the pinned reference track", "change the file externally", "attempt a stale write", "inspect both resulting versions after reopen"],
+        "tracks": ["stable", "early-access"],
+        "result": null
+      },
+      "comparison": {
+        "status": "not-compared",
+        "discrepancies": [],
+        "decision_id": "D18",
+        "decision": "Never replace external bytes during a stale write; preserve both versions until a reference conflict workflow is observed and compared."
+      }
+    },
+    {
+      "id": "symlink-boundary-is-not-followed",
+      "surface": "vault-filesystem",
+      "operation": "scan-read-write-symlink",
+      "input": {
+        "target": "outside.txt",
+        "outside_source": "outside\n"
+      },
+      "local_test": "bun test tests/vault-differential.test.ts -t symlink-boundary-is-not-followed",
+      "local_expectation": {
+        "status": "passed",
+        "snapshot_records_symlink": true,
+        "read_denied": true,
+        "write_denied": true,
+        "outside_bytes_unchanged": true
+      },
+      "reference_observation": {
+        "status": "external-pending",
+        "required_steps": ["Place the symlink in the pinned reference vault", "open and index the vault", "attempt to open the link", "compare target bytes and metadata"],
+        "tracks": ["stable", "early-access"],
+        "result": null
+      },
+      "comparison": {
+        "status": "not-compared",
+        "discrepancies": [],
+        "decision_id": "D18",
+        "decision": "Preserve symlink metadata while denying traversal; reference behavior must be recorded before any compatibility relaxation."
+      }
+    }
+  ]
+}
