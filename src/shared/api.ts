@@ -1,3 +1,5 @@
+import type {BookmarkResponse, TagIndex, TaskItem} from "./ui/workflows.js";
+
 export const CHANNELS = {
   selectVault: "vault:select",
   listFiles: "vault:list-files",
@@ -11,6 +13,10 @@ export const CHANNELS = {
   restoreChronicle: "chronicle:restore",
   commitChronicle: "chronicle:commit",
   noteContext: "vault:note-context",
+  bookmarks: "vault:bookmarks",
+  tags: "vault:tags",
+  tasks: "vault:tasks",
+  toggleTask: "vault:toggle-task",
   loadSettings: "workspace:load-settings",
   saveSettings: "workspace:save-settings",
   historyPlan: "vault:history-plan",
@@ -300,6 +306,8 @@ export type NoteContext = {
   backlinks: NoteBacklink[];
 };
 
+export type ToggleTaskRequest = {relativePath: string; expectedRevision: string; line: number; checked: boolean};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -368,6 +376,11 @@ export function validateWorkspaceState(value: unknown): WorkspaceState {
   const activePath = value.activePath === null || value.activePath === undefined ? null : validateWorkspacePath(value.activePath, "active path");
   if (activePath && !openTabs.includes(activePath)) throw new Error("Invalid workspace active path");
   return {settings: validateWorkspaceSettings(value.settings), vaultRoot: value.vaultRoot as string | null, openTabs, activePath, navigationHistory};
+}
+
+export function validateTaskToggleRequest(value: unknown): ToggleTaskRequest {
+  if (!isRecord(value) || typeof value.line !== "number" || !Number.isSafeInteger(value.line) || value.line < 1 || value.line > 1_000_000 || typeof value.checked !== "boolean") throw new Error("Invalid task toggle request");
+  return {relativePath: validateWorkspacePath(value.relativePath, "task path"), expectedRevision: validateCanvasRevision(value.expectedRevision), line: value.line, checked: value.checked};
 }
 
 function validateCanvasPath(value: unknown, label: string): string {
@@ -556,6 +569,10 @@ export type OpenObsidianAPI = {
   restoreChronicle: (request: ChronicleRestoreRequest) => Promise<VaultReadResponse>;
   commitChronicle: (request: ChronicleCommitRequest) => Promise<{revision: string; message: string; paths: string[]}>;
   noteContext: (relativePath: string) => Promise<NoteContext>;
+  bookmarks: () => Promise<BookmarkResponse>;
+  tags: () => Promise<TagIndex>;
+  tasks: () => Promise<TaskItem[]>;
+  toggleTask: (request: ToggleTaskRequest) => Promise<VaultReadResponse>;
   loadSettings: () => Promise<WorkspaceSettings>;
   saveSettings: (settings: WorkspaceSettings) => Promise<WorkspaceSettings>;
   historyPlan: (policy?: HistoryPolicy) => Promise<HistoryPlanSummary>;

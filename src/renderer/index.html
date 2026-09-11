@@ -242,6 +242,10 @@
       .context-item { width: 100%; border-radius: 6px; padding: 6px 7px; background: transparent; color: #b8bdcb; font-size: 11px; text-align: left; }
       .context-item:hover { background: #ffffff0a; color: #eef0f6; }
       .context-empty { margin: 0; color: #858b9c; font-size: 11px; line-height: 1.5; }
+      .task-context-item { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 7px; width: 100%; padding: 5px 6px; color: #b8bdcb; font-size: 11px; text-align: left; }
+      .task-context-item input { margin: 2px 0 0; accent-color: #a78bfa; }
+      .task-context-item span { min-width: 0; }
+      .task-context-item small { display: block; margin-top: 2px; color: #858b9c; font-size: 10px; }
       .settings-grid { display: grid; gap: 10px; max-width: 520px; }
       .settings-grid label { display: flex; align-items: center; gap: 8px; color: #c5c9d4; font-size: 12px; }
       .settings-grid select, .settings-grid input[type="number"] { width: min(280px, 100%); border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
@@ -291,6 +295,24 @@
       .bookmarks-empty { display: none; margin: 8px 10px; color: #858585; font-size: 11px; line-height: 1.5; }
       .sidebar[data-active-pane="bookmarks"] #file-list { display: none; }
       .sidebar[data-active-pane="bookmarks"] .bookmarks-empty { display: block; }
+      .workflow-list { display: grid; gap: 3px; min-height: 0; overflow: auto; }
+      .workflow-list[hidden] { display: none; }
+      .workflow-row { display: grid; gap: 2px; width: 100%; border-radius: 4px; padding: 6px 8px; background: transparent; color: #bdbdbd; text-align: left; }
+      .workflow-row:hover, .workflow-row:focus-visible { background: #ffffff0b; color: #f0f0f0; }
+      .workflow-row small, .workflow-summary { color: #777; font-size: 10px; }
+      .workflow-group { margin: 5px 8px 2px; color: #858585; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+      .vault-indices { display: grid; flex: 0 1 170px; gap: 8px; min-height: 0; overflow: auto; padding: 6px 10px 8px; border-top: 1px solid var(--panel-border); }
+      .vault-index { display: grid; gap: 3px; min-height: 0; }
+      .vault-index h2 { margin: 0; color: #858585; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+      .vault-index-list { display: grid; gap: 2px; max-height: 70px; overflow: auto; margin: 0; padding: 0; list-style: none; }
+      .vault-index-list[hidden] { display: none; }
+      .vault-index-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; border-radius: 3px; padding: 3px 4px; background: transparent; color: #a7a7a7; font-size: 10px; text-align: left; }
+      .vault-index-row:hover, .vault-index-row:focus-visible { background: #ffffff0b; color: #eeeeee; }
+      .vault-index-row small { color: #777; }
+      .task-index-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 5px; }
+      .task-index-row input { margin: 1px 0 0; accent-color: var(--accent); }
+      .sidebar[data-active-pane="bookmarks"] #file-list, .sidebar[data-active-pane="bookmarks"] .vault-indices { display: none; }
+      .sidebar[data-active-pane="bookmarks"] #bookmarks-list { display: grid; }
       .search-wrap { flex: 0 0 auto; gap: 0; padding: 8px 10px 6px; }
       .search-wrap label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
       #vault-search { height: 30px; padding: 6px 9px; border-color: #ffffff16; border-radius: 5px; background: #1a1a1a; color: #d9d9d9; font-size: 12px; }
@@ -341,6 +363,7 @@
       .context-group + .context-group { margin-top: 18px; }
       .context-item { border-radius: 4px; padding: 5px 6px; color: #919191; }
       .context-item:hover { background: #ffffff0b; color: #ddd; }
+      .task-context-item:hover { background: #ffffff0b; color: #ddd; }
       #status { flex: 0 0 28px; min-height: 28px; padding: 6px 10px; border-top: 1px solid var(--panel-border); background: var(--chrome); color: #777; font-size: 10px; }
       @media (max-width: 760px) { .app-shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; } .ribbon { display: none; } .sidebar { max-height: 42vh; border-right: 0; border-bottom: 1px solid var(--panel-border); } .workspace { min-height: 58vh; } .workspace-header { align-items: center; padding: 0 8px; } .workspace-actions { justify-content: flex-start; } .note-tabs { padding-left: 0; padding-right: 0; } .tool-panel { padding: 14px 16px; } .note-surface { padding: 18px 20px; } .editor-stage[data-split="true"] { grid-template-columns: 1fr; } .context-pane { max-height: 220px; border-top: 1px solid var(--panel-border); border-left: 0; } #status { padding: 6px 8px; } }
       /* Reference-first macOS titlebar: native traffic lights sit over this shared navigation band. */
@@ -418,12 +441,16 @@
         <nav class="sidebar-tabs" aria-label="Vault panes" role="tablist">
           <button class="sidebar-tab" id="sidebar-tab-files" data-sidebar-pane="files" role="tab" aria-controls="file-list" aria-selected="true" title="Files" type="button">Files</button>
           <button class="sidebar-tab" id="sidebar-tab-search" data-sidebar-pane="search" role="tab" aria-controls="file-list" aria-selected="false" title="Search" type="button">Search</button>
-          <button class="sidebar-tab" id="sidebar-tab-bookmarks" data-sidebar-pane="bookmarks" role="tab" aria-controls="bookmarks-empty" aria-selected="false" title="Bookmarks" type="button">Bookmarks</button>
+          <button class="sidebar-tab" id="sidebar-tab-bookmarks" data-sidebar-pane="bookmarks" role="tab" aria-controls="bookmarks-list" aria-selected="false" title="Bookmarks" type="button">Bookmarks</button>
         </nav>
         <div class="search-wrap"><label for="vault-search">Find in vault</label><input id="vault-search" type="search" placeholder="Search notes…" autocomplete="off" /></div>
         <div id="vault-mode" aria-label="Vault mode">No vault</div>
         <nav id="file-list" aria-label="Markdown notes"><p class="empty-list">Choose a vault to begin.</p></nav>
-        <p class="bookmarks-empty" id="bookmarks-empty" aria-label="Bookmarks">Bookmarks are pending; no bookmark data is created or inferred.</p>
+        <nav id="bookmarks-list" class="workflow-list" aria-label="Bookmarks" hidden><p class="empty-list" id="bookmarks-summary">Open a vault to load bookmarks.</p></nav>
+        <section class="vault-indices" aria-label="Vault indices">
+          <section class="vault-index"><h2>Tags <span class="workflow-summary" id="tag-summary">No tags indexed.</span></h2><nav class="vault-index-list" id="tag-list" aria-label="Tags"></nav></section>
+          <section class="vault-index"><h2>Tasks <span class="workflow-summary" id="task-summary">No tasks indexed.</span></h2><nav class="vault-index-list" id="task-index-list" aria-label="Tasks"></nav></section>
+        </section>
         <footer class="sidebar-footer" aria-label="Vault identity"><strong id="vault-name">No vault open</strong><span id="vault-branch">Local workspace</span></footer>
       </aside>
       <main class="workspace">
@@ -506,7 +533,7 @@
           <div class="ai-actions"><button id="apply-ai" type="button" disabled>Apply selected preview</button><button id="undo-ai" type="button" disabled>Undo last AI write</button><button id="suggest-ai" type="button">Suggest organization</button></div>
           <div class="ai-organization" id="ai-organization" aria-live="polite" hidden></div>
         </section>
-        <section class="editor-wrap" aria-label="Note editor"><div class="editor-toolbar"><div class="view-switch" role="group" aria-label="Editor mode"><button class="view-button" data-editor-mode="source" type="button">Source</button><button class="view-button" data-editor-mode="live-preview" type="button">Live preview</button><button class="view-button" data-editor-mode="reading" type="button">Reading</button></div><button class="context-toggle" id="toggle-context" type="button">Hide context</button></div><div class="editor-stage" id="editor-stage"><div class="note-surface"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><article id="note-preview" aria-label="Rendered Markdown" hidden></article><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></div><aside class="context-pane" id="context-pane" aria-label="Note context"><div class="context-group"><h2>Outline</h2><ul class="context-list" id="outline-list"></ul></div><div class="context-group"><h2>Outgoing links</h2><ul class="context-list" id="outgoing-links-list"></ul></div><div class="context-group"><h2>Backlinks</h2><ul class="context-list" id="backlinks-list"></ul></div></aside></div></section>
+        <section class="editor-wrap" aria-label="Note editor"><div class="editor-toolbar"><div class="view-switch" role="group" aria-label="Editor mode"><button class="view-button" data-editor-mode="source" type="button">Source</button><button class="view-button" data-editor-mode="live-preview" type="button">Live preview</button><button class="view-button" data-editor-mode="reading" type="button">Reading</button></div><button class="context-toggle" id="toggle-context" type="button">Hide context</button></div><div class="editor-stage" id="editor-stage"><div class="note-surface"><textarea id="note-editor" aria-label="Markdown note editor" spellcheck="false" disabled></textarea><article id="note-preview" aria-label="Rendered Markdown" hidden></article><div id="empty-state"><h2>Open an existing vault</h2><p>Your selected folder stays authoritative. Scan, search and edit a Markdown note through a revision-checked save, then return to Obsidian with the original file format intact.</p></div></div><aside class="context-pane" id="context-pane" aria-label="Note context"><div class="context-group"><h2>Outline</h2><ul class="context-list" id="outline-list"></ul></div><div class="context-group"><h2>Outgoing links</h2><ul class="context-list" id="outgoing-links-list"></ul></div><div class="context-group"><h2>Backlinks</h2><ul class="context-list" id="backlinks-list"></ul></div><div class="context-group"><h2>Tasks</h2><ul class="context-list" id="task-list"></ul></div></aside></div></section>
         <div id="status" role="status" aria-live="polite">No vault selected.</div>
       </main>
     </div>

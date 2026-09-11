@@ -4,3 +4,4 @@ export {KEYBOARD_SHORTCUTS, resolveKeyboardCommand, type KeyboardCommandId, type
 export {parseInlineMarkdown, parseMarkdownPreview, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "./markdown-preview.js";
 export {layoutGraph, type GraphLayoutOptions} from "./graph.js";
 export {UNINSTALL_CLEANUP_OPTIONS, uninstallCleanupOption, type UninstallCleanupOptionId} from "./uninstall.js";
+export {annotateBookmarks, buildTagSummaries, extractMarkdownTags, extractMarkdownTasks, parseBookmarkConfiguration, toggleMarkdownTaskSource, type BookmarkItem, type BookmarkResponse, type TagIndex, type TaskItem} from "./workflows.js";

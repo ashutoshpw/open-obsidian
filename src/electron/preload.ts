@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -14,6 +14,10 @@ const api: OpenObsidianAPI = {
   restoreChronicle: (request) => ipcRenderer.invoke(CHANNELS.restoreChronicle, request),
   commitChronicle: (request) => ipcRenderer.invoke(CHANNELS.commitChronicle, request),
   noteContext: (relativePath) => ipcRenderer.invoke(CHANNELS.noteContext, relativePath),
+  bookmarks: () => ipcRenderer.invoke(CHANNELS.bookmarks),
+  tags: () => ipcRenderer.invoke(CHANNELS.tags),
+  tasks: () => ipcRenderer.invoke(CHANNELS.tasks),
+  toggleTask: (request: ToggleTaskRequest) => ipcRenderer.invoke(CHANNELS.toggleTask, request),
   loadSettings: () => ipcRenderer.invoke(CHANNELS.loadSettings),
   saveSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveSettings, settings),
   historyPlan: (policy) => ipcRenderer.invoke(CHANNELS.historyPlan, policy),

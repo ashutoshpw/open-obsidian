@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -63,6 +63,13 @@ test("workspace state validation restores only bounded relative note navigation"
   expect(validateWorkspaceState({settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: "/tmp/vault", openTabs: ["one.md", "folder/two.md"], activePath: "folder/two.md", navigationHistory: ["one.md", "folder/two.md"]})).toMatchObject({activePath: "folder/two.md", openTabs: ["one.md", "folder/two.md"]});
   expect(() => validateWorkspaceState({settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: null, openTabs: ["../outside.md"], activePath: null, navigationHistory: []})).toThrow("Invalid workspace tabs");
   expect(() => validateWorkspaceState({settings: DEFAULT_WORKSPACE_SETTINGS, vaultRoot: null, openTabs: ["one.md"], activePath: "two.md", navigationHistory: []})).toThrow("Invalid workspace active path");
+});
+
+test("task IPC validation keeps source paths, revisions and line edits bounded", () => {
+  expect(validateTaskToggleRequest({relativePath: "notes/plan.md", expectedRevision: "a".repeat(64), line: 7, checked: true})).toEqual({relativePath: "notes/plan.md", expectedRevision: "a".repeat(64), line: 7, checked: true});
+  expect(() => validateTaskToggleRequest({relativePath: "../outside.md", expectedRevision: "a", line: 1, checked: true})).toThrow("Invalid workspace task path");
+  expect(() => validateTaskToggleRequest({relativePath: "note.md", expectedRevision: "a", line: 0, checked: true})).toThrow("Invalid task toggle request");
+  expect(() => validateTaskToggleRequest({relativePath: "note.md", expectedRevision: "a", line: 1, checked: "yes"})).toThrow("Invalid task toggle request");
 });
 
 test("Canvas IPC validation keeps edits revision-aware and note creation explicit", () => {

@@ -1,7 +1,7 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
-import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, uninstallCleanupOption, vaultPane, workspaceAction, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
+import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type TagIndex, type TaskItem, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
 type VaultSummary = Exclude<Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>, null>;
@@ -19,6 +19,12 @@ const sidebar = document.querySelector<HTMLElement>(".sidebar");
 const toggleLeftSidebarButton = document.querySelector<HTMLButtonElement>("#toggle-left-sidebar");
 const toggleRightSidebarButton = document.querySelector<HTMLButtonElement>("[data-ui-action=\"toggle-right-sidebar\"]");
 const sidebarPaneButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-sidebar-pane]")];
+const bookmarksList = document.querySelector<HTMLElement>("#bookmarks-list");
+const bookmarksSummary = document.querySelector<HTMLElement>("#bookmarks-summary");
+const tagList = document.querySelector<HTMLElement>("#tag-list");
+const tagSummary = document.querySelector<HTMLElement>("#tag-summary");
+const taskIndexList = document.querySelector<HTMLElement>("#task-index-list");
+const taskSummary = document.querySelector<HTMLElement>("#task-summary");
 const editorPath = document.querySelector<HTMLElement>("#editor-path");
 const editor = document.querySelector<HTMLTextAreaElement>("#note-editor");
 const emptyState = document.querySelector<HTMLElement>("#empty-state");
@@ -59,6 +65,7 @@ const toggleContextButton = document.querySelector<HTMLButtonElement>("#toggle-c
 const outlineList = document.querySelector<HTMLElement>("#outline-list");
 const outgoingLinksList = document.querySelector<HTMLElement>("#outgoing-links-list");
 const backlinksList = document.querySelector<HTMLElement>("#backlinks-list");
+const taskList = document.querySelector<HTMLElement>("#task-list");
 const quickSwitcher = document.querySelector<HTMLDialogElement>("#quick-switcher");
 const openQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#open-quick-switcher");
 const closeQuickSwitcherButton = document.querySelector<HTMLButtonElement>("#close-quick-switcher");
@@ -172,6 +179,9 @@ let workspaceStateReady: Promise<void> = Promise.resolve();
 let leftSidebarVisible = true;
 let activeVaultPane: VaultPaneId = "files";
 let vaultFiles: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>> = [];
+let bookmarkData: BookmarkResponse | null = null;
+let tagData: TagIndex | null = null;
+let taskData: TaskItem[] = [];
 let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
@@ -359,13 +369,298 @@ function applySharedVaultPaneMetadata(): void {
   });
 }
 
+const bookmarkKindLabels: Partial<Record<BookmarkItem["kind"], string>> = {file: "File", folder: "Folder", search: "Search", block: "Block", group: "Group"};
+
+function bookmarkMeta(item: BookmarkItem): string {
+  return `${bookmarkKindLabels[item.kind] ?? "Bookmark"} · ${bookmarkTarget(item)}${item.subpath ?? ""}`;
+}
+
+function bookmarkTarget(item: BookmarkItem): string {
+  if (item.kind === "search") return item.query ?? "";
+  return item.path ?? "Group";
+}
+
+function openSearchBookmark(item: BookmarkItem): void {
+  const query = item.query ?? "";
+  setVaultPane("search");
+  if (searchInput) searchInput.value = query;
+  searchVault(query);
+}
+
+function openFolderBookmark(item: BookmarkItem): void {
+  if (!item.path) return;
+  const first = vaultFiles.find((file) => file.kind === "file" && (file.relativePath === item.path || file.relativePath.startsWith(`${item.path}/`)));
+  if (first) openFile(first.relativePath);
+  else setStatus(`Bookmark folder ${item.path} is empty; no file was opened.`);
+}
+
+const bookmarkActions: Partial<Record<BookmarkItem["kind"], (item: BookmarkItem) => void>> = {search: openSearchBookmark, folder: openFolderBookmark, file: openPathBookmark, block: openPathBookmark};
+
+function openBookmark(item: BookmarkItem): void {
+  if (!item.available) {
+    setStatus(`Bookmark target ${item.path ?? item.title} is missing; no file was opened.`);
+    return;
+  }
+  bookmarkActions[item.kind]?.(item);
+}
+
+function openPathBookmark(item: BookmarkItem): void {
+  if (!item.path) return;
+  openFile(item.path);
+  if (item.kind === "block" && item.subpath) setStatus(`Opened ${item.path}; bookmark target ${item.subpath} remains source-preserving.`);
+}
+
+function bookmarkNodes(items: BookmarkItem[]): Node[] {
+  const nodes: Node[] = [];
+  items.forEach((item) => nodes.push(...bookmarkNode(item)));
+  return nodes;
+}
+
+function bookmarkNode(item: BookmarkItem): Node[] {
+  if (item.kind === "group") {
+    const heading = document.createElement("h3");
+    heading.className = "workflow-group";
+    heading.textContent = item.title;
+    return [heading, ...bookmarkNodes(item.items ?? [])];
+  }
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "workflow-row";
+  button.disabled = !item.available;
+  const meta = bookmarkMeta(item);
+  button.title = item.available ? meta : `${meta} · missing`;
+  const title = document.createElement("span");
+  title.textContent = item.title;
+  const detail = document.createElement("small");
+  detail.textContent = button.title;
+  button.append(title, detail);
+  button.addEventListener("click", () => openBookmark(item));
+  return [button];
+}
+
+function bookmarkSummaryText(data: BookmarkResponse | null): string {
+  if (!data) return "Open a vault to load bookmarks.";
+  if (data.source === "missing") return "No Obsidian bookmark configuration found.";
+  return `${bookmarkCountText(data.items.length)}${bookmarkIssueText(data.issues.length)}.`;
+}
+
+function bookmarkCountText(count: number): string {
+  return `${count} bookmark${count === 1 ? "" : "s"} loaded`;
+}
+
+function bookmarkIssueText(count: number): string {
+  return count ? ` · ${count} issue${count === 1 ? "" : "s"}` : "";
+}
+
+function renderBookmarkEmpty(data: BookmarkResponse | null): void {
+  if (!bookmarksList) return;
+  const empty = document.createElement("p");
+  empty.className = "empty-list";
+  empty.textContent = data?.issues[0] ?? "No bookmarks configured.";
+  bookmarksList.append(empty);
+}
+
+function renderBookmarkSummary(data: BookmarkResponse | null): void {
+  if (!bookmarksSummary) return;
+  bookmarksSummary.textContent = bookmarkSummaryText(data);
+  bookmarksList?.append(bookmarksSummary);
+}
+
+function renderBookmarks(data: BookmarkResponse | null): void {
+  if (!bookmarksList) return;
+  bookmarksList.replaceChildren();
+  renderBookmarkSummary(data);
+  if (data && data.items.length > 0) {
+    bookmarksList.append(...bookmarkNodes(data.items));
+    return;
+  }
+  renderBookmarkEmpty(data);
+}
+
+function tagSummaryText(data: TagIndex | null): string {
+  if (!data) return "Open a vault.";
+  return `${data.tags.length} tag${data.tags.length === 1 ? "" : "s"} · ${data.filesScanned} files`;
+}
+
+function tagIndexItem(tag: TagIndex["tags"][number]): HTMLLIElement {
+  const item = document.createElement("li");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "vault-index-row";
+  const label = document.createElement("span");
+  label.textContent = `#${tag.tag}`;
+  const count = document.createElement("small");
+  count.textContent = `${tag.files.length} file${tag.files.length === 1 ? "" : "s"}`;
+  button.append(label, count);
+  button.title = `${tag.count} occurrence${tag.count === 1 ? "" : "s"}`;
+  button.addEventListener("click", () => {
+    const first = tag.files[0];
+    if (first) openFile(first.relativePath);
+  });
+  item.append(button);
+  return item;
+}
+
+function renderTagIndex(data: TagIndex | null): void {
+  setText(tagSummary, tagSummaryText(data));
+  if (!tagList) return;
+  tagList.replaceChildren();
+  if (!data || data.tags.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "workflow-summary";
+    empty.textContent = "No tags indexed.";
+    tagList.append(empty);
+    return;
+  }
+  tagList.append(...data.tags.map(tagIndexItem));
+}
+
+function taskRevision(task: TaskItem): string | null {
+  return task.revision ?? (task.relativePath === selectedPath ? selectedRevision : null);
+}
+
+function taskToggleBlockReason(task: TaskItem, revision: string | null): string | undefined {
+  if (!api) return "This task has no current revision; reopen the vault before changing it.";
+  if (!revision) return "This task has no current revision; reopen the vault before changing it.";
+  if (taskNeedsSave(task)) return "Save the current note before toggling a task; unsaved source remains unchanged.";
+  return undefined;
+}
+
+function taskNeedsSave(task: TaskItem): boolean {
+  return task.relativePath === selectedPath && dirty;
+}
+
+function taskToggleError(error: unknown): string {
+  return errorText(error, "Unable to update the task; the original note bytes remain authoritative.");
+}
+
+function applyTaskRead(task: TaskItem, updated: Awaited<ReturnType<OpenObsidianAPI["toggleTask"]>>): void {
+  if (task.relativePath === selectedPath) applyReadResponse(updated);
+}
+
+async function performTaskToggle(client: OpenObsidianAPI, task: TaskItem, revision: string, checkbox: HTMLInputElement): Promise<void> {
+  const updated = await client.toggleTask({relativePath: task.relativePath, expectedRevision: revision, line: task.line, checked: checkbox.checked});
+  applyTaskRead(task, updated);
+  await loadWorkflowIndexes(client);
+}
+
+async function toggleTaskItem(task: TaskItem, checkbox: HTMLInputElement): Promise<void> {
+  const client = api;
+  const revision = taskRevision(task);
+  const blocked = taskToggleBlockReason(task, revision);
+  if (blocked) {
+    checkbox.checked = task.checked;
+    setStatus(blocked);
+    return;
+  }
+  checkbox.disabled = true;
+  try {
+    await performTaskToggle(client!, task, revision!, checkbox);
+    setStatus(`Updated task in ${task.relativePath} at line ${task.line}; surrounding Markdown and recurrence text were preserved.`);
+  } catch (error) {
+    checkbox.checked = task.checked;
+    checkbox.disabled = false;
+    setStatus(taskToggleError(error));
+  }
+}
+
+function taskContextItem(task: TaskItem): HTMLLIElement {
+  const item = document.createElement("li");
+  const label = document.createElement("label");
+  label.className = "task-context-item";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = task.checked;
+  checkbox.disabled = !taskRevision(task) || dirty;
+  checkbox.setAttribute("aria-label", `${task.checked ? "Complete" : "Incomplete"} task: ${task.text}`);
+  const content = document.createElement("span");
+  content.textContent = task.text;
+  const meta = document.createElement("small");
+  meta.textContent = `line ${task.line}${task.recurrence ? ` · ${task.recurrence}` : ""}`;
+  content.append(meta);
+  label.append(checkbox, content);
+  checkbox.addEventListener("change", () => void toggleTaskItem(task, checkbox));
+  item.append(label);
+  return item;
+}
+
+function renderTaskContext(): void {
+  const tasks = selectedPath && editor ? extractMarkdownTasks(editor.value, selectedPath).map((task) => ({...task, revision: selectedRevision ?? undefined})) : [];
+  renderContextList(taskList, tasks.map(taskContextItem), "No tasks in this note.");
+}
+
+function taskIndexItem(task: TaskItem): HTMLLIElement {
+  const item = document.createElement("li");
+  item.className = "task-index-row";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = task.checked;
+  checkbox.disabled = !taskRevision(task);
+  checkbox.setAttribute("aria-label", `${task.checked ? "Complete" : "Incomplete"} task in ${task.relativePath}`);
+  checkbox.addEventListener("change", () => void toggleTaskItem(task, checkbox));
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "vault-index-row";
+  const text = document.createElement("span");
+  text.textContent = task.text;
+  const meta = document.createElement("small");
+  meta.textContent = `${task.relativePath}:${task.line}`;
+  button.append(text, meta);
+  button.addEventListener("click", () => openFile(task.relativePath));
+  item.append(checkbox, button);
+  return item;
+}
+
+function renderTaskIndex(tasks: TaskItem[]): void {
+  setText(taskSummary, `${tasks.length} task${tasks.length === 1 ? "" : "s"}`);
+  if (!taskIndexList) return;
+  taskIndexList.replaceChildren(...tasks.map(taskIndexItem));
+  if (tasks.length === 0) {
+    const empty = document.createElement("li");
+    empty.className = "workflow-summary";
+    empty.textContent = "No tasks indexed.";
+    taskIndexList.append(empty);
+  }
+}
+
+function renderWorkflowIndexes(): void {
+  renderBookmarks(bookmarkData);
+  renderTagIndex(tagData);
+  renderTaskIndex(taskData);
+  renderTaskContext();
+}
+
+async function loadWorkflowIndexes(client: OpenObsidianAPI): Promise<void> {
+  try {
+    const [bookmarks, tags, tasks] = await Promise.all([client.bookmarks(), client.tags(), client.tasks()]);
+    bookmarkData = bookmarks;
+    tagData = tags;
+    taskData = tasks;
+    renderWorkflowIndexes();
+  } catch (error) {
+    setStatus(errorText(error, "Unable to load bookmarks, tags and tasks; source notes remain unchanged."));
+  }
+}
+
 function paneStatus(id: VaultPaneId): string {
   const statusByPane: Record<VaultPaneId, string> = {
-    files: selectedSummary ? "Showing Markdown notes from the selected vault." : "Choose a vault to begin.",
-    search: selectedSummary ? "Search the selected vault locally." : "Open a vault to search its notes.",
-    bookmarks: "Bookmarks remain external-pending; the selected vault and source bytes are unchanged.",
+    files: filesPaneStatus(),
+    search: searchPaneStatus(),
+    bookmarks: bookmarksPaneStatus(),
   };
   return statusByPane[id];
+}
+
+function filesPaneStatus(): string {
+  return selectedSummary ? "Showing Markdown notes from the selected vault." : "Choose a vault to begin.";
+}
+
+function searchPaneStatus(): string {
+  return selectedSummary ? "Search the selected vault locally." : "Open a vault to search its notes.";
+}
+
+function bookmarksPaneStatus(): string {
+  return bookmarkData?.source === "obsidian-bookmarks" ? "Showing read-only Obsidian bookmarks." : "No Obsidian bookmark configuration was found; no bookmark data was inferred.";
 }
 
 const vaultPaneActions: Record<VaultPaneId, () => void> = {
@@ -380,6 +675,7 @@ const vaultPaneActions: Record<VaultPaneId, () => void> = {
 function setVaultPane(id: VaultPaneId): void {
   activeVaultPane = id;
   sidebar?.setAttribute("data-active-pane", id);
+  setHidden(bookmarksList, id !== "bookmarks");
   sidebarPaneButtons.forEach((button) => button.setAttribute("aria-selected", String(button.dataset.sidebarPane === id)));
   vaultPaneActions[id]();
 }
@@ -426,7 +722,6 @@ function previewTask(block: Extract<MarkdownPreviewBlock, {kind: "task"}>): HTML
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = block.checked;
-  checkbox.disabled = true;
   const text = document.createElement("span");
   appendPreviewInline(text, block.text);
   row.append(checkbox, text);
@@ -523,6 +818,18 @@ function previewElement(block: MarkdownPreviewBlock): HTMLElement {
 function renderNotePreview(value: string): void {
   if (!notePreview) return;
   notePreview.replaceChildren(...parseMarkdownPreview(value).map(previewElement));
+  const tasks = selectedPath ? extractMarkdownTasks(value, selectedPath).map((task) => ({...task, revision: selectedRevision ?? undefined})) : [];
+  notePreview.querySelectorAll<HTMLInputElement>(".task-line input").forEach((checkbox, index) => {
+    const task = tasks[index];
+    if (!task) {
+      checkbox.disabled = true;
+      return;
+    }
+    checkbox.disabled = !taskRevision(task) || dirty;
+    checkbox.setAttribute("aria-label", `${task.checked ? "Complete" : "Incomplete"} task: ${task.text}`);
+    checkbox.addEventListener("change", () => void toggleTaskItem(task, checkbox));
+  });
+  renderTaskContext();
 }
 
 function renderEditorMode(): void {
@@ -1099,6 +1406,7 @@ function renderNoteContext(context: NoteContext): void {
     });
   }), "No outgoing links in this note.");
   renderContextList(backlinksList, context.backlinks.map((backlink) => contextButton(backlink.relativePath, `line ${backlink.line}`, () => openFile(backlink.relativePath))), "No notes link here yet.");
+  renderTaskContext();
 }
 
 function renderContextList(list: HTMLElement | null, rows: HTMLLIElement[], emptyMessage: string): void {
@@ -2556,6 +2864,7 @@ async function writeNoteRequest(client: OpenObsidianAPI, path: string, revision:
     renderTabs();
     void persistWorkspaceState();
     updateEditorState();
+    void loadWorkflowIndexes(client);
     setStatus(`Saved ${response.relativePath} · revision ${response.revision.slice(0, 12)}…`);
   } catch (error) {
     updateEditorState();
@@ -2591,12 +2900,11 @@ async function listFilesRequest(client: OpenObsidianAPI): Promise<void> {
   }
 }
 
-function resetEditor(): void {
-  selectedPath = null;
-  selectedRevision = null;
-  dirty = false;
-  tabStates = [];
+function resetWorkflowData(): void {
   vaultFiles = [];
+  bookmarkData = null;
+  tagData = null;
+  taskData = [];
   graphData = null;
   canvasData = null;
   baseData = null;
@@ -2605,8 +2913,17 @@ function resetEditor(): void {
   resetSourceInspector();
   aiChangeSet = null;
   aiUndoId = null;
+}
+
+function resetEditor(): void {
+  selectedPath = null;
+  selectedRevision = null;
+  dirty = false;
+  tabStates = [];
+  resetWorkflowData();
   renderTabs();
   renderNoteContext({relativePath: "", headings: [], outgoingLinks: [], backlinks: []});
+  renderWorkflowIndexes();
   updateEditorState();
   updateWorkspaceToolControls();
 }
@@ -2627,15 +2944,8 @@ function showNoVault(): void {
   setHidden(conflictBox, true);
   selectedConflict = null;
   changeReview = null;
-  vaultFiles = [];
-  graphData = null;
-  canvasData = null;
-  baseData = null;
-  retrievalData = null;
-  pendingCitation = null;
-  resetSourceInspector();
-  aiChangeSet = null;
-  aiUndoId = null;
+  resetWorkflowData();
+  renderWorkflowIndexes();
   updateChronicleControls();
   setStatus(summaryMessage(selectedSummary));
 }
@@ -2651,6 +2961,7 @@ async function openVaultRequest(client: OpenObsidianAPI): Promise<void> {
     }
     renderMode(selectedSummary);
     await listFilesRequest(client);
+    await loadWorkflowIndexes(client);
     await restoreWorkspaceTabs(client);
     setStatus(summaryMessage(selectedSummary));
   } catch (error) {

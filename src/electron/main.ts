@@ -17,8 +17,9 @@ import {retrieveVault} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
 import {VaultStore} from "../core/vault.js";
+import {buildBookmarkIndex, buildTagIndex, buildTaskIndex, toggleVaultTask} from "../core/workflows.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
-import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -419,6 +420,24 @@ function noteContext(_event: Electron.IpcMainInvokeEvent, relativePath: unknown)
   return buildNoteContext(requireVault(), relativePath);
 }
 
+function bookmarksRequest() {
+  return buildBookmarkIndex(requireVault());
+}
+
+function tagsRequest() {
+  return buildTagIndex(requireVault());
+}
+
+function tasksRequest() {
+  return buildTaskIndex(requireVault());
+}
+
+function toggleTaskRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
+  const request = validateTaskToggleRequest(value);
+  const updated = toggleVaultTask(requireVault(), request.relativePath, request.expectedRevision, request.line, request.checked);
+  return {relativePath: updated.relativePath, base64: Buffer.from(updated.bytes).toString("base64"), revision: updated.revision};
+}
+
 function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.selectVault, selectVault);
   ipcMain.handle(CHANNELS.listFiles, listFiles);
@@ -447,6 +466,10 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.restoreChronicle, restoreChronicle);
   ipcMain.handle(CHANNELS.commitChronicle, commitChronicle);
   ipcMain.handle(CHANNELS.noteContext, noteContext);
+  ipcMain.handle(CHANNELS.bookmarks, bookmarksRequest);
+  ipcMain.handle(CHANNELS.tags, tagsRequest);
+  ipcMain.handle(CHANNELS.tasks, tasksRequest);
+  ipcMain.handle(CHANNELS.toggleTask, toggleTaskRequest);
   ipcMain.handle(CHANNELS.loadSettings, loadSettings);
   ipcMain.handle(CHANNELS.saveSettings, saveSettings);
   ipcMain.handle(CHANNELS.loadProviderSettings, loadProviderSettings);
