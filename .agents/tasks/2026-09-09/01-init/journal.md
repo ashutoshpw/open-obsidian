@@ -541,3 +541,8 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-mode-accessibility.json` records the CDP procedures, observed rules, accessibility labels, source hashes and limitations.
 - Safety: this remains synthetic Linux evidence only. It does not certify Minimal, PC17/unchanged plugins, popouts, plugin-created views, screen readers, keyboard/IME, contrast/scale, other platforms or reference Obsidian reopening; C12 and RISK-002 remain pending.
 - Next: obtain the supported reference/plugin and platform runtimes for the remaining P3.3/P1.2 certification gates while retaining all external handoffs.
+
+## 2026-09-11T08:46:10Z — P3.3 mode/accessibility evidence reconciliation
+
+- Reconciled the Linux mode and accessibility trace at `03b814c5de889f8c85f89399e22dbf275e13e869` and pushed `main` to `origin/main`.
+- Updated `state.json` so `last_reconciled_head` and `recent_increment.commit` point to the pushed evidence commit; C12 and RISK-002 remain pending.
