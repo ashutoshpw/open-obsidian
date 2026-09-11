@@ -53,6 +53,8 @@ function safeDomObject() {
     addEventListener() {},
     removeEventListener() {},
     appendChild(child) { return child; },
+    append() {},
+    prepend() {},
     createEl() { return safeDomObject(); },
     createDiv() { return safeDomObject(); },
     createSpan() { return safeDomObject(); },
@@ -70,6 +72,27 @@ function safeDomObject() {
       return safeCallable(`dom.${String(property)}`);
     },
   });
+}
+
+function safeDocumentObject() {
+  return {
+    body: safeDomObject(),
+    createDocumentFragment() { return safeDomObject(); },
+    createElement() { return safeDomObject(); },
+    createTextNode() { return safeDomObject(); },
+  };
+}
+
+function safeComponentObject() {
+  const component = {app: null, containerEl: safeDomObject()};
+  let proxy;
+  proxy = new Proxy(component, {
+    get(target, property) {
+      if (property in target) return target[property];
+      return (..._args) => proxy;
+    },
+  });
+  return proxy;
 }
 
 function safeCallable(name) {
@@ -91,7 +114,9 @@ function safeCallable(name) {
       return safeCallable(`${name}()`);
     },
     construct(_target, args) {
-      return {app: args[0], containerEl: safeDomObject()};
+      const component = safeComponentObject();
+      component.app = args[0];
+      return component;
     },
   });
 }
@@ -113,7 +138,11 @@ function createObsidianApi() {
     }
 
     addCommand(command) {
-      if (command && typeof command.id === "string") this.app.commands.push(command.id);
+      if (command && typeof command.id === "string") {
+        this.app.commands.push(command.id);
+        const callback = [command.callback, command.editorCallback, command.checkCallback].find((candidate) => typeof candidate === "function");
+        if (callback) this.app.commandHandlers.push({id: command.id, callback, owner: this, callbackKind: callback === command.checkCallback ? "checkCallback" : callback === command.editorCallback ? "editorCallback" : "callback"});
+      }
     }
 
     addRibbonIcon() {
@@ -124,16 +153,26 @@ function createObsidianApi() {
       return safeDomObject();
     }
 
-    registerView(type) {
-      if (typeof type === "string") this.app.views.push(type);
+    registerView(type, viewCreator) {
+      if (typeof type === "string") {
+        this.app.views.push(type);
+        if (typeof viewCreator === "function") this.app.viewFactories.push({type, creator: viewCreator, owner: this});
+      }
     }
 
     addSettingTab(tab) {
-      if (tab && typeof tab.id === "string") this.app.settings.push(tab.id);
+      if (tab) {
+        const id = typeof tab.id === "string" ? tab.id : tab.constructor?.name || "setting-tab";
+        this.app.settings.push(id);
+        this.app.settingTabs.push({id, tab});
+      }
     }
 
     registerEvent(event) {
-      if (event && typeof event.type === "string") this.app.registeredEvents.push(event.type);
+      if (event && typeof event.type === "string") {
+        this.app.registeredEvents.push(event.type);
+        if (typeof event.callback === "function") this.app.eventHandlers.push({type: event.type, callback: event.callback});
+      }
     }
 
     register() {}
@@ -172,7 +211,20 @@ function createObsidianApi() {
       this.app.savedData = cloneData(value);
     }
   }
-  const target = {Plugin};
+  class ItemView {
+    constructor(leaf) {
+      this.leaf = leaf;
+      this.app = leaf?.app;
+      this.containerEl = leaf?.containerEl ?? safeDomObject();
+    }
+  }
+  class PluginSettingTab {
+    constructor(pluginApp) {
+      this.app = pluginApp;
+      this.containerEl = safeDomObject();
+    }
+  }
+  const target = {Plugin, ItemView, PluginSettingTab};
   return new Proxy(target, {
     ownKeys() {
       return [...new Set([...Reflect.ownKeys(target), ...OBSIDIAN_EXPORT_NAMES])];
@@ -196,92 +248,143 @@ function pluginConstructor(module) {
   return null;
 }
 
-function createPluginApp(events, dataStore) {
-  const event = (type) => ({type, off() {}});
+function createPluginApp(events, dataStore, workflowContext = {}) {
+  const context = workflowContext && typeof workflowContext === "object" ? workflowContext : {};
+  const files = new Map();
+  const fileEntries = Array.isArray(context.files) ? context.files : [];
+  for (const entry of fileEntries) {
+    if (!entry || typeof entry.path !== "string") continue;
+    files.set(entry.path, typeof entry.content === "string" ? entry.content : "");
+  }
+  const activePath = typeof context.active_file === "string" ? context.active_file : fileEntries[0]?.path;
+  const metrics = context.metrics && typeof context.metrics === "object" ? context.metrics : {};
+  if (!Array.isArray(metrics.vaultOperations)) metrics.vaultOperations = [];
+  if (typeof metrics.vaultWrites !== "number") metrics.vaultWrites = 0;
+  const fileRecord = (path) => {
+    if (typeof path !== "string" || !files.has(path)) return null;
+    const parts = path.split("/");
+    const name = parts.at(-1) || path;
+    const dot = name.lastIndexOf(".");
+    return {path, name, basename: dot > 0 ? name.slice(0, dot) : name, extension: dot > 0 ? name.slice(dot + 1) : "", stat: {size: new TextEncoder().encode(files.get(path)).byteLength}};
+  };
+  const pathValue = (value) => typeof value === "string" ? value : value && typeof value.path === "string" ? value.path : "";
+  const recordWrite = (operation, path) => {
+    metrics.vaultWrites += 1;
+    metrics.vaultOperations.push({operation, path: pathValue(path)});
+  };
+  const event = (type, callback) => ({type, callback, off() {}, ref: null});
   const missingFile = () => {
     const error = new Error("mediated vault path is unavailable");
     error.code = "ENOENT";
     throw error;
   };
+  let pluginApp;
+  const readPath = async (path) => {
+    const value = files.get(pathValue(path));
+    if (value === undefined) return missingFile();
+    return value;
+  };
+  const writePath = async (path, value, operation = "modify") => {
+    const target = pathValue(path);
+    if (!target) return undefined;
+    files.set(target, typeof value === "string" ? value : new TextDecoder().decode(value));
+    recordWrite(operation, target);
+    return fileRecord(target) || {path: target};
+  };
   const adapter = {
-    exists: async () => false,
-    read: async () => "",
-    readBinary: async () => new Uint8Array(),
-    write: async () => undefined,
-    writeBinary: async () => undefined,
-    append: async () => undefined,
-    appendBinary: async () => undefined,
-    list: async () => ({files: [], folders: []}),
+    exists: async (path) => files.has(pathValue(path)),
+    read: readPath,
+    readBinary: async (path) => new TextEncoder().encode(await readPath(path)),
+    write: (path, value) => writePath(path, value, "adapter.write"),
+    writeBinary: (path, value) => writePath(path, value, "adapter.writeBinary"),
+    append: async (path, value) => writePath(path, `${await readPath(path)}${value}`, "adapter.append"),
+    appendBinary: async (path, value) => writePath(path, `${await readPath(path)}${new TextDecoder().decode(value)}`, "adapter.appendBinary"),
+    list: async () => ({files: [...files.keys()].map(fileRecord).filter(Boolean), folders: []}),
     mkdir: async () => undefined,
-    rmdir: async (_path, _recursive) => undefined,
-    remove: async () => undefined,
-    stat: missingFile,
+    rmdir: async () => undefined,
+    remove: async (path) => { files.delete(pathValue(path)); recordWrite("adapter.remove", path); },
+    stat: async (path) => fileRecord(pathValue(path)) || missingFile(),
     getBasePath: () => "",
     getFullPath: (path) => path,
     getResourcePath: (path) => path,
-    readFile: async () => "",
-    writeFile: async () => undefined,
-    readdir: async () => [],
-    unlink: async () => undefined,
-    lstat: missingFile,
+    readFile: readPath,
+    writeFile: (path, value) => writePath(path, value, "adapter.writeFile"),
+    readdir: async () => [...files.keys()],
+    unlink: async (path) => { files.delete(pathValue(path)); recordWrite("adapter.unlink", path); },
+    lstat: async (path) => fileRecord(pathValue(path)) || missingFile(),
     readlink: async () => "",
     symlink: async () => undefined,
-    cp: async () => undefined,
-    rm: async () => undefined,
+    cp: async (source, target) => writePath(target, await readPath(source), "adapter.cp"),
+    rm: async (path) => { files.delete(pathValue(path)); recordWrite("adapter.rm", path); },
   };
   const vault = {
-    on(type) { return event(type); },
+    on(type, callback) { return event(type, callback); },
     off() {},
     offref() {},
-    getConfig() { return undefined; },
-    getAbstractFileByPath() { return null; },
-    getFileByPath() { return null; },
+    getConfig() { return context.vault_config; },
+    getAbstractFileByPath(path) { return fileRecord(pathValue(path)); },
+    getFileByPath(path) { return fileRecord(pathValue(path)); },
     getFolderByPath() { return null; },
-    getAllLoadedFiles() { return []; },
-    read: async () => "",
-    cachedRead: async () => "",
-    create: async () => ({}),
-    createBinary: async () => ({}),
-    createFolder: async () => ({}),
-    modify: async () => undefined,
-    modifyBinary: async () => undefined,
-    delete: async () => undefined,
+    getFiles() { return [...files.keys()].map(fileRecord).filter(Boolean); },
+    getAllLoadedFiles() { return [...files.keys()].map(fileRecord).filter(Boolean); },
+    read: readPath,
+    cachedRead: readPath,
+    create: (path, value) => writePath(path, value, "vault.create"),
+    createBinary: (path, value) => writePath(path, value, "vault.createBinary"),
+    createFolder: async () => undefined,
+    modify: (file, value) => writePath(file, value, "vault.modify"),
+    modifyBinary: (file, value) => writePath(file, value, "vault.modifyBinary"),
+    delete: async (file) => { files.delete(pathValue(file)); recordWrite("vault.delete", file); },
+    config: {defaultViewMode: "source", livePreview: false},
     adapter,
   };
+  const activeFile = fileRecord(activePath);
+  const leaves = Array.isArray(context.leaves) ? context.leaves : [];
   const workspace = {
     layoutReady: true,
-    on(type) { return event(type); },
+    on(type, callback) { return event(type, callback); },
     off() {},
     offref() {},
     onLayoutReady(callback) { if (typeof callback === "function") callback(); },
-    getLeavesOfType() { return []; },
-    getRightLeaf() { return {setViewState() {}, openFile: async () => undefined}; },
-    getActiveFile() { return null; },
-    getActiveViewOfType() { return null; },
-    getActiveFileView() { return null; },
-    getLeaf() { return {openFile: async () => undefined, setViewState() {}}; },
+    getLeavesOfType(type) { return leaves.filter((leaf) => leaf && leaf.type === type); },
+    getRightLeaf() { return {app: pluginApp, view: {containerEl: safeDomObject()}, setViewState() {}, openFile: async (file) => { pluginApp.activeFile = file; }}; },
+    getLeftLeaf() { return {app: pluginApp, view: {containerEl: safeDomObject()}, setViewState() {}, openFile: async (file) => { pluginApp.activeFile = file; }}; },
+    getLayout() { return {type: "split", children: []}; },
+    getActiveFile() { return activeFile; },
+    getActiveViewOfType() { return context.active_view || null; },
+    getActiveFileView() { return context.active_view || null; },
+    getLeaf() { return {app: pluginApp, view: {containerEl: safeDomObject()}, openFile: async (file) => { pluginApp.activeFile = file; }, setViewState() {}}; },
     getMostRecentLeaf() { return null; },
-    openLinkText: async () => undefined,
-    iterateAllLeaves() {},
+    openLinkText: async (_link, _sourcePath, _newLeaf) => undefined,
+    revealLeaf: async () => undefined,
+    changeLayout: async () => undefined,
+    iterateAllLeaves(callback) { for (const leaf of leaves) if (typeof callback === "function") callback(leaf); },
     trigger() {},
   };
-  return {
+  pluginApp = {
     events,
     commands: [],
+    commandHandlers: [],
     views: [],
+    viewFactories: [],
     settings: [],
+    settingTabs: [],
     registeredEvents: [],
+    eventHandlers: [],
     persistence: [],
     dataStore,
     vault,
     workspace,
-    metadataCache: {},
-    fileManager: {trashFile: async () => undefined},
+    metadataCache: {getFileCache() { return {}; }, getFirstLinkpathDest(path) { return fileRecord(path) || activeFile; }},
+    config: {defaultViewMode: "source", livePreview: false},
+    fileManager: {trashFile: async (file) => { files.delete(pathValue(file)); recordWrite("fileManager.trashFile", file); }},
     commandsManager: {},
-    plugins: {enabledPlugins: new Set(), plugins: {}, getPlugin() { return null; }},
-    internalPlugins: {plugins: {}},
+    plugins: {enabledPlugins: new Set(), plugins: context.plugins || {}, getPlugin(id) { return this.plugins[id] || null; }},
+    internalPlugins: {plugins: {}, getEnabledPluginById() { return null; }},
     app: null,
+    activeFile,
   };
+  return pluginApp;
 }
 
 function pluginApiSummary(pluginApp) {
@@ -340,6 +443,10 @@ function createEvaluationArguments(capabilities, requiredModules) {
 
 function evaluateSource(source, capabilities, requiredModules) {
   const module = {exports: {}};
+  globalThis.activeDocument = safeDocumentObject();
+  globalThis.DOMParser = class { parseFromString() { return safeDocumentObject(); } };
+  globalThis.createDiv = () => safeDomObject();
+  globalThis.createEl = () => safeDomObject();
   const factory = new Function(
     "module", "exports", "require", "document", "window", "globalThis", "self", "navigator", "location",
     "process", "fetch", "WebSocket", "XMLHttpRequest", "keytar", "WebAssembly", "setTimeout", "setInterval",
@@ -415,13 +522,66 @@ function lifecycleInstance(module, lifecycle) {
   return instance;
 }
 
-async function workflowInstance(module, workflow, dataStore, phase, version) {
+function actionError(error) {
+  return error instanceof Error ? error.message.slice(0, 240) : String(error).slice(0, 240);
+}
+
+async function awaitAction(value) {
+  if (value && typeof value.then === "function") await value;
+}
+
+async function exerciseRegistrations(pluginApp) {
+  const actions = {commands: [], views: [], settings: []};
+  for (const command of pluginApp.commandHandlers) {
+    try {
+      await awaitAction(command.callback.call(command.owner));
+      actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "passed"});
+    } catch (error) {
+      actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "failed", error: actionError(error)});
+    }
+  }
+  for (const viewFactory of pluginApp.viewFactories) {
+    const leaf = {app: pluginApp, containerEl: safeDomObject(), view: null, getViewState() { return {}; }, setViewState() {}};
+    try {
+      let view;
+      let directError;
+      try {
+        view = viewFactory.creator(leaf);
+      } catch (error) {
+        directError = error;
+        try {
+          view = Reflect.construct(viewFactory.creator, [leaf]);
+        } catch {
+          throw directError;
+        }
+      }
+      leaf.view = view || null;
+      if (view && typeof view.onOpen === "function") await awaitAction(view.onOpen());
+      if (view && typeof view.onClose === "function") await awaitAction(view.onClose());
+      actions.views.push({type: viewFactory.type, status: "passed", lifecycle: ["construct", "onOpen", "onClose"].filter((name) => name === "construct" || (name === "onOpen" && view && typeof view.onOpen === "function") || (name === "onClose" && view && typeof view.onClose === "function"))});
+    } catch (error) {
+      actions.views.push({type: viewFactory.type, status: "failed", error: actionError(error)});
+    }
+  }
+  for (const setting of pluginApp.settingTabs) {
+    try {
+      if (setting.tab && typeof setting.tab.display === "function") await awaitAction(setting.tab.display());
+      actions.settings.push({id: setting.id, status: "passed", displayed: Boolean(setting.tab && typeof setting.tab.display === "function")});
+    } catch (error) {
+      actions.settings.push({id: setting.id, status: "failed", error: actionError(error)});
+    }
+  }
+  return actions;
+}
+
+async function workflowInstance(module, workflow, dataStore, phase, version, workflowContext = {}, manifestId = "renderer-workflow-fixture") {
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
-  const pluginApp = createPluginApp([], dataStore);
-  const instance = new Constructor(pluginApp, {id: "renderer-workflow-fixture", version});
+  const pluginApp = createPluginApp([], dataStore, workflowContext);
+  const instance = new Constructor(pluginApp, {id: manifestId, version});
   const events = ["constructed"];
   await lifecycleCall(instance, "onload", events);
+  const actions = await exerciseRegistrations(pluginApp);
   await lifecycleCall(instance, "onunload", events);
   const registered = {
     commands: [...pluginApp.commands],
@@ -437,12 +597,16 @@ async function workflowInstance(module, workflow, dataStore, phase, version) {
     loadedData: cloneData(pluginApp.loadedData),
     savedData: cloneData(pluginApp.savedData),
     registered,
+    actions,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
   pluginApp.views.length = 0;
   pluginApp.settings.length = 0;
   pluginApp.registeredEvents.length = 0;
+  pluginApp.commandHandlers.length = 0;
+  pluginApp.viewFactories.length = 0;
+  pluginApp.settingTabs.length = 0;
   phaseResult.remainingRegistrationsAfterCleanup = pluginApp.commands.length + pluginApp.views.length + pluginApp.settings.length + pluginApp.registeredEvents.length;
   workflow.phases.push(phaseResult);
   return phaseResult;
@@ -462,19 +626,23 @@ function lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, wo
   };
 }
 
-async function rendererLifecycleWorkflowProbe(source) {
+async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const deniedCapabilities = [];
   const requiredModules = [];
-  const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, activeAfterUninstall: true};
+  const metrics = {vaultWrites: 0, vaultOperations: []};
+  const workflowContext = {...workflowConfig, metrics};
+  const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
   try {
     exposeBoundedApp();
     const module = evaluateSource(source, deniedCapabilities, requiredModules);
     workflow.supported = true;
-    const dataStore = {value: {}, writes: 0};
-    await workflowInstance(module, workflow, dataStore, "install", "1.0.0");
-    await workflowInstance(module, workflow, dataStore, "restart", "1.0.0");
-    await workflowInstance(module, workflow, dataStore, "update", "1.1.0");
+    const dataStore = {value: cloneData(workflowConfig.initial_data), writes: 0};
+    await workflowInstance(module, workflow, dataStore, "install", "1.0.0", workflowContext, workflow.artifactId);
+    await workflowInstance(module, workflow, dataStore, "restart", "1.0.0", workflowContext, workflow.artifactId);
+    await workflowInstance(module, workflow, dataStore, "update", "1.1.0", workflowContext, workflow.artifactId);
     workflow.pluginDataWrites = dataStore.writes;
+    workflow.vaultWrites = metrics.vaultWrites;
+    workflow.vaultOperations = metrics.vaultOperations;
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -530,7 +698,7 @@ async function rendererLifecycleProbe(source) {
   }
 }
 
-function rendererScript(source, mode = "probe") {
+function rendererScript(source, mode = "probe", workflowConfig = {}) {
   const runtime = [
     `const OBSIDIAN_EXPORT_NAMES = ${JSON.stringify(OBSIDIAN_EXPORT_NAMES)};`,
     remember,
@@ -538,6 +706,8 @@ function rendererScript(source, mode = "probe") {
     deniedObject,
     deniedFunction,
     safeDomObject,
+    safeDocumentObject,
+    safeComponentObject,
     safeCallable,
     cloneData,
     createObsidianApi,
@@ -556,12 +726,15 @@ function rendererScript(source, mode = "probe") {
     lifecycleInstance,
     lifecycleFailure,
     rendererLifecycleProbe,
+    actionError,
+    awaitAction,
+    exerciseRegistrations,
     workflowInstance,
     lifecycleWorkflowFailure,
     rendererLifecycleWorkflowProbe,
   ].map((functionDefinition) => functionDefinition.toString()).join("\n");
   const probe = mode === "workflow" ? "rendererLifecycleWorkflowProbe" : mode === "lifecycle" ? "rendererLifecycleProbe" : "rendererProbe";
-  return `(function(){${runtime};return ${probe}(${JSON.stringify(source)});})()`;
+  return `(function(){${runtime};return ${probe}(${JSON.stringify(source)}, ${JSON.stringify(workflowConfig)});})()`;
 }
 
 function createWindow() {
@@ -579,12 +752,12 @@ function destroyWindow(window) {
   if (!window.isDestroyed()) window.destroy();
 }
 
-async function executeRenderer(sourceFile, mode = "probe") {
+async function executeRenderer(sourceFile, mode = "probe", workflowConfig = {}) {
   const source = readFileSync(sourceFile, "utf8");
   const window = createWindow();
   try {
     await window.loadURL("data:text/html,<meta charset='utf-8'><title>OpenObsidian plugin preflight</title>");
-    return await window.webContents.executeJavaScript(rendererScript(source, mode), true);
+    return await window.webContents.executeJavaScript(rendererScript(source, mode, workflowConfig), true);
   } finally {
     destroyWindow(window);
   }
@@ -609,7 +782,10 @@ function start(sourceFile) {
     return;
   }
   const mode = hasArgument("--run-workflow") ? "workflow" : hasArgument("--run-lifecycle") ? "lifecycle" : "probe";
-  app.whenReady().then(() => executeRenderer(sourceFile, mode)).then(emit, (error) => emit(startupFailure(error, mode), 1));
+  let workflowConfig = {};
+  const configFile = argumentValue("--workflow-config");
+  if (configFile) workflowConfig = JSON.parse(readFileSync(configFile, "utf8"));
+  app.whenReady().then(() => executeRenderer(sourceFile, mode, workflowConfig)).then(emit, (error) => emit(startupFailure(error, mode), 1));
 }
 
 start(argumentValue("--source-file"));

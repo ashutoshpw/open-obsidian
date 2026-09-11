@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "id": "fixture:plugin-loaded-workflows",
+  "checkpoint": "P3.2",
+  "decision_id": "D14",
+  "boundary": "electron-renderer",
+  "target_ids": ["PC07", "PC21", "PC23"],
+  "scenarios": {
+    "PC07": {
+      "workflow_id": "workflow:pc07",
+      "description": "Open/create daily notes from calendar navigation using the configured date and weekly-note settings.",
+      "initial_data": {
+        "shouldConfirmBeforeCreate": false,
+        "weekStart": "monday",
+        "wordsPerDot": 250,
+        "showWeeklyNote": true,
+        "weeklyNoteFormat": "GGGG-[W]WW",
+        "weeklyNoteTemplate": "Templates/Weekly.md",
+        "weeklyNoteFolder": "Weekly",
+        "localeOverride": "en"
+      },
+      "active_file": "Daily/2026-09-11.md",
+      "files": [
+        {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
+        {"path": "Templates/Weekly.md", "content": "# {{title}}\n"}
+      ]
+    },
+    "PC21": {
+      "workflow_id": "workflow:pc21",
+      "description": "Restore the configured startup target and preserve homepage settings across restart and update.",
+      "initial_data": {
+        "version": 4,
+        "homepages": {
+          "Main Homepage": {
+            "value": "Daily/2026-09-11.md",
+            "kind": "File",
+            "openOnStartup": true,
+            "commands": []
+          }
+        },
+        "separateMobile": false
+      },
+      "active_file": "Daily/2026-09-11.md",
+      "files": [
+        {"path": "Daily/2026-09-11.md", "content": "# Friday\n"}
+      ]
+    },
+    "PC23": {
+      "workflow_id": "workflow:pc23",
+      "description": "Record/reopen recent files, preserve exclusions and exercise restart/update cleanup behavior.",
+      "initial_data": {
+        "recentFiles": [
+          {"path": "Daily/2026-09-11.md", "basename": "2026-09-11"}
+        ],
+        "omittedPaths": [],
+        "omittedTags": [],
+        "updateOn": "file-open",
+        "omitBookmarks": false,
+        "maxLength": 50
+      },
+      "active_file": "Daily/2026-09-11.md",
+      "files": [
+        {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
+        {"path": "Archive/old-note.md", "content": "# Old\n"}
+      ]
+    }
+  },
+  "combination": {
+    "id": "combination:pc07-pc21-pc23",
+    "target_ids": ["PC07", "PC21", "PC23"],
+    "description": "Load the three unchanged marker-free artifacts in one mediated renderer workflow and verify registrations are cleaned on return to Obsidian."
+  },
+  "required_phases": ["install", "restart", "update"],
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It records bounded settings/view/command registrations, mediated action attempts, restart/update data restoration, cleanup and return-to-Obsidian state; it does not certify stock Obsidian or human behavior."
+}
