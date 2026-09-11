@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import type {LaunchIntent} from "../shared/entry-points.js";
 import {decodeBase64, encodeBase64} from "../shared/base64.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
@@ -96,6 +96,8 @@ const runRetrievalButton = document.querySelector<HTMLButtonElement>("#run-retri
 const retrievalMeta = document.querySelector<HTMLElement>("#retrieval-meta");
 const retrievalAnswer = document.querySelector<HTMLElement>("#retrieval-answer");
 const retrievalResults = document.querySelector<HTMLElement>("#retrieval-results");
+const exportConversationButton = document.querySelector<HTMLButtonElement>("#export-conversation");
+const conversationExportOutput = document.querySelector<HTMLElement>("#conversation-export");
 const sourceInspector = document.querySelector<HTMLElement>("#source-inspector");
 const sourceInspectorPath = document.querySelector<HTMLElement>("#source-inspector-path");
 const sourceInspectorMeta = document.querySelector<HTMLElement>("#source-inspector-meta");
@@ -202,6 +204,7 @@ let graphData: GraphView | null = null;
 let canvasData: CanvasView | null = null;
 let baseData: BaseResponse | null = null;
 let retrievalData: RetrievalResponse | null = null;
+let conversationTurns: ConversationTurn[] = [];
 let pendingCitation: RetrievalCitation | null = null;
 let sourceInspectorCitation: RetrievalCitation | null = null;
 let aiChangeSet: AIChangeSet | null = null;
@@ -2443,6 +2446,46 @@ function renderRetrieval(response: RetrievalResponse): void {
   renderRetrievalResults(response.passages);
 }
 
+function conversationProviderMode(): "none" | ProviderMode {
+  if (!retrievalData || retrievalData.provider === "none") return "none";
+  return providerSettings.mode;
+}
+
+function recordRetrievalConversation(request: RetrievalRequest, response: RetrievalResponse): void {
+  const query = request.query.trim();
+  const answer = response.answer.answer.trim();
+  if (!query || !answer) return;
+  const now = new Date().toISOString();
+  conversationTurns.push({role: "user", content: query, createdAt: now});
+  conversationTurns.push({role: "assistant", content: answer, createdAt: new Date().toISOString()});
+  setDisabled(exportConversationButton, false);
+}
+
+async function exportConversation(): Promise<void> {
+  if (!api) return;
+  if (conversationTurns.length === 0) {
+    setStatus("Run a grounded search before exporting conversation history.");
+    return;
+  }
+  try {
+    const content = await api.exportConversation({providerMode: conversationProviderMode(), model: retrievalData?.model ?? null, turns: conversationTurns});
+    if (conversationExportOutput) {
+      conversationExportOutput.textContent = content;
+      setHidden(conversationExportOutput, false);
+    }
+    const blob = new Blob([content], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "openobsidian-conversation.json";
+    link.click();
+    URL.revokeObjectURL(url);
+    setStatus(`Exported ${conversationTurns.length} conversation turns as portable JSON.`);
+  } catch (error) {
+    setStatus(errorText(error, "Unable to export conversation history."));
+  }
+}
+
 function openRetrievalCitation(citation: RetrievalCitation): void {
   renderSourceInspector(citation);
   pendingCitation = citation;
@@ -2473,6 +2516,7 @@ async function performRetrieval(client: OpenObsidianAPI, request: RetrievalReque
   try {
     retrievalData = await client.retrieve(request);
     renderRetrieval(retrievalData);
+    recordRetrievalConversation(request, retrievalData);
     setStatus(`Grounded search found ${retrievalData.passages.length} source passage${retrievalData.passages.length === 1 ? "" : "s"}; ${retrievalCompletionStatus(retrievalData)}.`);
   } catch (error) {
     setText(retrievalMeta, errorText(error, "Unable to run grounded search."));
@@ -3278,6 +3322,9 @@ function resetWorkflowData(): void {
   canvasData = null;
   baseData = null;
   retrievalData = null;
+  conversationTurns = [];
+  setDisabled(exportConversationButton, true);
+  setHidden(conversationExportOutput, true);
   pendingCitation = null;
   resetSourceInspector();
   aiChangeSet = null;
@@ -3411,6 +3458,7 @@ if (applyAIButton) applyAIButton.addEventListener("click", () => void applyAIDra
 if (undoAIButton) undoAIButton.addEventListener("click", () => void undoAIRequest());
 if (suggestAIButton) suggestAIButton.addEventListener("click", () => void suggestOrganizationRequest());
 if (closeRetrievalButton) closeRetrievalButton.addEventListener("click", () => setHidden(retrievalPanel, true));
+if (exportConversationButton) exportConversationButton.addEventListener("click", () => void exportConversation());
 if (retrievalForm) retrievalForm.addEventListener("submit", (event) => {
   event.preventDefault();
   void runRetrievalRequest();

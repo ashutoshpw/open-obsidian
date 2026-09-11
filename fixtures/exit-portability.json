@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c14-exit-portability",
+  "ordinary_outputs": ["notes/ai-output.md", "boards/ai-output.canvas"],
+  "conversation": {
+    "providerMode": "none",
+    "model": null,
+    "turns": [
+      {"role": "user", "content": "Summarize the selected note.", "createdAt": "2026-09-11T00:00:00Z"},
+      {"role": "assistant", "content": "The selected note remains in ordinary Markdown.", "createdAt": "2026-09-11T00:00:01Z"}
+    ]
+  },
+  "external_pending": [
+    "reference Obsidian 1.13.7/1.14.1 reopen and back-and-forth comparison",
+    "human portability review"
+  ]
+}

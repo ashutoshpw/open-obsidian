@@ -18,6 +18,8 @@ test("workspace journey fixture covers keyboard commands and visible entry point
   expect(renderer).toContain("provider destination: none");
   expect(html).toContain('id="appearance-settings"');
   expect(html).toContain('id="appearance-theme"');
+  expect(html).toContain('id="export-conversation"');
+  expect(renderer).toContain("exportConversation");
   expect(renderer).toContain("loadAppearance");
   expect(renderer).toContain("previewThemeAsset");
 });

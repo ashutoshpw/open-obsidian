@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type ConversationExportRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -47,6 +47,7 @@ const api: OpenObsidianAPI = {
   saveProviderSettings: (settings) => ipcRenderer.invoke(CHANNELS.saveProviderSettings, settings),
   saveProviderCredential: (request: ProviderCredentialRequest) => ipcRenderer.invoke(CHANNELS.saveProviderCredential, request),
   providerStatus: () => ipcRenderer.invoke(CHANNELS.providerStatus),
+  exportConversation: (request: ConversationExportRequest) => ipcRenderer.invoke(CHANNELS.exportConversation, request),
   diagnosticManifest: () => ipcRenderer.invoke(CHANNELS.diagnosticManifest),
   onLaunchIntent: (listener) => {
     const handler = (_event: Electron.IpcRendererEvent, intent: Parameters<typeof listener>[0]) => listener(intent);

@@ -5,6 +5,7 @@ import {fileURLToPath} from "node:url";
 import {dirname, isAbsolute, join, resolve} from "node:path";
 import {applyAIChangeSet, draftLocalAIChange, organizationSuggestions, undoAIChange, type AppliedAIChange} from "../core/ai-changes.js";
 import {createFetchProviderTransport, createProviderRetrievalModel, describeProvider, ProviderUsageLedger} from "../core/providers.js";
+import {exportPortableConversation} from "../core/model-lifecycle.js";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
 import {createNoteFromTextNode, editCanvasTextNode, parseCanvas} from "../core/canvas.js";
 import {evaluateBase, parseBase, type BaseRow} from "../core/bases.js";
@@ -23,7 +24,7 @@ import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
 import {parseLaunchArguments, parseDeepLinkIntent, type LaunchIntent} from "../shared/entry-points.js";
 import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
-import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -599,6 +600,11 @@ function providerStatus(): ProviderStatus {
   return describeProvider(settings, providerCredentialStore(), {online: true, transportConfigured: true, usage: providerLedger(settings).snapshot()});
 }
 
+function exportConversationRequest(_event: Electron.IpcMainInvokeEvent, value: unknown): string {
+  const request: ConversationExportRequest = validateConversationExportRequest(value);
+  return exportPortableConversation(request);
+}
+
 function diagnosticManifest(): DiagnosticManifest {
   const provider = providerStatus();
   const vault = activeVault;
@@ -720,6 +726,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.saveProviderSettings, saveProviderSettings);
   ipcMain.handle(CHANNELS.saveProviderCredential, saveProviderCredential);
   ipcMain.handle(CHANNELS.providerStatus, providerStatus);
+  ipcMain.handle(CHANNELS.exportConversation, exportConversationRequest);
   ipcMain.handle(CHANNELS.diagnosticManifest, diagnosticManifest);
   ipcMain.handle(CHANNELS.loadWorkspaceState, loadWorkspaceState);
   ipcMain.handle(CHANNELS.saveWorkspaceState, saveWorkspaceState);

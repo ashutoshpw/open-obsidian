@@ -130,6 +130,9 @@
       .retrieval-answer[data-status="missing-evidence"] strong, .retrieval-answer[data-status="conflicting-evidence"] strong { color: #ffd28b; }
       .retrieval-answer small { color: #858b9c; }
       .retrieval-results { display: grid; gap: 6px; max-height: 300px; overflow: auto; margin-top: 10px; }
+      .conversation-actions { display: grid; gap: 8px; margin-top: 10px; }
+      .conversation-actions button { justify-self: start; border: 1px solid #a78bfa66; border-radius: 7px; padding: 7px 10px; background: #a78bfa22; color: #f0ebff; font-size: 11px; }
+      .conversation-export { max-height: 220px; overflow: auto; margin: 0; border: 1px solid #ffffff12; border-radius: 8px; padding: 10px; background: #0c0e12; color: #c8cedc; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
       .retrieval-result { display: grid; gap: 5px; width: 100%; border: 1px solid #ffffff12; border-radius: 8px; padding: 9px 10px; background: #ffffff05; color: #d8dbe5; text-align: left; }
       .retrieval-result:hover, .retrieval-result:focus-visible { border-color: #a78bfa88; background: #a78bfa18; }
       .retrieval-result header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
@@ -543,6 +546,7 @@
           <div class="retrieval-meta" id="retrieval-meta" aria-live="polite">Choose a question to build a local source index.</div>
           <div class="retrieval-answer" id="retrieval-answer" hidden></div>
           <div class="retrieval-results" id="retrieval-results" aria-label="Grounded source passages"></div>
+          <div class="conversation-actions"><button id="export-conversation" type="button" disabled>Export chat history</button><pre class="conversation-export" id="conversation-export" aria-label="Portable conversation export" hidden></pre></div>
           <section class="source-inspector" id="source-inspector" aria-label="Source inspector" hidden><header><h3>Source inspector</h3><span class="source-inspector-badge">Source excerpt · no model inference</span></header><p id="source-inspector-path">No source selected.</p><p id="source-inspector-meta"></p><pre id="source-inspector-snippet">Select a grounded result to inspect its source excerpt.</pre><button id="open-source-inspector" type="button">Open source at cited lines</button></section>
         </section>
         <section class="tool-panel" id="ai-panel" aria-label="Reviewed local AI changes" hidden>

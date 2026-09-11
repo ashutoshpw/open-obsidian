@@ -61,6 +61,7 @@
     "audit:minimal-theme": "bun scripts/audit-minimal-theme.ts",
     "audit:comparison-scorecard": "bun scripts/comparison-scorecard.ts",
     "audit:golden-edit-fidelity": "bun scripts/golden-edit-fidelity.ts",
+    "audit:exit-portability": "bun scripts/audit-exit-portability.ts",
     "audit:compatibility-coverage": "bun scripts/audit-compatibility-coverage.ts",
     "knip": "knip",
     "audit:fallow": "bunx fallow health --root . --format compact --report-only",

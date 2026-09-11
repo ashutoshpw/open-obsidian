@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -52,6 +52,15 @@ test("provider IPC validation rejects unsafe endpoints, modes, caps and credenti
   expect(() => validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, endpoint: "http://192.168.1.10:11434/v1"})).toThrow("Local provider endpoint must use loopback");
   expect(() => validateProviderSettings({...DEFAULT_PROVIDER_SETTINGS, caps: {...DEFAULT_PROVIDER_SETTINGS.caps, maxRequests: 0}})).toThrow("Invalid provider usage cap");
   expect(() => validateProviderCredentialRequest({credentialRef: "bad ref", secret: "secret-value"})).toThrow("Invalid provider credential request");
+});
+
+test("conversation export validation keeps portable turns bounded and provider destination explicit", () => {
+  const request = validateConversationExportRequest({providerMode: "none", model: null, turns: [{role: "user", content: "Where is the note?", createdAt: "2026-09-11T00:00:00Z"}, {role: "assistant", content: "In the selected vault.", createdAt: "2026-09-11T00:00:01Z"}]});
+  expect(CHANNELS.exportConversation).toBe("ai:export-conversation");
+  expect(request.providerMode).toBe("none");
+  expect(request.turns).toHaveLength(2);
+  expect(() => validateConversationExportRequest({providerMode: "none", model: null, turns: [{role: "tool", content: "unsafe", createdAt: "now"}]})).toThrow("Invalid conversation turn");
+  expect(() => validateConversationExportRequest({providerMode: "managed", model: "model", turns: [{role: "user", content: "", createdAt: "now"}]})).toThrow("Invalid conversation turn");
 });
 
 test("history and conflict IPC validation keeps destructive actions explicit", () => {

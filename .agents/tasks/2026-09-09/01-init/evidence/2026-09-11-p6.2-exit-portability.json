@@ -1,0 +1,38 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:c14-exit-portability-local",
+  "recorded_at": "2026-09-11T20:59:43Z",
+  "checkpoint": "P6.2",
+  "requirements": ["C14"],
+  "command": "bun run audit:exit-portability",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "runtime": "Bun 1.4.2",
+    "electron": "44.3.0"
+  },
+  "fixture": "fixtures/exit-portability.json",
+  "tested_source_tree": {
+    "sha256": "e0a4f9408b15425d39f1343afd41df680091308c1491c0cfd77acab9e9df5fcb",
+    "paths": 231
+  },
+  "exit_code": 0,
+  "local": {
+    "status": "passed",
+    "checks": {
+      "markdown_reopened": true,
+      "canvas_reopened": true,
+      "conversation_exported": true,
+      "vault_contains_only_portable_outputs": true,
+      "app_database_required": false
+    },
+    "conversation": {"schema_version": 1, "provider_mode": "none", "model": null, "turns": 2},
+    "output_hashes": {"markdown": "542295fdecf6", "canvas": "501d898ca6d8"}
+  },
+  "limitations": [
+    "This proves local ordinary Markdown/JSON Canvas reopen and portable conversation export only.",
+    "Reference Obsidian 1.13.7/1.14.1 back-and-forth reopen and human portability review remain external-pending.",
+    "No personal or selected /home/ashutosh/Obsidian vault was accessed."
+  ],
+  "result": "Local portability implementation is covered; C14 reference-runtime certification remains pending."
+}

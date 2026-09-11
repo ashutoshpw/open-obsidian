@@ -48,6 +48,7 @@ export const CHANNELS = {
   saveProviderSettings: "ai:save-provider-settings",
   saveProviderCredential: "ai:save-provider-credential",
   providerStatus: "ai:provider-status",
+  exportConversation: "ai:export-conversation",
   diagnosticManifest: "workspace:diagnostic-manifest",
   launchIntent: "workspace:launch-intent",
   popoutIntent: "popout:intent",
@@ -264,6 +265,8 @@ export type OrganizationSuggestionKind = "link" | "property" | "duplicate" | "re
 export type OrganizationSuggestion = {id: string; kind: OrganizationSuggestionKind; relativePath: string; targetPath?: string; summary: string; detail: string; status: "awaiting-approval" | "denied-security"; safeAlternative?: string};
 export type AIOrganizationResponse = {provider: "none"; scope: RetrievalScope; suggestions: OrganizationSuggestion[]; warnings: string[]; safety: AIChangeSafety};
 
+export type ConversationTurn = {role: "system" | "user" | "assistant"; content: string; createdAt: string};
+
 export type ProviderMode = "managed" | "byok" | "local";
 export type ProviderId = "openrouter-proxy" | "openai-compatible" | "local-openai-compatible";
 export type ProviderUsageCaps = {maxRequests: number; maxInputTokens: number; maxOutputTokens: number; maxCostCents: number};
@@ -273,6 +276,7 @@ export type ProviderAvailability = "ready" | "setup-required" | "offline" | "quo
 export type ProviderUsageSnapshot = ProviderUsageCaps & {requestCount: number; inputTokens: number; outputTokens: number; costCents: number};
 export type ProviderStatus = {mode: ProviderMode; providerId: ProviderId; model: string; endpoint: string; destination: string; credentialState: ProviderCredentialState; availability: ProviderAvailability; fallback: "none"; reason: string; usage: ProviderUsageSnapshot};
 export type ProviderCredentialRequest = {credentialRef: string; secret: string};
+export type ConversationExportRequest = {providerMode: ProviderMode | "none"; model: string | null; turns: ConversationTurn[]};
 
 export type WorkspaceSettings = {
   editorMode: EditorMode;
@@ -586,6 +590,20 @@ export function validateProviderCredentialRequest(value: unknown): ProviderCrede
   return {credentialRef: value.credentialRef, secret: value.secret};
 }
 
+function validateConversationTurn(value: unknown): ConversationTurn {
+  if (!isRecord(value) || !["system", "user", "assistant"].includes(value.role as string)) throw new Error("Invalid conversation turn");
+  if (typeof value.content !== "string" || value.content.length === 0 || value.content.length > 100_000) throw new Error("Invalid conversation turn");
+  if (typeof value.createdAt !== "string" || value.createdAt.length === 0 || value.createdAt.length > 100) throw new Error("Invalid conversation turn");
+  return {role: value.role as ConversationTurn["role"], content: value.content, createdAt: value.createdAt};
+}
+
+export function validateConversationExportRequest(value: unknown): ConversationExportRequest {
+  if (!isRecord(value) || !["none", "managed", "byok", "local"].includes(value.providerMode as string)) throw new Error("Invalid conversation export request");
+  if (value.model !== null && (typeof value.model !== "string" || value.model.length > 200)) throw new Error("Invalid conversation export request");
+  if (!Array.isArray(value.turns) || value.turns.length > 500) throw new Error("Invalid conversation export request");
+  return {providerMode: value.providerMode as ConversationExportRequest["providerMode"], model: value.model as string | null, turns: value.turns.map(validateConversationTurn)};
+}
+
 export type OpenObsidianAPI = {
   selectVault: () => Promise<VaultSummary | null>;
   openVault: (root: string) => Promise<VaultSummary>;
@@ -633,6 +651,7 @@ export type OpenObsidianAPI = {
   saveProviderSettings: (settings: ProviderSettings) => Promise<ProviderSettings>;
   saveProviderCredential: (request: ProviderCredentialRequest) => Promise<ProviderStatus>;
   providerStatus: () => Promise<ProviderStatus>;
+  exportConversation: (request: ConversationExportRequest) => Promise<string>;
   diagnosticManifest: () => Promise<import("../core/privacy.js").DiagnosticManifest>;
   onLaunchIntent: (listener: (intent: LaunchIntent) => void) => () => void;
   onPopoutIntent: (listener: (intent: PopoutIntent) => void) => () => void;
