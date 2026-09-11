@@ -72,6 +72,30 @@ export type PluginCompatibilityMatrix = {
   feasibility: PluginFeasibilityPlan;
 };
 
+const COMPATIBILITY_COVERAGE_STATUSES = ["passing", "failing", "untested", "unsupported-security"] as const;
+export type CompatibilityCoverageStatus = (typeof COMPATIBILITY_COVERAGE_STATUSES)[number];
+
+export type PluginCompatibilityCoverageCell = {
+  artifactId: string;
+  platform: PluginPlatform;
+  mandatory: boolean;
+  status: CompatibilityCoverageStatus;
+  runtimeDisposition: "pending-runtime";
+};
+
+export type PluginCompatibilityCoverageReport = {
+  schema_version: 1;
+  fixture_id: "fixture:q-extension-matrix";
+  mandatoryTargetIds: string[];
+  dependencyTargetIds: string[];
+  platforms: PluginPlatform[];
+  cells: PluginCompatibilityCoverageCell[];
+  counts: Record<CompatibilityCoverageStatus, number>;
+  unassessedMandatoryCells: number;
+  noUnassessedMandatoryCells: boolean;
+  result: string;
+};
+
 type UnknownRecord = Record<string, unknown>;
 
 function record(value: unknown): UnknownRecord | null {
@@ -252,5 +276,70 @@ export function validatePluginCompatibilityMatrix(matrix: PluginCompatibilityMat
   if (dependencies.size !== 2) failures.push(`expected 2 dependency targets, found ${dependencies.size}`);
   [...mandatory, ...dependencies].filter((id) => !targetIds.includes(id)).forEach((id) => failures.push(`selection references missing matrix target ${id}`));
   failures.push(...validateFeasibilityPlan(matrix, targetIds));
+  return failures;
+}
+
+function emptyCoverageCounts(): Record<CompatibilityCoverageStatus, number> {
+  return Object.fromEntries(COMPATIBILITY_COVERAGE_STATUSES.map((status) => [status, 0])) as Record<CompatibilityCoverageStatus, number>;
+}
+
+/** Convert every pending runtime cell into an explicit `untested` coverage result. */
+export function buildPluginCompatibilityCoverageReport(matrix: PluginCompatibilityMatrix): PluginCompatibilityCoverageReport {
+  const mandatory = new Set(matrix.mandatoryTargetIds);
+  const cells = matrix.targets.map((target) => ({artifactId: target.artifactId, platform: target.platform, mandatory: mandatory.has(target.artifactId), status: target.disposition === "pending-runtime" ? "untested" as const : "failing" as const, runtimeDisposition: target.disposition}));
+  const counts = emptyCoverageCounts();
+  cells.forEach((cell) => { counts[cell.status] += 1; });
+  const mandatoryCells = cells.filter((cell) => cell.mandatory);
+  const unassessedMandatoryCells = mandatoryCells.filter((cell) => !COMPATIBILITY_COVERAGE_STATUSES.includes(cell.status)).length;
+  return {
+    schema_version: 1,
+    fixture_id: "fixture:q-extension-matrix",
+    mandatoryTargetIds: [...matrix.mandatoryTargetIds],
+    dependencyTargetIds: [...matrix.dependencyTargetIds],
+    platforms: [...PLUGIN_PLATFORMS],
+    cells,
+    counts,
+    unassessedMandatoryCells,
+    noUnassessedMandatoryCells: unassessedMandatoryCells === 0 && mandatoryCells.length === matrix.mandatoryTargetIds.length * PLUGIN_PLATFORMS.length,
+    result: "Every mandatory target/platform cell is explicitly classified. Pending runtime evidence is reported as untested; passing, failing and unsupported-security remain separate categories.",
+  };
+}
+
+export type CompatibilityCoverageFixture = {
+  schema_version: 1;
+  fixture_id: "fixture:q-extension-matrix";
+  mandatory_target_count: number;
+  dependency_target_count: number;
+  platforms: string[];
+  statuses: string[];
+  pending_runtime_maps_to: string;
+  no_unassessed_mandatory_cells: boolean;
+};
+
+export function validatePluginCompatibilityCoverage(report: PluginCompatibilityCoverageReport, fixture: CompatibilityCoverageFixture): string[] {
+  const failures: string[] = [];
+  if (fixture.schema_version !== 1 || fixture.fixture_id !== "fixture:q-extension-matrix") failures.push("compatibility coverage fixture identity is invalid");
+  if (report.schema_version !== 1 || report.fixture_id !== fixture.fixture_id) failures.push("compatibility coverage report identity is invalid");
+  if (report.mandatoryTargetIds.length !== fixture.mandatory_target_count) failures.push(`expected ${fixture.mandatory_target_count} mandatory targets, found ${report.mandatoryTargetIds.length}`);
+  if (report.dependencyTargetIds.length !== fixture.dependency_target_count) failures.push(`expected ${fixture.dependency_target_count} dependency targets, found ${report.dependencyTargetIds.length}`);
+  if (report.platforms.join("|") !== fixture.platforms.join("|")) failures.push("compatibility coverage platforms do not match the fixture");
+  if (fixture.statuses.some((status) => !COMPATIBILITY_COVERAGE_STATUSES.includes(status as CompatibilityCoverageStatus))) failures.push("fixture declares an unsupported compatibility coverage status");
+  if (fixture.pending_runtime_maps_to !== "untested") failures.push("pending runtime must map to untested");
+  if (fixture.no_unassessed_mandatory_cells !== true || report.noUnassessedMandatoryCells !== true || report.unassessedMandatoryCells !== 0) failures.push("mandatory compatibility cells must have explicit dispositions");
+  const identities = report.cells.map((cell) => `${cell.artifactId}/${cell.platform}`);
+  if (new Set(identities).size !== identities.length) failures.push("compatibility coverage contains duplicate cells");
+  report.cells.forEach((cell) => {
+    if (!report.platforms.includes(cell.platform)) failures.push(`${cell.artifactId} has an unknown platform cell`);
+    if (!COMPATIBILITY_COVERAGE_STATUSES.includes(cell.status)) failures.push(`${cell.artifactId}/${cell.platform} has an unknown coverage status`);
+    if (cell.runtimeDisposition !== "pending-runtime" || cell.status !== "untested") failures.push(`${cell.artifactId}/${cell.platform} must remain explicitly untested while runtime evidence is pending`);
+  });
+  const mandatoryCells = report.cells.filter((cell) => cell.mandatory);
+  const expectedMandatoryIdentities = new Set(report.mandatoryTargetIds.flatMap((id) => report.platforms.map((platform) => `${id}/${platform}`)));
+  if (mandatoryCells.length !== expectedMandatoryIdentities.size || mandatoryCells.some((cell) => !expectedMandatoryIdentities.has(`${cell.artifactId}/${cell.platform}`))) failures.push("mandatory compatibility target/platform coverage is incomplete");
+  const counted = emptyCoverageCounts();
+  report.cells.forEach((cell) => { counted[cell.status] += 1; });
+  COMPATIBILITY_COVERAGE_STATUSES.forEach((status) => {
+    if (report.counts[status] !== counted[status]) failures.push(`compatibility coverage count for ${status} is incorrect`);
+  });
   return failures;
 }

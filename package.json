@@ -57,6 +57,8 @@
     "audit:theme-assets": "bun scripts/audit-theme-assets.ts",
     "audit:minimal-theme": "bun scripts/audit-minimal-theme.ts",
     "audit:comparison-scorecard": "bun scripts/comparison-scorecard.ts",
+    "audit:golden-edit-fidelity": "bun scripts/golden-edit-fidelity.ts",
+    "audit:compatibility-coverage": "bun scripts/audit-compatibility-coverage.ts",
     "knip": "knip",
     "audit:fallow": "bunx fallow health --root . --format compact --report-only",
     "audit:fallow:health": "bunx fallow health --root . --format compact --report-only",

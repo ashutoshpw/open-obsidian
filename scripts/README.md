@@ -13,6 +13,8 @@ Use the shortest command that matches the change. All scripts are repository-loc
 | `bun run quality` | Phase-boundary gate: full local checks, compile, distribution, quality scorecard, Knip and report-only Fallow health. |
 | `bun run benchmark` | Measures Linux core-synthetic startup/indexing, edit-operation, search, watcher and resource distributions; use `--profiles=100,1000,10000` and optionally `--index-runs=1 --search-runs=25 --input-runs=25` for a bounded larger corpus. Renderer paint, pinned hardware, reference vaults, cross-platform and human comparison remain external-pending. |
 | `bun run audit:comparison-scorecard` | Builds the counterbalanced stock/plugin-equipped/OpenObsidian find/synthesize/organize assignment matrix across identical corpus and model conditions; unavailable runtime and human measurements remain explicitly external-pending. |
+| `bun run audit:golden-edit-fidelity` | Applies exact Markdown and Canvas golden edits through the revision-aware writer, checks approved-only diffs and local reopen bytes, and keeps reference-Obsidian reopen external-pending. |
+| `bun run audit:compatibility-coverage` | Enumerates every mandatory/dependency plugin target on macOS, Windows and Linux with separate passing, failing, untested and unsupported-security counts; pending runtime evidence is explicit untested. |
 | `bun run knip` | Recurring unused files, exports and dependencies audit. |
 | `bun run audit:fallow` | Repository health score; inherited advisories stay visible. |
 | `bun run audit:fallow:changed` | Brief changed-file Fallow review for the current working tree. |

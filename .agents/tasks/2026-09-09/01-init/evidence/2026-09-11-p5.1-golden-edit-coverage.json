@@ -1,0 +1,57 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T16:58:30Z",
+  "checkpoint": "P5.1",
+  "requirements": ["Q-002", "Q-003"],
+  "fixture_ids": ["fixture:q-edit-fidelity", "fixture:q-extension-matrix"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "bun_version": "1.4.2",
+    "branch": "main",
+    "implementation_commit_before_reconciliation": "1d681e341868a6d120cb2130fbc7998712c18d43",
+    "tested_source_tree": "a9a13c97a3a2433da4be092a05cf682837cf9d03dba2bb66b86edc47901adc11",
+    "source_tree_paths": 219,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "golden_edit_fidelity": {
+    "local_status": "passed",
+    "case_count": 2,
+    "exact_outputs": 2,
+    "reopened_locally": 2,
+    "cases": [
+      {"id": "markdown-property", "approved_change": "status: open -> status: done", "unrelated_source_preserved": true, "byte_identical_local_reopen": true},
+      {"id": "canvas-text-node", "approved_change": "nodes[text-1].text: draft -> updated", "unknown_fields_preserved": true, "byte_identical_local_reopen": true}
+    ],
+    "reference_reopen": "external-pending",
+    "release_eligible": false
+  },
+  "compatibility_coverage": {
+    "mandatory_targets": 25,
+    "dependency_targets": 2,
+    "platforms": ["macOS", "Windows", "Linux"],
+    "total_cells": 81,
+    "mandatory_cells": 75,
+    "counts": {"passing": 0, "failing": 0, "untested": 81, "unsupported-security": 0},
+    "unassessed_mandatory_cells": 0,
+    "no_unassessed_mandatory_cells": true,
+    "release_eligible": false
+  },
+  "checks": [
+    {"command": "bun run audit:golden-edit-fidelity", "exit_code": 0, "result": "Two exact Markdown/Canvas approved edits passed, preserved unrelated/unknown fields and reopened locally with byte-identical output; reference Obsidian reopen stayed external-pending."},
+    {"command": "bun run audit:compatibility-coverage", "exit_code": 0, "result": "All 81 target/platform cells were enumerated, including 75 mandatory cells; all pending runtime cells were explicitly classified as untested and counts remained separate."},
+    {"command": "bun test tests/compatibility-coverage.test.ts", "exit_code": 0, "result": "The focused compatibility coverage test passed with one test and nine expectations."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript typecheck passed."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "The routine state, contract, audit, typecheck, test, Knip and changed-file checks passed; the honest audit remains active with 125 implemented rows and 161 mandatory rows not release-passing."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "Strict changed-file Fallow passed with no dead-code, complexity or duplication findings."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "Source tree digest a9a13c97a3a2433da4be092a05cf682837cf9d03dba2bb66b86edc47901adc11 across 219 included paths."}
+  ],
+  "limitations": [
+    "A pinned reference Obsidian runtime and consented vault were unavailable, so reference reopen and reference-vault portability remain external-pending.",
+    "Plugin unchanged-artifact lifecycle, settings, views, combinations, restart/update/uninstall, return-to-Obsidian and OS enforcement remain runtime-pending for all 81 cells; untested is not passing or unsupported-security.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Q-002 now has local exact-edit and reopen evidence, and Q-003 now has explicit 81-cell coverage with no unassessed mandatory cells. Neither result is release-passing until the named external runtime and reference evidence is available."
+}

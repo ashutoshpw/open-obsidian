@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "fixture_id": "fixture:q-extension-matrix",
+  "name": "explicit-compatibility-coverage",
+  "mandatory_target_count": 25,
+  "dependency_target_count": 2,
+  "platforms": ["macOS", "Windows", "Linux"],
+  "statuses": ["passing", "failing", "untested", "unsupported-security"],
+  "pending_runtime_maps_to": "untested",
+  "no_unassessed_mandatory_cells": true,
+  "notes": "Every mandatory target/platform cell is enumerated. Pending runtime evidence is reported as untested; unsupported-security is a separate count and is never inferred from missing implementation."
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "fixture_id": "fixture:q-edit-fidelity",
+  "name": "golden-approved-edit-fidelity",
+  "cases": [
+    {
+      "id": "markdown-property",
+      "kind": "markdown-property",
+      "path": "notes/golden.md",
+      "before": "\uFEFF---\r\nstatus: open\r\nunknown: [keep, me]\r\ncomment: # untouched\r\n---\r\nBody\r\n",
+      "edit": {"key": "status", "raw_value": "done"},
+      "after": "\uFEFF---\r\nstatus: done\r\nunknown: [keep, me]\r\ncomment: # untouched\r\n---\r\nBody\r\n",
+      "approved_diff": {"kind": "text-span", "start": 14, "delete_text": "open", "insert_text": "done"}
+    },
+    {
+      "id": "canvas-text-node",
+      "kind": "canvas-text-node",
+      "path": "boards/golden.canvas",
+      "before": {
+        "nodes": [
+          {"id": "text-1", "type": "text", "text": "draft", "x": 10, "y": 20, "width": 300, "height": 120, "unknownNode": {"keep": true}},
+          {"id": "file-1", "type": "file", "file": "Notes/Target.md", "subpath": "#Heading", "label": "Target"}
+        ],
+        "edges": [{"id": "edge-1", "fromNode": "text-1", "toNode": "file-1", "label": "relates", "unknownEdge": {"keep": true}}],
+        "unknownRoot": "preserve"
+      },
+      "edit": {"node_id": "text-1", "text": "updated"},
+      "after": {
+        "nodes": [
+          {"id": "text-1", "type": "text", "text": "updated", "x": 10, "y": 20, "width": 300, "height": 120, "unknownNode": {"keep": true}},
+          {"id": "file-1", "type": "file", "file": "Notes/Target.md", "subpath": "#Heading", "label": "Target"}
+        ],
+        "edges": [{"id": "edge-1", "fromNode": "text-1", "toNode": "file-1", "label": "relates", "unknownEdge": {"keep": true}}],
+        "unknownRoot": "preserve"
+      },
+      "approved_diff": {"kind": "canvas-field", "path": "nodes[text-1].text", "from": "draft", "to": "updated"}
+    }
+  ],
+  "reference_reopen": {
+    "status": "external-pending",
+    "reason": "A pinned reference Obsidian runtime and consented vault are required to reopen the edited files in the reference application."
+  }
+}
