@@ -5,8 +5,9 @@
   "requirements": ["PLUG-006"],
   "decision_id": "D18",
   "fixture_id": "fixture:external-prerequisites",
-  "recorded_at": "2026-09-11T23:30:51Z",
+  "recorded_at": "2026-09-11T23:35:06Z",
   "implementation_commit": "de3a32dbad17405c8b8dda0b089443500f1a9647",
+  "contract_fix_commit": "f08ddc336c985c31858d4d89f54ab51610578d4f",
   "commands": {
     "validator": "bun run validate:plugin-prerequisites",
     "focused_test": "bun test tests/plugin-prerequisites.test.ts",
@@ -16,8 +17,8 @@
     "fast_checks": "bun run check:fast"
   },
   "source_tree": {
-    "head": "de3a32dbad17405c8b8dda0b089443500f1a9647",
-    "sha256": "aa80010cdc7dd6a17c0b97d4856376d0d56c0540fe8577c002d5a414b837afbf",
+    "head": "f08ddc3b0b5e879a6cc13ebd1c6744f90a6dc0a5",
+    "sha256": "a148bd3033c857f142436ebc7e65bbfe0cb08cd7b144312277489242a3a8d79b",
     "paths": 235,
     "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
   },
