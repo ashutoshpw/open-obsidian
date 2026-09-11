@@ -14,6 +14,7 @@ export const QUICK_CHECKS: readonly QuickCheck[] = [
   {id: "paid-service-boundary", args: ["run", "validate:paid-service-boundary"]},
   {id: "workflows", args: ["run", "validate:workflows"]},
   {id: "input-matrix", args: ["run", "validate:input-matrix"]},
+  {id: "comparison-scorecard", args: ["run", "audit:comparison-scorecard"]},
   {id: "accessibility", args: ["run", "check:accessibility"]},
   {id: "layout", args: ["run", "validate:layout"]},
   {id: "typecheck", args: ["run", "typecheck"]},

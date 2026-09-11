@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "protocol_version": "2026-09-11.p5.1",
+  "name": "counterbalanced-find-synthesize-organize",
+  "assignment_seed": "openobsidian-v1-comparison-2026-09-11",
+  "profiles": [
+    {
+      "id": "stock-obsidian",
+      "label": "Stock Obsidian",
+      "disposition": "external-pending",
+      "reason": "A pinned stock Obsidian runtime and consented comparison vault are required."
+    },
+    {
+      "id": "plugin-equipped-obsidian",
+      "label": "Plugin-equipped Obsidian",
+      "disposition": "external-pending",
+      "reason": "A pinned plugin-equipped Obsidian runtime, unchanged artifacts and consented comparison vault are required."
+    },
+    {
+      "id": "openobsidian",
+      "label": "OpenObsidian",
+      "disposition": "external-pending",
+      "reason": "A visible OpenObsidian run with the same fixture, task instructions and model condition is required."
+    }
+  ],
+  "tasks": [
+    {
+      "id": "find",
+      "prompt": "Find a requested fact and cite the exact source location.",
+      "measures": ["accuracy", "completion-time-ms", "citation-correctness"]
+    },
+    {
+      "id": "synthesize",
+      "prompt": "Synthesize a bounded answer from the requested source set.",
+      "measures": ["accuracy", "completion-time-ms", "supported-claims"]
+    },
+    {
+      "id": "organize",
+      "prompt": "Review and apply an approved organization change without unrelated edits.",
+      "measures": ["accuracy", "completion-time-ms", "approved-diff-fidelity"]
+    }
+  ],
+  "corpus_profiles": [
+    "smoke-edge-cases",
+    "medium-10k",
+    "large-100k",
+    "canvas-bases",
+    "conflict-recovery",
+    "ai-grounding"
+  ],
+  "model_conditions": [
+    {
+      "id": "local-deterministic",
+      "description": "The same offline deterministic model or no-model baseline on every profile.",
+      "network": "offline"
+    },
+    {
+      "id": "provider-backed",
+      "description": "The same explicitly named provider/model, credentials and caps on every profile.",
+      "network": "controlled-external"
+    }
+  ],
+  "repetitions": 1,
+  "external_pending": [
+    {
+      "id": "reference-runtimes",
+      "reason": "Stock and plugin-equipped Obsidian runtimes are not available in this checkout."
+    },
+    {
+      "id": "consented-vaults",
+      "reason": "No consented stock/plugin/OpenObsidian comparison vaults are available."
+    },
+    {
+      "id": "visible-human-runs",
+      "reason": "Completion time, visible interaction and practical benefit require a human-run pilot."
+    },
+    {
+      "id": "provider-condition",
+      "reason": "No provider credentials or operated endpoint are available for the provider-backed condition."
+    }
+  ]
+}
