@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c10-core-workflows",
+  "purpose": "Keep the Obsidian core-workflow inventory explicit while separating local implementation evidence from visible/reference validation.",
+  "workflows": [
+    {"id": "file-explorer", "label": "File explorer", "status": "implemented", "entry_point": "file-list", "test_disposition": "automated-local", "markers": ["id=\"file-list\""], "test": "bun test tests/workspace-contract.test.ts tests/vault-index.test.ts"},
+    {"id": "tabs", "label": "Tabs", "status": "implemented", "entry_point": "note-tabs", "test_disposition": "automated-local", "markers": ["id=\"note-tabs\""], "test": "bun test tests/workspace-contract.test.ts"},
+    {"id": "splits", "label": "Splits", "status": "implemented", "entry_point": "toggle-context", "test_disposition": "automated-local", "markers": ["id=\"editor-stage\"", "data-split"], "test": "bun test tests/api.test.ts tests/workspace-contract.test.ts"},
+    {"id": "popouts", "label": "Popouts", "status": "deferred", "entry_point": "editor-stage", "test_disposition": "external-pending", "markers": [], "handoff": "Owner: desktop-release. Prerequisite: multi-window workspace host and cross-platform/reference focus validation."},
+    {"id": "command-palette", "label": "Command palette", "status": "implemented", "entry_point": "open-command-palette", "test_disposition": "automated-local", "markers": ["id=\"command-palette\"", "resolveKeyboardCommand"], "test": "bun test tests/workspace-contract.test.ts tests/shared-ui.test.ts"},
+    {"id": "quick-switcher", "label": "Quick switcher", "status": "implemented", "entry_point": "open-quick-switcher", "test_disposition": "automated-local", "markers": ["id=\"quick-switcher\"", "resolveKeyboardCommand"], "test": "bun test tests/workspace-contract.test.ts"},
+    {"id": "bookmarks", "label": "Bookmarks", "status": "incomplete", "entry_point": "sidebar-tab-bookmarks", "test_disposition": "automated-partial", "markers": ["id=\"bookmarks-empty\""], "handoff": "Owner: product-ux. Prerequisite: read-only bookmark configuration mapping and visible bookmark navigation fixture."},
+    {"id": "outline", "label": "Outline", "status": "implemented", "entry_point": "outline-list", "test_disposition": "automated-local", "markers": ["id=\"outline-list\""], "test": "bun test tests/note-context.test.ts"},
+    {"id": "backlinks", "label": "Backlinks", "status": "implemented", "entry_point": "backlinks-list", "test_disposition": "automated-local", "markers": ["id=\"backlinks-list\""], "test": "bun test tests/note-context.test.ts"},
+    {"id": "outgoing-links", "label": "Outgoing links", "status": "implemented", "entry_point": "outgoing-links-list", "test_disposition": "automated-local", "markers": ["id=\"outgoing-links-list\""], "test": "bun test tests/note-context.test.ts tests/links.test.ts"},
+    {"id": "templates", "label": "Templates", "status": "deferred", "entry_point": "note-editor", "test_disposition": "external-pending", "markers": [], "handoff": "Owner: compatibility-runtime. Prerequisite: unchanged template/plugin artifact execution with D15 preview and a source-preserving write trace."},
+    {"id": "daily-notes", "label": "Daily notes", "status": "deferred", "entry_point": "file-list", "test_disposition": "external-pending", "markers": [], "handoff": "Owner: compatibility-runtime. Prerequisite: date-folder/template configuration mapping and reference Obsidian reopen evidence."},
+    {"id": "note-composition", "label": "Note composition", "status": "implemented", "entry_point": "note-editor", "test_disposition": "automated-local", "markers": ["id=\"note-editor\"", "data-editor-mode"], "test": "bun test tests/markdown.test.ts tests/markdown-preview.test.ts"},
+    {"id": "history", "label": "History", "status": "implemented", "entry_point": "history-panel", "test_disposition": "automated-local", "markers": ["id=\"history-panel\""], "test": "bun test tests/history-watcher.test.ts tests/chronicle.test.ts"},
+    {"id": "tasks", "label": "Tasks", "status": "incomplete", "entry_point": "note-preview", "test_disposition": "automated-partial", "markers": ["id=\"note-preview\""], "handoff": "Owner: product-ux. Prerequisite: task query/editing workflow and source-preserving recurrence fixture."},
+    {"id": "tags", "label": "Tags", "status": "incomplete", "entry_point": "vault-search", "test_disposition": "automated-partial", "markers": ["id=\"vault-search\""], "handoff": "Owner: product-ux. Prerequisite: tag index/navigation surface and cross-note rename fixture."}
+  ],
+  "keyboard_journey": {
+    "id": "implemented-keyboard-journey",
+    "status": "implemented-locally",
+    "shortcuts": ["Meta/Ctrl-K", "Meta/Ctrl-P", "Meta/Ctrl-S"],
+    "steps": ["open command palette", "choose quick switcher", "open a note", "edit source", "save with the primary modifier"],
+    "markers": ["id=\"command-palette\"", "id=\"quick-switcher\"", "id=\"note-editor\"", "id=\"save-note\"", "resolveKeyboardCommand"],
+    "external_pending": ["visible Electron keyboard/focus run", "IME and screen-reader run", "reference Obsidian keyboard comparison"]
+  }
+}
