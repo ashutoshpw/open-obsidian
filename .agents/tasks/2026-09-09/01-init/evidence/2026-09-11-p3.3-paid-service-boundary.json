@@ -1,0 +1,32 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T09:13:13Z",
+  "checkpoint": "P3.3",
+  "requirements": ["BASE-004"],
+  "fixture_ids": ["fixture:paid-service-boundary"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "implementation_commit": "ef0b438d1fcb8da529647743364c2a6d7b6da588",
+    "tested_source_tree": "f55cd677bf3d3447fecc1e059dae09eb019f31baec662975b5df88b0b0472be9",
+    "source_tree_paths": 180
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun run validate:paid-service-boundary", "exit_code": 0, "result": "The fixture lists Obsidian Sync and Obsidian Publish separately as unsupported, contract-only, remote-free and entitlement-free; the existing renderer handoff and sync disposition match."},
+    {"command": "bun test tests/sync-tools.test.ts", "exit_code": 0, "result": "Two sync-boundary tests pass with six expectations, including the fixture validator and the existing no-proprietary-access disposition."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "The paid-service validator is part of the routine gate; local tests and changed-file Fallow pass."}
+  ],
+  "implemented": [
+    "Added fixtures/paid-service-boundary.json with separate Sync and Publish records, explicit unsupported/contract-only status, remote_contacted=false and entitlement=not-inferred invariants.",
+    "Added a validator and focused test that cross-check the fixture, sync tool disposition and visible External sync compatibility renderer handoff."
+  ],
+  "limitations": [
+    "No Sync or Publish account, entitlement, billing, network or proprietary runtime was contacted; this evidence is a client boundary contract only.",
+    "Local file compatibility does not establish interoperability, and cross-platform/reference/human validation remains pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Sync and Publish are separately visible as unsupported and no entitlement is inferred; BASE-004 is implemented locally while live interoperability remains outside scope."
+}

@@ -558,3 +558,20 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 
 - Reconciled the Linux permission-model plugin probe at `6e88ee60fbdd63b9cf3f3451ea1172342333eb51` and pushed `main` to `origin/main`.
 - Updated `state.json` so `last_reconciled_head` and `recent_increment.commit` point to the pushed P1.2 evidence commit; runtime/lifecycle dispositions remain pending.
+
+## 2026-09-11T09:10:55Z — P3.3 CLI and deep-link entry points
+
+- Completed: pushed source commit `4d695ceebc3b3f954c174f4c328767932a16eed5` with marker `[openobsidian P3.3] Add safe CLI and deep-link entry points`; added a platform-neutral parser and executable `fixture:entry-points` matrix for explicit `--vault`/`--open` arguments and `openobsidian://open` links.
+- Completed: wired validated `vault:open` IPC, sandboxed preload forwarding, single-instance launch delivery and macOS `open-url` handling into the existing broker path. The main process rejects missing, non-directory, symlink and non-absolute launch roots; relative note targets reject traversal and ambiguous separators.
+- Safety: `obsidian://` is ignored, no reference protocol registration or hijack is introduced, unknown Electron switches are ignored, and malformed owned inputs fail closed. Opening a launch target performs only the existing read/no-op scan until an explicit editor save.
+- Validation: `bun run validate:entry-points`, focused entry-point tests, `bun run typecheck`, `bun run compile`, `bun run check:fast` (145 tests, 770 expectations) and changed-file strict Fallow pass.
+- Runtime: a disposable Linux x64 Electron 44.3.0 packaged launch opened `Note.md` from `--vault/--open`; a quoted `openobsidian://open` launch opened `Deep.md`; both were read back through CDP without using the selected `/home/ashutosh/Obsidian` vault.
+- Limitation: macOS/Windows protocol and second-instance traces, reference Obsidian CLI/deep-link behavior, popouts, plugin-created views and human input/accessibility validation remain pending; Sync/Publish interoperability is not inferred.
+
+## 2026-09-11T09:13:13Z — P3.3 paid-service boundary
+
+- Completed: pushed source commit `ef0b438d1fcb8da529647743364c2a6d7b6da588` with marker `[openobsidian P3.3] Freeze paid-service boundary`; added `fixture:paid-service-boundary` and a validator cross-checking the client disposition and visible renderer handoff.
+- Completed: Sync and Publish are listed separately as `unsupported`, `contract-only`, `remote_contacted=false` and `entitlement=not-inferred`; no account, billing, network or proprietary service path was added.
+- Validation: `bun run validate:paid-service-boundary`, focused sync-boundary tests, `bun run typecheck`, changed-file strict Fallow and the routine `check:fast` gate pass.
+- Reconciled: BASE-004 is now `implemented` with evidence `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-paid-service-boundary.json`; UX-003 is now `implemented` from its existing named-surface inventory and explicit external handoffs.
+- Limitation: live Sync/Publish interoperability, entitlement, cross-platform/reference behavior and human validation remain pending; local file compatibility is not treated as paid-service access.

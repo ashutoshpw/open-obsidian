@@ -1,0 +1,41 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T09:08:23Z",
+  "checkpoint": "P3.3",
+  "requirements": ["C13"],
+  "fixture_ids": ["fixture:entry-points", "fixture:c13-external-tools"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "electron_version": "44.3.0",
+    "implementation_commit": "4d695ceebc3b3f954c174f4c328767932a16eed5",
+    "tested_source_tree": "460d30892b925570354f3606c884d663944360980082476501ff6a2a5952a5ba",
+    "source_tree_paths": 178
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "implementation": {
+    "cli": "Explicit --vault and --open arguments open an existing absolute vault through a validated IPC method; optional --open paths must remain safe vault-relative paths.",
+    "deep_link": "Only openobsidian://open is parsed. The Electron single-instance and macOS open-url paths deliver the typed intent to the renderer, which opens the vault and optional note through the same broker.",
+    "protocol_boundary": "obsidian:// inputs are ignored, unknown Electron switches are ignored, malformed owned inputs fail closed, and no obsidian protocol registration or hijack is introduced.",
+    "vault_boundary": "The main process rejects missing, non-directory, symlink and non-absolute launch vault roots before constructing VaultStore; note opens remain read-only until an explicit editor save."
+  },
+  "checks": [
+    {"command": "bun run validate:entry-points", "exit_code": 0, "result": "Five valid CLI/deep-link cases and three invalid cases pass the executable matrix."},
+    {"command": "bun test tests/entry-points.test.ts", "exit_code": 0, "result": "Three focused tests pass with nine expectations, including obsidian:// non-hijacking and traversal rejection."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript compilation succeeds for the main/preload/renderer launch-intent contract."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Electron main, preload and renderer bundles compile with the launch-intent IPC."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "145 tests pass with 770 expectations; the entry-point validator is included in the routine gate."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No dead-code or changed-file Fallow issues; inherited renderer complexity remains report-only."},
+    {"procedure": "Packaged Electron 44.3.0 Linux x64 launch with --vault=<synthetic temp vault> --open=Note.md and CDP DOM readback", "exit_code": 0, "result": "The renderer opened the synthetic vault and Note.md through the launch intent; the title, vault label, editor path and revision status were visible."},
+    {"procedure": "Packaged Electron 44.3.0 Linux x64 launch with quoted openobsidian://open?vault=<encoded synthetic temp vault>&file=Deep.md and CDP DOM readback", "exit_code": 0, "result": "The renderer opened the synthetic vault and Deep.md through the owned deep-link scheme."}
+  ],
+  "limitations": [
+    "Runtime launch evidence is Linux x64 only and uses disposable synthetic vaults; macOS/Windows protocol registration, second-instance handoff and reference Obsidian behavior remain pending.",
+    "The entry-point parser does not claim Obsidian CLI command compatibility or paid Sync/Publish interoperability; those surfaces remain separate handoffs.",
+    "No popout window, plugin-created view, screen-reader, IME or human focus validation was performed.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Explicit CLI and OpenObsidian deep-link opening is implemented and locally exercised while obsidian:// remains untouched; cross-platform, reference and broader external-tool certification remain open."
+}
