@@ -1,0 +1,77 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T12:39:03Z",
+  "checkpoint": "P1.2",
+  "requirements": ["PLUG-002", "PLUG-007", "PLUG-009"],
+  "decision_id": "D15",
+  "fixture_id": "fixture:plugin-renderer-preflight",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "branch": "main",
+    "implementation_commit": "cff5da3cc0dc375dc652ecce6c79803d46e64714",
+    "tested_source_tree": "5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4",
+    "source_tree_paths": 201,
+    "source_tree_definition": "bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out"
+  },
+  "command": "bun run audit:plugin-renderer --all",
+  "result": {
+    "exit_code": 0,
+    "integrity_passed": 26,
+    "denied_security": 26,
+    "renderer_loaded": 1,
+    "ordinary_renderer_failures": 0,
+    "worker_errors": 0,
+    "not_applicable": 1,
+    "enforcement": "electron-context-isolated-sandbox",
+    "coverage": "electron-sandboxed-renderer-module-load-only"
+  },
+  "artifact_results": [
+    {"artifact_id":"PC01","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC02","status":"denied-security","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC03","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC04","status":"denied-security","denied_capabilities":["process.spawn","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC05","status":"denied-security","denied_capabilities":["process.spawn","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC06","status":"denied-security","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC07","status":"denied-security","denied_capabilities":["dom.privileged"]},
+    {"artifact_id":"PC08","status":"denied-security","denied_capabilities":["process.spawn","dom.privileged"]},
+    {"artifact_id":"PC09","status":"denied-security","denied_capabilities":["process.spawn","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC10","status":"denied-security","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC11","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC12","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC13","status":"denied-security","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC14","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC15","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC16","status":"denied-security","denied_capabilities":["filesystem.direct","network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC17","status":"denied-security","denied_capabilities":["dom.privileged"]},
+    {"artifact_id":"PC18","status":"denied-security","denied_capabilities":["network.request","process.spawn","credentials.read","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC19","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi","code.dynamic"]},
+    {"artifact_id":"PC20","status":"denied-security","denied_capabilities":["process.spawn","dom.privileged","code.dynamic"]},
+    {"artifact_id":"PC21","status":"denied-security","denied_capabilities":["dom.privileged"]},
+    {"artifact_id":"PC22","status":"denied-security","denied_capabilities":["filesystem.direct","network.request","process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC23","status":"denied-security","denied_capabilities":["dom.privileged"]},
+    {"artifact_id":"PC24","status":"denied-security","denied_capabilities":["process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC25","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged","native.abi"]},
+    {"artifact_id":"PC-DEP-TEXT-EXTRACTOR","status":"denied-security","denied_capabilities":["network.request","process.spawn","dom.privileged"]},
+    {"artifact_id":"PC-DEP-MINIMAL","status":"not-applicable","denied_capabilities":[]}
+  ],
+  "mediated_fixture": {
+    "artifact_id": "fixture:renderer-mediated-source",
+    "status": "renderer-loaded",
+    "integrity": "passed",
+    "execution": "renderer-wrapper",
+    "denied_capabilities": []
+  },
+  "interpretation": {
+    "PLUG-009": "unsupported_security",
+    "reason": "Every pinned artifact with a main.js asset passed byte/hash integrity and was denied before renderer execution when static privileged markers were present; no real artifact was allowed through the marker-free execution path.",
+    "safe_alternatives_attempted": ["mediated vault read", "preview broker", "workflow disabled"]
+  },
+  "limitations": [
+    "This is Linux-only static-marker and module-load preflight evidence, not unchanged-plugin lifecycle certification.",
+    "Plugin settings, commands, events, editor mutation, view rendering, hotkeys, vault writes, restart, update, uninstall, combinations and return-to-Obsidian remain pending-runtime; PLUG-002 and PLUG-007 remain pending.",
+    "The Electron sandbox does not prove same-user OS-enforced isolation, native-addon isolation or macOS/Windows behavior, and no reference Obsidian, human, signing, managed-service or publication gate is claimed.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}

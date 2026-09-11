@@ -92,7 +92,8 @@
         "Reran all 27 pinned artifacts on Linux x64 with permission-capable Node 22.22.2; 26 main.js bundles passed integrity, 15 were denied, 7 loaded, 4 had ordinary compatibility failures and all runtime dispositions remained pending-runtime.",
         "Added the ARCH-008 DOM-dependent compatibility fixture and contract test; the privileged DOM path is visibly denied with mediated alternatives while renderer lifecycle certification remains pending.",
         "Added the Electron renderer-sandbox preflight for the eight hardest unchanged pins; all eight byte/hash checks passed, privileged markers were denied before execution with mediated alternatives, and a marker-free mediated fixture loaded under context isolation, sandbox and nodeIntegration false.",
-        "Named shared plugin configuration writes as an explicit D15-denied capability with a discovery-time settings-write fixture; unchanged-plugin lifecycle and cross-platform enforcement remain pending."
+        "Named shared plugin configuration writes as an explicit D15-denied capability with a discovery-time settings-write fixture; unchanged-plugin lifecycle and cross-platform enforcement remain pending.",
+        "Ran the full Linux x64 Electron renderer preflight for all pinned artifacts; 26 main.js assets passed integrity and were denied before execution by privileged markers, Minimal was not-applicable and only the synthetic mediated fixture loaded; lifecycle dispositions remain pending-runtime."
       ],
       "next_action": "Use a compatible Electron/renderer host to exercise lifecycle, DOM and workflow combinations for unchanged artifacts; record artifact-specific D15 denials or passing evidence while retaining the module-load probe as feasibility data.",
       "evidence": [
@@ -105,12 +106,13 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-dom-denial.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-preflight.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-ci.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-config-policy.json"
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-config-policy.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all.json"
       ],
       "commit_marker": "[openobsidian P1.2 work] Add renderer sandbox preflight",
-      "validated_source_tree": "cd403ccff04d141b1a5dee015ac5f8991dc53ca02a2f170cd3056350b1f8b850",
+      "validated_source_tree": "5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4",
       "blockers": [
-        "Frozen release pins and manifest metadata are verified; Linux x64 and macOS arm64 permission-restricted module-load probes record unchanged-artifact denials and ordinary failures, while the Minimal theme has no main.js; no compatible Electron/renderer runtime is certified.",
+        "Frozen release pins and manifest metadata are verified; Linux x64 permission-restricted and Electron renderer preflights record integrity-checked unchanged-artifact denials, while the Minimal theme has no main.js; unchanged-artifact lifecycle certification is not claimed.",
         "The permission-restricted probe is module-load evidence only and does not prove Electron or OS isolation; ordinary compatibility failures remain pending rather than D15 denials.",
         "The renderer preflight loads only a synthetic marker-free mediated fixture; unchanged plugin lifecycle, settings, views, restart/update/uninstall, combinations and return-to-Obsidian remain pending.",
         "The DOM fixture and renderer preflight record fail-closed D15 decisions; Electron renderer DOM/lifecycle traces, Windows/Linux lifecycle bypass tests, same-user OS enforcement and reference behavior remain pending.",

@@ -731,3 +731,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-platform-path-policy-ci.json` and updated C01.2, C02.2, SYNC-004 and RISK-004 to the tested source tree `5e0b71120089c3afdd7413cbf5ae81153a46e229e0d20c6fbf71503a2579b7a4` across 201 source paths.
 - The green matrix verifies the platform-policy contract and packaging checks, not host filesystem semantics, reference Obsidian reopen round trips, same-user OS isolation, human validation or signed release; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: validate and push this metadata-only reconciliation, then continue the earliest dependency-ready reference/cross-platform vault and unchanged-plugin lifecycle work.
+
+## 2026-09-11T12:39:03Z — P1.2 full renderer preflight
+
+- Ran `bun run audit:plugin-renderer --all` under Electron 44.3.0 on Linux x64 using the existing hidden `BrowserWindow` boundary (`contextIsolation: true`, `sandbox: true`, `nodeIntegration: false`).
+- All 26 pinned `main.js` assets passed recorded integrity checks and were denied before renderer execution by privileged static markers; the Minimal theme was not-applicable and only the synthetic mediated fixture loaded. No real unchanged artifact entered the marker-free execution path.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-renderer-all.json`; PLUG-009 remains `unsupported_security`, while PLUG-002 and PLUG-007 remain pending for lifecycle, views, settings, restart/update/uninstall, combinations, per-OS separation and reference behavior.
+- Limitation: this is Linux static-marker/module-load preflight evidence, not plugin lifecycle or OS isolation certification; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
