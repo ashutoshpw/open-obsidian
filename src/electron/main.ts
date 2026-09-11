@@ -23,7 +23,7 @@ import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
 import {parseLaunchArguments, parseDeepLinkIntent, type LaunchIntent} from "../shared/entry-points.js";
 import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
-import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -33,6 +33,9 @@ let rendererReady = false;
 let pendingLaunchIntent: LaunchIntent | null = null;
 const aiChangeSets = new Map<string, AIChangeSet>();
 const aiAppliedChanges = new Map<string, AppliedAIChange>();
+type PopoutSession = {window: BrowserWindow; webContentsId: number; vaultRoot: string; relativePath: string};
+const popoutWindows = new Map<string, PopoutSession>();
+const popoutSessionsByWebContentsId = new Map<number, PopoutSession>();
 
 function vaultAppData(root: string): string {
   const id = createHash("sha256").update(resolve(root)).digest("hex").slice(0, 24);
@@ -58,8 +61,89 @@ function applicationIconPath(): string {
   return join(appRoot, "assets", "openobsidian-icon.png");
 }
 
+function sharedWebPreferences() {
+  return {
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true,
+    preload: join(currentDirectory, "preload.cjs"),
+  };
+}
+
+function popoutKey(vaultRoot: string, relativePath: string): string {
+  return `${vaultRoot}\0${relativePath}`;
+}
+
+function closePopoutWindows(): void {
+  for (const session of popoutWindows.values()) {
+    popoutSessionsByWebContentsId.delete(session.webContentsId);
+    if (!session.window.isDestroyed()) session.window.close();
+  }
+  popoutWindows.clear();
+}
+
+function focusExistingPopout(existing: PopoutSession | undefined, relativePath: string): PopoutOpenResponse | null {
+  if (!existing || existing.window.isDestroyed()) return null;
+  existing.window.show();
+  existing.window.focus();
+  return {relativePath, reused: true};
+}
+
+function removeStalePopout(key: string, existing: PopoutSession | undefined): void {
+  if (!existing) return;
+  popoutWindows.delete(key);
+  popoutSessionsByWebContentsId.delete(existing.webContentsId);
+}
+
+function sendPopoutIntent(window: BrowserWindow, intent: PopoutIntent): void {
+  if (!window.isDestroyed()) window.webContents.send(CHANNELS.popoutIntent, intent);
+}
+
+function createPopoutWindow(relativePath: string, vaultRoot: string): PopoutOpenResponse {
+  const key = popoutKey(vaultRoot, relativePath);
+  const existing = popoutWindows.get(key);
+  const reused = focusExistingPopout(existing, relativePath);
+  if (reused) return reused;
+  removeStalePopout(key, existing);
+  const window = new BrowserWindow({
+    width: 900,
+    height: 700,
+    minWidth: 520,
+    minHeight: 360,
+    backgroundColor: "#202020",
+    icon: applicationIconPath(),
+    title: `OpenObsidian · ${relativePath}`,
+    webPreferences: sharedWebPreferences(),
+  });
+  const session: PopoutSession = {window, webContentsId: window.webContents.id, vaultRoot, relativePath};
+  popoutWindows.set(key, session);
+  popoutSessionsByWebContentsId.set(session.webContentsId, session);
+  window.on("closed", () => {
+    popoutWindows.delete(key);
+    popoutSessionsByWebContentsId.delete(session.webContentsId);
+  });
+  window.webContents.once("did-finish-load", () => {
+    sendPopoutIntent(window, {vaultRoot, relativePath});
+  });
+  const projectRoot = resolve(currentDirectory, "..");
+  const popoutPath = app.isPackaged ? join(app.getAppPath(), "src/renderer/popout.html") : join(projectRoot, "src/renderer/popout.html");
+  void window.loadFile(popoutPath);
+  return {relativePath, reused: false};
+}
+
+function popoutSessionForEvent(event: Electron.IpcMainInvokeEvent): PopoutSession | null {
+  const session = popoutSessionsByWebContentsId.get(event.sender.id);
+  if (!session) return null;
+  if (!activeVault || activeVault.root !== session.vaultRoot) throw new Error("This popout no longer belongs to the active vault");
+  return session;
+}
+
+function assertPopoutPath(session: PopoutSession, relativePath: string): void {
+  if (relativePath !== session.relativePath) throw new Error("This popout can access only its opened note");
+}
+
 function createWindow(): void {
-  mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 1280,
     height: 820,
     minWidth: 960,
@@ -68,24 +152,27 @@ function createWindow(): void {
     icon: applicationIconPath(),
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     trafficLightPosition: process.platform === "darwin" ? {x: 12, y: 12} : undefined,
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      preload: join(currentDirectory, "preload.cjs"),
-    },
+    webPreferences: sharedWebPreferences(),
   });
+  mainWindow = window;
   rendererReady = false;
-  mainWindow.webContents.once("did-finish-load", () => {
+  window.on("closed", () => {
+    if (mainWindow === window) {
+      mainWindow = null;
+      rendererReady = false;
+    }
+    closePopoutWindows();
+  });
+  window.webContents.once("did-finish-load", () => {
     rendererReady = true;
-    if (pendingLaunchIntent && mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send(CHANNELS.launchIntent, pendingLaunchIntent);
+    if (pendingLaunchIntent && !window.isDestroyed()) {
+      window.webContents.send(CHANNELS.launchIntent, pendingLaunchIntent);
       pendingLaunchIntent = null;
     }
   });
   const projectRoot = resolve(currentDirectory, "..");
   const rendererPath = app.isPackaged ? join(app.getAppPath(), "src/renderer/index.html") : join(projectRoot, "src/renderer/index.html");
-  void mainWindow.loadFile(rendererPath);
+  void window.loadFile(rendererPath);
 }
 
 function launchIntentFromArguments(args: readonly string[]): LaunchIntent | null {
@@ -158,6 +245,7 @@ function vaultSummary(store: VaultStore): VaultSummary {
 
 function activateVault(root: string): VaultSummary {
   const resolvedRoot = validatedVaultRoot(root);
+  closePopoutWindows();
   activeVault = new VaultStore(resolvedRoot, vaultAppData(resolvedRoot));
   aiChangeSets.clear();
   aiAppliedChanges.clear();
@@ -190,20 +278,34 @@ function searchFiles(_event: Electron.IpcMainInvokeEvent, query: unknown): Vault
   return searchVaultIndex(buildVaultIndex(requireVault()), query.slice(0, 200)).slice(0, 50);
 }
 
-function readFile(_event: Electron.IpcMainInvokeEvent, relativePath: unknown): object {
+function readFile(event: Electron.IpcMainInvokeEvent, relativePath: unknown): object {
   if (!isString(relativePath)) throw new Error("Vault path must be a string");
+  const session = popoutSessionForEvent(event);
+  if (session) assertPopoutPath(session, relativePath);
   const read = requireVault().read(relativePath);
   return {relativePath: read.relativePath, base64: Buffer.from(read.bytes).toString("base64"), revision: read.revision};
 }
 
-function writeFile(_event: Electron.IpcMainInvokeEvent, value: unknown): object {
+function writeFile(event: Electron.IpcMainInvokeEvent, value: unknown): object {
   const request: VaultWriteRequest = validateVaultWriteRequest(value);
+  const session = popoutSessionForEvent(event);
+  if (session) assertPopoutPath(session, request.relativePath);
   const written = requireVault().write({
     relativePath: request.relativePath,
     expectedRevision: request.expectedRevision,
     bytes: decodeBase64(request.base64),
   });
   return {relativePath: written.relativePath, base64: Buffer.from(written.bytes).toString("base64"), revision: written.revision};
+}
+
+function openPopout(event: Electron.IpcMainInvokeEvent, value: unknown): PopoutOpenResponse {
+  if (popoutSessionsByWebContentsId.has(event.sender.id)) throw new Error("Popouts cannot open nested popouts");
+  const request = validatePopoutOpenRequest(value);
+  const store = requireVault();
+  if (request.vaultRoot !== store.root) throw new Error("Popout request does not match the active vault");
+  if (!request.relativePath.toLocaleLowerCase().endsWith(".md")) throw new Error("Only Markdown notes can be opened in an editor popout");
+  store.read(request.relativePath);
+  return createPopoutWindow(request.relativePath, store.root);
 }
 
 function requireChronicle(): VaultStore {
@@ -550,6 +652,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.search, searchFiles);
   ipcMain.handle(CHANNELS.readFile, readFile);
   ipcMain.handle(CHANNELS.writeFile, writeFile);
+  ipcMain.handle(CHANNELS.popoutOpen, openPopout);
   ipcMain.handle(CHANNELS.reviewChanges, reviewChanges);
   ipcMain.handle(CHANNELS.diffChanges, diffChanges);
   ipcMain.handle(CHANNELS.chronicleHistory, chronicleHistoryRequest);

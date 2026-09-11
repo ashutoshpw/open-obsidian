@@ -8,6 +8,7 @@ export const CHANNELS = {
   search: "vault:search",
   readFile: "vault:read",
   writeFile: "vault:write",
+  popoutOpen: "popout:open",
   reviewChanges: "chronicle:review-changes",
   diffChanges: "chronicle:diff",
   chronicleHistory: "chronicle:history",
@@ -49,6 +50,7 @@ export const CHANNELS = {
   providerStatus: "ai:provider-status",
   diagnosticManifest: "workspace:diagnostic-manifest",
   launchIntent: "workspace:launch-intent",
+  popoutIntent: "popout:intent",
 } as const;
 
 export type VaultGitSummary = {
@@ -95,6 +97,21 @@ export type VaultWriteRequest = {
   relativePath: string;
   expectedRevision: string | null;
   base64: string;
+};
+
+export type PopoutOpenRequest = {
+  vaultRoot: string;
+  relativePath: string;
+};
+
+export type PopoutOpenResponse = {
+  relativePath: string;
+  reused: boolean;
+};
+
+export type PopoutIntent = {
+  vaultRoot: string;
+  relativePath: string;
 };
 
 export type ChronicleCommitReview = {
@@ -371,6 +388,11 @@ function validateWorkspacePath(value: unknown, label: string): string {
   return value;
 }
 
+export function validatePopoutOpenRequest(value: unknown): PopoutOpenRequest {
+  if (!isRecord(value) || typeof value.vaultRoot !== "string" || value.vaultRoot.length === 0 || value.vaultRoot.length > 4096 || value.vaultRoot.includes("\0")) throw new Error("Invalid popout open request");
+  return {vaultRoot: value.vaultRoot, relativePath: validateWorkspacePath(value.relativePath, "popout path")};
+}
+
 function validateWorkspacePaths(value: unknown, label: string, limit: number): string[] {
   if (!Array.isArray(value) || value.length > limit) throw new Error(`Invalid workspace ${label}`);
   return value.map((path) => validateWorkspacePath(path, label));
@@ -570,6 +592,7 @@ export type OpenObsidianAPI = {
   search: (query: string) => Promise<VaultSearchResult[]>;
   readFile: (relativePath: string) => Promise<VaultReadResponse>;
   writeFile: (request: VaultWriteRequest) => Promise<VaultReadResponse>;
+  openPopout: (request: PopoutOpenRequest) => Promise<PopoutOpenResponse>;
   reviewChanges: () => Promise<ChronicleCommitReview>;
   diffChanges: (request?: ChronicleDiffRequest) => Promise<string>;
   chronicleHistory: (limit?: number) => Promise<ChronicleHistoryEntry[]>;
@@ -611,4 +634,5 @@ export type OpenObsidianAPI = {
   providerStatus: () => Promise<ProviderStatus>;
   diagnosticManifest: () => Promise<import("../core/privacy.js").DiagnosticManifest>;
   onLaunchIntent: (listener: (intent: LaunchIntent) => void) => () => void;
+  onPopoutIntent: (listener: (intent: PopoutIntent) => void) => () => void;
 };

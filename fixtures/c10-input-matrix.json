@@ -35,9 +35,9 @@
       "id": "popout-external",
       "status": "external-pending",
       "owner": "product-ux",
-      "prerequisites": ["multi-window host and IPC handoff", "screen-reader and visible focus review", "macOS and Windows desktop runtimes"],
+      "prerequisites": ["visible Electron popout and revision-conflict trace", "screen-reader and visible focus review", "macOS and Windows desktop runtimes"],
       "verification": ["open an editor popout", "repeat keyboard/IME/RTL/Unicode cases", "verify source bytes before and after explicit save"],
-      "note": "No popout or cross-platform input trace is claimed in the local Linux fixture."
+      "note": "The tracked child-window and revision-aware IPC contract is implemented locally, but no popout or cross-platform input trace is claimed in the local Linux fixture."
     }
   ],
   "invariants": [

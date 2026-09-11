@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -8,6 +8,7 @@ const api: OpenObsidianAPI = {
   search: (query) => ipcRenderer.invoke(CHANNELS.search, query),
   readFile: (relativePath) => ipcRenderer.invoke(CHANNELS.readFile, relativePath),
   writeFile: (request: VaultWriteRequest) => ipcRenderer.invoke(CHANNELS.writeFile, request),
+  openPopout: (request: PopoutOpenRequest) => ipcRenderer.invoke(CHANNELS.popoutOpen, request),
   reviewChanges: () => ipcRenderer.invoke(CHANNELS.reviewChanges),
   diffChanges: (request) => ipcRenderer.invoke(CHANNELS.diffChanges, request),
   chronicleHistory: (limit) => ipcRenderer.invoke(CHANNELS.chronicleHistory, limit),
@@ -51,6 +52,11 @@ const api: OpenObsidianAPI = {
     const handler = (_event: Electron.IpcRendererEvent, intent: Parameters<typeof listener>[0]) => listener(intent);
     ipcRenderer.on(CHANNELS.launchIntent, handler);
     return () => ipcRenderer.removeListener(CHANNELS.launchIntent, handler);
+  },
+  onPopoutIntent: (listener: (intent: PopoutIntent) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, intent: PopoutIntent) => listener(intent);
+    ipcRenderer.on(CHANNELS.popoutIntent, handler);
+    return () => ipcRenderer.removeListener(CHANNELS.popoutIntent, handler);
   },
   onRetrievalProgress: (listener: (progress: RetrievalProgress) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, progress: RetrievalProgress) => listener(progress);

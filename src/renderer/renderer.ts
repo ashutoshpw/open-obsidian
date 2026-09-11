@@ -1,5 +1,6 @@
 import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import type {LaunchIntent} from "../shared/entry-points.js";
+import {decodeBase64, encodeBase64} from "../shared/base64.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, parseThemeStylesheet, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
 import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type DailyNotePlan, type TagIndex, type TaskItem, type TemplateIndex, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
@@ -34,6 +35,7 @@ const editorPath = document.querySelector<HTMLElement>("#editor-path");
 const editor = document.querySelector<HTMLTextAreaElement>("#note-editor");
 const emptyState = document.querySelector<HTMLElement>("#empty-state");
 const saveButton = document.querySelector<HTMLButtonElement>("#save-note");
+const popoutButton = document.querySelector<HTMLButtonElement>("#popout-note");
 const reviewButton = document.querySelector<HTMLButtonElement>("#review-changes");
 const historyButton = document.querySelector<HTMLButtonElement>("#show-history");
 const changePanel = document.querySelector<HTMLElement>("#change-panel");
@@ -229,19 +231,6 @@ function scanSummaryMessage(summary: VaultSummary): string {
 function summaryMessage(summary: Awaited<ReturnType<OpenObsidianAPI["selectVault"]>>): string {
   if (!summary) return "No vault selected.";
   return `Opened ${summary.root} · ${gitSummaryMessage(summary.git)} · ${summary.fileCount} files · ${scanSummaryMessage(summary)} · ${summary.sha256.slice(0, 12)}…`;
-}
-
-function decodeBase64(value: string): string {
-  const binary = atob(value);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
-function encodeBase64(value: string): string {
-  const bytes = new TextEncoder().encode(value);
-  let binary = "";
-  for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-  return btoa(binary);
 }
 
 function setText(element: HTMLElement | null, value: string): void {
@@ -1533,6 +1522,7 @@ function updateEditorState(): void {
   setText(editorPath, selectedPath ?? "No note selected");
   setDisabled(editor, !selectedPath);
   setDisabled(saveButton, !selectedPath || !dirty);
+  setDisabled(popoutButton, !selectedPath || dirty || !selectedSummary);
   setHidden(emptyState, Boolean(selectedPath));
   renderEditorMode();
   renderContextSplit();
@@ -3259,6 +3249,35 @@ function saveNote(): void {
   void writeNoteRequest(client, path, revision, noteEditor.value);
 }
 
+function hasPopoutSelection(): boolean {
+  if (!api || !selectedSummary) return false;
+  return Boolean(selectedPath);
+}
+
+function popoutTarget(): {client: OpenObsidianAPI; vaultRoot: string; relativePath: string} | null {
+  if (!hasPopoutSelection()) {
+    setStatus("Open a saved Markdown note before opening a popout.");
+    return null;
+  }
+  if (dirty) {
+    setStatus("Save the current note before opening its popout.");
+    return null;
+  }
+  return {client: api!, vaultRoot: selectedSummary!.root, relativePath: selectedPath!};
+}
+
+function openPopout(): void {
+  const target = popoutTarget();
+  if (!target) return;
+  setDisabled(popoutButton, true);
+  setStatus(`Opening ${target.relativePath} in a tracked popout…`);
+  void target.client.openPopout({vaultRoot: target.vaultRoot, relativePath: target.relativePath}).then((result) => {
+    setStatus(result.reused ? `Focused the existing popout for ${result.relativePath}.` : `Opened ${result.relativePath} in a tracked popout.`);
+  }).catch((error) => {
+    setStatus(errorText(error, "Unable to open the note popout; the main editor remains authoritative."));
+  }).finally(() => updateEditorState());
+}
+
 async function searchRequest(client: OpenObsidianAPI, query: string, currentRequest: number): Promise<void> {
   try {
     const results = await client.search(query);
@@ -3498,6 +3517,7 @@ if (editor) editor.addEventListener("input", () => {
   setStatus("Unsaved changes · save to create a recoverable revision.");
 });
 if (saveButton) saveButton.addEventListener("click", () => void saveNote());
+if (popoutButton) popoutButton.addEventListener("click", openPopout);
 if (api) api.onRetrievalProgress(renderRetrievalProgress);
 function keyboardAction(command: KeyboardCommandId): (() => void) | undefined {
   return {
