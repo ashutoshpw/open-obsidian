@@ -1,0 +1,74 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T14:58:30Z",
+  "checkpoint": "P2.1",
+  "requirements": ["PROD-001", "C01", "C01.1", "ARCH-004", "ARCH-006", "SYNC-001"],
+  "implementation_commit": "0271f9604228271629401f7b1f5dd0d2e400ba2e",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "6fab4c0b6a7ffe2094e3c54b173b6b93e902d4d8bf0ad5070e210d98b27f5377",
+    "source_tree_paths": 211,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "fixture_id": "fixture:electron-vault-roundtrip",
+  "command": "bun run audit:electron-vault",
+  "platforms": [
+    {"runner": "ubuntu-latest", "job_id": 103308185176, "platform": "linux", "architecture": "x64", "display": "xvfb", "status": "passed"},
+    {"runner": "macos-latest", "job_id": 103308185175, "platform": "darwin", "architecture": "arm64", "display": "native", "status": "passed"},
+    {"runner": "windows-latest", "job_id": 103308185798, "platform": "win32", "architecture": "x64", "display": "native", "status": "passed"}
+  ],
+  "checks": {
+    "launch": true,
+    "existing_vault_opened": true,
+    "read_only_scan": true,
+    "read_preserved_bytes": true,
+    "revision_aware_write": true,
+    "unrelated_binary_preserved": true,
+    "process_restart": true,
+    "reopen_read": true,
+    "app_data_outside_vault": true,
+    "remote_contact_avoided": true
+  },
+  "fixture_details": {
+    "vault_file_count": 3,
+    "before_sha256": "d0c1d5e4c8debd0db83b1eb1e7100016132ddf519025f1ebc9f36333e00cbb84",
+    "after_sha256": "fb10f6f7dd970e616c07689fa8c816e6519fc994965a202e378bcfac024edcc9",
+    "first_revision": "f30b0a9e78ee3de0a049db0d7b51ece062ffd82c833fe23dfc26431aa1528aab",
+    "edited_revision": "f82ea87e531bd223a1983f817f150951ce16e4dbabcf0429b89caca8f5a5cdf5"
+  },
+  "ci": [
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34613086856,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34613086856",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103308185176, "conclusion": "success"},
+        "macos-latest": {"job_id": 103308185175, "conclusion": "success"},
+        "windows-latest": {"job_id": 103308185798, "conclusion": "success"}
+      },
+      "result": "The compiled Electron vault audit passed on Linux x64, macOS arm64 and Windows x64; all other quality checks also passed."
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34613086685,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34613086685",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103308184135, "conclusion": "success"},
+        "macos-latest": {"job_id": 103308184377, "conclusion": "success"},
+        "windows-latest": {"job_id": 103308184375, "conclusion": "success"}
+      },
+      "result": "All three packaging jobs passed release-gate, manifest, runtime-notice, transitive-attribution and artifact-upload checks; production signing was skipped because credentials were unavailable."
+    }
+  ],
+  "limitations": [
+    "This is a disposable packaged Electron broker/renderer trace on hosted Linux, macOS and Windows; it is not a reference Obsidian reopen or back-to-back portability comparison.",
+    "The fixture does not certify AI portability, unchanged plugin lifecycle/settings/views, same-user OS isolation, human accessibility/input, signing, publication or release readiness.",
+    "No personal vault was accessed; the selected /home/ashutosh/Obsidian vault was not used."
+  ],
+  "result": "The disposable Electron open/read/write/restart contract passed on all three hosted desktop platforms while reference-vault, plugin, human and release gates remain pending."
+}
