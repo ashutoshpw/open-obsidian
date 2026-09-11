@@ -30,3 +30,10 @@ test("restricted runtime probe denies direct modules and dynamic code", async ()
   expect(result.status).toBe("denied");
   expect(result.deniedCapabilities).toContain("filesystem.direct");
 });
+
+test("restricted runtime probe bounds synchronous resource exhaustion", async () => {
+  const result = await probePluginBundle("while (true) {}", {timeoutMs: 5_000});
+
+  expect(result.status).toBe("timed-out");
+  expect(result.deniedCapabilities).toContain("resource.unbounded");
+});
