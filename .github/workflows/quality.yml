@@ -63,6 +63,8 @@ jobs:
         run: bun run quality:program
       - name: Compile Electron shell
         run: bun run compile
+      - name: Run Electron vault round-trip report
+        run: bun run audit:electron-vault
       - name: Run Knip audit
         run: bun run knip
       - name: Run Fallow health audit

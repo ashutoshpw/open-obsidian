@@ -96,11 +96,15 @@ async function startXvfb(): Promise<{display: string; process: Child | null}> {
   if (platform() !== "linux" || process.env.DISPLAY) return {display: process.env.DISPLAY ?? "", process: null};
   const probe = Bun.spawnSync(["sh", "-lc", "command -v Xvfb"], {stdout: "pipe", stderr: "pipe"});
   if (probe.exitCode !== 0) throw new Error("Electron vault audit requires DISPLAY or Xvfb on Linux");
-  const display = `:${100 + (process.pid % 700)}`;
-  const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x720x24", "-nolisten", "tcp"], {stdout: "pipe", stderr: "pipe"});
-  await Bun.sleep(250);
-  if (xvfb.exitCode !== null) throw new Error(`Xvfb failed to start on ${display}`);
-  return {display, process: xvfb};
+  const firstDisplay = (process.pid + Date.now()) % 700;
+  for (let attempt = 0; attempt < 700; attempt += 1) {
+    const display = `:${100 + ((firstDisplay + attempt) % 700)}`;
+    const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x720x24", "-nolisten", "tcp"], {stdout: "pipe", stderr: "pipe"});
+    await Bun.sleep(250);
+    if (xvfb.exitCode === null) return {display, process: xvfb};
+    await xvfb.exited;
+  }
+  throw new Error("Xvfb could not start on any display in the bounded range :100-:799");
 }
 
 async function stopProcess(child: Child | null): Promise<void> {
@@ -309,7 +313,7 @@ function buildElectronReport(fixtureData: ElectronFixture, display: string, firs
     checks,
     details: {vault_file_count: first.summary.fileCount, first_revision: first.read.revision, edited_revision: first.written.revision, before_sha256: fixtureData.before.sha256, after_sha256: snapshotVault(fixtureData.vaultRoot).sha256},
     limitations: [
-      "This is a disposable Linux packaged Electron trace; macOS and Windows interactive launches, reference Obsidian reopen behavior and human accessibility/input review remain separate gates.",
+      "This is a disposable packaged Electron trace on the current host; reference Obsidian reopen behavior and human accessibility/input review remain separate gates.",
       "The trace proves the local broker and renderer boundary only; it does not certify unchanged plugin lifecycle, OS isolation, signing, publication or release readiness.",
       "No personal vault was accessed; the selected /home/ashutosh/Obsidian vault was not used.",
     ],
