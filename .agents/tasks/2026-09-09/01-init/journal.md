@@ -710,3 +710,10 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Validation: focused plugin policy/runner/matrix tests pass (8 tests, 35 expectations), `bun run typecheck`, `bun run validate:plugin-matrix` and strict changed-file Fallow pass. C09.1 is now `implemented` with explicit pending-runtime blockers.
 - Limitation: this proves the host policy and denied path only; unchanged plugin settings/enablement, lifecycle, per-OS enforcement and reference Obsidian behavior remain pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - Next: run full local gates, commit and push this scoped P1.2 work, inspect all available CI matrices, reconcile the observed work SHA, then resume reference/cross-platform vault round trips and unchanged-plugin lifecycle evidence.
+
+## 2026-09-11T12:24:00Z — P1.2 shared plugin configuration policy reconciliation
+
+- Reconciled pushed work commit `04527e28b28ae7db19a8c48512a01c9e0e71940b` on `main`; local and `origin/main` matched before this metadata update.
+- Quality run `34598530346` and desktop-build run `34598530358` passed on Ubuntu, Windows and macOS. Desktop packaging, release-manifest, runtime-notice and transitive-attribution audits passed; signing remained correctly skipped as an external credential gate.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-config-policy-ci.json`; `state.json` now records the pushed work SHA, source tree and CI IDs while retaining C09.1 as implementation-only and P1.2 in progress.
+- Next: continue the earliest dependency-ready reference/cross-platform vault round trips and unchanged-plugin lifecycle/DOM evidence; do not claim reference Obsidian, OS-enforced isolation, human or signed-release completion.

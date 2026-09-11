@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-11T12:24:00Z",
+  "checkpoint": "P1.2",
+  "requirements": ["C09.1"],
+  "implementation_commit": "04527e28b28ae7db19a8c48512a01c9e0e71940b",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "401cb629a3d6825a61e39f4896e93c4038457ff95a8a81a6a1cc68f05691624c",
+    "source_tree_paths": 201
+  },
+  "ci": [
+    {"workflow": "OpenObsidian quality", "run_id": 34598530346, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34598530346", "conclusion": "success", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "result": "All quality matrix jobs passed, including state/contracts, typecheck, full tests, compile, Knip and Fallow health."},
+    {"workflow": "OpenObsidian desktop build", "run_id": 34598530358, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34598530358", "conclusion": "success", "platforms": ["ubuntu-latest", "macos-latest", "windows-latest"], "result": "All desktop matrix jobs passed packaging, release-manifest, Electron runtime notice and transitive attribution audits; signing remained skipped because credentials were unavailable."}
+  ],
+  "limitations": [
+    "The CI matrix verifies the host policy and contract tests on all three runners, not unchanged plugin settings/enablement or lifecycle execution.",
+    "Reference Obsidian round trips, same-user OS bypass resistance and human or signed-release gates remain pending; no selected user vault was accessed or modified."
+  ]
+}
