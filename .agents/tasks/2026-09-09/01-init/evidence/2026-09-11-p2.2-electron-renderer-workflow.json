@@ -1,0 +1,45 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-11T15:37:33Z",
+  "checkpoint": "P2.2",
+  "requirements": ["C10.1", "UX-001", "UX-003", "Q-011"],
+  "fixture_ids": ["fixture:electron-vault-roundtrip", "fixture:workspace-journeys", "fixture:ux-accessibility"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "electron_version": "44.3.0",
+    "tested_source_tree": "96f8bd6cc95492d0bce1cfb75ed970d945fcf8a499e6be2d08ba906bae9ca349",
+    "source_tree_paths": 211
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "procedure": {
+    "command": "bun run compile && bun run audit:electron-vault",
+    "launch": "Electron 44.3.0 with --vault=<disposable> --open=Note.md, Xvfb display and a bounded fixed CDP-port range",
+    "workflow": "The launch intent hydrated the visible Markdown editor; a CDP keyboard event triggered Ctrl/Cmd-S after Unicode input; source/live-preview mode controls were switched and the note was read back through the broker.",
+    "disposable_vault": "A separate temporary vault contained Note.md and .obsidian/app.json; it was removed after the run."
+  },
+  "checks": {
+    "launch_intent_hydrated_renderer": true,
+    "renderer_keyboard_save": true,
+    "renderer_unicode_input": true,
+    "renderer_mode_switch": true,
+    "persisted_bytes_match_keyboard_edit": true,
+    "existing_vault_opened": true,
+    "read_only_scan": true,
+    "revision_aware_write": true,
+    "process_restart": true,
+    "reopen_read": true,
+    "unrelated_binary_preserved": true,
+    "app_data_outside_vault": true,
+    "remote_contact_avoided": true
+  },
+  "result": "The packaged Electron renderer now has a durable launch-intent and keyboard-save trace over the same revision-aware broker as the direct IPC round trip. Unicode text remained in the visible editor and persisted with an explicit save; mode switching did not alter source bytes.",
+  "limitations": [
+    "This is disposable Linux x64 packaged-renderer evidence; macOS and Windows UI interaction, true OS IME, screen-reader, human focus, reference Obsidian and release validation remain pending.",
+    "CDP keyboard/input dispatch is renderer evidence, not OS IME or human accessibility certification.",
+    "The unchanged /home/ashutosh/Obsidian vault was not accessed or modified."
+  ]
+}

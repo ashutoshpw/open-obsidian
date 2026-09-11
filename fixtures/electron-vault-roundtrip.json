@@ -5,6 +5,7 @@
   "purpose": "Packaged Electron open-in-place, mediated read/write and process-restart persistence on a disposable existing vault.",
   "phases": [
     "launch",
+    "launch-intent-and-renderer-workflow",
     "open-existing-vault",
     "read-only-scan",
     "revision-aware-write",
@@ -17,7 +18,10 @@
     "read bytes and revisions come from the selected vault",
     "writes require the read revision and survive a fresh process",
     "unrelated binary bytes remain unchanged",
-    "vault files remain outside Electron user-data storage"
+    "vault files remain outside Electron user-data storage",
+    "a --vault/--open launch intent hydrates the visible editor",
+    "keyboard save persists Unicode input through the revision-aware broker",
+    "source and live-preview mode controls switch without changing source bytes"
   ],
   "external_pending": [
     "reference Obsidian reopen and back-to-back portability",

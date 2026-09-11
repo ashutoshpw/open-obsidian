@@ -43,6 +43,10 @@ export type ElectronVaultAuditReport = {
     reopen_read: boolean;
     app_data_outside_vault: boolean;
     remote_contact_avoided: boolean;
+    launch_intent_hydrated_renderer: boolean;
+    renderer_keyboard_save: boolean;
+    renderer_unicode_input: boolean;
+    renderer_mode_switch: boolean;
   };
   details: JsonRecord;
   limitations: string[];
@@ -80,16 +84,25 @@ function readChildOutput(child: Child): {get: () => string} {
 }
 
 async function freePort(): Promise<number> {
-  const server = createServer();
-  await new Promise<void>((resolvePromise, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => resolvePromise());
-  });
-  const address = server.address();
-  const port = typeof address === "object" && address ? address.port : 0;
-  await new Promise<void>((resolvePromise) => server.close(() => resolvePromise()));
-  if (!port) throw new Error("Could not allocate a local CDP port");
-  return port;
+  // A bounded fixed range avoids asking the kernel for an ephemeral port when
+  // the shared development host has exhausted its ephemeral allocation pool.
+  const firstPort = 28_000 + ((process.pid + Date.now()) % 900);
+  for (let attempt = 0; attempt < 900; attempt += 1) {
+    const port = 28_000 + ((firstPort - 28_000 + attempt) % 900);
+    const server = createServer();
+    const available = await new Promise<boolean>((resolvePromise) => {
+      const onError = (): void => resolvePromise(false);
+      server.once("error", onError);
+      server.listen(port, "127.0.0.1", () => resolvePromise(true));
+    });
+    if (!available) {
+      server.close();
+      continue;
+    }
+    await new Promise<void>((resolvePromise) => server.close(() => resolvePromise()));
+    return port;
+  }
+  throw new Error("Could not allocate a local CDP port in the bounded range 28000-28899");
 }
 
 async function startXvfb(): Promise<{display: string; process: Child | null}> {
@@ -179,9 +192,9 @@ async function pageTarget(port: number, output: () => string): Promise<CdpTarget
   throw new Error(`Electron renderer did not become available: ${output()}`);
 }
 
-async function launchRenderer(userData: string, display: string): Promise<{child: Child; output: () => string; client: CdpClient; stop: () => Promise<void>}> {
+async function launchRenderer(userData: string, display: string, launchArguments: string[] = []): Promise<{child: Child; output: () => string; client: CdpClient; stop: () => Promise<void>}> {
   const port = await freePort();
-  const child = Bun.spawn([electronBinary, "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${userData}`, "."], {
+  const child = Bun.spawn([electronBinary, "--no-sandbox", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${userData}`, ".", ...launchArguments], {
     cwd: root,
     env: display ? {...process.env, DISPLAY: display} : process.env,
     stdout: "pipe",
@@ -205,6 +218,17 @@ async function launchRenderer(userData: string, display: string): Promise<{child
   }
 }
 
+async function waitForRenderer<T>(client: CdpClient, expression: string, predicate: (value: T) => boolean, label: string): Promise<T> {
+  const deadline = Date.now() + startupTimeoutMs;
+  let last: T | undefined;
+  while (Date.now() < deadline) {
+    last = await client.evaluate<T>(expression);
+    if (predicate(last)) return last;
+    await Bun.sleep(100);
+  }
+  throw new Error(`Electron renderer did not reach ${label}: ${JSON.stringify(last)}`);
+}
+
 function fixtureStringList(key: string): string[] {
   return asArray(fixture[key]).map(string).filter(Boolean);
 }
@@ -212,9 +236,9 @@ function fixtureStringList(key: string): string[] {
 export function validateElectronVaultFixture(): {phases: number; paths: number; assertions: number} {
   requireCondition(fixture.schema_version === 1, "Electron vault fixture schema_version must be 1");
   requireCondition(string(fixture.id) === "fixture:electron-vault-roundtrip", "Electron vault fixture id is invalid");
-  requireCondition(fixtureStringList("phases").length === 6, "Electron vault fixture phases are incomplete");
+  requireCondition(fixtureStringList("phases").length === 7, "Electron vault fixture phases are incomplete");
   requireCondition(fixtureStringList("paths").includes("Note.md"), "Electron vault fixture must include Note.md");
-  requireCondition(fixtureStringList("assertions").length >= 4, "Electron vault fixture assertions are incomplete");
+  requireCondition(fixtureStringList("assertions").length >= 8, "Electron vault fixture assertions are incomplete");
   return {phases: fixtureStringList("phases").length, paths: fixtureStringList("paths").length, assertions: fixtureStringList("assertions").length};
 }
 
@@ -249,6 +273,13 @@ type ElectronFixture = {
   before: ReturnType<typeof snapshotVault>;
 };
 
+type ElectronUiFixture = {
+  vaultRoot: string;
+  userData: string;
+  originalNote: Uint8Array;
+  editedNote: Uint8Array;
+};
+
 type FirstProcessTrace = {
   summary: JsonRecord;
   read: JsonRecord;
@@ -270,6 +301,74 @@ function createElectronFixture(): ElectronFixture {
   return {vaultRoot, userData, originalNote, editedNote, originalBinary, before: snapshotVault(vaultRoot)};
 }
 
+function createElectronUiFixture(): ElectronUiFixture {
+  const vaultRoot = mkdtempSync(join(tmpdir(), "openobsidian-electron-ui-vault-"));
+  const userData = mkdtempSync(join(tmpdir(), "openobsidian-electron-ui-user-"));
+  const originalNote = Buffer.from("# UI fixture\nOriginal\n", "utf8");
+  const editedNote = Buffer.from("# UI fixture\nEdited through keyboard save · नमस्ते · مرحبا · 東京 · 🌍\n", "utf8");
+  mkdirSync(join(vaultRoot, ".obsidian"));
+  writeFileSync(join(vaultRoot, "Note.md"), originalNote);
+  writeFileSync(join(vaultRoot, ".obsidian", "app.json"), '{"theme":"minimal"}\n');
+  return {vaultRoot, userData, originalNote, editedNote};
+}
+
+type ElectronUiTrace = {
+  launchIntentHydrated: boolean;
+  keyboardSave: boolean;
+  unicodeInput: boolean;
+  modeSwitch: boolean;
+  initial: JsonRecord;
+  savedStatus: string;
+};
+
+type ElectronUiInitial = {path: string; disabled: boolean; value: string; direction: string};
+type ElectronUiInput = {focused: boolean; value: string; dirtyStatus: string};
+
+async function runUiProcess(fixtureData: ElectronUiFixture, display: string): Promise<ElectronUiTrace> {
+  const runtime = await launchRenderer(fixtureData.userData, display, [`--vault=${fixtureData.vaultRoot}`, "--open=Note.md"]);
+  try {
+    const initial = await waitForRenderer<ElectronUiInitial>(
+      runtime.client,
+      "(() => { const editor = document.querySelector('#note-editor'); return {path: document.querySelector('#editor-path')?.textContent ?? '', disabled: editor?.disabled ?? true, value: editor?.value ?? '', direction: document.documentElement.dir}; })()",
+      (value) => value.path === "Note.md" && value.disabled === false && value.value.includes("Original"),
+      "launch-intent hydration",
+    );
+    requireCondition(initial.path === "Note.md" && initial.disabled === false, "Launch intent did not hydrate the visible editor");
+    const state = await runtime.client.evaluate<ElectronUiInput>(`(() => {
+      const editor = document.querySelector('#note-editor');
+      if (!(editor instanceof HTMLTextAreaElement)) throw new Error('Visible note editor is unavailable');
+      editor.focus();
+      editor.value = ${JSON.stringify(new TextDecoder().decode(fixtureData.editedNote))};
+      editor.dispatchEvent(new Event('input', {bubbles: true}));
+      document.dispatchEvent(new KeyboardEvent('keydown', {key: 's', ctrlKey: true, bubbles: true}));
+      return {focused: document.activeElement === editor, value: editor.value, dirtyStatus: document.querySelector('#status')?.textContent ?? ''};
+    })()`);
+    requireCondition(state.focused === true, "Keyboard save fixture lost focus from the visible editor");
+    requireCondition(state.value === new TextDecoder().decode(fixtureData.editedNote), "Unicode renderer input was not retained in the editor");
+    const savedStatus = await waitForRenderer<string>(runtime.client, "document.querySelector('#status')?.textContent ?? ''", (value) => value.startsWith("Saved Note.md"), "keyboard save");
+    const modeSwitch = await runtime.client.evaluate<boolean>(`(() => {
+      const live = document.querySelector('[data-editor-mode="live-preview"]');
+      const source = document.querySelector('[data-editor-mode="source"]');
+      if (!(live instanceof HTMLButtonElement) || !(source instanceof HTMLButtonElement)) return false;
+      live.click();
+      const preview = document.querySelector('#note-preview');
+      const previewVisible = !(preview instanceof HTMLElement) || !preview.hidden;
+      source.click();
+      return previewVisible && document.querySelector('#note-editor')?.hidden === false;
+    })()`);
+    return {
+      launchIntentHydrated: initial.path === "Note.md" && initial.disabled === false,
+      keyboardSave: savedStatus.startsWith("Saved Note.md"),
+      unicodeInput: state.value === new TextDecoder().decode(fixtureData.editedNote),
+      modeSwitch,
+      initial,
+      savedStatus,
+    };
+  } finally {
+    await runtime.stop();
+  }
+}
+
 async function runFirstProcess(fixtureData: ElectronFixture, display: string): Promise<FirstProcessTrace> {
   const runtime = await launchRenderer(fixtureData.userData, display);
   try {
@@ -289,7 +388,7 @@ async function runFirstProcess(fixtureData: ElectronFixture, display: string): P
   }
 }
 
-function buildElectronReport(fixtureData: ElectronFixture, display: string, first: FirstProcessTrace, second: JsonRecord): ElectronVaultAuditReport {
+function buildElectronReport(fixtureData: ElectronFixture, display: string, first: FirstProcessTrace, second: JsonRecord, ui: ElectronUiTrace): ElectronVaultAuditReport {
   const secondSummary = asObject(second.summary, "reopen summary");
   const checks = {
     launch: true,
@@ -302,6 +401,10 @@ function buildElectronReport(fixtureData: ElectronFixture, display: string, firs
     reopen_read: Buffer.from(decoded(asObject(second.read, "restart read").base64, "restart read")).equals(Buffer.from(fixtureData.editedNote)),
     app_data_outside_vault: !readdirSync(fixtureData.vaultRoot).includes(".openobsidian-data"),
     remote_contact_avoided: asRecord(secondSummary.git)?.remoteContacted === false,
+    launch_intent_hydrated_renderer: ui.launchIntentHydrated,
+    renderer_keyboard_save: ui.keyboardSave,
+    renderer_unicode_input: ui.unicodeInput,
+    renderer_mode_switch: ui.modeSwitch,
   };
   requireCondition(Object.entries(checks).every(([, value]) => value), `Electron audit checks failed: ${JSON.stringify(checks)}`);
   return {
@@ -311,7 +414,7 @@ function buildElectronReport(fixtureData: ElectronFixture, display: string, firs
     environment: {platform: platform(), architecture: arch(), electron_version: string(readJson(join(root, "node_modules/electron/package.json")).version) || "unknown", display: display || "native"},
     fixture_id: string(fixture.id),
     checks,
-    details: {vault_file_count: first.summary.fileCount, first_revision: first.read.revision, edited_revision: first.written.revision, before_sha256: fixtureData.before.sha256, after_sha256: snapshotVault(fixtureData.vaultRoot).sha256},
+    details: {vault_file_count: first.summary.fileCount, first_revision: first.read.revision, edited_revision: first.written.revision, before_sha256: fixtureData.before.sha256, after_sha256: snapshotVault(fixtureData.vaultRoot).sha256, renderer: ui},
     limitations: [
       "This is a disposable packaged Electron trace on the current host; reference Obsidian reopen behavior and human accessibility/input review remain separate gates.",
       "The trace proves the local broker and renderer boundary only; it does not certify unchanged plugin lifecycle, OS isolation, signing, publication or release readiness.",
@@ -323,16 +426,21 @@ function buildElectronReport(fixtureData: ElectronFixture, display: string, firs
 export async function runElectronVaultAudit(): Promise<ElectronVaultAuditReport> {
   validateElectronVaultFixture();
   const fixtureData = createElectronFixture();
+  const uiFixture = createElectronUiFixture();
   let displayRuntime: {display: string; process: Child | null} = {display: "", process: null};
   try {
     displayRuntime = await startXvfb();
+    const ui = await runUiProcess(uiFixture, displayRuntime.display);
     const first = await runFirstProcess(fixtureData, displayRuntime.display);
     const second = await exerciseProcess(fixtureData.vaultRoot, fixtureData.userData, displayRuntime.display, fixtureData.editedNote);
-    return buildElectronReport(fixtureData, displayRuntime.display, first, second);
+    requireCondition(readFileSync(join(uiFixture.vaultRoot, "Note.md")).equals(Buffer.from(uiFixture.editedNote)), "Renderer keyboard save did not persist the edited note");
+    return buildElectronReport(fixtureData, displayRuntime.display, first, second, ui);
   } finally {
     await stopProcess(displayRuntime.process);
     rmSync(fixtureData.vaultRoot, {recursive: true, force: true});
     rmSync(fixtureData.userData, {recursive: true, force: true});
+    rmSync(uiFixture.vaultRoot, {recursive: true, force: true});
+    rmSync(uiFixture.userData, {recursive: true, force: true});
   }
 }
 
