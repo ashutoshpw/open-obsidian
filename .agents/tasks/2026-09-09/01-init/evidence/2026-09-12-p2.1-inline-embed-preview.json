@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T02:08:18Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C02.1", "C03", "C03.1", "C08"],
+  "fixture_ids": ["fixture:c02-dialects", "fixture:c03-links", "fixture:c03-link-forms", "fixture:c08-attachments"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "86d371676f341ded8a038937911333fb46c49923",
+    "tested_source_tree": "94476eb301dea71421cef7a341dad88982bc85e65b01fff0c1efea090b840fff"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/markdown-preview.test.ts", "exit_code": 0, "result": "7 focused tests pass with 24 expectations, including wiki embeds, Markdown image embeds, fragments, 320x180 and one-dimensional sizing, labels and escaped inert syntax."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the four-file inline-embed increment; two pre-existing renderer complexity findings remain excluded as inherited."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checking passes for the shared embed segment contract and renderer placeholder path."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes with 190 tests and 1,069 expectations; state, contracts, architecture, UX, accessibility, layout, typecheck, Knip and changed-file Fallow checks pass."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout bundles compile successfully."},
+    {"command": "bun run final:audit", "exit_code": 0, "result": "Final audit keeps origin/main and separate release handoffs valid; 196 rows remain 28 passing, 128 implemented, 32 pending, 0 failing, 1 unsupported-security and 7 external-pending, with 161 mandatory rows not release-passing."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "235 included paths; source tree digest is 94476eb301dea71421cef7a341dad88982bc85e65b01fff0c1efea090b840fff."}
+  ],
+  "implemented": [
+    "Added data-only embed inline segments for Obsidian wiki embeds and Markdown image syntax, preserving target paths, fragments, labels and numeric width/height dimensions.",
+    "Added an inert renderer placeholder that exposes target metadata and accessible text without creating image elements, loading local or external assets, or navigating URLs.",
+    "Added focused parser coverage and kept escaped embed syntax as source text."
+  ],
+  "limitations": [
+    "This slice deliberately does not load, decode or render attachment bytes; PDF/audio/video/transclusion behavior and external-open actions remain pending.",
+    "The placeholder proves safe visible representation only, not reference application rendering or cross-platform Electron interaction.",
+    "Reference application comparison, human validation, provider access, signing and publication remain outside this implementation evidence."
+  ]
+}
