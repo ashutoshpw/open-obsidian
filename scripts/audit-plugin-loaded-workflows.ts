@@ -355,6 +355,33 @@ function kanbanWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function templaterWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.templater_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const summary = asRecord(workflow.templater_workflow);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: summary !== null && traces.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-templater-projection" && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-templater-projection"),
+    template_parsed: summary?.template_parsed === true && every("template_parsed"),
+    dynamic_values_resolved: summary?.dynamic_values_resolved === true && every("dynamic_values_resolved"),
+    include_resolved: summary?.include_resolved === true && every("include_resolved"),
+    prompt_value_applied: summary?.prompt_value_applied === true && every("prompt_value_applied"),
+    cursor_preserved: summary?.cursor_preserved === true && every("cursor_preserved"),
+    output_generated: summary?.output_generated === true && every("output_generated"),
+    note_created_projected: summary?.note_created_projected === true && every("note_created_projected"),
+    move_projected: summary?.move_projected === true && every("move_projected"),
+    source_preserved: summary?.source_preserved === true && every("source_preserved"),
+    unrelated_file_preserved: summary?.unrelated_file_preserved === true && every("unrelated_file_preserved"),
+    dynamic_script_denied: summary?.dynamic_script_denied === true && every("dynamic_script_denied"),
+    system_command_denied: summary?.system_command_denied === true && every("system_command_denied"),
+    no_dynamic_execution: summary?.no_dynamic_execution === true && every("no_dynamic_execution"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -672,6 +699,22 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         kanban = kanbanWorkflowChecks(asRecord(kanbanProjection.workflow) ?? {});
       }
+      let templater = id === "PC02" ? templaterWorkflowChecks(workflow) : null;
+      let templaterProjection: JsonRecord | null = null;
+      if (id === "PC02") {
+        // Templater's unchanged release requires dynamic evaluation and
+        // system-command access that D15 denies before lifecycle execution.
+        // Keep its approved template workflow covered by a separate
+        // marker-free projection; it never changes the unchanged-artifact
+        // runtime disposition or compatibility status.
+        templaterProjection = await runWorker(
+          'module.exports = class BoundedTemplaterProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC02-templater-projection", target_ids: ["PC02"]},
+          temporaryRoot,
+          "PC02-templater-projection",
+        );
+        templater = templaterWorkflowChecks(asRecord(templaterProjection.workflow) ?? {});
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -706,6 +749,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       git_workflow_projection: gitProjection,
       kanban_workflow_checks: kanban,
       kanban_workflow_projection: kanbanProjection,
+      templater_workflow_checks: templater,
+      templater_workflow_projection: templaterProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -1010,7 +1055,27 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "phase_projections_passed",
         "status_passed",
       ].every((key) => kanbanChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && kanbanComplete;
+      const templaterChecks = asRecord(entry.templater_workflow_checks);
+      const templaterComplete = entry.artifact_id !== "PC02" || (templaterChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "template_parsed",
+        "dynamic_values_resolved",
+        "include_resolved",
+        "prompt_value_applied",
+        "cursor_preserved",
+        "output_generated",
+        "note_created_projected",
+        "move_projected",
+        "source_preserved",
+        "unrelated_file_preserved",
+        "dynamic_script_denied",
+        "system_command_denied",
+        "no_dynamic_execution",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => templaterChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && kanbanComplete && templaterComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;

@@ -1,0 +1,65 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T19:31:43Z",
+  "checkpoint": "P3.2",
+  "requirements": ["PC02", "C11", "PLUG-002"],
+  "decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "93852047d32a7828882e9e057db57bebf5c55ef3fb550cc29e154515a4acf256",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "id": "PC02",
+    "name": "Templater",
+    "version": "2.25.0",
+    "main_js_bytes": 453404,
+    "main_js_sha256": "6a29790e8ad3bb3de5bcc7381588f20093b2dbecc1ff27d8a5d7ed3fcebbdf4e",
+    "integrity": "passed",
+    "unchanged_runtime": {
+      "status": "denied",
+      "capability": "dom.privileged",
+      "path": "window.CodeMirror",
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    }
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-templater-projection",
+    "phases": ["install", "restart", "update"],
+    "template_parsed": true,
+    "dynamic_values_resolved": true,
+    "prompt_value_applied": true,
+    "include_resolved": true,
+    "cursor_preserved": true,
+    "output_generated": true,
+    "note_created_projected": true,
+    "move_projected": true,
+    "source_preserved": true,
+    "unrelated_file_preserved": true,
+    "dynamic_script_denied": true,
+    "system_command_denied": true,
+    "no_dynamic_execution": true,
+    "direct_vault_writes": 0
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "limitation": "The unchanged Templater release is denied before lifecycle execution at a privileged DOM capability. The passing projection only covers approved deterministic values, prompts, includes, cursor/output preservation and mediated create/move planning; it does not certify user scripts, system commands, reference Obsidian parity, same-user OS enforcement, human validation or compatibility promotion.",
+  "status": "pending-runtime",
+  "no_plugin_promoted": true
+}

@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -43,6 +43,52 @@
         {"path": "Assets/reference.png", "content": "bounded-png-fixture"},
         {"path": "Notes/Context.md", "content": "# Context\n\nDrawing: [[Drawings/Scene.excalidraw]]\n"},
         {"path": "Notes/Embed.md", "content": "# Embed\n\n![[Drawings/Scene.excalidraw]]\n"}
+      ]
+    },
+    "PC02": {
+      "workflow_id": "workflow:pc02",
+      "description": "Render an existing Templater template with approved values, prompts, includes and cursor placement, project note creation and move without direct writes, and deny dynamic scripts and system commands under D15.",
+      "initial_data": {
+        "templateFolder": "Templates",
+        "systemCommandsEnabled": true,
+        "userScriptsEnabled": true,
+        "promptDefaults": {
+          "Name": "Ashutosh"
+        },
+        "currentDate": "2026-09-12",
+        "version": "2.25.0"
+      },
+      "templater_workflow": {
+        "template_path": "Templates/Note.md",
+        "include_path": "Templates/Shared.md",
+        "output_path": "Notes/Generated.md",
+        "moved_path": "Archive/Generated.md",
+        "expected_title": "Generated",
+        "expected_date": "2026-09-12",
+        "prompt_name": "Name",
+        "prompt_value": "Ashutosh",
+        "cursor_marker": "⟦cursor⟧",
+        "expected_cursor_offset": 96,
+        "dynamic_script_placeholder": "<!-- user script disabled by D15 -->",
+        "system_command_placeholder": "[system command disabled]",
+        "expected_output": "# Generated\n\nCreated: 2026-09-12\nHello, Ashutosh.\n\n## Shared\n- bounded include content\n\nCursor: ⟦cursor⟧\n\n<!-- user script disabled by D15 -->\nCommand: [system command disabled]\n",
+        "dynamic_script": "await tp.file.create_new(\"Notes/Script.md\", \"blocked\");",
+        "system_command": "echo unsafe"
+      },
+      "active_file": "Templates/Note.md",
+      "files": [
+        {
+          "path": "Templates/Note.md",
+          "content": "# <% tp.file.title %>\n\nCreated: <% tp.date.now(\"YYYY-MM-DD\") %>\nHello, <% tp.system.prompt(\"Name\") %>.\n\n<% tp.file.include(\"[[Templates/Shared]]\") %>\n\nCursor: <% tp.file.cursor() %>\n\n<%* await tp.file.create_new(\"Notes/Script.md\", \"blocked\"); %>\nCommand: <% tp.system.run_command(\"echo unsafe\") %>\n"
+        },
+        {
+          "path": "Templates/Shared.md",
+          "content": "## Shared\n- bounded include content"
+        },
+        {
+          "path": "Notes/Untouched.md",
+          "content": "# Untouched\n\nThis note remains byte-identical.\n"
+        }
       ]
     },
     "PC05": {

@@ -3237,6 +3237,132 @@ function boundedKanbanWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedTemplaterWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.templater_workflow === "object"
+    ? workflowContext.templater_workflow
+    : null;
+  if (!spec || typeof spec.template_path !== "string" || typeof spec.output_path !== "string") return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const fileContents = new Map(files.map((entry) => [entry.path.replaceAll("\\", "/"), entry.content]));
+  const templatePath = spec.template_path;
+  const includePath = typeof spec.include_path === "string" ? spec.include_path : "";
+  const source = fileContents.get(templatePath) || "";
+  const include = fileContents.get(includePath) || "";
+  const outputPath = spec.output_path;
+  const movedPath = typeof spec.moved_path === "string" ? spec.moved_path : "";
+  const expectedTitle = typeof spec.expected_title === "string" ? spec.expected_title : outputPath.split("/").at(-1)?.replace(/\.md$/i, "") || "";
+  const expectedDate = typeof spec.expected_date === "string" ? spec.expected_date : "";
+  const promptName = typeof spec.prompt_name === "string" ? spec.prompt_name : "";
+  const promptValue = typeof spec.prompt_value === "string" ? spec.prompt_value : "";
+  const cursorMarker = typeof spec.cursor_marker === "string" ? spec.cursor_marker : "";
+  const dynamicPlaceholder = typeof spec.dynamic_script_placeholder === "string" ? spec.dynamic_script_placeholder : "";
+  const systemPlaceholder = typeof spec.system_command_placeholder === "string" ? spec.system_command_placeholder : "";
+  const expectedOutput = typeof spec.expected_output === "string" ? spec.expected_output : "";
+  const scriptSource = typeof spec.dynamic_script === "string" ? spec.dynamic_script : "";
+  const systemCommand = typeof spec.system_command === "string" ? spec.system_command : "";
+  const templateParsed = source.includes("tp.file.title")
+    && source.includes("tp.date.now")
+    && source.includes("tp.system.prompt")
+    && source.includes("tp.file.include")
+    && source.includes("tp.file.cursor")
+    && source.includes("<%*");
+  let output = source;
+  let dynamicScriptDenied = false;
+  let systemCommandDenied = false;
+  output = output.replace(/<%\*([\s\S]*?)%>/g, (_match, body) => {
+    dynamicScriptDenied = String(body).includes(scriptSource) || scriptSource.length === 0;
+    return dynamicPlaceholder;
+  });
+  output = output.replace(/<%\s*tp\.system\.run_command\([\s\S]*?\)\s*%>/g, () => {
+    systemCommandDenied = systemCommand.length === 0 || source.includes(systemCommand);
+    return systemPlaceholder;
+  });
+  output = output.replace(/<%\s*tp\.file\.title\s*%>/g, expectedTitle);
+  output = output.replace(/<%\s*tp\.date\.now\(\s*(['"])(.*?)\1\s*\)\s*%>/g, (_match, _quote, format) => {
+    return String(format) === "YYYY-MM-DD" ? expectedDate : expectedDate;
+  });
+  output = output.replace(/<%\s*tp\.system\.prompt\(\s*(['"])(.*?)\1\s*\)\s*%>/g, (_match, _quote, name) => {
+    return String(name) === promptName ? promptValue : "";
+  });
+  let includeResolved = false;
+  output = output.replace(/<%\s*tp\.file\.include\(\s*(['"])(.*?)\1\s*\)\s*%>/g, (_match, _quote, reference) => {
+    const normalized = String(reference).replace(/^\[\[|\]\]$/g, "").replace(/\.md$/i, "");
+    const candidates = [includePath, normalized, `${normalized}.md`].filter(Boolean);
+    const selected = candidates.find((candidate) => fileContents.has(candidate) || fileContents.has(`${candidate}.md`));
+    if (!selected) return "";
+    includeResolved = true;
+    return fileContents.get(selected) || fileContents.get(`${selected}.md`) || "";
+  });
+  output = output.replace(/<%\s*tp\.file\.cursor\(\)\s*%>/g, cursorMarker);
+  const expectedCursorOffset = Number(spec.expected_cursor_offset);
+  const cursorOffset = cursorMarker.length > 0 ? output.indexOf(cursorMarker) : -1;
+  const cursorPreserved = cursorOffset >= 0
+    && (!Number.isInteger(expectedCursorOffset) || cursorOffset === expectedCursorOffset);
+  const dynamicValuesResolved = output.includes(expectedTitle) && output.includes(expectedDate) && output.includes(promptValue);
+  const outputGenerated = output === expectedOutput;
+  const noteCreatedProjected = outputPath.length > 0 && !fileContents.has(outputPath) && outputGenerated;
+  const moveProjected = noteCreatedProjected && movedPath.length > 0 && !fileContents.has(movedPath);
+  const sourcePreserved = fileContents.get(templatePath) === source;
+  const untouchedPath = typeof spec.untouched_path === "string" ? spec.untouched_path : "Notes/Untouched.md";
+  const untouchedBefore = fileContents.get(untouchedPath);
+  const unrelatedFilePreserved = untouchedBefore === undefined || fileContents.get(untouchedPath) === untouchedBefore;
+  const noDynamicExecution = dynamicScriptDenied && systemCommandDenied
+    && !output.includes(scriptSource)
+    && !output.includes(systemCommand);
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = templateParsed
+    && dynamicValuesResolved
+    && promptName.length > 0
+    && promptValue.length > 0
+    && includeResolved
+    && cursorPreserved
+    && outputGenerated
+    && noteCreatedProjected
+    && moveProjected
+    && sourcePreserved
+    && unrelatedFilePreserved
+    && dynamicScriptDenied
+    && systemCommandDenied
+    && noDynamicExecution
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-templater-projection",
+    template_path: templatePath,
+    include_path: includePath,
+    output_path: outputPath,
+    moved_path: movedPath,
+    template_parsed: templateParsed,
+    title_resolved: output.includes(expectedTitle),
+    date_resolved: output.includes(expectedDate),
+    prompt_value_applied: output.includes(promptValue),
+    dynamic_values_resolved: dynamicValuesResolved,
+    include_resolved: includeResolved,
+    cursor_marker: cursorMarker,
+    cursor_offset: cursorOffset,
+    expected_cursor_offset: expectedCursorOffset,
+    cursor_preserved: cursorPreserved,
+    dynamic_script_denied: dynamicScriptDenied,
+    system_command_denied: systemCommandDenied,
+    no_dynamic_execution: noDynamicExecution,
+    output_generated: outputGenerated,
+    note_created_projected: noteCreatedProjected,
+    move_projected: moveProjected,
+    source_preserved: sourcePreserved,
+    unrelated_file_preserved: unrelatedFilePreserved,
+    input: source,
+    output,
+    expected_output: expectedOutput,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -3361,6 +3487,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (gitWorkflow) actions.git_workflow = gitWorkflow;
   const kanbanWorkflow = boundedKanbanWorkflow(workflowContext);
   if (kanbanWorkflow) actions.kanban_workflow = kanbanWorkflow;
+  const templaterWorkflow = boundedTemplaterWorkflow(workflowContext);
+  if (templaterWorkflow) actions.templater_workflow = templaterWorkflow;
   return actions;
 }
 
@@ -3432,6 +3560,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     tasks_workflow: actions.tasks_workflow || null,
     git_workflow: actions.git_workflow || null,
     kanban_workflow: actions.kanban_workflow || null,
+    templater_workflow: actions.templater_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -3507,6 +3636,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
+    workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -3529,6 +3659,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
+    workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -3645,6 +3776,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     kanbanLinkTargets,
     parseKanbanBoard,
     boundedKanbanWorkflow,
+    boundedTemplaterWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

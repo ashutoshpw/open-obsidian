@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -177,6 +177,41 @@ test("PC01 fixture covers bounded Excalidraw scene, links, export and reopen pro
   expect(loadedWorkflowAudit).toContain("function excalidrawWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("bounded_excalidraw_projection");
   expect(loadedWorkflowAudit).toContain("excalidraw_bounded_projection_complete");
+});
+
+test("PC02 fixture and bounded projection cover safe Templater values and denied execution", () => {
+  const pc02 = fixture.scenarios.PC02 as typeof fixture.scenarios.PC03 & {
+    templater_workflow?: {
+      template_path: string;
+      include_path: string;
+      output_path: string;
+      moved_path: string;
+      expected_output: string;
+      dynamic_script: string;
+      system_command: string;
+      cursor_marker: string;
+      expected_cursor_offset: number;
+    };
+  };
+  expect(pc02.workflow_id).toBe("workflow:pc02");
+  expect(pc02.files).toContainEqual(expect.objectContaining({path: "Templates/Note.md", content: expect.stringContaining("tp.file.include") }));
+  expect(pc02.templater_workflow).toMatchObject({
+    template_path: "Templates/Note.md",
+    include_path: "Templates/Shared.md",
+    output_path: "Notes/Generated.md",
+    moved_path: "Archive/Generated.md",
+    cursor_marker: "⟦cursor⟧",
+    expected_cursor_offset: 96,
+    dynamic_script: expect.stringContaining("tp.file.create_new"),
+    system_command: "echo unsafe",
+    expected_output: expect.stringContaining("<!-- user script disabled by D15 -->"),
+  });
+  expect(rendererWorker).toContain("function boundedTemplaterWorkflow");
+  expect(rendererWorker).toContain("bounded-in-memory-templater-projection");
+  expect(rendererWorker).toContain("dynamic_script_denied");
+  expect(rendererWorker).toContain("system_command_denied");
+  expect(loadedWorkflowAudit).toContain("function templaterWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("templater_workflow_checks");
 });
 
 test("PC20 fixture and bounded editor trace cover mutation history and folding", () => {
