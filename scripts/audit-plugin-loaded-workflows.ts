@@ -328,6 +328,39 @@ function gitWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function remotelySaveWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.remotely_save_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const summary = asRecord(workflow.remotely_save_workflow);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: summary !== null && traces.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-remotely-save-projection" && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-remotely-save-projection"),
+    backend_configured: summary?.backend_configured === true && every("backend_configured"),
+    live_contact_disabled: summary?.live_contact_disabled === true && every("live_contact_disabled"),
+    network_denied: summary?.network_denied === true && every("network_denied"),
+    credential_read_denied: summary?.credential_read_denied === true && every("credential_read_denied"),
+    denied_operations_recorded: summary?.denied_operations_recorded === true && every("denied_operations_recorded"),
+    network_contacted_zero: summary?.network_contacted === false && traces.length === 3 && traces.every((trace) => trace.network_contacted === false),
+    credentials_read_zero: summary?.credentials_read === false && traces.length === 3 && traces.every((trace) => trace.credentials_read === false),
+    text_sync_plan_recorded: summary?.text_sync_plan_recorded === true && every("text_sync_plan_recorded"),
+    binary_sync_plan_recorded: summary?.binary_sync_plan_recorded === true && every("binary_sync_plan_recorded"),
+    sync_plans_recorded: summary?.sync_plans_recorded === true && every("sync_plans_recorded"),
+    interrupted_transfer_resumed: summary?.interrupted_transfer_resumed === true && every("interrupted_transfer_resumed"),
+    rename_projected: summary?.rename_projected === true && every("rename_projected"),
+    delete_projected: summary?.delete_projected === true && every("delete_projected"),
+    rename_delete_handled: summary?.rename_delete_handled === true && every("rename_delete_handled"),
+    encryption_metadata_preserved: summary?.encryption_metadata_preserved === true && every("encryption_metadata_preserved"),
+    conflict_protected: summary?.conflict_protected === true && every("conflict_protected"),
+    conflict_versions_retained: summary?.conflict_versions_retained === true && every("conflict_versions_retained"),
+    version_retention_preserved: summary?.version_retention_preserved === true && every("version_retention_preserved"),
+    unrelated_content_preserved: summary?.unrelated_content_preserved === true && every("unrelated_content_preserved"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function kanbanWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.kanban_workflow);
   const phases = records(trace?.phases);
@@ -684,6 +717,22 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         git = gitWorkflowChecks(asRecord(gitProjection.workflow) ?? {});
       }
+      let remotelySave = id === "PC10" ? remotelySaveWorkflowChecks(workflow) : null;
+      let remotelySaveProjection: JsonRecord | null = null;
+      if (id === "PC10") {
+        // Remotely Save's unchanged release reaches network/credential/DOM
+        // capabilities that D15 denies before lifecycle execution. Keep its
+        // text/binary sync and recovery contract in a separate marker-free
+        // projection; this never changes the unchanged-artifact runtime
+        // disposition or compatibility status.
+        remotelySaveProjection = await runWorker(
+          'module.exports = class BoundedRemotelySaveProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC10-remotely-save-projection", target_ids: ["PC10"]},
+          temporaryRoot,
+          "PC10-remotely-save-projection",
+        );
+        remotelySave = remotelySaveWorkflowChecks(asRecord(remotelySaveProjection.workflow) ?? {});
+      }
       let kanban = id === "PC09" ? kanbanWorkflowChecks(workflow) : null;
       let kanbanProjection: JsonRecord | null = null;
       if (id === "PC09") {
@@ -747,6 +796,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       table_workflow_checks: table,
       git_workflow_checks: git,
       git_workflow_projection: gitProjection,
+      remotely_save_workflow_checks: remotelySave,
+      remotely_save_workflow_projection: remotelySaveProjection,
       kanban_workflow_checks: kanban,
       kanban_workflow_projection: kanbanProjection,
       templater_workflow_checks: templater,
@@ -1075,7 +1126,33 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => templaterChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && kanbanComplete && templaterComplete;
+      const remotelySaveChecks = asRecord(entry.remotely_save_workflow_checks);
+      const remotelySaveComplete = entry.artifact_id !== "PC10" || (remotelySaveChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "backend_configured",
+        "live_contact_disabled",
+        "network_denied",
+        "credential_read_denied",
+        "denied_operations_recorded",
+        "network_contacted_zero",
+        "credentials_read_zero",
+        "text_sync_plan_recorded",
+        "binary_sync_plan_recorded",
+        "sync_plans_recorded",
+        "interrupted_transfer_resumed",
+        "rename_projected",
+        "delete_projected",
+        "rename_delete_handled",
+        "encryption_metadata_preserved",
+        "conflict_protected",
+        "conflict_versions_retained",
+        "version_retention_preserved",
+        "unrelated_content_preserved",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => remotelySaveChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && kanbanComplete && templaterComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
@@ -1114,7 +1191,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

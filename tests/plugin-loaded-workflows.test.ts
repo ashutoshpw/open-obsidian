@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -526,6 +526,67 @@ test("PC09 fixture and bounded projection preserve Kanban board structure and li
   expect(loadedWorkflowAudit).toContain("function kanbanWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("kanban_workflow_checks");
   expect(loadedWorkflowAudit).toContain("move_projected");
+});
+
+test("PC10 fixture and bounded projection keep sync plans credential-safe", () => {
+  const pc10 = fixture.scenarios.PC10 as typeof fixture.scenarios.PC03 & {
+    remotely_save_workflow?: {
+      backend_config: Record<string, string>;
+      live_contact: boolean;
+      text_sync_plan: {path: string; kind: string; direction: string; expected_action: string};
+      binary_sync_plan: {path: string; kind: string; direction: string; expected_action: string};
+      interrupted_transfer: {path: string; resumed_from_chunk: number; expected_final_chunks: number; expected_status: string};
+      rename_delete: {rename: {from: string; to: string; expected_action: string}; delete: {path: string; expected_action: string}};
+      encryption_metadata: {algorithm: string; key_id: string; expected_preservation: string};
+      conflict_versions: {path: string; local_copy: string; remote_copy: string; expected_state: string};
+      version_retention: {configured: number; expected: number; protected_conflicts_never_auto_removed: boolean};
+      denied_operations: Array<{operation: string; capability: string; disposition: string; safe_alternative: string}>;
+    };
+  };
+  expect(pc10.workflow_id).toBe("workflow:pc10");
+  expect(pc10.initial_data).toMatchObject({
+    version: "0.5.25",
+    liveContact: false,
+    credentialReference: "os-keychain:remotely-save-fixture",
+    encryption: {enabled: true, algorithm: "AES-256-GCM", keyId: "fixture-key-01", metadataVersion: 1},
+    conflictPolicy: "retain-both",
+    versionRetention: 5,
+  });
+  expect(pc10.remotely_save_workflow).toMatchObject({
+    backend_config: {
+      provider: "s3-compatible",
+      endpoint: "https://sync.example.test",
+      bucket: "openobsidian-fixture",
+      region: "us-east-1",
+      path_prefix: "vault-fixture",
+      credential_reference: "os-keychain:remotely-save-fixture",
+    },
+    live_contact: false,
+    text_sync_plan: {path: "Notes/Sync.md", kind: "text", direction: "upload", expected_action: "upload-local"},
+    binary_sync_plan: {path: "Assets/Diagram.png", kind: "binary", direction: "download", expected_action: "download-remote"},
+    interrupted_transfer: {path: "Assets/Archive.zip", resumed_from_chunk: 2, expected_final_chunks: 4, expected_status: "resumed"},
+    rename_delete: {
+      rename: {from: "Notes/Old.md", to: "Notes/Renamed.md", expected_action: "rename"},
+      delete: {path: "Notes/Removed.md", expected_action: "delete"},
+    },
+    encryption_metadata: {algorithm: "AES-256-GCM", key_id: "fixture-key-01", expected_preservation: "preserve-without-key-read"},
+    conflict_versions: {path: "Notes/Conflict.md", local_copy: "Notes/Conflict.local.md", remote_copy: "Notes/Conflict.remote.md", expected_state: "protected"},
+    version_retention: {configured: 5, expected: 5, protected_conflicts_never_auto_removed: true},
+  });
+  expect(pc10.remotely_save_workflow?.denied_operations).toEqual([
+    {operation: "backend-contact", capability: "network.request", disposition: "denied", safe_alternative: "bounded sync plan without live contact"},
+    {operation: "credential-read", capability: "credentials.read", disposition: "denied", safe_alternative: "preserve credential reference without reading the secret"},
+  ]);
+  expect(pc10.files).toContainEqual(expect.objectContaining({path: "Assets/Diagram.png"}));
+  expect(pc10.files).toContainEqual(expect.objectContaining({path: "Notes/Conflict.remote.md"}));
+  expect(rendererWorker).toContain("function boundedRemotelySaveWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-remotely-save-projection"');
+  expect(rendererWorker).toContain("interrupted_transfer_resumed");
+  expect(rendererWorker).toContain("encryption_metadata_preserved");
+  expect(rendererWorker).toContain("conflict_versions_retained");
+  expect(loadedWorkflowAudit).toContain("function remotelySaveWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("remotely_save_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("network_contacted_zero");
 });
 
 test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {

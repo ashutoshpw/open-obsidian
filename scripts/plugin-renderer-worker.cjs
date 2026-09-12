@@ -3042,6 +3042,186 @@ function boundedGitWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedRemotelySaveWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.remotely_save_workflow === "object"
+    ? workflowContext.remotely_save_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const backend = initialData && typeof initialData.backend === "object" ? initialData.backend : {};
+  const backendSpec = spec.backend_config && typeof spec.backend_config === "object" ? spec.backend_config : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const fileContents = new Map(files.map((entry) => [entry.path.replaceAll("\\", "/"), entry.content]));
+  const normalizedPath = (value) => typeof value === "string" ? value.replaceAll("\\", "/") : "";
+  const backendFieldsMatch = ["provider", "endpoint", "bucket", "region"]
+    .every((field) => typeof backendSpec[field] === "string" && backendSpec[field].length > 0 && backendSpec[field] === backend[field]);
+  const pathPrefixMatch = backendSpec.path_prefix === backend.pathPrefix;
+  const credentialReferencePreserved = backendSpec.credential_reference === initialData.credentialReference
+    && typeof initialData.credentialReference === "string"
+    && initialData.credentialReference.length > 0;
+  const liveContactDisabled = spec.live_contact === false && initialData.liveContact === false;
+  const backendConfigured = backendFieldsMatch && pathPrefixMatch && credentialReferencePreserved && liveContactDisabled;
+
+  const deniedOperations = Array.isArray(spec.denied_operations) ? spec.denied_operations : [];
+  const deniedOperationsRecorded = deniedOperations.length >= 2 && deniedOperations.every((entry) => entry
+    && entry.disposition === "denied"
+    && typeof entry.capability === "string"
+    && typeof entry.safe_alternative === "string"
+    && entry.safe_alternative.length > 0);
+  const networkDenied = deniedOperations.some((entry) => entry && entry.capability === "network.request" && entry.disposition === "denied");
+  const credentialDenied = deniedOperations.some((entry) => entry && entry.capability === "credentials.read" && entry.disposition === "denied");
+  // The projection records plans only. It never invokes a provider, network
+  // transport, OS credential store, or plugin-owned writer.
+  const networkContacted = false;
+  const credentialsRead = false;
+
+  const textPlan = spec.text_sync_plan && typeof spec.text_sync_plan === "object" ? spec.text_sync_plan : {};
+  const binaryPlan = spec.binary_sync_plan && typeof spec.binary_sync_plan === "object" ? spec.binary_sync_plan : {};
+  const textPath = normalizedPath(textPlan.path);
+  const binaryPath = normalizedPath(binaryPlan.path);
+  const textSyncPlanRecorded = textPath.length > 0
+    && fileContents.has(textPath)
+    && textPlan.kind === "text"
+    && (textPlan.direction === "upload" || textPlan.direction === "download")
+    && typeof textPlan.local_revision === "string"
+    && typeof textPlan.remote_revision === "string"
+    && typeof textPlan.expected_action === "string"
+    && textPlan.expected_action.length > 0;
+  const binarySyncPlanRecorded = binaryPath.length > 0
+    && fileContents.has(binaryPath)
+    && binaryPlan.kind === "binary"
+    && (binaryPlan.direction === "upload" || binaryPlan.direction === "download")
+    && Number(binaryPlan.bytes) > 0
+    && typeof binaryPlan.sha256 === "string"
+    && binaryPlan.sha256.length > 0
+    && typeof binaryPlan.expected_action === "string"
+    && binaryPlan.expected_action.length > 0;
+  const syncPlansRecorded = textSyncPlanRecorded && binarySyncPlanRecorded;
+
+  const interrupted = spec.interrupted_transfer && typeof spec.interrupted_transfer === "object" ? spec.interrupted_transfer : {};
+  const interruptedPath = normalizedPath(interrupted.path);
+  const totalChunks = Number(interrupted.total_chunks);
+  const completedChunks = Number(interrupted.completed_chunks_before_interrupt);
+  const resumedFromChunk = Number(interrupted.resumed_from_chunk);
+  const finalChunks = Number(interrupted.expected_final_chunks);
+  const interruptedTransferResumed = interruptedPath.length > 0
+    && fileContents.has(interruptedPath)
+    && typeof interrupted.transfer_id === "string"
+    && interrupted.transfer_id.length > 0
+    && Number.isInteger(Number(interrupted.chunk_size))
+    && Number(interrupted.chunk_size) > 0
+    && Number.isInteger(totalChunks)
+    && totalChunks > 0
+    && Number.isInteger(completedChunks)
+    && completedChunks > 0
+    && completedChunks < totalChunks
+    && resumedFromChunk === completedChunks
+    && finalChunks === totalChunks
+    && interrupted.expected_status === "resumed";
+
+  const renameDelete = spec.rename_delete && typeof spec.rename_delete === "object" ? spec.rename_delete : {};
+  const rename = renameDelete.rename && typeof renameDelete.rename === "object" ? renameDelete.rename : {};
+  const deletion = renameDelete.delete && typeof renameDelete.delete === "object" ? renameDelete.delete : {};
+  const renameFrom = normalizedPath(rename.from);
+  const renameTo = normalizedPath(rename.to);
+  const deletePath = normalizedPath(deletion.path);
+  const renameProjected = renameFrom.length > 0
+    && renameTo.length > 0
+    && fileContents.has(renameFrom)
+    && !fileContents.has(renameTo)
+    && rename.expected_action === "rename";
+  const deleteProjected = deletePath.length > 0
+    && fileContents.has(deletePath)
+    && deletion.expected_action === "delete";
+  const renameDeleteHandled = renameProjected && deleteProjected;
+
+  const encryption = spec.encryption_metadata && typeof spec.encryption_metadata === "object" ? spec.encryption_metadata : {};
+  const encryptionMetadataPreserved = encryption.enabled === true
+    && initialData.encryption?.enabled === true
+    && encryption.algorithm === initialData.encryption.algorithm
+    && encryption.key_id === initialData.encryption.keyId
+    && Number(encryption.metadata_version) === Number(initialData.encryption.metadataVersion)
+    && encryption.expected_preservation === "preserve-without-key-read";
+
+  const conflict = spec.conflict_versions && typeof spec.conflict_versions === "object" ? spec.conflict_versions : {};
+  const conflictPath = normalizedPath(conflict.path);
+  const localCopy = normalizedPath(conflict.local_copy);
+  const remoteCopy = normalizedPath(conflict.remote_copy);
+  const conflictVersionsRetained = conflictPath.length > 0
+    && fileContents.has(conflictPath)
+    && fileContents.has(localCopy)
+    && fileContents.has(remoteCopy)
+    && typeof conflict.base_version === "string"
+    && typeof conflict.local_version === "string"
+    && typeof conflict.remote_version === "string"
+    && conflict.base_version !== conflict.local_version
+    && conflict.base_version !== conflict.remote_version
+    && conflict.local_version !== conflict.remote_version
+    && conflict.expected_state === "protected"
+    && Number(conflict.retained_versions) >= 2;
+  const conflictProtected = conflictVersionsRetained;
+  const retention = spec.version_retention && typeof spec.version_retention === "object" ? spec.version_retention : {};
+  const versionRetentionPreserved = Number(initialData.versionRetention) === Number(retention.configured)
+    && Number(retention.configured) === Number(retention.expected)
+    && retention.protected_conflicts_never_auto_removed === true;
+  const untouchedPath = "Notes/Untouched.md";
+  const unrelatedContentPreserved = fileContents.has(untouchedPath);
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = backendConfigured
+    && deniedOperationsRecorded
+    && networkDenied
+    && credentialDenied
+    && networkContacted === false
+    && credentialsRead === false
+    && syncPlansRecorded
+    && interruptedTransferResumed
+    && renameDeleteHandled
+    && encryptionMetadataPreserved
+    && conflictProtected
+    && versionRetentionPreserved
+    && unrelatedContentPreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-remotely-save-projection",
+    backend_configured: backendConfigured,
+    backend_contacted: networkContacted,
+    network_contacted: networkContacted,
+    credentials_read: credentialsRead,
+    credential_read: credentialsRead,
+    live_contact_disabled: liveContactDisabled,
+    network_denied: networkDenied,
+    credential_read_denied: credentialDenied,
+    denied_operations_recorded: deniedOperationsRecorded,
+    denied_operations: deniedOperations,
+    text_sync_plan: textPlan,
+    binary_sync_plan: binaryPlan,
+    text_sync_plan_recorded: textSyncPlanRecorded,
+    binary_sync_plan_recorded: binarySyncPlanRecorded,
+    sync_plans_recorded: syncPlansRecorded,
+    interrupted_transfer: interrupted,
+    interrupted_transfer_resumed: interruptedTransferResumed,
+    rename_delete: renameDelete,
+    rename_projected: renameProjected,
+    delete_projected: deleteProjected,
+    rename_delete_handled: renameDeleteHandled,
+    encryption_metadata: encryption,
+    encryption_metadata_preserved: encryptionMetadataPreserved,
+    conflict_versions: conflict,
+    conflict_protected: conflictProtected,
+    conflict_versions_retained: conflictVersionsRetained,
+    version_retention: retention,
+    version_retention_preserved: versionRetentionPreserved,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  };
+}
+
 function kanbanLinkTargets(value) {
   return [...String(value ?? "").matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map((match) => match[1]);
 }
@@ -3485,6 +3665,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (tasksWorkflow) actions.tasks_workflow = tasksWorkflow;
   const gitWorkflow = boundedGitWorkflow(workflowContext);
   if (gitWorkflow) actions.git_workflow = gitWorkflow;
+  const remotelySaveWorkflow = boundedRemotelySaveWorkflow(workflowContext);
+  if (remotelySaveWorkflow) actions.remotely_save_workflow = remotelySaveWorkflow;
   const kanbanWorkflow = boundedKanbanWorkflow(workflowContext);
   if (kanbanWorkflow) actions.kanban_workflow = kanbanWorkflow;
   const templaterWorkflow = boundedTemplaterWorkflow(workflowContext);
@@ -3559,6 +3741,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     task_workflow: actions.task_workflow || null,
     tasks_workflow: actions.tasks_workflow || null,
     git_workflow: actions.git_workflow || null,
+    remotely_save_workflow: actions.remotely_save_workflow || null,
     kanban_workflow: actions.kanban_workflow || null,
     templater_workflow: actions.templater_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
@@ -3635,6 +3818,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
+    workflow.remotely_save_workflow = boundedRemotelySaveWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
@@ -3658,6 +3842,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
+    workflow.remotely_save_workflow = boundedRemotelySaveWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
@@ -3773,6 +3958,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTaskWorkflow,
     boundedTasksWorkflow,
     boundedGitWorkflow,
+    boundedRemotelySaveWorkflow,
     kanbanLinkTargets,
     parseKanbanBoard,
     boundedKanbanWorkflow,

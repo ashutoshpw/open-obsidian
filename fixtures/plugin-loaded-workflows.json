@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -402,6 +402,126 @@
         {"path": "Notes/Review.md", "content": "# Review\n\nCompatibility notes.\n"},
         {"path": "Notes/Design.md", "content": "# Design\n\nProjection notes.\n"},
         {"path": "Notes/Context.md", "content": "# Context\n\nThe board links back to this note.\n"}
+      ]
+    },
+    "PC10": {
+      "workflow_id": "workflow:pc10",
+      "description": "Project Remotely Save backend configuration and text/binary transfer recovery without contacting a live backend, reading credentials, or writing the vault.",
+      "initial_data": {
+        "version": "0.5.25",
+        "backend": {
+          "provider": "s3-compatible",
+          "endpoint": "https://sync.example.test",
+          "bucket": "openobsidian-fixture",
+          "region": "us-east-1",
+          "pathPrefix": "vault-fixture"
+        },
+        "credentialReference": "os-keychain:remotely-save-fixture",
+        "liveContact": false,
+        "encryption": {
+          "enabled": true,
+          "algorithm": "AES-256-GCM",
+          "keyId": "fixture-key-01",
+          "metadataVersion": 1
+        },
+        "conflictPolicy": "retain-both",
+        "versionRetention": 5
+      },
+      "remotely_save_workflow": {
+        "backend_config": {
+          "provider": "s3-compatible",
+          "endpoint": "https://sync.example.test",
+          "bucket": "openobsidian-fixture",
+          "region": "us-east-1",
+          "path_prefix": "vault-fixture",
+          "credential_reference": "os-keychain:remotely-save-fixture"
+        },
+        "live_contact": false,
+        "text_sync_plan": {
+          "path": "Notes/Sync.md",
+          "kind": "text",
+          "direction": "upload",
+          "local_revision": "text-local-v2",
+          "remote_revision": "text-remote-v1",
+          "expected_action": "upload-local"
+        },
+        "binary_sync_plan": {
+          "path": "Assets/Diagram.png",
+          "kind": "binary",
+          "direction": "download",
+          "bytes": 16,
+          "sha256": "binary-fixture-sha256",
+          "expected_action": "download-remote"
+        },
+        "interrupted_transfer": {
+          "path": "Assets/Archive.zip",
+          "transfer_id": "transfer-binary-01",
+          "chunk_size": 4,
+          "total_chunks": 4,
+          "completed_chunks_before_interrupt": 2,
+          "resumed_from_chunk": 2,
+          "expected_final_chunks": 4,
+          "expected_status": "resumed"
+        },
+        "rename_delete": {
+          "rename": {
+            "from": "Notes/Old.md",
+            "to": "Notes/Renamed.md",
+            "expected_action": "rename"
+          },
+          "delete": {
+            "path": "Notes/Removed.md",
+            "expected_action": "delete"
+          }
+        },
+        "encryption_metadata": {
+          "enabled": true,
+          "algorithm": "AES-256-GCM",
+          "key_id": "fixture-key-01",
+          "metadata_version": 1,
+          "expected_preservation": "preserve-without-key-read"
+        },
+        "conflict_versions": {
+          "path": "Notes/Conflict.md",
+          "base_version": "base-v1",
+          "local_version": "local-v2",
+          "remote_version": "remote-v3",
+          "local_copy": "Notes/Conflict.local.md",
+          "remote_copy": "Notes/Conflict.remote.md",
+          "expected_state": "protected",
+          "retained_versions": 2
+        },
+        "version_retention": {
+          "configured": 5,
+          "expected": 5,
+          "protected_conflicts_never_auto_removed": true
+        },
+        "denied_operations": [
+          {
+            "operation": "backend-contact",
+            "capability": "network.request",
+            "disposition": "denied",
+            "safe_alternative": "bounded sync plan without live contact"
+          },
+          {
+            "operation": "credential-read",
+            "capability": "credentials.read",
+            "disposition": "denied",
+            "safe_alternative": "preserve credential reference without reading the secret"
+          }
+        ]
+      },
+      "active_file": "Notes/Sync.md",
+      "files": [
+        {"path": "Notes/Sync.md", "content": "# Sync fixture\n\nText content remains local until an explicit mediated action.\n"},
+        {"path": "Assets/Diagram.png", "content": "binary-diagram-v1"},
+        {"path": "Assets/Archive.zip", "content": "archive-chunk-fixture"},
+        {"path": "Notes/Old.md", "content": "# Old\n\nRename source.\n"},
+        {"path": "Notes/Removed.md", "content": "# Removed\n\nDelete candidate.\n"},
+        {"path": "Notes/Conflict.md", "content": "# Conflict\n\nLocal version.\n"},
+        {"path": "Notes/Conflict.local.md", "content": "# Conflict\n\nLocal version.\n"},
+        {"path": "Notes/Conflict.remote.md", "content": "# Conflict\n\nRemote version.\n"},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
       ]
     },
     "PC21": {
