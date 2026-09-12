@@ -328,6 +328,33 @@ function gitWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function kanbanWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const trace = asRecord(workflow.kanban_workflow);
+  const phases = records(trace?.phases);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === true);
+  return {
+    present: trace !== null,
+    bounded_read_only: trace?.mutation_scope === "bounded-in-memory-kanban-projection",
+    source_path_match: trace?.source_path === "Boards/Project.md",
+    board_parsed: trace?.board_parsed === true,
+    frontmatter_matches: trace?.frontmatter_matches === true,
+    lanes_match: trace?.lanes_match === true,
+    card_count_match: trace?.card_count_match === true,
+    move_projected: trace?.move_projected === true && every("move_projected"),
+    edit_projected: trace?.edit_projected === true && every("edit_projected"),
+    lane_order_preserved: trace?.lane_order_preserved === true,
+    metadata_preserved: trace?.metadata_preserved === true,
+    links_preserved: trace?.links_preserved === true,
+    source_preserved: trace?.source_preserved === true,
+    serialization_match: trace?.serialization_match === true && every("serialization_match"),
+    reopened: trace?.reopened === true && every("reopen_preserved"),
+    unrelated_content_preserved: trace?.unrelated_content_preserved === true,
+    direct_vault_writes_zero: trace?.direct_vault_writes === 0 && trace?.direct_vault_writes_zero === true && every("direct_vault_writes_zero"),
+    phase_projections_passed: phases.length === 3 && phases.every((phase) => phase.status === "passed"),
+    status_passed: trace?.status === "passed",
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -630,6 +657,21 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         git = gitWorkflowChecks(asRecord(gitProjection.workflow) ?? {});
       }
+      let kanban = id === "PC09" ? kanbanWorkflowChecks(workflow) : null;
+      let kanbanProjection: JsonRecord | null = null;
+      if (id === "PC09") {
+        // Kanban's unchanged release is denied before lifecycle execution by
+        // the renderer boundary. Keep its Markdown-board workflow covered by
+        // a separate marker-free synthetic projection; it never changes the
+        // unchanged-artifact runtime disposition or compatibility status.
+        kanbanProjection = await runWorker(
+          'module.exports = class BoundedKanbanProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC09-kanban-projection", target_ids: ["PC09"]},
+          temporaryRoot,
+          "PC09-kanban-projection",
+        );
+        kanban = kanbanWorkflowChecks(asRecord(kanbanProjection.workflow) ?? {});
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -662,6 +704,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       table_workflow_checks: table,
       git_workflow_checks: git,
       git_workflow_projection: gitProjection,
+      kanban_workflow_checks: kanban,
+      kanban_workflow_projection: kanbanProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -944,7 +988,29 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => gitChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete;
+      const kanbanChecks = asRecord(entry.kanban_workflow_checks);
+      const kanbanComplete = entry.artifact_id !== "PC09" || (kanbanChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "source_path_match",
+        "board_parsed",
+        "frontmatter_matches",
+        "lanes_match",
+        "card_count_match",
+        "move_projected",
+        "edit_projected",
+        "lane_order_preserved",
+        "metadata_preserved",
+        "links_preserved",
+        "source_preserved",
+        "serialization_match",
+        "reopened",
+        "unrelated_content_preserved",
+        "direct_vault_writes_zero",
+        "phase_projections_passed",
+        "status_passed",
+      ].every((key) => kanbanChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && kanbanComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;

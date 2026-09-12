@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -311,6 +311,51 @@
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
         {"path": "Themes/Minimal.css", "content": "/* @settings\nname: Appearance\nid: appearance\nsettings:\n  - id: compact\n    title: Compact\n    type: class-toggle\n  - id: accent\n    title: Accent\n    type: variable-color\n*/\n"}
+      ]
+    },
+    "PC09": {
+      "workflow_id": "workflow:pc09",
+      "description": "Open an existing Markdown Kanban board, move and edit cards across lanes, preserve frontmatter and links, and reopen the projected board without conversion or direct vault writes.",
+      "initial_data": {
+        "version": 2,
+        "boardFolder": "Boards",
+        "preserveMetadata": true,
+        "cardSyntax": "checkbox"
+      },
+      "kanban_workflow": {
+        "source_path": "Boards/Project.md",
+        "expected_frontmatter": {
+          "kanban-plugin": "board",
+          "board": "Project",
+          "owner": "Ashutosh"
+        },
+        "expected_lanes": [
+          {"name": "Backlog", "cards": ["Plan release", "Review compatibility [[Notes/Review.md|review notes]]"]},
+          {"name": "In Progress", "cards": ["Implement projection [[Notes/Design.md|design notes]]"]},
+          {"name": "Done", "cards": ["Ship baseline"]}
+        ],
+        "move_card": {
+          "card": "Review compatibility [[Notes/Review.md|review notes]]",
+          "from_lane": "Backlog",
+          "to_lane": "In Progress",
+          "position": 1
+        },
+        "edit_card": {
+          "before": "Implement projection [[Notes/Design.md|design notes]]",
+          "after": "Implement bounded projection [[Notes/Design.md|design notes]]",
+          "expected_link": "Notes/Design.md"
+        },
+        "expected_link_targets": ["Notes/Review.md", "Notes/Design.md"],
+        "expected_output": "---\nkanban-plugin: board\nboard: Project\nowner: Ashutosh\n---\n\n## Backlog\n- [ ] Plan release\n\n## In Progress\n- [ ] Implement bounded projection [[Notes/Design.md|design notes]]\n- [ ] Review compatibility [[Notes/Review.md|review notes]]\n\n## Done\n- [x] Ship baseline\n",
+        "untouched_path": "Notes/Context.md",
+        "expected_untouched_content": "# Context\n\nThe board links back to this note.\n"
+      },
+      "active_file": "Boards/Project.md",
+      "files": [
+        {"path": "Boards/Project.md", "content": "---\nkanban-plugin: board\nboard: Project\nowner: Ashutosh\n---\n\n## Backlog\n- [ ] Plan release\n- [ ] Review compatibility [[Notes/Review.md|review notes]]\n\n## In Progress\n- [ ] Implement projection [[Notes/Design.md|design notes]]\n\n## Done\n- [x] Ship baseline\n"},
+        {"path": "Notes/Review.md", "content": "# Review\n\nCompatibility notes.\n"},
+        {"path": "Notes/Design.md", "content": "# Design\n\nProjection notes.\n"},
+        {"path": "Notes/Context.md", "content": "# Context\n\nThe board links back to this note.\n"}
       ]
     },
     "PC21": {

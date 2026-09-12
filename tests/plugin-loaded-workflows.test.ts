@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -451,6 +451,46 @@ test("PC08 fixture and detached DOM seam keep Style Settings bounded", () => {
   expect(rendererWorker).toContain("target.getElementsByTagName");
   expect(rendererWorker).toContain("detachLeavesOfType(type)");
   expect(rendererWorker).toContain('String(name).toLowerCase() === "head"');
+});
+
+test("PC09 fixture and bounded projection preserve Kanban board structure and links", () => {
+  const pc09 = fixture.scenarios.PC09 as typeof fixture.scenarios.PC03 & {
+    kanban_workflow?: {
+      source_path: string;
+      expected_frontmatter: Record<string, string>;
+      expected_lanes: Array<{name: string; cards: string[]}>;
+      move_card: {card: string; from_lane: string; to_lane: string; position: number};
+      edit_card: {before: string; after: string; expected_link: string};
+      expected_link_targets: string[];
+      expected_output: string;
+      untouched_path: string;
+      expected_untouched_content: string;
+    };
+  };
+  expect(pc09.initial_data).toMatchObject({version: 2, boardFolder: "Boards", preserveMetadata: true, cardSyntax: "checkbox"});
+  expect(pc09.files).toContainEqual(expect.objectContaining({path: "Boards/Project.md", content: expect.stringContaining("## Backlog")}));
+  expect(pc09.kanban_workflow).toEqual({
+    source_path: "Boards/Project.md",
+    expected_frontmatter: {"kanban-plugin": "board", board: "Project", owner: "Ashutosh"},
+    expected_lanes: [
+      {name: "Backlog", cards: ["Plan release", "Review compatibility [[Notes/Review.md|review notes]]"]},
+      {name: "In Progress", cards: ["Implement projection [[Notes/Design.md|design notes]]"]},
+      {name: "Done", cards: ["Ship baseline"]},
+    ],
+    move_card: {card: "Review compatibility [[Notes/Review.md|review notes]]", from_lane: "Backlog", to_lane: "In Progress", position: 1},
+    edit_card: {before: "Implement projection [[Notes/Design.md|design notes]]", after: "Implement bounded projection [[Notes/Design.md|design notes]]", expected_link: "Notes/Design.md"},
+    expected_link_targets: ["Notes/Review.md", "Notes/Design.md"],
+    expected_output: "---\nkanban-plugin: board\nboard: Project\nowner: Ashutosh\n---\n\n## Backlog\n- [ ] Plan release\n\n## In Progress\n- [ ] Implement bounded projection [[Notes/Design.md|design notes]]\n- [ ] Review compatibility [[Notes/Review.md|review notes]]\n\n## Done\n- [x] Ship baseline\n",
+    untouched_path: "Notes/Context.md",
+    expected_untouched_content: "# Context\n\nThe board links back to this note.\n",
+  });
+  expect(rendererWorker).toContain("function boundedKanbanWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-kanban-projection"');
+  expect(rendererWorker).toContain("parseKanbanBoard");
+  expect(rendererWorker).toContain("links_preserved");
+  expect(loadedWorkflowAudit).toContain("function kanbanWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("kanban_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("move_projected");
 });
 
 test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {

@@ -3042,6 +3042,201 @@ function boundedGitWorkflow(workflowContext = {}) {
   };
 }
 
+function kanbanLinkTargets(value) {
+  return [...String(value ?? "").matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map((match) => match[1]);
+}
+
+function parseKanbanBoard(source) {
+  const normalized = String(source ?? "").replace(/\r\n/g, "\n");
+  const lines = normalized.split("\n");
+  const frontmatterLines = [];
+  const frontmatter = {};
+  let bodyStart = 0;
+  if (lines[0] === "---") {
+    const closing = lines.indexOf("---", 1);
+    if (closing > 0) {
+      frontmatterLines.push(...lines.slice(0, closing + 1));
+      for (const line of lines.slice(1, closing)) {
+        const match = line.match(/^([^:#][^:]*):\s*(.*)$/);
+        if (match) frontmatter[match[1].trim()] = match[2].trim();
+      }
+      bodyStart = closing + 1;
+      if (lines[bodyStart] === "") bodyStart += 1;
+    }
+  }
+  const lanes = [];
+  let current = null;
+  for (const line of lines.slice(bodyStart)) {
+    const heading = line.match(/^##\s+(.+?)\s*$/);
+    if (heading) {
+      current = {name: heading[1], cards: []};
+      lanes.push(current);
+      continue;
+    }
+    const card = line.match(/^\s*-\s+\[([ xX])\]\s+(.*)$/);
+    if (current && card) current.cards.push({checked: card[1].toLowerCase() === "x", text: card[2]});
+  }
+  return {normalized, lines, frontmatterLines, frontmatter, lanes};
+}
+
+function boundedKanbanWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.kanban_workflow === "object"
+    ? workflowContext.kanban_workflow
+    : null;
+  if (!spec) return null;
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const sourcePath = typeof spec.source_path === "string" ? spec.source_path : "";
+  const sourceEntry = files.find((entry) => entry.path === sourcePath) || null;
+  const source = sourceEntry ? sourceEntry.content : "";
+  const parsed = parseKanbanBoard(source);
+  const expectedFrontmatter = spec.expected_frontmatter && typeof spec.expected_frontmatter === "object" ? spec.expected_frontmatter : {};
+  const expectedFrontmatterEntries = Object.entries(expectedFrontmatter).filter(([key, value]) => typeof key === "string" && typeof value === "string");
+  const frontmatterMatches = parsed.frontmatterLines.length > 0
+    && expectedFrontmatterEntries.length > 0
+    && expectedFrontmatterEntries.every(([key, value]) => parsed.frontmatter[key] === value);
+  const expectedLanes = Array.isArray(spec.expected_lanes)
+    ? spec.expected_lanes.filter((lane) => lane && typeof lane.name === "string" && Array.isArray(lane.cards))
+    : [];
+  const laneSnapshot = parsed.lanes.map((lane) => ({name: lane.name, cards: lane.cards.map((card) => card.text)}));
+  const expectedLaneSnapshot = expectedLanes.map((lane) => ({name: lane.name, cards: lane.cards.filter((card) => typeof card === "string")}));
+  const lanesMatch = JSON.stringify(laneSnapshot) === JSON.stringify(expectedLaneSnapshot);
+  const boardParsed = parsed.frontmatterLines.length > 0 && parsed.lanes.length > 0 && parsed.lanes.every((lane) => lane.cards.length > 0);
+  const cardCount = parsed.lanes.reduce((count, lane) => count + lane.cards.length, 0);
+  const expectedCardCount = expectedLaneSnapshot.reduce((count, lane) => count + lane.cards.length, 0);
+  const cardCountMatch = cardCount === expectedCardCount && expectedCardCount > 0;
+  const move = spec.move_card && typeof spec.move_card === "object" ? spec.move_card : {};
+  const moveCard = typeof move.card === "string" ? move.card : "";
+  const moveFrom = typeof move.from_lane === "string" ? move.from_lane : "";
+  const moveTo = typeof move.to_lane === "string" ? move.to_lane : "";
+  const movePosition = Number.isInteger(Number(move.position)) ? Number(move.position) : -1;
+  const workingLanes = parsed.lanes.map((lane) => ({name: lane.name, cards: lane.cards.map((card) => ({...card}))}));
+  const fromLane = workingLanes.find((lane) => lane.name === moveFrom) || null;
+  const toLane = workingLanes.find((lane) => lane.name === moveTo) || null;
+  const movingIndex = fromLane ? fromLane.cards.findIndex((card) => card.text === moveCard) : -1;
+  const movedCard = movingIndex >= 0 && fromLane ? fromLane.cards[movingIndex] : null;
+  if (movedCard && toLane && fromLane !== toLane && movePosition >= 0 && movePosition <= toLane.cards.length) {
+    fromLane.cards.splice(movingIndex, 1);
+    toLane.cards.splice(movePosition, 0, movedCard);
+  }
+  const moveProjected = movedCard !== null
+    && fromLane !== null
+    && toLane !== null
+    && fromLane !== toLane
+    && !fromLane.cards.some((card) => card.text === moveCard)
+    && toLane.cards[movePosition]?.text === moveCard;
+  const edit = spec.edit_card && typeof spec.edit_card === "object" ? spec.edit_card : {};
+  const editBefore = typeof edit.before === "string" ? edit.before : "";
+  const editAfter = typeof edit.after === "string" ? edit.after : "";
+  const editLane = workingLanes.find((lane) => lane.cards.some((card) => card.text === editBefore)) || null;
+  const editCard = editLane ? editLane.cards.find((card) => card.text === editBefore) : null;
+  if (editCard) editCard.text = editAfter;
+  const expectedLink = typeof edit.expected_link === "string" ? edit.expected_link : "";
+  const editProjected = editCard !== null
+    && editCard.text === editAfter
+    && (expectedLink.length === 0 || kanbanLinkTargets(editAfter).includes(expectedLink));
+  const finalLaneSnapshot = workingLanes.map((lane) => ({name: lane.name, cards: lane.cards.map((card) => card.text)}));
+  const laneOrderPreserved = JSON.stringify(workingLanes.map((lane) => lane.name)) === JSON.stringify(parsed.lanes.map((lane) => lane.name));
+  const formatCard = (card) => `- [${card.checked ? "x" : " "}] ${card.text}`;
+  const outputLines = [
+    ...parsed.frontmatterLines,
+    "",
+    ...workingLanes.flatMap((lane, index) => [
+      `## ${lane.name}`,
+      ...lane.cards.map(formatCard),
+      ...(index < workingLanes.length - 1 ? [""] : []),
+    ]),
+  ];
+  const output = `${outputLines.join("\n")}\n`;
+  const expectedOutput = typeof spec.expected_output === "string" ? spec.expected_output.replace(/\r\n/g, "\n") : "";
+  const outputBoard = parseKanbanBoard(output);
+  const reopened = JSON.stringify(outputBoard.lanes.map((lane) => ({name: lane.name, cards: lane.cards.map((card) => card.text)}))) === JSON.stringify(finalLaneSnapshot)
+    && JSON.stringify(outputBoard.frontmatter) === JSON.stringify(parsed.frontmatter);
+  const sourceLinks = [...kanbanLinkTargets(source)].sort();
+  const outputLinks = [...kanbanLinkTargets(output)].sort();
+  const expectedLinkTargets = Array.isArray(spec.expected_link_targets) ? spec.expected_link_targets.filter((target) => typeof target === "string").sort() : [];
+  const linksPreserved = JSON.stringify(sourceLinks) === JSON.stringify(outputLinks)
+    && expectedLinkTargets.every((target) => sourceLinks.includes(target) && outputLinks.includes(target));
+  const metadataPreserved = JSON.stringify(outputBoard.frontmatter) === JSON.stringify(parsed.frontmatter)
+    && frontmatterMatches
+    && workflowContext.initial_data?.preserveMetadata === true;
+  const untouchedPath = typeof spec.untouched_path === "string" ? spec.untouched_path : "";
+  const untouchedEntry = files.find((entry) => entry.path === untouchedPath);
+  const expectedUntouched = typeof spec.expected_untouched_content === "string" ? spec.expected_untouched_content : "";
+  const unrelatedContentPreserved = Boolean(untouchedEntry && untouchedEntry.content === expectedUntouched);
+  const sourcePreserved = sourceEntry !== null && source === sourceEntry.content;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = sourceEntry !== null
+    && parsed.frontmatterLines.length > 0
+    && sourcePath === workflowContext.active_file
+    && boardParsed
+    && frontmatterMatches
+    && lanesMatch
+    && cardCountMatch
+    && moveProjected
+    && editProjected
+    && laneOrderPreserved
+    && metadataPreserved
+    && linksPreserved
+    && sourcePreserved
+    && output === expectedOutput
+    && reopened
+    && unrelatedContentPreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status,
+    move_projected: moveProjected,
+    edit_projected: editProjected,
+    serialization_match: output === expectedOutput,
+    reopen_preserved: reopened,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  }));
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-kanban-projection",
+    source_path: sourcePath,
+    source_bytes: new TextEncoder().encode(source).byteLength,
+    board_parsed: boardParsed,
+    frontmatter: parsed.frontmatter,
+    expected_frontmatter: expectedFrontmatter,
+    frontmatter_matches: frontmatterMatches,
+    expected_lanes: expectedLaneSnapshot,
+    initial_lanes: laneSnapshot,
+    lanes_match: lanesMatch,
+    card_count: cardCount,
+    expected_card_count: expectedCardCount,
+    card_count_match: cardCountMatch,
+    move_card: moveCard,
+    move_from_lane: moveFrom,
+    move_to_lane: moveTo,
+    move_position: movePosition,
+    move_projected: moveProjected,
+    edit_before: editBefore,
+    edit_after: editAfter,
+    edit_projected: editProjected,
+    lane_order_preserved: laneOrderPreserved,
+    metadata_preserved: metadataPreserved,
+    source_links: sourceLinks,
+    output_links: outputLinks,
+    expected_link_targets: expectedLinkTargets,
+    links_preserved: linksPreserved,
+    source_preserved: sourcePreserved,
+    output,
+    expected_output: expectedOutput,
+    serialization_match: output === expectedOutput,
+    reopened,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    untouched_path: untouchedPath,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -3164,6 +3359,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (tasksWorkflow) actions.tasks_workflow = tasksWorkflow;
   const gitWorkflow = boundedGitWorkflow(workflowContext);
   if (gitWorkflow) actions.git_workflow = gitWorkflow;
+  const kanbanWorkflow = boundedKanbanWorkflow(workflowContext);
+  if (kanbanWorkflow) actions.kanban_workflow = kanbanWorkflow;
   return actions;
 }
 
@@ -3234,6 +3431,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     task_workflow: actions.task_workflow || null,
     tasks_workflow: actions.tasks_workflow || null,
     git_workflow: actions.git_workflow || null,
+    kanban_workflow: actions.kanban_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -3308,6 +3506,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
+    workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -3329,6 +3528,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
+    workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -3442,6 +3642,9 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTaskWorkflow,
     boundedTasksWorkflow,
     boundedGitWorkflow,
+    kanbanLinkTargets,
+    parseKanbanBoard,
+    boundedKanbanWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,
