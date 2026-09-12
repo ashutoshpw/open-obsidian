@@ -1,0 +1,53 @@
+name: OpenObsidian plugin renderer matrix
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-renderer-matrix-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lifecycle:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Configure Electron Linux sandbox helper
+        if: runner.os == 'Linux'
+        run: |
+          electron_package_dir="$(dirname "$(node -p "require.resolve('electron/package.json')")")"
+          node "$electron_package_dir/install.js"
+          sandbox_helper="$electron_package_dir/dist/chrome-sandbox"
+          test -f "$sandbox_helper"
+          sudo chown root:root "$sandbox_helper"
+          sudo chmod 4755 "$sandbox_helper"
+      - name: Run all unchanged plugin renderer lifecycle probes
+        shell: bash
+        run: bun scripts/audit-plugin-renderer.ts --all --lifecycle > plugin-renderer-lifecycle-${{ runner.os }}.json
+      - name: Upload renderer lifecycle evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-renderer-lifecycle-${{ runner.os }}-${{ github.sha }}
+          path: plugin-renderer-lifecycle-${{ runner.os }}.json
+          if-no-files-found: error
