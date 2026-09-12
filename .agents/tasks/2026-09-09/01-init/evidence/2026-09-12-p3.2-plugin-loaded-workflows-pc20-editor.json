@@ -1,0 +1,104 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc20-editor",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC20"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T06:17:48.426Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "053fc8a63c5bce21a5154a83004eaf394ccf515a",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "053fc8a63c5bce21a5154a83004eaf394ccf515a",
+    "sha256": "17a30eef69335470eab17b56394f11dc026143613d9c9f9864ad3d56b0ba75dc",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seam": "Added a finite in-memory CodeMirror-compatible editor adapter for unchanged renderer callbacks, including cursor/selections, line/range offsets, replacement, folding state and bounded @codemirror/language range iteration.",
+    "security_disposition": "The adapter mutates only the synthetic editor buffer; direct vault writes, filesystem/network/process/credential paths and privileged DOM remain denied."
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "pc20": {
+      "name": "Outliner",
+      "version": "4.10.2",
+      "main_js_sha256": "3d5bc634d3045ead4df9747d07ab51f16d9722f4601f9fee27e0c7fe9828fb33",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "phases": ["install", "restart", "update"],
+      "versions": ["1.0.0", "1.0.0", "1.1.0"],
+      "commands": [
+        "system-info",
+        "move-list-item-up",
+        "move-list-item-down",
+        "indent-list",
+        "outdent-list",
+        "fold",
+        "unfold"
+      ],
+      "actions": "All seven registered commands, including four editorCallback commands, passed in every phase; the Outliner settings tab displayed in every phase.",
+      "persistence": "preserved via mediated-plugin-data-store",
+      "restart_restores_persisted_data": true,
+      "update_restores_persisted_data": true,
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "bounded_lifecycle": "complete",
+      "persistence": "not-proven",
+      "action_status": "partial",
+      "action_failure_count": 12,
+      "vault_writes": 0
+    },
+    "no_plugin_promoted": true
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian editor hierarchy and undo comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This is Linux x64 Electron renderer-boundary evidence using unchanged pinned Outliner bytes. The adapter exercises bounded callbacks against a synthetic editor buffer; it does not certify CodeMirror parity, reference Obsidian hierarchy/undo behavior, cross-platform behavior or compatibility promotion."
+}

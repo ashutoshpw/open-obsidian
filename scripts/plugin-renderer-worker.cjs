@@ -311,6 +311,132 @@ function safeCallable(name) {
   });
 }
 
+function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
+  const context = workflowContext && typeof workflowContext === "object" ? workflowContext : {};
+  const entries = Array.isArray(context.files) ? context.files : [];
+  const activePath = typeof context.active_file === "string" ? context.active_file : entries[0]?.path;
+  const activeEntry = entries.find((entry) => entry && entry.path === activePath) || entries[0] || {content: ""};
+  let value = typeof activeEntry.content === "string" ? activeEntry.content : "";
+  let cursor = {line: 0, ch: 0};
+  let selections = [{anchor: {...cursor}, head: {...cursor}}];
+  const foldedLines = new Set();
+  if (!Array.isArray(metrics.editorOperations)) metrics.editorOperations = [];
+
+  function lines() {
+    return value.split("\n");
+  }
+
+  function normalizePosition(position = {}) {
+    const currentLines = lines();
+    const line = Math.max(0, Math.min(Number.isFinite(position.line) ? Math.trunc(position.line) : 0, currentLines.length - 1));
+    const lineValue = currentLines[line] ?? "";
+    const ch = Math.max(0, Math.min(Number.isFinite(position.ch) ? Math.trunc(position.ch) : 0, lineValue.length));
+    return {line, ch};
+  }
+
+  function positionToOffset(position) {
+    const normalized = normalizePosition(position);
+    return lines().slice(0, normalized.line).reduce((total, line) => total + line.length + 1, 0) + normalized.ch;
+  }
+
+  function offsetToPosition(offset) {
+    const bounded = Math.max(0, Math.min(Number.isFinite(offset) ? Math.trunc(offset) : 0, value.length));
+    let remaining = bounded;
+    const currentLines = lines();
+    for (let line = 0; line < currentLines.length; line += 1) {
+      const width = currentLines[line].length;
+      if (remaining <= width) return {line, ch: remaining};
+      remaining -= width + 1;
+    }
+    const lastLine = Math.max(0, currentLines.length - 1);
+    return {line: lastLine, ch: currentLines[lastLine].length};
+  }
+
+  function record(operation, details = {}) {
+    metrics.editorOperations.push({operation, ...details});
+  }
+
+  const firstListLine = lines().findIndex((line) => /^\s*(?:[-*+] |\d+\. )/.test(line));
+  cursor = normalizePosition({line: firstListLine >= 0 ? firstListLine : 0, ch: firstListLine >= 0 ? 2 : 0});
+  selections = [{anchor: {...cursor}, head: {...cursor}}];
+
+  const editor = {
+    cm: {
+      state: {
+        doc: {
+          line(number) {
+            const line = Math.max(1, Math.trunc(Number(number) || 1)) - 1;
+            const lineValue = lines()[line] ?? "";
+            return {from: positionToOffset({line, ch: 0}), to: positionToOffset({line, ch: lineValue.length})};
+          },
+        },
+      },
+      lineBlockAt(position) {
+        const normalized = offsetToPosition(typeof position === "number" ? position : 0);
+        return {from: positionToOffset({line: normalized.line, ch: 0}), to: positionToOffset({line: normalized.line, ch: lines()[normalized.line].length})};
+      },
+      dispatch() {},
+    },
+    getCursor() { return {...cursor}; },
+    setCursor(position) {
+      cursor = normalizePosition(position);
+      selections = [{anchor: {...cursor}, head: {...cursor}}];
+      record("setCursor", {cursor: {...cursor}});
+    },
+    getLine(line) { return lines()[Math.max(0, Math.trunc(Number(line) || 0))] ?? ""; },
+    lastLine() { return Math.max(0, lines().length - 1); },
+    listSelections() { return selections.map((selection) => ({anchor: {...selection.anchor}, head: {...selection.head}})); },
+    setSelections(nextSelections) {
+      if (!Array.isArray(nextSelections) || nextSelections.length === 0) return;
+      selections = nextSelections.map((selection) => ({
+        anchor: normalizePosition(selection?.anchor ?? selection?.head ?? cursor),
+        head: normalizePosition(selection?.head ?? selection?.anchor ?? cursor),
+      }));
+      cursor = {...selections[0].head};
+      record("setSelections", {count: selections.length});
+    },
+    getRange(from, to) {
+      const start = positionToOffset(from);
+      const end = positionToOffset(to ?? from);
+      return value.slice(Math.min(start, end), Math.max(start, end));
+    },
+    replaceRange(replacement, from, to = from) {
+      const start = positionToOffset(from);
+      const end = positionToOffset(to);
+      const lower = Math.min(start, end);
+      const upper = Math.max(start, end);
+      const text = typeof replacement === "string" ? replacement : String(replacement ?? "");
+      value = `${value.slice(0, lower)}${text}${value.slice(upper)}`;
+      cursor = offsetToPosition(lower + text.length);
+      selections = [{anchor: {...cursor}, head: {...cursor}}];
+      record("replaceRange", {from: normalizePosition(from), to: normalizePosition(to), bytes: text.length});
+    },
+    setValue(text) {
+      value = typeof text === "string" ? text : String(text ?? "");
+      cursor = normalizePosition(cursor);
+      selections = [{anchor: {...cursor}, head: {...cursor}}];
+      record("setValue", {bytes: value.length});
+    },
+    getValue() { return value; },
+    offsetToPos(offset) { return offsetToPosition(offset); },
+    posToOffset(position) { return positionToOffset(position); },
+    fold(line) {
+      foldedLines.add(Number(line));
+      record("fold", {line: Number(line)});
+    },
+    unfold(line) {
+      foldedLines.delete(Number(line));
+      record("unfold", {line: Number(line)});
+    },
+    getAllFoldedLines() { return [...foldedLines].sort((left, right) => left - right); },
+    getZoomRange() { return null; },
+    zoomOut() {},
+    zoomIn() {},
+    tryRefreshZoom() {},
+  };
+  return editor;
+}
+
 const OBSIDIAN_EXPORT_NAMES = [
   "App", "AbstractInputSuggest", "ButtonComponent", "ColorComponent", "Component", "ConfirmationModal", "DataAdapter", "DropdownComponent", "Editor", "EditorPosition", "EditorRange", "EditorSuggest", "Events", "FileSystemAdapter", "FileView", "FuzzySuggestModal", "ItemView", "Keymap", "MarkdownPostProcessorContext", "MarkdownRenderChild", "MarkdownRenderer", "MarkdownView", "Menu", "MenuItem", "MetadataCache", "Modal", "Notice", "Platform", "PluginSettingTab", "Scope", "SearchComponent", "Setting", "SettingGroup", "SettingPage", "SliderComponent", "SuggestModal", "TAbstractFile", "TFile", "TFolder", "TextAreaComponent", "TextComponent", "ToggleComponent", "Vault", "Workspace", "WorkspaceLeaf", "addIcon", "arrayBufferToBase64", "debounce", "getAllTags", "getFrontMatterInfo", "getLanguage", "normalizePath", "parseLinktext", "parseYaml", "prepareFuzzySearch", "requestUrl", "resolveSubpath", "setIcon", "stringifyYaml",
 ];
@@ -652,6 +778,7 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     registeredEvents: [],
     eventHandlers: [],
     persistence: [],
+    editor: boundedEditorAdapter(context, metrics),
     dataStore,
     vault,
     workspace,
@@ -707,6 +834,20 @@ function createSafeRequire(capabilities, requiredModules) {
   return function safeRequire(specifier) {
     remember(requiredModules, specifier);
     if (specifier === "obsidian") return obsidian;
+    if (specifier === "@codemirror/language") {
+      const emptyRanges = {
+        iter() { return {value: null, next() {}}; },
+        between() {},
+      };
+      return {
+        foldable() { return null; },
+        foldedRanges() { return emptyRanges; },
+        foldEffect: {of(value) { return value;}},
+        unfoldEffect: {of(value) { return value;}},
+        getIndentUnit() { return 4; },
+        indentString() { return "    "; },
+      };
+    }
     if (safeModulePattern.test(specifier)) return safeCallable(specifier);
     const capability = /^(?:node:)?fs(?:\/promises)?$/.test(specifier) ? "filesystem.direct" : "module.import";
     return denyCapability(capabilities, capability);
@@ -893,12 +1034,8 @@ async function configureSyntheticSmartEnvironment(runtime) {
 async function exerciseRegistrations(pluginApp) {
   const actions = {commands: [], views: [], settings: []};
   for (const command of pluginApp.commandHandlers) {
-    if (command.callbackKind === "editorCallback") {
-      actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "not-executed", reason: "bounded CodeMirror editor adapter is not certified"});
-      continue;
-    }
     try {
-      await awaitAction(command.callback.call(command.owner));
+      await awaitAction(command.callback.call(command.owner, pluginApp.editor));
       actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "passed"});
     } catch (error) {
       actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "failed", error: actionError(error)});
@@ -1092,6 +1229,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     safeWindowObject,
     safeComponentObject,
     safeCallable,
+    boundedEditorAdapter,
     cloneData,
     storageSnapshot,
     createObsidianApi,

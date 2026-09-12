@@ -51,8 +51,13 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("evaluatePhase");
   expect(rendererWorker).toContain("getElementsByClassName");
   expect(rendererWorker).toContain("registerHoverLinkSource() {}");
-  expect(rendererWorker).toContain('status: "not-executed"');
-  expect(rendererWorker).toContain("bounded CodeMirror editor adapter is not certified");
+  expect(rendererWorker).toContain("function boundedEditorAdapter");
+  expect(rendererWorker).toContain('specifier === "@codemirror/language"');
+  expect(rendererWorker).toContain("foldedRanges()");
+  expect(rendererWorker).toContain("getRange(from, to)");
+  expect(rendererWorker).toContain("replaceRange(replacement, from, to = from)");
+  expect(rendererWorker).toContain("editorCallback");
+  expect(rendererWorker).not.toContain('status: "not-executed"');
   expect(rendererWorker).toContain("globalThis.app = runtime.window?.app || runtime.app || null");
   expect(rendererWorker).toContain("globalThis.app = pluginApp");
   expect(rendererWorker).toContain("updateFontSize() {");

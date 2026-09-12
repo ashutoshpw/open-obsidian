@@ -1296,6 +1296,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening-ci.json` to the requirements reconciliation and recent state increment. P3.2 and the overall goal remain active; reference Obsidian, same-user macOS/Windows enforcement, human validation, provider-backed behavior, signing, publication, updater and required plugin combinations remain pending.
 - Next operation: continue the next available compatibility or recovery gap without promoting plugin support, retaining action, persistence, cross-platform, reference and human limitations explicitly.
 
+## 2026-09-12T06:18:30Z — P3.2 bounded PC20 editor adapter
+
+- Added a finite in-memory CodeMirror-compatible editor adapter to `scripts/plugin-renderer-worker.cjs` and a bounded `@codemirror/language` range stub. Unchanged Outliner `editorCallback` commands now receive cursor, selection, line/range, replacement and folding seams without direct vault access; direct writes and privileged capabilities remain denied.
+- Fresh Linux x64 / Electron 44.3.0 `bun run audit:plugin-loaded-workflows` evidence at head `053fc8a63c5bce21a5154a83004eaf394ccf515a` and source digest `17a30eef69335470eab17b56394f11dc026143613d9c9f9864ad3d56b0ba75dc` records PC20 Outliner lifecycle, all seven command actions, mediated plugin-data persistence, cleanup and return-to-Obsidian as complete within the synthetic scope, with zero vault writes. The overall audit remains partial because PC07/PC21/PC23 DOM actions, the shared-combination persistence, hierarchy/undo parity, cross-platform/reference/human and release gates remain pending.
+- Focused contract tests and worker syntax checks passed. No compatibility row was promoted. Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor.json`.
+- Next operation: commit this coherent worker/evidence/progress slice, run normal hooks, push `main`, reconcile quality/desktop-build/loaded-workflow Actions, then continue the next available compatibility or recovery gap without changing the explicit pending boundaries. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+
 ## 2026-09-12T05:45:11Z — P3.2 bounded PC17 font-size seam
 
 - Added a bounded plugin-local `app.updateFontSize()` seam to `scripts/plugin-renderer-worker.cjs`; the seam reads only bounded in-memory `vaultConfig` state, records a finite `fontSize` value or `null`, and performs no mediated vault write. Added focused contract assertions for the seam.
