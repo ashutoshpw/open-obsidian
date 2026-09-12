@@ -1,6 +1,6 @@
 {
   "evidence_version": 1,
-  "recorded_at": "2026-09-12T19:31:43Z",
+  "recorded_at": "2026-09-12T19:38:12Z",
   "checkpoint": "P3.2",
   "requirements": ["PC02", "C11", "PLUG-002"],
   "decision_id": "D15",
@@ -16,7 +16,7 @@
     "selected_vault_accessed": false
   },
   "source_tree": {
-    "sha256": "93852047d32a7828882e9e057db57bebf5c55ef3fb550cc29e154515a4acf256",
+    "sha256": "893b6bf771ae4c62fe22a2307361529728914e3eedbf2154ca79cfc89d21cdc6",
     "paths": 243,
     "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
   },
