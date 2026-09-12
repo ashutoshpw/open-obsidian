@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T02:56:56Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C03", "C03.1", "C02.1", "C08"],
+  "fixture_ids": ["fixture:c03-links", "fixture:c03-link-forms", "fixture:c02-dialects", "fixture:c08-attachments"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "ec40a495e8802b454aa407d5bdae8dee748a3778",
+    "tested_source_tree": "60c7c450e1c508ba3b629f1b4ed815cee36386cd913f966b1982634020ec5214"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "command": "bun test tests/links.test.ts tests/markdown-preview.test.ts",
+      "exit_code": 0,
+      "result": "14 focused tests pass with 53 expectations, covering Markdown embed parsing, Markdown-only note resolution, relative and ambiguous targets, external targets, heading/block slicing, fenced-code exclusion, cycle/depth guards and bounded source reads."
+    },
+    {
+      "command": "bun test",
+      "exit_code": 0,
+      "result": "197 tests pass with 1,106 expectations across 60 files."
+    },
+    {
+      "command": "bun run audit:fallow:strict",
+      "exit_code": 0,
+      "result": "No changed-code Fallow issues; two pre-existing renderer complexity findings remain excluded by the audit gate."
+    },
+    {
+      "command": "bun run typecheck",
+      "exit_code": 0,
+      "result": "Strict TypeScript checking passes for the source-aware transclusion resolver and renderer hydration path."
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "Routine state, contract, plugin-matrix, accessibility, layout, typecheck, 197-test, Knip and changed-file Fallow gates pass."
+    },
+    {
+      "command": "bun run compile",
+      "exit_code": 0,
+      "result": "Main, preload, renderer and popout bundles compile successfully."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "237 included paths; source tree digest is 60c7c450e1c508ba3b629f1b4ed815cee36386cd913f966b1982634020ec5214."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "No whitespace errors."
+    }
+  ],
+  "implemented": [
+    "Added a bounded source-aware note transclusion resolver that filters to Markdown notes, preserves relative path rules, validates headings and block IDs against source bytes, excludes fenced-code identities and reports unresolved, ambiguous and external targets without guessing.",
+    "Added fence-aware heading/block source slicing, a three-level recursion bound, cycle protection and a 512 KiB base64 source cap before renderer decoding.",
+    "Extended the renderer to read only resolved Markdown notes through the existing mediated readFile IPC, render transcluded content through the safe Markdown parser, preserve stale-generation checks, keep nested task controls read-only and leave unsupported or unsafe targets as accessible inert placeholders.",
+    "Added focused resolver and source-slice tests without changing authoritative vault bytes."
+  ],
+  "limitations": [
+    "PDF, SVG, unknown-binary and external-open behavior remain inert; no OS-level external opener was added.",
+    "This evidence is local implementation evidence only; visible Electron transclusion rendering, reference Obsidian parity, human accessibility review, cross-platform interaction and release signing remain pending.",
+    "Filesystem rename execution, full link dialect parity and reference reopen/save comparison remain outside this slice.",
+    "No provider, account, credential, personal vault or external reference runtime was accessed or modified."
+  ],
+  "commit_marker": "[openobsidian P2.1 work] Add bounded note transclusion"
+}
