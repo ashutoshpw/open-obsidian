@@ -38,6 +38,7 @@
     "validate:plugin-prerequisites": "bun scripts/validate-plugin-external-prerequisites.ts",
     "audit:plugin-lifecycle": "bun scripts/audit-plugin-lifecycle.ts",
     "audit:plugin-loaded-workflows": "bun scripts/audit-plugin-loaded-workflows.ts",
+    "audit:plugin-combinations": "bun scripts/audit-plugin-combinations.ts",
     "audit:vault-roundtrip": "bun scripts/vault-roundtrip.ts",
     "audit:electron-vault": "bun scripts/audit-electron-vault.ts",
     "validate:plugin-matrix": "bun scripts/validate-plugin-matrix.ts",
