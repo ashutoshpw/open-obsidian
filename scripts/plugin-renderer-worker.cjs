@@ -87,6 +87,10 @@ function safeDomObject() {
   }, {
     get(target, property) {
       if (property === "then") return undefined;
+      if (property === Symbol.toPrimitive) return () => "[object Object]";
+      if (property === Symbol.toStringTag) return "Object";
+      if (property === "toString") return () => "[object Object]";
+      if (property === "valueOf") return () => target;
       if (property in target) return target[property];
       return safeCallable(`dom.${String(property)}`);
     },
@@ -308,6 +312,39 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     app: runtimeApp || null,
     document,
     moment,
+    // Browser pages expose standard language/platform primitives on
+    // `window`.  These values are pure and do not provide a path to the host
+    // process, filesystem, network, credentials or native modules, so they
+    // can be shared with unchanged plugin code without weakening D15.
+    Object,
+    Array,
+    String,
+    Number,
+    Boolean,
+    RegExp,
+    Date,
+    Error,
+    TypeError,
+    Map,
+    Set,
+    WeakMap,
+    WeakSet,
+    Promise,
+    Symbol,
+    JSON,
+    Math,
+    Reflect,
+    Intl,
+    parseInt,
+    parseFloat,
+    isNaN,
+    isFinite,
+    encodeURI,
+    decodeURI,
+    encodeURIComponent,
+    decodeURIComponent,
+    TextEncoder,
+    TextDecoder,
     CodeMirrorAdapter: null,
     setTimeout: boundedTimer,
     setInterval: (callback) => {
@@ -721,7 +758,13 @@ function createObsidianApi() {
         this.app.commands.push(command.id);
         const callback = [command.callback, command.editorCallback, command.checkCallback].find((candidate) => typeof candidate === "function");
         if (callback) this.app.commandHandlers.push({id: command.id, callback, owner: this, callbackKind: callback === command.checkCallback ? "checkCallback" : callback === command.editorCallback ? "editorCallback" : "callback"});
+        // Obsidian returns the registered command descriptor.  A number of
+        // unchanged plugins retain that handle for refresh/unregister paths;
+        // returning it keeps the mediated seam faithful without exposing a
+        // host command registry.
+        return {id: command.id};
       }
+      return undefined;
     }
 
     addRibbonIcon() {
@@ -827,6 +870,17 @@ function createObsidianApi() {
         this.app.registeredEvents.push(event.type);
       }
       return event;
+    }
+
+    registerDomEvent(_target, _type, _callback, _options) {
+      // Item views own their DOM listeners in Obsidian.  The workflow adapter
+      // uses detached DOM objects, so retain only the registration boundary
+      // and never attach a host listener.
+      return undefined;
+    }
+
+    registerInterval(_interval) {
+      return undefined;
     }
   }
   class FileView {

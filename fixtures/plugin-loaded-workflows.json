@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC07": {
       "workflow_id": "workflow:pc07",
@@ -104,6 +104,25 @@
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
         {"path": "Themes/Minimal.css", "content": ".workspace-tab-header-container { color: var(--text-normal); }\n"}
+      ]
+    },
+    "PC19": {
+      "workflow_id": "workflow:pc19",
+      "description": "Exercise TaskNotes note-backed task commands with calendar and Bases view mappings without direct vault writes.",
+      "initial_data": {
+        "taskTag": "task",
+        "defaultTaskStatus": "open",
+        "enableBases": true,
+        "commandFileMapping": {
+          "open-tasks-view": "TaskNotes/Views/tasks-default.base",
+          "open-calendar-view": "TaskNotes/Views/calendar-default.base"
+        }
+      },
+      "active_file": "Notes/Task.md",
+      "files": [
+        {"path": "Notes/Task.md", "content": "---\ntags:\n  - task\nstatus: open\n---\n\n- [ ] Review compatibility #task\n"},
+        {"path": "TaskNotes/Views/tasks-default.base", "content": "views:\n  - type: table\n    name: Tasks\n    filters:\n      and:\n        - file.tasks\n"},
+        {"path": "TaskNotes/Views/calendar-default.base", "content": "views:\n  - type: calendar\n    name: Calendar\n    filters:\n      and:\n        - file.tasks\n"}
       ]
     },
     "PC20": {

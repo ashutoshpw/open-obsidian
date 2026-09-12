@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; files: Array<{path: string; content: string}>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>}>;
   combination: {id: string; target_ids: string[]};
   safe_alternatives_attempted: string[];
   external_pending: string[];
@@ -30,7 +30,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -127,6 +127,21 @@ test("PC20 fixture and bounded editor trace cover mutation history and folding",
   expect(loadedWorkflowAudit).toContain("folding_round_trip");
   expect(loadedWorkflowAudit).toContain("phase_editor_round_trip");
   expect(loadedWorkflowAudit).toContain("editor_checks: editor");
+});
+
+test("PC19 fixture covers note-backed tasks plus Bases view mappings", () => {
+  const pc19 = fixture.scenarios.PC19;
+  expect(pc19.files).toContainEqual(expect.objectContaining({path: "Notes/Task.md", content: expect.stringContaining("- [ ] Review compatibility #task")}));
+  expect(pc19.files).toContainEqual(expect.objectContaining({path: "TaskNotes/Views/tasks-default.base"}));
+  expect(pc19.files).toContainEqual(expect.objectContaining({path: "TaskNotes/Views/calendar-default.base"}));
+  expect(pc19.initial_data).toMatchObject({taskTag: "task", defaultTaskStatus: "open", enableBases: true});
+  expect(pc19.initial_data.commandFileMapping).toEqual({
+    "open-tasks-view": "TaskNotes/Views/tasks-default.base",
+    "open-calendar-view": "TaskNotes/Views/calendar-default.base",
+  });
+  expect(pc19.active_file).toBe("Notes/Task.md");
+  expect(rendererWorker).toContain("return {id: command.id};");
+  expect(rendererWorker).toContain("registerDomEvent(_target, _type, _callback, _options)");
 });
 
 test("PC08 fixture and detached DOM seam keep Style Settings bounded", () => {

@@ -1426,6 +1426,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the CI evidence to the requirements and state metadata. Reference Obsidian stale-entry/rename/delete behavior, same-user platform enforcement, human validation, required combinations, signing, publication and updater validation remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - P3.2 and the overall goal remain active. No plugin or compatibility row was promoted; the bounded renderer evidence remains synthetic and does not certify stock Obsidian or reference parity.
 
+## 2026-09-12T11:00:00Z — P3.2 bounded PC19 TaskNotes workflow
+
+- Added PC19 TaskNotes to the loaded-workflow fixture with a note-backed task, YAML task metadata and Tasks/Calendar Bases mappings. The selected `/home/ashutosh/Obsidian` vault was not accessed.
+- Hardened the bounded renderer seam for unchanged artifacts: pure browser language primitives are available on `window`, `Plugin.addCommand` returns the mediated command descriptor, and detached `ItemView` instances expose no-host `registerDomEvent`/`registerInterval` hooks. Privileged DOM, filesystem, process, network, credential, native-module and direct vault writes remain denied.
+- Fresh Linux x64 / Electron 44.3.0 evidence at source digest `11644c9fef3082db02774a9de4e69f260f8c1bb3a938db0d34b306c4f9126db3` verifies unchanged TaskNotes 4.12.5 integrity (`7f82b6bbffe5ff4b03c6b1581aa193f1204cd5970700ef9641f095e0c277bc4e`), complete bounded install/restart/update lifecycle, mediated persistence, all registered command callbacks, settings display, cleanup and zero direct vault writes. Two detached view actions remain bounded failures and the artifact remains pending.
+- Local validation passed: focused loaded-workflow tests (9 tests, 195 expectations), loaded-workflow audit execution, source-tree audit, JSON parsing and worker syntax checks. Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes.json`.
+- PC19 remains pending for lossless writer behavior, reference Obsidian TaskNotes/Bases/calendar parity, same-user macOS/Windows enforcement, human validation, required combinations and compatibility promotion. No plugin row was promoted.
+- Next operation: run the full local quality checks, commit with `[openobsidian P3.2 work] Add bounded PC19 TaskNotes workflow`, push `main`, inspect quality/desktop-build/loaded-workflow Actions on all three hosted platforms and reconcile their evidence.
+
 ## 2026-09-12T10:38:00Z — P3.2 hosted PC25 Linter reconciliation
 
 - Reconciled pushed head `4dcd4b137d79e8fc0eb80e0ab73adb03618c1384` with successful quality run `34688613788`, preview desktop-build run `34688613783` and loaded-workflow run `34688613769`; Ubuntu, macOS and Windows jobs passed across all three workflows.
