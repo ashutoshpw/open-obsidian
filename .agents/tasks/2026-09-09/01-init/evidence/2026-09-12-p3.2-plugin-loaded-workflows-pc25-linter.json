@@ -1,0 +1,133 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc25-linter",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC25"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T10:29:28Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "d0652b370d3b9df2688430be7a81431e93c3b1ea",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "d0652b370d3b9df2688430be7a81431e93c3b1ea",
+    "sha256": "720ca228d263a34a25eb203cd546311cbf702952f7122e9ea75dee40cde0ba90",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "artifact_id": "PC25",
+    "name": "Linter",
+    "version": "1.32.0",
+    "main_js_bytes": 902746,
+    "main_js_sha256": "1b4f44bf929024cf78dd5e60a655f7cffdf7ff49f8f55695a01591f8f69e3416",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "denied",
+    "denied_capabilities": ["dom.privileged"],
+    "denied_paths": ["window.navigator"],
+    "denial": "D15 denied dom.privileged at window.navigator"
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC25 declares lintOnSave, lint-on-file-change, enabled YAML/Markdown rules, explicit lint-file automation, expected YAML key order and a separate untouched note.",
+      "The fail-closed renderer projection applies only the fixture-declared YAML key sort, heading-start and final-newline rules to Notes/Lint.md in memory.",
+      "The projection records first-open no-op, explicit command output, lint-on-save parity, target-only impact and zero direct vault writes for install/restart/update traces even when unchanged main.js is denied."
+    ],
+    "security_disposition": "The unchanged pinned artifact remains inside the context-isolated synthetic renderer. Host DOM, filesystem/network/process/credential access and direct vault writes remain denied; the configured-output trace is a bounded in-memory projection and does not promote compatibility."
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "integrity_checked": true,
+    "pc25": {
+      "bounded_lifecycle": "partial",
+      "workflow_projection": {
+        "status": "passed",
+        "mutation_scope": "bounded-in-memory-projection",
+        "target_path": "Notes/Lint.md",
+        "enabled_rules": ["yaml-key-sort", "headings-start-line", "line-break-at-document-end"],
+        "yaml_key_priority_order": ["title", "tags"],
+        "input": "---\ntags:\n  - b\n  - a\ntitle: Lint fixture\n---\n\n  # Heading\n\nBody",
+        "output": "---\ntitle: Lint fixture\ntags:\n  - b\n  - a\n---\n\n# Heading\n\nBody\n",
+        "expected_output_match": true,
+        "first_open_mutation_count": 0,
+        "first_open_noop": true,
+        "explicit_command": "lint-file",
+        "explicit_command_configured": true,
+        "explicit_command_mutation_count": 1,
+        "lint_on_save": true,
+        "lint_on_save_matches": true,
+        "lint_on_save_disposition": "enabled",
+        "only_expected_target_affected": true,
+        "actual_mutated_paths": ["Notes/Lint.md"],
+        "expected_unchanged_paths": ["Notes/Untouched.md"],
+        "configured_yaml_output_match": true,
+        "configured_markdown_output_match": true,
+        "direct_vault_writes": 0,
+        "all_phases_passed": true
+      },
+      "cleanup_after_each_phase": false,
+      "uninstall_clears_registrations": false,
+      "return_to_obsidian": false,
+      "no_plugin_promoted": true
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 8 tests, 182 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 212 tests, 1258 expectations",
+    "typecheck_command": "bun run typecheck",
+    "typecheck_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "state_validation": "passed",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian Linter first-open, explicit command and lint-on-save behavior",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release, publication and updater installation/rollback",
+    "compatibility promotion and release-track certification"
+  ],
+  "limitation": "This evidence executes unchanged pinned Linter bytes only inside the hidden Electron context-isolated sandbox. The configured YAML/Markdown output and first-open/lint-on-save checks are bounded projections over mediated fixture notes; the unchanged artifact is D15-denied at window.navigator, so this does not certify stock Obsidian, reference parity, cross-platform behavior, human behavior or compatibility promotion."
+}

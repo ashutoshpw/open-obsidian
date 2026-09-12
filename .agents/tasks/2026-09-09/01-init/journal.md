@@ -1426,6 +1426,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the CI evidence to the requirements and state metadata. Reference Obsidian stale-entry/rename/delete behavior, same-user platform enforcement, human validation, required combinations, signing, publication and updater validation remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - P3.2 and the overall goal remain active. No plugin or compatibility row was promoted; the bounded renderer evidence remains synthetic and does not certify stock Obsidian or reference parity.
 
+## 2026-09-12T10:27:00Z — P3.2 bounded PC25 Linter workflow
+
+- Added PC25 Linter 1.32.0 to the loaded-workflow fixture with an explicit `lint-file` target, `lintOnSave: true`, disabled lint-on-file-change behavior, YAML key priority and deterministic Markdown rules over `Notes/Lint.md`; `Notes/Untouched.md` remains the unchanged control note.
+- Added a fail-closed bounded in-memory Linter projection that records zero first-open mutations, explicit command-only target impact, configured YAML/Markdown output, lint-on-save parity and zero direct vault writes across install/restart/update phases. It does not invoke the unchanged plugin's vault mutation callback.
+- Fresh Linux x64 / Electron 44.3.0 audit at source digest `720ca228d263a34a25eb203cd546311cbf702952f7122e9ea75dee40cde0ba90` verified the pinned 902746-byte PC25 main.js hash `1b4f44bf929024cf78dd5e60a655f7cffdf7ff49f8f55695a01591f8f69e3416`; the unchanged artifact remains D15-denied at `window.navigator`, while all bounded Linter projection checks pass in all three synthetic phases. Overall loaded-workflow status remains partial and no plugin was promoted.
+- Local validation passed: focused loaded-workflow tests (8 tests, 182 expectations), `bun run check:fast` (212 tests, 1258 expectations), typecheck, worker syntax, source-tree, state and diff checks. Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc25-linter.json`. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Reference Obsidian Linter behavior, same-user macOS/Windows enforcement, human validation, required combinations, signing, publication, updater validation and compatibility promotion remain pending; this is synthetic renderer evidence only.
+- Next operation: commit with `[openobsidian P3.2 work] Add bounded PC25 Linter workflow`, push `main`, inspect quality/desktop-build/loaded-workflow Actions on Ubuntu, macOS and Windows, and reconcile CI evidence without promoting plugin compatibility.
+
 ## 2026-09-12T10:04:31Z — P3.2 hosted PC22 Smart Connections local-model/exclusion reconciliation
 
 - Reconciled pushed head `96b3eac03bb3433629437a7278470269f1925048` with successful quality run `34686901647`, preview desktop-build run `34686901642` and loaded-workflow run `34686901661`; Ubuntu, macOS and Windows jobs passed across all three workflows.

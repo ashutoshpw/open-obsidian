@@ -30,7 +30,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"]);
+  expect(fixture.target_ids).toEqual(["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -242,4 +242,42 @@ test("PC22 fixture and Smart Connections seam enforce local provenance and exclu
   expect(loadedWorkflowAudit).toContain("smart_connections_workflow_checks");
   expect(loadedWorkflowAudit).toContain("local_model_provenance_verified");
   expect(loadedWorkflowAudit).toContain("remote_fallback_not_used");
+});
+
+test("PC25 fixture and Linter seam require explicit deterministic automation", () => {
+  const pc25 = fixture.scenarios.PC25 as typeof fixture.scenarios.PC25 & {
+    linter_workflow?: {
+      target_path: string;
+      explicit_command: string;
+      expected_lint_on_save: boolean;
+      first_open_expected_mutations: number;
+      enabled_rules: string[];
+      yaml_key_priority_order: string[];
+      expected_mutated_paths: string[];
+      expected_unchanged_paths: string[];
+      expected_output: string;
+    };
+  };
+  expect(pc25.initial_data).toMatchObject({lintOnSave: true, lintOnFileChange: false});
+  expect(pc25.linter_workflow).toEqual({
+    target_path: "Notes/Lint.md",
+    explicit_command: "lint-file",
+    expected_lint_on_save: true,
+    first_open_expected_mutations: 0,
+    enabled_rules: ["yaml-key-sort", "headings-start-line", "line-break-at-document-end"],
+    yaml_key_priority_order: ["title", "tags"],
+    expected_mutated_paths: ["Notes/Lint.md"],
+    expected_unchanged_paths: ["Notes/Untouched.md"],
+    expected_output: "---\ntitle: Lint fixture\ntags:\n  - b\n  - a\n---\n\n# Heading\n\nBody\n",
+  });
+  expect(pc25.files).toContainEqual(expect.objectContaining({path: "Notes/Untouched.md"}));
+  expect(rendererWorker).toContain("function boundedLinterWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-projection"');
+  expect(rendererWorker).toContain("first_open_mutation_count");
+  expect(rendererWorker).toContain("configured_yaml_output_match");
+  expect(rendererWorker).toContain("direct_vault_writes_zero");
+  expect(loadedWorkflowAudit).toContain("function linterWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("linter_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("first_open_noop");
+  expect(loadedWorkflowAudit).toContain("lint_on_save_matches");
 });

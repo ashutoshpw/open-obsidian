@@ -1570,6 +1570,175 @@ function boundedSmartConnectionsWorkflow(workflowContext = {}, runtime = {}) {
   };
 }
 
+function boundedLinterWorkflow(workflowContext = {}, runtime = {}) {
+  const spec = workflowContext && typeof workflowContext.linter_workflow === "object"
+    ? workflowContext.linter_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const ruleConfigs = initialData.ruleConfigs && typeof initialData.ruleConfigs === "object" ? initialData.ruleConfigs : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const targetPath = typeof spec.target_path === "string" ? spec.target_path : "";
+  const target = files.find((entry) => entry.path === targetPath) || null;
+  const supportedRules = new Set(["yaml-key-sort", "headings-start-line", "line-break-at-document-end"]);
+  const enabledRules = Object.entries(ruleConfigs)
+    .filter(([, config]) => config && typeof config === "object" && config.enabled === true)
+    .map(([name]) => name);
+  const expectedRules = Array.isArray(spec.enabled_rules) ? spec.enabled_rules.filter((name) => typeof name === "string") : [];
+  const normalizedRules = (values) => [...new Set(values)].sort();
+  const enabledRulesMatch = JSON.stringify(normalizedRules(enabledRules)) === JSON.stringify(normalizedRules(expectedRules));
+  const unsupportedRules = enabledRules.filter((name) => !supportedRules.has(name));
+  const yamlConfig = ruleConfigs["yaml-key-sort"] && typeof ruleConfigs["yaml-key-sort"] === "object" ? ruleConfigs["yaml-key-sort"] : {};
+  const configuredPriority = Array.isArray(yamlConfig.yamlKeyPrioritySortOrder)
+    ? yamlConfig.yamlKeyPrioritySortOrder.filter((value) => typeof value === "string").map((value) => value.replace(/:\s*$/, ""))
+    : [];
+  const expectedPriority = Array.isArray(spec.yaml_key_priority_order)
+    ? spec.yaml_key_priority_order.filter((value) => typeof value === "string").map((value) => value.replace(/:\s*$/, ""))
+    : [];
+  const yamlPriorityMatch = JSON.stringify(configuredPriority) === JSON.stringify(expectedPriority);
+  const sortYamlKeys = (value) => {
+    const lines = String(value ?? "").replace(/\r\n/g, "\n").split("\n");
+    if (lines[0]?.trim() !== "---") return String(value ?? "");
+    const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+    if (end < 0) return String(value ?? "");
+    const groups = [];
+    let current = null;
+    for (const line of lines.slice(1, end)) {
+      const keyMatch = line.match(/^([A-Za-z0-9_-]+):(?:.*)$/);
+      if (keyMatch) {
+        current = {key: keyMatch[1], lines: [line], order: groups.length};
+        groups.push(current);
+      } else if (current) {
+        current.lines.push(line);
+      } else {
+        groups.push({key: "", lines: [line], order: groups.length});
+      }
+    }
+    const priority = new Map(expectedPriority.map((key, index) => [key, index]));
+    groups.sort((left, right) => {
+      const leftRank = priority.has(left.key) ? priority.get(left.key) : expectedPriority.length + left.order;
+      const rightRank = priority.has(right.key) ? priority.get(right.key) : expectedPriority.length + right.order;
+      return leftRank - rightRank || left.order - right.order;
+    });
+    return [lines[0], ...groups.flatMap((group) => group.lines), ...lines.slice(end)].join("\n");
+  };
+  const applyConfiguredRules = (value) => {
+    let output = String(value ?? "").replace(/\r\n/g, "\n");
+    if (enabledRules.includes("yaml-key-sort") && yamlPriorityMatch) output = sortYamlKeys(output);
+    if (enabledRules.includes("headings-start-line")) {
+      output = output.split("\n").map((line) => /^\s+#{1,6}(?:\s|$)/.test(line) ? line.trimStart() : line).join("\n");
+    }
+    if (enabledRules.includes("line-break-at-document-end")) output = `${output.replace(/\n+$/g, "")}\n`;
+    return output;
+  };
+  const input = target ? target.content : "";
+  const output = target ? applyConfiguredRules(input) : "";
+  const expectedOutput = typeof spec.expected_output === "string" ? spec.expected_output.replace(/\r\n/g, "\n") : "";
+  const expectedMutatedPaths = Array.isArray(spec.expected_mutated_paths) ? spec.expected_mutated_paths.filter((path) => typeof path === "string") : [];
+  const expectedUnchangedPaths = Array.isArray(spec.expected_unchanged_paths) ? spec.expected_unchanged_paths.filter((path) => typeof path === "string") : [];
+  const actualMutatedPaths = target && output !== input ? [target.path] : [];
+  const initialContentByPath = new Map(files.map((entry) => [entry.path, entry.content]));
+  const projectedContentByPath = new Map(initialContentByPath);
+  if (target) projectedContentByPath.set(target.path, output);
+  const unchangedPaths = files.filter((entry) => entry.path !== targetPath && projectedContentByPath.get(entry.path) === initialContentByPath.get(entry.path)).map((entry) => entry.path);
+  const normalizedPaths = (values) => [...new Set(values)].sort();
+  const onlyExpectedTargetAffected = JSON.stringify(normalizedPaths(actualMutatedPaths)) === JSON.stringify(normalizedPaths(expectedMutatedPaths))
+    && expectedUnchangedPaths.every((path) => unchangedPaths.includes(path));
+  const frontmatter = (value) => {
+    const lines = String(value ?? "").replace(/\r\n/g, "\n").split("\n");
+    if (lines[0]?.trim() !== "---") return "";
+    const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+    return end < 0 ? "" : lines.slice(0, end + 1).join("\n");
+  };
+  const markdownBody = (value) => {
+    const lines = String(value ?? "").replace(/\r\n/g, "\n").split("\n");
+    const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
+    return (end < 0 ? lines : lines.slice(end + 1)).join("\n");
+  };
+  const lintOnSave = initialData.lintOnSave;
+  const expectedLintOnSave = spec.expected_lint_on_save;
+  const lintOnSaveMatches = typeof lintOnSave === "boolean" && typeof expectedLintOnSave === "boolean" && lintOnSave === expectedLintOnSave;
+  const explicitCommand = spec.explicit_command;
+  const explicitCommandConfigured = explicitCommand === "lint-file" && target !== null && /\.md$/i.test(targetPath);
+  const firstOpenContentByPath = new Map(files.map((entry) => [entry.path, entry.content]));
+  const firstOpenAfterByPath = new Map(firstOpenContentByPath);
+  const firstOpenMutatedPaths = files.filter((entry) => firstOpenAfterByPath.get(entry.path) !== firstOpenContentByPath.get(entry.path)).map((entry) => entry.path);
+  const firstOpenMutationCount = firstOpenMutatedPaths.length;
+  const firstOpenNoop = Number(spec.first_open_expected_mutations) === 0 && firstOpenMutationCount === 0;
+  const directVaultWrites = Number(runtime.metrics?.vaultWrites || 0);
+  const outputMatch = target !== null && output === expectedOutput;
+  const yamlOutputMatch = frontmatter(output) === frontmatter(expectedOutput) && frontmatter(output).length > 0;
+  const markdownOutputMatch = markdownBody(output) === markdownBody(expectedOutput);
+  const directVaultWritesZero = directVaultWrites === 0;
+  const status = Boolean(
+    target
+    && explicitCommandConfigured
+    && enabledRulesMatch
+    && unsupportedRules.length === 0
+    && yamlPriorityMatch
+    && lintOnSaveMatches
+    && firstOpenNoop
+    && outputMatch
+    && yamlOutputMatch
+    && markdownOutputMatch
+    && onlyExpectedTargetAffected
+    && directVaultWritesZero,
+  ) ? "passed" : "failed";
+  const phaseTrace = (phase) => ({
+    phase,
+    first_open_mutation_count: firstOpenMutationCount,
+    first_open_noop: firstOpenNoop,
+    explicit_command: explicitCommand,
+    explicit_command_configured: explicitCommandConfigured,
+    explicit_command_mutation_count: actualMutatedPaths.length,
+    explicit_output_match: outputMatch,
+    configured_yaml_output_match: yamlOutputMatch,
+    configured_markdown_output_match: markdownOutputMatch,
+    lint_on_save: lintOnSave,
+    expected_lint_on_save: expectedLintOnSave,
+    lint_on_save_matches: lintOnSaveMatches,
+    lint_on_save_disposition: lintOnSave === true ? "enabled" : lintOnSave === false ? "disabled" : "invalid",
+    only_expected_target_affected: onlyExpectedTargetAffected,
+    direct_vault_writes_zero: directVaultWritesZero,
+    status,
+  });
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-projection",
+    target_path: targetPath,
+    enabled_rules: enabledRules,
+    expected_enabled_rules: expectedRules,
+    unsupported_rules: unsupportedRules,
+    yaml_key_priority_order: configuredPriority,
+    expected_yaml_key_priority_order: expectedPriority,
+    input,
+    output,
+    expected_output: expectedOutput,
+    first_open_mutation_count: firstOpenMutationCount,
+    first_open_noop: firstOpenNoop,
+    explicit_command: explicitCommand,
+    explicit_command_configured: explicitCommandConfigured,
+    explicit_command_mutation_count: actualMutatedPaths.length,
+    explicit_output_match: outputMatch,
+    configured_yaml_output_match: yamlOutputMatch,
+    configured_markdown_output_match: markdownOutputMatch,
+    lint_on_save: lintOnSave,
+    expected_lint_on_save: expectedLintOnSave,
+    lint_on_save_matches: lintOnSaveMatches,
+    lint_on_save_disposition: lintOnSave === true ? "enabled" : lintOnSave === false ? "disabled" : "invalid",
+    only_expected_target_affected: onlyExpectedTargetAffected,
+    actual_mutated_paths: actualMutatedPaths,
+    expected_mutated_paths: expectedMutatedPaths,
+    expected_unchanged_paths: expectedUnchangedPaths,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWritesZero,
+    phases: ["install", "restart", "update"].map(phaseTrace),
+    all_phases_passed: status === "passed",
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -1777,6 +1946,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const metrics = {vaultWrites: 0, vaultOperations: [], clipboardWrites: 0, clipboardReads: 0, clipboardText: ""};
   const workflowContext = {...workflowConfig, metrics};
   const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
+  const runtime = {app: null, allowSyntheticDocument: true, storage: new Map(), metrics};
   try {
     const dataStore = {
       value: cloneData(workflowConfig.initial_data),
@@ -1784,7 +1954,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
       writes: 0,
     };
     const initialApp = createPluginApp([], dataStore, workflowContext, deniedCapabilities);
-    const runtime = {app: initialApp, allowSyntheticDocument: true, storage: new Map(), metrics};
+    runtime.app = initialApp;
     const evaluatePhase = () => evaluateSource(source, deniedCapabilities, requiredModules, runtime);
     const module = evaluatePhase();
     workflow.supported = true;
@@ -1796,6 +1966,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.pluginDataWrites = dataStore.writes;
     workflow.vaultWrites = metrics.vaultWrites;
     workflow.vaultOperations = metrics.vaultOperations;
+    workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -1808,6 +1979,9 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
       workflow,
     };
   } catch (error) {
+    workflow.vaultWrites = metrics.vaultWrites;
+    workflow.vaultOperations = metrics.vaultOperations;
+    workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -1899,6 +2073,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTagWorkflow,
     boundedRecentFilesWorkflow,
     boundedSmartConnectionsWorkflow,
+    boundedLinterWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

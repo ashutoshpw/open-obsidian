@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC07": {
       "workflow_id": "workflow:pc07",
@@ -166,6 +166,39 @@
       "active_file": "Notes/Tags.md",
       "files": [
         {"path": "Notes/Tags.md", "content": "---\ntags:\n  - project/open\n  - project/open/sub\n  - archive/open\nowner: keep\n---\n\n#project/open\n#project/open/sub\n#keep\nproject/opening remains plain text\n"}
+      ]
+    },
+    "PC25": {
+      "workflow_id": "workflow:pc25",
+      "description": "Apply enabled Linter YAML and Markdown rules only after explicit automation while keeping first open unchanged.",
+      "initial_data": {
+        "lintOnSave": true,
+        "lintOnFileChange": false,
+        "ruleConfigs": {
+          "yaml-key-sort": {
+            "enabled": true,
+            "yamlKeyPrioritySortOrder": ["title", "tags"],
+            "priorityKeysAtStartOfYaml": true
+          },
+          "headings-start-line": {"enabled": true},
+          "line-break-at-document-end": {"enabled": true}
+        }
+      },
+      "linter_workflow": {
+        "target_path": "Notes/Lint.md",
+        "explicit_command": "lint-file",
+        "expected_lint_on_save": true,
+        "first_open_expected_mutations": 0,
+        "enabled_rules": ["yaml-key-sort", "headings-start-line", "line-break-at-document-end"],
+        "yaml_key_priority_order": ["title", "tags"],
+        "expected_mutated_paths": ["Notes/Lint.md"],
+        "expected_unchanged_paths": ["Notes/Untouched.md"],
+        "expected_output": "---\ntitle: Lint fixture\ntags:\n  - b\n  - a\n---\n\n# Heading\n\nBody\n"
+      },
+      "active_file": "Notes/Lint.md",
+      "files": [
+        {"path": "Notes/Lint.md", "content": "---\ntags:\n  - b\n  - a\ntitle: Lint fixture\n---\n\n  # Heading\n\nBody"},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note is not an explicit lint target.\n"}
       ]
     }
   },

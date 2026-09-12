@@ -5,6 +5,14 @@
   "created_at": "2026-09-09T17:20:00Z",
   "reconciliation_evidence": [
     {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc25-linter.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC25"],
+      "tested_source_tree": "720ca228d263a34a25eb203cd546311cbf702952f7122e9ea75dee40cde0ba90",
+      "status": "partial",
+      "summary": "Fresh Linux bounded loaded-workflow evidence records the unchanged Linter 1.32.0 integrity and D15 renderer denial while the fail-closed PC25 projection passes YAML key ordering, heading/final-newline output, first-open no-op, explicit lint-file targeting, configured lint-on-save parity and zero direct vault writes across install/restart/update; reference, cross-platform, human and compatibility gates remain pending."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC22"],
@@ -783,7 +791,7 @@
     {
       "id": "PC25", "parent_id": null,
       "source": {"path": ".agents/tasks/2026-09-09/01-init/references/plugin-catalog/index.md", "heading": "PC25 Linter", "clause": "Apply enabled lint rules to explicit test notes, preserve configured lint-on-save behavior and predictable YAML/Markdown output without first-open bulk linting."},
-        "checkpoint": "P3.2", "owner": "compatibility-runtime", "mandatory": true, "acceptance_criteria": "The unchanged obsidian-linter release only mutates after explicit configured automation and passes configured-output fixtures; first open remains no-op.", "fixture_ids": ["fixture:pc25-linter"], "reference_versions": [{"kind": "plugin-catalog", "version": "v0.3", "sha256": "bde50e3acae531337ac4ef68414c1d8e1a489c60de27af346ab6b8c682e94c23"}, {"kind": "release-artifact", "version": "pin-required-P0.2", "sha256": null, "verified": false}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json"], "tested_source_tree": "df73ca3d9e89ee577aca8d35ff97e25eae05b6ac6572d23180c9eb4d52b08a3f", "blocker": "The D15 workflow contract records the renderer denial, workflow reproduction, safe alternatives, visible pending entry and synthetic disabled path; unchanged workflow certification, cross-platform and reference validation remain pending.", "gate_class": "implementation", "decision_id": "D15"
+        "checkpoint": "P3.2", "owner": "compatibility-runtime", "mandatory": true, "acceptance_criteria": "The unchanged obsidian-linter release only mutates after explicit configured automation and passes configured-output fixtures; first open remains no-op.", "fixture_ids": ["fixture:pc25-linter"], "reference_versions": [{"kind": "plugin-catalog", "version": "v0.3", "sha256": "bde50e3acae531337ac4ef68414c1d8e1a489c60de27af346ab6b8c682e94c23"}, {"kind": "release-artifact", "version": "pin-required-P0.2", "sha256": null, "verified": false}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc25-linter.json"], "tested_source_tree": "720ca228d263a34a25eb203cd546311cbf702952f7122e9ea75dee40cde0ba90", "blocker": "The unchanged Linter 1.32.0 bytes pass integrity but are D15-denied at window.navigator; the bounded projection verifies explicit lint-file targeting, deterministic configured YAML/Markdown output, lint-on-save parity, first-open no-op and zero direct vault writes across synthetic phases, while reference, cross-platform, human and compatibility validation remain pending.", "gate_class": "implementation", "decision_id": "D15"
     },
     {
       "id": "PC-DEP-MINIMAL", "parent_id": null,

@@ -188,6 +188,25 @@ function smartConnectionsWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const trace = asRecord(workflow.linter_workflow);
+  const phases = records(trace?.phases);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === true);
+  return {
+    present: trace !== null,
+    bounded_read_only: trace?.mutation_scope === "bounded-in-memory-projection",
+    first_open_noop: every("first_open_noop") && trace?.first_open_mutation_count === 0,
+    explicit_command_configured: every("explicit_command_configured"),
+    explicit_output_match: every("explicit_output_match") && trace?.explicit_output_match === true,
+    configured_yaml_output_match: every("configured_yaml_output_match") && trace?.configured_yaml_output_match === true,
+    configured_markdown_output_match: every("configured_markdown_output_match") && trace?.configured_markdown_output_match === true,
+    lint_on_save_matches: every("lint_on_save_matches") && trace?.lint_on_save_matches === true,
+    only_expected_target_affected: every("only_expected_target_affected") && trace?.only_expected_target_affected === true,
+    direct_vault_writes_zero: trace?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: trace?.status === "passed" && phases.length === 3 && phases.every((phase) => phase.status === "passed"),
+  };
+}
+
 function combinationTargetIds(): string[] {
   const combination = asRecord(fixture.combination);
   return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
@@ -293,6 +312,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const failures = actionFailures(workflow);
       const editor = editorChecks(workflow);
       const smartConnections = id === "PC22" ? smartConnectionsWorkflowChecks(workflow) : null;
+      const linter = id === "PC25" ? linterWorkflowChecks(workflow) : null;
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -317,6 +337,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       tag_workflow_checks: id === "PC24" ? tagWorkflowChecks(workflow) : null,
       recent_files_workflow_checks: id === "PC23" ? recentFilesWorkflowChecks(workflow) : null,
       smart_connections_workflow_checks: smartConnections,
+      linter_workflow_checks: linter,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -384,7 +405,21 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => smartConnectionsChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete;
+      const linterChecks = asRecord(entry.linter_workflow_checks);
+      const linterComplete = entry.artifact_id !== "PC25" || (linterChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "first_open_noop",
+        "explicit_command_configured",
+        "explicit_output_match",
+        "configured_yaml_output_match",
+        "configured_markdown_output_match",
+        "lint_on_save_matches",
+        "only_expected_target_affected",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => linterChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && linterComplete;
     });
     const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
     const allChecks = artifactChecksComplete && combinationChecksComplete;
