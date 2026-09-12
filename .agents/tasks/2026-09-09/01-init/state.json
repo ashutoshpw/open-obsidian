@@ -20,19 +20,27 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-    "last_reconciled_head": "bf15a8beeb667db5b3312bdfd6f2b5118928df82",
-  "updated_at": "2026-09-12T07:05:24Z",
+    "last_reconciled_head": "cb0905048dc8e085128f66f66cf0b505aa59e707",
+  "updated_at": "2026-09-12T07:35:10Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"bf15a8beeb667db5b3312bdfd6f2b5118928df82","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor-roundtrip.json","tested_source_tree":"9d3d95a3a6e61be011642b25ebc30eb8e498e0d5feddc268e5acdbffe8324cac","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor-roundtrip-ci.json","ci_runs":{"quality":34679421777,"desktop_build":34679421819,"loaded_workflows":34679421806},"quality_rerun":false},
+    "recent_increment": {"checkpoint":"P3.2","commit":"cb0905048dc8e085128f66f66cf0b505aa59e707","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc07-pc23-combination.json","tested_source_tree":"bbbc36ba28e3f599a63a56f19b98d0b9acb33e58a12a71c745dc9fa1515db860","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc07-pc23-combination.json","ci_runs":{"quality":34680530754,"desktop_build":34680530772,"loaded_workflows":34680530802},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Strengthen bounded PC20 editor semantics",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor-roundtrip.json",
-    "tested_source_tree": "9d3d95a3a6e61be011642b25ebc30eb8e498e0d5feddc268e5acdbffe8324cac",
-    "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly."
+    "commit_marker": "[openobsidian P3.2 work] Extend bounded plugin workflow semantics",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc07-pc23-combination.json",
+    "tested_source_tree": "bbbc36ba28e3f599a63a56f19b98d0b9acb33e58a12a71c745dc9fa1515db860",
+    "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
+    "hosted_reconciliation": {
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc07-pc23-combination.json",
+      "runs": {"quality": 34680530754, "desktop_build": 34680530772, "loaded_workflows": 34680530802},
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "status": "partial",
+      "signing": "skipped",
+      "no_plugin_promoted": true
+    }
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",

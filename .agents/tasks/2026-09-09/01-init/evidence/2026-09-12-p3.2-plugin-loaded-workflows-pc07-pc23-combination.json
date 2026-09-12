@@ -1,0 +1,107 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc07-pc23-combination",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC21",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T07:21:58Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "cb0905048dc8e085128f66f66cf0b505aa59e707",
+    "sha256": "bbbc36ba28e3f599a63a56f19b98d0b9acb33e58a12a71c745dc9fa1515db860",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "Detached synthetic documentElement/createElementNS and bounded Calendar locale/date methods run only in workflow mode.",
+      "A leaf detach seam completes Calendar cleanup without retaining a renderer leaf.",
+      "Plugin data is scoped by unchanged manifest ID, with per-plugin initial, loaded and saved snapshots for combination checks.",
+      "The Homepage navigator.clipboard path remains D15-denied and records the denied window.clipboard path."
+    ],
+    "security_disposition": "Only finite in-memory renderer seams were widened; direct vault writes, filesystem/network/process/credential access, host DOM and OS clipboard remain unavailable or denied."
+  },
+  "local_audit": {
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "artifacts": {
+      "PC07": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC21": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "partial", "denied_capabilities": ["dom.privileged"], "representative_failure": "D15 denied dom.privileged at window.clipboard", "vault_writes": 0},
+      "PC23": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0}
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "persistence_source": "mediated-plugin-data-store",
+      "action_status": "partial",
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "cleanup_after_each_phase": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "representative_failure": "D15 denied dom.privileged at window.clipboard"
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "hosted": {
+    "quality": {"run_id": 34680530754, "conclusion": "success", "platforms": ["Ubuntu", "macOS", "Windows"]},
+    "desktop_build": {"run_id": 34680530772, "conclusion": "success", "platforms": ["Ubuntu", "macOS", "Windows"], "signing": "skipped", "artifact_upload": "passed"},
+    "loaded_workflows": {"run_id": 34680530802, "conclusion": "success", "platforms": ["Ubuntu", "macOS", "Windows"]},
+    "loaded_report_source_trees": {
+      "Linux": {"sha256": "00eb8070d48d0b8e3e49c69465aa8d7fd06bf7575aa55a361459d5f88791390d", "paths": 239},
+      "macOS": {"sha256": "a0a78e39800e6dc7dc3e48866822db53017b8024897ebb42ddbfa26c3f457410", "paths": 239},
+      "Windows": {"sha256": "dced054a2e39136882c9e4e6ae1f368c921030077a99ba755a495c72c53a44ca", "paths": 239}
+    },
+    "report_note": "Hosted loaded reports contain one transient redirected-output path beyond the clean local 238-path source-of-record digest; macOS and Windows reports begin with the Electron download line before JSON. All three platforms reproduced the same bounded PC07/PC21/PC23 outcomes."
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 3 tests, 111 expectations",
+    "repository_check": "bun run check:fast passed; 207 tests, 1179 expectations",
+    "typecheck": "bun run typecheck passed",
+    "syntax": "node --check scripts/plugin-renderer-worker.cjs passed",
+    "diff_check": "git diff --check passed"
+  },
+  "external_pending": [
+    "reference Obsidian settings, view, clipboard and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review and CodeMirror/reference editor parity",
+    "required plugin combinations and alternating launches",
+    "provider-backed behavior, signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It proves bounded synthetic Calendar/Recent Files seams and per-plugin combination-store recovery, not stock Obsidian compatibility, OS clipboard behavior, reference persistence, human behavior or compatibility promotion.",
+  "result": "PC07 and PC23 now complete their bounded action paths and the PC07/PC21/PC23 combination restores scoped plugin data across restart/update on Linux, macOS and Windows hosted jobs. PC21 clipboard remains an explicit D15 action denial; the overall result remains partial and no plugin was promoted."
+}
