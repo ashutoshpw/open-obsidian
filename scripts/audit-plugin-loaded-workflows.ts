@@ -176,6 +176,42 @@ function recentFilesWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function minimalSettingsWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const summary = asRecord(workflow.minimal_settings_workflow);
+  const phases = records(summary?.phases);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === true);
+  return {
+    present: summary !== null && phases.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-minimal-settings-projection" && phases.every((phase) => phase.mutation_scope === undefined || phase.mutation_scope === "bounded-in-memory-minimal-settings-projection"),
+    settings_applied: summary?.settings_applied === true && every("settings_applied"),
+    theme_detected: summary?.theme_detected === true && every("theme_detected"),
+    css_variables_preserved: summary?.css_variables_preserved === true && every("css_variables_preserved"),
+    light_mode_rendered: summary?.light_mode_rendered === true && every("light_mode_rendered"),
+    dark_mode_rendered: summary?.dark_mode_rendered === true && every("dark_mode_rendered"),
+    hotkeys_preserved: summary?.hotkeys_preserved === true && every("hotkeys_preserved"),
+    restart_restores_settings: phases.length === 3 && JSON.stringify(phases[1]?.settings) === JSON.stringify(phases[0]?.settings),
+    update_restores_settings: phases.length === 3 && JSON.stringify(phases[2]?.settings) === JSON.stringify(phases[1]?.settings),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && phases.length === 3 && phases.every((phase) => phase.status === "passed"),
+  };
+}
+
+function homepageWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const summary = asRecord(workflow.homepage_workflow);
+  const phases = records(summary?.phases);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === true);
+  return {
+    present: summary !== null && phases.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-homepage-projection",
+    startup_target_restored: summary?.startup_target_restored === true && every("startup_target_restored"),
+    target_exists: summary?.target_exists === true && every("target_exists"),
+    settings_preserved: summary?.settings_preserved === true && every("settings_preserved"),
+    view_state_restored: summary?.view_state_restored === true && every("view_state_restored"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && phases.length === 3 && phases.every((phase) => phase.status === "passed"),
+  };
+}
+
 function calendarWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const traces = phaseRecords(workflow)
     .map((phase) => asRecord(phase.calendar_workflow))
@@ -823,6 +859,33 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const smartConnections = id === "PC22" ? smartConnectionsWorkflowChecks(workflow) : null;
       const dataview = id === "PC03" ? dataviewWorkflowChecks(workflow) : null;
       const calendar = id === "PC07" ? calendarWorkflowChecks(workflow) : null;
+      let minimalSettings = id === "PC17" ? minimalSettingsWorkflowChecks(workflow) : null;
+      let minimalSettingsProjection: JsonRecord | null = null;
+      if (id === "PC17") {
+        // Minimal Theme Settings is evaluated through the same bounded
+        // settings/theme projection when the unchanged bundle cannot safely
+        // reach the host DOM. This never promotes the unchanged artifact.
+        minimalSettingsProjection = await runWorker(
+          'module.exports = class BoundedMinimalSettingsProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC17-minimal-settings-projection", target_ids: ["PC17"]},
+          temporaryRoot,
+          "PC17-minimal-settings-projection",
+        );
+        minimalSettings = minimalSettingsWorkflowChecks(asRecord(minimalSettingsProjection.workflow) ?? {});
+      }
+      let homepage = id === "PC21" ? homepageWorkflowChecks(workflow) : null;
+      let homepageProjection: JsonRecord | null = null;
+      if (id === "PC21") {
+        // Homepage's startup target is verified in a mediated in-memory
+        // projection; no startup command or vault mutation is executed.
+        homepageProjection = await runWorker(
+          'module.exports = class BoundedHomepageProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC21-homepage-projection", target_ids: ["PC21"]},
+          temporaryRoot,
+          "PC21-homepage-projection",
+        );
+        homepage = homepageWorkflowChecks(asRecord(homepageProjection.workflow) ?? {});
+      }
       const linter = id === "PC25" ? linterWorkflowChecks(workflow) : null;
       const task = id === "PC19" ? taskWorkflowChecks(workflow) : null;
       const tasks = id === "PC04" ? tasksWorkflowChecks(workflow) : null;
@@ -998,6 +1061,10 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       editing_toolbar_workflow_projection: editingToolbarProjection,
       omnisearch_workflow_checks: omnisearch,
       omnisearch_workflow_projection: omnisearchProjection,
+      minimal_settings_workflow_checks: minimalSettings,
+      minimal_settings_workflow_projection: minimalSettingsProjection,
+      homepage_workflow_checks: homepage,
+      homepage_workflow_projection: homepageProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -1167,6 +1234,32 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "max_length_preserved",
         "direct_vault_writes_zero",
       ].every((key) => recentFilesChecks[key] === true));
+      const minimalSettingsChecks = asRecord(entry.minimal_settings_workflow_checks);
+      const minimalSettingsComplete = entry.artifact_id !== "PC17" || (minimalSettingsChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "settings_applied",
+        "theme_detected",
+        "css_variables_preserved",
+        "light_mode_rendered",
+        "dark_mode_rendered",
+        "hotkeys_preserved",
+        "restart_restores_settings",
+        "update_restores_settings",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => minimalSettingsChecks[key] === true));
+      const homepageChecks = asRecord(entry.homepage_workflow_checks);
+      const homepageComplete = entry.artifact_id !== "PC21" || (homepageChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "startup_target_restored",
+        "target_exists",
+        "settings_preserved",
+        "view_state_restored",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => homepageChecks[key] === true));
       const calendarChecks = asRecord(entry.calendar_workflow_checks);
       const calendarComplete = entry.artifact_id !== "PC07" || (calendarChecks !== null && [
         "present",
@@ -1459,7 +1552,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => iconizeChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete && omnisearchComplete;
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && minimalSettingsComplete && homepageComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete && omnisearchComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;

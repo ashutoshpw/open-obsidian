@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T23:11:04Z",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC17", "PC21", "PC-DEP-MINIMAL"],
+  "decision_id": "D15",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "tested_source_tree": "115390c89e69ee47468e23bd322ff28055d8255a8851bda97db44a906cb7ed28",
+  "artifact_results": [
+    {
+      "artifact_id": "PC17",
+      "version": "9.0.0",
+      "integrity": "passed",
+      "renderer_status": "loaded",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "projection": "bounded-in-memory-minimal-settings-projection",
+      "checks": {
+        "settings_applied": true,
+        "theme_detected": true,
+        "css_variables_preserved": true,
+        "light_mode_rendered": true,
+        "dark_mode_rendered": true,
+        "hotkeys_preserved": true,
+        "restart_restores_settings": true,
+        "update_restores_settings": true,
+        "direct_vault_writes_zero": true,
+        "status_passed": true
+      }
+    },
+    {
+      "artifact_id": "PC21",
+      "version": "4.5.0",
+      "integrity": "passed",
+      "renderer_status": "loaded",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "projection": "bounded-in-memory-homepage-projection",
+      "checks": {
+        "startup_target_restored": true,
+        "target_exists": true,
+        "settings_preserved": true,
+        "view_state_restored": true,
+        "direct_vault_writes_zero": true,
+        "status_passed": true
+      }
+    }
+  ],
+  "audit_checks": {
+    "all_artifacts_integrity_checked": true,
+    "no_plugin_promoted": true,
+    "overall_status": "partial",
+    "remaining_scope": "The full loaded-artifact audit remains pending because other plugin action/combination, same-user OS, reference Obsidian, human, signing, publication and updater gates are not satisfied by these bounded projections."
+  },
+  "limitations": [
+    "The settings and startup projections are mediated in-memory checks and do not grant unchanged plugins privileged DOM, filesystem, process, network or credential access.",
+    "This evidence does not certify reference Obsidian parity or promote PC17/PC21 compatibility status.",
+    "No personal vault was accessed; /home/ashutosh/Obsidian was not used."
+  ]
+}

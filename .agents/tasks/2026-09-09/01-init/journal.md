@@ -1640,6 +1640,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the hosted CI evidence in the requirements and state reconciliation metadata. PC01 and P3.2 remain pending/non-certified: reference Excalidraw behavior and scripting, same-user OS enforcement, human validation, signing, publication, updater and compatibility promotion remain external-pending. No plugin or compatibility row was promoted.
 - Next operation: run final state, audit and diff gates, commit and push this hosted reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.
 
+## 2026-09-12T23:18:00Z — P3.2 bounded PC17/PC21 workflow projections
+
+- Added bounded PC17 Minimal Theme Settings and PC21 Homepage fixtures to the loaded-workflow worker. The projections cover Minimal settings application/detection, CSS-token retention, light/dark mode markers, hotkeys, restart/update settings retention, configured startup target/view restoration, Homepage command preservation and zero direct vault writes.
+- The unchanged PC17 9.0.0 and PC21 4.5.0 artifacts remain integrity-checked under the isolated Electron worker. The projections are explicitly in-memory and do not grant privileged DOM, filesystem, process, network or credential access; no plugin or compatibility row was promoted.
+- Local focused loaded-workflow tests pass (23 tests, 419 expectations), as do typecheck, check:fast, diff checks and the full loaded-workflow audit. Aggregate audit status remains `partial`; source digest is `115390c89e69ee47468e23bd322ff28055d8255a8851bda97db44a906cb7ed28`, and `/home/ashutosh/Obsidian` was not accessed.
+- PC17/PC21 remain `pending-runtime`/non-certifying. Unchanged plugin action/reference parity, same-user macOS/Windows enforcement, human validation, required combinations, signing, publication, updater and compatibility promotion remain pending; hosted CI evidence is not yet available.
+- Updated requirements and durable state records for PC17, PC21, PLUG-002 through PLUG-005 and the Minimal dependency while retaining implemented/pending statuses and all external gates.
+- Next operation: run final state/audit/diff gates, commit with `[openobsidian P3.2 work] Add bounded PC17 and PC21 workflow projections`, push `main`, inspect hosted quality/loaded-workflow/renderer-matrix/desktop-build results and reconcile without promoting compatibility.
+
 ## 2026-09-12T22:08:56Z — P3.2 hosted PC14 Editing Toolbar reconciliation
 
 - Reconciled implementation commit `f0ed3e7b2773777747b07270c932700731c78425` and clean local source digest `f3a677f7f778686263487166fcf09a7b38372dd6daf372783e64cbb73b5e1b1a` with quality run `34721252231` attempt 2, loaded-workflow run `34721252634`, renderer-matrix run `34721252249` and unsigned preview desktop-build run `34721252243`; Ubuntu, macOS and Windows jobs passed across all four workflows. The quality rerun repaired only the attempt 1 macOS Electron vault-retrieval timing failure.

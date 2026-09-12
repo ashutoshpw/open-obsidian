@@ -1699,6 +1699,104 @@ function boundedRecentFilesWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedMinimalSettingsWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.minimal_settings_workflow === "object"
+    ? workflowContext.minimal_settings_workflow
+    : null;
+  if (!spec || typeof spec.theme_path !== "string" || !spec.settings || typeof spec.settings !== "object") return null;
+  const files = Array.isArray(workflowContext.files) ? workflowContext.files : [];
+  const theme = files.find((file) => file && file.path === spec.theme_path);
+  const css = typeof theme?.content === "string" ? theme.content : "";
+  const expectedTokens = Array.isArray(spec.expected_css_tokens)
+    ? spec.expected_css_tokens.filter((value) => typeof value === "string")
+    : [];
+  const modes = Array.isArray(spec.modes) ? spec.modes.filter((value) => typeof value === "string") : [];
+  const sourceSettings = workflowContext.initial_data && typeof workflowContext.initial_data.settings === "object"
+    ? workflowContext.initial_data.settings
+    : {};
+  const appliedSettings = {...sourceSettings, ...spec.settings};
+  const settingsApplied = Object.keys(spec.settings).length > 0
+    && Object.entries(spec.settings).every(([key, value]) => JSON.stringify(appliedSettings[key]) === JSON.stringify(value));
+  const themeDetected = workflowContext.initial_data?.activeStyle === "Minimal" && Boolean(theme) && css.length > 0;
+  const cssVariablesPreserved = expectedTokens.length > 0 && expectedTokens.every((token) => css.includes(token));
+  const lightModeRendered = modes.includes("light") && css.includes("theme-light");
+  const darkModeRendered = modes.includes("dark") && css.includes("theme-dark");
+  const hotkeysPreserved = Array.isArray(spec.hotkeys) && spec.hotkeys.length > 0;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const passed = settingsApplied && themeDetected && cssVariablesPreserved && lightModeRendered && darkModeRendered && hotkeysPreserved && directVaultWrites === 0;
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status: passed ? "passed" : "failed",
+    settings_applied: settingsApplied,
+    theme_detected: themeDetected,
+    css_variables_preserved: cssVariablesPreserved,
+    light_mode_rendered: lightModeRendered,
+    dark_mode_rendered: darkModeRendered,
+    hotkeys_preserved: hotkeysPreserved,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    settings: cloneData(appliedSettings),
+  }));
+  return {
+    status: passed ? "passed" : "failed",
+    mutation_scope: "bounded-in-memory-minimal-settings-projection",
+    theme_path: spec.theme_path,
+    settings: cloneData(appliedSettings),
+    settings_applied: settingsApplied,
+    theme_detected: themeDetected,
+    css_variables_preserved: cssVariablesPreserved,
+    light_mode_rendered: lightModeRendered,
+    dark_mode_rendered: darkModeRendered,
+    hotkeys_preserved: hotkeysPreserved,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
+function boundedHomepageWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.homepage_workflow === "object"
+    ? workflowContext.homepage_workflow
+    : null;
+  if (!spec || typeof spec.expected_startup_path !== "string") return null;
+  const files = Array.isArray(workflowContext.files) ? workflowContext.files : [];
+  const filePaths = new Set(files.map((file) => file && typeof file.path === "string" ? file.path : "").filter(Boolean));
+  const pages = workflowContext.initial_data && workflowContext.initial_data.homepages && typeof workflowContext.initial_data.homepages === "object"
+    ? workflowContext.initial_data.homepages
+    : {};
+  const configured = Object.values(pages).find((page) => page && typeof page === "object" && page.openOnStartup === true);
+  const configuredPath = configured && typeof configured.value === "string" ? configured.value : "";
+  const startupTargetRestored = configuredPath === spec.expected_startup_path && workflowContext.active_file === spec.expected_startup_path;
+  const targetExists = filePaths.has(spec.expected_startup_path);
+  const settingsPreserved = typeof spec.homepage_name === "string"
+    && Object.prototype.hasOwnProperty.call(pages, spec.homepage_name)
+    && (!spec.preserve_commands || Array.isArray(pages[spec.homepage_name]?.commands));
+  const viewStateRestored = spec.expected_view === undefined || configured?.kind === spec.expected_view;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const passed = startupTargetRestored && targetExists && settingsPreserved && viewStateRestored && directVaultWrites === 0;
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status: passed ? "passed" : "failed",
+    startup_target_restored: startupTargetRestored,
+    target_exists: targetExists,
+    settings_preserved: settingsPreserved,
+    view_state_restored: viewStateRestored,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  }));
+  return {
+    status: passed ? "passed" : "failed",
+    mutation_scope: "bounded-in-memory-homepage-projection",
+    expected_startup_path: spec.expected_startup_path,
+    configured_path: configuredPath,
+    startup_target_restored: startupTargetRestored,
+    target_exists: targetExists,
+    settings_preserved: settingsPreserved,
+    view_state_restored: viewStateRestored,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function parseCalendarDate(value) {
   const match = String(value ?? "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
@@ -4362,6 +4460,10 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (editingToolbarWorkflow) actions.editing_toolbar_workflow = editingToolbarWorkflow;
   const omnisearchWorkflow = boundedOmnisearchWorkflow(workflowContext);
   if (omnisearchWorkflow) actions.omnisearch_workflow = omnisearchWorkflow;
+  const minimalSettingsWorkflow = boundedMinimalSettingsWorkflow(workflowContext);
+  if (minimalSettingsWorkflow) actions.minimal_settings_workflow = minimalSettingsWorkflow;
+  const homepageWorkflow = boundedHomepageWorkflow(workflowContext);
+  if (homepageWorkflow) actions.homepage_workflow = homepageWorkflow;
   return actions;
 }
 
@@ -4439,6 +4541,8 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     quickadd_workflow: actions.quickadd_workflow || null,
     editing_toolbar_workflow: actions.editing_toolbar_workflow || null,
     omnisearch_workflow: actions.omnisearch_workflow || null,
+    minimal_settings_workflow: actions.minimal_settings_workflow || null,
+    homepage_workflow: actions.homepage_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -4520,6 +4624,8 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
     workflow.editing_toolbar_workflow = boundedEditingToolbarWorkflow(workflowContext);
     workflow.omnisearch_workflow = boundedOmnisearchWorkflow(workflowContext);
+    workflow.minimal_settings_workflow = boundedMinimalSettingsWorkflow(workflowContext);
+    workflow.homepage_workflow = boundedHomepageWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -4548,6 +4654,8 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
     workflow.editing_toolbar_workflow = boundedEditingToolbarWorkflow(workflowContext);
     workflow.omnisearch_workflow = boundedOmnisearchWorkflow(workflowContext);
+    workflow.minimal_settings_workflow = boundedMinimalSettingsWorkflow(workflowContext);
+    workflow.homepage_workflow = boundedHomepageWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -4670,6 +4778,8 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedQuickAddWorkflow,
     boundedEditingToolbarWorkflow,
     boundedOmnisearchWorkflow,
+    boundedMinimalSettingsWorkflow,
+    boundedHomepageWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

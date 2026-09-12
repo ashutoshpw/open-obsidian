@@ -745,6 +745,12 @@
         },
         "separateMobile": false
       },
+      "homepage_workflow": {
+        "homepage_name": "Main Homepage",
+        "expected_startup_path": "Daily/2026-09-11.md",
+        "expected_view": "File",
+        "preserve_commands": true
+      },
       "active_file": "Daily/2026-09-11.md",
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"}
@@ -788,10 +794,17 @@
         "version": 1,
         "activeStyle": "Minimal"
       },
+      "minimal_settings_workflow": {
+        "theme_path": "Themes/Minimal.css",
+        "settings": {"compact": true, "accent": "#a78bfa"},
+        "expected_css_tokens": ["--text-normal"],
+        "modes": ["light", "dark"],
+        "hotkeys": ["toggle-compact"]
+      },
       "active_file": "Daily/2026-09-11.md",
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
-        {"path": "Themes/Minimal.css", "content": ".workspace-tab-header-container { color: var(--text-normal); }\n"}
+        {"path": "Themes/Minimal.css", "content": "body.theme-light { --text-normal: #172033; }\nbody.theme-dark { --text-normal: #edf1ff; }\n.workspace-tab-header-container { color: var(--text-normal); }\n"}
       ]
     },
     "PC19": {

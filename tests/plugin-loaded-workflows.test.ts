@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; omnisearch_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; homepage_workflow?: Record<string, unknown>; minimal_settings_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; omnisearch_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -242,6 +242,28 @@ test("PC20 fixture and bounded editor trace cover mutation history and folding",
   expect(loadedWorkflowAudit).toContain("folding_round_trip");
   expect(loadedWorkflowAudit).toContain("phase_editor_round_trip");
   expect(loadedWorkflowAudit).toContain("editor_checks: editor");
+});
+
+test("PC17 and PC21 fixtures expose bounded settings and startup projections", () => {
+  const minimal = fixture.scenarios.PC17;
+  expect(minimal.minimal_settings_workflow).toMatchObject({
+    theme_path: "Themes/Minimal.css",
+    modes: ["light", "dark"],
+    settings: {compact: true, accent: "#a78bfa"},
+  });
+  expect(minimal.files).toContainEqual(expect.objectContaining({path: "Themes/Minimal.css", content: expect.stringContaining("body.theme-light")}));
+  const homepage = fixture.scenarios.PC21;
+  expect(homepage.homepage_workflow).toMatchObject({
+    homepage_name: "Main Homepage",
+    expected_startup_path: "Daily/2026-09-11.md",
+    expected_view: "File",
+  });
+  expect(rendererWorker).toContain("function boundedMinimalSettingsWorkflow");
+  expect(rendererWorker).toContain("bounded-in-memory-minimal-settings-projection");
+  expect(rendererWorker).toContain("function boundedHomepageWorkflow");
+  expect(rendererWorker).toContain("bounded-in-memory-homepage-projection");
+  expect(loadedWorkflowAudit).toContain("minimal_settings_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("homepage_workflow_checks");
 });
 
 test("PC03 fixture and bounded projection cover DQL fields, links, tasks and safe refresh", () => {
