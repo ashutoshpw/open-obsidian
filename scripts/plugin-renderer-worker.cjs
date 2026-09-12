@@ -2226,7 +2226,16 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const requiredModules = [];
   const metrics = {vaultWrites: 0, vaultOperations: [], clipboardWrites: 0, clipboardReads: 0, clipboardText: ""};
   const workflowContext = {...workflowConfig, metrics};
-  const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
+  const workflow = {
+    supported: false,
+    phases: [],
+    pluginDataWrites: 0,
+    vaultWrites: 0,
+    vaultOperations: [],
+    activeAfterUninstall: true,
+    artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture",
+    targetIds: Array.isArray(workflowConfig.target_ids) ? workflowConfig.target_ids.filter((value) => typeof value === "string") : [],
+  };
   const runtime = {app: null, allowSyntheticDocument: true, storage: new Map(), metrics};
   try {
     const dataStore = {

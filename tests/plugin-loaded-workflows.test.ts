@@ -12,6 +12,7 @@ type LoadedWorkflowFixture = {
   required_phases: string[];
   scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; task_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
+  required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
   external_pending: string[];
   limitation: string;
@@ -34,6 +35,21 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
+  expect(fixture.required_combinations).toEqual([
+    expect.objectContaining({
+      id: "combination:pc08-pc17-minimal",
+      target_ids: ["PC08", "PC17"],
+      scenario_id: "PC08",
+      dependency_artifacts: [{artifact_id: "PC-DEP-MINIMAL", assets: ["manifest.json", "theme.css"]}],
+    }),
+    expect.objectContaining({
+      id: "combination:pc19-bases",
+      target_ids: ["PC19"],
+      scenario_id: "PC19",
+      dependency_fixtures: [{fixture_id: "fixture:baseline:bases", paths: ["TaskNotes/Views/tasks-default.base", "TaskNotes/Views/calendar-default.base"]}],
+    }),
+  ]);
+  expect(fixture.required_combinations.every((combination) => combination.target_ids.every((id) => fixture.target_ids.includes(id)))).toBe(true);
   expect(packageJson.scripts?.["audit:plugin-loaded-workflows"]).toBe("bun scripts/audit-plugin-loaded-workflows.ts");
   expect(workflow).toContain("name: OpenObsidian loaded plugin workflows");
   expect(workflow).toContain("os: [ubuntu-latest, macos-latest, windows-latest]");
@@ -75,12 +91,16 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("dataStore.initialByPlugin");
   expect(rendererWorker).toContain("loadedSnapshotsByPlugin");
   expect(rendererWorker).toContain("persistedDataByPlugin");
+  expect(rendererWorker).toContain("targetIds: Array.isArray(workflowConfig.target_ids)");
   expect(rendererWorker).toContain("detach() {");
   expect(rendererWorker).toContain("env.smart_sources.opts.prevent_import_on_load = true");
   expect(rendererWorker).toContain("runtime.window = undefined");
   expect(loadedWorkflowAudit).toContain('.filter((action) => action.status !== "passed")');
   expect(loadedWorkflowAudit).toContain("scopedPersistencePass");
   expect(loadedWorkflowAudit).toContain("loadedSnapshotsByPlugin");
+  expect(loadedWorkflowAudit).toContain("combinationDefinitions");
+  expect(loadedWorkflowAudit).toContain("verifyCombinationDependencies");
+  expect(loadedWorkflowAudit).toContain("all_required_combinations_complete");
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];

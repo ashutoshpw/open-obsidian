@@ -233,6 +233,38 @@
     "target_ids": ["PC07", "PC21", "PC23"],
     "description": "Load the three unchanged marker-free artifacts in one mediated renderer workflow and verify registrations are cleaned on return to Obsidian."
   },
+  "required_combinations": [
+    {
+      "id": "combination:pc08-pc17-minimal",
+      "target_ids": ["PC08", "PC17"],
+      "scenario_id": "PC08",
+      "description": "Load Style Settings and Minimal Theme Settings together with the pinned Minimal theme fixture, then verify settings registration, mediated persistence and cleanup.",
+      "dependency_artifacts": [
+        {
+          "artifact_id": "PC-DEP-MINIMAL",
+          "assets": ["manifest.json", "theme.css"]
+        }
+      ],
+      "files": [
+        {
+          "path": "Themes/Minimal.css",
+          "content": "/* Minimal 9.1.0 compatibility fixture */\n/* @settings\nname: Appearance\nid: appearance\nsettings:\n  - id: compact\n    title: Compact\n    type: class-toggle\n  - id: accent\n    title: Accent\n    type: variable-color\n*/\n.workspace-tab-header-container { color: var(--text-normal); }\n"
+        }
+      ]
+    },
+    {
+      "id": "combination:pc19-bases",
+      "target_ids": ["PC19"],
+      "scenario_id": "PC19",
+      "description": "Load TaskNotes against the mediated file-based Bases fixture and verify task commands, configured view mappings, revision-aware projection and cleanup.",
+      "dependency_fixtures": [
+        {
+          "fixture_id": "fixture:baseline:bases",
+          "paths": ["TaskNotes/Views/tasks-default.base", "TaskNotes/Views/calendar-default.base"]
+        }
+      ]
+    }
+  ],
   "required_phases": ["install", "restart", "update"],
   "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
   "external_pending": [

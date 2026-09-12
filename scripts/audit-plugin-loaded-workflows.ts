@@ -1,4 +1,5 @@
 import {createRequire} from "node:module";
+import {createHash} from "node:crypto";
 import {arch, platform, tmpdir} from "node:os";
 import {mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import {join, resolve} from "node:path";
@@ -237,9 +238,39 @@ function taskWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
-function combinationTargetIds(): string[] {
-  const combination = asRecord(fixture.combination);
-  return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
+function combinationDefinitions(): JsonRecord[] {
+  const primary = asRecord(fixture.combination);
+  const additional = records(fixture.required_combinations);
+  const definitions = [primary, ...additional].filter((value): value is JsonRecord => value !== null);
+  const seen = new Set<string>();
+  return definitions.filter((definition) => {
+    const id = string(definition.id);
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
+function combinationIds(definition: JsonRecord): string[] {
+  return asArray(definition.target_ids).filter((value): value is string => typeof value === "string");
+}
+
+function combinationScenarioId(definition: JsonRecord, ids: string[]): string {
+  const configured = string(definition.scenario_id);
+  return configured && ids.includes(configured) ? configured : ids[0] ?? "";
+}
+
+function mergeCombinationFiles(base: JsonRecord[], overrides: JsonRecord[]): JsonRecord[] {
+  const byPath = new Map<string, JsonRecord>();
+  for (const entry of [...base, ...overrides]) {
+    const path = string(entry.path);
+    if (path) byPath.set(path, entry);
+  }
+  return [...byPath.values()];
+}
+
+function sha256(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
 function scopedPersistencePass(phases: JsonRecord[], currentIndex: number): boolean {
@@ -312,6 +343,32 @@ function persistencePasses(checks: Record<string, boolean>): boolean {
   return restart === true && update === true;
 }
 
+function taskWorkflowPasses(task: JsonRecord | null): boolean {
+  if (task === null) return true;
+  return [
+    "present",
+    "bounded_revision_aware",
+    "query_matched",
+    "bases_mappings_present",
+    "source_revision_matched",
+    "stale_revision_rejected",
+    "status_updated",
+    "task_checkbox_updated",
+    "unrelated_content_preserved",
+    "revision_advanced",
+    "direct_vault_writes_zero",
+    "status_passed",
+  ].every((key) => task[key] === true);
+}
+
+function combinationSpecificChecks(targetIds: string[], workflow: JsonRecord): JsonRecord {
+  const task = targetIds.includes("PC19") ? taskWorkflowChecks(workflow) : null;
+  return {
+    task_workflow_checks: task,
+    task_workflow_complete: taskWorkflowPasses(task),
+  };
+}
+
 async function runWorker(source: string, config: JsonRecord, temporaryRoot: string, name: string): Promise<JsonRecord> {
   const sourcePath = join(temporaryRoot, `${name}.main.js`);
   const configPath = join(temporaryRoot, `${name}.json`);
@@ -331,6 +388,50 @@ async function downloadArtifact(id: string): Promise<{artifact: JsonRecord; sour
   const failure = integrityFailure(asset, bytes);
   requireCondition(failure === null, `${id} main.js integrity failed: ${failure}`);
   return {artifact, source: new TextDecoder().decode(bytes), integrity: "passed"};
+}
+
+async function verifyCombinationDependencies(definition: JsonRecord, config: JsonRecord): Promise<JsonRecord> {
+  const artifacts: JsonRecord[] = [];
+  for (const dependency of records(definition.dependency_artifacts)) {
+    const artifactId = string(dependency.artifact_id);
+    requireCondition(Boolean(artifactId), "combination dependency artifact_id is required");
+    const artifact = artifactById(artifactId);
+    const requestedAssets = asArray(dependency.assets).filter((value): value is string => typeof value === "string");
+    requireCondition(requestedAssets.length > 0, `${artifactId} combination dependency must name at least one asset`);
+    const verifiedAssets: JsonRecord[] = [];
+    for (const name of requestedAssets) {
+      const asset = records(artifact.release_assets).find((candidate) => string(candidate.name) === name);
+      requireCondition(asset !== undefined, `${artifactId} is missing required combination asset ${name}`);
+      const bytes = await downloadPinnedAsset(string(asset.url), {attempts: 3, timeoutMs: 45_000});
+      requireCondition(bytes !== null, `${artifactId} ${name} download failed`);
+      const failure = integrityFailure(asset, bytes);
+      requireCondition(failure === null, `${artifactId} ${name} integrity failed: ${failure}`);
+      verifiedAssets.push({name, bytes: bytes.byteLength, sha256: sha256(new Uint8Array(bytes))});
+    }
+    artifacts.push({
+      artifact_id: artifactId,
+      name: string(artifact.name),
+      version: string(artifact.tag),
+      assets: verifiedAssets,
+    });
+  }
+
+  const files = records(config.files);
+  const fixtures = records(definition.dependency_fixtures).map((dependency) => {
+    const paths = asArray(dependency.paths).filter((value): value is string => typeof value === "string");
+    const checked = paths.map((path) => {
+      const file = files.find((candidate) => string(candidate.path) === path);
+      const content = file ? string(file.content) : "";
+      return {path, present: file !== undefined, bytes: new TextEncoder().encode(content).byteLength, sha256: file ? sha256(new TextEncoder().encode(content)) : null};
+    });
+    return {
+      fixture_id: string(dependency.fixture_id),
+      paths: checked,
+      complete: checked.length > 0 && checked.every((entry) => entry.present),
+    };
+  });
+  requireCondition(fixtures.every((fixture) => fixture.complete), "required combination fixture files are missing");
+  return {artifacts, fixtures};
 }
 
 export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
@@ -382,26 +483,62 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       });
       sources.push({id, source: downloaded.source});
     }
-    const combinationIds = combinationTargetIds();
-    requireCondition(combinationIds.length > 0 && combinationIds.every((id) => targetIds.includes(id)), "loaded-plugin combination must reference audited target ids");
-    const combinationSources = sources.filter(({id}) => combinationIds.includes(id));
-    const combinationScenario = scenario(combinationIds[0]);
-    const combination = asRecord(fixture.combination) ?? {};
-    const combinationId = string(combination.id) || `combination:${combinationIds.map((id) => id.toLowerCase()).join("-")}`;
-    const combinationInitialData = Object.fromEntries(combinationIds.map((id) => [id, asRecord(scenario(id).initial_data) ?? {}]));
-    const combinationConfig = {
-      artifact_id: combinationId,
-      ...combinationScenario,
-      initial_data_by_plugin: combinationInitialData,
-      target_ids: combinationIds,
-    };
-    const combinationResult = await runWorker(combinedSource(combinationSources), combinationConfig, temporaryRoot, `combination-${combinationIds.map((id) => id.toLowerCase()).join("-")}`);
-    const combinationChecks = workflowChecks(combinationResult);
-    const combinationWorkflow = asRecord(combinationResult.workflow) ?? {};
-    const combinationActionFailures = actionFailures(combinationWorkflow);
-    const combinationEditor = editorChecks(combinationWorkflow);
+    const definitions = combinationDefinitions();
+    requireCondition(definitions.length > 0, "loaded-plugin audit requires at least one combination definition");
+    const combinationResults: JsonRecord[] = [];
+    for (const definition of definitions) {
+      const ids = combinationIds(definition);
+      requireCondition(ids.length > 0 && ids.every((id) => targetIds.includes(id)), `loaded-plugin combination ${string(definition.id)} must reference audited target ids`);
+      const sourceEntries = ids.map((id) => sources.find((entry) => entry.id === id)).filter((entry): entry is {id: string; source: string} => entry !== undefined);
+      requireCondition(sourceEntries.length === ids.length, `loaded-plugin combination ${string(definition.id)} is missing an audited source`);
+      const scenarioId = combinationScenarioId(definition, ids);
+      const baseScenario = scenario(scenarioId);
+      const definitionFiles = records(definition.files);
+      const id = string(definition.id) || `combination:${ids.map((value) => value.toLowerCase()).join("-")}`;
+      const combinationConfig = {
+        ...baseScenario,
+        artifact_id: id,
+        files: mergeCombinationFiles(records(baseScenario.files), definitionFiles),
+        initial_data_by_plugin: Object.fromEntries(ids.map((pluginId) => [pluginId, asRecord(scenario(pluginId).initial_data) ?? {}])),
+        target_ids: ids,
+      };
+      const dependencies = await verifyCombinationDependencies(definition, combinationConfig);
+      const result = await runWorker(combinedSource(sourceEntries), combinationConfig, temporaryRoot, `combination-${id.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`);
+      const checks = workflowChecks(result);
+      const workflow = asRecord(result.workflow) ?? {};
+      const failures = actionFailures(workflow);
+      const editor = editorChecks(workflow);
+      const specific = combinationSpecificChecks(ids, workflow);
+      const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
+      const persistenceComplete = persistencePasses(checks);
+      const specificComplete = specific.task_workflow_complete === true;
+      const dependencyComplete = records(dependencies.artifacts).every((artifact) => records(artifact.assets).length > 0)
+        && records(dependencies.fixtures).every((fixture) => fixture.complete === true);
+      combinationResults.push({
+        id,
+        target_ids: ids,
+        scenario_id: scenarioId,
+        dependencies,
+        result,
+        checks,
+        bounded_lifecycle: lifecycleComplete ? "complete" : "partial",
+        persistence: persistenceComplete ? "preserved" : "not-proven",
+        persistence_source: checks.restart_restores_data === true && checks.update_restores_data === true
+          ? "plugin-data-save"
+          : persistenceComplete
+            ? "mediated-plugin-data-store"
+            : "not-proven",
+        action_status: failures.length === 0 && specificComplete ? "passed" : "partial",
+        action_failures: failures,
+        editor_checks: editor,
+        specific_checks: specific,
+        dependency_status: dependencyComplete ? "verified" : "partial",
+        disposition: "bounded-combination-evidence-pending-runtime",
+      });
+    }
+    const primaryCombination = combinationResults[0];
     const artifactLifecyclesComplete = artifactResults.every((entry) => entry.bounded_lifecycle === "complete");
-    const combinationLifecycleComplete = checksPass(combinationChecks, boundedLifecycleChecks);
+    const combinationLifecycleComplete = combinationResults.every((entry) => entry.bounded_lifecycle === "complete");
     const artifactChecksComplete = artifactResults.every((entry) => {
       const tagChecks = asRecord(entry.tag_workflow_checks);
       const tagComplete = entry.artifact_id !== "PC24" || (tagChecks !== null && [
@@ -476,8 +613,15 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       ].every((key) => taskChecks[key] === true));
       return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && linterComplete && taskComplete;
     });
-    const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
+    const combinationChecksComplete = combinationResults.every((entry) => {
+      const checks = asRecord(entry.checks) as Record<string, boolean>;
+      return checksPass(checks, boundedLifecycleChecks)
+        && persistencePasses(checks)
+        && entry.action_status === "passed"
+        && entry.dependency_status === "verified";
+    });
     const allChecks = artifactChecksComplete && combinationChecksComplete;
+    requireCondition(primaryCombination !== undefined, "loaded-plugin audit primary combination is missing");
     return {
       evidence_version: 1,
       status: allChecks ? "passed" : "partial",
@@ -490,26 +634,12 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       environment: {platform: platform(), architecture: arch(), electron: electronVersion, display: process.env.DISPLAY ? "existing" : "xvfb-run", branch: "main", selected_vault: "/home/ashutosh/Obsidian", selected_vault_accessed: false},
       source_tree: sourceTree(),
       artifact_results: artifactResults,
-      combination: {
-        id: combinationId,
-        target_ids: combinationIds,
-        result: combinationResult,
-        checks: combinationChecks,
-        bounded_lifecycle: combinationLifecycleComplete ? "complete" : "partial",
-        persistence: persistencePasses(combinationChecks) ? "preserved" : "not-proven",
-        persistence_source: combinationChecks.restart_restores_data === true && combinationChecks.update_restores_data === true
-          ? "plugin-data-save"
-          : persistencePasses(combinationChecks)
-            ? "mediated-plugin-data-store"
-            : "not-proven",
-        action_status: combinationActionFailures.length === 0 ? "passed" : "partial",
-        action_failures: combinationActionFailures,
-        editor_checks: combinationEditor,
-        disposition: "bounded-combination-evidence-pending-runtime",
-      },
+      combination: primaryCombination,
+      combinations: combinationResults,
       checks: {
         all_artifact_lifecycle_traces_complete: artifactLifecyclesComplete,
         combination_lifecycle_trace_complete: combinationLifecycleComplete,
+        all_required_combinations_complete: combinationChecksComplete,
         all_bounded_traces_complete: allChecks,
         all_artifacts_integrity_checked: artifactResults.every((entry) => entry.integrity === "passed"),
         no_plugin_promoted: true,
@@ -518,9 +648,9 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
-          ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action or persistence checks remain partial; no compatibility status was promoted."
+          ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",
     };
   } finally {
