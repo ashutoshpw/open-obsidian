@@ -67,6 +67,12 @@ function safeDomObject() {
     createEl() { return safeDomObject(); },
     createDiv() { return safeDomObject(); },
     createSpan() { return safeDomObject(); },
+    querySelector() { return safeDomObject(); },
+    querySelectorAll() { return safeCollection([]); },
+    getElementsByClassName() { return safeCollection([]); },
+    closest() { return safeDomObject(); },
+    contains() { return false; },
+    remove() {},
     empty() {},
     toggleClass() {},
     addClass() {},
@@ -80,6 +86,7 @@ function safeDomObject() {
     classList: {add() {}, remove() {}, toggle() {}, contains() { return false; }},
   }, {
     get(target, property) {
+      if (property === "then") return undefined;
       if (property in target) return target[property];
       return safeCallable(`dom.${String(property)}`);
     },
@@ -89,9 +96,14 @@ function safeDomObject() {
 function safeDocumentObject(capabilities, allowSyntheticDocument = false, root = "document") {
   const target = {body: safeDomObject()};
   if (allowSyntheticDocument) {
+    target.head = safeDomObject();
     target.createDocumentFragment = () => safeDomObject();
     target.createElement = () => safeDomObject();
     target.createTextNode = () => safeDomObject();
+    target.createRange = () => ({createContextualFragment: () => safeDomObject(), selectNodeContents() {}, deleteContents() {}});
+    target.querySelector = () => safeDomObject();
+    target.querySelectorAll = () => safeCollection([]);
+    target.getElementById = () => null;
     target.getElementsByClassName = () => safeCollection([]);
     target.addEventListener = () => undefined;
     target.removeEventListener = () => undefined;
@@ -206,7 +218,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
   let boundedTimerCalls = 0;
   const boundedTimer = allowSyntheticDocument
     ? (callback) => {
-      if (++boundedTimerCalls > 32) return 0;
+      if (++boundedTimerCalls > 256) return 0;
       if (typeof callback === "function") Promise.resolve().then(callback);
       return 0;
     }
@@ -221,9 +233,9 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
       if (!allowSyntheticDocument) return denyCapability(capabilities, "resource.unbounded", `${root}.setInterval`);
       let calls = 0;
       const tick = () => {
-        if (++calls > 32) return;
+        if (++calls > 256) return;
         if (typeof callback === "function") callback();
-        if (calls < 32) Promise.resolve().then(tick);
+        if (calls < 256) Promise.resolve().then(tick);
       };
       Promise.resolve().then(tick);
       return 0;
@@ -253,7 +265,15 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
 }
 
 function safeComponentObject() {
-  const component = {app: null, containerEl: safeDomObject()};
+  const component = {
+    app: null,
+    containerEl: safeDomObject(),
+    controlEl: safeDomObject(),
+    infoEl: safeDomObject(),
+    nameEl: safeDomObject(),
+    descEl: safeDomObject(),
+    settingEl: safeDomObject(),
+  };
   let proxy;
   proxy = new Proxy(component, {
     get(target, property) {
@@ -268,6 +288,7 @@ function safeCallable(name) {
   const callable = function safePluginCallable() {};
   return new Proxy(callable, {
     get(target, property) {
+      if (property === "then") return undefined;
       if (property === "prototype") return target.prototype;
       if (property === Symbol.toStringTag) return "Function";
       if (property === Symbol.toPrimitive) return () => name;
@@ -395,6 +416,7 @@ function createObsidianApi() {
       this.app = leaf?.app;
       this.containerEl = leaf?.containerEl ?? safeDomObject();
       this.contentEl = this.containerEl;
+      this.titleEl = leaf?.titleEl ?? safeDomObject();
     }
 
     registerEvent(event) {
@@ -446,6 +468,8 @@ function pluginConstructor(module) {
 function createPluginApp(events, dataStore, workflowContext = {}, capabilities = []) {
   const context = workflowContext && typeof workflowContext === "object" ? workflowContext : {};
   const files = new Map();
+  const internalFiles = dataStore?.internalFiles instanceof Map ? dataStore.internalFiles : new Map();
+  if (dataStore && !(dataStore.internalFiles instanceof Map)) dataStore.internalFiles = internalFiles;
   const fileEntries = Array.isArray(context.files) ? context.files : [];
   for (const entry of fileEntries) {
     if (!entry || typeof entry.path !== "string") continue;
@@ -468,6 +492,11 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     return {path: normalized, name: normalized.split("/").at(-1) || normalized, children: [...files.keys()].filter((candidate) => candidate.startsWith(prefix)).map(fileRecord).filter(Boolean)};
   };
   const pathValue = (value) => typeof value === "string" ? value : value && typeof value.path === "string" ? value.path : "";
+  const normalizedInternalPath = (path) => pathValue(path).replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+  const isInternalPath = (path) => {
+    const normalized = normalizedInternalPath(path);
+    return normalized === ".smart-env" || normalized.startsWith(".smart-env/");
+  };
   const recordWrite = (operation, path) => {
     metrics.vaultWrites += 1;
     metrics.vaultOperations.push({operation, path: pathValue(path)});
@@ -481,20 +510,25 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
   };
   let pluginApp;
   const readPath = async (path) => {
-    const value = files.get(pathValue(path));
+    const target = pathValue(path);
+    const value = isInternalPath(target) ? internalFiles.get(normalizedInternalPath(target)) : files.get(target);
     if (value === undefined) return missingFile();
     return value;
   };
   const writePath = async (path, value, operation = "modify") => {
     const target = pathValue(path);
     if (!target) return undefined;
+    if (isInternalPath(target)) {
+      internalFiles.set(normalizedInternalPath(target), typeof value === "string" ? value : new TextDecoder().decode(value));
+      return {path: normalizedInternalPath(target)};
+    }
     denyVaultWrite(operation, target);
     files.set(target, typeof value === "string" ? value : new TextDecoder().decode(value));
     recordWrite(operation, target);
     return fileRecord(target) || {path: target};
   };
   const adapter = {
-    exists: async (path) => files.has(pathValue(path)),
+    exists: async (path) => isInternalPath(path) ? internalFiles.has(normalizedInternalPath(path)) || [...internalFiles.keys()].some((entry) => entry.startsWith(`${normalizedInternalPath(path)}/`)) : files.has(pathValue(path)),
     read: readPath,
     readBinary: async (path) => new TextEncoder().encode(await readPath(path)),
     write: (path, value) => writePath(path, value, "adapter.write"),
@@ -561,6 +595,7 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
       view: null,
       type: "empty",
       containerEl: safeDomObject(),
+      titleEl: safeDomObject(),
       getViewState() { return {type: leaf.type}; },
       setViewState: async (state = {}) => {
         leaf.type = typeof state.type === "string" ? state.type : leaf.type;
@@ -680,7 +715,7 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
   let boundedTimerCalls = 0;
   const boundedTimer = runtime.allowSyntheticDocument
     ? (callback) => {
-      if (++boundedTimerCalls > 32) return 0;
+      if (++boundedTimerCalls > 256) return 0;
       if (typeof callback === "function") Promise.resolve().then(callback);
       return 0;
     }
@@ -689,9 +724,9 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     ? (callback) => {
       let calls = 0;
       const tick = () => {
-        if (++calls > 32) return;
+        if (++calls > 256) return;
         if (typeof callback === "function") callback();
-        if (calls < 32) Promise.resolve().then(tick);
+        if (calls < 256) Promise.resolve().then(tick);
       };
       Promise.resolve().then(tick);
       return 0;
@@ -731,6 +766,7 @@ function evaluateSource(source, capabilities, requiredModules, runtime = {}) {
     Object.defineProperty(Array.prototype, "contains", {configurable: true, value(value) { return this.includes(value); }});
   }
   globalThis.activeDocument = safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true, "activeDocument");
+  globalThis.app = runtime.window?.app || runtime.app || null;
   globalThis.DOMParser = class { parseFromString() { return safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true, "DOMParser.document"); } };
   globalThis.createDiv = () => safeDomObject();
   globalThis.createEl = () => safeDomObject();
@@ -805,6 +841,7 @@ function lifecycleInstance(module, lifecycle, runtime = {}, capabilities = []) {
   if (!Constructor) throw new Error("lifecycle fixture did not export a plugin class");
   lifecycle.supported = true;
   const pluginApp = createPluginApp(lifecycle.events, undefined, {}, capabilities);
+  globalThis.app = pluginApp;
   if (runtime.window) runtime.window.app = pluginApp;
   const instance = new Constructor(pluginApp, {id: "renderer-lifecycle-fixture", version: "1"});
   Object.defineProperty(lifecycle, "_pluginApp", {configurable: true, value: pluginApp});
@@ -833,6 +870,22 @@ async function awaitAction(value) {
   }
 }
 
+async function configureSyntheticSmartEnvironment(runtime) {
+  for (let attempt = 0; attempt < 512; attempt += 1) {
+    const env = runtime.window?.smart_env;
+    if (env?.smart_sources) {
+      env.smart_sources.opts.prevent_import_on_load = true;
+      env.smart_sources.opts.process_embed_queue = false;
+      if (env.smart_blocks?.opts) {
+        env.smart_blocks.opts.prevent_import_on_load = true;
+        env.smart_blocks.opts.process_embed_queue = false;
+      }
+      if (env.state === "loaded") return;
+    }
+    await Promise.resolve();
+  }
+}
+
 async function exerciseRegistrations(pluginApp) {
   const actions = {commands: [], views: [], settings: []};
   for (const command of pluginApp.commandHandlers) {
@@ -848,7 +901,7 @@ async function exerciseRegistrations(pluginApp) {
     }
   }
   for (const viewFactory of pluginApp.viewFactories) {
-    const leaf = {app: pluginApp, containerEl: safeDomObject(), view: null, getViewState() { return {}; }, setViewState() {}};
+    const leaf = {app: pluginApp, containerEl: safeDomObject(), titleEl: safeDomObject(), view: null, getViewState() { return {}; }, setViewState() {}};
     try {
       let view;
       let directError;
@@ -885,11 +938,13 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
   const pluginApp = createPluginApp([], dataStore, workflowContext, capabilities);
+  globalThis.app = pluginApp;
   const instance = new Constructor(pluginApp, {id: manifestId, version});
   pluginApp.plugins.plugins[manifestId] = instance;
   if (runtime.window) runtime.window.app = pluginApp;
   const events = ["constructed"];
   await lifecycleCall(instance, "onload", events);
+  await configureSyntheticSmartEnvironment(runtime);
   const actions = await exerciseRegistrations(pluginApp);
   await lifecycleCall(instance, "onunload", events);
   const registered = {
@@ -953,7 +1008,9 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     const module = evaluatePhase();
     workflow.supported = true;
     await workflowInstance(module, workflow, dataStore, "install", "1.0.0", workflowContext, workflow.artifactId, runtime, deniedCapabilities);
+    runtime.window = undefined;
     await workflowInstance(evaluatePhase(), workflow, dataStore, "restart", "1.0.0", workflowContext, workflow.artifactId, runtime, deniedCapabilities);
+    runtime.window = undefined;
     await workflowInstance(evaluatePhase(), workflow, dataStore, "update", "1.1.0", workflowContext, workflow.artifactId, runtime, deniedCapabilities);
     workflow.pluginDataWrites = dataStore.writes;
     workflow.vaultWrites = metrics.vaultWrites;
@@ -1051,6 +1108,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     rendererLifecycleProbe,
     actionError,
     awaitAction,
+    configureSyntheticSmartEnvironment,
     exerciseRegistrations,
     workflowInstance,
     lifecycleWorkflowFailure,

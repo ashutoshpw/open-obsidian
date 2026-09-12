@@ -1,0 +1,175 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-smart-connections",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC17",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T05:24:59.892Z",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "e2c0dd2fd286541f4c2768bd1683da1d5af0a868",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "e2c0dd2fd286541f4c2768bd1683da1d5af0a868",
+    "sha256": "b5e56d93d52b8f77e093e91d4a94caca2c956a7e9c0a4cb9eeaeffcaf2619c6a",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "globalThis.app is exposed without reserving app as a new Function formal",
+      "synthetic document range/head/query seams and non-thenable DOM/callable proxies",
+      "bounded ItemView titleEl and Obsidian Setting-compatible component fields",
+      "isolated in-memory .smart-env adapter storage that is excluded from vault-write metrics",
+      "Smart Connections import and embed queue disabled during the bounded workflow",
+      "synthetic window reset between install, restart and update evaluations"
+    ],
+    "security_disposition": "The bounded worker remains an isolated, non-certifying renderer boundary; direct vault writes and unbounded capabilities remain denied."
+  },
+  "regression_validation": {
+    "focused": {
+      "command": "bun test tests/plugin-loaded-workflows.test.ts",
+      "exit_code": 0,
+      "tests": 2,
+      "expectations": 80
+    },
+    "full": {
+      "command": "bun test",
+      "exit_code": 0,
+      "tests": 206,
+      "expectations": 1156
+    },
+    "syntax": {
+      "command": "node --check scripts/plugin-renderer-worker.cjs",
+      "exit_code": 0
+    },
+    "diff": {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  },
+  "loaded_workflow_audit": {
+    "command": "bun run audit:plugin-loaded-workflows",
+    "exit_code": 0,
+    "status": "partial",
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "not-proven",
+      "action_status": "partial"
+    },
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "artifact_lifecycles": {
+      "PC07": "complete",
+      "PC17": "complete",
+      "PC20": "complete",
+      "PC21": "complete",
+      "PC22": "complete",
+      "PC23": "complete",
+      "PC24": "complete"
+    },
+    "persistence": {
+      "PC07": "preserved",
+      "PC17": "preserved",
+      "PC20": "preserved",
+      "PC21": "preserved",
+      "PC22": "preserved",
+      "PC23": "preserved",
+      "PC24": "preserved",
+      "combination": "not-proven"
+    },
+    "action_status": {
+      "PC07": "partial",
+      "PC17": "partial",
+      "PC20": "partial",
+      "PC21": "partial",
+      "PC22": "passed",
+      "PC23": "partial",
+      "PC24": "passed"
+    },
+    "pc22": {
+      "name": "Smart Connections",
+      "version": "4.7.2",
+      "main_js_sha256": "f5b1e045e9427a7b7ffc43cd46ba7e0b9223adcc856037d4e0571dc7a9c08083",
+      "integrity": "passed",
+      "workflow_supported": true,
+      "lifecycle": {
+        "phases": ["install", "restart", "update"],
+        "versions": ["1.0.0", "1.0.0", "1.1.0"],
+        "each_phase_constructed_onload_onunload": true,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true
+      },
+      "actions": {
+        "commands": 3,
+        "views": 4,
+        "settings": 1,
+        "failed_or_not_executed": 0
+      },
+      "persistence": {
+        "restart_restores_data": true,
+        "update_restores_data": true,
+        "phase_data": {
+          "settings": {
+            "embeddingModel": "local",
+            "excludedFolders": []
+          },
+          "version": 4
+        }
+      },
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "other_action_limitations": {
+      "PC07": "DOM-dependent calendar commands/settings remain denied",
+      "PC17": "settings callbacks require the missing updateFontSize seam",
+      "PC20": "editor callbacks remain not-executed because the bounded CodeMirror adapter is uncertified",
+      "PC21": "debug-copy remains denied at the DOM boundary",
+      "PC23": "settings display remains DOM-denied"
+    },
+    "actual_vault_writes": 0,
+    "no_plugin_promoted": true,
+    "disposition": "PC22 bounded workflow evidence is complete for this Linux synthetic scope; cross-platform, reference Obsidian, human, provider and required-combination validation remain pending."
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This is Linux x64 Electron renderer-boundary evidence using unchanged pinned main.js bytes. It does not certify stock Obsidian, cross-platform behavior, human behavior, required plugin combinations or compatibility promotion."
+}
