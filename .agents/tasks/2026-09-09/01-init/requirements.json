@@ -5,6 +5,14 @@
   "created_at": "2026-09-09T17:20:00Z",
   "reconciliation_evidence": [
     {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc21-clipboard.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC21", "PC23"],
+      "tested_source_tree": "1c0b269c10be26b606e60af7a51b9d13726182176474853f60b8ea19ef99016e",
+      "status": "passed",
+      "summary": "Fresh Linux bounded loaded-workflow evidence makes Homepage copy-debug-info pass through a 1 MiB-capped renderer-local clipboard adapter with external=false and zero OS writes; all eight unchanged artifact traces and the PC07/PC21/PC23 combination pass bounded actions, persistence, cleanup and zero vault writes, while reference, cross-platform, human and compatibility gates remain pending."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc24-tag-wrangler.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC24"],

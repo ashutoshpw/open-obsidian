@@ -1,0 +1,112 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc21-clipboard",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC21",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T08:36:18Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "0452560c486addc2d8dee309876476c799269d3b",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "0452560c486addc2d8dee309876476c799269d3b",
+    "sha256": "1c0b269c10be26b606e60af7a51b9d13726182176474853f60b8ea19ef99016e",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "fixtures/plugin-loaded-workflows.json",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "Workflow mode exposes only a finite in-memory navigator/window.clipboard adapter capped at 1 MiB per write; module-load probes retain the privileged DOM denial.",
+      "Clipboard writes and reads are recorded per phase with external=false; no host or OS clipboard API is contacted.",
+      "The unchanged Homepage copy-debug-info callback now passes alongside open-homepage and set-to-active-file without direct vault writes."
+    ],
+    "security_disposition": "Direct vault writes, filesystem/network/process/credential access and privileged host DOM remain denied. Renderer-local clipboard capture is a synthetic safe alternative only and never reaches the OS clipboard."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "artifacts": {
+      "PC07": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC08": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC17": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC20": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC21": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "clipboard_writes_per_phase": 1, "clipboard_external": false, "vault_writes": 0},
+      "PC22": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC23": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0},
+      "PC24": {"bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "vault_writes": 0}
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "passed",
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "clipboard_external": false,
+      "vault_writes": 0
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 5 tests, 134 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 209 tests, 1209 expectations",
+    "typecheck_command": "bun run typecheck",
+    "typecheck_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow-disabled host/OS clipboard path"
+  ],
+  "external_pending": [
+    "reference Obsidian Homepage copy-debug-info and OS clipboard comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. Homepage clipboard behavior is captured in memory with external=false and zero OS writes; stock Obsidian, reference clipboard behavior, cross-platform enforcement, human behavior and compatibility promotion remain unverified."
+}

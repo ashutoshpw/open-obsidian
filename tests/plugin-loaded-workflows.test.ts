@@ -91,6 +91,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.external_pending.length).toBeGreaterThanOrEqual(5);
   expect(fixture.limitation).toContain("unchanged pinned main.js bytes");
   expect(fixture.limitation).toContain("does not certify stock Obsidian");
+  expect(fixture.limitation).toContain("clipboard capture that never reaches the OS");
 });
 
 test("renderer wrapper permits plugin-local app bindings", () => {
