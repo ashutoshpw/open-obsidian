@@ -666,6 +666,7 @@ function createSafeRequire(capabilities, requiredModules) {
 
 function createEvaluationArguments(capabilities, requiredModules, runtime = {}) {
   const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true, "window", runtime.storage));
+  const localStorage = runtime.allowSyntheticDocument ? safeWindow.localStorage : undefined;
   let boundedTimerCalls = 0;
   const boundedTimer = runtime.allowSyntheticDocument
     ? (callback) => {
@@ -694,7 +695,7 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     safeWindow,
     safeWindow,
     safeWindow,
-    safeWindow.localStorage,
+    localStorage,
     deniedObject(capabilities, "process.spawn"),
     deniedFunction(capabilities, "network.request"),
     deniedFunction(capabilities, "network.request"),
