@@ -1,0 +1,128 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-required-combinations-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC08",
+    "PC17",
+    "PC19",
+    "PC21",
+    "PC23",
+    "PC-DEP-MINIMAL"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T14:18:00Z",
+  "head": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e8",
+  "status": "passed",
+  "workflows": {
+    "quality": {
+      "run_id": 34698467112,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34698467112",
+      "jobs": {"Ubuntu": 103565919659, "macOS": 103565919792, "Windows": 103565919794},
+      "conclusion": "success"
+    },
+    "desktop_build": {
+      "run_id": 34698467114,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34698467114",
+      "jobs": {"macOS": 103565919666, "Ubuntu": 103565919752, "Windows": 103565919780},
+      "conclusion": "success",
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false"
+    },
+    "loaded_workflows": {
+      "run_id": 34698467125,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34698467125",
+      "jobs": {"macOS": 103565919644, "Windows": 103565919761, "Ubuntu": 103565919839},
+      "conclusion": "success"
+    },
+    "renderer_matrix": {
+      "run_id": 34698467133,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34698467133",
+      "jobs": {"macOS": 103565919606, "Windows": 103565919754, "Ubuntu": 103565919755},
+      "conclusion": "success"
+    }
+  },
+  "platform_reports": {
+    "Ubuntu": {
+      "loaded_report_sha256": "90d474d733c41f04c578ecfa0d41707d081b642f0ad3b77b5dcdc5149c1d321f",
+      "renderer_report_sha256": "ca1f4af2306bd60f0589922226ff098527d36436b4aac50b1060459d0b8a5866",
+      "source_tree_sha256": "1a44ee0adc417a0dbf07d6ec5bf978ca157b8e2d7e2aeb4e04ca767de5ff71fa",
+      "source_tree_paths": 240
+    },
+    "macOS": {
+      "loaded_report_sha256": "86cf7209669a33ededf8acce9ae98eae6b4d3f19d1560a26eddeeebc33bcd76c",
+      "renderer_report_sha256": "ae61d2406613817b98d1735e71bca43c38b0b8388feadc86e2d1975f5a22718d",
+      "source_tree_sha256": "c3d2d2baa1ce428a62e1babc029fbf8d20cf15415d20b9452ec50cd5c5cc659f",
+      "source_tree_paths": 240
+    },
+    "Windows": {
+      "loaded_report_sha256": "1cb2cb1b8175a18d9c5c1616d38fcbdd9b01963eaa7bd90342b3330a07f439d1",
+      "renderer_report_sha256": "ae61d2406613817b98d1735e71bca43c38b0b8388feadc86e2d1975f5a22718d",
+      "source_tree_sha256": "9d5c8dbdecddbfb711b50cff51f4bdcec4de8bc577024ad6380f6bc8f28a94f4",
+      "source_tree_paths": 240
+    }
+  },
+  "desktop_release_manifests": {
+    "Ubuntu": "55995ac966084ad07d0967683cc1da0c7d7891c87464dd6f857c454e8af2e573",
+    "macOS": "11b1bc2025954c131f551c780ff118d811c6e5682e506be48c0740b2ce06ccfc",
+    "Windows": "c9480c962a75016568fe3293143cdea06aa2dbd58fa626c7ea94be0f2afabf58"
+  },
+  "loaded_workflow_results": {
+    "all_platforms": "passed",
+    "artifact_count_per_platform": 10,
+    "artifact_lifecycle": "all ten complete",
+    "artifact_actions": "all ten passed within the bounded synthetic scope",
+    "artifact_persistence": "all ten preserved mediated or plugin data",
+    "required_combinations": [
+      {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"], "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "dependencies": "verified", "vault_writes": 0},
+      {"id": "combination:pc08-pc17-minimal", "target_ids": ["PC08", "PC17"], "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "dependencies": "PC-DEP-MINIMAL manifest.json/theme.css verified", "vault_writes": 0},
+      {"id": "combination:pc19-bases", "target_ids": ["PC19"], "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "dependencies": "fixture:baseline:bases paths verified", "vault_writes": 0}
+    ],
+    "per_platform_checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_required_combinations_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "renderer_matrix": {
+    "all_platforms": "passed",
+    "rows_per_platform": 28,
+    "renderer_denials_per_platform": 23,
+    "loaded_lifecycle_rows_per_platform": 4,
+    "non_applicable_rows_per_platform": 1,
+    "ordinary_failures_per_platform": 0,
+    "integrity_failures_per_platform": 0
+  },
+  "desktop_build": {
+    "all_platforms": "passed",
+    "preview_only": true,
+    "release_signing_configured": false,
+    "artifacts": "unsigned previews; release-manifest, packaged runtime and attribution checks passed"
+  },
+  "report_format_limitations": [
+    "Hosted source workspaces contain one transient redirected-output path (240 paths) versus the clean local 239-path source-of-record digest.",
+    "macOS and Windows loaded/renderer downloads begin with the Electron download diagnostic line before JSON; raw hashes above cover the unmodified files and parsing strips only that line."
+  ],
+  "security_disposition": "Hosted jobs execute unchanged pinned artifacts only in the context-isolated synthetic renderer. No host vault, OS clipboard or direct vault writer was accessed; passing combination traces are implementation-boundary evidence, not compatibility promotion.",
+  "external_pending": [
+    "reference Obsidian and lossless-writer parity",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed behavior, signing, publication and updater installation/rollback",
+    "remaining required plugin combinations, compatibility promotion and release-track certification"
+  ],
+  "selected_vault": "/home/ashutosh/Obsidian",
+  "selected_vault_accessed": false
+}

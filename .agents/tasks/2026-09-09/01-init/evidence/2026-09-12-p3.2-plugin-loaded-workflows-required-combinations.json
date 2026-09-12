@@ -1,0 +1,141 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-required-combinations",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC08",
+    "PC17",
+    "PC19",
+    "PC21",
+    "PC23",
+    "PC-DEP-MINIMAL"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T14:17:23Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "bun": "1.4.2",
+    "branch": "main",
+    "base_head": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e8",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e8",
+    "sha256": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae44545ee4ada",
+    "paths": 239,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "scripts/plugin-renderer-worker.cjs",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "The audit accepts a primary and additional required-combination definition, merges only declared fixture files and loads unchanged pinned main.js bytes through the same context-isolated renderer wrapper.",
+      "Minimal + Minimal Theme Settings + Style Settings verifies the pinned Minimal 9.1.0 manifest/theme.css assets before running the PC08/PC17 wrapper.",
+      "TaskNotes + Bases verifies the declared file-based Bases fixture paths before exercising the PC19 task projection and all lifecycle phases.",
+      "Combination traces record target IDs in the worker, per-plugin mediated persistence, cleanup, return-to-Obsidian state and zero direct vault writes."
+    ],
+    "security_disposition": "Unchanged pinned artifacts remain inside the context-isolated synthetic renderer. Dependency assets and Bases fixture bytes are integrity-checked or mediated in memory; no host vault, OS clipboard or direct vault writer is accessed."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": ["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "artifact_lifecycles": "all ten audited unchanged artifact lifecycles complete",
+    "artifact_actions": "all ten audited bounded action paths pass",
+    "artifact_persistence": "all ten audited bounded persistence checks pass",
+    "artifact_vault_writes": 0,
+    "required_combinations": [
+      {
+        "id": "combination:pc07-pc21-pc23",
+        "target_ids": ["PC07", "PC21", "PC23"],
+        "bounded_lifecycle": "complete",
+        "persistence": "preserved",
+        "action_status": "passed",
+        "dependency_status": "verified",
+        "vault_writes": 0
+      },
+      {
+        "id": "combination:pc08-pc17-minimal",
+        "target_ids": ["PC08", "PC17"],
+        "bounded_lifecycle": "complete",
+        "persistence": "preserved",
+        "action_status": "passed",
+        "dependency_status": "verified",
+        "dependency_artifact": {
+          "id": "PC-DEP-MINIMAL",
+          "version": "9.1.0",
+          "assets": {
+            "manifest.json": {"bytes": 200, "sha256": "e01344d2fc722931c689ce7ba35c786312be10d677b8fe6921e0d3a7a1ea1184"},
+            "theme.css": {"bytes": 265574, "sha256": "c95225a3653dcf600d006e9551c1038a06c336d03228a623bd5008b1561438a4"}
+          }
+        },
+        "vault_writes": 0
+      },
+      {
+        "id": "combination:pc19-bases",
+        "target_ids": ["PC19"],
+        "bounded_lifecycle": "complete",
+        "persistence": "preserved",
+        "action_status": "passed",
+        "dependency_status": "verified",
+        "dependency_fixture": {
+          "id": "fixture:baseline:bases",
+          "paths": {
+            "TaskNotes/Views/tasks-default.base": {"bytes": 84, "sha256": "1025fb053ec41ff262b3e84652ae6805b309477f447e6016060dc17d0041517c"},
+            "TaskNotes/Views/calendar-default.base": {"bytes": 90, "sha256": "675215c0be6dbd73fcc927977ed18ad0b152de16863270f8b53fe6f45515cc76"}
+          }
+        },
+        "task_workflow": "revision match, stale rejection, status/checkbox update, unrelated-content preservation and revision advance pass",
+        "vault_writes": 0
+      }
+    ],
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_required_combinations_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 9 tests, 210 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 213 tests, 1286 expectations",
+    "typecheck": "passed; bun run typecheck",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "final_audit": "passed; bun run final:audit",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian and lossless-writer parity",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed behavior, signing, publication and updater installation/rollback",
+    "remaining required plugin combinations, compatibility promotion and release-track certification"
+  ],
+  "limitation": "This evidence exercises unchanged pinned artifacts only inside the hidden Electron context-isolated sandbox. Passing combinations are bounded synthetic implementation evidence; they do not certify stock Obsidian, reference behavior, hostile same-user OS isolation, human behavior or compatibility promotion."
+}

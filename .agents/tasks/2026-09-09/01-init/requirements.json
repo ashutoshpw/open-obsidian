@@ -299,6 +299,22 @@
       "tested_source_tree": "edea60e0c73a641b46e466205eba0bfd405fe3d586ff6595d8df73fbca74136c",
       "status": "passed",
       "summary": "Hosted renderer-matrix run 34697117320, quality run 34697117344, unsigned preview desktop-build run 34697117321 and loaded-workflow run 34697117325 succeeded on Ubuntu, macOS and Windows for 20e65d5. Loaded reports reproduce unchanged TaskNotes 4.12.5 integrity, 36/36 command callbacks, settings and all four detached views, bounded revision-aware task projection across install/restart/update, cleanup and zero direct vault writes; renderer/desktop hashes are recorded, while reference, same-user OS, human, provider, signing, publication, updater, required-combination and compatibility-promotion gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC08", "PC17", "PC19", "PC21", "PC23", "PC-DEP-MINIMAL"],
+      "tested_source_tree": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae44545ee4ada",
+      "status": "passed",
+      "summary": "Local Linux bounded loaded-workflow audit at 99fbfef verifies all ten unchanged artifact lifecycles/actions/persistence and three required synthetic combinations: PC07/PC21/PC23, PC08/PC17 with verified Minimal 9.1.0 assets, and PC19 with verified Bases fixture paths; cleanup and zero direct vault writes pass, while reference, same-user OS, human and compatibility certification remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC08", "PC17", "PC19", "PC21", "PC23", "PC-DEP-MINIMAL"],
+      "tested_source_tree": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae445ee4ada",
+      "status": "passed",
+      "summary": "Hosted loaded-workflow, renderer-matrix, quality and unsigned preview desktop-build runs 34698467125, 34698467133, 34698467112 and 34698467114 passed on Ubuntu, macOS and Windows for 99fbfef. All ten artifact traces and all three required synthetic combinations pass with verified dependencies, cleanup and zero direct vault writes; exact raw report and release-manifest hashes are recorded, while reference, same-user OS, human, signing, provider, updater, publication and compatibility gates remain pending."
     }
   ],
   "source_snapshots": {
