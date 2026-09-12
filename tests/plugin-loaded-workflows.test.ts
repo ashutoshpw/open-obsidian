@@ -163,3 +163,28 @@ test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () =
   expect(loadedWorkflowAudit).toContain("clipboard_external_writes_zero");
   expect(loadedWorkflowAudit).toContain("event_attempts_recorded");
 });
+
+test("PC23 fixture and recent-file seam remove stale entries read-only", () => {
+  const pc23 = fixture.scenarios.PC23 as typeof fixture.scenarios.PC23 & {
+    recent_files_workflow?: {
+      stale_path: string;
+      retained_path: string;
+      max_length: number;
+    };
+  };
+  expect(pc23.initial_data.recentFiles).toContainEqual({path: "Archive/missing.md", basename: "missing"});
+  expect(pc23.recent_files_workflow).toEqual({
+    stale_path: "Archive/missing.md",
+    retained_path: "Daily/2026-09-11.md",
+    max_length: 50,
+  });
+  expect(rendererWorker).toContain("function boundedRecentFilesWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-projection"');
+  expect(rendererWorker).toContain("stale_entries_removed");
+  expect(rendererWorker).toContain("order_preserved");
+  expect(rendererWorker).toContain("direct_vault_writes: 0");
+  expect(loadedWorkflowAudit).toContain("function recentFilesWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("recent_files_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("max_length_preserved");
+  expect(loadedWorkflowAudit).toContain("direct_vault_writes_zero");
+});

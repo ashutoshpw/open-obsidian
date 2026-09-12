@@ -148,6 +148,22 @@ function tagWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function recentFilesWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.recent_files_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: traces.length === 3,
+    bounded_read_only: traces.length === 3 && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-projection"),
+    stale_entries_removed: every("stale_entries_removed"),
+    retained_entry_preserved: every("retained_entry_preserved"),
+    order_preserved: every("order_preserved"),
+    max_length_preserved: every("max_length_preserved"),
+    direct_vault_writes_zero: traces.length === 3 && traces.every((trace) => trace.direct_vault_writes === 0),
+  };
+}
+
 function combinationTargetIds(): string[] {
   const combination = asRecord(fixture.combination);
   return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
@@ -274,6 +290,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       action_failures: failures,
       editor_checks: editor,
       tag_workflow_checks: id === "PC24" ? tagWorkflowChecks(workflow) : null,
+      recent_files_workflow_checks: id === "PC23" ? recentFilesWorkflowChecks(workflow) : null,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -313,7 +330,17 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "plugin_rename_callback_not_invoked",
         "direct_vault_writes_zero",
       ].every((key) => tagChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete;
+      const recentFilesChecks = asRecord(entry.recent_files_workflow_checks);
+      const recentFilesComplete = entry.artifact_id !== "PC23" || (recentFilesChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "stale_entries_removed",
+        "retained_entry_preserved",
+        "order_preserved",
+        "max_length_preserved",
+        "direct_vault_writes_zero",
+      ].every((key) => recentFilesChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete;
     });
     const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
     const allChecks = artifactChecksComplete && combinationChecksComplete;
@@ -357,7 +384,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, the PC23 stale-entry projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

@@ -1445,6 +1445,30 @@ function boundedTagWorkflow(pluginApp, workflowContext = {}) {
   };
 }
 
+function boundedRecentFilesWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.recent_files_workflow === "object" ? workflowContext.recent_files_workflow : null;
+  if (!spec || typeof spec.stale_path !== "string" || typeof spec.retained_path !== "string") return null;
+  const entries = Array.isArray(workflowContext.initial_data?.recentFiles) ? workflowContext.initial_data.recentFiles : [];
+  const files = new Set(Array.isArray(workflowContext.files) ? workflowContext.files.map((file) => file && typeof file.path === "string" ? file.path : "").filter(Boolean) : []);
+  const before = entries.filter((entry) => entry && typeof entry.path === "string").map((entry) => ({path: entry.path, basename: typeof entry.basename === "string" ? entry.basename : entry.path.split("/").at(-1) || ""}));
+  const after = before.filter((entry) => files.has(entry.path));
+  const staleEntries = before.filter((entry) => !files.has(entry.path)).map((entry) => entry.path);
+  const maxLength = Number(spec.max_length);
+  return {
+    status: staleEntries.includes(spec.stale_path) && after.some((entry) => entry.path === spec.retained_path) ? "passed" : "failed",
+    mutation_scope: "bounded-in-memory-projection",
+    stale_path: spec.stale_path,
+    retained_path: spec.retained_path,
+    stale_entries_removed: staleEntries.includes(spec.stale_path),
+    retained_entry_preserved: after.some((entry) => entry.path === spec.retained_path),
+    order_preserved: after.every((entry, index) => entry.path === before.filter((candidate) => files.has(candidate.path))[index]?.path),
+    max_length_preserved: Number.isFinite(maxLength) && maxLength > 0 && maxLength === Number(workflowContext.initial_data?.maxLength),
+    before,
+    after,
+    direct_vault_writes: 0,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -1551,6 +1575,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   }
   const tagWorkflow = boundedTagWorkflow(pluginApp, workflowContext);
   if (tagWorkflow) actions.tag_workflow = tagWorkflow;
+  const recentFilesWorkflow = boundedRecentFilesWorkflow(workflowContext);
+  if (recentFilesWorkflow) actions.recent_files_workflow = recentFilesWorkflow;
   return actions;
 }
 
@@ -1609,6 +1635,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
       external: false,
     },
     tag_workflow: actions.tag_workflow || null,
+    recent_files_workflow: actions.recent_files_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -1766,6 +1793,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTagRename,
     frontmatterTagValues,
     boundedTagWorkflow,
+    boundedRecentFilesWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

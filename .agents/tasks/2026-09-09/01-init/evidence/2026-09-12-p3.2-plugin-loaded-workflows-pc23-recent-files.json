@@ -1,0 +1,128 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc23-recent-files",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T08:53:26Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "bada4a60bc192f7924967f078dfa3c5d09ff6973",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "bada4a60bc192f7924967f078dfa3c5d09ff6973",
+    "sha256": "b023d5ce11ce85d05e0d88672d7d9eaf259129fce3bebe6169ed17a302f9035c",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "The PC23 fixture includes a stale Archive/missing.md recent-file entry alongside a valid Daily/2026-09-11.md entry and retains the configured maxLength.",
+      "The workflow-only worker builds a read-only in-memory projection that removes paths absent from the mediated fixture file list, preserves valid entry order and records stale-entry, retention and max-length checks in every install/restart/update phase.",
+      "The audit requires the PC23 projection to be present and passing across all three phases while preserving mediated persistence, cleanup, return-to-Obsidian state and zero vault writes."
+    ],
+    "security_disposition": "Direct vault writes, filesystem/network/process/credential access and privileged DOM remain denied. Recent-file filtering is a bounded in-memory projection only; no unchanged-plugin file deletion or vault mutation callback is invoked."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "artifact_lifecycles": "all eight audited artifact lifecycles complete",
+    "artifact_persistence": "all eight audited artifact traces preserved mediated or plugin data across restart/update",
+    "artifact_actions": "all eight audited artifact action paths passed within the bounded synthetic scope",
+    "pc23": {
+      "name": "Recent Files",
+      "version": "1.7.10",
+      "main_js_sha256": "9a85d22a342d6bc8cfcbfe89a8ed04cdfdb444c370a220b008e4423f1fd37dc8",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "phases": ["install", "restart", "update"],
+      "persistence": "preserved via mediated-plugin-data-store",
+      "recent_files_workflow": {
+        "mutation_scope": "bounded-in-memory-projection",
+        "stale_path": "Archive/missing.md",
+        "retained_path": "Daily/2026-09-11.md",
+        "stale_entries_removed": true,
+        "retained_entry_preserved": true,
+        "order_preserved": true,
+        "max_length_preserved": true,
+        "direct_vault_writes": 0,
+        "all_phases_passed": true
+      },
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved via mediated-plugin-data-store",
+      "action_status": "passed",
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "vault_writes": 0
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 6 tests, 145 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 210 tests, 1221 expectations",
+    "typecheck_command": "bun run typecheck",
+    "typecheck_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian Recent Files stale-entry, rename, delete and navigation comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned Recent Files bytes only inside the hidden Electron context-isolated sandbox. The stale-entry result is a bounded in-memory projection over mediated fixture files with zero vault writes; it does not certify stock Obsidian, unchanged-plugin rename/delete callbacks, reference behavior, same-user cross-platform enforcement, human behavior or compatibility promotion."
+}

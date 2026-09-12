@@ -67,13 +67,19 @@
       "description": "Record/reopen recent files, preserve exclusions and exercise restart/update cleanup behavior.",
       "initial_data": {
         "recentFiles": [
-          {"path": "Daily/2026-09-11.md", "basename": "2026-09-11"}
+          {"path": "Daily/2026-09-11.md", "basename": "2026-09-11"},
+          {"path": "Archive/missing.md", "basename": "missing"}
         ],
         "omittedPaths": [],
         "omittedTags": [],
         "updateOn": "file-open",
         "omitBookmarks": false,
         "maxLength": 50
+      },
+      "recent_files_workflow": {
+        "stale_path": "Archive/missing.md",
+        "retained_path": "Daily/2026-09-11.md",
+        "max_length": 50
       },
       "active_file": "Daily/2026-09-11.md",
       "files": [
