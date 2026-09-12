@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC03", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC03": {
       "workflow_id": "workflow:pc03",
@@ -47,6 +47,44 @@
         {"path": "Notes/Project.md", "content": "---\nstatus: active\npriority: 2\n---\n\n# Project\n\n[owner:: Ashutosh]\nSee [[Notes/Second]] for context.\n\n- [ ] Review compatibility\n"},
         {"path": "Notes/Second.md", "content": "---\nstatus: active\npriority: 1\n---\n\n# Second\n\n[owner:: Ashutosh]\n"},
         {"path": "Archive/Paused.md", "content": "---\nstatus: paused\npriority: 9\n---\n\n# Paused\n"}
+      ]
+    },
+    "PC04": {
+      "workflow_id": "workflow:pc04",
+      "description": "Query, filter and group note-backed tasks, then project create/complete edits while preserving dates, status markers and recurrence syntax.",
+      "initial_data": {
+        "globalFilter": "#task",
+        "taskFormat": "emoji",
+        "recurrenceOnNextLine": false,
+        "statusGroup": "status",
+        "version": 8
+      },
+      "tasks_workflow": {
+        "query": "not done\npath includes Notes/Tasks.md\nsort by due\ngroup by status",
+        "source_path": "Notes/Tasks.md",
+        "task_tag": "#task",
+        "expected_source_revision": "4eb055c7",
+        "expected_query_rows": [
+          {"line": "- [ ] Prepare release 📅 2026-09-20 🔁 every week when done #task", "status": "TODO", "due": "2026-09-20", "recurrence": "every week when done"},
+          {"line": "- [ ] Review compatibility ⏫ 📅 2026-09-22 #task", "status": "TODO", "due": "2026-09-22", "recurrence": null}
+        ],
+        "expected_group_counts": {"TODO": 2},
+        "create_task": {
+          "line": "- [ ] Draft changelog 📅 2026-09-24 #task",
+          "insert_before": "Plain note remains untouched"
+        },
+        "complete_task": {
+          "target_line": "- [ ] Prepare release 📅 2026-09-20 🔁 every week when done #task",
+          "expected_line": "- [x] Prepare release 📅 2026-09-20 🔁 every week when done #task"
+        },
+        "expected_dates": ["2026-09-20", "2026-09-22", "2026-09-01", "2026-09-24"],
+        "expected_recurrence": "every week when done",
+        "expected_output": "---\ntags:\n  - project\nstatus: active\n---\n\n# Tasks\n\n- [x] Prepare release 📅 2026-09-20 🔁 every week when done #task\n- [ ] Review compatibility ⏫ 📅 2026-09-22 #task\n- [x] Ship previous release ✅ 2026-09-01 #task\n- [ ] Draft changelog 📅 2026-09-24 #task\n- [ ] Plain note remains untouched\n"
+      },
+      "active_file": "Notes/Tasks.md",
+      "files": [
+        {"path": "Notes/Tasks.md", "content": "---\ntags:\n  - project\nstatus: active\n---\n\n# Tasks\n\n- [ ] Prepare release 📅 2026-09-20 🔁 every week when done #task\n- [ ] Review compatibility ⏫ 📅 2026-09-22 #task\n- [x] Ship previous release ✅ 2026-09-01 #task\n- [ ] Plain note remains untouched\n"},
+        {"path": "Notes/Unrelated.md", "content": "# Unrelated\n\nThis note must remain unchanged.\n"}
       ]
     },
     "PC07": {

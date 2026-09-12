@@ -60,6 +60,37 @@ function deniedFunction(capabilities, capability, path = capability) {
   return denied;
 }
 
+function boundedProcessObject(capabilities) {
+  const processFacade = {
+    nextTick(callback, ...args) {
+      if (typeof callback === "function") Promise.resolve().then(() => callback(...args));
+    },
+    emitWarning() {},
+    platform: "linux",
+    arch: "x64",
+    env: Object.freeze({NODE_ENV: "production"}),
+    argv: [],
+    version: "bounded-renderer",
+    versions: Object.freeze({}),
+    cwd() { return "/"; },
+    uptime() { return 0; },
+  };
+  return new Proxy(processFacade, {
+    get(target, property) {
+      if (property === Symbol.toStringTag) return "process";
+      if (property === "spawn") return deniedFunction(capabilities, "process.spawn", "process.spawn");
+      if (property in target) return target[property];
+      return deniedFunction(capabilities, "process.spawn", "process." + String(property));
+    },
+    set(_target, property) {
+      return denyCapability(capabilities, "process.spawn", "process." + String(property));
+    },
+    defineProperty(_target, property) {
+      return denyCapability(capabilities, "process.spawn", "process." + String(property));
+    },
+  });
+}
+
 function safeDomObject() {
   return new Proxy({
     addEventListener() {},
@@ -416,6 +447,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     target.smart_env = null;
     target.smart_env_configs = Object.create(null);
     target.all_envs = [];
+    target.flatpickr = null;
   }
   return new Proxy(target, {
     get(current, property) {
@@ -423,7 +455,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
       return denyCapability(capabilities, "dom.privileged", `${root}.${String(property)}`);
     },
     set(current, property, value) {
-      if (property === "app" || (allowSyntheticDocument && ["smart_env", "smart_env_configs", "all_envs", "_bundledLocaleWeekSpec"].includes(property))) {
+      if (property === "app" || (allowSyntheticDocument && ["smart_env", "smart_env_configs", "all_envs", "_bundledLocaleWeekSpec", "flatpickr"].includes(property))) {
         current[property] = value;
         return true;
       }
@@ -441,6 +473,7 @@ function safeComponentObject() {
     nameEl: safeDomObject(),
     descEl: safeDomObject(),
     settingEl: safeDomObject(),
+    extraSettingsEl: safeDomObject(),
     modalEl: safeDomObject(),
     contentEl: safeDomObject(),
     titleEl: safeDomObject(),
@@ -455,6 +488,7 @@ function safeComponentObject() {
   let proxy;
   proxy = new Proxy(component, {
     get(target, property) {
+      if (property === "then") return undefined;
       if (property in target) return target[property];
       if (callbackMethods.has(property)) return (...args) => {
         if (typeof args[0] === "function") args[0](safeComponentObject());
@@ -1249,6 +1283,7 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     dataStore,
     vault,
     workspace,
+    scope: {register() {}},
     metadataCache: {
       getFileCache() { return {}; },
       getFirstLinkpathDest(path) { return fileRecord(path) || activeFile; },
@@ -1362,7 +1397,7 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     safeNavigator,
     safeWindow,
     localStorage,
-    deniedObject(capabilities, "process.spawn"),
+    boundedProcessObject(capabilities),
     deniedFunction(capabilities, "network.request"),
     deniedFunction(capabilities, "network.request"),
     deniedFunction(capabilities, "network.request"),
@@ -2221,6 +2256,157 @@ function boundedTaskWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedTasksWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.tasks_workflow === "object"
+    ? workflowContext.tasks_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const sourcePath = typeof spec.source_path === "string" ? spec.source_path : "";
+  const target = files.find((entry) => entry.path === sourcePath) || null;
+  const source = target ? String(target.content).replace(/\r\n/g, "\n") : "";
+  const query = typeof spec.query === "string" ? spec.query : "";
+  const taskTag = typeof spec.task_tag === "string" ? spec.task_tag : "#task";
+  const expectedRows = Array.isArray(spec.expected_query_rows) ? spec.expected_query_rows : [];
+  const expectedGroups = spec.expected_group_counts && typeof spec.expected_group_counts === "object" ? spec.expected_group_counts : {};
+  const lines = source.split("\n");
+  const taskTagPattern = new RegExp(`(?:^|\\s)${escapePattern(taskTag)}(?=\\s|$)`);
+  const parseTask = (line) => {
+    const match = String(line).match(/^\s*[-*+]\s+\[([ xX])\]\s+(.+)$/);
+    if (!match) return null;
+    const body = match[2];
+    const due = body.match(/📅\s+(\d{4}-\d{2}-\d{2})/);
+    const recurrence = body.match(/🔁\s+(.+?)(?=\s+#[\w/-]+(?:\s|$)|$)/);
+    return {
+      line: String(line),
+      checked: /x/i.test(match[1]),
+      status: /x/i.test(match[1]) ? "DONE" : "TODO",
+      due: due ? due[1] : null,
+      recurrence: recurrence ? recurrence[1].trim() : null,
+      tagged: taskTagPattern.test(body),
+    };
+  };
+  const parsed = lines.map(parseTask).filter((task) => task !== null);
+  const sourceRevision = (() => {
+    let hash = 2166136261;
+    for (const character of source) {
+      hash ^= character.codePointAt(0) || 0;
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  })();
+  const expectedSourceRevision = typeof spec.expected_source_revision === "string" ? spec.expected_source_revision : "";
+  const queryLines = query.toLowerCase().split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const queryParsed = queryLines.includes("not done")
+    && queryLines.some((line) => line === `path includes ${sourcePath.toLowerCase()}`)
+    && queryLines.includes("sort by due")
+    && queryLines.includes("group by status")
+    && initialData.globalFilter === taskTag;
+  const queryRows = parsed.filter((task) => task.tagged && !task.checked);
+  const queryRowsMatch = queryRows.length === expectedRows.length && expectedRows.every((expected) => {
+    const candidate = queryRows.find((task) => task.line === expected.line);
+    return candidate
+      && candidate.status === expected.status
+      && candidate.due === (expected.due ?? null)
+      && candidate.recurrence === (expected.recurrence ?? null);
+  });
+  const sortedByDue = queryRows.every((task, index) => index === 0 || !task.due || !queryRows[index - 1].due || task.due >= queryRows[index - 1].due);
+  const actualGroups = queryRows.reduce((groups, task) => {
+    groups[task.status] = (groups[task.status] || 0) + 1;
+    return groups;
+  }, {});
+  const groupsMatch = Object.keys(expectedGroups).length === Object.keys(actualGroups).length
+    && Object.entries(expectedGroups).every(([group, count]) => actualGroups[group] === count);
+  const filterApplied = queryRows.every((task) => task.tagged && !task.checked);
+  const queryMatched = target !== null && queryParsed && queryRowsMatch && sortedByDue && filterApplied;
+  const groupMatched = queryParsed && groupsMatch;
+
+  const create = spec.create_task && typeof spec.create_task === "object" ? spec.create_task : {};
+  const createLine = typeof create.line === "string" ? create.line : "";
+  const insertBefore = typeof create.insert_before === "string" ? create.insert_before : "";
+  const createdLines = [...lines];
+  const markerIndex = insertBefore ? createdLines.findIndex((line) => line.includes(insertBefore)) : -1;
+  if (createLine) {
+    if (markerIndex >= 0) createdLines.splice(markerIndex, 0, createLine);
+    else createdLines.splice(Math.max(0, createdLines.length - 1), 0, createLine);
+  }
+  const createdTask = parseTask(createLine);
+  const createProjected = Boolean(createLine && createdTask && createdTask.tagged && !createdTask.checked && createdLines.includes(createLine));
+
+  const complete = spec.complete_task && typeof spec.complete_task === "object" ? spec.complete_task : {};
+  const targetLine = typeof complete.target_line === "string" ? complete.target_line : "";
+  const expectedCompletedLine = typeof complete.expected_line === "string" ? complete.expected_line : "";
+  const completedLines = [...createdLines];
+  const completionIndex = completedLines.findIndex((line) => line === targetLine);
+  if (completionIndex >= 0) completedLines[completionIndex] = completedLines[completionIndex].replace(/^(\s*[-*+]\s+)\[ \]/, "$1[x]");
+  const completedTask = completionIndex >= 0 ? parseTask(completedLines[completionIndex]) : null;
+  const completeProjected = completionIndex >= 0
+    && completedLines[completionIndex] === expectedCompletedLine
+    && completedTask !== null
+    && completedTask.checked;
+  const output = completedLines.join("\n");
+  const expectedOutput = typeof spec.expected_output === "string" ? spec.expected_output : "";
+  const expectedOutputMatch = output === expectedOutput;
+  const originalNonTaskLines = lines.filter((line) => parseTask(line) === null);
+  const finalNonTaskLines = completedLines.filter((line) => parseTask(line) === null);
+  const unrelatedContentPreserved = JSON.stringify(originalNonTaskLines) === JSON.stringify(finalNonTaskLines)
+    && lines.filter((line) => parseTask(line)?.line !== targetLine).every((line) => completedLines.includes(line));
+  const expectedDates = Array.isArray(spec.expected_dates) ? spec.expected_dates.filter((value) => typeof value === "string") : [];
+  const datesPreserved = expectedDates.length > 0 && expectedDates.every((date) => output.includes(date));
+  const expectedRecurrence = typeof spec.expected_recurrence === "string" ? spec.expected_recurrence : "";
+  const recurrenceRoundTripped = Boolean(expectedRecurrence)
+    && targetLine.includes(expectedRecurrence)
+    && completedLines[completionIndex] === expectedCompletedLine
+    && completedLines[completionIndex].includes(expectedRecurrence);
+  const sourceNoteUpdateSurgical = createProjected && completeProjected && expectedOutputMatch && unrelatedContentPreserved;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = target !== null
+    && queryMatched
+    && groupMatched
+    && createProjected
+    && completeProjected
+    && sourceNoteUpdateSurgical
+    && datesPreserved
+    && recurrenceRoundTripped
+    && sourceRevision === expectedSourceRevision
+    && output !== source
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-task-projection",
+    source_path: sourcePath,
+    query,
+    task_tag: taskTag,
+    source_revision: sourceRevision,
+    expected_source_revision: expectedSourceRevision,
+    query_parsed: queryParsed,
+    query_matched: queryMatched,
+    filter_applied: filterApplied,
+    rows_match: queryRowsMatch,
+    sorted_by_due: sortedByDue,
+    group_by_status: queryLines.includes("group by status"),
+    groups_match: groupsMatch,
+    create_task_projected: createProjected,
+    complete_task_projected: completeProjected,
+    status_markers_preserved: completedTask !== null && completedTask.status === "DONE",
+    dates_preserved: datesPreserved,
+    recurrence_round_tripped: recurrenceRoundTripped,
+    source_note_update_surgical: sourceNoteUpdateSurgical,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    revision_advanced: output !== source,
+    input: source,
+    output,
+    expected_output: expectedOutput,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -2335,6 +2521,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (dataviewWorkflow) actions.dataview_workflow = dataviewWorkflow;
   const taskWorkflow = boundedTaskWorkflow(workflowContext);
   if (taskWorkflow) actions.task_workflow = taskWorkflow;
+  const tasksWorkflow = boundedTasksWorkflow(workflowContext);
+  if (tasksWorkflow) actions.tasks_workflow = tasksWorkflow;
   return actions;
 }
 
@@ -2401,6 +2589,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     smart_connections_workflow: actions.smart_connections_workflow || null,
     dataview_workflow: actions.dataview_workflow || null,
     task_workflow: actions.task_workflow || null,
+    tasks_workflow: actions.tasks_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -2469,6 +2658,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
+    workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -2485,6 +2675,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
+    workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -2538,6 +2729,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     denyCapability,
     deniedObject,
     deniedFunction,
+    boundedProcessObject,
     safeDomObject,
     safeDocumentObject,
     safeCollection,
@@ -2584,6 +2776,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedDataviewWorkflow,
     boundedLinterWorkflow,
     boundedTaskWorkflow,
+    boundedTasksWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

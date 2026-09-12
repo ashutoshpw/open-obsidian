@@ -339,6 +339,14 @@
       "tested_source_tree": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae445ee4ada",
       "status": "passed",
       "summary": "Hosted loaded-workflow, renderer-matrix, quality and unsigned preview desktop-build runs 34698467125, 34698467133, 34698467112 and 34698467114 passed on Ubuntu, macOS and Windows for 99fbfef. All ten artifact traces and all three required synthetic combinations pass with verified dependencies, cleanup and zero direct vault writes; exact raw report and release-manifest hashes are recorded, while reference, same-user OS, human, signing, provider, updater, publication and compatibility gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc04-tasks.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC04"],
+      "tested_source_tree": "d56015faaa043936d4776a07b8fd30a3d7cffcb4d8f18e2400ff40858c7b4330",
+      "status": "partial",
+      "summary": "Fresh Linux bounded loaded-workflow evidence verifies unchanged Tasks 8.4.0 integrity, complete install/restart/update lifecycle, command/settings actions, mediated persistence, cleanup and zero direct vault writes. The PC04 task projection passes query/filter/group, surgical create/complete edits, date/status/recurrence preservation and all phase checks; reference, same-user macOS/Windows, human, signing, updater and compatibility gates remain pending."
     }
   ],
   "source_snapshots": {
@@ -798,7 +806,7 @@
     {
       "id": "PC04", "parent_id": null,
       "source": {"path": ".agents/tasks/2026-09-09/01-init/references/plugin-catalog/index.md", "heading": "PC04 Tasks", "clause": "Query, filter, group, create and complete tasks while retaining date/status/recurrence syntax and correct source-note updates."},
-        "checkpoint": "P3.2", "owner": "compatibility-runtime", "mandatory": true, "acceptance_criteria": "The unchanged obsidian-tasks-plugin release passes task query and source-update fixtures through the revision-aware writer.", "fixture_ids": ["fixture:pc04-tasks"], "reference_versions": [{"kind": "plugin-catalog", "version": "v0.3", "sha256": "bde50e3acae531337ac4ef68414c1d8e1a489c60de27af346ab6b8c682e94c23"}, {"kind": "release-artifact", "version": "pin-required-P0.2", "sha256": null, "verified": false}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json"], "tested_source_tree": "df73ca3d9e89ee577aca8d35ff97e25eae05b6ac6572d23180c9eb4d52b08a3f", "blocker": "The D15 workflow contract records the renderer denial, workflow reproduction, safe alternatives, visible pending entry and synthetic disabled path; unchanged workflow certification, cross-platform and reference validation remain pending.", "gate_class": "implementation", "decision_id": "D14"
+        "checkpoint": "P3.2", "owner": "compatibility-runtime", "mandatory": true, "acceptance_criteria": "The unchanged obsidian-tasks-plugin release passes task query and source-update fixtures through the revision-aware writer.", "fixture_ids": ["fixture:pc04-tasks"], "reference_versions": [{"kind": "plugin-catalog", "version": "v0.3", "sha256": "bde50e3acae531337ac4ef68414c1d8e1a489c60de27af346ab6b8c682e94c23"}, {"kind": "release-artifact", "version": "pin-required-P0.2", "sha256": null, "verified": false}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc04-tasks.json"], "tested_source_tree": "d56015faaa043936d4776a07b8fd30a3d7cffcb4d8f18e2400ff40858c7b4330", "blocker": "The bounded Linux projection and unchanged Tasks 8.4.0 lifecycle/actions pass in the synthetic renderer with zero direct vault writes; reference Tasks behavior, lossless recurring-task writes, same-user macOS/Windows enforcement, human validation, signing, updater and compatibility promotion remain pending.", "gate_class": "implementation", "decision_id": "D14"
     },
     {
       "id": "PC05", "parent_id": null,

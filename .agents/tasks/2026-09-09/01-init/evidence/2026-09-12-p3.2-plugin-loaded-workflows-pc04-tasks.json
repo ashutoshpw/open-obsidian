@@ -1,0 +1,156 @@
+{
+  "evidence_version": 1,
+  "status": "partial",
+  "recorded_at": "2026-09-12T15:50:00Z",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC04"
+  ],
+  "decision_id": "D14",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "d3539db3e41341f8b098b776bb7b21ff3d3c1eb9",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "d3539db3e41341f8b098b776bb7b21ff3d3c1eb9",
+    "sha256": "d56015faaa043936d4776a07b8fd30a3d7cffcb4d8f18e2400ff40858c7b4330",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC04 now has a dated Tasks fixture with a note-backed query, not-done/tag/path filtering, due-date ordering, status grouping, task creation and completion, date/status/recurrence preservation, and an unchanged-note control.",
+      "The renderer worker projects the query and surgical source-note result in memory for install, restart and update; the projection records the source revision and never invokes a vault write.",
+      "The unchanged Tasks bundle receives only inert renderer seams required for lifecycle exercise: bounded process scheduling with process.spawn still denied, synthetic window.flatpickr assignment, app.scope registration, thenable-safe detached components and bounded settings controls."
+    ],
+    "security_disposition": "The unchanged pinned artifact remains inside the context-isolated synthetic renderer. No process spawning, filesystem, network, credential, dynamic-code, host-window or direct-vault capability is granted; compatibility remains pending."
+  },
+  "artifact": {
+    "artifact_id": "PC04",
+    "name": "Tasks",
+    "version": "8.4.0",
+    "main_js_bytes": 935515,
+    "main_js_sha256": "c1e3333bce3fee7c1a06397ea2989cd27e1659cc30795c53ed5a60e7941e48fa",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "loaded",
+    "denied_capabilities": [],
+    "denial": null
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": [
+      "PC03",
+      "PC04",
+      "PC07",
+      "PC08",
+      "PC17",
+      "PC19",
+      "PC20",
+      "PC21",
+      "PC22",
+      "PC23",
+      "PC24",
+      "PC25"
+    ],
+    "required_phases": ["install", "restart", "update"],
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "integrity_checked": true,
+    "pc04": {
+      "bounded_lifecycle": "complete",
+      "renderer_status": "loaded",
+      "action_status": "passed",
+      "persistence": "preserved",
+      "persistence_source": "plugin-data-save",
+      "direct_vault_writes": 0,
+      "workflow_projection": {
+        "status": "passed",
+        "mutation_scope": "bounded-in-memory-task-projection",
+        "source_path": "Notes/Tasks.md",
+        "source_revision": "4eb055c7",
+        "query_parsed": true,
+        "query_matched": true,
+        "filter_applied": true,
+        "rows_match": true,
+        "sorted_by_due": true,
+        "group_by_status": true,
+        "groups_match": true,
+        "create_task_projected": true,
+        "complete_task_projected": true,
+        "status_markers_preserved": true,
+        "dates_preserved": true,
+        "recurrence_round_tripped": true,
+        "source_note_update_surgical": true,
+        "unrelated_content_preserved": true,
+        "revision_advanced": true,
+        "direct_vault_writes": 0,
+        "phase_projections_passed": true,
+        "all_phases_passed": true
+      },
+      "checks": {
+        "present": true,
+        "bounded_read_only": true,
+        "query_parsed": true,
+        "query_matched": true,
+        "filter_applied": true,
+        "rows_match": true,
+        "sorted_by_due": true,
+        "group_by_status": true,
+        "groups_match": true,
+        "create_task_projected": true,
+        "complete_task_projected": true,
+        "status_markers_preserved": true,
+        "dates_preserved": true,
+        "recurrence_round_tripped": true,
+        "source_note_update_surgical": true,
+        "unrelated_content_preserved": true,
+        "revision_advanced": true,
+        "direct_vault_writes_zero": true,
+        "status_passed": true
+      }
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_required_combinations_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian Tasks query/filter/group/create/complete behavior",
+    "lossless source-note writer parity and recurring-task next-copy behavior",
+    "same-user macOS/Windows enforcement",
+    "human accessibility/input validation",
+    "signed release and updater installation/rollback",
+    "compatibility promotion"
+  ],
+  "limitation": "The unchanged Tasks 8.4.0 bundle and bounded task projection pass only inside the hidden context-isolated Electron renderer. Query and source-note results are synthetic in-memory evidence; no stock Obsidian, reference parity, cross-platform same-user enforcement, human validation, signed release, updater or compatibility certification is claimed."
+}

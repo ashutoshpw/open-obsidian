@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC03", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -182,6 +182,46 @@ test("PC03 fixture and bounded projection cover DQL fields, links, tasks and saf
   expect(loadedWorkflowAudit).toContain("function dataviewWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("dataview_workflow_checks");
   expect(loadedWorkflowAudit).toContain("rows_match");
+});
+
+test("PC04 fixture and bounded projection cover task query, grouping and surgical edits", () => {
+  const pc04 = fixture.scenarios.PC04 as typeof fixture.scenarios.PC04 & {
+    tasks_workflow?: {
+      query: string;
+      expected_query_rows: Array<Record<string, unknown>>;
+      expected_group_counts: Record<string, number>;
+      create_task: {line: string; insert_before: string};
+      complete_task: {target_line: string; expected_line: string};
+      expected_dates: string[];
+      expected_recurrence: string;
+      expected_output: string;
+    };
+  };
+  expect(pc04.files).toContainEqual(expect.objectContaining({path: "Notes/Tasks.md", content: expect.stringContaining("🔁 every week when done") }));
+  expect(pc04.tasks_workflow).toMatchObject({
+    query: expect.stringContaining("group by status"),
+    expected_query_rows: [
+      {line: "- [ ] Prepare release 📅 2026-09-20 🔁 every week when done #task", status: "TODO", due: "2026-09-20", recurrence: "every week when done"},
+      {line: "- [ ] Review compatibility ⏫ 📅 2026-09-22 #task", status: "TODO", due: "2026-09-22", recurrence: null},
+    ],
+    expected_group_counts: {TODO: 2},
+    create_task: {line: "- [ ] Draft changelog 📅 2026-09-24 #task", insert_before: "Plain note remains untouched"},
+    complete_task: {
+      target_line: "- [ ] Prepare release 📅 2026-09-20 🔁 every week when done #task",
+      expected_line: "- [x] Prepare release 📅 2026-09-20 🔁 every week when done #task",
+    },
+    expected_recurrence: "every week when done",
+  });
+  expect(pc04.tasks_workflow?.expected_dates).toEqual(["2026-09-20", "2026-09-22", "2026-09-01", "2026-09-24"]);
+  expect(pc04.tasks_workflow?.expected_output).toContain("- [x] Prepare release");
+  expect(pc04.tasks_workflow?.expected_output).toContain("- [ ] Draft changelog");
+  expect(rendererWorker).toContain("function boundedTasksWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-task-projection"');
+  expect(rendererWorker).toContain("recurrence_round_tripped");
+  expect(rendererWorker).toContain("source_note_update_surgical");
+  expect(loadedWorkflowAudit).toContain("function tasksWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("tasks_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("create_task_projected");
 });
 
 test("PC19 fixture covers note-backed tasks plus Bases view mappings", () => {
