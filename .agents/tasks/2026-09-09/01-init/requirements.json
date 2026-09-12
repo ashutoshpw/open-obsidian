@@ -363,6 +363,14 @@
       "tested_source_tree": "57def9313f7ff71b750f9b4c61c3bf2f85b5f88c314be4a393b7fab0fd5a7828",
       "status": "partial",
       "summary": "Fresh Linux bounded loaded-workflow evidence verifies unchanged Calendar 1.5.10 integrity, complete install/restart/update lifecycle and mediated persistence. The PC07 projection passes existing-date navigation, missing-date daily creation, configured date formats/folders/templates, weekly-note integration, deterministic paths and zero direct vault writes; reference, same-user macOS/Windows, human, signing, updater and compatibility gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc07-calendar-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07"],
+      "tested_source_tree": "57def9313f7ff71b750f9b4c61c3bf2f85b5f88c314be4a393b7fab0fd5a7828",
+      "status": "partial",
+      "summary": "Hosted quality 34705800452, loaded-workflow 34705800388, renderer-matrix 34705800353 and unsigned preview desktop-build 34705800345 succeeded on Ubuntu, macOS and Windows for de7f64a. Hosted Calendar 1.5.10 reports reproduce integrity, complete bounded install/restart/update lifecycle and persistence, all daily/weekly path/date-format/folder/template/weekly-integration projections and zero direct vault writes; exact report, artifact and release-manifest hashes are recorded, while reference, same-user OS, human, signing, publication, updater and compatibility gates remain pending."
     }
   ],
   "source_snapshots": {
