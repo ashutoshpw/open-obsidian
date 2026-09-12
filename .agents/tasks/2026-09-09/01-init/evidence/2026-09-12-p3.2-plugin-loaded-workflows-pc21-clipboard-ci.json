@@ -1,0 +1,79 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc21-clipboard-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC21",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T08:44:04Z",
+  "source_commit": "34efcc8a74bb9c301f65fc821547937f87ab6571",
+  "source_tree": {
+    "local_sha256": "1c0b269c10be26b606e60af7a51b9d13726182176474853f60b8ea19ef99016e",
+    "local_paths": 238,
+    "hosted_report_paths": 239,
+    "hosted_report_sha256": {
+      "Linux": "1cbf83b1f72ae2b13cc0a00612d9425279b46a410d74f458af0cd418af7668f3",
+      "macOS": "f78df0c324974891586c2e6a9fbf81db376ca7eaf4897e71828ab52dc00f31f0",
+      "Windows": "1cbab3cf9bdbb50f2cb7c5228c3ee5863e862a26ef52ab4c7bd699909c4c08be"
+    },
+    "report_note": "Each hosted workspace contains one transient redirected-output path beyond the clean local source-of-record digest; the loaded workflow JSON reports are retained as platform evidence, not as the canonical source digest."
+  },
+  "runs": {
+    "quality": {
+      "run_id": 34683946803,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {"ubuntu-latest": "success", "macos-latest": "success", "windows-latest": "success"},
+      "scope": "repository quality, contracts, tests, typecheck, compile, packaged Electron/vault checks, synthetic lifecycle, Knip and report-only Fallow health"
+    },
+    "desktop_build": {
+      "run_id": 34683946818,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {"ubuntu-latest": "success", "macos-latest": "success", "windows-latest": "success"},
+      "signing": "skipped",
+      "release_gate": "preview; unsigned-preview",
+      "packaged_runtime": "passed; 6 checks",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifacts": {
+        "Linux": {"name": "openobsidian-Linux-preview-34efcc8a74bb9c301f65fc821547937f87ab6571.zip", "artifact_id": 10294388662, "sha256": "9004fcb04f8ea912fd80be16ace99068b9d29a44d3b42943283f11d81fba02c3"},
+        "macOS": {"name": "openobsidian-macOS-preview-34efcc8a74bb9c301f65fc821547937f87ab6571.zip", "artifact_id": 10294628253, "sha256": "ec369f078b0fb892df16327c8b52fc935296908ab2a80abb6b141e30e2032911"},
+        "Windows": {"name": "openobsidian-Windows-preview-34efcc8a74bb9c301f65fc821547937f87ab6571.zip", "artifact_id": 10294209243, "sha256": "d37e9d94a3fe159c9c17cb2b55c4cf68f420b358858ad674ba4dbaf3068f2c00"}
+      }
+    },
+    "loaded_workflows": {
+      "run_id": 34683946816,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {"ubuntu-latest": "success", "macos-latest": "success", "windows-latest": "success"},
+      "reports": {
+        "Linux": {"status": "passed", "pc21_action_status": "passed", "pc21_clipboard_external": false, "combination_action_status": "passed", "all_bounded_traces_complete": true, "vault_writes": 0},
+        "macOS": {"status": "passed", "pc21_action_status": "passed", "pc21_clipboard_external": false, "combination_action_status": "passed", "all_bounded_traces_complete": true, "vault_writes": 0},
+        "Windows": {"status": "passed", "pc21_action_status": "passed", "pc21_clipboard_external": false, "combination_action_status": "passed", "all_bounded_traces_complete": true, "vault_writes": 0}
+      },
+      "scope": "unchanged pinned main.js bytes in the context-isolated synthetic Electron renderer; no stock Obsidian, host/OS clipboard or human certification"
+    }
+  },
+  "security_disposition": "The workflow-only clipboard seam is renderer-local, finite and observable with external=false. Direct vault writes, host DOM, filesystem/network/process/credential access and compatibility promotion remain denied or pending.",
+  "external_pending": [
+    "reference Obsidian Homepage copy-debug-info and OS clipboard comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "result": "Quality, preview desktop-build and loaded-workflow runs all succeeded on Ubuntu, macOS and Windows for 34efcc8. Hosted reports reproduce all eight bounded artifact actions, renderer-local clipboard telemetry, mediated persistence, cleanup and zero vault writes; artifacts remain unsigned previews and no plugin or compatibility row is promoted."
+}
