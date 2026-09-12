@@ -1426,6 +1426,14 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the CI evidence to the requirements and state metadata. Reference Obsidian stale-entry/rename/delete behavior, same-user platform enforcement, human validation, required combinations, signing, publication and updater validation remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - P3.2 and the overall goal remain active. No plugin or compatibility row was promoted; the bounded renderer evidence remains synthetic and does not certify stock Obsidian or reference parity.
 
+## 2026-09-12T10:38:00Z — P3.2 hosted PC25 Linter reconciliation
+
+- Reconciled pushed head `4dcd4b137d79e8fc0eb80e0ab73adb03618c1384` with successful quality run `34688613788`, preview desktop-build run `34688613783` and loaded-workflow run `34688613769`; Ubuntu, macOS and Windows jobs passed across all three workflows.
+- Hosted loaded-workflow reports reproduce PC25 Linter 1.32.0 integrity and the unchanged-artifact `D15 denied dom.privileged at window.navigator` on all three platforms. The bounded PC25 projection passes install/restart/update checks for first-open no-op, explicit `lint-file` targeting, deterministic YAML key ordering and Markdown final-newline/heading output, configured lint-on-save parity, target-only impact and zero direct vault writes.
+- Desktop packaging passed release-gate, packaged-runtime, dependency-attribution and artifact-upload checks; production signing remains skipped and the recorded platform artifacts are unsigned previews. Exact loaded-report, loaded-artifact, desktop-artifact and release-manifest hashes are recorded in `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc25-linter-ci.json`.
+- Hosted source workspaces contain one transient redirected-output path (239 paths) versus the clean local 238-path source-of-record digest; macOS/Windows report downloads retain the Electron download line before JSON. These remain report-format limitations, not promotion evidence. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Added and linked the hosted CI evidence to requirements and state metadata. PC25 and P3.2 remain pending: reference Obsidian Linter behavior, same-user platform enforcement, human validation, required combinations, signing, publication, updater, provider and compatibility promotion remain external-pending; no plugin or compatibility row was promoted.
+
 ## 2026-09-12T10:27:00Z — P3.2 bounded PC25 Linter workflow
 
 - Added PC25 Linter 1.32.0 to the loaded-workflow fixture with an explicit `lint-file` target, `lintOnSave: true`, disabled lint-on-file-change behavior, YAML key priority and deterministic Markdown rules over `Notes/Lint.md`; `Notes/Untouched.md` remains the unchanged control note.

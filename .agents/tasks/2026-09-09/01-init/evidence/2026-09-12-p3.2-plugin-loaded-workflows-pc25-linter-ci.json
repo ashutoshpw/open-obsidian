@@ -1,0 +1,241 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc25-linter-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC25"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T10:38:00Z",
+  "source_commit": "4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+  "status": "partial",
+  "source_tree": {
+    "local_sha256": "720ca228d263a34a25eb203cd546311cbf702952f7122e9ea75dee40cde0ba90",
+    "local_paths": 238,
+    "hosted_report_paths": 239,
+    "hosted_report_source_tree_sha256": {
+      "Linux": "3e3c0957a4638d949be2842a94be4f3d3d384dc6204eb7aabe8dc398f1700026",
+      "macOS": "ee50226f0336326a6ba619235b4d6bd3e97fda12f4ce17fbbc2862912794bece",
+      "Windows": "b9a18e6504061e11dd24a6d180c6e356b64324e91c490a14307da9975e368704"
+    },
+    "definition": "Clean local digest is the source of record; each hosted audit workspace contains one transient redirected-output path (239 paths versus 238 locally)."
+  },
+  "runs": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34688613788,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34688613788",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103539874685, "conclusion": "success"},
+        "macos-latest": {"job_id": 103539874597, "conclusion": "success"},
+        "windows-latest": {"job_id": 103539874754, "conclusion": "success"}
+      },
+      "tests": {
+        "Ubuntu": "212 tests across 61 files, 0 failures",
+        "macOS": "212 tests across 61 files, 0 failures",
+        "Windows": "212 tests across 61 files, 0 failures"
+      },
+      "checks": "Repository contracts, architecture, version baseline, differential fixture, core workflows, distribution/update metadata, accessibility, typecheck, tests, quality scorecard, Electron compile/vault round trip, synthetic lifecycle, Knip and report-only Fallow health passed on all three jobs; push-triggered changed-code Fallow review remains conditionally limited."
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34688613783,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34688613783",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103539874705, "conclusion": "success"},
+        "macos-latest": {"job_id": 103539874608, "conclusion": "success"},
+        "windows-latest": {"job_id": 103539874721, "conclusion": "success"}
+      },
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "release_gate": "preview; unsigned-preview",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifacts": {
+        "Linux": {
+          "name": "openobsidian-Linux-preview-4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+          "artifact_id": 10296019923,
+          "archive_bytes": 125946548,
+          "archive_sha256": "2c8c76772978cf0b1a526a48296f152adb89ce4dcaaed6e9f7396f2a8c81a117",
+          "release_manifest_sha256": "2b0653228e27b469f5d9c31a9d9e00f9f7b4fa940b5ddfc82c4ab36d8800589d"
+        },
+        "macOS": {
+          "name": "openobsidian-macOS-preview-4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+          "artifact_id": 10296641134,
+          "archive_bytes": 397395487,
+          "archive_sha256": "af573c9fb7a77b0aaacea3f226f95804a757c8c0f4c49c41310feba8b1cb46c5",
+          "release_manifest_sha256": "7ce5286e52d09aae21838d3def346f7253fcc618935e7e97da701ae62a108625"
+        },
+        "Windows": {
+          "name": "openobsidian-Windows-preview-4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+          "artifact_id": 10296166975,
+          "archive_bytes": 163005824,
+          "archive_sha256": "de60807a8fec05fedec1421b6272e3557ce3c3a40deb9d59335dda7690d82b14",
+          "release_manifest_sha256": "20cfc1317af44b81f56cbb537680122dec0f022132533af39528c7542547c84d"
+        }
+      }
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34688613769,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34688613769",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103539874722, "conclusion": "success"},
+        "macos-latest": {"job_id": 103539874609, "conclusion": "success"},
+        "windows-latest": {"job_id": 103539874730, "conclusion": "success"}
+      },
+      "artifacts": {
+        "Linux": {
+          "name": "loaded-plugin-workflows-Linux-4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+          "artifact_id": 10296064649,
+          "artifact_archive_bytes": 13386,
+          "artifact_archive_sha256": "544dfaa72dd6faa722d9a0cbb46ff620da623a56cfd73d87009c594799231730",
+          "report_name": "loaded-plugin-workflows-Linux.json",
+          "report_bytes": 268342,
+          "report_sha256": "11a65c189c000999f9eb504ae41b5a61e6d272d1a4379174b855077886ef54c7",
+          "report_parse": "direct JSON",
+          "status": "partial"
+        },
+        "macOS": {
+          "name": "loaded-plugin-workflows-macOS-4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+          "artifact_id": 10296376532,
+          "artifact_archive_bytes": 13410,
+          "artifact_archive_sha256": "37b6b1304cbce0c4f1b21a7bb84ea2539e24e9a33f6a894839e8ed848b7474b0",
+          "report_name": "loaded-plugin-workflows-macOS.json",
+          "report_bytes": 268376,
+          "report_sha256": "947d414c1aff7c65d26bf5f985840f484c87bdd003eed7956f2bae86978956e6",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "partial"
+        },
+        "Windows": {
+          "name": "loaded-plugin-workflows-Windows-4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
+          "artifact_id": 10296381500,
+          "artifact_archive_bytes": 13409,
+          "artifact_archive_sha256": "73fcf3c9d032702b8618dd2ca8da91cac8e9e34e6bfe42565fbfea06f51af74c",
+          "report_name": "loaded-plugin-workflows-Windows.json",
+          "report_bytes": 268373,
+          "report_sha256": "90765492854122f228f312b3fd14bb754f6547d7d6597c086a4d652693cd9e8c",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "partial"
+        }
+      }
+    }
+  },
+  "loaded_workflow_reconciliation": {
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked_on_all_platforms": true,
+    "pc25": {
+      "name": "Linter",
+      "version": "1.32.0",
+      "main_js_bytes": 902746,
+      "main_js_sha256": "1b4f44bf929024cf78dd5e60a655f7cffdf7ff49f8f55695a01591f8f69e3416",
+      "integrity": "passed",
+      "renderer_status": "denied on all three hosted platforms",
+      "denied_capabilities": ["dom.privileged"],
+      "denied_paths": ["window.navigator"],
+      "denial": "D15 denied dom.privileged at window.navigator",
+      "bounded_lifecycle": "partial because unchanged execution is denied",
+      "workflow_projection": {
+        "status": "passed on Linux, macOS and Windows",
+        "mutation_scope": "bounded-in-memory-projection",
+        "target_path": "Notes/Lint.md",
+        "expected_unchanged_paths": ["Notes/Untouched.md"],
+        "enabled_rules": ["yaml-key-sort", "headings-start-line", "line-break-at-document-end"],
+        "yaml_key_priority_order": ["title", "tags"],
+        "first_open_mutation_count": 0,
+        "first_open_noop": true,
+        "explicit_command": "lint-file",
+        "explicit_command_configured": true,
+        "explicit_command_mutation_count": 1,
+        "explicit_output_match": true,
+        "configured_yaml_output_match": true,
+        "configured_markdown_output_match": true,
+        "lint_on_save": true,
+        "lint_on_save_matches": true,
+        "only_expected_target_affected": true,
+        "direct_vault_writes": 0,
+        "phases": ["install", "restart", "update"],
+        "all_phases_passed": true
+      }
+    },
+    "platform_reports": {
+      "Linux": {
+        "source_tree_sha256": "3e3c0957a4638d949be2842a94be4f3d3d384dc6204eb7aabe8dc398f1700026",
+        "report_sha256": "11a65c189c000999f9eb504ae41b5a61e6d272d1a4379174b855077886ef54c7",
+        "pc25_renderer_status": "denied",
+        "pc25_workflow_status": "passed",
+        "pc25_direct_vault_writes": 0,
+        "pc25_linter_checks": "all passed",
+        "overall_report_status": "partial",
+        "no_plugin_promoted": true
+      },
+      "macOS": {
+        "source_tree_sha256": "ee50226f0336326a6ba619235b4d6bd3e97fda12f4ce17fbbc2862912794bece",
+        "report_sha256": "947d414c1aff7c65d26bf5f985840f484c87bdd003eed7956f2bae86978956e6",
+        "pc25_renderer_status": "denied",
+        "pc25_workflow_status": "passed",
+        "pc25_direct_vault_writes": 0,
+        "pc25_linter_checks": "all passed",
+        "overall_report_status": "partial",
+        "no_plugin_promoted": true
+      },
+      "Windows": {
+        "source_tree_sha256": "b9a18e6504061e11dd24a6d180c6e356b64324e91c490a14307da9975e368704",
+        "report_sha256": "90765492854122f228f312b3fd14bb754f6547d7d6597c086a4d652693cd9e8c",
+        "pc25_renderer_status": "denied",
+        "pc25_workflow_status": "passed",
+        "pc25_direct_vault_writes": 0,
+        "pc25_linter_checks": "all passed",
+        "overall_report_status": "partial",
+        "no_plugin_promoted": true
+      }
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "lifecycle_trace": "complete on all three hosted platforms",
+      "status": "partial overall audit remains due bounded action/persistence gaps",
+      "vault_writes": 0
+    },
+    "overall": {
+      "status": "partial",
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "security_disposition": "Unchanged pinned Linter bytes run only inside the context-isolated synthetic Electron renderer and are D15-denied at window.navigator. The YAML/Markdown output, explicit lint-file targeting, lint-on-save parity and first-open checks are bounded projections over mediated fixture notes; direct vault writes, host DOM, filesystem/network/process/credential access and compatibility promotion remain denied or pending.",
+  "external_pending": [
+    "reference Obsidian Linter first-open, explicit command, lint-on-save and configured-output comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release, publication and updater installation/rollback",
+    "compatibility promotion and release-track certification"
+  ],
+  "limitations": [
+    "Hosted report source digests contain one transient redirected-output path beyond the clean local 238-path source-of-record digest.",
+    "macOS and Windows report files retain the leading Electron download line before JSON; raw report hashes cover the downloaded files and parsing stripped that line only.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified.",
+    "The hosted desktop artifacts are unsigned previews; production signing and updater installation/rollback were not exercised."
+  ],
+  "result": "Quality, unsigned preview desktop-build and loaded-workflow runs all succeeded on Ubuntu, macOS and Windows for 4dcd4b1. Hosted PC25 reports reproduce the D15 denial and the bounded Linter projection passes deterministic YAML/Markdown output, first-open no-op, explicit lint-file targeting, lint-on-save parity, target-only impact and zero direct vault writes across install/restart/update; PC25, P3.2 and compatibility promotion remain pending."
+}
