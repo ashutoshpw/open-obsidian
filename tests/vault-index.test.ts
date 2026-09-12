@@ -75,3 +75,20 @@ test("index search returns deterministic ranked results and updates after a rebu
     rmSync(appData, {recursive: true, force: true});
   }
 });
+
+test("vault index resolves represented heading and block subpaths from source bytes", () => {
+  const root = mkdtempSync(join(tmpdir(), "openobsidian-subpaths-vault-"));
+  const appData = mkdtempSync(join(tmpdir(), "openobsidian-subpaths-app-"));
+  try {
+    writeFileSync(join(root, "Index.md"), "[[Target#Overview]] [[Target#^intro]] [[Target#Missing]] [[Target#Duplicate]]\n");
+    writeFileSync(join(root, "Target.md"), "# Overview\n\nOpening paragraph ^intro\n\n## Duplicate\n## Duplicate\n");
+    const index = buildVaultIndex(new VaultStore(root, appData));
+    const links = index.files.find((file) => file.relativePath === "Index.md")?.links ?? [];
+    expect(links.map((link) => link.resolution.status)).toEqual(["resolved", "resolved", "unresolved", "ambiguous"]);
+    expect(links[0]?.resolution.target).toBe("Target.md");
+    expect(links[2]?.resolution.candidates).toEqual(["Target.md"]);
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+    rmSync(appData, {recursive: true, force: true});
+  }
+});

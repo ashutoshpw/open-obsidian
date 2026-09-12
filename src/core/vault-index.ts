@@ -69,10 +69,10 @@ function saveVaultIdentities(store: VaultStore, identities: VaultIdentity[]): vo
   writeFileSync(identityPath(store), JSON.stringify({schema_version: 1, vaultRoot: store.root, identities}, null, 2));
 }
 
-function indexEntry(store: VaultStore, entry: VaultEntry, identity: VaultIdentity, filePaths: string[]): IndexedFile {
+function indexEntry(store: VaultStore, entry: VaultEntry, identity: VaultIdentity, filePaths: string[], fileContents: ReadonlyMap<string, string>): IndexedFile {
   if (entry.kind === "symlink" || !entry.relativePath.toLowerCase().endsWith(".md")) return {...entry, identity: identity.id, links: []};
-  const searchText = readFileSync(filePath(store, entry.relativePath), "utf8");
-  const links = extractLinks(searchText).map((link) => ({...link, resolution: resolveLink(link, filePaths, entry.relativePath)}));
+  const searchText = fileContents.get(entry.relativePath) ?? readFileSync(filePath(store, entry.relativePath), "utf8");
+  const links = extractLinks(searchText).map((link) => ({...link, resolution: resolveLink(link, filePaths, entry.relativePath, fileContents)}));
   return {...entry, identity: identity.id, links, searchText};
 }
 
@@ -80,7 +80,8 @@ export function buildVaultIndex(store: VaultStore): VaultIndex {
   const snapshot = snapshotVault(store.root);
   const identities = assignIdentities(store, snapshot.entries);
   const filePaths = snapshot.entries.filter((entry) => entry.kind === "file").map((entry) => entry.relativePath);
-  const files = snapshot.entries.map((entry, index) => indexEntry(store, entry, identities[index]!, filePaths));
+  const fileContents = new Map(snapshot.entries.filter((entry) => entry.kind === "file" && entry.relativePath.toLowerCase().endsWith(".md")).map((entry) => [entry.relativePath, readFileSync(filePath(store, entry.relativePath), "utf8")]));
+  const files = snapshot.entries.map((entry, index) => indexEntry(store, entry, identities[index]!, filePaths, fileContents));
   return {schema_version: 1, vaultRoot: store.root, builtAt: new Date().toISOString(), sourceSnapshot: snapshot.sha256, files};
 }
 
