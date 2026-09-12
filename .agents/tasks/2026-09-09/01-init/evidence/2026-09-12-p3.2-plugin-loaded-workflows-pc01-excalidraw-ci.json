@@ -1,0 +1,260 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc01-excalidraw-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01"],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T17:22:00Z",
+  "source_commit": "222bbf6fb5dd2e18a0dba40de156224953c245ec",
+  "status": "partial",
+  "source_tree": {
+    "local_sha256": "b1b9ed8e60b32abb386324f514462ee0b3a58c899ba191a693507534b731d8fa",
+    "local_paths": 243,
+    "hosted_report_paths": 244,
+    "hosted_source_tree_sha256": {
+      "Linux": "74ce0f7eaf44eac2c25d6eab08ded71bf442c8db2562057f5271a7e60a2dbbd2",
+      "macOS": "dcb494a4d34f7328bcb0d2ae51e056570a0cf9206b47153d710ecdd2336e3b2d",
+      "Windows": "0aa0b3df95ef092cbb9695d526327e9a92be967bce368b2f8a0d864a56f70e46"
+    },
+    "definition": "The clean local digest is the source of record; each hosted audit workspace contains one transient redirected-output path beyond the local 243-path digest."
+  },
+  "runs": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34707353072,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34707353072",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103589701075, "conclusion": "success", "tests": "221 tests across 62 files"},
+        "macos-latest": {"job_id": 103589700987, "conclusion": "success", "tests": "221 tests across 62 files"},
+        "windows-latest": {"job_id": 103589701035, "conclusion": "success", "tests": "221 tests across 62 files"}
+      },
+      "scope": "Repository contracts, typecheck, tests, quality scorecard, Electron/vault checks, synthetic lifecycle, catalog-combination audit, Knip and report-only Fallow health passed; no stock Obsidian or reference-plugin certification is implied."
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34707353077,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34707353077",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103589701045, "conclusion": "success"},
+        "macos-latest": {"job_id": 103589700952, "conclusion": "success"},
+        "windows-latest": {"job_id": 103589701037, "conclusion": "success"}
+      },
+      "artifacts": {
+        "Linux": {
+          "name": "loaded-plugin-workflows-Linux-222bbf6fb5dd2e18a0dba40de156224953c245ec",
+          "artifact_id": 10301739771,
+          "artifact_archive_bytes": 104416,
+          "artifact_archive_sha256": "e6f66369b9f1bf608af2d7d9e36f62fda5b76d014b4526ea20d8cf58014d58f8",
+          "report_name": "loaded-plugin-workflows-Linux.json",
+          "report_bytes": 2023661,
+          "report_sha256": "dccc106fae06ed0e7e62b086423e24e70cd4e087edbe13e4faaa05b1f99a1e20",
+          "report_parse": "direct JSON",
+          "status": "partial"
+        },
+        "macOS": {
+          "name": "loaded-plugin-workflows-macOS-222bbf6fb5dd2e18a0dba40de156224953c245ec",
+          "artifact_id": 10302710494,
+          "artifact_archive_bytes": 104421,
+          "artifact_archive_sha256": "6ea5f45b946d4c237c6d9395f1314a5d9678e66b8ef4213c93b71fecb5597d8e",
+          "report_name": "loaded-plugin-workflows-macOS.json",
+          "report_bytes": 2023695,
+          "report_sha256": "9215825d3c5f7552a66798422abd7de81d733908d7df0cb0775a3bdb9a9d1d8a",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "partial"
+        },
+        "Windows": {
+          "name": "loaded-plugin-workflows-Windows-222bbf6fb5dd2e18a0dba40de156224953c245ec",
+          "artifact_id": 10302311794,
+          "artifact_archive_bytes": 104435,
+          "artifact_archive_sha256": "1c858391eb14d8af2d6cfc96e4157c4e85c447c8d8818c81d0c924d3ca1ecfa",
+          "report_name": "loaded-plugin-workflows-Windows.json",
+          "report_bytes": 2023692,
+          "report_sha256": "970953f6a0349b4fee201978d56aef2e90ef6acdd7996f923f863c0f7827c534",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "partial"
+        }
+      }
+    },
+    "renderer_matrix": {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 34707353061,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34707353061",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103589700986, "conclusion": "success"},
+        "macos-latest": {"job_id": 103589700823, "conclusion": "success"},
+        "windows-latest": {"job_id": 103589701009, "conclusion": "success"}
+      },
+      "reports": {
+        "Linux": {
+          "artifact_id": 10302101951,
+          "artifact_archive_bytes": 3221,
+          "artifact_archive_sha256": "a8537e7897c45b820a3f5485e9fad22084880cbc3ed99a0541eeb60997c63ceb",
+          "report_bytes": 32301,
+          "report_sha256": "5e45b3adc8dd720e79750beb2e331ac83e4b4304ba037b8f9ae565e8c23e7dca",
+          "rows": 28,
+          "renderer_loaded": 4,
+          "renderer_denied": 23,
+          "not_applicable": 1,
+          "ordinary_failures": 0,
+          "pc01_renderer_status": "renderer-denied",
+          "pc01_integrity": "passed",
+          "pc01_denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+          "pc01_renderer_denied_capabilities": ["dom.privileged"]
+        },
+        "macOS": {
+          "artifact_id": 10301739796,
+          "artifact_archive_bytes": 3238,
+          "artifact_archive_sha256": "3eb5d9a13829148601699c39a9db1567282d43661fe28af7f4526d9bf4a638b3",
+          "report_bytes": 32332,
+          "report_sha256": "c924b998e5015a55c614ddca1734f310c117a95d85c8c7a6f63312b1fbf95ede",
+          "rows": 28,
+          "renderer_loaded": 4,
+          "renderer_denied": 23,
+          "not_applicable": 1,
+          "ordinary_failures": 0,
+          "pc01_renderer_status": "renderer-denied",
+          "pc01_integrity": "passed",
+          "pc01_denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+          "pc01_renderer_denied_capabilities": ["dom.privileged"]
+        },
+        "Windows": {
+          "artifact_id": 10302431529,
+          "artifact_archive_bytes": 3242,
+          "artifact_archive_sha256": "0e436b3f0cb23903e4e0c4252e0b3b191f0a16902933a8bd530db984e69ec6e6",
+          "report_bytes": 32332,
+          "report_sha256": "c924b998e5015a55c614ddca1734f310c117a95d85c8c7a6f63312b1fbf95ede",
+          "rows": 28,
+          "renderer_loaded": 4,
+          "renderer_denied": 23,
+          "not_applicable": 1,
+          "ordinary_failures": 0,
+          "pc01_renderer_status": "renderer-denied",
+          "pc01_integrity": "passed",
+          "pc01_denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+          "pc01_renderer_denied_capabilities": ["dom.privileged"]
+        }
+      }
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34707353051,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34707353051",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103589701225, "conclusion": "success"},
+        "macos-latest": {"job_id": 103589701183, "conclusion": "success"},
+        "windows-latest": {"job_id": 103589701130, "conclusion": "success"}
+      },
+      "release_gate": "preview; unsigned-preview",
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifacts": {
+        "Linux": {
+          "name": "openobsidian-Linux-preview-222bbf6fb5dd2e18a0dba40de156224953c245ec",
+          "artifact_id": 10302656202,
+          "archive_bytes": 125946548,
+          "archive_sha256": "71c2881a29562fc473502af480733d9456e2ff83564f1aeebc481846461c706c",
+          "release_manifest_bytes": 12292,
+          "release_manifest_sha256": "f6ed600560f66212fcd4bdd8d2eab46f50d9fd83fff489f58f2c52587e19a3f5",
+          "manifest_files": 73
+        },
+        "macOS": {
+          "name": "openobsidian-macOS-preview-222bbf6fb5dd2e18a0dba40de156224953c245ec",
+          "artifact_id": 10302845219,
+          "archive_bytes": 397395487,
+          "archive_sha256": "8222053e1d58029440549bd88b18f9147cb67a62899caeb85fbae3b28b661507",
+          "release_manifest_bytes": 65732,
+          "release_manifest_sha256": "08a901518df793c4e040e8516768a234845d60ed256cb8d62156f114bfd47403",
+          "manifest_files": 260
+        },
+        "Windows": {
+          "name": "openobsidian-Windows-preview-222bbf6fb5dd2e18a0dba40de156224953c245ec",
+          "artifact_id": 10301279637,
+          "archive_bytes": 163005824,
+          "archive_sha256": "01ba05429b2f237b714c2ca7e5c0c9503e80f9c0b24e873f407e1221f18a36e7",
+          "release_manifest_bytes": 12305,
+          "release_manifest_sha256": "6c8174ea6967b0fcb69621812026e221498975a0c3ff950afb0eab0a1db65097",
+          "manifest_files": 74
+        }
+      }
+    }
+  },
+  "loaded_workflow_reconciliation": {
+    "target_ids": ["PC01", "PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked_on_all_platforms": true,
+    "pc01": {
+      "name": "Excalidraw",
+      "version": "2.27.3",
+      "main_js_bytes": 4884569,
+      "main_js_sha256": "8275e85d0f6314654a3d5ad86125d2e1b0018b4ffd60eddab2bbc8eefa0e13c1",
+      "integrity": "passed",
+      "renderer_status": "denied on all three hosted platforms",
+      "denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+      "renderer_denied_capabilities": ["dom.privileged"],
+      "denied_paths": ["window.unpackBase64Deflate"],
+      "denial": "D15 denied dom.privileged at window.unpackBase64Deflate",
+      "bounded_lifecycle": "not-supported because unchanged execution is D15-denied",
+      "workflow_projection": {
+        "status": "passed on Ubuntu, macOS and Windows",
+        "mutation_scope": "bounded-in-memory-excalidraw-projection",
+        "source_path": "Drawings/Scene.excalidraw",
+        "source_bytes": 281,
+        "source_preserved": true,
+        "scene_parsed": true,
+        "scene_id_match": true,
+        "element_count_match": true,
+        "edit_projected": true,
+        "linked_asset_paths": ["Assets/reference.png"],
+        "linked_assets_resolved": true,
+        "note_link_path": "Notes/Context.md",
+        "note_link_resolved": true,
+        "embed_path": "Notes/Embed.md",
+        "embed_resolved": true,
+        "export_path": "Exports/Scene.svg",
+        "export_mime": "image/svg+xml",
+        "export_projected": true,
+        "reopen_path": "Drawings/Scene.excalidraw",
+        "reopen_preserved": true,
+        "scripting_interface": {"name": "excalidraw-api", "version": "2", "operations": ["getScene", "updateScene", "exportImage"], "recorded": true},
+        "all_projection_checks": true,
+        "direct_vault_writes": 0,
+        "platforms": ["Linux", "macOS", "Windows"]
+      }
+    },
+    "platform_reports": {
+      "Linux": {"source_tree_sha256": "74ce0f7eaf44eac2c25d6eab08ded71bf442c8db2562057f5271a7e60a2dbbd2", "report_sha256": "dccc106fae06ed0e7e62b086423e24e70cd4e087edbe13e4faaa05b1f99a1e20", "pc01_workflow_status": "passed", "pc01_direct_vault_writes": 0, "pc01_renderer_status": "denied", "overall_report_status": "partial", "no_plugin_promoted": true},
+      "macOS": {"source_tree_sha256": "dcb494a4d34f7328bcb0d2ae51e056570a0cf9206b47153d710ecdd2336e3b2d", "report_sha256": "9215825d3c5f7552a66798422abd7de81d733908d7df0cb0775a3bdb9a9d1d8a", "pc01_workflow_status": "passed", "pc01_direct_vault_writes": 0, "pc01_renderer_status": "denied", "overall_report_status": "partial", "no_plugin_promoted": true},
+      "Windows": {"source_tree_sha256": "0aa0b3df95ef092cbb9695d526327e9a92be967bce368b2f8a0d864a56f70e46", "report_sha256": "970953f6a0349b4fee201978d56aef2e90ef6acdd7996f923f863c0f7827c534", "pc01_workflow_status": "passed", "pc01_direct_vault_writes": 0, "pc01_renderer_status": "denied", "overall_report_status": "partial", "no_plugin_promoted": true}
+    },
+    "overall": {"status": "partial", "all_artifact_lifecycle_traces_complete": false, "combination_lifecycle_trace_complete": true, "all_required_combinations_complete": true, "all_bounded_traces_complete": false, "all_artifacts_integrity_checked": true, "no_plugin_promoted": true}
+  },
+  "security_disposition": "Unchanged pinned Excalidraw 2.27.3 bytes run only inside the context-isolated synthetic Electron renderer and are D15-denied at window.unpackBase64Deflate. The bounded scene/link/embed/export/reopen projection uses mediated in-memory data and records zero direct vault writes; it does not certify stock Obsidian, the frozen scripting runtime, same-user OS enforcement or compatibility.",
+  "external_pending": [
+    "reference Obsidian Excalidraw scene, linked asset, note-link, embed, export, reopen and scripting behavior",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "signed release, publication and updater installation/rollback",
+    "compatibility promotion"
+  ],
+  "limitations": [
+    "Hosted report source digests contain one transient redirected-output path beyond the clean local source-of-record digest.",
+    "macOS and Windows report downloads retain the leading Electron download line before JSON; raw report hashes cover the downloaded files and parsing stripped that line only.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified.",
+    "The hosted desktop artifacts are unsigned previews; production signing and updater installation/rollback were not exercised.",
+    "The Excalidraw projection is a bounded synthetic in-memory trace separate from the unchanged artifact's denied renderer lifecycle."
+  ],
+  "result": "Quality, cross-platform renderer-matrix, loaded-workflow and unsigned preview desktop-build runs all succeeded on Ubuntu, macOS and Windows for 222bbf6. Hosted PC01 reports reproduce unchanged Excalidraw 2.27.3 integrity and the D15 denial on all three platforms; the bounded scene/link/embed/export/reopen and frozen scripting-interface projection passes with zero direct vault writes. This remains context-isolated synthetic evidence only; reference Obsidian, same-user OS, human, signing/publication/updater and compatibility gates remain pending, and no plugin row was promoted."
+}

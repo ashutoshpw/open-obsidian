@@ -371,6 +371,22 @@
       "tested_source_tree": "57def9313f7ff71b750f9b4c61c3bf2f85b5f88c314be4a393b7fab0fd5a7828",
       "status": "partial",
       "summary": "Hosted quality 34705800452, loaded-workflow 34705800388, renderer-matrix 34705800353 and unsigned preview desktop-build 34705800345 succeeded on Ubuntu, macOS and Windows for de7f64a. Hosted Calendar 1.5.10 reports reproduce integrity, complete bounded install/restart/update lifecycle and persistence, all daily/weekly path/date-format/folder/template/weekly-integration projections and zero direct vault writes; exact report, artifact and release-manifest hashes are recorded, while reference, same-user OS, human, signing, publication, updater and compatibility gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc01-excalidraw.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01"],
+      "tested_source_tree": "b1b9ed8e60b32abb386324f514462ee0b3a58c899ba191a693507534b731d8fa",
+      "status": "partial",
+      "summary": "Fresh Linux bounded loaded-workflow evidence verifies unchanged Excalidraw 2.27.3 integrity and D15 denial at window.unpackBase64Deflate while the separate bounded projection preserves the 281-byte scene, resolves the linked asset/note/embed paths, exports and reopens an in-memory SVG and records the frozen scripting interface with zero direct vault writes; reference, cross-platform, human, signing, updater and compatibility gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc01-excalidraw-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01"],
+      "tested_source_tree": "b1b9ed8e60b32abb386324f514462ee0b3a58c899ba191a693507534b731d8fa",
+      "status": "partial",
+      "summary": "Hosted quality 34707353072, loaded-workflow 34707353077, renderer-matrix 34707353061 and unsigned preview desktop-build 34707353051 succeeded on Ubuntu, macOS and Windows for 222bbf6. Hosted PC01 reports reproduce unchanged Excalidraw 2.27.3 integrity and D15 denial on all three platforms; the bounded scene/link/embed/export/reopen and frozen scripting-interface projection passes with zero direct vault writes, while reference, same-user OS, human, signing, publication, updater and compatibility gates remain pending."
     }
   ],
   "source_snapshots": {
@@ -815,7 +831,7 @@
     {
       "id": "PC01", "parent_id": null,
       "source": {"path": ".agents/tasks/2026-09-09/01-init/references/plugin-catalog/index.md", "heading": "PC01 Excalidraw", "clause": "Open/edit existing drawing files, preserve linked assets, follow note links, embed drawings, export and reopen in Obsidian, including the frozen scripting interface."},
-      "checkpoint": "P3.2", "owner": "compatibility-runtime", "mandatory": true, "acceptance_criteria": "The unchanged release artifact obsidian-excalidraw-plugin runs the workflow or is disabled with complete D15 evidence and denial tests.", "fixture_ids": ["fixture:pc01-excalidraw"], "reference_versions": [{"kind": "plugin-catalog", "version": "v0.3", "sha256": "bde50e3acae531337ac4ef68414c1d8e1a489c60de27af346ab6b8c682e94c23"}, {"kind": "release-artifact", "version": "pin-required-P0.2", "sha256": null, "verified": false}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc01-excalidraw.json"], "tested_source_tree": "b1b9ed8e60b32abb386324f514462ee0b3a58c899ba191a693507534b731d8fa", "blocker": "The unchanged 2.27.3 artifact remains D15 renderer-denied at window.unpackBase64Deflate; the bounded scene/link/embed/export/reopen projection passes with zero direct vault writes, while unchanged workflow certification, cross-platform and reference validation remain pending.", "gate_class": "implementation", "decision_id": "D14"
+      "checkpoint": "P3.2", "owner": "compatibility-runtime", "mandatory": true, "acceptance_criteria": "The unchanged release artifact obsidian-excalidraw-plugin runs the workflow or is disabled with complete D15 evidence and denial tests.", "fixture_ids": ["fixture:pc01-excalidraw"], "reference_versions": [{"kind": "plugin-catalog", "version": "v0.3", "sha256": "bde50e3acae531337ac4ef68414c1d8e1a489c60de27af346ab6b8c682e94c23"}, {"kind": "release-artifact", "version": "pin-required-P0.2", "sha256": null, "verified": false}], "applicable_platforms": ["macOS", "Windows", "Linux"], "status": "pending", "evidence_paths": [".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc01-excalidraw.json", ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc01-excalidraw-ci.json"], "tested_source_tree": "b1b9ed8e60b32abb386324f514462ee0b3a58c899ba191a693507534b731d8fa", "blocker": "The unchanged 2.27.3 artifact remains D15 renderer-denied at window.unpackBase64Deflate; the hosted bounded scene/link/embed/export/reopen projection passes with zero direct vault writes on all three runners, while unchanged workflow certification, cross-platform OS enforcement and reference validation remain pending.", "gate_class": "implementation", "decision_id": "D14"
     },
     {
       "id": "PC02", "parent_id": null,
