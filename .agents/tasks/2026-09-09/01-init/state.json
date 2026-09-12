@@ -21,18 +21,18 @@
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
   "last_reconciled_head": "035677060cb1ec14d9ca5258d3386aedeb164c72",
-  "updated_at": "2026-09-12T13:19:17Z",
+  "updated_at": "2026-09-12T13:22:45Z",
   "status": "active",
   "current_checkpoint": "P3.2",
-  "next_action": "Commit and push the cross-platform unchanged-plugin renderer matrix, inspect its Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility.",
+  "next_action": "Commit and push the renderer-matrix portability fix, inspect the rerun Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility.",
     "recent_increment": {"checkpoint":"P3.2","commit":"035677060cb1ec14d9ca5258d3386aedeb164c72","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot.json","tested_source_tree":"28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot-ci.json","ci_runs":{"quality":34694646965,"desktop_build":34694646948,"loaded_workflows":34694646984},"quality_rerun":true},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Add renderer lifecycle matrix",
+    "commit_marker": "[openobsidian P3.2 work] Fix renderer matrix portability",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot.json",
     "tested_source_tree": "28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d",
-    "next_action": "Commit and push the cross-platform unchanged-plugin renderer matrix, inspect its Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility.",
+    "next_action": "Commit and push the renderer-matrix portability fix, inspect the rerun Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility.",
     "hosted_reconciliation": {
       "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot-ci.json",
       "runs": {"quality": 34694646965, "desktop_build": 34694646948, "loaded_workflows": 34694646984},
@@ -52,7 +52,7 @@
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot-ci.json",
     "runs": {"quality": 34694646965, "desktop_build": 34694646948, "loaded_workflows": 34694646984},
     "status": "passed",
-    "next_action": "Commit and push the cross-platform unchanged-plugin renderer matrix, inspect its Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility."
+    "next_action": "Commit and push the renderer-matrix portability fix, inspect the rerun Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",

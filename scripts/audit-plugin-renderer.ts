@@ -1,5 +1,6 @@
 import {createRequire} from "node:module";
 import {mkdtempSync, readFileSync, rmSync, writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
 import {spawn} from "node:child_process";
 import {join, resolve} from "node:path";
 import {scanPluginBundle, type BundleMarker} from "../src/plugins/bundle-prescreen.js";
@@ -10,6 +11,7 @@ const root = resolve(import.meta.dir, "..");
 const attempts = 3;
 const downloadTimeoutMs = 45_000;
 const rendererTimeoutMs = 20_000;
+const auditConcurrency = 4;
 const workerPath = join(root, "scripts/plugin-renderer-worker.cjs");
 const electronBinary = createRequire(import.meta.url)("electron") as string;
 type RendererExecutionMode = "probe" | "lifecycle";
@@ -165,7 +167,18 @@ async function auditTarget(id: string, byId: Map<string, JsonRecord>, temporaryR
 }
 
 async function auditTargets(ids: string[], byId: Map<string, JsonRecord>, temporaryRoot: string, mode: RendererExecutionMode): Promise<RendererProbeResult[]> {
-  return Promise.all(ids.map((id) => auditTarget(id, byId, temporaryRoot, mode)));
+  const results = new Array<RendererProbeResult>(ids.length);
+  let nextIndex = 0;
+  async function worker(): Promise<void> {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= ids.length) return;
+      const id = ids[index];
+      results[index] = await auditTarget(id, byId, temporaryRoot, mode);
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(auditConcurrency, ids.length)}, () => worker()));
+  return results;
 }
 
 function rendererFixtureResult(safeRenderer: Record<string, unknown>): RendererProbeResult {
@@ -188,7 +201,7 @@ function rendererFixtureResult(safeRenderer: Record<string, unknown>): RendererP
 async function collectResults(manifest: JsonRecord, fixture: JsonRecord, mode: RendererExecutionMode): Promise<RendererProbeResult[]> {
   const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
   const ids = selectedIds(manifest, fixture);
-  const temporaryRoot = mkdtempSync(join("/tmp", "openobsidian-renderer-probe-"));
+  const temporaryRoot = mkdtempSync(join(tmpdir(), "openobsidian-renderer-probe-"));
   try {
     const safeSourceFile = join(temporaryRoot, "mediated-fixture.main.js");
     const safeSource = mode === "lifecycle"
