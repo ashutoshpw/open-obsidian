@@ -668,6 +668,10 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     config: {defaultViewMode: "source", livePreview: false},
     vaultConfig: cloneData(context.vault_config),
     theme: typeof context.theme === "string" ? context.theme : "default",
+    updateFontSize() {
+      const value = this.vaultConfig?.baseFontSize;
+      this.fontSize = typeof value === "number" && Number.isFinite(value) ? value : null;
+    },
     setTheme(theme) {
       if (typeof theme !== "string" || !theme.trim()) throw new Error("theme name is invalid");
       this.theme = theme;

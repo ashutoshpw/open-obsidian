@@ -55,6 +55,8 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("bounded CodeMirror editor adapter is not certified");
   expect(rendererWorker).toContain("globalThis.app = runtime.window?.app || runtime.app || null");
   expect(rendererWorker).toContain("globalThis.app = pluginApp");
+  expect(rendererWorker).toContain("updateFontSize() {");
+  expect(rendererWorker).toContain("this.fontSize = typeof value === \"number\" && Number.isFinite(value) ? value : null;");
   expect(rendererWorker).toContain("titleEl: safeDomObject()");
   expect(rendererWorker).toContain("target.createRange = () => ({createContextualFragment: () => safeDomObject()");
   expect(rendererWorker).toContain("if (property === \"then\") return undefined");
