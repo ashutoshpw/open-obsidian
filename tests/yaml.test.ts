@@ -8,6 +8,13 @@ test("bounded YAML reader preserves nested maps, arrays and scalar types", () =>
   expect(result.value).toEqual({tags: ["one", "two"], metadata: {owner: "Ashutosh", numbers: [1, true, null], children: [{key: "value", count: 2}]}});
 });
 
+test("bounded YAML reader accepts indentationless block sequences", () => {
+  const result = parseYamlMapping("metadata:\n- owner: Ashutosh\n  role: maintainer\n- owner: Bea\nunknown: keep\n");
+
+  expect(result.issues).toEqual([]);
+  expect(result.value).toEqual({metadata: [{owner: "Ashutosh", role: "maintainer"}, {owner: "Bea"}], unknown: "keep"});
+});
+
 test("unsupported YAML block scalars are reported without rewriting source", () => {
   const result = parseYamlMapping("summary: |\n  source stays authoritative\n");
 

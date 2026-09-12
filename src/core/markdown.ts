@@ -104,7 +104,14 @@ function sourceProperty(line: SourceLine, sequenceHead = false): SourceProperty 
 
 function blockEnd(lines: SourceLine[], start: number, parentIndent: number): number {
   let index = start;
-  while (index < lines.length && lines[index]!.indent > parentIndent) index += 1;
+  while (index < lines.length) {
+    const line = lines[index]!;
+    if (line.indent > parentIndent || (line.indent === parentIndent && sequenceLine(line))) {
+      index += 1;
+      continue;
+    }
+    break;
+  }
   return index;
 }
 
@@ -216,7 +223,7 @@ function nestedInlineChild(property: SourceProperty, path: MarkdownPropertyPath,
 
 function nestedBlockChild(lines: SourceLine[], index: number, end: number, indent: number, path: MarkdownPropertyPath, pathIndex: number): SourceProperty {
   const child = index + 1;
-  if (child >= end || lines[child]!.indent <= indent) throw new Error(`Nested Markdown property has no represented child: ${pathLabel(path)}`);
+  if (child >= end || (lines[child]!.indent < indent || (lines[child]!.indent === indent && !sequenceLine(lines[child]!)))) throw new Error(`Nested Markdown property has no represented child: ${pathLabel(path)}`);
   const childIndent = lines[child]!.indent;
   if (typeof path[pathIndex + 1] === "number") {
     if (!sequenceLine(lines[child]!)) throw new Error(`Nested Markdown property path expects a sequence: ${pathLabel(path)}`);

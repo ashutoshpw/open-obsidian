@@ -90,6 +90,15 @@ test("nested Markdown leaf edits support bare sequence map items and refuse ambi
   expect(() => editMarkdownNestedPropertyValue(source, ["metadata", "children", 0], "Ada")).toThrow("mapping key");
 });
 
+test("nested Markdown leaf edits support indentationless block sequence maps", () => {
+  const source = Buffer.from("---\r\nmetadata:\r\n- owner: Ashutosh # keep this comment\r\n  role: maintainer\r\n- owner: Bea\r\nunknown: keep\r\n---\r\n", "utf8");
+  const edited = editMarkdownNestedPropertyValue(source, ["metadata", 0, "owner"], "Ada");
+
+  expect(Buffer.from(edited).toString("utf8")).toBe("---\r\nmetadata:\r\n- owner: \"Ada\" # keep this comment\r\n  role: maintainer\r\n- owner: Bea\r\nunknown: keep\r\n---\r\n");
+  expect(parseMarkdown(edited).properties.find((property) => property.key === "metadata")?.value).toEqual([{owner: "Ada", role: "maintainer"}, {owner: "Bea"}]);
+  expect(parseMarkdown(edited).yamlIssues).toEqual([]);
+});
+
 test("markdown outline extraction ignores fenced headings and preserves source line numbers", () => {
   const headings = extractMarkdownHeadings("# Top\ntext\n```md\n## ignored\n```\n  ### Child ###\n");
   expect(headings).toEqual([{text: "Top", level: 1, line: 1}, {text: "Child", level: 3, line: 6}]);

@@ -339,6 +339,10 @@ function parseBlock(lines: YamlLine[], start: number, indent: number, issues: st
   return isSequenceLine(lines[start]!) ? parseSequence(lines, start, indent, issues) : parseMap(lines, start, indent, issues);
 }
 
+function hasNestedBlockValue(next: YamlLine | undefined, indent: number): boolean {
+  return Boolean(next && (next.indent > indent || (next.indent === indent && isSequenceLine(next))));
+}
+
 function parseMapEntry(lines: YamlLine[], start: number, indent: number, issues: string[]): ParsedMapEntry | undefined {
   const current = lines[start]!;
   const parsed = pair(current.content);
@@ -349,7 +353,7 @@ function parseMapEntry(lines: YamlLine[], start: number, indent: number, issues:
   const next = lines[start + 1];
   let index = start + 1;
   let value: YamlValue;
-  if (!parsed.value && next && next.indent > indent) {
+  if (!parsed.value && hasNestedBlockValue(next, indent)) {
     const child = parseBlock(lines, start + 1, next.indent, issues);
     value = child.value;
     index = child.index;
