@@ -65,6 +65,23 @@ test("nested Markdown leaf edits refuse flow, sequence and block-scalar traversa
   expect(() => editMarkdownNestedPropertyValue(block, ["metadata", "summary"], "changed")).toThrow("inline value");
 });
 
+test("nested Markdown leaf edits address explicitly indexed sequence maps", () => {
+  const source = Buffer.from("---\r\nmetadata:\r\n  children:\r\n    - owner: Ashutosh # keep this comment\r\n      role: maintainer\r\n    - owner: Bea\r\nunknown: [keep, me]\r\n---\r\nBody\r\n", "utf8");
+  const edited = editMarkdownNestedPropertyValue(source, ["metadata", "children", 0, "owner"], "Ada");
+
+  expect(Buffer.from(edited).toString("utf8")).toBe("---\r\nmetadata:\r\n  children:\r\n    - owner: \"Ada\" # keep this comment\r\n      role: maintainer\r\n    - owner: Bea\r\nunknown: [keep, me]\r\n---\r\nBody\r\n");
+  expect(parseMarkdown(edited).properties.find((property) => property.key === "metadata")?.value).toEqual({children: [{owner: "Ada", role: "maintainer"}, {owner: "Bea"}]});
+});
+
+test("nested Markdown leaf edits support bare sequence map items and refuse ambiguous paths", () => {
+  const source = Buffer.from("---\nmetadata:\n  children:\n    -\n      owner: Ashutosh\n      role: maintainer\nunknown: keep\n---\n", "utf8");
+  const edited = editMarkdownNestedPropertyValue(source, ["metadata", "children", 0, "owner"], "Ada");
+  expect(Buffer.from(edited).toString("utf8")).toBe("---\nmetadata:\n  children:\n    -\n      owner: \"Ada\"\n      role: maintainer\nunknown: keep\n---\n");
+  expect(() => editMarkdownNestedPropertyValue(source, ["metadata", "children", "owner"], "Ada")).toThrow("unsupported sequence");
+  expect(() => editMarkdownNestedPropertyValue(source, ["metadata", "children", 1, "owner"], "Ada")).toThrow("not represented");
+  expect(() => editMarkdownNestedPropertyValue(source, ["metadata", "children", 0], "Ada")).toThrow("mapping key");
+});
+
 test("markdown outline extraction ignores fenced headings and preserves source line numbers", () => {
   const headings = extractMarkdownHeadings("# Top\ntext\n```md\n## ignored\n```\n  ### Child ###\n");
   expect(headings).toEqual([{text: "Top", level: 1, line: 1}, {text: "Child", level: 3, line: 6}]);
