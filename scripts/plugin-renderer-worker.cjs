@@ -2877,6 +2877,171 @@ function boundedTasksWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedGitWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.git_workflow === "object"
+    ? workflowContext.git_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const repository = initialData && typeof initialData.repository === "object" ? initialData.repository : {};
+  const schedule = initialData && typeof initialData.schedule === "object" ? initialData.schedule : {};
+  const statusSpec = spec.status && typeof spec.status === "object" ? spec.status : {};
+  const diffSpec = spec.diff && typeof spec.diff === "object" ? spec.diff : {};
+  const commitSpec = spec.commit && typeof spec.commit === "object" ? spec.commit : {};
+  const pullSpec = spec.pull && typeof spec.pull === "object" ? spec.pull : {};
+  const pushSpec = spec.push && typeof spec.push === "object" ? spec.push : {};
+  const conflictSpec = spec.conflict && typeof spec.conflict === "object" ? spec.conflict : {};
+  const scheduleSpec = spec.schedule && typeof spec.schedule === "object" ? spec.schedule : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const fileContents = new Map(files.map((entry) => [entry.path.replaceAll("\\", "/"), entry.content]));
+  const normalizePaths = (values) => Array.isArray(values)
+    ? values.filter((value) => typeof value === "string").map((value) => value.replaceAll("\\", "/")).sort()
+    : [];
+  const expectedDirty = normalizePaths(statusSpec.expected_dirty_paths);
+  const expectedStaged = normalizePaths(statusSpec.expected_staged_paths);
+  const expectedUntracked = normalizePaths(statusSpec.expected_untracked_paths);
+  const repositoryPath = typeof repository.path === "string" ? repository.path.replaceAll("\\", "/") : "";
+  const repositoryDetected = repositoryPath === String(spec.repository_path || "")
+    && repository.branch === spec.default_branch
+    && repository.remote === spec.remote_name;
+  const statusObserved = repositoryDetected
+    && repository.dirty === true
+    && repository.staged === true
+    && repository.untracked === true
+    && expectedDirty.length > 0
+    && expectedStaged.length > 0
+    && expectedUntracked.length > 0
+    && expectedDirty.every((path) => fileContents.has(path))
+    && expectedStaged.every((path) => fileContents.has(path))
+    && expectedUntracked.every((path) => fileContents.has(path));
+  const diffPath = typeof diffSpec.path === "string" ? diffSpec.path.replaceAll("\\", "/") : "";
+  const diffBefore = typeof diffSpec.before === "string" ? diffSpec.before : "";
+  const diffAfter = typeof diffSpec.after === "string" ? diffSpec.after : "";
+  const diffLinesBefore = diffBefore.replace(/\r\n/g, "\n").split("\n");
+  const diffLinesAfter = diffAfter.replace(/\r\n/g, "\n").split("\n");
+  const changedLineCount = diffLinesBefore.reduce((count, line, index) => count + (line !== diffLinesAfter[index] ? 1 : 0), 0)
+    + Math.max(0, diffLinesAfter.length - diffLinesBefore.length);
+  const diffProjected = diffPath.length > 0
+    && fileContents.get(diffPath) === diffAfter
+    && diffBefore !== diffAfter
+    && changedLineCount > 0
+    && Number(diffSpec.expected_hunks) === 1;
+  const selectedPaths = normalizePaths(commitSpec.selected_paths);
+  const commitSelectionValid = selectedPaths.length > 0
+    && selectedPaths.every((path) => fileContents.has(path))
+    && selectedPaths.includes(diffPath)
+    && typeof commitSpec.message === "string"
+    && commitSpec.message.trim().length > 0
+    && typeof commitSpec.expected_revision === "string"
+    && /^[0-9a-f]{7,40}$/i.test(commitSpec.expected_revision);
+  const pullExplicit = pullSpec.mode === "explicit"
+    && pullSpec.remote === spec.remote_name
+    && pullSpec.branch === spec.default_branch
+    && typeof pullSpec.expected_result === "string"
+    && pullSpec.expected_result.length > 0;
+  const pushExplicit = pushSpec.mode === "explicit"
+    && pushSpec.remote === spec.remote_name
+    && pushSpec.branch === spec.default_branch
+    && typeof pushSpec.expected_result === "string"
+    && pushSpec.expected_result.length > 0;
+  const credentialHelperPreserved = typeof spec.credential_helper === "string"
+    && spec.credential_helper.length > 0
+    && repository.credentialHelper === spec.credential_helper;
+  const automaticPushDisabled = schedule.automaticPush === false && scheduleSpec.automatic_push === false;
+  const scheduledPullPreserved = Number(schedule.pullIntervalMinutes) === Number(scheduleSpec.pull_interval_minutes)
+    && Number.isInteger(Number(scheduleSpec.pull_interval_minutes))
+    && Number(scheduleSpec.pull_interval_minutes) > 0;
+  const scheduledPushNotConfigured = schedule.pushIntervalMinutes === scheduleSpec.push_interval_minutes;
+  const scheduleDispositionRecorded = scheduleSpec.expected_disposition === "configured-but-not-run";
+  const conflictPath = typeof conflictSpec.path === "string" ? conflictSpec.path.replaceAll("\\", "/") : "";
+  const base = typeof conflictSpec.base === "string" ? conflictSpec.base : "";
+  const local = typeof conflictSpec.local === "string" ? conflictSpec.local : "";
+  const remote = typeof conflictSpec.remote === "string" ? conflictSpec.remote : "";
+  const localCopy = typeof conflictSpec.local_copy === "string" ? conflictSpec.local_copy.replaceAll("\\", "/") : "";
+  const remoteCopy = typeof conflictSpec.remote_copy === "string" ? conflictSpec.remote_copy.replaceAll("\\", "/") : "";
+  const conflictProtected = conflictPath.length > 0
+    && base.length > 0
+    && local.length > 0
+    && remote.length > 0
+    && local !== remote
+    && base !== local
+    && base !== remote
+    && localCopy.length > 0
+    && remoteCopy.length > 0
+    && conflictSpec.expected_state === "protected";
+  const conflictProjection = conflictProtected
+    ? {path: conflictPath, state: "protected", local_path: localCopy, remote_path: remoteCopy, local, remote}
+    : null;
+  const deniedOperations = Array.isArray(spec.denied_operations) ? spec.denied_operations : [];
+  const deniedOperationsRecorded = deniedOperations.length >= 2 && deniedOperations.every((entry) => entry
+    && entry.disposition === "denied"
+    && typeof entry.capability === "string"
+    && typeof entry.safe_alternative === "string"
+    && entry.safe_alternative.length > 0);
+  const processDenied = deniedOperations.some((entry) => entry && entry.capability === "process.spawn" && entry.disposition === "denied");
+  const credentialDenied = deniedOperations.some((entry) => entry && entry.capability === "credentials.read" && entry.disposition === "denied");
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = repositoryDetected
+    && statusObserved
+    && diffProjected
+    && commitSelectionValid
+    && pullExplicit
+    && pushExplicit
+    && credentialHelperPreserved
+    && automaticPushDisabled
+    && scheduledPullPreserved
+    && scheduledPushNotConfigured
+    && scheduleDispositionRecorded
+    && conflictProtected
+    && deniedOperationsRecorded
+    && processDenied
+    && credentialDenied
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-git-projection",
+    repository_path: repositoryPath,
+    repository_detected: repositoryDetected,
+    branch: repository.branch || null,
+    remote_name: repository.remote || null,
+    status_observed: statusObserved,
+    expected_dirty_paths: expectedDirty,
+    expected_staged_paths: expectedStaged,
+    expected_untracked_paths: expectedUntracked,
+    diff_path: diffPath,
+    diff_projected: diffProjected,
+    diff_hunks: Number(diffSpec.expected_hunks) || 0,
+    selected_commit_paths: selectedPaths,
+    commit_selection_valid: commitSelectionValid,
+    commit_message: typeof commitSpec.message === "string" ? commitSpec.message : null,
+    projected_revision: typeof commitSpec.expected_revision === "string" ? commitSpec.expected_revision : null,
+    pull_explicit: pullExplicit,
+    pull_result: pullSpec.expected_result || null,
+    push_explicit: pushExplicit,
+    push_result: pushSpec.expected_result || null,
+    credential_helper: repository.credentialHelper || null,
+    credential_helper_preserved: credentialHelperPreserved,
+    credential_helper_accessed: false,
+    automatic_push_disabled: automaticPushDisabled,
+    scheduled_pull_preserved: scheduledPullPreserved,
+    scheduled_push_not_configured: scheduledPushNotConfigured,
+    schedule_disposition: scheduleSpec.expected_disposition || null,
+    schedule_disposition_recorded: scheduleDispositionRecorded,
+    conflict_protected: conflictProtected,
+    conflict_projection: conflictProjection,
+    conflict_versions_preserved: conflictProtected && conflictProjection.local !== conflictProjection.remote,
+    denied_operations_recorded: deniedOperationsRecorded,
+    process_spawn_denied: processDenied,
+    credential_read_denied: credentialDenied,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -2997,6 +3162,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (taskWorkflow) actions.task_workflow = taskWorkflow;
   const tasksWorkflow = boundedTasksWorkflow(workflowContext);
   if (tasksWorkflow) actions.tasks_workflow = tasksWorkflow;
+  const gitWorkflow = boundedGitWorkflow(workflowContext);
+  if (gitWorkflow) actions.git_workflow = gitWorkflow;
   return actions;
 }
 
@@ -3066,6 +3233,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     table_workflow: actions.table_workflow || null,
     task_workflow: actions.task_workflow || null,
     tasks_workflow: actions.tasks_workflow || null,
+    git_workflow: actions.git_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -3139,6 +3307,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
+    workflow.git_workflow = boundedGitWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -3159,6 +3328,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
+    workflow.git_workflow = boundedGitWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -3271,6 +3441,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedLinterWorkflow,
     boundedTaskWorkflow,
     boundedTasksWorkflow,
+    boundedGitWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

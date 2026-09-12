@@ -297,6 +297,37 @@ function tableWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function gitWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const trace = asRecord(workflow.git_workflow);
+  const phases = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.git_workflow))
+    .filter((value): value is JsonRecord => value !== null);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === true);
+  return {
+    present: trace !== null && phases.length === 3,
+    bounded_read_only: trace?.mutation_scope === "bounded-in-memory-git-projection" && phases.every((phase) => phase.mutation_scope === "bounded-in-memory-git-projection"),
+    repository_detected: trace?.repository_detected === true && every("repository_detected"),
+    status_observed: trace?.status_observed === true && every("status_observed"),
+    diff_projected: trace?.diff_projected === true && every("diff_projected"),
+    commit_selection_valid: trace?.commit_selection_valid === true && every("commit_selection_valid"),
+    pull_explicit: trace?.pull_explicit === true && every("pull_explicit"),
+    push_explicit: trace?.push_explicit === true && every("push_explicit"),
+    credential_helper_preserved: trace?.credential_helper_preserved === true && every("credential_helper_preserved"),
+    credential_helper_not_read: trace?.credential_helper_accessed === false && phases.every((phase) => phase.credential_helper_accessed === false),
+    automatic_push_disabled: trace?.automatic_push_disabled === true && every("automatic_push_disabled"),
+    scheduled_pull_preserved: trace?.scheduled_pull_preserved === true && every("scheduled_pull_preserved"),
+    scheduled_push_not_configured: trace?.scheduled_push_not_configured === true && every("scheduled_push_not_configured"),
+    schedule_disposition_recorded: trace?.schedule_disposition_recorded === true && every("schedule_disposition_recorded"),
+    conflict_protected: trace?.conflict_protected === true && every("conflict_protected"),
+    conflict_versions_preserved: trace?.conflict_versions_preserved === true && every("conflict_versions_preserved"),
+    denied_operations_recorded: trace?.denied_operations_recorded === true && every("denied_operations_recorded"),
+    process_spawn_denied: trace?.process_spawn_denied === true && every("process_spawn_denied"),
+    credential_read_denied: trace?.credential_read_denied === true && every("credential_read_denied"),
+    direct_vault_writes_zero: trace?.direct_vault_writes === 0 && phases.every((phase) => phase.direct_vault_writes === 0 && phase.direct_vault_writes_zero === true),
+    status_passed: trace?.status === "passed" && phases.length === 3 && phases.every((phase) => phase.status === "passed"),
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -584,6 +615,21 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const task = id === "PC19" ? taskWorkflowChecks(workflow) : null;
       const tasks = id === "PC04" ? tasksWorkflowChecks(workflow) : null;
       const table = id === "PC05" ? tableWorkflowChecks(workflow) : null;
+      let git = id === "PC06" ? gitWorkflowChecks(workflow) : null;
+      let gitProjection: JsonRecord | null = null;
+      if (id === "PC06") {
+        // Git's unchanged release is denied before lifecycle execution by the
+        // renderer boundary. Keep its user-facing workflow covered by a
+        // separate marker-free synthetic projection; it never changes the
+        // unchanged-artifact runtime disposition or compatibility status.
+        gitProjection = await runWorker(
+          'module.exports = class BoundedGitProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC06-git-projection", target_ids: ["PC06"]},
+          temporaryRoot,
+          "PC06-git-projection",
+        );
+        git = gitWorkflowChecks(asRecord(gitProjection.workflow) ?? {});
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -614,6 +660,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       task_workflow_checks: task,
       tasks_workflow_checks: tasks,
       table_workflow_checks: table,
+      git_workflow_checks: git,
+      git_workflow_projection: gitProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -872,7 +920,31 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "phase_projections_passed",
         "status_passed",
       ].every((key) => dataviewChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete;
+      const gitChecks = asRecord(entry.git_workflow_checks);
+      const gitComplete = entry.artifact_id !== "PC06" || (gitChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "repository_detected",
+        "status_observed",
+        "diff_projected",
+        "commit_selection_valid",
+        "pull_explicit",
+        "push_explicit",
+        "credential_helper_preserved",
+        "credential_helper_not_read",
+        "automatic_push_disabled",
+        "scheduled_pull_preserved",
+        "scheduled_push_not_configured",
+        "schedule_disposition_recorded",
+        "conflict_protected",
+        "conflict_versions_preserved",
+        "denied_operations_recorded",
+        "process_spawn_denied",
+        "credential_read_denied",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => gitChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;

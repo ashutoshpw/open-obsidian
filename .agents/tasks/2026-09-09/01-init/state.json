@@ -21,34 +21,21 @@
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
   "last_reconciled_head": "2a6199da6eb5080604fadba14fede06e45fa09a1",
-  "updated_at": "2026-09-12T18:04:04Z",
+  "updated_at": "2026-09-12T18:24:00Z",
   "status": "active",
   "current_checkpoint": "P3.2",
-  "next_action": "Run final state, audit and diff gates, commit and push the hosted PC05 reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"2a6199da6eb5080604fadba14fede06e45fa09a1","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables.json","tested_source_tree":"83f15dbd530530e560b37fc392719a0137b6d51d160ed18708dfe2b8383205cc","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json","ci_runs":{"quality":34709441109,"loaded_workflows":34709441112,"renderer_matrix":34709441119,"desktop_build":34709441111},"quality_rerun":false},
+  "next_action": "Review the staged PC06 diff, commit and push main, then monitor hosted quality, loaded-workflow, renderer-matrix and desktop-build runs without promoting compatibility.",
+    "recent_increment": {"checkpoint":"P3.2","commit":"d1726d034cb179b1ed03021adaab79bfa784ed80","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json","tested_source_tree":"83f15dbd530530e560b37fc392719a0137b6d51d160ed18708dfe2b8383205cc","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json","ci_runs":{"quality":34709441109,"loaded_workflows":34709441112,"renderer_matrix":34709441119,"desktop_build":34709441111},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Add bounded PC05 Advanced Tables workflow",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json",
-    "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc01-excalidraw-ci.json",
-    "tested_source_tree": "83f15dbd530530e560b37fc392719a0137b6d51d160ed18708dfe2b8383205cc",
-    "next_action": "Run final state, audit and diff gates, commit and push the hosted PC05 reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.",
-    "hosted_reconciliation": {
-      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json",
-      "runs": {"quality": 34709441109, "loaded_workflows": 34709441112, "renderer_matrix": 34709441119, "desktop_build": 34709441111},
-      "platforms": ["Ubuntu", "macOS", "Windows"],
-      "status": "passed_bounded_synthetic_only",
-      "loaded_workflow_status": "partial",
-      "loaded_workflow_target_count": 13,
-      "pc05_workflow_status": "passed",
-      "pc05_renderer_status": "denied on all three hosted platforms",
-      "pc05_direct_vault_writes": 0,
-      "unsupported_security_count": 0,
-      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
-      "no_plugin_promoted": true
-    },
+    "commit_marker": "[openobsidian P3.2 work] Add bounded PC06 Git workflow",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc06-git.json",
+    "ci_evidence": null,
+    "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json",
+    "tested_source_tree": "fc83050a8ae55c66d40e8aa9619b6e29796c8305916522c4d376ca68d930b106",
+    "next_action": "Review the staged PC06 diff, commit and push main, then monitor hosted quality, loaded-workflow, renderer-matrix and desktop-build runs without promoting compatibility.",
+    "hosted_reconciliation": null,
     "combination_audit": {
       "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json",
       "commit": "469a5381bd069224c528aa627b78aa2f3905546d",
@@ -78,7 +65,7 @@
     "no_plugin_promoted": true,
     "pc05_renderer_status": "denied on all three hosted platforms",
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
-    "next_action": "Run final state, audit and diff gates, commit and push the hosted PC05 reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility."
+    "next_action": "Review the staged PC06 diff, commit and push main, then monitor hosted quality, loaded-workflow, renderer-matrix and desktop-build runs without promoting compatibility."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
@@ -209,25 +196,25 @@
     "P7.1": {"status":"complete","depends_on":["P6.2"],"requirement_ids":["P7-001"],"completed_actions":["Recorded a separate P7 expansion handoff for future mobile/Expo, own encrypted sync, scoped autonomy, collaboration and publishing work.","Specified independent product decisions, prerequisites, security/release gates and verification procedures for each expansion.","Kept all P7 implementation outside the v1 desktop scope and preserved the existing reusable shared-contract evaluation seam for a future authorized client."],"next_action":"Do not implement P7 in v1; reopen only under a separate product and security authorization.","evidence":[".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p7.1-expansion-handoff.json"],"commit_marker":"[openobsidian P7.1] Record expansion handoff","validated_source_tree":"9fa9a463daa100372982784bcc60fbc291d83e7ad27828d8853247fd19046eb9","blockers":["No P7 implementation is part of v1; future work requires separate authorization, threat modeling and release gates."]}
   },
   "latest_p3_2_slice": {
-    "slice": "PC05 Advanced Tables",
+    "slice": "PC06 Git",
     "status": "partial_bounded_synthetic_only",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables.json",
-    "source_digest": "83f15dbd530530e560b37fc392719a0137b6d51d160ed18708dfe2b8383205cc",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc05-tables-ci.json",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc06-git.json",
+    "source_digest": "fc83050a8ae55c66d40e8aa9619b6e29796c8305916522c4d376ca68d930b106",
+    "ci_evidence": null,
     "artifact": {
-      "version": "0.23.2",
-      "bytes": 272036,
-      "sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+      "version": "2.39.0",
+      "bytes": 727717,
+      "sha256": "d5a74036cf17c1a02957c1f33f59e47cf3af83525641c4374ca1fa09d95f3eb4",
       "renderer_status": "denied",
       "denied_capability": "dom.privileged",
-      "denied_path": "window.Function"
+      "denied_path": "document.all"
     },
     "bounded_projection": "passed",
     "direct_vault_writes": 0,
     "runtime_disposition": "pending-runtime",
     "no_plugin_promoted": true,
-    "ci_runs": {"quality": 34709441109, "loaded_workflows": 34709441112, "renderer_matrix": 34709441119, "desktop_build": 34709441111},
-    "ci_platforms": ["Ubuntu", "macOS", "Windows"],
-    "next_action": "Run final state, audit and diff gates, commit and push the hosted PC05 reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility."
+    "ci_runs": null,
+    "ci_platforms": ["Linux x64"],
+    "next_action": "Review the staged PC06 diff, commit and push main, then monitor hosted quality, loaded-workflow, renderer-matrix and desktop-build runs without promoting compatibility."
   }
 }

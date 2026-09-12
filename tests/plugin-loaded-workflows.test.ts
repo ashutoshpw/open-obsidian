@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC05", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -299,6 +299,55 @@ test("PC05 fixture and bounded projection cover table edits, calculation and ser
   expect(loadedWorkflowAudit).toContain("function tableWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("table_workflow_checks");
   expect(loadedWorkflowAudit).toContain("serialization_match");
+});
+
+test("PC06 fixture and bounded projection keep Git actions explicit and credential-safe", () => {
+  const pc06 = fixture.scenarios.PC06 as typeof fixture.scenarios.PC03 & {
+    git_workflow?: {
+      repository_path: string;
+      default_branch: string;
+      remote_name: string;
+      credential_helper: string;
+      status: {expected_branch: string; expected_dirty_paths: string[]; expected_staged_paths: string[]; expected_untracked_paths: string[]};
+      diff: {path: string; before: string; after: string; expected_hunks: number};
+      commit: {selected_paths: string[]; message: string; expected_revision: string};
+      pull: {remote: string; branch: string; mode: string; expected_result: string};
+      push: {remote: string; branch: string; mode: string; expected_result: string};
+      conflict: {path: string; local_copy: string; remote_copy: string; expected_state: string};
+      schedule: {pull_interval_minutes: number; push_interval_minutes: null; automatic_push: boolean; expected_disposition: string};
+      denied_operations: Array<{operation: string; capability: string; disposition: string; safe_alternative: string}>;
+    };
+  };
+  expect(pc06.initial_data).toMatchObject({
+    repository: {path: "Chronicle", branch: "main", remote: "origin", credentialHelper: "os-keychain"},
+    schedule: {pullIntervalMinutes: 30, pushIntervalMinutes: null, automaticPush: false},
+  });
+  expect(pc06.files).toContainEqual(expect.objectContaining({path: "Notes/Changed.md", content: "# Changed\n\nNew body.\n"}));
+  expect(pc06.git_workflow).toMatchObject({
+    repository_path: "Chronicle",
+    default_branch: "main",
+    remote_name: "origin",
+    credential_helper: "os-keychain",
+    status: {expected_branch: "main", expected_dirty_paths: ["Notes/Changed.md"], expected_staged_paths: ["Notes/Staged.md"], expected_untracked_paths: ["Notes/New.md"]},
+    diff: {path: "Notes/Changed.md", expected_hunks: 1},
+    commit: {selected_paths: ["Notes/Changed.md"], message: "Update compatibility", expected_revision: "abc1234"},
+    pull: {remote: "origin", branch: "main", mode: "explicit", expected_result: "fast-forward"},
+    push: {remote: "origin", branch: "main", mode: "explicit", expected_result: "pushed"},
+    conflict: {path: "Notes/Conflict.md", local_copy: "Notes/Conflict.local.md", remote_copy: "Notes/Conflict.remote.md", expected_state: "protected"},
+    schedule: {pull_interval_minutes: 30, push_interval_minutes: null, automatic_push: false, expected_disposition: "configured-but-not-run"},
+  });
+  expect(pc06.git_workflow?.denied_operations).toEqual([
+    {operation: "git-process", capability: "process.spawn", disposition: "denied", safe_alternative: "mediated Chronicle Git action"},
+    {operation: "credential-helper", capability: "credentials.read", disposition: "denied", safe_alternative: "preserve the configured helper name without reading credentials"},
+  ]);
+  expect(rendererWorker).toContain("function boundedGitWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-git-projection"');
+  expect(rendererWorker).toContain("credential_helper_preserved");
+  expect(rendererWorker).toContain("conflict_versions_preserved");
+  expect(rendererWorker).toContain("automatic_push_disabled");
+  expect(loadedWorkflowAudit).toContain("function gitWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("git_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("credential_helper_not_read");
 });
 
 test("PC07 fixture and bounded projection cover daily paths, templates and weekly integration", () => {

@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC03", "PC04", "PC05", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -75,6 +75,98 @@
       "files": [
         {"path": "Notes/Table.md", "content": "# Pricing\n\nBefore table text.\n\n| Item | Qty | Price | Total |\n| --- | ---: | ---: | ---: |\n| Widget | 2 | 12.50 | 25.00 |\n| Gizmo | 1 | 4.00 | 4.00 |\n\nAfter table text.\n"},
         {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
+      ]
+    },
+    "PC06": {
+      "workflow_id": "workflow:pc06",
+      "description": "Inspect an existing repository, review a bounded diff, commit selected files, and project explicit pull/push and conflict handling without invoking a Git process or credential helper.",
+      "initial_data": {
+        "repository": {
+          "path": "Chronicle",
+          "branch": "main",
+          "remote": "origin",
+          "credentialHelper": "os-keychain",
+          "dirty": true,
+          "staged": true,
+          "untracked": true
+        },
+        "schedule": {
+          "pullIntervalMinutes": 30,
+          "pushIntervalMinutes": null,
+          "automaticPush": false
+        },
+        "version": 2
+      },
+      "git_workflow": {
+        "repository_path": "Chronicle",
+        "default_branch": "main",
+        "remote_name": "origin",
+        "credential_helper": "os-keychain",
+        "status": {
+          "expected_branch": "main",
+          "expected_dirty_paths": ["Notes/Changed.md"],
+          "expected_staged_paths": ["Notes/Staged.md"],
+          "expected_untracked_paths": ["Notes/New.md"]
+        },
+        "diff": {
+          "path": "Notes/Changed.md",
+          "before": "# Changed\n\nOld body.\n",
+          "after": "# Changed\n\nNew body.\n",
+          "expected_hunks": 1
+        },
+        "commit": {
+          "selected_paths": ["Notes/Changed.md"],
+          "message": "Update compatibility",
+          "expected_revision": "abc1234"
+        },
+        "pull": {
+          "remote": "origin",
+          "branch": "main",
+          "mode": "explicit",
+          "expected_result": "fast-forward"
+        },
+        "push": {
+          "remote": "origin",
+          "branch": "main",
+          "mode": "explicit",
+          "expected_result": "pushed"
+        },
+        "conflict": {
+          "path": "Notes/Conflict.md",
+          "base": "# Conflict\n\nBase.\n",
+          "local": "# Conflict\n\nLocal edit.\n",
+          "remote": "# Conflict\n\nRemote edit.\n",
+          "local_copy": "Notes/Conflict.local.md",
+          "remote_copy": "Notes/Conflict.remote.md",
+          "expected_state": "protected"
+        },
+        "schedule": {
+          "pull_interval_minutes": 30,
+          "push_interval_minutes": null,
+          "automatic_push": false,
+          "expected_disposition": "configured-but-not-run"
+        },
+        "denied_operations": [
+          {
+            "operation": "git-process",
+            "capability": "process.spawn",
+            "disposition": "denied",
+            "safe_alternative": "mediated Chronicle Git action"
+          },
+          {
+            "operation": "credential-helper",
+            "capability": "credentials.read",
+            "disposition": "denied",
+            "safe_alternative": "preserve the configured helper name without reading credentials"
+          }
+        ]
+      },
+      "active_file": "Notes/Changed.md",
+      "files": [
+        {"path": "Notes/Changed.md", "content": "# Changed\n\nNew body.\n"},
+        {"path": "Notes/Staged.md", "content": "# Staged\n\nReady for the selected commit.\n"},
+        {"path": "Notes/New.md", "content": "# New\n\nUntracked note.\n"},
+        {"path": "Notes/Conflict.md", "content": "# Conflict\n\nLocal edit.\n"}
       ]
     },
     "PC03": {
