@@ -347,6 +347,14 @@
       "tested_source_tree": "d56015faaa043936d4776a07b8fd30a3d7cffcb4d8f18e2400ff40858c7b4330",
       "status": "partial",
       "summary": "Fresh Linux bounded loaded-workflow evidence verifies unchanged Tasks 8.4.0 integrity, complete install/restart/update lifecycle, command/settings actions, mediated persistence, cleanup and zero direct vault writes. The PC04 task projection passes query/filter/group, surgical create/complete edits, date/status/recurrence preservation and all phase checks; reference, same-user macOS/Windows, human, signing, updater and compatibility gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc04-tasks-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC04"],
+      "tested_source_tree": "d56015faaa043936d4776a07b8fd30a3d7cffcb4d8f18e2400ff40858c7b4330",
+      "status": "partial",
+      "summary": "Hosted quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34703811445, 34703811413, 34703811412 and 34703811446 succeeded on Ubuntu, macOS and Windows for 9c6aae7. Hosted Tasks 8.4.0 reports reproduce integrity, complete bounded install/restart/update lifecycle and persistence, all PC04 query/filter/group/create/complete projections with date/status/recurrence preservation and zero direct vault writes; renderer-matrix denial, reference, same-user OS, human, signing, updater and compatibility gates remain pending."
     }
   ],
   "source_snapshots": {
