@@ -123,6 +123,9 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
     views_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.views)),
     restart_restores_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.savedData),
     update_restores_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.savedData),
+    restart_restores_persisted_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.persistedData),
+    update_restores_persisted_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.persistedData),
+    storage_recorded: phases.every((phase) => asRecord(phase.storage) !== null),
     cleanup_after_each_phase: phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0),
     uninstall_clears_registrations: uninstall.registrationsCleared === true,
     return_to_obsidian: uninstall.returnToObsidian === true && workflow.activeAfterUninstall === false,
@@ -132,6 +135,12 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
 
 function checksPass(checks: Record<string, boolean>, names: readonly string[]): boolean {
   return names.every((name) => checks[name] === true);
+}
+
+function persistencePasses(checks: Record<string, boolean>): boolean {
+  const restart = checks.restart_restores_data || checks.restart_restores_persisted_data;
+  const update = checks.update_restores_data || checks.update_restores_persisted_data;
+  return restart === true && update === true;
 }
 
 async function runWorker(source: string, config: JsonRecord, temporaryRoot: string, name: string): Promise<JsonRecord> {
@@ -174,7 +183,12 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         return [...records(actions.commands), ...records(actions.views), ...records(actions.settings)].filter((action) => action.status === "failed");
       });
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
-      const persistenceComplete = checks.restart_restores_data === true && checks.update_restores_data === true;
+      const persistenceComplete = persistencePasses(checks);
+      const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
+        ? "plugin-data-save"
+        : persistenceComplete
+          ? "mediated-plugin-data-store"
+          : "not-proven";
       artifactResults.push({
         artifact_id: id,
         name: string(downloaded.artifact.name),
@@ -185,6 +199,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         checks,
         bounded_lifecycle: lifecycleComplete ? "complete" : "partial",
         persistence: persistenceComplete ? "preserved" : "not-proven",
+        persistence_source: persistenceSource,
         action_status: actionFailures.length === 0 ? "passed" : "partial",
         action_failures: actionFailures,
         disposition: "bounded-workflow-evidence-pending-runtime",
@@ -200,9 +215,16 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
     const combinationConfig = {artifact_id: combinationId, ...combinationScenario, target_ids: combinationIds};
     const combinationResult = await runWorker(combinedSource(combinationSources), combinationConfig, temporaryRoot, `combination-${combinationIds.map((id) => id.toLowerCase()).join("-")}`);
     const combinationChecks = workflowChecks(combinationResult);
+    const combinationWorkflow = asRecord(combinationResult.workflow) ?? {};
+    const combinationActionFailures = phaseRecords(combinationWorkflow).flatMap((phase) => {
+      const actions = asRecord(phase.actions) ?? {};
+      return [...records(actions.commands), ...records(actions.views), ...records(actions.settings)].filter((action) => action.status === "failed");
+    });
     const artifactLifecyclesComplete = artifactResults.every((entry) => entry.bounded_lifecycle === "complete");
     const combinationLifecycleComplete = checksPass(combinationChecks, boundedLifecycleChecks);
-    const allChecks = artifactResults.every((entry) => Object.values(asRecord(entry.checks) ?? {}).every(Boolean)) && Object.values(combinationChecks).every(Boolean);
+    const artifactChecksComplete = artifactResults.every((entry) => checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed");
+    const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
+    const allChecks = artifactChecksComplete && combinationChecksComplete;
     return {
       evidence_version: 1,
       status: allChecks ? "passed" : "partial",
@@ -221,7 +243,14 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         result: combinationResult,
         checks: combinationChecks,
         bounded_lifecycle: combinationLifecycleComplete ? "complete" : "partial",
-        persistence: combinationChecks.restart_restores_data === true && combinationChecks.update_restores_data === true ? "preserved" : "not-proven",
+        persistence: persistencePasses(combinationChecks) ? "preserved" : "not-proven",
+        persistence_source: combinationChecks.restart_restores_data === true && combinationChecks.update_restores_data === true
+          ? "plugin-data-save"
+          : persistencePasses(combinationChecks)
+            ? "mediated-plugin-data-store"
+            : "not-proven",
+        action_status: combinationActionFailures.length === 0 ? "passed" : "partial",
+        action_failures: combinationActionFailures,
         disposition: "bounded-combination-evidence-pending-runtime",
       },
       checks: {

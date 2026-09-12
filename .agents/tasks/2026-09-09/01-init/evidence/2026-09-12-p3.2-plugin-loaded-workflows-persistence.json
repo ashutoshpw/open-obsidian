@@ -1,0 +1,95 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-persistence",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC17",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T00:01:47.513Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "801e2d181a5fa907b53df180c412fb266173dd9d",
+    "sha256": "9c0a523a8e3504a7810b6dddd8d9789b6097ced14b4bfa73fe51113cad0fa79f",
+    "paths": 235,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "execution": {
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "bounded_lifecycle_traces_complete": true,
+    "persisted_data_recovery": {
+      "PC20": "preserved via mediated-plugin-data-store",
+      "PC23": "preserved via mediated-plugin-data-store",
+      "combination": "not-proven because the three plugins share and transform one synthetic store"
+    },
+    "local_storage_boundary": "bounded synthetic localStorage is exposed only in workflow mode; all audited target snapshots remained empty",
+    "actual_vault_writes": 0,
+    "no_plugin_promoted": true
+  },
+  "artifact_results": [
+    {"artifact_id": "PC07", "name": "Calendar", "version": "1.5.10", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "plugin-data-save", "action_status": "partial", "action_failure_count": 6, "representative_action_failures": ["D15 denied dom.privileged"], "denied_capabilities": ["dom.privileged"], "vault_writes": 0},
+    {"artifact_id": "PC17", "name": "Minimal Theme Settings", "version": "9.0.0", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "plugin-data-save", "action_status": "partial", "action_failure_count": 123, "representative_action_failures": ["e.setTheme is not a function", "e.vault.setConfig is not a function"], "denied_capabilities": [], "vault_writes": 0},
+    {"artifact_id": "PC20", "name": "Outliner", "version": "4.10.2", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "mediated-plugin-data-store", "action_status": "partial", "action_failure_count": 18, "representative_action_failures": ["Cannot read properties of undefined (reading 'cm')"], "denied_capabilities": [], "vault_writes": 0},
+    {"artifact_id": "PC21", "name": "Homepage", "version": "4.5.0", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "plugin-data-save", "action_status": "partial", "action_failure_count": 3, "representative_action_failures": ["D15 denied dom.privileged"], "denied_capabilities": ["dom.privileged"], "vault_writes": 0},
+    {"artifact_id": "PC22", "name": "Smart Connections", "version": "4.7.2", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "plugin-data-save", "action_status": "partial", "action_failure_count": 6, "representative_action_failures": ["Cannot read properties of undefined (reading 'setText')", "D15 denied dom.privileged", "bounded action timeout after 1000ms"], "denied_capabilities": ["dom.privileged", "vault.direct-write"], "vault_writes": 0},
+    {"artifact_id": "PC23", "name": "Recent Files", "version": "1.7.10", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "mediated-plugin-data-store", "action_status": "partial", "action_failure_count": 3, "representative_action_failures": ["D15 denied dom.privileged"], "denied_capabilities": ["dom.privileged"], "vault_writes": 0},
+    {"artifact_id": "PC24", "name": "Tag Wrangler", "version": "0.6.5", "bounded_lifecycle": "complete", "persistence": "preserved", "persistence_source": "plugin-data-save", "action_status": "passed", "action_failure_count": 0, "representative_action_failures": [], "denied_capabilities": [], "vault_writes": 0}
+  ],
+  "combination_result": {
+    "id": "combination:pc07-pc21-pc23",
+    "target_ids": ["PC07", "PC21", "PC23"],
+    "bounded_lifecycle": "complete",
+    "persistence": "not-proven",
+    "persistence_source": "not-proven",
+    "action_status": "partial",
+    "action_failure_count": 12,
+    "vault_writes": 0,
+    "disposition": "bounded-combination-evidence-pending-runtime"
+  },
+  "checks": {
+    "all_artifact_lifecycle_traces_complete": true,
+    "combination_lifecycle_trace_complete": true,
+    "all_bounded_traces_complete": false,
+    "all_artifacts_integrity_checked": true,
+    "no_plugin_promoted": true
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This is Linux x64 Electron renderer-boundary evidence using unchanged pinned main.js bytes. Mediated store restoration does not prove reference Obsidian persistence, action fidelity, alternating launches, cross-platform enforcement or human behavior; no compatibility status was promoted."
+}

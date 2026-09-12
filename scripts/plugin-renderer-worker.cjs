@@ -113,6 +113,21 @@ function safeCollection(values = []) {
   return collection;
 }
 
+function boundedStorage(store) {
+  const entries = () => [...store.keys()];
+  return {
+    get length() { return store.size; },
+    key(index) { return entries()[Number(index)] ?? null; },
+    getItem(key) {
+      const normalized = String(key);
+      return store.has(normalized) ? store.get(normalized) : null;
+    },
+    setItem(key, value) { store.set(String(key), String(value)); },
+    removeItem(key) { store.delete(String(key)); },
+    clear() { store.clear(); },
+  };
+}
+
 function boundedMoment(value) {
   const initial = value && typeof value === "object" && value._date instanceof Date
     ? value._date
@@ -183,7 +198,7 @@ function boundedMoment(value) {
   return moment;
 }
 
-function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false, root = "window") {
+function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false, root = "window", storageStore = null) {
   const document = safeDocumentObject(capabilities, allowSyntheticDocument, `${root}.document`);
   const moment = (value) => boundedMoment(value);
   moment.weekdays = () => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -217,6 +232,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     clearInterval() {},
   };
   if (allowSyntheticDocument) {
+    target.localStorage = boundedStorage(storageStore || new Map());
     target.smart_env = null;
     target.smart_env_configs = Object.create(null);
     target.all_envs = [];
@@ -281,6 +297,13 @@ const OBSIDIAN_EXPORT_NAMES = [
 function cloneData(value) {
   if (value === undefined) return {};
   return JSON.parse(JSON.stringify(value));
+}
+
+function storageSnapshot(store) {
+  if (!(store instanceof Map)) return {};
+  return Object.fromEntries([...store.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => [key, String(value)]));
 }
 
 function createObsidianApi() {
@@ -642,7 +665,7 @@ function createSafeRequire(capabilities, requiredModules) {
 }
 
 function createEvaluationArguments(capabilities, requiredModules, runtime = {}) {
-  const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true));
+  const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true, "window", runtime.storage));
   let boundedTimerCalls = 0;
   const boundedTimer = runtime.allowSyntheticDocument
     ? (callback) => {
@@ -671,6 +694,7 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     safeWindow,
     safeWindow,
     safeWindow,
+    safeWindow.localStorage,
     deniedObject(capabilities, "process.spawn"),
     deniedFunction(capabilities, "network.request"),
     deniedFunction(capabilities, "network.request"),
@@ -701,7 +725,7 @@ function evaluateSource(source, capabilities, requiredModules, runtime = {}) {
   globalThis.createEl = () => safeDomObject();
   const factory = new Function(
     "module", "exports", "require", "document", "window", "globalThis", "self", "navigator", "location",
-    "process", "fetch", "WebSocket", "XMLHttpRequest", "keytar", "WebAssembly", "setTimeout", "setInterval",
+    "localStorage", "process", "fetch", "WebSocket", "XMLHttpRequest", "keytar", "WebAssembly", "setTimeout", "setInterval",
     "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder", "activeWindow", "app",
     `"use strict";\n${source}\n`,
   );
@@ -866,6 +890,8 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     lifecycle: events,
     loadedData: cloneData(pluginApp.loadedData),
     savedData: cloneData(pluginApp.savedData),
+    persistedData: cloneData(dataStore?.value),
+    storage: storageSnapshot(runtime.storage),
     registered,
     actions,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
@@ -907,7 +933,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   try {
     const dataStore = {value: cloneData(workflowConfig.initial_data), writes: 0};
     const initialApp = createPluginApp([], dataStore, workflowContext, deniedCapabilities);
-    const runtime = {app: initialApp, allowSyntheticDocument: true};
+    const runtime = {app: initialApp, allowSyntheticDocument: true, storage: new Map()};
     const evaluatePhase = () => evaluateSource(source, deniedCapabilities, requiredModules, runtime);
     const module = evaluatePhase();
     workflow.supported = true;
@@ -985,11 +1011,13 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     safeDomObject,
     safeDocumentObject,
     safeCollection,
+    boundedStorage,
     boundedMoment,
     safeWindowObject,
     safeComponentObject,
     safeCallable,
     cloneData,
+    storageSnapshot,
     createObsidianApi,
     pluginConstructor,
     createPluginApp,

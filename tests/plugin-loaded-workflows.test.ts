@@ -44,6 +44,8 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(workflow).toContain('sudo chmod 4755 "$sandbox_helper"');
   expect(rendererWorker).toContain("deniedPaths");
   expect(rendererWorker).toContain('"vault.direct-write"');
+  expect(rendererWorker).toContain("boundedStorage");
+  expect(rendererWorker).toContain("persistedData");
   expect(rendererWorker).toContain("bounded action timeout");
   expect(rendererWorker).toContain("evaluatePhase");
   expect(rendererWorker).toContain("getElementsByClassName");

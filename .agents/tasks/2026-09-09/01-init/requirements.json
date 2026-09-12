@@ -3,6 +3,16 @@
   "goal_id": "openobsidian-v1",
   "inventory_type": "acceptance-traceability",
   "created_at": "2026-09-09T17:20:00Z",
+  "reconciliation_evidence": [
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+      "tested_source_tree": "9c0a523a8e3504a7810b6dddd8d9789b6097ced14b4bfa73fe51113cad0fa79f",
+      "status": "partial",
+      "summary": "Bounded Linux workflow rerun records mediated persistence for PC20 and PC23, synthetic localStorage availability, zero vault writes and unchanged action/reference limitations without promoting compatibility."
+    }
+  ],
   "source_snapshots": {
     ".agents/tasks/2026-09-09/01-init/plan.md": {"version": "v0.4", "sha256": "0ea085aa7b9b14a279e7a51ec1a476b2ca8e3034d6a2947ca40f4e2d98cc5942"},
     ".agents/tasks/2026-09-09/01-init/references/ai-workspace/index.md": {"version": "v0.3", "sha256": "946699e29c399bb680b9ee89b2ea16c3c0e73f249c984778c12356f542306f3d"},
