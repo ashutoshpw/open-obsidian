@@ -1,0 +1,75 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T20:21:30Z",
+  "checkpoint": "P3.2",
+  "requirements": ["PC10", "C11", "PLUG-002"],
+  "decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "46182497054918d60f4319373d1530b86e62827add453464f2099bcd1a64ca01",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "id": "PC10",
+    "name": "Remotely Save",
+    "version": "0.5.25",
+    "main_js_bytes": 4249067,
+    "main_js_sha256": "b3afbd27f15188b9784618c958607869baa434dc0abcf072774f99362c11fa04",
+    "manifest_json_bytes": 374,
+    "manifest_json_sha256": "71d9c0b616003f3a696880e7aa88296e5b31555757e933a12d2900b96c4caa90",
+    "styles_css_bytes": 3125,
+    "styles_css_sha256": "87584e7d538ca58c527afbb2625b09ea282bcae7bf784b7cce33ca92e9e0dfb3",
+    "integrity": "passed",
+    "unchanged_runtime": {
+      "status": "denied",
+      "capability": "dom.privileged",
+      "path": "window.__core-js_shared__",
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    }
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-remotely-save-projection",
+    "phases": ["install", "restart", "update"],
+    "backend_configured": true,
+    "live_contact_disabled": true,
+    "network_denied": true,
+    "credential_read_denied": true,
+    "denied_operations_recorded": true,
+    "network_contacted": false,
+    "credentials_read": false,
+    "text_sync_plan_recorded": true,
+    "binary_sync_plan_recorded": true,
+    "interrupted_transfer_resumed": true,
+    "rename_projected": true,
+    "delete_projected": true,
+    "rename_delete_handled": true,
+    "encryption_metadata_preserved": true,
+    "conflict_protected": true,
+    "conflict_versions_retained": true,
+    "version_retention_preserved": true,
+    "unrelated_content_preserved": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "limitation": "The unchanged Remotely Save release is denied before lifecycle execution at a privileged renderer capability. The passing projection records backend configuration without live contact, explicit network and credential denial, text and binary sync plans, interrupted-transfer resume, rename/delete planning, encryption metadata preservation and protected conflict/version retention entirely in memory; it does not certify provider-backed sync, test credentials, reference Obsidian parity, same-user OS enforcement, human validation or compatibility promotion.",
+  "status": "pending-runtime",
+  "no_plugin_promoted": true
+}
