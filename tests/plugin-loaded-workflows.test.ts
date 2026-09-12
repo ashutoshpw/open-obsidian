@@ -22,6 +22,7 @@ const fixture = JSON.parse(readFileSync(join(root, "fixtures/plugin-loaded-workf
 const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {scripts?: Record<string, string>};
 const workflow = readFileSync(join(root, ".github/workflows/plugin-loaded-workflows.yml"), "utf8");
 const rendererWorker = readFileSync(join(root, "scripts/plugin-renderer-worker.cjs"), "utf8");
+const loadedWorkflowAudit = readFileSync(join(root, "scripts/audit-plugin-loaded-workflows.ts"), "utf8");
 
 test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries explicit", () => {
   expect(fixture.schema_version).toBe(1);
@@ -50,6 +51,9 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("evaluatePhase");
   expect(rendererWorker).toContain("getElementsByClassName");
   expect(rendererWorker).toContain("registerHoverLinkSource() {}");
+  expect(rendererWorker).toContain('status: "not-executed"');
+  expect(rendererWorker).toContain("bounded CodeMirror editor adapter is not certified");
+  expect(loadedWorkflowAudit).toContain('.filter((action) => action.status !== "passed")');
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];
@@ -64,4 +68,16 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.external_pending.length).toBeGreaterThanOrEqual(5);
   expect(fixture.limitation).toContain("unchanged pinned main.js bytes");
   expect(fixture.limitation).toContain("does not certify stock Obsidian");
+});
+
+test("renderer wrapper permits plugin-local app bindings", () => {
+  const argumentBlock = rendererWorker.match(/const factory = new Function\(\n([\s\S]*?)\n\s+`"use strict/)?.[1];
+  expect(argumentBlock).toBeDefined();
+  const formalNames = [...(argumentBlock ?? "").matchAll(/"([^"\\]+)"/g)].map((match) => match[1]);
+  expect(formalNames).not.toContain("app");
+
+  const module = {exports: {}};
+  const pluginLocalApp = new Function(...formalNames, "const app = {name: 'plugin-local'}; module.exports = app;");
+  expect(() => pluginLocalApp(module, module.exports, ...formalNames.slice(2).map(() => undefined))).not.toThrow();
+  expect(module.exports).toEqual({name: "plugin-local"});
 });

@@ -1,0 +1,132 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-worker-hardening",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC17",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_ids": ["fixture:plugin-loaded-workflows", "fixture:plugin-renderer-preflight"],
+  "recorded_at": "2026-09-12T04:32:14.398Z",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "74f4d3b1516c15e1b4ef309f80dc744a35121ba1",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "74f4d3b1516c15e1b4ef309f80dc744a35121ba1",
+    "sha256": "df0e8b5f7b7766a938382156d600c072d98b1f52c7b7dddb53358222dd555dbc",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "worker_hardening": {
+    "plugin_local_app_binding": "The renderer new Function wrapper no longer reserves app as a formal parameter, so unchanged bundles declaring a local app binding compile without an ordinary duplicate-binding failure.",
+    "bounded_config_and_theme": ["vault.setConfig", "app.setTheme"],
+    "editor_callbacks": {
+      "status": "not-executed",
+      "reason": "bounded CodeMirror editor adapter is not certified",
+      "direct_vault_writes": "denied"
+    },
+    "audit_disposition": "Every action status other than passed remains a partial/action failure; no compatibility status is promoted."
+  },
+  "regression_validation": {
+    "command": "bun test tests/plugin-loaded-workflows.test.ts tests/plugin-renderer-lifecycle.test.ts tests/plugin-renderer-probe.test.ts",
+    "exit_code": 0,
+    "tests": 6,
+    "expectations": 103,
+    "coverage": [
+      "plugin-local app binding compiles using the worker formal-parameter list",
+      "editor callback guard records not-executed and its certification reason",
+      "loaded-workflow audit retains every non-passed action status"
+    ]
+  },
+  "renderer_artifact_audit": {
+    "command": "bun run audit:plugin-renderer --all --lifecycle",
+    "exit_code": 0,
+    "integrity_passed": 26,
+    "denied_security": 23,
+    "renderer_loaded": 4,
+    "ordinary_renderer_failures": 0,
+    "not_applicable": 1,
+    "enforcement": "electron-context-isolated-sandbox",
+    "disposition": "isolated and non-certifying; cross-platform and reference results remain pending"
+  },
+  "loaded_workflow_audit": {
+    "command": "bun run audit:plugin-loaded-workflows",
+    "exit_code": 0,
+    "status": "partial",
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "artifact_lifecycles": {
+      "PC07": "complete",
+      "PC17": "complete",
+      "PC20": "complete",
+      "PC21": "complete",
+      "PC22": "partial",
+      "PC23": "complete",
+      "PC24": "complete"
+    },
+    "persistence": {
+      "PC07": "plugin-data-save",
+      "PC17": "plugin-data-save",
+      "PC20": "mediated-plugin-data-store",
+      "PC21": "plugin-data-save",
+      "PC22": "plugin-data-save",
+      "PC23": "mediated-plugin-data-store",
+      "PC24": "plugin-data-save",
+      "combination": "not-proven"
+    },
+    "action_limitations": {
+      "PC20": "editor callbacks are not-executed because the bounded CodeMirror editor adapter is not certified",
+      "PC07": "DOM-dependent calendar commands/settings are denied",
+      "PC17": "theme-settings callbacks remain partial where the bounded API is incomplete",
+      "PC21": "debug-copy action is denied at the DOM boundary",
+      "PC23": "settings display remains DOM-denied"
+    },
+    "actual_vault_writes": 0,
+    "no_plugin_promoted": true,
+    "disposition": "bounded lifecycle/action evidence pending cross-platform, reference Obsidian, human and required-combination validation"
+  },
+  "quality_validation": [
+    {"command": "bun test", "exit_code": 0, "tests": 206, "expectations": 1148},
+    {"command": "bun run typecheck", "exit_code": 0},
+    {"command": "bun run compile", "exit_code": 0},
+    {"command": "bun run check:fast", "exit_code": 0},
+    {"command": "bun run validate:state", "exit_code": 0},
+    {"command": "bun run final:audit", "exit_code": 0, "mandatory_rows_not_release_passing": 161},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "inherited_complexity_findings_excluded": 23, "inherited_worker_duplicate_retained": true},
+    {"command": "bun run audit:source-tree", "exit_code": 0},
+    {"command": "git diff --check", "exit_code": 0}
+  ],
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This is Linux x64 Electron renderer-boundary evidence using unchanged pinned main.js bytes. It records bounded lifecycle, action and persistence traces without certifying stock Obsidian, cross-platform behavior, human behavior, required plugin combinations or compatibility promotion."
+}

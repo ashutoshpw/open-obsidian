@@ -524,6 +524,10 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     off() {},
     offref() {},
     getConfig() { return context.vault_config; },
+    setConfig(key, value) {
+      if (typeof key !== "string" || !key) throw new Error("vault configuration key is invalid");
+      pluginApp.vaultConfig = Object.assign({}, pluginApp.vaultConfig, {[key]: cloneData(value)});
+    },
     getAbstractFileByPath(path) { return fileRecord(pathValue(path)); },
     getFileByPath(path) { return fileRecord(pathValue(path)); },
     getFolderByPath(path) { return folderRecord(path); },
@@ -627,6 +631,12 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
       offref() {},
     },
     config: {defaultViewMode: "source", livePreview: false},
+    vaultConfig: cloneData(context.vault_config),
+    theme: typeof context.theme === "string" ? context.theme : "default",
+    setTheme(theme) {
+      if (typeof theme !== "string" || !theme.trim()) throw new Error("theme name is invalid");
+      this.theme = theme;
+    },
     fileManager: {trashFile: async (file) => { denyVaultWrite("fileManager.trashFile", file); files.delete(pathValue(file)); recordWrite("fileManager.trashFile", file); }},
     commandsManager: {},
     plugins: {enabledPlugins: new Set(), plugins: context.plugins || {}, getPlugin(id) { return this.plugins[id] || null; }},
@@ -727,10 +737,10 @@ function evaluateSource(source, capabilities, requiredModules, runtime = {}) {
   const factory = new Function(
     "module", "exports", "require", "document", "window", "globalThis", "self", "navigator", "location",
     "localStorage", "process", "fetch", "WebSocket", "XMLHttpRequest", "keytar", "WebAssembly", "setTimeout", "setInterval",
-    "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder", "activeWindow", "app",
+    "clearTimeout", "clearInterval", "setImmediate", "Function", "moduleBuffer", "TextEncoder", "TextDecoder", "activeWindow",
     `"use strict";\n${source}\n`,
   );
-  factory(module, module.exports, ...createEvaluationArguments(capabilities, requiredModules, runtime), runtime.window?.app || null);
+  factory(module, module.exports, ...createEvaluationArguments(capabilities, requiredModules, runtime));
   return module;
 }
 
@@ -826,6 +836,10 @@ async function awaitAction(value) {
 async function exerciseRegistrations(pluginApp) {
   const actions = {commands: [], views: [], settings: []};
   for (const command of pluginApp.commandHandlers) {
+    if (command.callbackKind === "editorCallback") {
+      actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "not-executed", reason: "bounded CodeMirror editor adapter is not certified"});
+      continue;
+    }
     try {
       await awaitAction(command.callback.call(command.owner));
       actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "passed"});
