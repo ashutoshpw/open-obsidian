@@ -1447,22 +1447,39 @@ function boundedTagWorkflow(pluginApp, workflowContext = {}) {
 
 function boundedRecentFilesWorkflow(workflowContext = {}) {
   const spec = workflowContext && typeof workflowContext.recent_files_workflow === "object" ? workflowContext.recent_files_workflow : null;
-  if (!spec || typeof spec.stale_path !== "string" || typeof spec.retained_path !== "string") return null;
+  if (!spec || typeof spec.stale_path !== "string" || typeof spec.retained_path !== "string" || typeof spec.rename_from !== "string" || typeof spec.rename_to !== "string" || typeof spec.delete_path !== "string") return null;
   const entries = Array.isArray(workflowContext.initial_data?.recentFiles) ? workflowContext.initial_data.recentFiles : [];
   const files = new Set(Array.isArray(workflowContext.files) ? workflowContext.files.map((file) => file && typeof file.path === "string" ? file.path : "").filter(Boolean) : []);
   const before = entries.filter((entry) => entry && typeof entry.path === "string").map((entry) => ({path: entry.path, basename: typeof entry.basename === "string" ? entry.basename : entry.path.split("/").at(-1) || ""}));
-  const after = before.filter((entry) => files.has(entry.path));
-  const staleEntries = before.filter((entry) => !files.has(entry.path)).map((entry) => entry.path);
+  const renameBasename = typeof spec.rename_basename === "string" ? spec.rename_basename : spec.rename_to.split("/").at(-1)?.replace(/\.[^/.]+$/, "") || "";
+  const renamed = before.map((entry) => entry.path === spec.rename_from ? {...entry, path: spec.rename_to, basename: renameBasename} : entry);
+  const staleEntries = renamed.filter((entry) => !files.has(entry.path)).map((entry) => entry.path);
+  const existing = renamed.filter((entry) => files.has(entry.path));
+  const afterDelete = existing.filter((entry) => entry.path !== spec.delete_path);
   const maxLength = Number(spec.max_length);
+  const maxLengthValid = Number.isInteger(maxLength) && maxLength > 0;
+  const after = maxLengthValid ? afterDelete.slice(0, maxLength) : [];
+  const expectedOrder = maxLengthValid ? afterDelete.slice(0, maxLength) : [];
+  const renameEntryUpdated = before.some((entry) => entry.path === spec.rename_from) && after.some((entry) => entry.path === spec.rename_to && entry.basename === renameBasename) && !after.some((entry) => entry.path === spec.rename_from);
+  const deleteEntryRemoved = before.some((entry) => entry.path === spec.delete_path) && !after.some((entry) => entry.path === spec.delete_path);
+  const staleEntryRemoved = staleEntries.includes(spec.stale_path) && !after.some((entry) => entry.path === spec.stale_path);
+  const retainedEntryPreserved = after.some((entry) => entry.path === spec.retained_path);
+  const orderPreserved = after.every((entry, index) => entry.path === expectedOrder[index]?.path);
+  const maxLengthPreserved = maxLengthValid && maxLength === Number(workflowContext.initial_data?.maxLength) && after.length <= maxLength;
   return {
-    status: staleEntries.includes(spec.stale_path) && after.some((entry) => entry.path === spec.retained_path) ? "passed" : "failed",
+    status: staleEntryRemoved && renameEntryUpdated && deleteEntryRemoved && retainedEntryPreserved && orderPreserved && maxLengthPreserved ? "passed" : "failed",
     mutation_scope: "bounded-in-memory-projection",
     stale_path: spec.stale_path,
     retained_path: spec.retained_path,
-    stale_entries_removed: staleEntries.includes(spec.stale_path),
-    retained_entry_preserved: after.some((entry) => entry.path === spec.retained_path),
-    order_preserved: after.every((entry, index) => entry.path === before.filter((candidate) => files.has(candidate.path))[index]?.path),
-    max_length_preserved: Number.isFinite(maxLength) && maxLength > 0 && maxLength === Number(workflowContext.initial_data?.maxLength),
+    rename_from: spec.rename_from,
+    rename_to: spec.rename_to,
+    delete_path: spec.delete_path,
+    stale_entries_removed: staleEntryRemoved,
+    rename_entry_updated: renameEntryUpdated,
+    delete_entry_removed: deleteEntryRemoved,
+    retained_entry_preserved: retainedEntryPreserved,
+    order_preserved: orderPreserved,
+    max_length_preserved: maxLengthPreserved,
     before,
     after,
     direct_vault_writes: 0,

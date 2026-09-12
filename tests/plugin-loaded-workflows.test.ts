@@ -169,22 +169,36 @@ test("PC23 fixture and recent-file seam remove stale entries read-only", () => {
     recent_files_workflow?: {
       stale_path: string;
       retained_path: string;
+      rename_from: string;
+      rename_to: string;
+      rename_basename: string;
+      delete_path: string;
       max_length: number;
     };
   };
   expect(pc23.initial_data.recentFiles).toContainEqual({path: "Archive/missing.md", basename: "missing"});
+  expect(pc23.initial_data.recentFiles).toContainEqual({path: "Archive/old-note.md", basename: "old-note"});
   expect(pc23.recent_files_workflow).toEqual({
     stale_path: "Archive/missing.md",
-    retained_path: "Daily/2026-09-11.md",
+    retained_path: "Daily/2026-09-12.md",
+    rename_from: "Daily/2026-09-11.md",
+    rename_to: "Daily/2026-09-12.md",
+    rename_basename: "2026-09-12",
+    delete_path: "Archive/old-note.md",
     max_length: 50,
   });
+  expect(pc23.files).toContainEqual(expect.objectContaining({path: "Daily/2026-09-12.md"}));
   expect(rendererWorker).toContain("function boundedRecentFilesWorkflow");
   expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-projection"');
   expect(rendererWorker).toContain("stale_entries_removed");
+  expect(rendererWorker).toContain("rename_entry_updated");
+  expect(rendererWorker).toContain("delete_entry_removed");
   expect(rendererWorker).toContain("order_preserved");
   expect(rendererWorker).toContain("direct_vault_writes: 0");
   expect(loadedWorkflowAudit).toContain("function recentFilesWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("recent_files_workflow_checks");
   expect(loadedWorkflowAudit).toContain("max_length_preserved");
+  expect(loadedWorkflowAudit).toContain("rename_entry_updated");
+  expect(loadedWorkflowAudit).toContain("delete_entry_removed");
   expect(loadedWorkflowAudit).toContain("direct_vault_writes_zero");
 });

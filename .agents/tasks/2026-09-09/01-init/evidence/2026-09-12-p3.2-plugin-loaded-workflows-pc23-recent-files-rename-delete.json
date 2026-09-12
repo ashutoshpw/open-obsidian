@@ -1,0 +1,133 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc23-recent-files-rename-delete",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T09:14:32Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "5c9d9247a5fb4461fa5af9ef9b05a196d8df2902",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "5c9d9247a5fb4461fa5af9ef9b05a196d8df2902",
+    "sha256": "a01897a2212cd17218a94f0f633987bae0068d3b2d58275b2445108b0c710888",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "The PC23 fixture models the pinned Recent Files handlers' rename and delete outcomes alongside a stale missing entry, with a renamed valid note and a deletable existing note.",
+      "The workflow-only worker applies rename, stale filtering and delete to a read-only in-memory projection, preserves event order and configured maxLength, and records the final valid entry without invoking vault writes or the unchanged callbacks.",
+      "The audit requires stale removal, rename update, delete removal, retained entry, order, maxLength and zero-write checks in install/restart/update phases."
+    ],
+    "security_disposition": "Direct vault writes, filesystem/network/process/credential access and privileged DOM remain denied. Rename/delete behavior is a bounded projection only; no unchanged-plugin vault mutation callback is invoked."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "artifact_lifecycles": "all eight audited artifact lifecycles complete",
+    "artifact_persistence": "all eight audited artifact traces preserved mediated or plugin data across restart/update",
+    "artifact_actions": "all eight audited artifact action paths passed within the bounded synthetic scope",
+    "pc23": {
+      "name": "Recent Files",
+      "version": "1.7.10",
+      "main_js_sha256": "9a85d22a342d6bc8cfcbfe89a8ed04cdfdb444c370a220b008e4423f1fd37dc8",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "phases": ["install", "restart", "update"],
+      "persistence": "preserved via mediated-plugin-data-store",
+      "recent_files_workflow": {
+        "mutation_scope": "bounded-in-memory-projection",
+        "stale_path": "Archive/missing.md",
+        "rename_from": "Daily/2026-09-11.md",
+        "rename_to": "Daily/2026-09-12.md",
+        "delete_path": "Archive/old-note.md",
+        "stale_entries_removed": true,
+        "rename_entry_updated": true,
+        "delete_entry_removed": true,
+        "retained_entry_preserved": true,
+        "order_preserved": true,
+        "max_length_preserved": true,
+        "final_entries": [{"path": "Daily/2026-09-12.md", "basename": "2026-09-12"}],
+        "direct_vault_writes": 0,
+        "all_phases_passed": true
+      },
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved via mediated-plugin-data-store",
+      "action_status": "passed",
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "vault_writes": 0
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 6 tests, 151 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 210 tests, 1227 expectations",
+    "typecheck_command": "bun run typecheck",
+    "typecheck_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian Recent Files rename/delete callbacks, stale pruning and navigation comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned Recent Files bytes only inside the hidden Electron context-isolated sandbox. Rename, delete and stale pruning are a bounded in-memory projection over mediated fixture files with zero vault writes; it does not certify stock Obsidian, unchanged-plugin callback side effects, reference behavior, same-user cross-platform enforcement, human behavior or compatibility promotion."
+}

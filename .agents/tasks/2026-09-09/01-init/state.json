@@ -21,7 +21,7 @@
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
   "last_reconciled_head": "924b0265097f85d386ce9d94fa024e0732231238",
-  "updated_at": "2026-09-12T09:05:02Z",
+  "updated_at": "2026-09-12T09:18:44Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
@@ -29,10 +29,10 @@
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Add bounded PC23 Recent Files workflow",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc23-recent-files-ci.json",
-    "tested_source_tree": "b023d5ce11ce85d05e0d88672d7d9eaf259129fce3bebe6169ed17a302f9035c",
-    "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
+    "commit_marker": "[openobsidian P3.2 work] Add bounded PC23 rename/delete projection",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc23-recent-files-rename-delete.json",
+    "tested_source_tree": "a01897a2212cd17218a94f0f633987bae0068d3b2d58275b2445108b0c710888",
+    "next_action": "Commit and push this PC23 bounded rename/delete workflow slice, then reconcile the three hosted Actions workflows without promoting plugin compatibility.",
     "hosted_reconciliation": {
       "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc23-recent-files-ci.json",
       "runs": {"quality": 34684631906, "desktop_build": 34684631907, "loaded_workflows": 34684631905},

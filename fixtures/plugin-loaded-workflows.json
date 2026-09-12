@@ -68,6 +68,7 @@
       "initial_data": {
         "recentFiles": [
           {"path": "Daily/2026-09-11.md", "basename": "2026-09-11"},
+          {"path": "Archive/old-note.md", "basename": "old-note"},
           {"path": "Archive/missing.md", "basename": "missing"}
         ],
         "omittedPaths": [],
@@ -78,12 +79,16 @@
       },
       "recent_files_workflow": {
         "stale_path": "Archive/missing.md",
-        "retained_path": "Daily/2026-09-11.md",
+        "retained_path": "Daily/2026-09-12.md",
+        "rename_from": "Daily/2026-09-11.md",
+        "rename_to": "Daily/2026-09-12.md",
+        "rename_basename": "2026-09-12",
+        "delete_path": "Archive/old-note.md",
         "max_length": 50
       },
-      "active_file": "Daily/2026-09-11.md",
+      "active_file": "Daily/2026-09-12.md",
       "files": [
-        {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
+        {"path": "Daily/2026-09-12.md", "content": "# Saturday\n"},
         {"path": "Archive/old-note.md", "content": "# Old\n"}
       ]
     },

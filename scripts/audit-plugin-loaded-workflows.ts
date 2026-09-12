@@ -157,6 +157,8 @@ function recentFilesWorkflowChecks(workflow: JsonRecord): JsonRecord {
     present: traces.length === 3,
     bounded_read_only: traces.length === 3 && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-projection"),
     stale_entries_removed: every("stale_entries_removed"),
+    rename_entry_updated: every("rename_entry_updated"),
+    delete_entry_removed: every("delete_entry_removed"),
     retained_entry_preserved: every("retained_entry_preserved"),
     order_preserved: every("order_preserved"),
     max_length_preserved: every("max_length_preserved"),
@@ -335,6 +337,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "present",
         "bounded_read_only",
         "stale_entries_removed",
+        "rename_entry_updated",
+        "delete_entry_removed",
         "retained_entry_preserved",
         "order_preserved",
         "max_length_preserved",
@@ -384,7 +388,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, the PC23 stale-entry projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",
