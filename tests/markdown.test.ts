@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {editMarkdownProperty, editMarkdownPropertyValue, extractMarkdownHeadings, parseMarkdown} from "../src/core/markdown.js";
+import {editMarkdownNestedPropertyValue, editMarkdownProperty, editMarkdownPropertyValue, extractMarkdownHeadings, parseMarkdown} from "../src/core/markdown.js";
 
 const preservationFixture = JSON.parse(await Bun.file(new URL("../fixtures/markdown-property-preservation.json", import.meta.url)).text()) as {schema_version: number; invariants: Record<string, boolean>};
 
@@ -44,6 +44,25 @@ test("typed Markdown property edits use bounded flow YAML and refuse nested bloc
   expect(Buffer.from(edited).toString("utf8")).toBe("---\nstatus: [\"done\", \"later\"] # keep this\nmetadata:\n  owner: Ashutosh\n---\nBody\n");
   expect(parseMarkdown(edited).properties.find((property) => property.key === "status")?.value).toEqual(["done", "later"]);
   expect(() => editMarkdownPropertyValue(source, "metadata", {owner: "changed"})).toThrow("inline value");
+});
+
+test("nested Markdown leaf edits preserve block siblings, comments and source framing", () => {
+  const source = Buffer.from("\uFEFF---\r\nmetadata:\r\n  owner: Ashutosh # keep this comment\r\n  labels:\r\n    - one\r\nunknown: [keep, me]\r\n---\r\nBody\r\n", "utf8");
+  const edited = editMarkdownNestedPropertyValue(source, ["metadata", "owner"], "Ada");
+
+  expect(Buffer.from(edited).toString("utf8")).toBe("\uFEFF---\r\nmetadata:\r\n  owner: \"Ada\" # keep this comment\r\n  labels:\r\n    - one\r\nunknown: [keep, me]\r\n---\r\nBody\r\n");
+  expect(parseMarkdown(edited).properties.find((property) => property.key === "metadata")?.value).toEqual({owner: "Ada", labels: ["one"]});
+  expect(parseMarkdown(edited).yamlIssues).toEqual([]);
+});
+
+test("nested Markdown leaf edits refuse flow, sequence and block-scalar traversal", () => {
+  const flow = Buffer.from("---\nmetadata: {owner: Ashutosh}\n---\n", "utf8");
+  const sequence = Buffer.from("---\nmetadata:\n  - owner: Ashutosh\n---\n", "utf8");
+  const block = Buffer.from("---\nmetadata:\n  summary: |\n    source stays authoritative\n---\n", "utf8");
+
+  expect(() => editMarkdownNestedPropertyValue(flow, ["metadata", "owner"], "Ada")).toThrow("inline and cannot be traversed");
+  expect(() => editMarkdownNestedPropertyValue(sequence, ["metadata", "owner"], "Ada")).toThrow("unsupported sequence");
+  expect(() => editMarkdownNestedPropertyValue(block, ["metadata", "summary"], "changed")).toThrow("inline value");
 });
 
 test("markdown outline extraction ignores fenced headings and preserves source line numbers", () => {

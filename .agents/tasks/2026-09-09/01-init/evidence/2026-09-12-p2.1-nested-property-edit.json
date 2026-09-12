@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T00:29:02Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C04", "C04.1"],
+  "fixture_ids": ["fixture:c04-properties", "fixture:c04-unknown-preservation"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "pending worktree commit",
+    "tested_source_tree": "2013995a3b79f3012278081fe57d0c8fcfe8ae571e27192878a6cd13c08ff7b4"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/markdown.test.ts", "exit_code": 0, "result": "7 focused tests pass with 26 expectations, including BOM/CRLF nested leaf editing, inline-comment and unknown-sibling preservation, plus flow/sequence/block-scalar refusal."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the three-file nested-property increment."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checking passes for the nested source-span scanner and public Markdown editor contract."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes with 180 tests and 1,036 expectations; state, contracts, architecture, UX, accessibility, layout, typecheck, Knip and changed-file Fallow checks pass."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout bundles compile successfully."},
+    {"command": "bun run final:audit", "exit_code": 0, "result": "Final audit keeps origin/main and the separate release handoffs valid; 196 rows remain 28 passing, 128 implemented, 32 pending, 0 failing, 1 unsupported-security and 7 external-pending, with 161 mandatory rows not release-passing."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "235 included paths; source tree digest is 2013995a3b79f3012278081fe57d0c8fcfe8ae571e27192878a6cd13c08ff7b4."}
+  ],
+  "implemented": [
+    "Added an explicit nested Markdown property path editor for existing inline leaves under block-style mappings.",
+    "Replaced only the selected leaf span using bounded flow YAML, preserving BOM, line endings, comments, ordering, unknown siblings and all unrelated source bytes.",
+    "Added fail-closed tests for flow collections, sequence entries and literal/folded block scalars whose source-preserving edit semantics are not yet defined.",
+    "Documented the bounded editor contract for the shared, platform-neutral workspace layer."
+  ],
+  "limitations": [
+    "This is not full YAML dialect or structured block editing: aliases, anchors, tags, multiline scalars, flow traversal, sequence entries and whole-block replacement remain source-only and are refused.",
+    "Reference Obsidian open-edit-save-reopen comparison, cross-platform visible validation and full YAML dialect coverage remain pending.",
+    "No reference Obsidian instance, provider, personal vault or selected /home/ashutosh/Obsidian vault was accessed or modified."
+  ]
+}

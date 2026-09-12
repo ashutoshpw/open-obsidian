@@ -26,6 +26,9 @@ export type MarkdownHeading = {
 };
 
 type FrontmatterBounds = {contentStart: number; contentEnd: number};
+type SourceLine = {start: number; indent: number; content: string};
+type SourceProperty = {key: string; rawValue: string; valueStart: number; valueEnd: number};
+type NestedCandidate = {kind: "stop"} | {kind: "skip"} | {kind: "found"; property: SourceProperty};
 
 function detectLineEnding(text: string): MarkdownLineEnding {
   const endings = [...text.matchAll(/\r\n|\n|\r/g)].map((match) => match[0]);
@@ -46,6 +49,96 @@ function frontmatterBounds(text: string): FrontmatterBounds | null {
   const closing = /^---[ \t]*(?:\r\n|\n|\r|$)/m.exec(remainder);
   if (!closing) return null;
   return {contentStart: opening[0].length, contentEnd: opening[0].length + closing.index};
+}
+
+function sourceLines(text: string, bounds: FrontmatterBounds): SourceLine[] {
+  const source = text.slice(bounds.contentStart, bounds.contentEnd);
+  const lines: SourceLine[] = [];
+  const linePattern = /[^\r\n]*(?:\r\n|\n|\r|$)/g;
+  let offset = 0;
+  for (const match of source.matchAll(linePattern)) {
+    const line = match[0]!;
+    const body = line.replace(/(?:\r\n|\n|\r)$/, "");
+    const indentation = /^[ ]*/.exec(body)?.[0].length ?? 0;
+    const content = body.slice(indentation).trimEnd();
+    const meaningful = content.trim();
+    if (meaningful && !meaningful.startsWith("#")) {
+      lines.push({start: bounds.contentStart + offset, indent: indentation, content});
+    }
+    offset += line.length;
+    if (line.length === 0) break;
+  }
+  return lines;
+}
+
+function unquoteMappingKey(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (/^[A-Za-z0-9_.-]+$/.test(trimmed)) return trimmed;
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      return typeof parsed === "string" ? parsed : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  if (trimmed.startsWith("'") && trimmed.endsWith("'")) return trimmed.slice(1, -1).replaceAll("''", "'");
+  return undefined;
+}
+
+function sourceProperty(line: SourceLine): SourceProperty | undefined {
+  const match = /^((?:"(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[A-Za-z0-9_.-]+))([ \t]*):([ \t]*)(.*)$/.exec(line.content);
+  if (!match) return undefined;
+  const key = unquoteMappingKey(match[1]!);
+  if (!key) return undefined;
+  const keyAndSpacingLength = match[1]!.length + match[2]!.length;
+  const afterColon = `${match[3]!}${match[4]!}`;
+  const comment = yamlInlineCommentIndex(afterColon);
+  const beforeComment = comment < 0 ? afterColon : afterColon.slice(0, comment);
+  const rawValue = beforeComment.trim();
+  const valueStart = line.start + line.indent + keyAndSpacingLength + 1 + (beforeComment.length - beforeComment.trimStart().length);
+  return {key, rawValue, valueStart, valueEnd: valueStart + rawValue.length};
+}
+
+function blockEnd(lines: SourceLine[], start: number, parentIndent: number): number {
+  let index = start;
+  while (index < lines.length && lines[index]!.indent > parentIndent) index += 1;
+  return index;
+}
+
+function nestedLeafValue(property: SourceProperty, path: readonly string[]): SourceProperty {
+  if (!property.rawValue || property.rawValue === "|" || property.rawValue === ">") throw new Error(`Structured Markdown property edit requires an inline value: ${path.join(".")}`);
+  return property;
+}
+
+function nestedLeafChild(lines: SourceLine[], index: number, end: number, indent: number, path: readonly string[], pathIndex: number, property: SourceProperty): SourceProperty {
+  if (property.rawValue) throw new Error(`Nested Markdown property is inline and cannot be traversed: ${path.slice(0, pathIndex + 1).join(".")}`);
+  const child = index + 1;
+  if (child >= end || lines[child]!.indent <= indent) throw new Error(`Nested Markdown property has no represented child: ${path.join(".")}`);
+  return nestedLeaf(lines, child, blockEnd(lines, child, indent), lines[child]!.indent, path, pathIndex + 1);
+}
+
+function nestedCandidate(line: SourceLine, indent: number, wanted: string, path: readonly string[], pathIndex: number): NestedCandidate {
+  if (line.indent < indent) return {kind: "stop"};
+  if (line.indent !== indent) return {kind: "skip"};
+  if (line.content === "-" || line.content.startsWith("- ")) throw new Error(`Nested Markdown property path enters an unsupported sequence: ${path.slice(0, pathIndex + 1).join(".")}`);
+  const property = sourceProperty(line);
+  return property?.key === wanted ? {kind: "found", property} : {kind: "skip"};
+}
+
+function nestedLeaf(lines: SourceLine[], start: number, end: number, indent: number, path: readonly string[], pathIndex: number): SourceProperty {
+  const wanted = path[pathIndex];
+  if (!wanted) throw new Error("Nested Markdown property path must contain at least one key");
+  for (let index = start; index < end; index += 1) {
+    const candidate = nestedCandidate(lines[index]!, indent, wanted, path, pathIndex);
+    if (candidate.kind === "stop") break;
+    if (candidate.kind === "skip") continue;
+    const property = candidate.property;
+    return pathIndex === path.length - 1
+      ? nestedLeafValue(property, path)
+      : nestedLeafChild(lines, index, end, indent, path, pathIndex, property);
+  }
+  throw new Error(`Markdown property is not represented: ${path.join(".")}`);
 }
 
 function propertiesIn(text: string, bounds: FrontmatterBounds | null): {properties: MarkdownProperty[]; yamlIssues: string[]} {
@@ -123,4 +216,24 @@ export function editMarkdownPropertyValue(bytes: Uint8Array, key: string, value:
   if (!property) throw new Error(`Markdown property is not represented: ${key}`);
   if (!property.rawValue.trim() || ["|", ">"].includes(property.rawValue.trim())) throw new Error(`Structured Markdown property edit requires an inline value: ${key}`);
   return editMarkdownProperty(bytes, key, serializeYamlValue(value, {style: "flow"}));
+}
+
+/**
+ * Edit an existing inline scalar nested under block-style mappings. The path
+ * is intentionally explicit (for example, ["metadata", "owner"]): only the
+ * leaf scalar span is replaced, so comments, unknown siblings, indentation,
+ * line endings and all other source bytes remain untouched. Flow collections,
+ * sequence entries and block scalars are refused until their source-preserving
+ * edit semantics are specified.
+ */
+export function editMarkdownNestedPropertyValue(bytes: Uint8Array, path: readonly string[], value: YamlValue): Uint8Array {
+  if (path.length === 0 || path.some((segment) => !segment.trim())) throw new Error("Nested Markdown property path must contain non-empty keys");
+  const document = parseMarkdown(bytes);
+  const bounds = frontmatterBounds(document.text);
+  if (!bounds) throw new Error(`Markdown property is not represented: ${path.join(".")}`);
+  const lines = sourceLines(document.text, bounds);
+  const root = lines[0];
+  if (!root) throw new Error(`Markdown property is not represented: ${path.join(".")}`);
+  const property = nestedLeaf(lines, 0, lines.length, root.indent, path, 0);
+  return replaceMarkdownSpan(bytes, property.valueStart, property.valueEnd, serializeYamlValue(value, {style: "flow"}));
 }
