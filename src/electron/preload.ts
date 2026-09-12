@@ -8,6 +8,7 @@ const api: OpenObsidianAPI = {
   search: (query) => ipcRenderer.invoke(CHANNELS.search, query),
   readFile: (relativePath) => ipcRenderer.invoke(CHANNELS.readFile, relativePath),
   readAttachment: (request: AttachmentReadRequest) => ipcRenderer.invoke(CHANNELS.readAttachment, request),
+  openExternalFile: (relativePath) => ipcRenderer.invoke(CHANNELS.openExternalFile, relativePath),
   writeFile: (request: VaultWriteRequest) => ipcRenderer.invoke(CHANNELS.writeFile, request),
   openPopout: (request: PopoutOpenRequest) => ipcRenderer.invoke(CHANNELS.popoutOpen, request),
   reviewChanges: () => ipcRenderer.invoke(CHANNELS.reviewChanges),

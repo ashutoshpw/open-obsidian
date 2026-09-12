@@ -1809,7 +1809,7 @@ function renderMode(summary: VaultSummary): void {
 function configureFileButton(button: HTMLButtonElement, path: string, kind: "file" | "symlink", openable: boolean): void {
   button.disabled = kind === "symlink" || !openable;
   if (kind === "symlink") button.title = "Symlink entries are visible but cannot be opened through the vault boundary.";
-  else if (!openable) button.title = "This file remains visible and authoritative but is not a Markdown editor target.";
+  else if (!openable) button.title = "This file remains visible and authoritative but is not an available workspace target.";
   else button.addEventListener("click", () => void openFile(path));
 }
 
@@ -1914,7 +1914,7 @@ function renderFiles(files: Awaited<ReturnType<OpenObsidianAPI["listFiles"]>>): 
     fileList.append(message);
     return;
   }
-  files.forEach((file) => fileList.append(fileButton(file.relativePath, file.kind, undefined, file.kind === "file" && supportedWorkspaceFile(file.relativePath))));
+  files.forEach((file) => fileList.append(fileButton(file.relativePath, file.kind, undefined, file.kind === "file")));
 }
 
 function renderSearchResults(results: Awaited<ReturnType<OpenObsidianAPI["search"]>>): void {
@@ -1927,7 +1927,7 @@ function renderSearchResults(results: Awaited<ReturnType<OpenObsidianAPI["search
     fileList.append(message);
     return;
   }
-  results.forEach((result) => fileList.append(fileButton(result.relativePath, "file", result.preview, supportedWorkspaceFile(result.relativePath))));
+  results.forEach((result) => fileList.append(fileButton(result.relativePath, "file", result.preview, true)));
 }
 
 function currentTab(): NoteTab | undefined {
@@ -3509,8 +3509,32 @@ function activateLoadedTab(path: string): boolean {
 function openFile(path: string): void {
   if (!api) return;
   if (openSpecialFile(path)) return;
+  if (supportedWorkspaceFile(path)) return openWorkspaceFile(path);
+  void openExternalFile(path);
+}
+
+function openWorkspaceFile(path: string): void {
+  if (!api) return;
   if (activateLoadedTab(path)) return;
   beginFileRead(api, path);
+}
+
+function reportExternalOpen(result: Awaited<ReturnType<OpenObsidianAPI["openExternalFile"]>>): void {
+  if (result.opened) {
+    setStatus(`Opened ${result.relativePath} with the operating system.`);
+    return;
+  }
+  setStatus(`Unable to open ${result.relativePath} externally${result.error ? `: ${result.error}` : "."}`);
+}
+
+async function openExternalFile(path: string): Promise<void> {
+  if (!api) return;
+  setStatus(`Opening ${path} with the operating system…`);
+  try {
+    reportExternalOpen(await api.openExternalFile(path));
+  } catch (error) {
+    setStatus(errorText(error, "Unable to open the file externally; the vault remains unchanged."));
+  }
 }
 
 function openCanvasFile(path: string): void {

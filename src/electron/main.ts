@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain} from "electron";
+import {app, BrowserWindow, dialog, ipcMain, shell} from "electron";
 import {createHash} from "node:crypto";
 import {existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
@@ -288,6 +288,16 @@ function readFile(event: Electron.IpcMainInvokeEvent, relativePath: unknown): ob
   if (session) assertPopoutPath(session, relativePath);
   const read = requireVault().read(relativePath);
   return {relativePath: read.relativePath, base64: Buffer.from(read.bytes).toString("base64"), revision: read.revision};
+}
+
+async function openExternalFile(event: Electron.IpcMainInvokeEvent, relativePath: unknown): Promise<{relativePath: string; opened: boolean; error?: string}> {
+  if (!isString(relativePath)) throw new Error("Vault path must be a string");
+  const session = popoutSessionForEvent(event);
+  if (session) assertPopoutPath(session, relativePath);
+  const store = requireVault();
+  const absolutePath = store.resolveRegularFilePath(relativePath);
+  const error = await shell.openPath(absolutePath);
+  return error ? {relativePath, opened: false, error} : {relativePath, opened: true};
 }
 
 function inlineAttachmentEntry(store: VaultStore, request: ReturnType<typeof validateAttachmentReadRequest>): {relativePath: string; bytes: number} | null {
@@ -719,6 +729,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.search, searchFiles);
   ipcMain.handle(CHANNELS.readFile, readFile);
   ipcMain.handle(CHANNELS.readAttachment, readAttachment);
+  ipcMain.handle(CHANNELS.openExternalFile, openExternalFile);
   ipcMain.handle(CHANNELS.writeFile, writeFile);
   ipcMain.handle(CHANNELS.popoutOpen, openPopout);
   ipcMain.handle(CHANNELS.reviewChanges, reviewChanges);

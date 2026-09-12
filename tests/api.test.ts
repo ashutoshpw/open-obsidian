@@ -22,6 +22,10 @@ test("attachment IPC validation bounds the source note and leaves target resolut
   expect(() => validateAttachmentReadRequest({sourcePath: "Notes/readme.md", target: ""})).toThrow("Invalid attachment target");
 });
 
+test("external file opening has a dedicated mediated channel", () => {
+  expect(CHANNELS.openExternalFile).toBe("vault:open-external-file");
+});
+
 test("Chronicle IPC validation keeps diff, commit and restore actions typed", () => {
   expect(validateChronicleDiffRequest(undefined)).toEqual({});
   expect(validateChronicleDiffRequest({relativePath: "note.md", staged: true})).toEqual({relativePath: "note.md", staged: true});

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "evidence:p2.1-external-file-open",
+  "recorded_at": "2026-09-12T03:13:42Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C08", "C08.1"],
+  "tested_source_tree": "c62816a8f441bc947a34789c4f974dc35d5c17dfcd6a1d494efead8c16ee7335",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0"
+  },
+  "implementation": {
+    "channel": "vault:open-external-file",
+    "broker": "Electron main process validates a vault-relative regular file before calling shell.openPath",
+    "renderer": "Non-Markdown, non-Canvas and non-Base file actions use the mediated opener and report success or OS errors",
+    "boundary": "Absolute paths are never accepted from the renderer; traversal, directories, missing files and symlinks are rejected by VaultStore"
+  },
+  "checks": [
+    {"command": "bun test tests/api.test.ts tests/vault.test.ts", "exit_code": 0, "result": "35 tests passed; 160 expectations"},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "199 tests passed; 1,111 expectations; contracts, accessibility, layout, Knip and changed-code Fallow checks passed"},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passed"},
+    {"command": "bun run compile", "exit_code": 0, "result": "Electron main, preload, renderer and popout bundles compiled"},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in seven changed files; three inherited complexity findings excluded"},
+    {"command": "git diff --check", "exit_code": 0, "result": "No whitespace errors"}
+  ],
+  "fixture_results": [
+    "A regular PDF-like file resolves to its absolute path only inside the selected vault.",
+    "Directories, traversal and symlinks are rejected without reading or opening outside bytes.",
+    "The original binary remains in the vault; no write or conversion path is used."
+  ],
+  "limitations": [
+    "The operating-system opener was not invoked in this Linux shell-only validation environment.",
+    "macOS/Windows opener behavior, installed-handler behavior and human visible validation remain external-pending.",
+    "PDF/SVG and unknown binaries remain external-only; no decoder or derivative is introduced."
+  ],
+  "status": "implemented"
+}

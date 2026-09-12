@@ -8,6 +8,7 @@ export const CHANNELS = {
   search: "vault:search",
   readFile: "vault:read",
   readAttachment: "vault:read-attachment",
+  openExternalFile: "vault:open-external-file",
   writeFile: "vault:write",
   popoutOpen: "popout:open",
   reviewChanges: "chronicle:review-changes",
@@ -104,6 +105,12 @@ export type AttachmentReadResponse = {
   bytes: number;
   mimeType: string;
   kind: "image" | "audio" | "video";
+};
+
+export type ExternalFileOpenResponse = {
+  relativePath: string;
+  opened: boolean;
+  error?: string;
 };
 
 export type VaultWriteRequest = {
@@ -630,6 +637,7 @@ export type OpenObsidianAPI = {
   search: (query: string) => Promise<VaultSearchResult[]>;
   readFile: (relativePath: string) => Promise<VaultReadResponse>;
   readAttachment: (request: AttachmentReadRequest) => Promise<AttachmentReadResponse | null>;
+  openExternalFile: (relativePath: string) => Promise<ExternalFileOpenResponse>;
   writeFile: (request: VaultWriteRequest) => Promise<VaultReadResponse>;
   openPopout: (request: PopoutOpenRequest) => Promise<PopoutOpenResponse>;
   reviewChanges: () => Promise<ChronicleCommitReview>;

@@ -248,6 +248,22 @@ export class VaultStore {
     return {relativePath: normalized, bytes: new Uint8Array(bytes), revision: hashBytes(bytes)};
   }
 
+  /**
+   * Return an absolute path only after applying the same vault-boundary and
+   * regular-file checks used by reads. The caller may hand this path to an
+   * explicit OS integration, but symlinks and directories never cross the
+   * broker boundary.
+   */
+  resolveRegularFilePath(relativePath: string): string {
+    const normalized = normalizeRelativePath(relativePath, this.platform);
+    const filePath = pathInside(this.root, normalized, this.platform);
+    if (!existsSync(filePath)) throw new VaultSafetyError(`Vault file does not exist: ${normalized}`);
+    const stats = lstatSync(filePath);
+    if (stats.isSymbolicLink()) throw new VaultSafetyError(`Refusing to open a vault symlink externally: ${normalized}`);
+    if (!stats.isFile()) throw new VaultSafetyError(`Vault entry is not a regular file: ${normalized}`);
+    return filePath;
+  }
+
   write(request: VaultWrite): VaultRead {
     const normalized = normalizeRelativePath(request.relativePath, this.platform);
     const targetPath = pathInside(this.root, normalized, this.platform);

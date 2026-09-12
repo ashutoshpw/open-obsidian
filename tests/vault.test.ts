@@ -200,6 +200,21 @@ test("symlinks are recorded but never followed for file operations", () => {
   expect(() => store.write({relativePath: "outside.txt", expectedRevision: null, bytes: Buffer.from("blocked") })).toThrow(VaultSafetyError);
 });
 
+test("external-open path resolution allows regular files but rejects symlinks, directories and traversal", () => {
+  const fixture = createFixture();
+  mkdirSync(join(fixture.root, "folder"));
+  writeFileSync(join(fixture.root, "folder", "document.pdf"), Buffer.from("pdf bytes\n"));
+  const outside = join(fixture.appData, "outside.bin");
+  writeFileSync(outside, Buffer.from("outside\n"));
+  symlinkSync(outside, join(fixture.root, "linked.bin"));
+  const store = new VaultStore(fixture.root, fixture.appData);
+
+  expect(store.resolveRegularFilePath("folder/document.pdf")).toBe(join(fixture.root, "folder", "document.pdf"));
+  expect(() => store.resolveRegularFilePath("folder")).toThrow("not a regular file");
+  expect(() => store.resolveRegularFilePath("linked.bin")).toThrow("symlink");
+  expect(() => store.resolveRegularFilePath("../outside.bin")).toThrow(VaultSafetyError);
+});
+
 test("intermediate symlinks are never traversed", () => {
   const fixture = createFixture();
   const outsideDirectory = join(fixture.appData, "outside-directory");
