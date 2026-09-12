@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRenameApplyRequest, validateRenamePlanRequest, type RenamePlanResponse, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -24,6 +24,25 @@ test("attachment IPC validation bounds the source note and leaves target resolut
 
 test("external file opening has a dedicated mediated channel", () => {
   expect(CHANNELS.openExternalFile).toBe("vault:open-external-file");
+});
+
+test("rename IPC requires a bounded plan preview before applying filesystem changes", () => {
+  expect(CHANNELS.renamePlan).toBe("vault:rename-plan");
+  expect(CHANNELS.rename).toBe("vault:rename");
+  expect(validateRenamePlanRequest({oldPath: "Notes/Old.md", newPath: "Archive/New.md"})).toEqual({oldPath: "Notes/Old.md", newPath: "Archive/New.md"});
+  const plan: RenamePlanResponse = {
+    planId: "a".repeat(64),
+    snapshotSha256: "b".repeat(64),
+    oldPath: "Notes/Old.md",
+    newPath: "Archive/New.md",
+    references: [{sourcePath: "Index.md", kind: "wikilink", raw: "[[Old]]", target: "Old", start: 0, end: 7, targetStart: 2, targetEnd: 5, resolution: "resolved", action: "update", replacement: "Archive/New"}],
+    updateCount: 1,
+    skippedCount: 0,
+    warnings: [],
+  };
+  expect(validateRenameApplyRequest({plan})).toEqual({plan});
+  expect(() => validateRenamePlanRequest({oldPath: "../Old.md", newPath: "Archive/New.md"})).toThrow("Invalid workspace rename source path");
+  expect(() => validateRenameApplyRequest({plan: {...plan, planId: "not-a-digest"}})).toThrow("Invalid rename plan");
 });
 
 test("Chronicle IPC validation keeps diff, commit and restore actions typed", () => {

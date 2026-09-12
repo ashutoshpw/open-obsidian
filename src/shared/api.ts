@@ -9,6 +9,8 @@ export const CHANNELS = {
   readFile: "vault:read",
   readAttachment: "vault:read-attachment",
   openExternalFile: "vault:open-external-file",
+  renamePlan: "vault:rename-plan",
+  rename: "vault:rename",
   writeFile: "vault:write",
   popoutOpen: "popout:open",
   reviewChanges: "chronicle:review-changes",
@@ -111,6 +113,43 @@ export type ExternalFileOpenResponse = {
   relativePath: string;
   opened: boolean;
   error?: string;
+};
+
+export type RenamePlanReferenceView = {
+  sourcePath: string;
+  kind: "wikilink" | "markdown" | "embed";
+  raw: string;
+  target: string;
+  start: number;
+  end: number;
+  targetStart: number;
+  targetEnd: number;
+  resolution: "resolved" | "unresolved" | "ambiguous" | "external";
+  action: "update" | "skip-ambiguous" | "skip-unresolved";
+  replacement: string | null;
+};
+
+export type RenamePlanResponse = {
+  planId: string;
+  snapshotSha256: string;
+  oldPath: string;
+  newPath: string;
+  references: RenamePlanReferenceView[];
+  updateCount: number;
+  skippedCount: number;
+  warnings: string[];
+};
+
+export type RenamePlanRequest = {oldPath: string; newPath: string};
+export type RenameApplyRequest = {plan: RenamePlanResponse};
+export type RenameResponse = {
+  planId: string;
+  oldPath: string;
+  newPath: string;
+  updatedReferences: number;
+  skippedReferences: number;
+  warnings: string[];
+  read: VaultReadResponse;
 };
 
 export type VaultWriteRequest = {
@@ -369,6 +408,90 @@ export function validateVaultWriteRequest(value: unknown): VaultWriteRequest {
   if (value.expectedRevision !== undefined && value.expectedRevision !== null && typeof value.expectedRevision !== "string") throw new Error("Invalid vault write request");
   if (typeof value.base64 !== "string" || !isBase64(value.base64)) throw new Error("Invalid vault write request");
   return {relativePath: value.relativePath, expectedRevision: value.expectedRevision ?? null, base64: value.base64};
+}
+
+export function validateRenamePlanRequest(value: unknown): RenamePlanRequest {
+  if (!isRecord(value)) throw new Error("Invalid rename plan request");
+  return {oldPath: validateWorkspacePath(value.oldPath, "rename source path"), newPath: validateWorkspacePath(value.newPath, "rename destination path")};
+}
+
+const renameReferenceKinds = ["wikilink", "markdown", "embed"] as const;
+const renameReferenceResolutions = ["resolved", "unresolved", "ambiguous", "external"] as const;
+const renameReferenceActions = ["update", "skip-ambiguous", "skip-unresolved"] as const;
+
+function boundedRenameString(value: unknown, maximum: number): value is string {
+  return typeof value === "string" && value.length <= maximum;
+}
+
+function nonNegativeSafeInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && (value as number) >= 0;
+}
+
+function renameReferenceKind(value: unknown): value is RenamePlanReferenceView["kind"] {
+  return typeof value === "string" && renameReferenceKinds.includes(value as RenamePlanReferenceView["kind"]);
+}
+
+function renameReferenceResolution(value: unknown): value is RenamePlanReferenceView["resolution"] {
+  return typeof value === "string" && renameReferenceResolutions.includes(value as RenamePlanReferenceView["resolution"]);
+}
+
+function renameReferenceAction(value: unknown): value is RenamePlanReferenceView["action"] {
+  return typeof value === "string" && renameReferenceActions.includes(value as RenamePlanReferenceView["action"]);
+}
+
+function validateRenameReferenceStrings(value: Record<string, unknown>): void {
+  if (!boundedRenameString(value.raw, 4096) || !boundedRenameString(value.target, 4096)) throw new Error("Invalid rename plan");
+}
+
+function validateRenameReferenceOffsets(value: Record<string, unknown>): void {
+  if (![value.start, value.end, value.targetStart, value.targetEnd].every(nonNegativeSafeInteger)) throw new Error("Invalid rename plan");
+}
+
+function validateRenameReferenceEnums(value: Record<string, unknown>): void {
+  if (!renameReferenceKind(value.kind) || !renameReferenceResolution(value.resolution) || !renameReferenceAction(value.action)) throw new Error("Invalid rename plan");
+}
+
+function validateRenameReferenceReplacement(value: Record<string, unknown>): void {
+  if (value.replacement !== null && !boundedRenameString(value.replacement, 4096)) throw new Error("Invalid rename plan");
+}
+
+function validateRenamePlanReference(value: unknown): RenamePlanReferenceView {
+  if (!isRecord(value)) throw new Error("Invalid rename plan");
+  validateRenameReferenceStrings(value);
+  validateRenameReferenceOffsets(value);
+  validateRenameReferenceEnums(value);
+  validateRenameReferenceReplacement(value);
+  const sourcePath = validateWorkspacePath(value.sourcePath, "rename reference path");
+  if (!renameReferenceKind(value.kind)) throw new Error("Invalid rename plan");
+  if (!renameReferenceResolution(value.resolution)) throw new Error("Invalid rename plan");
+  if (!renameReferenceAction(value.action)) throw new Error("Invalid rename plan");
+  return {sourcePath, kind: value.kind as RenamePlanReferenceView["kind"], raw: value.raw as string, target: value.target as string, start: value.start as number, end: value.end as number, targetStart: value.targetStart as number, targetEnd: value.targetEnd as number, resolution: value.resolution as RenamePlanReferenceView["resolution"], action: value.action as RenamePlanReferenceView["action"], replacement: value.replacement as string | null};
+}
+
+function validateRenamePlanIdentity(value: Record<string, unknown>): void {
+  if (!boundedRenameString(value.planId, 64) || !/^[a-f0-9]{64}$/i.test(value.planId) || !boundedRenameString(value.snapshotSha256, 64) || !/^[a-f0-9]{64}$/i.test(value.snapshotSha256)) throw new Error("Invalid rename plan");
+}
+
+function validateRenamePlanCounts(value: Record<string, unknown>): void {
+  if (!Array.isArray(value.references) || value.references.length > 10_000 || !nonNegativeSafeInteger(value.updateCount) || !nonNegativeSafeInteger(value.skippedCount)) throw new Error("Invalid rename plan");
+}
+
+function validateRenamePlanWarnings(value: Record<string, unknown>): void {
+  if (!Array.isArray(value.warnings) || value.warnings.length > 20 || value.warnings.some((warning) => !boundedRenameString(warning, 500))) throw new Error("Invalid rename plan");
+}
+
+function validateRenamePlan(value: unknown): RenamePlanResponse {
+  if (!isRecord(value)) throw new Error("Invalid rename plan");
+  validateRenamePlanIdentity(value);
+  const paths = validateRenamePlanRequest({oldPath: value.oldPath, newPath: value.newPath});
+  validateRenamePlanCounts(value);
+  validateRenamePlanWarnings(value);
+  return {planId: value.planId as string, snapshotSha256: value.snapshotSha256 as string, ...paths, references: (value.references as unknown[]).map(validateRenamePlanReference), updateCount: value.updateCount as number, skippedCount: value.skippedCount as number, warnings: [...(value.warnings as unknown[])] as string[]};
+}
+
+export function validateRenameApplyRequest(value: unknown): RenameApplyRequest {
+  if (!isRecord(value)) throw new Error("Invalid rename request");
+  return {plan: validateRenamePlan(value.plan)};
 }
 
 export function validateAttachmentReadRequest(value: unknown): AttachmentReadRequest {
@@ -638,6 +761,8 @@ export type OpenObsidianAPI = {
   readFile: (relativePath: string) => Promise<VaultReadResponse>;
   readAttachment: (request: AttachmentReadRequest) => Promise<AttachmentReadResponse | null>;
   openExternalFile: (relativePath: string) => Promise<ExternalFileOpenResponse>;
+  renamePlan: (request: RenamePlanRequest) => Promise<RenamePlanResponse>;
+  rename: (request: RenameApplyRequest) => Promise<RenameResponse>;
   writeFile: (request: VaultWriteRequest) => Promise<VaultReadResponse>;
   openPopout: (request: PopoutOpenRequest) => Promise<PopoutOpenResponse>;
   reviewChanges: () => Promise<ChronicleCommitReview>;

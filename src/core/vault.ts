@@ -3,6 +3,7 @@ import {existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSyn
 import {basename, dirname, join, relative, resolve} from "node:path";
 import type {ConflictResolutionAction} from "../shared/api.js";
 import {threeWayMergeBytes, type MergeResult} from "./merge.js";
+import {applyRenamePlan as applyParsedRenamePlan, buildRenamePlan as buildParsedRenamePlan, renamePlanIdentity, type RenamePlan, type RenamePlanFile} from "./rename-plan.js";
 
 export type VaultEntryKind = "file" | "symlink";
 
@@ -43,6 +44,17 @@ export type VaultWrite = {
 
 export type VaultMergeResult = {merge: MergeResult; written?: VaultRead; preservedIncomingPath?: string};
 
+export type VaultRenamePlan = RenamePlan & {planId: string; snapshotSha256: string};
+export type VaultRenameResult = {
+  planId: string;
+  oldPath: string;
+  newPath: string;
+  updatedReferences: number;
+  skippedReferences: number;
+  warnings: string[];
+  read: VaultRead;
+};
+
 export type RecoveryRecord = {
   id: string;
   relativePath: string;
@@ -55,7 +67,7 @@ export type RecoveryRecord = {
 export type ConflictRecord = RecoveryRecord & {kind: "conflict"; expectedRevision: string | null; currentRevision: string | null; protected: true};
 export type ConflictResolution = {id: string; relativePath: string; action: ConflictResolutionAction; read?: VaultRead};
 
-export type VaultFaultStage = "before-temp-write" | "after-temp-write" | "before-replace";
+export type VaultFaultStage = "before-temp-write" | "after-temp-write" | "before-replace" | "before-rename";
 
 export type VaultStoreOptions = {
   /** Override the host platform for deterministic safety-fixture coverage. */
@@ -108,15 +120,21 @@ function conflictRecord(raw: Partial<ConflictRecord>): ConflictRecord[] {
 
 type JournalEntry = {
   id: string;
-  operation: "write" | "batch";
+  operation: "write" | "batch" | "rename";
   state: "prepared" | "committed" | "failed";
   relativePath?: string;
   paths?: string[];
+  oldPath?: string;
+  newPath?: string;
+  planId?: string;
   expectedRevision?: string | null;
   nextRevision?: string;
   recordedAt: string;
   error?: string;
 };
+
+type RenameUpdate = {sourcePath: string; targetPath: string; before: VaultRead; bytes: Uint8Array};
+type WrittenRenameUpdate = RenameUpdate & {written: VaultRead};
 
 function hashBytes(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
@@ -264,6 +282,163 @@ export class VaultStore {
     return filePath;
   }
 
+  buildRenamePlan(oldPath: string, newPath: string): VaultRenamePlan {
+    const normalizedOldPath = normalizeRelativePath(oldPath, this.platform);
+    const normalizedNewPath = normalizeRelativePath(newPath, this.platform);
+    if (normalizedOldPath === normalizedNewPath) throw new VaultSafetyError("Rename plan requires distinct source and destination paths");
+
+    const sourcePath = pathInside(this.root, normalizedOldPath, this.platform);
+    const sourceStats = this.regularRenameSource(sourcePath, normalizedOldPath);
+    const destinationPath = pathInside(this.root, normalizedNewPath, this.platform);
+    this.validateRenameDestination(sourcePath, sourceStats, destinationPath, normalizedNewPath);
+
+    const snapshot = snapshotVault(this.root);
+    const plan = buildParsedRenamePlan(this.readRenameFiles(snapshot), normalizedOldPath, normalizedNewPath);
+    const identity = renamePlanIdentity(plan, snapshot.sha256);
+    return {...plan, ...identity};
+  }
+
+  applyRenamePlan(plan: VaultRenamePlan): VaultRenameResult {
+    const current = this.currentRenamePlan(plan);
+    const sourceRead = this.read(current.oldPath);
+    const updates = this.buildRenameUpdates(current, sourceRead);
+    const sourceAbsolutePath = pathInside(this.root, current.oldPath, this.platform);
+    const destinationAbsolutePath = pathInside(this.root, current.newPath, this.platform);
+    const operationId = randomUUID();
+    const journalBase = this.renameJournal(current, updates, operationId);
+    this.appendJournal(journalBase);
+
+    let moved = false;
+    let written: WrittenRenameUpdate[] = [];
+    try {
+      this.renameAbsolute(sourceAbsolutePath, destinationAbsolutePath, current.oldPath);
+      moved = true;
+      this.writeRenameUpdates(updates, operationId, written);
+      return this.commitRename(current, journalBase);
+    } catch (error) {
+      return this.failRename(error, current, journalBase, operationId, moved, written, sourceAbsolutePath, destinationAbsolutePath);
+    }
+  }
+
+  private readRenameFiles(snapshot: VaultSnapshot): RenamePlanFile[] {
+    const files: RenamePlanFile[] = [];
+    for (const entry of snapshot.entries) {
+      if (entry.kind !== "file" || !entry.relativePath.toLocaleLowerCase().endsWith(".md")) continue;
+      const file = this.readRenameFile(entry.relativePath);
+      if (file) files.push(file);
+    }
+    return files;
+  }
+
+  private readRenameFile(relativePath: string): RenamePlanFile | null {
+    try {
+      const read = this.read(relativePath);
+      const text = new TextDecoder("utf-8", {fatal: true, ignoreBOM: true}).decode(read.bytes);
+      return {relativePath, text};
+    } catch (error) {
+      if (error instanceof TypeError || error instanceof DOMException) return null;
+      throw error;
+    }
+  }
+
+  private currentRenamePlan(plan: VaultRenamePlan): VaultRenamePlan {
+    const current = this.buildRenamePlan(plan.oldPath, plan.newPath);
+    if (current.planId !== plan.planId || current.snapshotSha256 !== plan.snapshotSha256) throw new VaultSafetyError("Rename plan is stale; preview the rename again before applying it");
+    return current;
+  }
+
+  private buildRenameUpdates(plan: VaultRenamePlan, sourceRead: VaultRead): RenameUpdate[] {
+    const beforeReads = new Map<string, VaultRead>([[plan.oldPath, sourceRead]]);
+    const affectedPaths = this.renameAffectedPaths(plan);
+    for (const sourcePath of affectedPaths) {
+      if (!beforeReads.has(sourcePath)) beforeReads.set(sourcePath, this.read(sourcePath));
+    }
+
+    const updates: RenameUpdate[] = [];
+    for (const sourcePath of affectedPaths) {
+      const update = this.buildRenameUpdate(plan, sourcePath, beforeReads.get(sourcePath));
+      if (update) updates.push(update);
+    }
+    return updates;
+  }
+
+  private renameAffectedPaths(plan: VaultRenamePlan): Set<string> {
+    const affectedPaths = new Set<string>();
+    for (const reference of plan.references) {
+      if (reference.action === "update") affectedPaths.add(reference.sourcePath);
+    }
+    return affectedPaths;
+  }
+
+  private buildRenameUpdate(plan: VaultRenamePlan, sourcePath: string, before: VaultRead | undefined): RenameUpdate | null {
+    if (!before) return null;
+    const targetPath = sourcePath === plan.oldPath ? plan.newPath : sourcePath;
+    const sourceText = new TextDecoder("utf-8", {fatal: true, ignoreBOM: true}).decode(before.bytes);
+    const updatedText = applyParsedRenamePlan(sourceText, sourcePath, plan);
+    const bytes = new TextEncoder().encode(updatedText);
+    if (hashBytes(bytes) === before.revision && targetPath === sourcePath) return null;
+    return {sourcePath, targetPath, before, bytes};
+  }
+
+  private renameJournal(plan: VaultRenamePlan, updates: RenameUpdate[], operationId: string): JournalEntry {
+    return {id: operationId, operation: "rename", state: "prepared", paths: [plan.oldPath, plan.newPath, ...updates.map((update) => update.targetPath)], oldPath: plan.oldPath, newPath: plan.newPath, planId: plan.planId, recordedAt: new Date().toISOString()};
+  }
+
+  private writeRenameUpdates(updates: RenameUpdate[], operationId: string, written: WrittenRenameUpdate[]): void {
+    for (const [index, update] of updates.entries()) {
+      const result = this.write({relativePath: update.targetPath, expectedRevision: update.before.revision, bytes: update.bytes, operationId: operationId + ":" + index});
+      written.push({...update, written: result});
+    }
+  }
+
+  private commitRename(plan: VaultRenamePlan, journalBase: JournalEntry): VaultRenameResult {
+    this.appendJournal({...journalBase, state: "committed", recordedAt: new Date().toISOString()});
+    const read = this.read(plan.newPath);
+    return {planId: plan.planId, oldPath: plan.oldPath, newPath: plan.newPath, updatedReferences: plan.updateCount, skippedReferences: plan.skippedCount, warnings: plan.warnings, read};
+  }
+
+  private failRename(error: unknown, plan: VaultRenamePlan, journalBase: JournalEntry, operationId: string, moved: boolean, written: WrittenRenameUpdate[], sourceAbsolutePath: string, destinationAbsolutePath: string): never {
+    const rollbackErrors = this.rollbackRename(written, operationId, moved, sourceAbsolutePath, destinationAbsolutePath, plan.newPath);
+    const message = error instanceof Error ? error.message : String(error);
+    const suffix = rollbackErrors.length > 0 ? " Rollback incomplete: " + rollbackErrors.join("; ") : "";
+    this.appendJournal({...journalBase, state: "failed", recordedAt: new Date().toISOString(), error: message + suffix});
+    if (rollbackErrors.length > 0) throw new VaultSafetyError("Rename failed and rollback was incomplete: " + message + "; " + rollbackErrors.join("; "));
+    throw error;
+  }
+
+  private rollbackRename(written: WrittenRenameUpdate[], operationId: string, moved: boolean, sourceAbsolutePath: string, destinationAbsolutePath: string, destinationRelativePath: string): string[] {
+    const errors: string[] = [];
+    for (const update of [...written].reverse()) {
+      const error = this.rollbackRenameUpdate(update, operationId);
+      if (error) errors.push(error);
+    }
+    if (moved) {
+      const error = this.rollbackRenameMove(destinationAbsolutePath, sourceAbsolutePath, destinationRelativePath);
+      if (error) errors.push(error);
+    }
+    return errors;
+  }
+
+  private rollbackRenameUpdate(update: WrittenRenameUpdate, operationId: string): string | null {
+    try {
+      const currentRead = this.read(update.targetPath);
+      if (currentRead.revision !== update.written.revision) throw new VaultSafetyError("Reference changed during rollback: " + update.targetPath);
+      this.write({relativePath: update.targetPath, expectedRevision: currentRead.revision, bytes: update.before.bytes, operationId: operationId + ":rollback:" + update.targetPath});
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  private rollbackRenameMove(destinationAbsolutePath: string, sourceAbsolutePath: string, destinationRelativePath: string): string | null {
+    try {
+      this.renameAbsolute(destinationAbsolutePath, sourceAbsolutePath, destinationRelativePath);
+      return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  }
+
   write(request: VaultWrite): VaultRead {
     const normalized = normalizeRelativePath(request.relativePath, this.platform);
     const targetPath = pathInside(this.root, normalized, this.platform);
@@ -403,6 +578,53 @@ export class VaultStore {
     if (!existsSync(filePath)) return null;
     if (lstatSync(filePath).isSymbolicLink()) throw new VaultSafetyError(`Refusing to write through a vault symlink: ${filePath}`);
     return hashBytes(readFileSync(filePath));
+  }
+
+  private regularRenameSource(filePath: string, relativePath: string): NonNullable<ReturnType<typeof lstatSync>> {
+    if (!existsSync(filePath)) throw new VaultSafetyError(`Vault file does not exist: ${relativePath}`);
+    const stats = lstatSync(filePath);
+    if (stats.isSymbolicLink()) throw new VaultSafetyError(`Refusing to rename a vault symlink: ${relativePath}`);
+    if (!stats.isFile()) throw new VaultSafetyError(`Only regular files can be renamed through the vault broker: ${relativePath}`);
+    return stats;
+  }
+
+  private validateRenameDestination(sourcePath: string, sourceStats: NonNullable<ReturnType<typeof lstatSync>>, destinationPath: string, relativePath: string): void {
+    this.validateExistingRenameDestination(sourcePath, sourceStats, destinationPath, relativePath);
+    this.validateRenameDestinationParent(destinationPath, relativePath);
+  }
+
+  private validateExistingRenameDestination(sourcePath: string, sourceStats: NonNullable<ReturnType<typeof lstatSync>>, destinationPath: string, relativePath: string): void {
+    if (!existsSync(destinationPath)) return;
+    const destinationStats = lstatSync(destinationPath);
+    const sameFile = destinationStats.isFile() && sourceStats.dev === destinationStats.dev && sourceStats.ino === destinationStats.ino;
+    if (!(this.platform === "win32" && sameFile)) throw new VaultSafetyError(`Rename destination already exists: ${relativePath}`);
+    if (resolve(sourcePath) === resolve(destinationPath)) throw new VaultSafetyError("Rename plan requires distinct source and destination paths");
+  }
+
+  private validateRenameDestinationParent(destinationPath: string, relativePath: string): void {
+    const parent = dirname(destinationPath);
+    if (!existsSync(parent)) throw new VaultSafetyError(`Rename destination folder does not exist: ${relativePath}`);
+    const parentStats = lstatSync(parent);
+    if (parentStats.isSymbolicLink() || !parentStats.isDirectory()) throw new VaultSafetyError(`Rename destination folder is not a real directory: ${relativePath}`);
+  }
+
+  private renameAbsolute(sourcePath: string, destinationPath: string, relativePath: string): void {
+    this.options.faultHook?.("before-rename", relativePath);
+    const sourceStats = lstatSync(sourcePath);
+    const destinationExists = existsSync(destinationPath);
+    const destinationStats = destinationExists ? lstatSync(destinationPath) : null;
+    const caseOnly = this.platform === "win32" && destinationStats?.isFile() && sourceStats.dev === destinationStats.dev && sourceStats.ino === destinationStats.ino;
+    if (!caseOnly) {
+      renameSync(sourcePath, destinationPath);
+      return;
+    }
+    const temporaryPath = join(dirname(sourcePath), `.${basename(sourcePath)}.${randomUUID()}.rename.tmp`);
+    try {
+      renameSync(sourcePath, temporaryPath);
+      renameSync(temporaryPath, destinationPath);
+    } finally {
+      if (existsSync(temporaryPath)) renameSync(temporaryPath, sourcePath);
+    }
   }
 
   private appendJournal(entry: JournalEntry): void {

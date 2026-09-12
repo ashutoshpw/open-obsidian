@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RenamePlanResponse, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import type {LaunchIntent} from "../shared/entry-points.js";
 import {decodeBase64, encodeBase64} from "../shared/base64.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
@@ -37,10 +37,20 @@ const editorPath = document.querySelector<HTMLElement>("#editor-path");
 const editor = document.querySelector<HTMLTextAreaElement>("#note-editor");
 const emptyState = document.querySelector<HTMLElement>("#empty-state");
 const saveButton = document.querySelector<HTMLButtonElement>("#save-note");
+const renameButton = document.querySelector<HTMLButtonElement>("#rename-note");
 const popoutButton = document.querySelector<HTMLButtonElement>("#popout-note");
 const reviewButton = document.querySelector<HTMLButtonElement>("#review-changes");
 const historyButton = document.querySelector<HTMLButtonElement>("#show-history");
 const changePanel = document.querySelector<HTMLElement>("#change-panel");
+const renamePanel = document.querySelector<HTMLElement>("#rename-panel");
+const closeRenameButton = document.querySelector<HTMLButtonElement>("#close-rename");
+const renameForm = document.querySelector<HTMLFormElement>("#rename-form");
+const renameSource = document.querySelector<HTMLElement>("#rename-source");
+const renameDestination = document.querySelector<HTMLInputElement>("#rename-destination");
+const previewRenameButton = document.querySelector<HTMLButtonElement>("#preview-rename");
+const applyRenameButton = document.querySelector<HTMLButtonElement>("#apply-rename");
+const renameSummary = document.querySelector<HTMLElement>("#rename-summary");
+const renameReferences = document.querySelector<HTMLElement>("#rename-references");
 const closeChangesButton = document.querySelector<HTMLButtonElement>("#close-changes");
 const changeSummary = document.querySelector<HTMLElement>("#change-summary");
 const changeList = document.querySelector<HTMLElement>("#change-list");
@@ -188,6 +198,7 @@ let previewGeneration = 0;
 type PreviewEmbedContext = {sourcePath: string; depth: number; chain: readonly string[]};
 const previewEmbedContexts = new WeakMap<HTMLElement, PreviewEmbedContext>();
 let changeReview: Awaited<ReturnType<OpenObsidianAPI["reviewChanges"]>> | null = null;
+let pendingRenamePlan: RenamePlanResponse | null = null;
 let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS, historyPolicy: {...DEFAULT_HISTORY_POLICY}};
 let workspaceState: WorkspaceState = {...DEFAULT_WORKSPACE_STATE, settings: workspaceSettings, openTabs: [], navigationHistory: []};
 let providerSettings: ProviderSettings = DEFAULT_PROVIDER_SETTINGS;
@@ -1772,6 +1783,7 @@ function updateEditorState(): void {
   setText(editorPath, selectedPath ?? "No note selected");
   setDisabled(editor, !selectedPath);
   setDisabled(saveButton, !selectedPath || !dirty);
+  setDisabled(renameButton, !selectedPath || dirty || !selectedSummary);
   setDisabled(popoutButton, !selectedPath || dirty || !selectedSummary);
   setHidden(emptyState, Boolean(selectedPath));
   renderEditorMode();
@@ -2324,7 +2336,7 @@ async function openGraphPanel(): Promise<void> {
 }
 
 function togglePanel(panel: HTMLElement | null, visible: boolean): void {
-  [changePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel, retrievalPanel, aiPanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
+  [changePanel, renamePanel, historyPanel, settingsPanel, graphPanel, canvasPanel, basePanel, retrievalPanel, aiPanel].forEach((candidate) => setHidden(candidate, candidate !== panel || !visible));
 }
 
 function selectPathOptions(select: HTMLSelectElement | null, paths: string[], selected: string | undefined): void {
@@ -3537,6 +3549,187 @@ async function openExternalFile(path: string): Promise<void> {
   }
 }
 
+function renameWarningRow(warning: string): HTMLElement {
+  const item = document.createElement("p");
+  item.className = "rename-warning";
+  item.textContent = warning;
+  return item;
+}
+
+function renameReferenceRow(reference: RenamePlanResponse["references"][number]): HTMLElement {
+  const item = document.createElement("div");
+  item.className = "rename-reference";
+  const title = document.createElement("strong");
+  title.textContent = `${reference.action} · ${reference.sourcePath}`;
+  const detail = document.createElement("small");
+  detail.textContent = `${reference.kind} ${reference.target}${reference.replacement ? ` → ${reference.replacement}` : ""}`;
+  item.append(title, detail);
+  return item;
+}
+
+function emptyRenameReferencesRow(): HTMLElement {
+  const empty = document.createElement("p");
+  empty.className = "panel-summary";
+  empty.textContent = "No parsed references point to this file; only the source path will move.";
+  return empty;
+}
+
+function referencePlural(count: number): string {
+  return count === 1 ? "" : "s";
+}
+
+function hasDistinctRenameDestination(value: string, oldPath: string): boolean {
+  if (!value) return false;
+  return value !== oldPath;
+}
+
+function skippedRenameSummary(count: number): string {
+  if (count === 0) return "";
+  return " · " + count + " reference" + referencePlural(count) + " left unchanged";
+}
+
+function renderRenameSummary(plan: RenamePlanResponse): void {
+  const summary = plan.updateCount + " reference" + referencePlural(plan.updateCount) + " will update" + skippedRenameSummary(plan.skippedCount) + ". The preview is bound to the current vault snapshot.";
+  setText(renameSummary, summary);
+}
+
+function renderRenameReferences(plan: RenamePlanResponse): void {
+  if (!renameReferences) return;
+  const rows = [...plan.warnings.map(renameWarningRow), ...plan.references.map(renameReferenceRow)];
+  if (rows.length === 0) rows.push(emptyRenameReferencesRow());
+  renameReferences.replaceChildren(...rows);
+}
+
+function renderRenamePlan(plan: RenamePlanResponse | null): void {
+  setDisabled(applyRenameButton, !plan);
+  if (!plan) {
+    setText(renameSummary, "Preview a destination before applying a filesystem rename.");
+    renameReferences?.replaceChildren();
+    return;
+  }
+  renderRenameSummary(plan);
+  renderRenameReferences(plan);
+}
+
+function selectedRenamePath(): string | null {
+  if (!api) return null;
+  if (!selectedSummary) return null;
+  return selectedPath;
+}
+
+function openRenamePanel(): void {
+  const path = selectedRenamePath();
+  if (!path) return;
+  if (dirty) {
+    setStatus("Save the current note before previewing a rename or move.");
+    return;
+  }
+  pendingRenamePlan = null;
+  setText(renameSource, path);
+  if (renameDestination) renameDestination.value = path;
+  renderRenamePlan(null);
+  togglePanel(renamePanel, true);
+  renameDestination?.focus();
+}
+
+type RenamePreviewInput = {client: OpenObsidianAPI; oldPath: string; newPath: string};
+
+function previewRenameSelection(): {client: OpenObsidianAPI; oldPath: string} | null {
+  if ([api, selectedPath].some((value) => !value) || dirty) {
+    setStatus("Save the current note before previewing a rename or move.");
+    return null;
+  }
+  return {client: api as OpenObsidianAPI, oldPath: selectedPath as string};
+}
+
+function readRenamePreviewInput(): RenamePreviewInput | null {
+  const selection = previewRenameSelection();
+  if (!selection) return null;
+  const newPath = renameDestination?.value.trim() ?? "";
+  if (!hasDistinctRenameDestination(newPath, selection.oldPath)) {
+    pendingRenamePlan = null;
+    renderRenamePlan(null);
+    setStatus("Enter a distinct vault-relative destination path before previewing the rename.");
+    return null;
+  }
+  return {...selection, newPath};
+}
+
+async function previewRenameRequest(): Promise<void> {
+  const input = readRenamePreviewInput();
+  if (!input) return;
+  setDisabled(previewRenameButton, true);
+  setDisabled(applyRenameButton, true);
+  setText(renameSummary, "Building a revision-bound rename plan without changing the vault…");
+  try {
+    pendingRenamePlan = await input.client.renamePlan({oldPath: input.oldPath, newPath: input.newPath});
+    renderRenamePlan(pendingRenamePlan);
+    setStatus(`Rename preview ready for ${input.oldPath} → ${input.newPath}; applying it requires explicit approval.`);
+  } catch (error) {
+    pendingRenamePlan = null;
+    renderRenamePlan(null);
+    setStatus(errorText(error, "Unable to preview the rename; the vault remains unchanged."));
+  } finally {
+    setDisabled(previewRenameButton, false);
+  }
+}
+
+type RenameApplyInput = {client: OpenObsidianAPI; plan: RenamePlanResponse; oldPath: string};
+
+function pendingRenameSelection(): RenameApplyInput | null {
+  if ([api, pendingRenamePlan, selectedPath].some((value) => !value) || dirty) return null;
+  return {client: api as OpenObsidianAPI, plan: pendingRenamePlan as RenamePlanResponse, oldPath: selectedPath as string};
+}
+
+function readRenameApplyInput(): RenameApplyInput | null {
+  const input = pendingRenameSelection();
+  if (!input) {
+    setStatus("Preview a rename after saving the current note before applying it.");
+    return null;
+  }
+  if (input.oldPath !== input.plan.oldPath) {
+    pendingRenamePlan = null;
+    renderRenamePlan(null);
+    setStatus("The selected note changed; preview the rename again before applying it.");
+    return null;
+  }
+  return input;
+}
+
+type RenameResult = Awaited<ReturnType<OpenObsidianAPI["rename"]>>;
+
+function updateRenamedTab(oldPath: string, newPath: string): void {
+  const tab = tabStates.find((candidate) => candidate.path === oldPath);
+  if (tab) tab.path = newPath;
+}
+
+function renameCompletionStatus(result: RenameResult): string {
+  const skipped = result.skippedReferences === 0 ? "" : " and left " + result.skippedReferences + " ambiguous or unresolved reference" + referencePlural(result.skippedReferences) + " unchanged";
+  return "Moved " + result.oldPath + " to " + result.newPath + "; updated " + result.updatedReferences + " reference" + referencePlural(result.updatedReferences) + skipped + ".";
+}
+
+async function finishRenameRequest(input: RenameApplyInput, result: RenameResult): Promise<void> {
+  updateRenamedTab(input.oldPath, result.newPath);
+  pendingRenamePlan = null;
+  applyReadResponse(result.read);
+  await listFilesRequest(input.client);
+  setHidden(renamePanel, true);
+  setStatus(renameCompletionStatus(result));
+  void persistWorkspaceState();
+}
+
+async function applyRenameRequest(): Promise<void> {
+  const input = readRenameApplyInput();
+  if (!input) return;
+  setDisabled(applyRenameButton, true);
+  try {
+    await finishRenameRequest(input, await input.client.rename({plan: input.plan}));
+  } catch (error) {
+    setDisabled(applyRenameButton, false);
+    setStatus(errorText(error, "Unable to apply the rename; the vault and references remain unchanged."));
+  }
+}
+
 function openCanvasFile(path: string): void {
   togglePanel(canvasPanel, true);
   void loadCanvasFile(path);
@@ -3652,6 +3845,8 @@ function resetWorkflowData(): void {
   setHidden(conversationExportOutput, true);
   pendingCitation = null;
   resetSourceInspector();
+  pendingRenamePlan = null;
+  renderRenamePlan(null);
   aiChangeSet = null;
   aiUndoId = null;
 }
@@ -3675,6 +3870,7 @@ function showNoVault(): void {
   setText(vaultBranch, "Local workspace");
   if (fileList) fileList.replaceChildren();
   setHidden(changePanel, true);
+  setHidden(renamePanel, true);
   setHidden(historyPanel, true);
   setHidden(settingsPanel, true);
   setHidden(graphPanel, true);
@@ -3774,6 +3970,17 @@ if (openQuickSwitcherButton) openQuickSwitcherButton.addEventListener("click", (
 if (dailyNoteButton) dailyNoteButton.addEventListener("click", () => void openDailyNoteRequest());
 if (openRetrievalButton) openRetrievalButton.addEventListener("click", openRetrievalPanel);
 if (openAIReviewButton) openAIReviewButton.addEventListener("click", openAIReviewPanel);
+if (renameButton) renameButton.addEventListener("click", openRenamePanel);
+if (closeRenameButton) closeRenameButton.addEventListener("click", () => setHidden(renamePanel, true));
+if (renameForm) renameForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  void previewRenameRequest();
+});
+if (renameDestination) renameDestination.addEventListener("input", () => {
+  pendingRenamePlan = null;
+  renderRenamePlan(null);
+});
+if (applyRenameButton) applyRenameButton.addEventListener("click", () => void applyRenameRequest());
 if (closeAIPanelButton) closeAIPanelButton.addEventListener("click", () => setHidden(aiPanel, true));
 if (aiForm) aiForm.addEventListener("submit", (event) => {
   event.preventDefault();

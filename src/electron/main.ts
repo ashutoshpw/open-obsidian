@@ -18,14 +18,14 @@ import {createDiagnosticManifest, type DiagnosticManifest} from "../core/privacy
 import {retrieveVaultWithModel} from "../core/retrieval.js";
 import {syncToolDispositions} from "../core/sync-tools.js";
 import {buildVaultIndex, searchVaultIndex} from "../core/vault-index.js";
-import {VaultStore} from "../core/vault.js";
+import {VaultStore, type VaultRenamePlan} from "../core/vault.js";
 import {buildDailyNotePlan, buildTemplateIndex, openDailyNote} from "../core/note-workflows.js";
 import {buildBookmarkIndex, buildTagIndex, buildTaskIndex, toggleVaultTask} from "../core/workflows.js";
 import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
 import {parseLaunchArguments, parseDeepLinkIntent, type LaunchIntent} from "../shared/entry-points.js";
 import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
-import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRenameApplyRequest, validateRenamePlanRequest, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RenameApplyRequest, type RenamePlanResponse, type RenameResponse, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -298,6 +298,23 @@ async function openExternalFile(event: Electron.IpcMainInvokeEvent, relativePath
   const absolutePath = store.resolveRegularFilePath(relativePath);
   const error = await shell.openPath(absolutePath);
   return error ? {relativePath, opened: false, error} : {relativePath, opened: true};
+}
+
+function renamePlanResponse(plan: VaultRenamePlan): RenamePlanResponse {
+  return plan;
+}
+
+function renamePlanRequest(event: Electron.IpcMainInvokeEvent, value: unknown): RenamePlanResponse {
+  if (popoutSessionForEvent(event)) throw new Error("Popouts cannot rename vault files");
+  const request = validateRenamePlanRequest(value);
+  return renamePlanResponse(requireVault().buildRenamePlan(request.oldPath, request.newPath));
+}
+
+function renameRequest(event: Electron.IpcMainInvokeEvent, value: unknown): RenameResponse {
+  if (popoutSessionForEvent(event)) throw new Error("Popouts cannot rename vault files");
+  const request: RenameApplyRequest = validateRenameApplyRequest(value);
+  const result = requireVault().applyRenamePlan(request.plan as VaultRenamePlan);
+  return {planId: result.planId, oldPath: result.oldPath, newPath: result.newPath, updatedReferences: result.updatedReferences, skippedReferences: result.skippedReferences, warnings: result.warnings, read: {relativePath: result.read.relativePath, base64: Buffer.from(result.read.bytes).toString("base64"), revision: result.read.revision}};
 }
 
 function inlineAttachmentEntry(store: VaultStore, request: ReturnType<typeof validateAttachmentReadRequest>): {relativePath: string; bytes: number} | null {
@@ -730,6 +747,8 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.readFile, readFile);
   ipcMain.handle(CHANNELS.readAttachment, readAttachment);
   ipcMain.handle(CHANNELS.openExternalFile, openExternalFile);
+  ipcMain.handle(CHANNELS.renamePlan, renamePlanRequest);
+  ipcMain.handle(CHANNELS.rename, renameRequest);
   ipcMain.handle(CHANNELS.writeFile, writeFile);
   ipcMain.handle(CHANNELS.popoutOpen, openPopout);
   ipcMain.handle(CHANNELS.reviewChanges, reviewChanges);

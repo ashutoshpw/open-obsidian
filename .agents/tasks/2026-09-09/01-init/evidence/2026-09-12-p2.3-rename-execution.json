@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "evidence:p2.3-rename-execution",
+  "recorded_at": "2026-09-12T04:05:00Z",
+  "checkpoint": "P2.3",
+  "requirements": ["C03", "C03.1", "C03.2"],
+  "tested_source_tree": "d7c368e2938ddfcd9b136d0844b70d821f9a5a54be673c015fd03b1945252937",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0"
+  },
+  "implementation": {
+    "preview": "VaultStore builds a revision-bound rename plan with SHA-256 snapshot and plan identities before mutation.",
+    "references": "Parsed Wikilinks, Markdown links and embeds update only resolved targets; aliases, fragments and nested relative Markdown links retain their syntax.",
+    "safety": "Vault-relative regular-file validation rejects traversal, symlink sources, unsafe parents and existing destinations; a Windows case-only seam is covered in the broker.",
+    "transaction": "The source move, reference writes, rollback and prepared/committed/failed journal entries share revision-aware recovery boundaries.",
+    "ipc": "vault:rename-plan and vault:rename are validated through the shared contract and exposed through the sandboxed preload; popout sessions cannot mutate the vault.",
+    "renderer": "The current-note panel requires an explicit preview and apply action, displays warnings/references, and refuses dirty or stale selection state."
+  },
+  "checks": [
+    {"command": "bun test tests/rename-execution.test.ts tests/rename-plan.test.ts tests/api.test.ts tests/ux-surfaces.test.ts", "exit_code": 0, "result": "26 tests passed; 111 expectations"},
+    {"command": "bun test", "exit_code": 0, "result": "205 tests passed across 61 files; 1,141 expectations"},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Fast checks passed, including full tests, contracts, accessibility, layout, Knip and changed-code Fallow"},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "TypeScript validation passed"},
+    {"command": "bun run compile", "exit_code": 0, "result": "Electron main, preload, renderer and popout bundles compiled"},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in changed files; inherited renderer complexity findings remain excluded by the changed-file gate"},
+    {"command": "npx react-doctor@latest --verbose --scope changed", "exit_code": 0, "result": "Score 85/100, no changed-file issues"},
+    {"command": "bun run status --validate", "exit_code": 0, "result": "Progress structure passed; goal remains active with release rows pending"},
+    {"command": "bun run final:audit", "exit_code": 0, "result": "Implementation readiness remains active and release readiness remains false"},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "SHA-256 d7c368e2938ddfcd9b136d0844b70d821f9a5a54be673c015fd03b1945252937 across 238 paths"},
+    {"command": "git diff --check", "exit_code": 0, "result": "No whitespace errors"}
+  ],
+  "fixtures": [
+    "Resolved Wikilinks, Markdown links and embeds update while aliases, fragments and unrelated links remain intact.",
+    "Nested relative Markdown links remain relative to their source note after a move.",
+    "A changed preview snapshot is rejected before mutation.",
+    "Injected write failure rolls back earlier reference writes and the filesystem move.",
+    "Symlink sources, existing destinations and traversal paths fail closed."
+  ],
+  "limitations": [
+    "No reference Obsidian vault was accessed; reference-vault parity and full link-dialect behavior remain external-pending.",
+    "No packaged Electron UI or OS filesystem handler was exercised in this shell-only validation; visible runtime, macOS/Windows behavior and human accessibility review remain pending.",
+    "Provider/account credentials, signing, publication and production systems were not accessed."
+  ],
+  "status": "implemented"
+}

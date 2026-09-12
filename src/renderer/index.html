@@ -51,6 +51,16 @@
       .panel-close:hover { color: #eef0f6; background: #ffffff0b; }
       .panel-summary { margin: 0; color: #9da3b5; font-size: 12px; line-height: 1.5; }
       .change-list, .history-list { display: grid; gap: 6px; }
+      .rename-form { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 8px; }
+      .rename-form label { display: grid; gap: 5px; color: #9da3b5; font-size: 11px; }
+      .rename-form input { width: 100%; min-width: 0; border: 1px solid #ffffff18; border-radius: 7px; padding: 7px 9px; background: #0f1116; color: #eef0f6; }
+      .rename-form input:focus { border-color: #a78bfa88; outline: 2px solid #a78bfa22; outline-offset: 1px; }
+      .rename-form button { border: 1px solid #a78bfa66; border-radius: 7px; padding: 7px 10px; background: #a78bfa22; color: #f0ebff; font-size: 11px; }
+      .rename-references { display: grid; gap: 6px; max-height: 190px; overflow: auto; }
+      .rename-reference { display: grid; gap: 3px; border: 1px solid #ffffff12; border-radius: 7px; padding: 7px 9px; background: #ffffff05; }
+      .rename-reference strong { color: #c9c1ff; font-size: 11px; }
+      .rename-reference small, .rename-warning { color: #9da3b5; font-size: 11px; }
+      .rename-warning { margin: 0; color: #ffd28b; }
       .change-row, .history-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #ffffff12; border-radius: 8px; padding: 8px 10px; background: #ffffff05; }
       .change-row label { display: flex; align-items: center; gap: 8px; min-width: 0; color: #d8dbe5; font-size: 12px; }
       .change-row label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -205,6 +215,7 @@
       .cleanup-option small { color: #858b9c; font-size: 10px; line-height: 1.4; }
       .cleanup-summary { margin: 0; color: #b8bdcb; font-size: 11px; line-height: 1.45; }
       @media (max-width: 980px) { .ai-form { grid-template-columns: 1fr 1fr; } .ai-form label:nth-child(2) { grid-column: 1 / -1; } .ai-form button { justify-self: start; } }
+      @media (max-width: 760px) { .rename-form { grid-template-columns: 1fr; } .rename-form button { justify-self: start; } }
       @media (max-width: 980px) { .retrieval-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .retrieval-form label:first-child { grid-column: 1 / -1; } .retrieval-form button { justify-self: start; } }
       .editor-wrap { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; min-height: 0; padding: 18px clamp(20px, 6vw, 90px) 28px; }
       .editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -488,7 +499,7 @@
         <footer class="sidebar-footer" aria-label="Vault identity"><strong id="vault-name">No vault open</strong><span id="vault-branch">Local workspace</span></footer>
       </aside>
       <main class="workspace">
-        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-command-palette" data-icon="⌘" aria-label="Commands" title="Commands" type="button">Commands</button><button class="tool-action" id="open-quick-switcher" data-icon="⌕" aria-label="Quick switcher" title="Quick switcher" type="button">Quick switcher</button><button class="tool-action" id="open-retrieval" data-icon="⌗" aria-label="Grounded search" title="Grounded search" type="button" disabled>Grounded search</button><button class="tool-action" id="open-ai-review" data-icon="✦" aria-label="AI review" title="AI review" type="button" disabled>AI review</button><button class="tool-action" id="open-graph" data-icon="◌" aria-label="Graph" title="Graph" type="button" disabled>Graph</button><button class="tool-action" id="open-canvas" data-icon="▧" aria-label="Canvas" title="Canvas" type="button" disabled>Canvas</button><button class="tool-action" id="open-base" data-icon="▦" aria-label="Bases" title="Bases" type="button" disabled>Bases</button><button class="tool-action" id="toggle-settings" data-icon="⚙" data-message-key="settings" aria-label="Settings" title="Settings" type="button">Settings</button><button class="tool-action" id="review-changes" data-icon="✓" aria-label="Review changes" title="Review changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" data-icon="◷" aria-label="History" title="History" type="button" disabled>History</button><button class="tool-action" id="popout-note" data-icon="↗" aria-label="Pop out current note" title="Pop out current note" type="button" disabled>Pop out</button><button class="save-action" id="save-note" data-icon="↓" aria-label="Save note" title="Save · ⌘/Ctrl S" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
+        <header class="workspace-header"><div><p class="eyebrow">Current note</p><div id="editor-path">No note selected</div></div><div class="workspace-actions"><button class="tool-action" id="open-command-palette" data-icon="⌘" aria-label="Commands" title="Commands" type="button">Commands</button><button class="tool-action" id="open-quick-switcher" data-icon="⌕" aria-label="Quick switcher" title="Quick switcher" type="button">Quick switcher</button><button class="tool-action" id="open-retrieval" data-icon="⌗" aria-label="Grounded search" title="Grounded search" type="button" disabled>Grounded search</button><button class="tool-action" id="open-ai-review" data-icon="✦" aria-label="AI review" title="AI review" type="button" disabled>AI review</button><button class="tool-action" id="open-graph" data-icon="◌" aria-label="Graph" title="Graph" type="button" disabled>Graph</button><button class="tool-action" id="open-canvas" data-icon="▧" aria-label="Canvas" title="Canvas" type="button" disabled>Canvas</button><button class="tool-action" id="open-base" data-icon="▦" aria-label="Bases" title="Bases" type="button" disabled>Bases</button><button class="tool-action" id="toggle-settings" data-icon="⚙" data-message-key="settings" aria-label="Settings" title="Settings" type="button">Settings</button><button class="tool-action" id="review-changes" data-icon="✓" aria-label="Review changes" title="Review changes" type="button" disabled>Review changes</button><button class="tool-action" id="show-history" data-icon="◷" aria-label="History" title="History" type="button" disabled>History</button><button class="tool-action" id="rename-note" data-icon="↪" aria-label="Rename or move current note" title="Rename or move current note" type="button" disabled>Rename or move</button><button class="tool-action" id="popout-note" data-icon="↗" aria-label="Pop out current note" title="Pop out current note" type="button" disabled>Pop out</button><button class="save-action" id="save-note" data-icon="↓" aria-label="Save note" title="Save · ⌘/Ctrl S" type="button" disabled>Save · ⌘/Ctrl S</button></div></header>
         <nav class="note-tabs" id="note-tabs" aria-label="Open notes"></nav>
         <section class="tool-panel" id="settings-panel" aria-label="Workspace settings" hidden>
           <div class="panel-header"><h2>Workspace settings</h2><button class="panel-close" id="close-settings" type="button">Close</button></div>
@@ -502,6 +513,17 @@
           <section class="settings-section" id="model-management" data-settings-section="model management downloads offline hardware" aria-label="Model and download management"><h3>Model and download management</h3><p class="surface-handoff"><strong>External-pending:</strong> Local model downloads, integrity/version checks, hardware capability, offline transitions, reindexing and derivative cleanup require a provisioned model runtime.</p><button class="provider-actions" id="show-model-handoff" type="button">Review model lifecycle handoff</button></section>
           <section class="settings-section" id="account-billing" data-settings-section="account billing entitlements managed service" aria-label="Account and billing"><h3>Account and billing</h3><p class="surface-handoff"><strong>External-pending:</strong> Managed accounts, entitlements, billing, pricing and production quotas are a later service handoff; this client has no paid provisioning.</p><button class="provider-actions" id="show-account-billing-handoff" type="button">Review managed-service handoff</button></section>
           <section class="settings-section" id="safe-mode" data-settings-section="safe mode diagnostics extension bisect" aria-label="Safe mode"><h3>Safe mode</h3><p class="surface-handoff"><strong>External-pending:</strong> Packaged crash restart and extension-disable harness validation are required before safe-mode launch behavior is certified.</p><button class="provider-actions" id="safe-mode-action" type="button">Review safe mode handoff</button></section>
+        </section>
+        <section class="tool-panel" id="rename-panel" aria-label="Rename or move current note" hidden>
+          <div class="panel-header"><h2>Rename or move current note</h2><button class="panel-close" id="close-rename" type="button">Close</button></div>
+          <p class="panel-summary">Source: <code id="rename-source">No note selected</code>. The destination is vault-relative; preview resolves parsed links before any filesystem mutation.</p>
+          <form class="rename-form" id="rename-form">
+            <label for="rename-destination">Destination path<input id="rename-destination" type="text" maxlength="500" placeholder="Archive/Note.md" autocomplete="off" required /></label>
+            <button id="preview-rename" type="submit">Preview rename</button>
+            <button id="apply-rename" type="button" disabled>Apply rename</button>
+          </form>
+          <p class="panel-summary" id="rename-summary" aria-live="polite">Preview a destination before applying a filesystem rename.</p>
+          <div class="rename-references" id="rename-references" aria-label="Rename reference plan"></div>
         </section>
         <section class="tool-panel" id="change-panel" aria-label="Chronicle change review" hidden>
           <div class="panel-header"><h2>Review Chronicle changes</h2><button class="panel-close" id="close-changes" type="button">Close</button></div>

@@ -1,5 +1,5 @@
 import {contextBridge, ipcRenderer} from "electron";
-import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type AttachmentReadRequest, type ConversationExportRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
+import {CHANNELS, type AIDraftRequest, type AIApplyChangeRequest, type AIUndoChangeRequest, type AttachmentReadRequest, type ConversationExportRequest, type OpenObsidianAPI, type PopoutIntent, type PopoutOpenRequest, type ProviderCredentialRequest, type RenameApplyRequest, type RenamePlanRequest, type RetrievalProgress, type RetrievalScope, type ToggleTaskRequest, type VaultWriteRequest} from "../shared/api.js";
 
 const api: OpenObsidianAPI = {
   selectVault: () => ipcRenderer.invoke(CHANNELS.selectVault),
@@ -9,6 +9,8 @@ const api: OpenObsidianAPI = {
   readFile: (relativePath) => ipcRenderer.invoke(CHANNELS.readFile, relativePath),
   readAttachment: (request: AttachmentReadRequest) => ipcRenderer.invoke(CHANNELS.readAttachment, request),
   openExternalFile: (relativePath) => ipcRenderer.invoke(CHANNELS.openExternalFile, relativePath),
+  renamePlan: (request: RenamePlanRequest) => ipcRenderer.invoke(CHANNELS.renamePlan, request),
+  rename: (request: RenameApplyRequest) => ipcRenderer.invoke(CHANNELS.rename, request),
   writeFile: (request: VaultWriteRequest) => ipcRenderer.invoke(CHANNELS.writeFile, request),
   openPopout: (request: PopoutOpenRequest) => ipcRenderer.invoke(CHANNELS.popoutOpen, request),
   reviewChanges: () => ipcRenderer.invoke(CHANNELS.reviewChanges),
