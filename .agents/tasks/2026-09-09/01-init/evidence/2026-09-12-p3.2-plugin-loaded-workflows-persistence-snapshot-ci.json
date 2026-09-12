@@ -1,0 +1,348 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-persistence-snapshot-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC08",
+    "PC17",
+    "PC19",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24",
+    "PC25"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T13:03:25Z",
+  "source_commit": "035677060cb1ec14d9ca5258d3386aedeb164c72",
+  "status": "passed",
+  "source_tree": {
+    "local_sha256": "28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d",
+    "local_paths": 238,
+    "hosted_report_paths": 239,
+    "hosted_report_source_tree_sha256": {
+      "Linux": "8abebfecf6af15d42802cbd3893f1cea0f7f811c0e8d71a3aaca0fd931a4f82c",
+      "macOS": "4ad3ac2e0bf6b2bd3828dddae7060b6d785b4c38ae4231797eeecd64dabf57d8",
+      "Windows": "4488ab94f376c7d6421668597a9689351a3f2ba077084ed3d55b418fb4245b4d"
+    },
+    "definition": "The clean local digest is the source of record; each hosted audit workspace contains one transient redirected-output path (239 paths versus 238 locally)."
+  },
+  "runs": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34694646965,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34694646965",
+      "attempt": 2,
+      "conclusion": "success",
+      "platforms": [
+        "Ubuntu",
+        "macOS",
+        "Windows"
+      ],
+      "jobs": {
+        "ubuntu-latest": {
+          "job_id": 103556165583,
+          "conclusion": "success"
+        },
+        "macos-latest": {
+          "job_id": 103556153503,
+          "conclusion": "success"
+        },
+        "windows-latest": {
+          "job_id": 103556154138,
+          "conclusion": "success"
+        }
+      },
+      "checks": "Repository contracts, architecture, version baseline, differential fixture, core workflows, distribution/update metadata, accessibility, typecheck, tests, quality scorecard, Electron vault round trip, synthetic lifecycle, Knip and report-only Fallow health passed on all three final jobs; changed-code Fallow review was skipped on this push-triggered workflow.",
+      "initial_attempt": {
+        "attempt": 1,
+        "conclusion": "failure",
+        "macos_job_id": 103555921720,
+        "failed_step": "Run Electron vault round-trip report",
+        "observation": "Transient renderer retrieval-boundary timing failure: Electron renderer did not reach the local retrieval boundary before the expected text (Local index complete · 1/1 Markdown files visited · 1 passages indexed · 3 excluded).",
+        "disposition": "Only the failed macOS job was rerun; attempt 2 passed on Ubuntu, macOS and Windows."
+      }
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34694646948,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34694646948",
+      "conclusion": "success",
+      "platforms": [
+        "Ubuntu",
+        "macOS",
+        "Windows"
+      ],
+      "jobs": {
+        "ubuntu-latest": {
+          "job_id": 103555921470,
+          "conclusion": "success"
+        },
+        "macos-latest": {
+          "job_id": 103555921613,
+          "conclusion": "success"
+        },
+        "windows-latest": {
+          "job_id": 103555921689,
+          "conclusion": "success"
+        }
+      },
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "release_gate": "preview; unsigned-preview",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "release_manifest": "passed on all three jobs; per-platform release-manifest.json matched packaged files",
+      "artifacts": {
+        "Linux": {
+          "name": "openobsidian-Linux-preview-035677060cb1ec14d9ca5258d3386aedeb164c72",
+          "artifact_id": 10298338702,
+          "archive_bytes": 125946548,
+          "archive_sha256": "d29c4cd3e28b26161595e02d069a2b156d544d3f0c541ced5b7bea6f6fd9faf9",
+          "release_manifest_bytes": 12292,
+          "release_manifest_sha256": "8f8568d305a117f4cdd9858fcec098e3fa519abff89b7efa815a79b079345f05",
+          "release_manifest_files": 73,
+          "app_asar_sha256": "27388d95e7975ac929a0dcce18b3218d3435f1ffc39f36c5e252a31f31196834"
+        },
+        "macOS": {
+          "name": "openobsidian-macOS-preview-035677060cb1ec14d9ca5258d3386aedeb164c72",
+          "artifact_id": 10297689306,
+          "archive_bytes": 397395487,
+          "archive_sha256": "b6abc10f6ecedc96426c826b9cad4dd499f2ba4c56f16b943efa36602f445833",
+          "release_manifest_bytes": 65732,
+          "release_manifest_sha256": "8298b20c622e35476797d8bb701112d856854b3183bfa9fb8753d6570157405f",
+          "release_manifest_files": 260,
+          "app_asar_sha256": "27388d95e7975ac929a0dcce18b3218d3435f1ffc39f36c5e252a31f31196834"
+        },
+        "Windows": {
+          "name": "openobsidian-Windows-preview-035677060cb1ec14d9ca5258d3386aedeb164c72",
+          "artifact_id": 10297438165,
+          "archive_bytes": 163005824,
+          "archive_sha256": "cfee03ca417d64a87387ea8185af31d50f4d1aee1cbdced57e503701f11dbef1",
+          "release_manifest_bytes": 12305,
+          "release_manifest_sha256": "3bee7bea462c0cccfbfd0492cc479984688fac6c5c1ea891b9f8ecb02e783eea",
+          "release_manifest_files": 74,
+          "app_asar_sha256": "27388d95e7975ac929a0dcce18b3218d3435f1ffc39f36c5e252a31f31196834"
+        }
+      }
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34694646984,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34694646984",
+      "conclusion": "success",
+      "platforms": [
+        "Ubuntu",
+        "macOS",
+        "Windows"
+      ],
+      "jobs": {
+        "ubuntu-latest": {
+          "job_id": 103555921666,
+          "conclusion": "success"
+        },
+        "macos-latest": {
+          "job_id": 103555921668,
+          "conclusion": "success"
+        },
+        "windows-latest": {
+          "job_id": 103555921604,
+          "conclusion": "success"
+        }
+      },
+      "artifacts": {
+        "Linux": {
+          "name": "loaded-plugin-workflows-Linux-035677060cb1ec14d9ca5258d3386aedeb164c72",
+          "artifact_id": 10297887754,
+          "artifact_archive_bytes": 56318,
+          "artifact_archive_sha256": "cb4d471de607c44883c325ef830a48b0aafadf63b6052e5aed823a89a1263b23",
+          "report_name": "loaded-plugin-workflows-Linux.json",
+          "report_bytes": 1146478,
+          "report_sha256": "3d41eccf3ce697b234dfa4a586634fe6bdf4787c46d3aa57cc5379082872753b",
+          "report_parse": "direct JSON",
+          "status": "passed"
+        },
+        "macOS": {
+          "name": "loaded-plugin-workflows-macOS-035677060cb1ec14d9ca5258d3386aedeb164c72",
+          "artifact_id": 10298033979,
+          "artifact_archive_bytes": 56330,
+          "artifact_archive_sha256": "76cea17c721ccba5a4611971a6abd11b30074e69109296ab8942108951bea686",
+          "report_name": "loaded-plugin-workflows-macOS.json",
+          "report_bytes": 1146512,
+          "report_sha256": "aa3c53fbfb1038ab72ab4668a40ce0adc40851dd35901d92653d9f3fc3ecbdfd",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "passed"
+        },
+        "Windows": {
+          "name": "loaded-plugin-workflows-Windows-035677060cb1ec14d9ca5258d3386aedeb164c72",
+          "artifact_id": 10298012721,
+          "artifact_archive_bytes": 56358,
+          "artifact_archive_sha256": "80039cf2c0ad5c5057aee6c492507699cbe13963d8d2318a1302ffa85cd33bf7",
+          "report_name": "loaded-plugin-workflows-Windows.json",
+          "report_bytes": 1146509,
+          "report_sha256": "0446163f94a56862b011a54929590d7279f1c69ec99d034cd5c9026e19a31547",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "passed"
+        }
+      }
+    }
+  },
+  "loaded_workflow_reconciliation": {
+    "target_ids": [
+      "PC07",
+      "PC08",
+      "PC17",
+      "PC19",
+      "PC20",
+      "PC21",
+      "PC22",
+      "PC23",
+      "PC24",
+      "PC25"
+    ],
+    "required_phases": [
+      "install",
+      "restart",
+      "update"
+    ],
+    "unchanged_main_js": true,
+    "integrity_checked_on_all_platforms": true,
+    "overall": {
+      "status": "passed",
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    },
+    "artifact_summary": [
+      {"id": "PC07", "name": "Calendar", "version": "1.5.10", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC08", "name": "Style Settings", "version": "1.0.9", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC17", "name": "Minimal Theme Settings", "version": "9.0.0", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC19", "name": "TaskNotes", "version": "4.12.5", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC20", "name": "Outliner", "version": "4.10.2", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC21", "name": "Homepage", "version": "4.5.0", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC22", "name": "Smart Connections", "version": "4.7.2", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC23", "name": "Recent Files", "version": "1.7.10", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC24", "name": "Tag Wrangler", "version": "0.6.5", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0},
+      {"id": "PC25", "name": "Linter", "version": "1.32.0", "integrity": "passed", "lifecycle": "complete", "persistence": "preserved", "actions": "passed", "vault_writes": 0}
+    ],
+    "persistence_semantics": "The hosted audit reports preserved mediated or plugin data for all ten bounded traces. Its separate generic restart_restores_data/update_restores_data fields remain false for plugin-normalized aggregate state in several reports; the repaired TaskNotes first/latest loadData snapshots make restart_restores_scoped_data, update_restores_scoped_data, restart_restores_persisted_data and update_restores_persisted_data true on every hosted platform.",
+    "pc19": {
+      "name": "TaskNotes",
+      "version": "4.12.5",
+      "main_js_bytes": 5233350,
+      "main_js_sha256": "7f82b6bbffe5ff4b03c6b1581aa193f1204cd5970700ef9641f095e0c277bc4e",
+      "renderer_status": "loaded on Linux, macOS and Windows",
+      "bounded_lifecycle": "complete on all three hosted platforms",
+      "registered_commands_per_phase": 36,
+      "command_failures_per_phase": 0,
+      "settings_displayed": true,
+      "views_passed": [
+        "tasknotes-pomodoro-view",
+        "tasknotes-pomodoro-stats-view",
+        "tasknotes-stats-view",
+        "tasknotes-release-notes"
+      ],
+      "aggregate_restart_restores_data": false,
+      "aggregate_update_restores_data": false,
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "restart_restores_persisted_data": true,
+      "update_restores_persisted_data": true,
+      "persistence_source": "mediated-plugin-data-store first/latest loadData snapshots",
+      "plugin_data_writes": 9,
+      "vault_writes": 0,
+      "denied_capabilities": ["vault.direct-write"],
+      "registrations_before_cleanup": 4,
+      "registrations_after_cleanup": 0,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "action_status": "passed"
+    },
+    "pc25": {
+      "name": "Linter",
+      "version": "1.32.0",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete on all three hosted platforms",
+      "action_status": "passed",
+      "projection": "configured YAML/Markdown output, explicit lint-file target, first-open no-op and target-only mutation pass across all phases",
+      "plugin_data_writes": 4,
+      "vault_writes": 0,
+      "denied_capabilities": ["dom.privileged"],
+      "registrations_before_cleanup": 3,
+      "registrations_after_cleanup": 0,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "bounded_lifecycle": "complete on all three hosted platforms",
+      "persistence": "preserved; scoped and persisted snapshot checks true",
+      "aggregate_restart_restores_data": false,
+      "aggregate_update_restores_data": false,
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "action_status": "passed",
+      "vault_writes": 0
+    },
+    "platform_reports": {
+      "Linux": {
+        "source_tree_sha256": "8abebfecf6af15d42802cbd3893f1cea0f7f811c0e8d71a3aaca0fd931a4f82c",
+        "report_sha256": "3d41eccf3ce697b234dfa4a586634fe6bdf4787c46d3aa57cc5379082872753b",
+        "overall_report_status": "passed",
+        "pc19_scoped_persistence": true,
+        "pc19_direct_vault_writes": 0,
+        "pc25_action_status": "passed",
+        "no_plugin_promoted": true
+      },
+      "macOS": {
+        "source_tree_sha256": "4ad3ac2e0bf6b2bd3828dddae7060b6d785b4c38ae4231797eeecd64dabf57d8",
+        "report_sha256": "aa3c53fbfb1038ab72ab4668a40ce0adc40851dd35901d92653d9f3fc3ecbdfd",
+        "overall_report_status": "passed",
+        "pc19_scoped_persistence": true,
+        "pc19_direct_vault_writes": 0,
+        "pc25_action_status": "passed",
+        "no_plugin_promoted": true
+      },
+      "Windows": {
+        "source_tree_sha256": "4488ab94f376c7d6421668597a9689351a3f2ba077084ed3d55b418fb4245b4d",
+        "report_sha256": "0446163f94a56862b011a54929590d7279f1c69ec99d034cd5c9026e19a31547",
+        "overall_report_status": "passed",
+        "pc19_scoped_persistence": true,
+        "pc19_direct_vault_writes": 0,
+        "pc25_action_status": "passed",
+        "no_plugin_promoted": true
+      }
+    }
+  },
+  "security_disposition": "Unchanged pinned main.js bytes execute only inside the context-isolated synthetic Electron renderer. Hosted reports reproduce mediated plugin-data writes, zero direct vault writes, the TaskNotes vault.direct-write denial and the Linter dom.privileged denial on Ubuntu, macOS and Windows; direct filesystem/network/process/credential access, stock Obsidian parity and compatibility promotion remain denied or pending.",
+  "external_pending": [
+    "reference Obsidian settings, view rendering, TaskNotes/Bases/calendar and lossless property-writer behavior",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility and input validation",
+    "provider-backed or subscription-backed plugin behavior",
+    "full required plugin combinations and compatibility promotion",
+    "production signing, publication and updater installation/rollback"
+  ],
+  "limitations": [
+    "Hosted report source digests contain one transient redirected-output path beyond the clean local 238-path source-of-record digest.",
+    "macOS and Windows report files retain the leading Electron download line before JSON; raw report hashes cover the downloaded files and parsing stripped that line only.",
+    "The hosted desktop artifacts are unsigned previews; signing and updater installation/rollback were not exercised.",
+    "The initial quality attempt had one transient macOS renderer timing failure; the failed job was rerun and the final quality attempt passed on all three platforms.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified.",
+    "This is bounded synthetic renderer evidence and does not certify stock Obsidian, reference behavior, human behavior or compatibility promotion."
+  ],
+  "result": "Hosted quality, unsigned preview desktop-build and loaded-workflow runs for 0356770 passed on Ubuntu, macOS and Windows after the isolated macOS quality retry. All ten unchanged artifacts and the PC07/PC21/PC23 combination completed bounded install/restart/update/uninstall/return-to-Obsidian traces with integrity, mediated persistence, actions, cleanup and zero direct vault writes; TaskNotes scoped first/latest persistence and Linter lifecycle/actions pass, while aggregate normalization flags and all external certification gates remain explicit."
+}
