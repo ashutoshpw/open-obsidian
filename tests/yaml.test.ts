@@ -48,4 +48,5 @@ test("flow YAML sequence spans preserve nested source boundaries and refuse malf
   ]);
   expect(yamlFlowSequenceEntries("[owner,, tail]")).toBeUndefined();
   expect(yamlFlowSequenceEntries("[owner, {name: source]")).toBeUndefined();
+  expect(yamlFlowSequenceEntries("[owner, {name: source]]")).toBeUndefined();
 });

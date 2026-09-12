@@ -143,20 +143,38 @@ export type YamlFlowMapEntry = {key: string; rawValue: string; valueStart: numbe
 export type YamlFlowSequenceEntry = {index: number; rawValue: string; valueStart: number; valueEnd: number};
 
 type FlowEntryRange = {start: number; end: number};
+const flowDelimiterPairs: Readonly<Record<string, string>> = {")": "(", "]": "[", "}": "{"};
+
+type FlowEntryCharacter = "invalid" | "separator" | "other";
+
+function flowEntryCharacter(scan: ScanState, delimiters: string[], value: string, index: number): FlowEntryCharacter {
+  const character = value[index] ?? "";
+  advanceScanState(scan, value, index);
+  if (scan.quote) return "other";
+  const expected = flowDelimiterPairs[character];
+  if (expected) return delimiters.pop() === expected ? "other" : "invalid";
+  if ("[{(".includes(character)) {
+    delimiters.push(character);
+    return "other";
+  }
+  return scan.depth === 0 && character === "," ? "separator" : "other";
+}
 
 function flowEntryRanges(value: string, opening: string, closing: string): FlowEntryRange[] | undefined {
   if (!value.startsWith(opening) || !value.endsWith(closing)) return undefined;
   const ranges: FlowEntryRange[] = [];
   let start = 1;
+  const delimiters: string[] = [];
   const state: ScanState = {quote: undefined, depth: 0};
   for (let index = 1; index < value.length - 1; index += 1) {
-    advanceScanState(state, value, index);
-    if (!state.quote && state.depth === 0 && value[index] === ",") {
+    const character = flowEntryCharacter(state, delimiters, value, index);
+    if (character === "invalid") return undefined;
+    if (character === "separator") {
       ranges.push({start, end: index});
       start = index + 1;
     }
   }
-  if (state.quote || state.depth !== 0) return undefined;
+  if (state.quote || delimiters.length !== 0) return undefined;
   ranges.push({start, end: value.length - 1});
   return ranges;
 }
