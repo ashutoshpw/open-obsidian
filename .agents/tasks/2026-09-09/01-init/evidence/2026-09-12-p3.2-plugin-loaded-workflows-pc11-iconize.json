@@ -1,0 +1,65 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T20:45:40Z",
+  "checkpoint": "P3.2",
+  "requirements": ["PC11", "C11", "PLUG-002"],
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "511181c4c9cecf6eb30ac644edc49c444067a0018fab687f2c81047788934264",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "id": "PC11",
+    "name": "Iconize",
+    "version": "2.14.7",
+    "main_js_bytes": 1003749,
+    "main_js_sha256": "ada0b009706556c98101f953a6a87f5cafd3001085df593d3be28eeeea218201",
+    "manifest_json_bytes": 311,
+    "manifest_json_sha256": "f524a18d69e990a244173a3595681c39a20bcbc9dc18b59af51e45660fef5ca2",
+    "styles_css_bytes": 2216,
+    "styles_css_sha256": "56ffeb8349f4af97dab8a14fcadcb0019d3b37b116d7a34aa21e958e98455a89",
+    "integrity": "passed",
+    "unchanged_runtime": {
+      "status": "denied",
+      "capability": "dom.privileged",
+      "path": "window.setImmediate",
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime"
+    }
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-iconize-projection",
+    "phases": ["install", "restart", "update"],
+    "file_assignment_preserved": true,
+    "folder_assignment_preserved": true,
+    "rules_preserved": true,
+    "file_rename_projected": true,
+    "folder_rename_projected": true,
+    "asset_resolved": true,
+    "sidebar_rendered": true,
+    "tab_rendered": true,
+    "restart_restores_assignments": true,
+    "update_restores_assignments": true,
+    "unrelated_content_preserved": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true
+  },
+  "status": "pending-runtime",
+  "no_plugin_promoted": true,
+  "limitations": [
+    "The unchanged Iconize artifact is denied inside the context-isolated renderer before lifecycle completion; the projection is marker-free synthetic evidence.",
+    "Reference Obsidian icon rendering, same-user macOS/Windows enforcement, human validation, signing, updater and compatibility promotion remain pending."
+  ]
+}

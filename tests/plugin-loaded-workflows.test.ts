@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -587,6 +587,53 @@ test("PC10 fixture and bounded projection keep sync plans credential-safe", () =
   expect(loadedWorkflowAudit).toContain("function remotelySaveWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("remotely_save_workflow_checks");
   expect(loadedWorkflowAudit).toContain("network_contacted_zero");
+});
+
+test("PC11 fixture and bounded projection preserve Iconize assignments and assets", () => {
+  const pc11 = fixture.scenarios.PC11 as typeof fixture.scenarios.PC03 & {
+    iconize_workflow?: {
+      file_assignment: {path: string; icon: string};
+      asset_assignment: {path: string; icon: string; asset_path: string; mime: string};
+      folder_assignment: {path: string; icon: string};
+      file_rename: {from: string; to: string; expected_icon: string};
+      folder_rename: {from: string; to: string; expected_icon: string};
+      rules: Array<{id: string; pattern: string; icon: string; enabled: boolean}>;
+      sidebar_render: {path: string; expected_icon: string};
+      tab_render: {path: string; expected_icon: string};
+      expected_unrelated_path: string;
+      expected_unrelated_content: string;
+    };
+  };
+  expect(pc11.workflow_id).toBe("workflow:pc11");
+  expect(pc11.initial_data).toMatchObject({
+    version: "2.14.7",
+    iconFolder: "Icons",
+    fileIcons: {"Notes/Home.md": "lucide:home", "Notes/Guide.md": "asset:guide.svg"},
+    folderIcons: {Projects: "lucide:folder-open"},
+    renderInSidebar: true,
+    renderInTabs: true,
+  });
+  expect(pc11.iconize_workflow).toEqual({
+    file_assignment: {path: "Notes/Home.md", icon: "lucide:home"},
+    asset_assignment: {path: "Notes/Guide.md", icon: "asset:guide.svg", asset_path: "Icons/guide.svg", mime: "image/svg+xml"},
+    folder_assignment: {path: "Projects", icon: "lucide:folder-open"},
+    file_rename: {from: "Notes/Home.md", to: "Notes/Start.md", expected_icon: "lucide:home"},
+    folder_rename: {from: "Projects", to: "Archive", expected_icon: "lucide:folder-open"},
+    rules: [{id: "markdown-default", pattern: "*.md", icon: "lucide:file-text", enabled: true}],
+    sidebar_render: {path: "Notes/Start.md", expected_icon: "lucide:home"},
+    tab_render: {path: "Notes/Start.md", expected_icon: "lucide:home"},
+    expected_unrelated_path: "Notes/Untouched.md",
+    expected_unrelated_content: "# Untouched\n\nThis note remains byte-identical.\n",
+  });
+  expect(pc11.files).toContainEqual(expect.objectContaining({path: "Icons/guide.svg", content: expect.stringContaining("<svg") }));
+  expect(rendererWorker).toContain("function boundedIconizeWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-iconize-projection"');
+  expect(rendererWorker).toContain("file_rename_projected");
+  expect(rendererWorker).toContain("folder_rename_projected");
+  expect(rendererWorker).toContain("asset_resolved");
+  expect(loadedWorkflowAudit).toContain("function iconizeWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("iconize_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("restart_restores_assignments");
 });
 
 test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {

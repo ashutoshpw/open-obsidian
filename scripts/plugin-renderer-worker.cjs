@@ -3222,6 +3222,155 @@ function boundedRemotelySaveWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedIconizeWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.iconize_workflow === "object"
+    ? workflowContext.iconize_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const normalize = (value) => typeof value === "string" ? value.replaceAll("\\", "/").replace(/^\/+|\/+$/g, "") : "";
+  const fileContents = new Map(files.map((entry) => [normalize(entry.path), entry.content]));
+  const fileIcons = initialData.fileIcons && typeof initialData.fileIcons === "object" ? initialData.fileIcons : {};
+  const folderIcons = initialData.folderIcons && typeof initialData.folderIcons === "object" ? initialData.folderIcons : {};
+  const configuredRules = Array.isArray(initialData.rules) ? initialData.rules : [];
+  const expectedRules = Array.isArray(spec.rules) ? spec.rules : [];
+  const fileAssignment = spec.file_assignment && typeof spec.file_assignment === "object" ? spec.file_assignment : {};
+  const assetAssignment = spec.asset_assignment && typeof spec.asset_assignment === "object" ? spec.asset_assignment : {};
+  const folderAssignment = spec.folder_assignment && typeof spec.folder_assignment === "object" ? spec.folder_assignment : {};
+  const filePath = normalize(fileAssignment.path);
+  const fileIcon = typeof fileAssignment.icon === "string" ? fileAssignment.icon : "";
+  const folderPath = normalize(folderAssignment.path);
+  const folderIcon = typeof folderAssignment.icon === "string" ? folderAssignment.icon : "";
+  const fileAssignmentPreserved = filePath.length > 0 && fileIcons[filePath] === fileIcon && fileContents.has(filePath);
+  const folderAssignmentPreserved = folderPath.length > 0
+    && folderIcons[folderPath] === folderIcon
+    && files.some((entry) => normalize(entry.path).startsWith(`${folderPath}/`));
+  const rulesPreserved = JSON.stringify(configuredRules) === JSON.stringify(expectedRules)
+    && configuredRules.length > 0
+    && configuredRules.every((rule) => rule && rule.enabled === true && typeof rule.pattern === "string" && typeof rule.icon === "string");
+  const assetPath = normalize(assetAssignment.asset_path);
+  const assetTargetPath = normalize(assetAssignment.path);
+  const assetIcon = typeof assetAssignment.icon === "string" ? assetAssignment.icon : "";
+  const assetContent = fileContents.get(assetPath) || "";
+  const assetResolved = assetTargetPath.length > 0
+    && fileIcons[assetTargetPath] === assetIcon
+    && assetPath.length > 0
+    && fileContents.has(assetPath)
+    && /^\s*<svg\b/i.test(assetContent)
+    && assetAssignment.mime === "image/svg+xml";
+
+  const fileRename = spec.file_rename && typeof spec.file_rename === "object" ? spec.file_rename : {};
+  const fileFrom = normalize(fileRename.from);
+  const fileTo = normalize(fileRename.to);
+  const projectedFileIcons = {...fileIcons};
+  const fileRenameProjected = fileFrom.length > 0
+    && fileTo.length > 0
+    && fileTo !== fileFrom
+    && Object.prototype.hasOwnProperty.call(projectedFileIcons, fileFrom)
+    && !Object.prototype.hasOwnProperty.call(projectedFileIcons, fileTo)
+    && fileContents.has(fileFrom)
+    && !fileContents.has(fileTo)
+    && fileRename.expected_icon === projectedFileIcons[fileFrom];
+  if (fileRenameProjected) {
+    projectedFileIcons[fileTo] = projectedFileIcons[fileFrom];
+    delete projectedFileIcons[fileFrom];
+  }
+
+  const folderRename = spec.folder_rename && typeof spec.folder_rename === "object" ? spec.folder_rename : {};
+  const folderFrom = normalize(folderRename.from);
+  const folderTo = normalize(folderRename.to);
+  const projectedFolderIcons = {...folderIcons};
+  const folderRenameProjected = folderFrom.length > 0
+    && folderTo.length > 0
+    && folderTo !== folderFrom
+    && Object.prototype.hasOwnProperty.call(projectedFolderIcons, folderFrom)
+    && !Object.prototype.hasOwnProperty.call(projectedFolderIcons, folderTo)
+    && files.some((entry) => normalize(entry.path).startsWith(`${folderFrom}/`))
+    && !files.some((entry) => normalize(entry.path).startsWith(`${folderTo}/`))
+    && folderRename.expected_icon === projectedFolderIcons[folderFrom];
+  if (folderRenameProjected) {
+    projectedFolderIcons[folderTo] = projectedFolderIcons[folderFrom];
+    delete projectedFolderIcons[folderFrom];
+  }
+
+  const sidebar = spec.sidebar_render && typeof spec.sidebar_render === "object" ? spec.sidebar_render : {};
+  const tab = spec.tab_render && typeof spec.tab_render === "object" ? spec.tab_render : {};
+  const sidebarPath = normalize(sidebar.path);
+  const tabPath = normalize(tab.path);
+  const sidebarRendered = initialData.renderInSidebar === true
+    && sidebarPath.length > 0
+    && projectedFileIcons[sidebarPath] === sidebar.expected_icon;
+  const tabRendered = initialData.renderInTabs === true
+    && tabPath.length > 0
+    && projectedFileIcons[tabPath] === tab.expected_icon;
+  const unrelatedPath = normalize(spec.expected_unrelated_path);
+  const unrelatedContentPreserved = unrelatedPath.length > 0
+    && fileContents.get(unrelatedPath) === spec.expected_unrelated_content;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = fileAssignmentPreserved
+    && assetResolved
+    && folderAssignmentPreserved
+    && rulesPreserved
+    && fileRenameProjected
+    && folderRenameProjected
+    && sidebarRendered
+    && tabRendered
+    && unrelatedContentPreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status,
+    file_assignment_preserved: fileAssignmentPreserved,
+    folder_assignment_preserved: folderAssignmentPreserved,
+    rules_preserved: rulesPreserved,
+    file_rename_projected: fileRenameProjected,
+    folder_rename_projected: folderRenameProjected,
+    asset_resolved: assetResolved,
+    sidebar_rendered: sidebarRendered,
+    tab_rendered: tabRendered,
+    restart_restores_assignments: fileRenameProjected && folderRenameProjected && rulesPreserved,
+    update_restores_assignments: fileRenameProjected && folderRenameProjected && rulesPreserved,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  }));
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-iconize-projection",
+    file_assignment: fileAssignment,
+    file_assignment_preserved: fileAssignmentPreserved,
+    asset_assignment: assetAssignment,
+    asset_resolved: assetResolved,
+    asset_path: assetPath,
+    folder_assignment: folderAssignment,
+    folder_assignment_preserved: folderAssignmentPreserved,
+    rules: configuredRules,
+    expected_rules: expectedRules,
+    rules_preserved: rulesPreserved,
+    file_rename: fileRename,
+    file_rename_projected: fileRenameProjected,
+    folder_rename: folderRename,
+    folder_rename_projected: folderRenameProjected,
+    restart_restores_assignments: fileRenameProjected && folderRenameProjected && rulesPreserved,
+    update_restores_assignments: fileRenameProjected && folderRenameProjected && rulesPreserved,
+    projected_file_icons: projectedFileIcons,
+    projected_folder_icons: projectedFolderIcons,
+    sidebar_render: sidebar,
+    sidebar_rendered: sidebarRendered,
+    tab_render: tab,
+    tab_rendered: tabRendered,
+    unrelated_path: unrelatedPath,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function kanbanLinkTargets(value) {
   return [...String(value ?? "").matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map((match) => match[1]);
 }
@@ -3667,6 +3816,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (gitWorkflow) actions.git_workflow = gitWorkflow;
   const remotelySaveWorkflow = boundedRemotelySaveWorkflow(workflowContext);
   if (remotelySaveWorkflow) actions.remotely_save_workflow = remotelySaveWorkflow;
+  const iconizeWorkflow = boundedIconizeWorkflow(workflowContext);
+  if (iconizeWorkflow) actions.iconize_workflow = iconizeWorkflow;
   const kanbanWorkflow = boundedKanbanWorkflow(workflowContext);
   if (kanbanWorkflow) actions.kanban_workflow = kanbanWorkflow;
   const templaterWorkflow = boundedTemplaterWorkflow(workflowContext);
@@ -3742,6 +3893,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     tasks_workflow: actions.tasks_workflow || null,
     git_workflow: actions.git_workflow || null,
     remotely_save_workflow: actions.remotely_save_workflow || null,
+    iconize_workflow: actions.iconize_workflow || null,
     kanban_workflow: actions.kanban_workflow || null,
     templater_workflow: actions.templater_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
@@ -3819,6 +3971,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
     workflow.remotely_save_workflow = boundedRemotelySaveWorkflow(workflowContext);
+    workflow.iconize_workflow = boundedIconizeWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
@@ -3843,6 +3996,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.git_workflow = boundedGitWorkflow(workflowContext);
     workflow.remotely_save_workflow = boundedRemotelySaveWorkflow(workflowContext);
+    workflow.iconize_workflow = boundedIconizeWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
@@ -3959,6 +4113,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTasksWorkflow,
     boundedGitWorkflow,
     boundedRemotelySaveWorkflow,
+    boundedIconizeWorkflow,
     kanbanLinkTargets,
     parseKanbanBoard,
     boundedKanbanWorkflow,

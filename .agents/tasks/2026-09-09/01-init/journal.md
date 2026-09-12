@@ -1640,6 +1640,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the hosted CI evidence in the requirements and state reconciliation metadata. PC01 and P3.2 remain pending/non-certified: reference Excalidraw behavior and scripting, same-user OS enforcement, human validation, signing, publication, updater and compatibility promotion remain external-pending. No plugin or compatibility row was promoted.
 - Next operation: run final state, audit and diff gates, commit and push this hosted reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.
 
+## 2026-09-12T20:47:15Z — P3.2 bounded PC11 Iconize workflow
+
+- Added PC11 Iconize 2.14.7 to the loaded-workflow target set with a fixture covering file and folder icon assignments, configured rules, file/folder rename transfer, SVG asset resolution, sidebar/tab rendering and an untouched-note control.
+- Added a bounded in-memory Iconize projection. It preserves configured assignments and rules, transfers icons across projected file/folder renames, resolves the configured SVG asset, projects sidebar/tab rendering and records zero direct vault writes across install/restart/update without reading credentials or contacting a provider.
+- The unchanged 1,003,749-byte Iconize main.js passes integrity but is D15 renderer-denied at `window.setImmediate`; the synthetic projection is recorded separately and cannot promote unchanged-plugin runtime or compatibility.
+- Local source digest `511181c4c9cecf6eb30ac644edc49c444067a0018fab687f2c81047788934264`; the focused loaded-workflow contract suite passes 19 tests with 356 expectations, and the full local loaded-workflow audit passes the PC11 projection while aggregate status remains partial because other target lifecycle/action gaps remain.
+- The selected `/home/ashutosh/Obsidian` vault was not accessed or modified. Reference Iconize rendering, same-user macOS/Windows enforcement, human validation, signing, publication, updater and compatibility promotion remain external-pending; no plugin or compatibility row was promoted.
+- Next operation: run final state/audit/diff gates, commit with `[openobsidian P3.2 work] Add bounded PC11 Iconize workflow`, push `main`, inspect hosted quality/loaded-workflow/renderer-matrix/desktop-build results on Ubuntu/macOS/Windows, reconcile without promoting compatibility, then continue the next dependency-ready P3.2 slice.
+
 ## 2026-09-12T17:41:15Z — P3.2 bounded PC05 Advanced Tables projection
 
 - Added the dependency-ready PC05 Advanced Tables fixture for Markdown table discovery/navigation, a Widget row edit, numeric total calculation, formatting/serialization and an untouched-note control. The bounded projection edits only an in-memory clone, preserves unrelated source bytes and records zero direct vault writes across install/restart/update.

@@ -361,6 +361,31 @@ function remotelySaveWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function iconizeWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.iconize_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const summary = asRecord(workflow.iconize_workflow);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: summary !== null && traces.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-iconize-projection" && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-iconize-projection"),
+    file_assignment_preserved: summary?.file_assignment_preserved === true && every("file_assignment_preserved"),
+    folder_assignment_preserved: summary?.folder_assignment_preserved === true && every("folder_assignment_preserved"),
+    rules_preserved: summary?.rules_preserved === true && every("rules_preserved"),
+    file_rename_projected: summary?.file_rename_projected === true && every("file_rename_projected"),
+    folder_rename_projected: summary?.folder_rename_projected === true && every("folder_rename_projected"),
+    asset_resolved: summary?.asset_resolved === true && every("asset_resolved"),
+    sidebar_rendered: summary?.sidebar_rendered === true && every("sidebar_rendered"),
+    tab_rendered: summary?.tab_rendered === true && every("tab_rendered"),
+    restart_restores_assignments: every("restart_restores_assignments"),
+    update_restores_assignments: every("update_restores_assignments"),
+    unrelated_content_preserved: summary?.unrelated_content_preserved === true && every("unrelated_content_preserved"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function kanbanWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.kanban_workflow);
   const phases = records(trace?.phases);
@@ -733,6 +758,21 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         remotelySave = remotelySaveWorkflowChecks(asRecord(remotelySaveProjection.workflow) ?? {});
       }
+      let iconize = id === "PC11" ? iconizeWorkflowChecks(workflow) : null;
+      let iconizeProjection: JsonRecord | null = null;
+      if (id === "PC11") {
+        // Iconize's unchanged release is evaluated inside the same denying
+        // renderer boundary. Keep the file/folder assignment, rename and
+        // asset-rendering contract in a separate marker-free projection; it
+        // never changes the unchanged-artifact runtime disposition.
+        iconizeProjection = await runWorker(
+          'module.exports = class BoundedIconizeProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC11-iconize-projection", target_ids: ["PC11"]},
+          temporaryRoot,
+          "PC11-iconize-projection",
+        );
+        iconize = iconizeWorkflowChecks(asRecord(iconizeProjection.workflow) ?? {});
+      }
       let kanban = id === "PC09" ? kanbanWorkflowChecks(workflow) : null;
       let kanbanProjection: JsonRecord | null = null;
       if (id === "PC09") {
@@ -798,6 +838,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       git_workflow_projection: gitProjection,
       remotely_save_workflow_checks: remotelySave,
       remotely_save_workflow_projection: remotelySaveProjection,
+      iconize_workflow_checks: iconize,
+      iconize_workflow_projection: iconizeProjection,
       kanban_workflow_checks: kanban,
       kanban_workflow_projection: kanbanProjection,
       templater_workflow_checks: templater,
@@ -1152,7 +1194,25 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => remotelySaveChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && kanbanComplete && templaterComplete;
+      const iconizeChecks = asRecord(entry.iconize_workflow_checks);
+      const iconizeComplete = entry.artifact_id !== "PC11" || (iconizeChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "file_assignment_preserved",
+        "folder_assignment_preserved",
+        "rules_preserved",
+        "file_rename_projected",
+        "folder_rename_projected",
+        "asset_resolved",
+        "sidebar_rendered",
+        "tab_rendered",
+        "restart_restores_assignments",
+        "update_restores_assignments",
+        "unrelated_content_preserved",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => iconizeChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
@@ -1191,7 +1251,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

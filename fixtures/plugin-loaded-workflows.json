@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -521,6 +521,48 @@
         {"path": "Notes/Conflict.md", "content": "# Conflict\n\nLocal version.\n"},
         {"path": "Notes/Conflict.local.md", "content": "# Conflict\n\nLocal version.\n"},
         {"path": "Notes/Conflict.remote.md", "content": "# Conflict\n\nRemote version.\n"},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
+      ]
+    },
+    "PC11": {
+      "workflow_id": "workflow:pc11",
+      "description": "Retain file and folder icon assignments and rules through file/folder renames, restart and update, and resolve configured assets for sidebar and tab rendering without direct vault writes.",
+      "initial_data": {
+        "version": "2.14.7",
+        "iconFolder": "Icons",
+        "fileIcons": {
+          "Notes/Home.md": "lucide:home",
+          "Notes/Guide.md": "asset:guide.svg"
+        },
+        "folderIcons": {
+          "Projects": "lucide:folder-open"
+        },
+        "rules": [
+          {"id": "markdown-default", "pattern": "*.md", "icon": "lucide:file-text", "enabled": true}
+        ],
+        "renderInSidebar": true,
+        "renderInTabs": true
+      },
+      "iconize_workflow": {
+        "file_assignment": {"path": "Notes/Home.md", "icon": "lucide:home"},
+        "asset_assignment": {"path": "Notes/Guide.md", "icon": "asset:guide.svg", "asset_path": "Icons/guide.svg", "mime": "image/svg+xml"},
+        "folder_assignment": {"path": "Projects", "icon": "lucide:folder-open"},
+        "file_rename": {"from": "Notes/Home.md", "to": "Notes/Start.md", "expected_icon": "lucide:home"},
+        "folder_rename": {"from": "Projects", "to": "Archive", "expected_icon": "lucide:folder-open"},
+        "rules": [
+          {"id": "markdown-default", "pattern": "*.md", "icon": "lucide:file-text", "enabled": true}
+        ],
+        "sidebar_render": {"path": "Notes/Start.md", "expected_icon": "lucide:home"},
+        "tab_render": {"path": "Notes/Start.md", "expected_icon": "lucide:home"},
+        "expected_unrelated_path": "Notes/Untouched.md",
+        "expected_unrelated_content": "# Untouched\n\nThis note remains byte-identical.\n"
+      },
+      "active_file": "Notes/Home.md",
+      "files": [
+        {"path": "Notes/Home.md", "content": "# Home\n\nIconize fixture source.\n"},
+        {"path": "Notes/Guide.md", "content": "# Guide\n\nConfigured asset icon.\n"},
+        {"path": "Projects/Plan.md", "content": "# Plan\n\nFolder icon fixture.\n"},
+        {"path": "Icons/guide.svg", "content": "<svg xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M1 1h8v8H1z\"/></svg>"},
         {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
       ]
     },
