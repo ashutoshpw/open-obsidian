@@ -11,6 +11,14 @@
       "tested_source_tree": "9c0a523a8e3504a7810b6dddd8d9789b6097ced14b4bfa73fe51113cad0fa79f",
       "status": "partial",
       "summary": "Bounded Linux workflow rerun records mediated persistence for PC20 and PC23, synthetic localStorage availability, zero vault writes and unchanged action/reference limitations without promoting compatibility."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+      "tested_source_tree": "79de753ac8506fd18ec3c9a7865a14d1c1e3d5ae0f7adb5d272078c2fef4fa44",
+      "status": "partial",
+      "summary": "Fresh quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows for the lifecycle storage-boundary fix; hosted unchanged-plugin reports remain partial with zero vault writes and no compatibility promotion."
     }
   ],
   "source_snapshots": {

@@ -1,0 +1,88 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-persistence-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence.json",
+  "implementation_commit": "0c27d6d0ac806bc88aa864c798cdf854e2321292",
+  "metadata_head": "0c27d6d0ac806bc88aa864c798cdf854e2321292",
+  "source_tree": {
+    "sha256": "79de753ac8506fd18ec3c9a7865a14d1c1e3d5ae0f7adb5d272078c2fef4fa44",
+    "paths": 235,
+    "definition": "Clean local digest from bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "loaded_workflows": {
+    "workflow": "OpenObsidian loaded plugin workflows",
+    "run_id": 34660684456,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34660684456",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {
+        "job_id": 103462361284,
+        "conclusion": "success",
+        "recorded_status": "partial",
+        "artifact": "loaded-plugin-workflows-Linux-0c27d6d0ac806bc88aa864c798cdf854e2321292",
+        "artifact_sha256": "14f0105d57e968ed3539517034dfe483b00922a50f6ca75343e9bbf193e0ebec",
+        "audit_source_tree_sha256": "768d25c2a9144d8b8ef0be416af76160fdf65b381c04e7b5dc1717b8fe07676d",
+        "audit_source_tree_paths": 236
+      },
+      "macos-latest": {
+        "job_id": 103462361277,
+        "conclusion": "success",
+        "recorded_status": "partial",
+        "artifact": "loaded-plugin-workflows-macOS-0c27d6d0ac806bc88aa864c798cdf854e2321292",
+        "artifact_sha256": "2ba90cab9a50aeab1b529fc49265acb420e5681fc421375a3efbad0907847795",
+        "audit_source_tree_sha256": "5d79886790b33821cde2e2bf34d86322d34bc97637283ef5ce8214f39ceba6ea",
+        "audit_source_tree_paths": 236
+      },
+      "windows-latest": {
+        "job_id": 103462361132,
+        "conclusion": "success",
+        "recorded_status": "partial",
+        "artifact": "loaded-plugin-workflows-Windows-0c27d6d0ac806bc88aa864c798cdf854e2321292",
+        "artifact_sha256": "42667118313360b6fa241e72e862255c6ff7c8dea77c592e92e4158664dbb8fa",
+        "audit_source_tree_sha256": "0e12695d943f3e35de94ce79014cdedb0048d9b887c580fc2849bafe9c3e2dc6",
+        "audit_source_tree_paths": 236
+      }
+    },
+    "checks": {
+      "all_jobs_uploaded_evidence": true,
+      "all_jobs_partial": true,
+      "zero_vault_writes": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34660684438,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34660684438",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103462361299, "conclusion": "success"},
+      "macos-latest": {"job_id": 103462361197, "conclusion": "success"},
+      "windows-latest": {"job_id": 103462360977, "conclusion": "success"}
+    },
+    "checks": "All Ubuntu, macOS and Windows quality jobs passed state/contracts, tests, typecheck, compile, packaged Electron vault round trip, synthetic plugin lifecycle, Knip and Fallow health; changed-code Fallow review was skipped."
+  },
+  "desktop_build": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34660684445,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34660684445",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103462361101, "conclusion": "success", "artifact": "openobsidian-Linux-preview-0c27d6d0ac806bc88aa864c798cdf854e2321292", "artifact_sha256": "d4bb020ddb6e2b1d2d6f0737a2b74c31faf3b3a95681d4253d2139974d127af3"},
+      "macos-latest": {"job_id": 103462361185, "conclusion": "success", "artifact": "openobsidian-macOS-preview-0c27d6d0ac806bc88aa864c798cdf854e2321292", "artifact_sha256": "e21569624a611ce77044872fdc98ea9b65d4d74daa0ff7511cd6a6fd46998c46"},
+      "windows-latest": {"job_id": 103462361318, "conclusion": "success", "artifact": "openobsidian-Windows-preview-0c27d6d0ac806bc88aa864c798cdf854e2321292", "artifact_sha256": "332c1fbf9688c590cac22920171add99d6ede68af06c2ef130c3ef445ddfd939"}
+    },
+    "checks": "All Ubuntu, macOS and Windows packaging, release-manifest, Electron runtime notice and dependency-attribution jobs passed; production signing was skipped and the artifacts are unsigned previews."
+  },
+  "interpretation": "Hosted CI validates repository, synthetic lifecycle, packaging and cross-platform unchanged-artifact loaded-workflow infrastructure at implementation commit 0c27d6d. The loaded-workflow reports remain partial rather than compatibility certification: action/persistence gaps and the shared-combination persistence boundary remain pending, and no plugin row is promoted.",
+  "limitations": [
+    "The hosted loaded-workflow audit executes unchanged pinned main.js bytes inside the hidden Electron context-isolated sandbox, not stock Obsidian; per-job source digests contain one transient redirected output path (236 paths), while the clean local source digest is 235 paths.",
+    "Reference Obsidian settings, views and return behavior, same-user macOS/Windows OS enforcement, human accessibility/input, provider-backed behavior, signing, publication and updater installation/rollback remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Fresh quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows for implementation commit 0c27d6d; loaded-plugin outcomes remain partial and pending-runtime with zero mediated vault writes and no compatibility promotion."
+}
