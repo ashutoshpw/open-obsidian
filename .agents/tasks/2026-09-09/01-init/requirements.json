@@ -13,6 +13,14 @@
       "summary": "Fresh Linux bounded loaded-workflow evidence completes all seven artifact lifecycles and improves PC22 Smart Connections to passing commands, views and settings actions with preserved bounded data and zero vault writes; documented action, combination, cross-platform and reference limitations remain and no plugin is promoted."
     },
     {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-smart-connections-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+      "tested_source_tree": "b5e56d93d52b8f77e093e91d4a94caca2c956a7e9c0a4cb9eeaeffcaf2619c6a",
+      "status": "partial",
+      "summary": "Hosted quality, desktop-build and loaded-workflow runs succeeded on Ubuntu, macOS and Windows for 3771722; PC22 is complete only in the bounded synthetic scope, the loaded reports remain partial, signing and changed-code Fallow review were skipped, and no plugin is promoted."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
