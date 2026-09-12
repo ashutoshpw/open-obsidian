@@ -1,0 +1,151 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc24-tag-wrangler",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC24"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T08:18:19Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "f5debc8f8e1454d905b50571d04e52994df4b775",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "f5debc8f8e1454d905b50571d04e52994df4b775",
+    "sha256": "87944392744af9b1af71327bd09f091efdf1c652ab767665b294ffcb7669c105",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "The loaded-workflow worker invokes only fixture-declared editor-menu, metadata-cache changed and vault delete callbacks with finite synthetic payloads and records event telemetry.",
+      "The PC24 editor-menu payload captures the unchanged plugin's Rename and Create tag page menu entries without invoking the modal/write callback.",
+      "A bounded in-memory editor projection renames project/open and its hierarchy to archive/open, merges duplicate frontmatter tags, preserves owner/text lines and proves undo/redo bytes; it never writes the mediated vault."
+    ],
+    "security_disposition": "Direct vault writes, filesystem/network/process/credential access and privileged DOM remain denied. The PC24 tag mutation is explicitly bounded-editor-only; the unchanged plugin rename callback is recorded as not-invoked."
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": [
+      "PC07",
+      "PC08",
+      "PC17",
+      "PC20",
+      "PC21",
+      "PC22",
+      "PC23",
+      "PC24"
+    ],
+    "required_phases": [
+      "install",
+      "restart",
+      "update"
+    ],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "pc24": {
+      "name": "Tag Wrangler",
+      "version": "0.6.5",
+      "main_js_sha256": "f390bf135135033cb2b8485438af42efb993ddd93255ac0836016e112ee9ab20",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "phases": [
+        "install",
+        "restart",
+        "update"
+      ],
+      "registered_events": [
+        "editor-menu",
+        "changed",
+        "delete"
+      ],
+      "event_actions": "All three fixture-declared event callbacks passed in every phase; the editor-menu trace captured Rename #project/open and Create tag page entries.",
+      "tag_workflow": {
+        "status": "passed",
+        "mutation_scope": "bounded-editor-only",
+        "source_tag": "project/open",
+        "target_tag": "archive/open",
+        "rename_scoped": true,
+        "merge_deterministic": true,
+        "hierarchical_occurrences_preserved": true,
+        "unrelated_properties_preserved": true,
+        "unrelated_text_preserved": true,
+        "undo_restored_prior_bytes": true,
+        "redo_restored_command_bytes": true,
+        "plugin_rename_callback": "not-invoked",
+        "direct_vault_writes": 0
+      },
+      "persistence": "preserved via plugin-data-save",
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "plugin_data_writes": 0,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "partial",
+      "representative_failure": "D15 denied dom.privileged at window.clipboard",
+      "vault_writes": 0
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 5 tests, 129 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 209 tests, 1205 expectations",
+    "typecheck_command": "bun run typecheck",
+    "typecheck_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian Tag Wrangler modal, vault mutation and hierarchy/merge comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned Tag Wrangler bytes only inside the hidden Electron context-isolated sandbox. Event registration and the menu surface are exercised, while tag rename/merge is a bounded editor-only fixture projection because invoking the unchanged modal and vault-write callback would leave the zero-write boundary; stock Obsidian, reference parity, cross-platform behavior and compatibility promotion remain unverified."
+}
