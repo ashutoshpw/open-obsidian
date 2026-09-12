@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; task_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -222,6 +222,75 @@ test("PC04 fixture and bounded projection cover task query, grouping and surgica
   expect(loadedWorkflowAudit).toContain("function tasksWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("tasks_workflow_checks");
   expect(loadedWorkflowAudit).toContain("create_task_projected");
+});
+
+test("PC07 fixture and bounded projection cover daily paths, templates and weekly integration", () => {
+  const pc07 = fixture.scenarios.PC07 as typeof fixture.scenarios.PC07 & {
+    calendar_workflow?: {
+      existing_date: string;
+      create_date: string;
+      week_date: string;
+      daily_note: {
+        format: string;
+        folder: string;
+        template: string;
+        existing_path: string;
+        expected_created_path: string;
+        expected_created_output: string;
+      };
+      weekly_note: {
+        format: string;
+        folder: string;
+        template: string;
+        expected_path: string;
+        expected_output: string;
+      };
+      expected_week_start: string;
+      expected_locale: string;
+      weekly_integration_disposition: string;
+    };
+  };
+  expect(pc07.files).toContainEqual(expect.objectContaining({path: "Templates/Daily.md", content: "# {{title}}\n"}));
+  expect(pc07.files).toContainEqual(expect.objectContaining({path: "Templates/Weekly.md", content: "# {{title}}\n"}));
+  expect(pc07.initial_data).toMatchObject({
+    weekStart: "monday",
+    showWeeklyNote: true,
+    weeklyNoteFormat: "GGGG-[W]WW",
+    weeklyNoteTemplate: "Templates/Weekly.md",
+    weeklyNoteFolder: "Weekly",
+    dailyNoteFormat: "YYYY-MM-DD",
+    dailyNoteTemplate: "Templates/Daily.md",
+    dailyNoteFolder: "Daily",
+  });
+  expect(pc07.calendar_workflow).toMatchObject({
+    existing_date: "2026-09-11",
+    create_date: "2026-09-12",
+    week_date: "2026-09-12",
+    daily_note: {
+      format: "YYYY-MM-DD",
+      folder: "Daily",
+      template: "Templates/Daily.md",
+      existing_path: "Daily/2026-09-11.md",
+      expected_created_path: "Daily/2026-09-12.md",
+      expected_created_output: "# 2026-09-12\n",
+    },
+    weekly_note: {
+      format: "GGGG-[W]WW",
+      folder: "Weekly",
+      template: "Templates/Weekly.md",
+      expected_path: "Weekly/2026-W37.md",
+      expected_output: "# 2026-W37\n",
+    },
+    expected_week_start: "monday",
+    expected_locale: "en",
+    weekly_integration_disposition: "configured-and-projected",
+  });
+  expect(rendererWorker).toContain("function boundedCalendarWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-calendar-projection"');
+  expect(rendererWorker).toContain("weekly_integration_recorded");
+  expect(loadedWorkflowAudit).toContain("function calendarWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("calendar_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("daily_note_path_matches");
 });
 
 test("PC19 fixture covers note-backed tasks plus Bases view mappings", () => {

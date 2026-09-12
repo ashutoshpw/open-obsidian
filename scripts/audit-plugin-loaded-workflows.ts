@@ -176,6 +176,33 @@ function recentFilesWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function calendarWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.calendar_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: traces.length === 3,
+    bounded_read_only: traces.length === 3 && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-calendar-projection"),
+    week_start_applied: every("week_start_applied"),
+    locale_applied: every("locale_applied"),
+    daily_note_path_matches: every("daily_note_path_matches"),
+    daily_existing_opened: every("daily_existing_opened"),
+    daily_created_in_projection: every("daily_created_in_projection"),
+    daily_date_format_preserved: every("daily_date_format_preserved"),
+    daily_template_applied: every("daily_template_applied"),
+    weekly_note_path_matches: every("weekly_note_path_matches"),
+    weekly_note_created_in_projection: every("weekly_note_created_in_projection"),
+    weekly_date_format_preserved: every("weekly_date_format_preserved"),
+    weekly_template_applied: every("weekly_template_applied"),
+    weekly_integration_recorded: every("weekly_integration_recorded"),
+    weekly_integration_disposition_recorded: traces.length === 3 && traces.every((trace) => trace.weekly_integration_disposition === "configured-and-projected"),
+    navigation_deterministic: every("navigation_deterministic"),
+    direct_vault_writes_zero: traces.length === 3 && traces.every((trace) => trace.direct_vault_writes === 0 && trace.direct_vault_writes_zero === true),
+    status_passed: traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function smartConnectionsWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const traces = phaseRecords(workflow)
     .map((phase) => asRecord(phase.smart_connections_workflow))
@@ -506,6 +533,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const editor = editorChecks(workflow);
       const smartConnections = id === "PC22" ? smartConnectionsWorkflowChecks(workflow) : null;
       const dataview = id === "PC03" ? dataviewWorkflowChecks(workflow) : null;
+      const calendar = id === "PC07" ? calendarWorkflowChecks(workflow) : null;
       const linter = id === "PC25" ? linterWorkflowChecks(workflow) : null;
       const task = id === "PC19" ? taskWorkflowChecks(workflow) : null;
       const tasks = id === "PC04" ? tasksWorkflowChecks(workflow) : null;
@@ -532,6 +560,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       editor_checks: editor,
       tag_workflow_checks: id === "PC24" ? tagWorkflowChecks(workflow) : null,
       recent_files_workflow_checks: id === "PC23" ? recentFilesWorkflowChecks(workflow) : null,
+      calendar_workflow_checks: calendar,
       smart_connections_workflow_checks: smartConnections,
       dataview_workflow_checks: dataview,
       linter_workflow_checks: linter,
@@ -624,6 +653,27 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "max_length_preserved",
         "direct_vault_writes_zero",
       ].every((key) => recentFilesChecks[key] === true));
+      const calendarChecks = asRecord(entry.calendar_workflow_checks);
+      const calendarComplete = entry.artifact_id !== "PC07" || (calendarChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "week_start_applied",
+        "locale_applied",
+        "daily_note_path_matches",
+        "daily_existing_opened",
+        "daily_created_in_projection",
+        "daily_date_format_preserved",
+        "daily_template_applied",
+        "weekly_note_path_matches",
+        "weekly_note_created_in_projection",
+        "weekly_date_format_preserved",
+        "weekly_template_applied",
+        "weekly_integration_recorded",
+        "weekly_integration_disposition_recorded",
+        "navigation_deterministic",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => calendarChecks[key] === true));
       const smartConnectionsChecks = asRecord(entry.smart_connections_workflow_checks);
       const smartConnectionsComplete = entry.artifact_id !== "PC22" || (smartConnectionsChecks !== null && [
         "present",
@@ -708,7 +758,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "phase_projections_passed",
         "status_passed",
       ].every((key) => dataviewChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete;
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
@@ -745,7 +795,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

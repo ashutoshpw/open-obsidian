@@ -1,0 +1,151 @@
+{
+  "evidence_version": 1,
+  "id": "evidence:p3.2:plugin-loaded-workflows:pc07-calendar",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07"],
+  "decision_id": "D14",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T16:27:59.359Z",
+  "status": "partial",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "998b55f834faf845697b185374245a457e09cd75",
+    "sha256": "57def9313f7ff71b750f9b4c61c3bf2f85b5f88c314be4a393b7fab0fd5a7828",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "artifact_id": "PC07",
+    "name": "Calendar",
+    "version": "1.5.10",
+    "main_js_bytes": 141498,
+    "main_js_sha256": "7fb339e9cf9fdbe5a801fa2b8ab85b366b5b3777fbd193cbc8728bc27711d125",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "loaded",
+    "denied_capabilities": [],
+    "denial": null
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC07 now has a dated Calendar fixture covering an existing daily-note open, a missing-date create path, configured daily format/folder/template values and a weekly-note integration disposition.",
+      "The renderer worker formats the configured daily and ISO-week paths, expands only bounded date/template placeholders and projects daily/weekly note results in memory for install, restart and update without invoking a vault write.",
+      "The unchanged Calendar bundle remains inside the context-isolated synthetic renderer; lifecycle, command, detached-view and settings actions are recorded separately from the bounded projection."
+    ],
+    "security_disposition": "The unchanged pinned artifact remains inside the context-isolated synthetic renderer. No process spawning, filesystem, network, credential, dynamic-code, host-window or direct-vault capability is granted; compatibility remains pending."
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "integrity_checked": true,
+    "pc07": {
+      "bounded_lifecycle": "complete",
+      "renderer_status": "loaded",
+      "action_status": "passed",
+      "persistence": "preserved",
+      "persistence_source": "plugin-data-save",
+      "direct_vault_writes": 0,
+      "workflow_projection": {
+        "status": "passed",
+        "mutation_scope": "bounded-in-memory-calendar-projection",
+        "phases": ["install", "restart", "update"],
+        "week_start": "monday",
+        "locale": "en",
+        "daily_note_path_matches": true,
+        "daily_existing_opened": true,
+        "daily_created_in_projection": true,
+        "daily_date_format_preserved": true,
+        "daily_template_applied": true,
+        "daily_created_path": "Daily/2026-09-12.md",
+        "daily_created_output": "# 2026-09-12\n",
+        "weekly_note_path_matches": true,
+        "weekly_note_created_in_projection": true,
+        "weekly_date_format_preserved": true,
+        "weekly_template_applied": true,
+        "weekly_projected_path": "Weekly/2026-W37.md",
+        "weekly_projected_output": "# 2026-W37\n",
+        "weekly_integration_disposition": "configured-and-projected",
+        "weekly_integration_recorded": true,
+        "navigation_deterministic": true,
+        "direct_vault_writes": 0,
+        "direct_vault_writes_zero": true,
+        "all_phases_passed": true
+      },
+      "checks": {
+        "loaded": true,
+        "workflow_supported": true,
+        "required_phases": true,
+        "version_progression": true,
+        "lifecycle_started": true,
+        "settings_registration_recorded": true,
+        "views_registration_recorded": true,
+        "command_attempts_recorded": true,
+        "settings_attempts_recorded": true,
+        "views_attempts_recorded": true,
+        "event_attempts_recorded": true,
+        "clipboard_bounded": true,
+        "clipboard_external_writes_zero": true,
+        "restart_restores_data": true,
+        "update_restores_data": true,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true,
+        "no_vault_writes": true
+      },
+      "calendar_workflow_checks": {
+        "present": true,
+        "bounded_read_only": true,
+        "week_start_applied": true,
+        "locale_applied": true,
+        "daily_note_path_matches": true,
+        "daily_existing_opened": true,
+        "daily_created_in_projection": true,
+        "daily_date_format_preserved": true,
+        "daily_template_applied": true,
+        "weekly_note_path_matches": true,
+        "weekly_note_created_in_projection": true,
+        "weekly_date_format_preserved": true,
+        "weekly_template_applied": true,
+        "weekly_integration_recorded": true,
+        "weekly_integration_disposition_recorded": true,
+        "navigation_deterministic": true,
+        "direct_vault_writes_zero": true,
+        "status_passed": true
+      }
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_required_combinations_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. The Calendar path/template/weekly projection is bounded synthetic evidence and does not certify stock Obsidian, reference-vault behavior or human interaction."
+}

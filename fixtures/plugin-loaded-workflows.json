@@ -98,11 +98,38 @@
         "weeklyNoteFormat": "GGGG-[W]WW",
         "weeklyNoteTemplate": "Templates/Weekly.md",
         "weeklyNoteFolder": "Weekly",
+        "dailyNoteFormat": "YYYY-MM-DD",
+        "dailyNoteTemplate": "Templates/Daily.md",
+        "dailyNoteFolder": "Daily",
         "localeOverride": "en"
+      },
+      "calendar_workflow": {
+        "existing_date": "2026-09-11",
+        "create_date": "2026-09-12",
+        "week_date": "2026-09-12",
+        "daily_note": {
+          "format": "YYYY-MM-DD",
+          "folder": "Daily",
+          "template": "Templates/Daily.md",
+          "existing_path": "Daily/2026-09-11.md",
+          "expected_created_path": "Daily/2026-09-12.md",
+          "expected_created_output": "# 2026-09-12\n"
+        },
+        "weekly_note": {
+          "format": "GGGG-[W]WW",
+          "folder": "Weekly",
+          "template": "Templates/Weekly.md",
+          "expected_path": "Weekly/2026-W37.md",
+          "expected_output": "# 2026-W37\n"
+        },
+        "expected_week_start": "monday",
+        "expected_locale": "en",
+        "weekly_integration_disposition": "configured-and-projected"
       },
       "active_file": "Daily/2026-09-11.md",
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
+        {"path": "Templates/Daily.md", "content": "# {{title}}\n"},
         {"path": "Templates/Weekly.md", "content": "# {{title}}\n"}
       ]
     },

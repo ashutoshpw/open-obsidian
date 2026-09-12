@@ -1699,6 +1699,210 @@ function boundedRecentFilesWorkflow(workflowContext = {}) {
   };
 }
 
+function parseCalendarDate(value) {
+  const match = String(value ?? "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return date.getUTCFullYear() === Number(match[1])
+    && date.getUTCMonth() === Number(match[2]) - 1
+    && date.getUTCDate() === Number(match[3])
+    ? date
+    : null;
+}
+
+function calendarWeekInfo(date, weekStart = "monday") {
+  const normalizedStart = String(weekStart || "monday").toLowerCase();
+  const day = date.getUTCDay();
+  if (normalizedStart === "monday") {
+    const thursday = new Date(date.getTime());
+    thursday.setUTCDate(date.getUTCDate() + 3 - ((day + 6) % 7));
+    const weekYear = thursday.getUTCFullYear();
+    const firstThursday = new Date(Date.UTC(weekYear, 0, 4));
+    const week = 1 + Math.round((thursday.getTime() - firstThursday.getTime()) / 604800000);
+    return {weekYear, week};
+  }
+  const startIndex = normalizedStart === "sunday" ? 0 : 1;
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const offset = (yearStart.getUTCDay() - startIndex + 7) % 7;
+  const dayOfYear = Math.floor((date.getTime() - yearStart.getTime()) / 86400000);
+  return {weekYear: date.getUTCFullYear(), week: Math.floor((dayOfYear + offset) / 7) + 1};
+}
+
+function formatCalendarDate(date, format, weekStart = "monday") {
+  const week = calendarWeekInfo(date, weekStart);
+  const values = {
+    YYYY: String(date.getUTCFullYear()),
+    GGGG: String(week.weekYear),
+    MM: String(date.getUTCMonth() + 1).padStart(2, "0"),
+    DD: String(date.getUTCDate()).padStart(2, "0"),
+    WW: String(week.week).padStart(2, "0"),
+    ww: String(week.week).padStart(2, "0"),
+  };
+  const literals = [];
+  const masked = String(format ?? "").replace(/\[([^\]]*)\]/g, (_match, value) => {
+    const index = literals.push(String(value)) - 1;
+    return `\u0000${index}\u0000`;
+  });
+  const formatted = masked.replace(/GGGG|YYYY|MM|DD|WW|ww/g, (token) => values[token] || token);
+  return formatted.replace(/\u0000(\d+)\u0000/g, (_match, index) => literals[Number(index)] ?? "");
+}
+
+function calendarRelativePath(folder, filename) {
+  const normalizedFolder = String(folder ?? "").replaceAll("\\", "/").replace(/^\/+|\/+$/g, "");
+  const normalizedFilename = String(filename ?? "").replaceAll("\\", "/").replace(/^\/+/, "");
+  const pieces = [...(normalizedFolder ? normalizedFolder.split("/") : []), ...normalizedFilename.split("/")];
+  if (pieces.length === 0 || pieces.some((piece) => !piece || piece === "." || piece === "..")) return null;
+  if (!pieces.every((piece) => /^[^<>:"|?*]+$/.test(piece))) return null;
+  const path = pieces.join("/");
+  return /\.md$/i.test(path) ? path : `${path}.md`;
+}
+
+function renderCalendarTemplate(template, date, format, weekStart = "monday") {
+  const dateText = formatCalendarDate(date, format, weekStart);
+  const yesterday = new Date(date.getTime());
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const tomorrow = new Date(date.getTime());
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  const values = {
+    date: dateText,
+    title: dateText,
+    time: "00:00",
+    yesterday: formatCalendarDate(yesterday, format, weekStart),
+    tomorrow: formatCalendarDate(tomorrow, format, weekStart),
+  };
+  return String(template ?? "").replace(/{{\s*(date|title|time|yesterday|tomorrow)\s*}}/gi, (_match, key) => values[String(key).toLowerCase()] ?? _match);
+}
+
+function boundedCalendarWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.calendar_workflow === "object"
+    ? workflowContext.calendar_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const dailySpec = spec.daily_note && typeof spec.daily_note === "object" ? spec.daily_note : {};
+  const weeklySpec = spec.weekly_note && typeof spec.weekly_note === "object" ? spec.weekly_note : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const fileContents = new Map(files.map((entry) => [entry.path.replaceAll("\\", "/"), entry.content]));
+  const existingDate = parseCalendarDate(spec.existing_date);
+  const createDate = parseCalendarDate(spec.create_date);
+  const weekDate = parseCalendarDate(spec.week_date);
+  const dailyFormat = typeof dailySpec.format === "string" ? dailySpec.format : "";
+  const dailyFolder = typeof dailySpec.folder === "string" ? dailySpec.folder : "";
+  const dailyTemplatePath = typeof dailySpec.template === "string" ? dailySpec.template : "";
+  const weeklyFormat = typeof weeklySpec.format === "string" ? weeklySpec.format : "";
+  const weeklyFolder = typeof weeklySpec.folder === "string" ? weeklySpec.folder : "";
+  const weeklyTemplatePath = typeof weeklySpec.template === "string" ? weeklySpec.template : "";
+  const expectedWeekStart = typeof spec.expected_week_start === "string" ? spec.expected_week_start.toLowerCase() : "";
+  const configuredWeekStart = typeof initialData.weekStart === "string" ? initialData.weekStart.toLowerCase() : "";
+  const expectedLocale = typeof spec.expected_locale === "string" ? spec.expected_locale.toLowerCase() : "";
+  const configuredLocale = typeof initialData.localeOverride === "string" ? initialData.localeOverride.toLowerCase() : "";
+  const dailyExistingPath = existingDate ? calendarRelativePath(dailyFolder, formatCalendarDate(existingDate, dailyFormat, configuredWeekStart)) : null;
+  const dailyCreatePath = createDate ? calendarRelativePath(dailyFolder, formatCalendarDate(createDate, dailyFormat, configuredWeekStart)) : null;
+  const expectedDailyExistingPath = typeof dailySpec.existing_path === "string" ? dailySpec.existing_path : "";
+  const expectedDailyCreatePath = typeof dailySpec.expected_created_path === "string" ? dailySpec.expected_created_path : "";
+  const dailyTemplate = fileContents.get(dailyTemplatePath) || "";
+  const dailyCreatedOutput = createDate ? renderCalendarTemplate(dailyTemplate, createDate, dailyFormat, configuredWeekStart) : "";
+  const expectedDailyOutput = typeof dailySpec.expected_created_output === "string" ? dailySpec.expected_created_output : "";
+  const weeklyPath = weekDate ? calendarRelativePath(weeklyFolder, formatCalendarDate(weekDate, weeklyFormat, configuredWeekStart)) : null;
+  const expectedWeeklyPath = typeof weeklySpec.expected_path === "string" ? weeklySpec.expected_path : "";
+  const weeklyTemplate = fileContents.get(weeklyTemplatePath) || "";
+  const weeklyOutput = weekDate ? renderCalendarTemplate(weeklyTemplate, weekDate, weeklyFormat, configuredWeekStart) : "";
+  const expectedWeeklyOutput = typeof weeklySpec.expected_output === "string" ? weeklySpec.expected_output : "";
+  const dailySettingsMatch = dailyFormat === initialData.dailyNoteFormat
+    && dailyFolder === initialData.dailyNoteFolder
+    && dailyTemplatePath === initialData.dailyNoteTemplate;
+  const weeklySettingsMatch = weeklyFormat === initialData.weeklyNoteFormat
+    && weeklyFolder === initialData.weeklyNoteFolder
+    && weeklyTemplatePath === initialData.weeklyNoteTemplate;
+  const dailyExistingOpened = Boolean(
+    dailyExistingPath
+    && dailyExistingPath === expectedDailyExistingPath
+    && fileContents.has(dailyExistingPath),
+  );
+  const dailyNotePathMatches = Boolean(
+    dailyExistingOpened
+    && dailyCreatePath
+    && dailyCreatePath === expectedDailyCreatePath
+    && !fileContents.has(dailyCreatePath),
+  );
+  const dailyDateFormatPreserved = Boolean(
+    existingDate
+    && createDate
+    && dailyCreatePath
+    && formatCalendarDate(createDate, dailyFormat, configuredWeekStart) === expectedDailyCreatePath.split("/").at(-1)?.replace(/\.md$/i, "")
+    && formatCalendarDate(existingDate, dailyFormat, configuredWeekStart) === expectedDailyExistingPath.split("/").at(-1)?.replace(/\.md$/i, ""),
+  );
+  const dailyTemplateApplied = dailyCreatedOutput === expectedDailyOutput && dailyTemplate.length > 0;
+  const weeklyDateFormatPreserved = Boolean(
+    weekDate
+    && weeklyPath
+    && weeklyPath === expectedWeeklyPath
+    && formatCalendarDate(weekDate, weeklyFormat, configuredWeekStart) === expectedWeeklyPath.split("/").at(-1)?.replace(/\.md$/i, ""),
+  );
+  const weeklyTemplateApplied = weeklyOutput === expectedWeeklyOutput && weeklyTemplate.length > 0;
+  const weeklyNoteProjected = Boolean(weeklyPath && !fileContents.has(weeklyPath) && weeklyTemplateApplied);
+  const weeklyIntegrationDisposition = typeof spec.weekly_integration_disposition === "string" ? spec.weekly_integration_disposition : "";
+  const weeklyIntegrationRecorded = weeklyIntegrationDisposition === "configured-and-projected"
+    && initialData.showWeeklyNote === true
+    && weeklySettingsMatch
+    && weeklyNoteProjected;
+  const weekStartApplied = expectedWeekStart.length > 0 && expectedWeekStart === configuredWeekStart;
+  const localeApplied = expectedLocale.length > 0 && expectedLocale === configuredLocale;
+  const navigationDeterministic = dailyExistingOpened && dailyNotePathMatches && weeklyNoteProjected && weekDate?.getTime() === createDate?.getTime();
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = Boolean(
+    existingDate
+    && createDate
+    && weekDate
+    && dailySettingsMatch
+    && weeklySettingsMatch
+    && weekStartApplied
+    && localeApplied
+    && dailyNotePathMatches
+    && dailyDateFormatPreserved
+    && dailyTemplateApplied
+    && weeklyDateFormatPreserved
+    && weeklyTemplateApplied
+    && weeklyIntegrationRecorded
+    && navigationDeterministic
+    && directVaultWrites === 0,
+  ) ? "passed" : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-calendar-projection",
+    existing_date: typeof spec.existing_date === "string" ? spec.existing_date : null,
+    create_date: typeof spec.create_date === "string" ? spec.create_date : null,
+    week_date: typeof spec.week_date === "string" ? spec.week_date : null,
+    week_start: configuredWeekStart,
+    week_start_applied: weekStartApplied,
+    locale: configuredLocale,
+    locale_applied: localeApplied,
+    daily_note_path_matches: dailyNotePathMatches,
+    daily_existing_opened: dailyExistingOpened,
+    daily_created_in_projection: dailyNotePathMatches && dailyCreatedOutput === expectedDailyOutput,
+    daily_date_format_preserved: dailyDateFormatPreserved,
+    daily_template_applied: dailyTemplateApplied,
+    daily_existing_path: dailyExistingPath,
+    daily_created_path: dailyCreatePath,
+    daily_expected_created_path: expectedDailyCreatePath,
+    daily_created_output: dailyCreatedOutput,
+    weekly_note_path_matches: weeklyDateFormatPreserved,
+    weekly_note_created_in_projection: weeklyNoteProjected,
+    weekly_date_format_preserved: weeklyDateFormatPreserved,
+    weekly_template_applied: weeklyTemplateApplied,
+    weekly_expected_path: expectedWeeklyPath,
+    weekly_projected_path: weeklyPath,
+    weekly_projected_output: weeklyOutput,
+    weekly_integration_disposition: weeklyIntegrationDisposition,
+    weekly_integration_recorded: weeklyIntegrationRecorded,
+    navigation_deterministic: navigationDeterministic,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  };
+}
+
 function boundedSmartConnectionsWorkflow(workflowContext = {}, runtime = {}) {
   const spec = workflowContext && typeof workflowContext.smart_connections_workflow === "object"
     ? workflowContext.smart_connections_workflow
@@ -2515,6 +2719,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (tagWorkflow) actions.tag_workflow = tagWorkflow;
   const recentFilesWorkflow = boundedRecentFilesWorkflow(workflowContext);
   if (recentFilesWorkflow) actions.recent_files_workflow = recentFilesWorkflow;
+  const calendarWorkflow = boundedCalendarWorkflow(workflowContext);
+  if (calendarWorkflow) actions.calendar_workflow = calendarWorkflow;
   const smartConnectionsWorkflow = boundedSmartConnectionsWorkflow(workflowContext, workflowContext.runtime || {});
   if (smartConnectionsWorkflow) actions.smart_connections_workflow = smartConnectionsWorkflow;
   const dataviewWorkflow = boundedDataviewWorkflow(workflowContext, workflowContext.runtime || {});
@@ -2586,6 +2792,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     },
     tag_workflow: actions.tag_workflow || null,
     recent_files_workflow: actions.recent_files_workflow || null,
+    calendar_workflow: actions.calendar_workflow || null,
     smart_connections_workflow: actions.smart_connections_workflow || null,
     dataview_workflow: actions.dataview_workflow || null,
     task_workflow: actions.task_workflow || null,
@@ -2658,6 +2865,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
+    workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
@@ -2675,6 +2883,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
+    workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
@@ -2767,6 +2976,11 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     frontmatterTagValues,
     boundedTagWorkflow,
     boundedRecentFilesWorkflow,
+    parseCalendarDate,
+    calendarWeekInfo,
+    formatCalendarDate,
+    calendarRelativePath,
+    renderCalendarTemplate,
     boundedSmartConnectionsWorkflow,
     dataviewScalar,
     dataviewFrontmatter,
@@ -2774,6 +2988,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     dataviewPath,
     dataviewNoteRecord,
     boundedDataviewWorkflow,
+    boundedCalendarWorkflow,
     boundedLinterWorkflow,
     boundedTaskWorkflow,
     boundedTasksWorkflow,
