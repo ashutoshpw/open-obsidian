@@ -32,7 +32,7 @@ function rememberDeniedPath(capabilities, path) {
 function denyCapability(capabilities, capability, path = capability) {
   remember(capabilities, capability);
   rememberDeniedPath(capabilities, path);
-  throw new Error(`D15 denied ${capability}`);
+  throw new Error(`D15 denied ${capability} at ${path}`);
 }
 
 function deniedObject(capabilities, capability, path = capability) {
@@ -97,8 +97,12 @@ function safeDocumentObject(capabilities, allowSyntheticDocument = false, root =
   const target = {body: safeDomObject()};
   if (allowSyntheticDocument) {
     target.head = safeDomObject();
+    // XML/HTML helpers used by unchanged plugins receive only a detached,
+    // inert synthetic root. It never points at the host document.
+    target.documentElement = safeDomObject();
     target.createDocumentFragment = () => safeDomObject();
     target.createElement = () => safeDomObject();
+    target.createElementNS = () => safeDomObject();
     target.createTextNode = () => safeDomObject();
     target.createRange = () => ({createContextualFragment: () => safeDomObject(), selectNodeContents() {}, deleteContents() {}});
     target.querySelector = () => safeDomObject();
@@ -140,7 +144,7 @@ function boundedStorage(store) {
   };
 }
 
-function boundedMoment(value) {
+function boundedMoment(value, localeState = {name: "en", week: {dow: 0}}) {
   const initial = value && typeof value === "object" && value._date instanceof Date
     ? value._date
     : value instanceof Date
@@ -151,7 +155,7 @@ function boundedMoment(value) {
   const date = new Date(initial.getTime());
   const moment = {
     _date: date,
-    clone() { return boundedMoment(date); },
+    clone() { return boundedMoment(date, localeState); },
     isValid() { return Number.isFinite(date.getTime()); },
     add(amount, unit) {
       if (unit === "d" || unit === "day" || unit === "days") date.setUTCDate(date.getUTCDate() + Number(amount));
@@ -160,6 +164,7 @@ function boundedMoment(value) {
       if (unit === "y" || unit === "year" || unit === "years") date.setUTCFullYear(date.getUTCFullYear() + Number(amount));
       return moment;
     },
+    subtract(amount, unit) { return moment.add(-Number(amount), unit); },
     set(values, value) {
       if (typeof values === "string") values = {[values]: value};
       if (values && typeof values === "object") {
@@ -176,7 +181,8 @@ function boundedMoment(value) {
       if (unit === "day") date.setUTCHours(0, 0, 0, 0);
       if (unit === "week") {
         const day = date.getUTCDay();
-        date.setUTCDate(date.getUTCDate() - day);
+        const weekStart = Number(localeState.week?.dow) || 0;
+        date.setUTCDate(date.getUTCDate() - ((day - weekStart + 7) % 7));
         date.setUTCHours(0, 0, 0, 0);
       }
       if (unit === "month") {
@@ -186,8 +192,37 @@ function boundedMoment(value) {
       return moment;
     },
     weekday(value) {
-      if (value === undefined) return date.getUTCDay();
-      date.setUTCDate(date.getUTCDate() + Number(value) - date.getUTCDay());
+      const weekStart = Number(localeState.week?.dow) || 0;
+      const current = (date.getUTCDay() - weekStart + 7) % 7;
+      if (value === undefined) return current;
+      date.setUTCDate(date.getUTCDate() + Number(value) - current);
+      return moment;
+    },
+    isoWeekday(value) {
+      const current = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
+      if (value === undefined) return current;
+      date.setUTCDate(date.getUTCDate() + Number(value) - current);
+      return moment;
+    },
+    date(value) {
+      if (value === undefined) return date.getUTCDate();
+      date.setUTCDate(Number(value));
+      return moment;
+    },
+    week(value) {
+      const firstDay = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      const dayOfYear = Math.floor((date.getTime() - firstDay.getTime()) / 86400000);
+      const weekStart = Number(localeState.week?.dow) || 0;
+      const firstOffset = (firstDay.getUTCDay() - weekStart + 7) % 7;
+      const current = Math.floor((dayOfYear + firstOffset) / 7) + 1;
+      if (value === undefined) return current;
+      date.setUTCDate(date.getUTCDate() + (Number(value) - current) * 7);
+      return moment;
+    },
+    calendar() { return moment.format("YYYY-MM-DD"); },
+    locale(value) {
+      if (value === undefined) return localeState.name;
+      localeState.name = String(value);
       return moment;
     },
     format(pattern = "YYYY-MM-DD") {
@@ -205,16 +240,31 @@ function boundedMoment(value) {
         .replace(/WW/g, week)
         .replace(/ww/g, week);
     },
-    localeData() { return {_week: {dow: 0}}; },
+    localeData() { return {_week: {...localeState.week}}; },
   };
   return moment;
 }
 
 function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false, root = "window", storageStore = null) {
   const document = safeDocumentObject(capabilities, allowSyntheticDocument, `${root}.document`);
-  const moment = (value) => boundedMoment(value);
+  const localeState = {name: "en", week: {dow: 0}};
+  const moment = (value) => boundedMoment(value, localeState);
   moment.weekdays = () => ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  moment.weekdaysShort = () => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   moment.months = () => ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  moment.locales = () => ["en"];
+  moment.locale = (value) => {
+    if (value === undefined) return localeState.name;
+    localeState.name = String(value);
+    return localeState.name;
+  };
+  moment.localeData = () => ({_week: {...localeState.week}});
+  moment.updateLocale = (_locale, options = {}) => {
+    if (options && typeof options === "object" && options.week && typeof options.week === "object") {
+      localeState.week = {dow: Number(options.week.dow) || 0};
+    }
+    return moment.locale();
+  };
   let boundedTimerCalls = 0;
   const boundedTimer = allowSyntheticDocument
     ? (callback) => {
@@ -244,6 +294,9 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     clearInterval() {},
   };
   if (allowSyntheticDocument) {
+    target.language = "en";
+    target.appVersion = "OpenObsidian Electron";
+    target._bundledLocaleWeekSpec = {dow: 0};
     target.localStorage = boundedStorage(storageStore || new Map());
     target.smart_env = null;
     target.smart_env_configs = Object.create(null);
@@ -255,7 +308,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
       return denyCapability(capabilities, "dom.privileged", `${root}.${String(property)}`);
     },
     set(current, property, value) {
-      if (property === "app" || (allowSyntheticDocument && ["smart_env", "smart_env_configs", "all_envs"].includes(property))) {
+      if (property === "app" || (allowSyntheticDocument && ["smart_env", "smart_env_configs", "all_envs", "_bundledLocaleWeekSpec"].includes(property))) {
         current[property] = value;
         return true;
       }
@@ -666,7 +719,21 @@ function createObsidianApi() {
     loadData() {
       this.app.persistence.push("loadData");
       const dataStore = this.app.dataStore;
-      const value = dataStore ? cloneData(dataStore.value) : {};
+      const dataKey = typeof this.manifest?.id === "string" && this.manifest.id.length > 0 ? this.manifest.id : null;
+      if (dataStore && dataKey) {
+        if (!dataStore.scopedValues || typeof dataStore.scopedValues !== "object") dataStore.scopedValues = Object.create(null);
+        if (!Object.prototype.hasOwnProperty.call(dataStore.scopedValues, dataKey)) {
+          const initialByPlugin = dataStore.initialByPlugin && typeof dataStore.initialByPlugin === "object" ? dataStore.initialByPlugin : null;
+          dataStore.scopedValues[dataKey] = cloneData(initialByPlugin && Object.prototype.hasOwnProperty.call(initialByPlugin, dataKey) ? initialByPlugin[dataKey] : dataStore.value);
+        }
+      }
+      const value = dataStore
+        ? cloneData(dataKey && dataStore.scopedValues ? dataStore.scopedValues[dataKey] : dataStore.value)
+        : {};
+      if (dataStore && dataKey) {
+        if (!dataStore.loadedByPlugin || typeof dataStore.loadedByPlugin !== "object") dataStore.loadedByPlugin = Object.create(null);
+        dataStore.loadedByPlugin[dataKey] = cloneData(value);
+      }
       this.app.loadedData = value;
       return value;
     }
@@ -675,6 +742,13 @@ function createObsidianApi() {
       this.app.persistence.push("saveData");
       const dataStore = this.app.dataStore;
       if (dataStore) {
+        const dataKey = typeof this.manifest?.id === "string" && this.manifest.id.length > 0 ? this.manifest.id : null;
+        if (dataKey) {
+          if (!dataStore.scopedValues || typeof dataStore.scopedValues !== "object") dataStore.scopedValues = Object.create(null);
+          dataStore.scopedValues[dataKey] = cloneData(value);
+          if (!dataStore.savedByPlugin || typeof dataStore.savedByPlugin !== "object") dataStore.savedByPlugin = Object.create(null);
+          dataStore.savedByPlugin[dataKey] = cloneData(value);
+        }
         dataStore.value = cloneData(value);
         dataStore.writes += 1;
       }
@@ -868,6 +942,10 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
       containerEl: safeDomObject(),
       titleEl: safeDomObject(),
       getViewState() { return {type: leaf.type}; },
+      detach() {
+        const index = leaves.indexOf(leaf);
+        if (index >= 0) leaves.splice(index, 1);
+      },
       setViewState: async (state = {}) => {
         leaf.type = typeof state.type === "string" ? state.type : leaf.type;
         const factory = pluginApp.viewFactories.find((candidate) => candidate.type === leaf.type);
@@ -1248,6 +1326,8 @@ async function exerciseRegistrations(pluginApp) {
 async function workflowInstance(module, workflow, dataStore, phase, version, workflowContext = {}, manifestId = "renderer-workflow-fixture", runtime = {}, capabilities = []) {
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
+  dataStore.loadedByPlugin = Object.create(null);
+  dataStore.savedByPlugin = Object.create(null);
   const pluginApp = createPluginApp([], dataStore, workflowContext, capabilities);
   globalThis.app = pluginApp;
   const instance = new Constructor(pluginApp, {id: manifestId, version});
@@ -1276,6 +1356,9 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     loadedData: cloneData(pluginApp.loadedData),
     savedData: cloneData(pluginApp.savedData),
     persistedData: cloneData(dataStore?.value),
+    loadedDataByPlugin: cloneData(dataStore?.loadedByPlugin),
+    savedDataByPlugin: cloneData(dataStore?.savedByPlugin),
+    persistedDataByPlugin: cloneData(dataStore?.scopedValues),
     storage: storageSnapshot(runtime.storage),
     registered,
     actions,
@@ -1323,7 +1406,11 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const workflowContext = {...workflowConfig, metrics};
   const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
   try {
-    const dataStore = {value: cloneData(workflowConfig.initial_data), writes: 0};
+    const dataStore = {
+      value: cloneData(workflowConfig.initial_data),
+      initialByPlugin: cloneData(workflowConfig.initial_data_by_plugin),
+      writes: 0,
+    };
     const initialApp = createPluginApp([], dataStore, workflowContext, deniedCapabilities);
     const runtime = {app: initialApp, allowSyntheticDocument: true, storage: new Map(), metrics};
     const evaluatePhase = () => evaluateSource(source, deniedCapabilities, requiredModules, runtime);

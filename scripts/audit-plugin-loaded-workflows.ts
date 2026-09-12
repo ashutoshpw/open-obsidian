@@ -130,6 +130,18 @@ function combinationTargetIds(): string[] {
   return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
 }
 
+function scopedPersistencePass(phases: JsonRecord[], currentIndex: number): boolean {
+  const current = asRecord(phases[currentIndex]?.loadedDataByPlugin) ?? {};
+  const previous = phases[currentIndex - 1];
+  const previousSaved = asRecord(previous?.savedDataByPlugin) ?? {};
+  const previousPersisted = asRecord(previous?.persistedDataByPlugin) ?? {};
+  const keys = Object.keys(current);
+  return keys.length > 0 && keys.every((key) => {
+    const expected = Object.prototype.hasOwnProperty.call(previousSaved, key) ? previousSaved[key] : previousPersisted[key];
+    return JSON.stringify(current[key]) === JSON.stringify(expected);
+  });
+}
+
 function workflowChecks(result: JsonRecord): Record<string, boolean> {
   const workflow = asRecord(result.workflow) ?? {};
   const phases = phaseRecords(workflow);
@@ -137,6 +149,8 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
   const expectedPhases = asArray(fixture.required_phases).filter((value): value is string => typeof value === "string");
   const uninstall = asRecord(workflow.uninstall) ?? {};
   const registered = phases.map((phase) => asRecord(phase.registered) ?? {});
+  const scopedRestart = scopedPersistencePass(phases, 1);
+  const scopedUpdate = scopedPersistencePass(phases, 2);
   return {
     loaded: result.status === "loaded",
     workflow_supported: workflow.supported === true,
@@ -150,8 +164,10 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
     views_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.views)),
     restart_restores_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.savedData),
     update_restores_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.savedData),
-    restart_restores_persisted_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.persistedData),
-    update_restores_persisted_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.persistedData),
+    restart_restores_scoped_data: scopedRestart,
+    update_restores_scoped_data: scopedUpdate,
+    restart_restores_persisted_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.persistedData) || scopedRestart,
+    update_restores_persisted_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.persistedData) || scopedUpdate,
     storage_recorded: phases.every((phase) => asRecord(phase.storage) !== null),
     cleanup_after_each_phase: phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0),
     uninstall_clears_registrations: uninstall.registrationsCleared === true,
@@ -165,8 +181,8 @@ function checksPass(checks: Record<string, boolean>, names: readonly string[]): 
 }
 
 function persistencePasses(checks: Record<string, boolean>): boolean {
-  const restart = checks.restart_restores_data || checks.restart_restores_persisted_data;
-  const update = checks.update_restores_data || checks.update_restores_persisted_data;
+  const restart = checks.restart_restores_data || checks.restart_restores_persisted_data || checks.restart_restores_scoped_data;
+  const update = checks.update_restores_data || checks.update_restores_persisted_data || checks.update_restores_scoped_data;
   return restart === true && update === true;
 }
 
@@ -238,7 +254,13 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
     const combinationScenario = scenario(combinationIds[0]);
     const combination = asRecord(fixture.combination) ?? {};
     const combinationId = string(combination.id) || `combination:${combinationIds.map((id) => id.toLowerCase()).join("-")}`;
-    const combinationConfig = {artifact_id: combinationId, ...combinationScenario, target_ids: combinationIds};
+    const combinationInitialData = Object.fromEntries(combinationIds.map((id) => [id, asRecord(scenario(id).initial_data) ?? {}]));
+    const combinationConfig = {
+      artifact_id: combinationId,
+      ...combinationScenario,
+      initial_data_by_plugin: combinationInitialData,
+      target_ids: combinationIds,
+    };
     const combinationResult = await runWorker(combinedSource(combinationSources), combinationConfig, temporaryRoot, `combination-${combinationIds.map((id) => id.toLowerCase()).join("-")}`);
     const combinationChecks = workflowChecks(combinationResult);
     const combinationWorkflow = asRecord(combinationResult.workflow) ?? {};
