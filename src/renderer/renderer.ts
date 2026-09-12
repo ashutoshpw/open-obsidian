@@ -4,6 +4,7 @@ import {decodeBase64, encodeBase64} from "../shared/base64.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
 import {effectiveThemeMode, previewThemeAssets, safeAppearanceColor, safeAppearanceFontSize} from "./theme-preview.js";
 import {localeDirection, message, normalizeLocale, type MessageKey} from "../core/localization.js";
+import {MAX_TRANSCLUSION_DEPTH, guardTransclusion, resolveNoteEmbed, selectTransclusionSource, withinTransclusionSourceLimit, type NoteEmbedResolution, type TransclusionGuard} from "../core/transclusion.js";
 import {OPEN_OBSIDIAN_THEME, UNINSTALL_CLEANUP_OPTIONS, extractMarkdownTasks, uninstallCleanupOption, vaultPane, workspaceAction, type BookmarkItem, type BookmarkResponse, type DailyNotePlan, type TagIndex, type TaskItem, type TemplateIndex, type UninstallCleanupOptionId, type VaultPane, type VaultPaneId, type WorkspaceActionId} from "../shared/ui/index.js";
 
 type OpenObsidianWindow = Window & {openObsidian?: OpenObsidianAPI};
@@ -184,6 +185,8 @@ let selectedRevision: string | null = null;
 let dirty = false;
 let requestId = 0;
 let previewGeneration = 0;
+type PreviewEmbedContext = {sourcePath: string; depth: number; chain: readonly string[]};
+const previewEmbedContexts = new WeakMap<HTMLElement, PreviewEmbedContext>();
 let changeReview: Awaited<ReturnType<OpenObsidianAPI["reviewChanges"]>> | null = null;
 let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS, historyPolicy: {...DEFAULT_HISTORY_POLICY}};
 let workspaceState: WorkspaceState = {...DEFAULT_WORKSPACE_STATE, settings: workspaceSettings, openTabs: [], navigationHistory: []};
@@ -1105,18 +1108,198 @@ async function requestPreviewAttachment(sourcePath: string, target: string | und
   }
 }
 
-async function hydratePreviewEmbed(sourcePath: string, generation: number, placeholder: HTMLElement): Promise<void> {
-  const response = await requestPreviewAttachment(sourcePath, placeholder.dataset.target);
-  if (!response) return;
-  if (generation !== previewGeneration) return;
-  if (!placeholder.isConnected) return;
+function decoratePreviewEmbeds(root: ParentNode, context: PreviewEmbedContext): void {
+  root.querySelectorAll<HTMLElement>(".markdown-embed").forEach((placeholder) => {
+    previewEmbedContexts.set(placeholder, context);
+    placeholder.dataset.sourcePath = context.sourcePath;
+    placeholder.dataset.depth = String(context.depth);
+  });
+}
+
+function previewEmbedFailureLabel(reason: string): string {
+  const labels: Record<string, string> = {
+    unresolved: "target was not found",
+    ambiguous: "target is ambiguous",
+    external: "external targets are not loaded",
+    depth: `nested preview limit reached (${MAX_TRANSCLUSION_DEPTH})`,
+    cycle: "recursive embed cycle blocked",
+    oversized: "note is too large for an inline preview",
+    unsupported: "target is not a supported inline preview",
+    read: "note could not be read",
+  };
+  return labels[reason] ?? reason;
+}
+
+function markPreviewEmbedUnavailable(placeholder: HTMLElement, reason: string, resolution?: NoteEmbedResolution): void {
+  const target = placeholder.dataset.target || "current note";
+  const fragment = placeholder.dataset.fragment ? `#${placeholder.dataset.fragment}` : "";
+  const label = `Embedded content unavailable: ${target}${fragment} · ${previewEmbedFailureLabel(reason)}`;
+  placeholder.classList.add("markdown-embed-unresolved");
+  placeholder.dataset.status = reason;
+  if (resolution?.candidates.length) placeholder.dataset.candidates = resolution.candidates.join(",");
+  placeholder.title = label;
+  placeholder.setAttribute("aria-label", label);
+  placeholder.textContent = `[embed unavailable: ${target}${fragment} · ${previewEmbedFailureLabel(reason)}]`;
+}
+
+function previewSourceBytesWithinLimit(base64: string): boolean {
+  return withinTransclusionSourceLimit(base64);
+}
+
+type ReadNoteEmbed = {
+  response: Awaited<ReturnType<OpenObsidianAPI["readFile"]>>;
+  source: string;
+  resolution: NoteEmbedResolution;
+  guard: Extract<TransclusionGuard, {allowed: true}>;
+};
+
+type PreviewNoteTarget = {resolution: NoteEmbedResolution; guard: Extract<TransclusionGuard, {allowed: true}>};
+
+function previewNoteTargetValue(placeholder: HTMLElement): string | null {
+  const target = placeholder.dataset.target;
+  if (target) return target;
+  markPreviewEmbedUnavailable(placeholder, "unresolved");
+  return null;
+}
+
+function previewNoteReference(target: string, fragment: string | undefined): {target: string; fragment?: string} {
+  return fragment ? {target, fragment} : {target};
+}
+
+function previewNoteResolution(context: PreviewEmbedContext, placeholder: HTMLElement): NoteEmbedResolution | null {
+  const target = previewNoteTargetValue(placeholder);
+  if (!target) return null;
+  const fragment = placeholder.dataset.fragment;
+  const initial = resolveNoteEmbed(previewNoteReference(target, fragment), vaultFiles.filter((file) => file.kind === "file").map((file) => file.relativePath), context.sourcePath);
+  if (initial.status !== "resolved" || !initial.target) {
+    markPreviewEmbedUnavailable(placeholder, initial.status, initial);
+    return null;
+  }
+  return initial;
+}
+
+function resolvePreviewNoteTarget(context: PreviewEmbedContext, placeholder: HTMLElement): PreviewNoteTarget | null {
+  const initial = previewNoteResolution(context, placeholder);
+  if (!initial?.target) return null;
+  const guard = guardTransclusion(context.depth, context.chain, initial.target);
+  if (!guard.allowed) {
+    markPreviewEmbedUnavailable(placeholder, guard.reason);
+    return null;
+  }
+  return {resolution: initial, guard};
+}
+
+async function readPreviewNoteSource(target: string, placeholder: HTMLElement): Promise<{response: Awaited<ReturnType<OpenObsidianAPI["readFile"]>>; source: string} | null> {
+  if (!api) return null;
+  let response: Awaited<ReturnType<OpenObsidianAPI["readFile"]>>;
+  try {
+    response = await api.readFile(target);
+  } catch {
+    markPreviewEmbedUnavailable(placeholder, "read");
+    return null;
+  }
+  if (!previewSourceBytesWithinLimit(response.base64)) {
+    markPreviewEmbedUnavailable(placeholder, "oversized");
+    return null;
+  }
+  try {
+    return {response, source: decodeBase64(response.base64)};
+  } catch {
+    markPreviewEmbedUnavailable(placeholder, "read");
+    return null;
+  }
+}
+
+function selectPreviewNoteSource(context: PreviewEmbedContext, placeholder: HTMLElement, response: Awaited<ReturnType<OpenObsidianAPI["readFile"]>>, source: string, resolution: NoteEmbedResolution): {source: string; resolution: NoteEmbedResolution} | null {
+  const fragment = placeholder.dataset.fragment;
+  const sourceAware = resolvePreviewFragment(context, response, source, resolution, fragment);
+  if (sourceAware.status !== "resolved") {
+    markPreviewEmbedUnavailable(placeholder, sourceAware.status, sourceAware);
+    return null;
+  }
+  const selected = selectTransclusionSource(source, fragment);
+  if (selected.status !== "resolved" || selected.text === undefined) {
+    markPreviewEmbedUnavailable(placeholder, selected.status);
+    return null;
+  }
+  return {source: selected.text, resolution: sourceAware};
+}
+
+function resolvePreviewFragment(context: PreviewEmbedContext, response: Awaited<ReturnType<OpenObsidianAPI["readFile"]>>, source: string, resolution: NoteEmbedResolution, fragment: string | undefined): NoteEmbedResolution {
+  if (!fragment) return resolution;
+  const target = resolution.target ?? response.relativePath;
+  const sources = new Map([[target, source], [response.relativePath, source]]);
+  return resolveNoteEmbed({target: response.relativePath, fragment}, [response.relativePath], context.sourcePath, sources);
+}
+
+async function requestPreviewNote(context: PreviewEmbedContext, placeholder: HTMLElement): Promise<ReadNoteEmbed | null> {
+  const target = resolvePreviewNoteTarget(context, placeholder);
+  const targetPath = target?.resolution.target;
+  if (!targetPath) return null;
+  const read = await readPreviewNoteSource(targetPath, placeholder);
+  if (!read) return null;
+  const selected = selectPreviewNoteSource(context, placeholder, read.response, read.source, target.resolution);
+  if (!selected) return null;
+  return {response: read.response, source: selected.source, resolution: selected.resolution, guard: target.guard};
+}
+
+function previewTransclusionElement(read: ReadNoteEmbed, placeholder: HTMLElement): HTMLElement {
+  const target = read.response.relativePath;
+  const fragment = placeholder.dataset.fragment;
+  const label = `Transcluded note: ${target}${fragment ? `#${fragment}` : ""}`;
+  const section = document.createElement("section");
+  section.className = "markdown-transclusion";
+  section.dataset.target = target;
+  section.dataset.revision = read.response.revision;
+  if (fragment) section.dataset.fragment = fragment;
+  section.setAttribute("aria-label", label);
+  section.title = label;
+  section.replaceChildren(...parseMarkdownPreview(read.source).map(previewElement));
+  section.querySelectorAll<HTMLInputElement>(".task-line input").forEach((checkbox) => {
+    checkbox.disabled = true;
+    checkbox.setAttribute("aria-label", "Read-only transcluded task");
+  });
+  decoratePreviewEmbeds(section, {sourcePath: target, depth: read.guard.nextDepth, chain: read.guard.chain});
+  return section;
+}
+
+function previewHydrationCurrent(generation: number, placeholder: HTMLElement): boolean {
+  return generation === previewGeneration && placeholder.isConnected;
+}
+
+function replacePreviewAttachment(response: AttachmentReadResponse, generation: number, placeholder: HTMLElement): boolean {
+  if (!previewHydrationCurrent(generation, placeholder)) return false;
   placeholder.replaceWith(previewAttachmentElement(response, placeholder));
+  return true;
+}
+
+async function hydrateNestedPreviewEmbeds(transclusion: HTMLElement, note: ReadNoteEmbed, generation: number): Promise<void> {
+  const nested = [...transclusion.querySelectorAll<HTMLElement>(".markdown-embed")];
+  await Promise.all(nested.map((child) => {
+    const childContext = previewEmbedContexts.get(child) ?? {sourcePath: note.response.relativePath, depth: note.guard.nextDepth, chain: note.guard.chain};
+    return hydratePreviewEmbed(childContext, generation, child);
+  }));
+}
+
+async function hydratePreviewEmbed(context: PreviewEmbedContext, generation: number, placeholder: HTMLElement): Promise<void> {
+  const response = await requestPreviewAttachment(context.sourcePath, placeholder.dataset.target);
+  if (response) {
+    replacePreviewAttachment(response, generation, placeholder);
+    return;
+  }
+  const note = await requestPreviewNote(context, placeholder);
+  if (!note || !previewHydrationCurrent(generation, placeholder)) return;
+  const transclusion = previewTransclusionElement(note, placeholder);
+  placeholder.replaceWith(transclusion);
+  await hydrateNestedPreviewEmbeds(transclusion, note, generation);
 }
 
 async function hydratePreviewEmbeds(sourcePath: string, generation: number): Promise<void> {
   if (!api || !notePreview) return;
+  const context: PreviewEmbedContext = {sourcePath, depth: 0, chain: [sourcePath]};
+  decoratePreviewEmbeds(notePreview, context);
   const placeholders = [...notePreview.querySelectorAll<HTMLElement>(".markdown-embed")];
-  await Promise.all(placeholders.map((placeholder) => hydratePreviewEmbed(sourcePath, generation, placeholder)));
+  await Promise.all(placeholders.map((placeholder) => hydratePreviewEmbed(context, generation, placeholder)));
 }
 
 const markdownInlineSpecialRenderers: Partial<Record<MarkdownInlineSegment["kind"], (segment: MarkdownInlineSegment) => Node>> = {

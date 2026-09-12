@@ -106,6 +106,13 @@ function headingText(value: string): string {
 
 type FenceState = {character: "`" | "~"; length: number};
 
+type SourceSubpath = {
+  key: string;
+  line: number;
+  kind: "heading" | "block";
+  level?: number;
+};
+
 function updateFence(line: string, fence: FenceState | null): {next: FenceState | null; consumed: boolean} {
   const match = /^ {0,3}(`{3,}|~{3,})/.exec(line);
   if (!match) return {next: fence, consumed: Boolean(fence)};
@@ -119,28 +126,71 @@ function setextHeading(line: string, next: string): boolean {
   return Boolean(line.trim()) && !/^ {0,3}(?:[-+*]|\d+[.)])[\t ]+/.test(line) && /^ {0,3}(?:=+|-+)[\t ]*$/.test(next);
 }
 
-function sourceLineSubpaths(line: string, next: string): string[] {
-  const subpaths: string[] = [];
+function sourceLineSubpaths(line: string, next: string, lineNumber: number): SourceSubpath[] {
+  const subpaths: SourceSubpath[] = [];
   const atx = /^ {0,3}#{1,6}[\t ]+(.+?)\s*$/.exec(line);
-  if (atx) subpaths.push(normalizedHeading(headingText(atx[1]!)));
-  else if (setextHeading(line, next)) subpaths.push(normalizedHeading(headingText(line)));
+  if (atx) subpaths.push({key: normalizedHeading(headingText(atx[1]!)), line: lineNumber, kind: "heading", level: atx[0]!.match(/^ {0,3}#+/)?.[0].trim().length});
+  else if (setextHeading(line, next)) subpaths.push({key: normalizedHeading(headingText(line)), line: lineNumber, kind: "heading", level: /^ {0,3}=/.test(next) ? 1 : 2});
   const id = blockId(line);
-  if (id) subpaths.push(`^${id}`);
+  if (id) subpaths.push({key: `^${id}`, line: lineNumber, kind: "block"});
   return subpaths;
 }
 
-function sourceSubpaths(source: string): string[] {
+function sourceSubpathEntries(source: string): SourceSubpath[] {
   const lines = source.split(/\r\n|\n|\r/);
-  const subpaths: string[] = [];
+  const subpaths: SourceSubpath[] = [];
   let fence: FenceState | null = null;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!.replace(/^\uFEFF/, "");
     const transition = updateFence(line, fence);
     fence = transition.next;
     if (transition.consumed || fence) continue;
-    subpaths.push(...sourceLineSubpaths(line, lines[index + 1] ?? ""));
+    subpaths.push(...sourceLineSubpaths(line, lines[index + 1] ?? "", index));
   }
   return subpaths;
+}
+
+function sourceSubpaths(source: string): string[] {
+  return sourceSubpathEntries(source).map((subpath) => subpath.key);
+}
+
+export type LinkSubpathSlice = {
+  status: "resolved" | "unresolved" | "ambiguous";
+  text?: string;
+  lineStart?: number;
+  lineEnd?: number;
+};
+
+/**
+ * Select the source span addressed by a Markdown heading or block ID. The
+ * parser intentionally follows the same fence-aware identity rules as link
+ * resolution, so executable-looking source remains plain text for hosts.
+ */
+export function sliceLinkSubpath(source: string, requestedSubpath: string): LinkSubpathSlice {
+  const requested = requestedSubpath.trim();
+  if (!requested) return {status: "resolved", text: source, lineStart: 0, lineEnd: source.split(/\r\n|\n|\r/).length};
+  const key = requested.startsWith("^") ? requested : normalizedHeading(requested);
+  const lines = source.split(/\r\n|\n|\r/);
+  const matches = sourceSubpathEntries(source).filter((subpath) => subpath.key === key);
+  if (matches.length === 0) return {status: "unresolved"};
+  if (matches.length > 1) return {status: "ambiguous"};
+  const match = matches[0]!;
+  let end = lines.length;
+  if (match.kind === "heading") {
+    for (const candidate of sourceSubpathEntries(source)) {
+      if (candidate.kind === "heading" && candidate.line > match.line && (candidate.level ?? 6) <= (match.level ?? 6)) {
+        end = candidate.line;
+        break;
+      }
+    }
+  } else {
+    // Block IDs identify the containing source line. Remove only the marker
+    // itself while preserving the author's surrounding text and whitespace.
+    const line = lines[match.line] ?? "";
+    lines[match.line] = line.replace(/\^[A-Za-z0-9][A-Za-z0-9_-]*[\t ]*$/, "").replace(/[\t ]+$/, "");
+    end = match.line + 1;
+  }
+  return {status: "resolved", text: lines.slice(match.line, end).join("\n"), lineStart: match.line, lineEnd: end};
 }
 
 function subpathMatches(source: string, requestedSubpath: string): number {
