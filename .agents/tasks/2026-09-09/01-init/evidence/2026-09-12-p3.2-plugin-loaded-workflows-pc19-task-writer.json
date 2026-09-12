@@ -1,0 +1,225 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc19-task-writer",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC19"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T13:42:03.161Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false,
+    "bun": "1.4.2",
+    "base_head": "20e65d5377757dd76e90fd78e7dec370c9876836"
+  },
+  "source_tree": {
+    "schema_version": 1,
+    "generated_at": "2026-09-12T13:42:03.178Z",
+    "head": "20e65d5377757dd76e90fd78e7dec370c9876836",
+    "sha256": "edea60e0c73a641b46e466205eba0bfd405fe3d586ff6595d8df73fbca74136c",
+    "paths": 239,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "commit": "20e65d5377757dd76e90fd78e7dec370c9876836",
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "fixtures/plugin-loaded-workflows.json",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC19 task discovery matches the configured tag/status and note-backed task without invoking the unchanged plugin vault writer.",
+      "A bounded revision-aware in-memory writer rejects a stale revision, requires the expected source revision, updates only status and task checkbox bytes, and records the advanced revision.",
+      "Configured TaskNotes Bases mappings are checked against the mediated fixture files while direct vault writes remain denied and zero."
+    ],
+    "security_disposition": "The unchanged TaskNotes artifact remains inside the context-isolated synthetic renderer; the task projection is a bounded synthetic adapter and does not access the host vault or OS clipboard."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": [
+      "PC07",
+      "PC08",
+      "PC17",
+      "PC19",
+      "PC20",
+      "PC21",
+      "PC22",
+      "PC23",
+      "PC24",
+      "PC25"
+    ],
+    "required_phases": [
+      "install",
+      "restart",
+      "update"
+    ],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "artifact_lifecycles": "all ten audited artifact lifecycles complete",
+    "artifact_actions": "all ten audited artifact action paths pass within the bounded synthetic scope",
+    "pc19": {
+      "name": "TaskNotes",
+      "version": "4.12.5",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "action_status": "passed",
+      "task_projection": {
+        "present": true,
+        "bounded_revision_aware": true,
+        "query_matched": true,
+        "bases_mappings_present": true,
+        "source_revision_matched": true,
+        "stale_revision_rejected": true,
+        "status_updated": true,
+        "task_checkbox_updated": true,
+        "unrelated_content_preserved": true,
+        "revision_advanced": true,
+        "direct_vault_writes_zero": true,
+        "status_passed": true
+      },
+      "task_phases": [
+        {
+          "status": "passed",
+          "mutation_scope": "bounded-revision-aware-writer",
+          "target_path": "Notes/Task.md",
+          "task_tag": "task",
+          "initial_status": "open",
+          "final_status": "done",
+          "query_matched": true,
+          "bases_mappings_present": true,
+          "source_revision": "e2acd09d",
+          "expected_revision": "e2acd09d",
+          "revision_matched": true,
+          "stale_revision": "00000000",
+          "stale_revision_rejected": true,
+          "output_revision": "ba47aeed",
+          "revision_advanced": true,
+          "status_updated": true,
+          "task_checkbox_updated": true,
+          "unrelated_content_preserved": true,
+          "input": "---\ntags:\n  - task\nstatus: open\n---\n\n- [ ] Review compatibility #task\n",
+          "output": "---\ntags:\n  - task\nstatus: done\n---\n\n- [x] Review compatibility #task\n",
+          "direct_vault_writes": 0,
+          "direct_vault_writes_zero": true
+        },
+        {
+          "status": "passed",
+          "mutation_scope": "bounded-revision-aware-writer",
+          "target_path": "Notes/Task.md",
+          "task_tag": "task",
+          "initial_status": "open",
+          "final_status": "done",
+          "query_matched": true,
+          "bases_mappings_present": true,
+          "source_revision": "e2acd09d",
+          "expected_revision": "e2acd09d",
+          "revision_matched": true,
+          "stale_revision": "00000000",
+          "stale_revision_rejected": true,
+          "output_revision": "ba47aeed",
+          "revision_advanced": true,
+          "status_updated": true,
+          "task_checkbox_updated": true,
+          "unrelated_content_preserved": true,
+          "input": "---\ntags:\n  - task\nstatus: open\n---\n\n- [ ] Review compatibility #task\n",
+          "output": "---\ntags:\n  - task\nstatus: done\n---\n\n- [x] Review compatibility #task\n",
+          "direct_vault_writes": 0,
+          "direct_vault_writes_zero": true
+        },
+        {
+          "status": "passed",
+          "mutation_scope": "bounded-revision-aware-writer",
+          "target_path": "Notes/Task.md",
+          "task_tag": "task",
+          "initial_status": "open",
+          "final_status": "done",
+          "query_matched": true,
+          "bases_mappings_present": true,
+          "source_revision": "e2acd09d",
+          "expected_revision": "e2acd09d",
+          "revision_matched": true,
+          "stale_revision": "00000000",
+          "stale_revision_rejected": true,
+          "output_revision": "ba47aeed",
+          "revision_advanced": true,
+          "status_updated": true,
+          "task_checkbox_updated": true,
+          "unrelated_content_preserved": true,
+          "input": "---\ntags:\n  - task\nstatus: open\n---\n\n- [ ] Review compatibility #task\n",
+          "output": "---\ntags:\n  - task\nstatus: done\n---\n\n- [x] Review compatibility #task\n",
+          "direct_vault_writes": 0,
+          "direct_vault_writes_zero": true
+        }
+      ],
+      "persistence": "preserved",
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": [
+        "vault.direct-write"
+      ]
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": [
+        "PC07",
+        "PC21",
+        "PC23"
+      ],
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "action_status": "passed",
+      "vault_writes": 0
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 9 tests, 204 expectations",
+    "full_tests": "passed; 213 tests, 1280 expectations",
+    "fast_checks": "passed; bun run check:fast",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "typecheck": "passed; bun run typecheck",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian TaskNotes/Bases/calendar and lossless-writer behavior",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed behavior, signed release, publication and updater installation/rollback",
+    "full required plugin combinations, compatibility promotion and release-track certification"
+  ],
+  "limitation": "This evidence executes the unchanged pinned TaskNotes artifact only inside the hidden Electron context-isolated sandbox. The task projection is synthetic implementation evidence; it does not certify stock Obsidian, lossless-writer parity, same-user cross-platform enforcement, human behavior or compatibility promotion."
+}
