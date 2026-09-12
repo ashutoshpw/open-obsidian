@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
   "scenarios": {
     "PC07": {
       "workflow_id": "workflow:pc07",
@@ -23,6 +23,23 @@
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
         {"path": "Templates/Weekly.md", "content": "# {{title}}\n"}
+      ]
+    },
+    "PC08": {
+      "workflow_id": "workflow:pc08",
+      "description": "Load Style Settings controls from a detached stylesheet fixture and preserve its bounded settings payload across restart and update.",
+      "initial_data": {
+        "settings": {
+          "appearance@@compact": true,
+          "appearance@@accent": "#3366ff"
+        },
+        "version": 1,
+        "activeStyle": "Minimal"
+      },
+      "active_file": "Daily/2026-09-11.md",
+      "files": [
+        {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
+        {"path": "Themes/Minimal.css", "content": "/* @settings\nname: Appearance\nid: appearance\nsettings:\n  - id: compact\n    title: Compact\n    type: class-toggle\n  - id: accent\n    title: Accent\n    type: variable-color\n*/\n"}
       ]
     },
     "PC21": {

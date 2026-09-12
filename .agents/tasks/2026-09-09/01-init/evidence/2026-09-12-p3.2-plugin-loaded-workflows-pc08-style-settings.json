@@ -1,0 +1,130 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc08-style-settings",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC08",
+    "PC21"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T07:50:35Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "6d00aceadf49d59096b83a761cb564ae7f99f336",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "6d00aceadf49d59096b83a761cb564ae7f99f336",
+    "sha256": "cf536c9ca4bbb4935a889b8e7294a203a0b11d561a49647376d52388b3179669",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC08 uses an in-memory Themes/Minimal.css settings fixture with detached synthetic document head lookup and styleSheets.",
+      "The workflow worker provides a finite workspace.detachLeavesOfType seam for Style Settings cleanup.",
+      "The audit result describes all audited target artifacts generically while preserving the existing three-artifact combination.",
+      "Only mediated plugin-data snapshots are used for restart/update persistence; host DOM, clipboard and direct vault writes remain unavailable or denied."
+    ],
+    "security_disposition": "Only finite in-memory renderer seams were widened for the loaded-workflow mode; direct vault writes, filesystem/network/process/credential access, host DOM and OS clipboard remain unavailable or denied."
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved",
+      "persistence_source": "mediated-plugin-data-store",
+      "action_status": "partial",
+      "representative_failure": "D15 denied dom.privileged at window.clipboard",
+      "vault_writes": 0
+    },
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "artifact_lifecycles": "all eight audited artifact lifecycles complete",
+    "pc08": {
+      "name": "Style Settings",
+      "version": "1.0.9",
+      "main_js_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+      "integrity": "passed",
+      "workflow_supported": true,
+      "bounded_lifecycle": "complete",
+      "phases": ["install", "restart", "update"],
+      "versions": ["1.0.0", "1.0.0", "1.1.0"],
+      "lifecycle": {
+        "each_phase_constructed_onload_onunload": true,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true
+      },
+      "actions": {
+        "commands": ["show-style-settings-leaf"],
+        "views": ["style-settings"],
+        "settings": ["mr"],
+        "failed_or_not_executed": 0
+      },
+      "persistence": {
+        "restart_restores_data": false,
+        "update_restores_data": false,
+        "restart_restores_scoped_data": true,
+        "update_restores_scoped_data": true,
+        "restart_restores_persisted_data": true,
+        "update_restores_persisted_data": true,
+        "source": "mediated-plugin-data-store"
+      },
+      "plugin_data_writes": 0,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 4 tests, 120 expectations",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "audit_command": "bun run audit:plugin-loaded-workflows",
+    "audit_result": "exit 0; overall partial with PC08 bounded result complete"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. PC08 is complete only for the bounded synthetic settings/view/command and mediated persistence trace; it does not certify stock Obsidian, light/dark or popout rendering parity, human behavior or compatibility promotion.",
+  "result": "PC08 Style Settings passes bounded install/restart/update/uninstall/return-to-Obsidian lifecycle, settings/view/command actions, mediated scoped persistence and zero vault writes. The overall loaded-workflow audit remains partial because the shared PC07/PC21/PC23 combination retains the explicit D15 window.clipboard denial; PC08 remains pending for reference, cross-platform and human validation."
+}

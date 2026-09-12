@@ -109,6 +109,8 @@ function safeDocumentObject(capabilities, allowSyntheticDocument = false, root =
     target.querySelectorAll = () => safeCollection([]);
     target.getElementById = () => null;
     target.getElementsByClassName = () => safeCollection([]);
+    target.getElementsByTagName = (name) => String(name).toLowerCase() === "head" ? safeCollection([target.head]) : safeCollection([]);
+    target.styleSheets = safeCollection([]);
     target.addEventListener = () => undefined;
     target.removeEventListener = () => undefined;
     target.on = () => undefined;
@@ -984,6 +986,11 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     registerHoverLinkSource() {},
     getLeaf() { return createLeaf(); },
     getMostRecentLeaf() { return null; },
+    detachLeavesOfType(type) {
+      for (const leaf of [...leaves]) {
+        if (leaf && leaf.type === type && typeof leaf.detach === "function") leaf.detach();
+      }
+    },
     openLinkText: async (_link, _sourcePath, _newLeaf) => undefined,
     revealLeaf: async () => undefined,
     changeLayout: async () => undefined,

@@ -30,7 +30,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"]);
+  expect(fixture.target_ids).toEqual(["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -126,4 +126,12 @@ test("PC20 fixture and bounded editor trace cover mutation history and folding",
   expect(loadedWorkflowAudit).toContain("folding_round_trip");
   expect(loadedWorkflowAudit).toContain("phase_editor_round_trip");
   expect(loadedWorkflowAudit).toContain("editor_checks: editor");
+});
+
+test("PC08 fixture and detached DOM seam keep Style Settings bounded", () => {
+  const pc08 = fixture.scenarios.PC08;
+  expect(pc08.files).toContainEqual(expect.objectContaining({path: "Themes/Minimal.css"}));
+  expect(rendererWorker).toContain("target.getElementsByTagName");
+  expect(rendererWorker).toContain("detachLeavesOfType(type)");
+  expect(rendererWorker).toContain('String(name).toLowerCase() === "head"');
 });

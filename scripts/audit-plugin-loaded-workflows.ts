@@ -311,7 +311,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: artifactLifecyclesComplete && combinationLifecycleComplete
-        ? "All three unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces; persisted-data gaps and settings/view/command action failures remain recorded as pending-runtime limitations."
+        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces; persisted-data gaps and settings/view/command action failures remain recorded as pending-runtime limitations."
         : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",
     };
   } finally {
