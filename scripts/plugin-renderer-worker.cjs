@@ -64,6 +64,13 @@ function safeDomObject() {
     append() {},
     prepend() {},
     appendText() {},
+    getBoundingClientRect() {
+      return {x: 0, y: 0, top: 0, left: 0, right: 640, bottom: 480, width: 640, height: 480, toJSON() { return this; }};
+    },
+    get clientWidth() { return 640; },
+    get clientHeight() { return 480; },
+    get offsetWidth() { return 640; },
+    get offsetHeight() { return 480; },
     createEl() { return safeDomObject(); },
     createDiv() { return safeDomObject(); },
     createSpan() { return safeDomObject(); },
@@ -347,6 +354,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     TextDecoder,
     CodeMirrorAdapter: null,
     setTimeout: boundedTimer,
+    requestAnimationFrame: (callback) => boundedTimer(callback),
     setInterval: (callback) => {
       if (!allowSyntheticDocument) return denyCapability(capabilities, "resource.unbounded", `${root}.setInterval`);
       let calls = 0;
@@ -359,6 +367,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
       return 0;
     },
     clearTimeout() {},
+    cancelAnimationFrame() {},
     clearInterval() {},
   };
   if (allowSyntheticDocument) {
@@ -747,6 +756,40 @@ function storageSnapshot(store) {
 }
 
 function createObsidianApi() {
+  class Events {
+    constructor() {
+      this._handlers = new Map();
+    }
+
+    on(name, callback) {
+      if (typeof name !== "string" || typeof callback !== "function") return callback;
+      const handlers = this._handlers.get(name) || [];
+      handlers.push(callback);
+      this._handlers.set(name, handlers);
+      return callback;
+    }
+
+    off(name, callback) {
+      const handlers = this._handlers.get(name);
+      if (!handlers) return;
+      const remaining = handlers.filter((candidate) => candidate !== callback);
+      if (remaining.length > 0) this._handlers.set(name, remaining);
+      else this._handlers.delete(name);
+    }
+
+    offref(callback) {
+      for (const [name, handlers] of this._handlers) {
+        const remaining = handlers.filter((candidate) => candidate !== callback);
+        if (remaining.length > 0) this._handlers.set(name, remaining);
+        else this._handlers.delete(name);
+      }
+    }
+
+    trigger(name, ...args) {
+      for (const callback of [...(this._handlers.get(name) || [])]) callback(...args);
+    }
+  }
+
   class Plugin {
     constructor(pluginApp, manifest) {
       this.app = pluginApp;
@@ -810,6 +853,8 @@ function createObsidianApi() {
     registerEditorExtension() {}
 
     registerMarkdownCodeBlockProcessor() {}
+
+    registerMarkdownPostProcessor() {}
 
     registerHoverLinkSource() {}
 
@@ -912,7 +957,19 @@ function createObsidianApi() {
     if (typeof value === "string") return [value];
     return [];
   };
-  const target = {Plugin, ItemView, FileView, PluginSettingTab, parseFrontMatterAliases, parseFrontMatterTags};
+  const target = {
+    Events,
+    Plugin,
+    ItemView,
+    FileView,
+    PluginSettingTab,
+    parseFrontMatterAliases,
+    parseFrontMatterTags,
+    // Locale detection is a pure renderer primitive. Returning a stable
+    // language keeps unchanged plugins' i18n resources usable without
+    // exposing host or network state.
+    getLanguage: () => "en",
+  };
   return new Proxy(target, {
     ownKeys() {
       return [...new Set([...Reflect.ownKeys(target), ...OBSIDIAN_EXPORT_NAMES])];
@@ -940,7 +997,9 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
   const context = workflowContext && typeof workflowContext === "object" ? workflowContext : {};
   const files = new Map();
   const internalFiles = dataStore?.internalFiles instanceof Map ? dataStore.internalFiles : new Map();
+  const localStorageValues = dataStore?.localStorageValues instanceof Map ? dataStore.localStorageValues : new Map();
   if (dataStore && !(dataStore.internalFiles instanceof Map)) dataStore.internalFiles = internalFiles;
+  if (dataStore && !(dataStore.localStorageValues instanceof Map)) dataStore.localStorageValues = localStorageValues;
   const fileEntries = Array.isArray(context.files) ? context.files : [];
   for (const entry of fileEntries) {
     if (!entry || typeof entry.path !== "string") continue;
@@ -1037,6 +1096,7 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     getFileByPath(path) { return fileRecord(pathValue(path)); },
     getFolderByPath(path) { return folderRecord(path); },
     getFiles() { return safeCollection([...files.keys()].map(fileRecord).filter(Boolean)); },
+    getMarkdownFiles() { return safeCollection([...files.keys()].filter((path) => /\.md$/i.test(path)).map(fileRecord).filter(Boolean)); },
     getAllLoadedFiles() { return safeCollection([...files.keys()].map(fileRecord).filter(Boolean)); },
     recurseChildren(folder, callback) {
       const normalized = pathValue(folder).replace(/\\/g, "/").replace(/\/$/, "");
@@ -1163,6 +1223,13 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     internalPlugins: {plugins: {}, getEnabledPluginById() { return null; }, getPluginById() { return null; }},
     app: null,
     activeFile,
+    loadLocalStorage(key) {
+      const value = localStorageValues.get(String(key));
+      return value === undefined ? null : String(value);
+    },
+    saveLocalStorage(key, value) {
+      localStorageValues.set(String(key), String(value));
+    },
   };
   pluginApp.app = pluginApp;
   activeLeaf.app = pluginApp;
@@ -1351,7 +1418,10 @@ function lifecycleInstance(module, lifecycle, runtime = {}, capabilities = []) {
 }
 
 function actionError(error) {
-  return error instanceof Error ? error.message.slice(0, 240) : String(error).slice(0, 240);
+  if (!(error instanceof Error)) return String(error).slice(0, 240);
+  const message = error.message.slice(0, 240);
+  const stack = typeof error.stack === "string" ? error.stack.split("\n").slice(1, 4).join(" ").slice(0, 480) : "";
+  return stack ? `${message} [${stack}]` : message;
 }
 
 async function awaitAction(value) {

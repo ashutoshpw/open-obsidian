@@ -1,0 +1,97 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc19-tasknotes-worker-fix",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC19"],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T11:59:43Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "exit_code": 0,
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "c1547842e38fbf7d24782c32d071e1e36d9e5a6e",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "c1547842e38fbf7d24782c32d071e1e36d9e5a6e",
+    "sha256": "c4834e8b11564d99d431624f72c639937e6bcd47d4166869f982e3a4dcf0acfa",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "artifact_id": "PC19",
+    "name": "TaskNotes",
+    "version": "4.12.5",
+    "main_js_bytes": 5233350,
+    "main_js_sha256": "7f82b6bbffe5ff4b03c6b1581aa193f1204cd5970700ef9641f095e0c277bc4e",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "loaded",
+    "denied_capabilities": ["vault.direct-write"]
+  },
+  "worker_changes": {
+    "bounded_seams": [
+      "Events implements bounded on/off/offref/trigger behavior for unchanged plugin i18n and service emitters.",
+      "Plugin exposes the standard registerMarkdownPostProcessor lifecycle seam without attaching host listeners.",
+      "The mediated app exposes read-only Markdown file enumeration and bounded renderer-local loadLocalStorage/saveLocalStorage state.",
+      "Renderer-local requestAnimationFrame/cancelAnimationFrame and deterministic detached geometry support view initialization without host DOM access."
+    ],
+    "security_disposition": "Unchanged TaskNotes bytes remain inside the context-isolated synthetic renderer; direct vault writes remain denied and no compatibility status is promoted."
+  },
+  "loaded_workflow_audit": {
+    "required_phases": ["install", "restart", "update"],
+    "bounded_lifecycle": "complete",
+    "persistence": "not-proven",
+    "persistence_reason": "The aggregate restart/update data-restoration checks remain false despite nine mediated plugin-data writes; scoped and persisted-data checks are not sufficient to certify this artifact.",
+    "commands_registered_per_phase": 36,
+    "command_failures_per_phase": 0,
+    "settings": {"id": "tB", "displayed": true, "status": "passed"},
+    "views": {
+      "passed": [
+        "tasknotes-pomodoro-view",
+        "tasknotes-pomodoro-stats-view",
+        "tasknotes-stats-view",
+        "tasknotes-release-notes"
+      ],
+      "failed": []
+    },
+    "phase_lifecycle": {
+      "install": ["constructed", "onload", "onunload"],
+      "restart": ["constructed", "onload", "onunload"],
+      "update": ["constructed", "onload", "onunload"]
+    },
+    "cleanup_after_each_phase": true,
+    "uninstall_clears_registrations": true,
+    "return_to_obsidian": true,
+    "plugin_data_writes": 9,
+    "vault_writes": 0,
+    "action_status": "passed",
+    "no_plugin_promoted": true
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 9 tests, 195 expectations",
+    "quality_command": "bun run check:fast",
+    "quality_result": "passed; 213 tests, 1271 expectations; state/contracts/plugin-matrix/D15/syntax/type and Fallow checks passed",
+    "audit_result": "exit 0; overall partial with PC19 aggregate persistence not-proven",
+    "manual_worker_result": "all four TaskNotes views passed in install/restart/update"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian TaskNotes/Bases/calendar behavior and lossless property writes",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "aggregate persistence semantics and full required plugin combinations",
+    "provider-backed behavior, signed release, publication and updater installation/rollback",
+    "compatibility promotion and release-track certification"
+  ],
+  "limitation": "This evidence exercises unchanged pinned TaskNotes bytes only inside the bounded Electron context-isolated sandbox. Passing renderer actions are implementation evidence, not stock Obsidian parity or compatibility certification; the earlier partial failure record is retained and this rerun does not promote PC19."
+}
