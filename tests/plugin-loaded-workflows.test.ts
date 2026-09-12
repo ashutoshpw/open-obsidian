@@ -54,6 +54,8 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("target.createElementNS = () => safeDomObject();");
   expect(rendererWorker).toContain("moment.updateLocale =");
   expect(rendererWorker).toContain("target._bundledLocaleWeekSpec = {dow: 0};");
+  expect(rendererWorker).toContain("target.navigator = {");
+  expect(rendererWorker).toContain("const safeNavigator = runtime.allowSyntheticDocument ? safeWindow.navigator : deniedObject");
   expect(rendererWorker).toContain("registerHoverLinkSource() {}");
   expect(rendererWorker).toContain("function boundedEditorAdapter");
   expect(rendererWorker).toContain('specifier === "@codemirror/language"');
@@ -71,12 +73,14 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("if (property === \"then\") return undefined");
   expect(rendererWorker).toContain("const internalFiles = dataStore?.internalFiles instanceof Map");
   expect(rendererWorker).toContain("dataStore.initialByPlugin");
+  expect(rendererWorker).toContain("loadedSnapshotsByPlugin");
   expect(rendererWorker).toContain("persistedDataByPlugin");
   expect(rendererWorker).toContain("detach() {");
   expect(rendererWorker).toContain("env.smart_sources.opts.prevent_import_on_load = true");
   expect(rendererWorker).toContain("runtime.window = undefined");
   expect(loadedWorkflowAudit).toContain('.filter((action) => action.status !== "passed")');
   expect(loadedWorkflowAudit).toContain("scopedPersistencePass");
+  expect(loadedWorkflowAudit).toContain("loadedSnapshotsByPlugin");
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];

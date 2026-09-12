@@ -15,8 +15,13 @@ function hasArgument(name) {
 }
 
 function emit(result, exitCode = 0) {
-  process.stdout.write(`${JSON.stringify(result)}\n`);
-  app.exit(exitCode);
+  const payload = `${JSON.stringify(result)}\n`;
+  const finish = () => app.exit(exitCode);
+  // Large unchanged-plugin traces (notably TaskNotes persistence snapshots)
+  // can exceed a pipe's high-water mark. Wait for stdout to drain before
+  // terminating Electron so the audit receives one complete JSON record.
+  if (process.stdout.write(payload)) setImmediate(finish);
+  else process.stdout.once("drain", finish);
 }
 
 function remember(list, value) {
@@ -352,7 +357,7 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     decodeURIComponent,
     TextEncoder,
     TextDecoder,
-    CodeMirrorAdapter: null,
+    CodeMirrorAdapter: allowSyntheticDocument ? {commands: {}} : null,
     setTimeout: boundedTimer,
     requestAnimationFrame: (callback) => boundedTimer(callback),
     setInterval: (callback) => {
@@ -394,6 +399,20 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
         return clipboardText;
       },
     };
+    // Browser identity is represented by inert, deterministic values. It is
+    // safe to expose to unchanged renderer plugins because it has no process,
+    // filesystem, network, credential or host-window capabilities.
+    target.navigator = {
+      language: "en-US",
+      languages: ["en-US", "en"],
+      platform: "OpenObsidian",
+      userAgent: "OpenObsidian Electron",
+      userAgentData: {platform: "OpenObsidian", mobile: false},
+      maxTouchPoints: 0,
+      onLine: false,
+      clipboard: target.clipboard,
+    };
+    target.log = {debug() {}, info() {}, warn() {}, error() {}, log() {}};
     target.smart_env = null;
     target.smart_env_configs = Object.create(null);
     target.all_envs = [];
@@ -422,11 +441,25 @@ function safeComponentObject() {
     nameEl: safeDomObject(),
     descEl: safeDomObject(),
     settingEl: safeDomObject(),
+    modalEl: safeDomObject(),
+    contentEl: safeDomObject(),
+    titleEl: safeDomObject(),
+    headerEl: safeDomObject(),
+    inputEl: safeDomObject(),
+    buttonEl: safeDomObject(),
+    selectEl: safeDomObject(),
+    sliderEl: safeDomObject(),
+    colorPicker: safeDomObject(),
   };
+  const callbackMethods = new Set(["addText", "addToggle", "addDropdown", "addSearch", "addButton", "addExtraButton", "addSlider", "addColorPicker", "addFileSuggest", "addMomentFormat", "addComponent"]);
   let proxy;
   proxy = new Proxy(component, {
     get(target, property) {
       if (property in target) return target[property];
+      if (callbackMethods.has(property)) return (...args) => {
+        if (typeof args[0] === "function") args[0](safeComponentObject());
+        return proxy;
+      };
       return (..._args) => proxy;
     },
   });
@@ -852,6 +885,8 @@ function createObsidianApi() {
 
     registerEditorExtension() {}
 
+    registerEditorSuggest() {}
+
     registerMarkdownCodeBlockProcessor() {}
 
     registerMarkdownPostProcessor() {}
@@ -879,6 +914,21 @@ function createObsidianApi() {
       if (dataStore && dataKey) {
         if (!dataStore.loadedByPlugin || typeof dataStore.loadedByPlugin !== "object") dataStore.loadedByPlugin = Object.create(null);
         dataStore.loadedByPlugin[dataKey] = cloneData(value);
+        if (!dataStore.loadedSnapshotsByPlugin || typeof dataStore.loadedSnapshotsByPlugin !== "object") dataStore.loadedSnapshotsByPlugin = Object.create(null);
+        if (!Array.isArray(dataStore.loadedSnapshotsByPlugin[dataKey])) dataStore.loadedSnapshotsByPlugin[dataKey] = [];
+        // Plugins may call loadData repeatedly and mutate the returned object
+        // between calls. Retain the boundary snapshots so persistence checks
+        // can distinguish the value restored from storage from later
+        // runtime-normalized state (for example a transient timer session).
+        // Keep only the first and latest snapshots so an unchanged plugin
+        // cannot make the bounded audit response unbounded.
+        const snapshots = dataStore.loadedSnapshotsByPlugin[dataKey];
+        const snapshot = cloneData(value);
+        if (snapshots.length === 0) snapshots.push(snapshot);
+        else if (snapshots.length === 1) snapshots.push(snapshot);
+        else snapshots[1] = snapshot;
+        if (!dataStore.loadDataCallsByPlugin || typeof dataStore.loadDataCallsByPlugin !== "object") dataStore.loadDataCallsByPlugin = Object.create(null);
+        dataStore.loadDataCallsByPlugin[dataKey] = Number(dataStore.loadDataCallsByPlugin[dataKey] || 0) + 1;
       }
       this.app.loadedData = value;
       return value;
@@ -1183,7 +1233,10 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
   };
   pluginApp = {
     events,
-    commands: [],
+    commands: Object.assign([], {
+      executeCommandById() { return false; },
+      findCommand(id) { return this.includes(id) ? {id} : null; },
+    }),
     commandHandlers: [],
     views: [],
     viewFactories: [],
@@ -1279,6 +1332,7 @@ function createSafeRequire(capabilities, requiredModules, metrics = {}) {
 function createEvaluationArguments(capabilities, requiredModules, runtime = {}) {
   const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true, "window", runtime.storage, runtime.metrics));
   const localStorage = runtime.allowSyntheticDocument ? safeWindow.localStorage : undefined;
+  const safeNavigator = runtime.allowSyntheticDocument ? safeWindow.navigator : deniedObject(capabilities, "dom.privileged", "navigator");
   let boundedTimerCalls = 0;
   const boundedTimer = runtime.allowSyntheticDocument
     ? (callback) => {
@@ -1305,7 +1359,7 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     safeWindow,
     safeWindow,
     safeWindow,
-    safeWindow,
+    safeNavigator,
     safeWindow,
     localStorage,
     deniedObject(capabilities, "process.spawn"),
@@ -1980,6 +2034,8 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   const Constructor = pluginConstructor(module);
   if (!Constructor) throw new Error("workflow fixture did not export a plugin class");
   dataStore.loadedByPlugin = Object.create(null);
+  dataStore.loadedSnapshotsByPlugin = Object.create(null);
+  dataStore.loadDataCallsByPlugin = Object.create(null);
   dataStore.savedByPlugin = Object.create(null);
   const pluginApp = createPluginApp([], dataStore, workflowContext, capabilities);
   globalThis.app = pluginApp;
@@ -2012,6 +2068,8 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     savedData: cloneData(pluginApp.savedData),
     persistedData: cloneData(dataStore?.value),
     loadedDataByPlugin: cloneData(dataStore?.loadedByPlugin),
+    loadedSnapshotsByPlugin: cloneData(dataStore?.loadedSnapshotsByPlugin),
+    loadDataCallsByPlugin: cloneData(dataStore?.loadDataCallsByPlugin),
     savedDataByPlugin: cloneData(dataStore?.savedByPlugin),
     persistedDataByPlugin: cloneData(dataStore?.scopedValues),
     storage: storageSnapshot(runtime.storage),

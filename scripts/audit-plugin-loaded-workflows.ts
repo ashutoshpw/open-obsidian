@@ -65,10 +65,19 @@ async function collect(child: ReturnType<typeof spawn>): Promise<ChildOutcome> {
 
 function parseWorker(outcome: ChildOutcome): JsonRecord {
   if (outcome.timedOut) throw new Error(`loaded-plugin workflow worker exceeded ${rendererTimeoutMs}ms`);
-  const line = outcome.stdout.trim().split("\n").at(-1) ?? "";
-  const parsed = asRecord(JSON.parse(line));
-  if (!parsed) throw new Error(outcome.stderr.trim() || "loaded-plugin workflow worker emitted a non-object result");
-  return parsed;
+  const lines = outcome.stdout.trim().split(/\r?\n/).reverse();
+  let parseError = "";
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    try {
+      const parsed = asRecord(JSON.parse(line));
+      if (parsed) return parsed;
+    } catch (error) {
+      parseError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  const tail = outcome.stdout.trim().slice(-400);
+  throw new Error(outcome.stderr.trim() || `loaded-plugin workflow worker emitted no JSON object (${parseError || "unknown parse error"}); stdout bytes: ${outcome.stdout.length}; stdout tail: ${tail}`);
 }
 
 function scenario(id: string): JsonRecord {
@@ -213,14 +222,22 @@ function combinationTargetIds(): string[] {
 }
 
 function scopedPersistencePass(phases: JsonRecord[], currentIndex: number): boolean {
-  const current = asRecord(phases[currentIndex]?.loadedDataByPlugin) ?? {};
+  const currentPhase = phases[currentIndex] ?? {};
+  const snapshots = asRecord(currentPhase.loadedSnapshotsByPlugin);
+  const current = asRecord(currentPhase.loadedDataByPlugin) ?? {};
   const previous = phases[currentIndex - 1];
   const previousSaved = asRecord(previous?.savedDataByPlugin) ?? {};
   const previousPersisted = asRecord(previous?.persistedDataByPlugin) ?? {};
-  const keys = Object.keys(current);
+  const keys = [...new Set([...Object.keys(previousSaved), ...Object.keys(previousPersisted)])];
   return keys.length > 0 && keys.every((key) => {
+    if (!Object.prototype.hasOwnProperty.call(previousSaved, key) && !Object.prototype.hasOwnProperty.call(previousPersisted, key)) return false;
     const expected = Object.prototype.hasOwnProperty.call(previousSaved, key) ? previousSaved[key] : previousPersisted[key];
-    return JSON.stringify(current[key]) === JSON.stringify(expected);
+    const candidates = snapshots && Array.isArray(snapshots[key])
+      ? snapshots[key]
+      : Object.prototype.hasOwnProperty.call(current, key)
+        ? [current[key]]
+        : [];
+    return candidates.some((candidate) => JSON.stringify(candidate) === JSON.stringify(expected));
   });
 }
 

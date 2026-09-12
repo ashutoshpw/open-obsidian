@@ -1,0 +1,136 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-persistence-snapshot",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC08",
+    "PC17",
+    "PC19",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24",
+    "PC25"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T12:45:00Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "916d72b95a58b4f72e760e4d2a2076d7d8041120",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "916d72b95a58b4f72e760e4d2a2076d7d8041120",
+    "sha256": "28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "The renderer records only the first and latest mediated loadData snapshots plus bounded call counts, allowing restart/update persistence checks to distinguish restored storage from plugin-normalized runtime state without unbounded output.",
+      "The worker flushes large JSON traces before Electron exit and parses the final valid JSON record when hosted Electron emits a leading diagnostic line.",
+      "Synthetic renderer plugins receive inert navigator, CodeMirror command, logger, editor-suggest and settings-component seams; filesystem, network, process, credential, privileged-DOM and direct vault-write paths remain denied."
+    ],
+    "security_disposition": "Unchanged pinned artifacts remain inside the context-isolated synthetic renderer. TaskNotes direct vault writes remain denied and recorded; no host vault or OS clipboard was accessed."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": ["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "artifact_lifecycles": "all ten audited artifact lifecycles complete",
+    "artifact_persistence": "all ten audited artifact traces preserve mediated or plugin data across restart/update",
+    "artifact_actions": "all ten audited artifact action paths pass within the bounded synthetic scope",
+    "pc19": {
+      "name": "TaskNotes",
+      "version": "4.12.5",
+      "main_js_bytes": 5233350,
+      "main_js_sha256": "7f82b6bbffe5ff4b03c6b1581aa193f1204cd5970700ef9641f095e0c277bc4e",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "registered_commands_per_phase": 36,
+      "command_failures_per_phase": 0,
+      "views_passed_per_phase": 4,
+      "settings_displayed": true,
+      "persistence": "preserved via mediated-plugin-data-store first/latest load snapshots",
+      "restart_restores_persisted_data": true,
+      "update_restores_persisted_data": true,
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": ["vault.direct-write"]
+    },
+    "pc25": {
+      "name": "Linter",
+      "version": "1.32.0",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "action_status": "passed",
+      "linter_projection": "configured YAML/Markdown output, explicit lint-file target, first-open no-op and target-only mutation pass across all phases",
+      "vault_writes": 0,
+      "denied_capabilities": ["dom.privileged"]
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved via mediated-plugin-data-store first/latest load snapshots",
+      "action_status": "passed",
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "vault_writes": 0
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts tests/plugin-renderer-lifecycle.test.ts tests/plugin-renderer-probe.test.ts",
+    "focused_result": "passed; 13 tests, 230 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 213 tests, 1275 expectations",
+    "audit_result": "passed; all ten bounded artifact traces and the PC07/PC21/PC23 combination passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "diff_check": "passed"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian behavior and lossless property-writer parity",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed behavior, signed release, publication and updater installation/rollback",
+    "full required plugin combinations, compatibility promotion and release-track certification"
+  ],
+  "limitation": "This evidence executes unchanged pinned artifacts only inside the hidden Electron context-isolated sandbox. Bounded lifecycle, persistence and action checks are implementation evidence; they do not certify stock Obsidian, reference behavior, same-user cross-platform enforcement, human behavior or compatibility promotion."
+}

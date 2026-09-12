@@ -267,6 +267,14 @@
       "tested_source_tree": "bbbc36ba28e3f599a63a56f19b98d0b9acb33e58a12a71c745dc9fa1515db860",
       "status": "partial",
       "summary": "Hosted quality, desktop-build and loaded-workflow runs succeeded on Ubuntu, macOS and Windows for cb09050; Calendar and Recent Files bounded actions pass, Homepage clipboard remains D15-denied, the shared combination restores scoped plugin data and no plugin is promoted."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+      "tested_source_tree": "28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d",
+      "status": "passed",
+      "summary": "Fresh Linux loaded-workflow audit passes all ten bounded unchanged-artifact traces and the PC07/PC21/PC23 combination. First/latest mediated loadData snapshots repair the TaskNotes aggregate persistence false-negative; inert navigator/CodeMirror/settings seams let Linter complete while D15 direct-capability denials remain recorded. Reference, same-user OS, human, signing, provider, required-combination and compatibility-promotion gates remain pending."
     }
   ],
   "source_snapshots": {
