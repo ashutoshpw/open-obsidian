@@ -21,11 +21,11 @@
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
     "last_reconciled_head": "2c7919709c65ab8578a74ababb8bcc948b005c60",
-  "updated_at": "2026-09-12T00:57:04Z",
+  "updated_at": "2026-09-12T01:10:25Z",
   "status": "active",
   "current_checkpoint": "P6.2",
   "next_action": "Run C14 reference-vault round trips and execute the listed external handoffs when the reference runtime, consented fixtures, credentials and release authority are available.",
-    "recent_increment": {"checkpoint":"P2.1","commit":"2c7919709c65ab8578a74ababb8bcc948b005c60","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-sequence-property-edit.json","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-sequence-property-edit-ci.json","tested_source_tree":"87d2eefa7a89de13d00e3b1cac2a3f6b8ea8b3b53d8838215ca1c13502be61dd","ci_runs":[34663403607,34663403662,34663403648]},
+    "recent_increment": {"checkpoint":"P2.1","commit":"af1bcd9d03dc0f51c49477a5621fa4fbf30e601a","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-flow-map-property-edit.json","tested_source_tree":"fa642469433a0ea660ba1489686388162780bf5dc823401bd10653f60a36af15","ci_runs":[]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T01:10:25Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C04", "C04.1"],
+  "fixture_ids": ["fixture:c04-properties", "fixture:c04-unknown-preservation"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "af1bcd9d03dc0f51c49477a5621fa4fbf30e601a",
+    "tested_source_tree": "fa642469433a0ea660ba1489686388162780bf5dc823401bd10653f60a36af15"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/markdown.test.ts tests/yaml.test.ts", "exit_code": 0, "result": "14 focused tests pass with 45 expectations, including nested flow-map leaf replacement, source-span checks, indexed sequence-map edits and malformed/flow-sequence/block-scalar refusal."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the five-file flow-map property increment."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checking passes for the span-aware flow-map API and Markdown editor."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes with 183 tests and 1,046 expectations; state, contracts, architecture, UX, accessibility, layout, typecheck, Knip and changed-file Fallow checks pass."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout bundles compile successfully."},
+    {"command": "bun run final:audit", "exit_code": 0, "result": "Final audit keeps origin/main and separate release handoffs valid; 196 rows remain 28 passing, 128 implemented, 32 pending, 0 failing, 1 unsupported-security and 7 external-pending, with 161 mandatory rows not release-passing."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "235 included paths; source tree digest is fa642469433a0ea660ba1489686388162780bf5dc823401bd10653f60a36af15."}
+  ],
+  "implemented": [
+    "Added span-aware yamlFlowMapEntries parsing for single-line flow mappings, including nested maps and malformed-entry refusal.",
+    "Extended editMarkdownNestedPropertyValue to replace existing scalar leaves under flow mappings while preserving comments, map ordering, whitespace, unknown siblings, line endings and unrelated source bytes.",
+    "Kept flow sequences, structural flow edits, block scalars, aliases, anchors and other unsupported YAML source-only or fail-closed."
+  ],
+  "limitations": [
+    "Flow-map editing is limited to existing inline leaves in single-line flow mappings; flow sequences and multiline/structural YAML edits remain refused.",
+    "Reference Obsidian open-edit-save-reopen comparison, cross-platform visible validation and full YAML dialect coverage remain pending.",
+    "No reference Obsidian instance, provider, personal vault or selected /home/ashutosh/Obsidian vault was accessed or modified."
+  ]
+}
