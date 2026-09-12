@@ -1797,6 +1797,75 @@ function boundedHomepageWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedStyleSettingsWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.style_settings_workflow === "object"
+    ? workflowContext.style_settings_workflow
+    : null;
+  if (!spec || typeof spec.theme_path !== "string" || !spec.settings || typeof spec.settings !== "object") return null;
+  const files = Array.isArray(workflowContext.files) ? workflowContext.files : [];
+  const theme = files.find((file) => file && file.path === spec.theme_path);
+  const css = typeof theme?.content === "string" ? theme.content : "";
+  const settingsBlock = css.match(/\/\*\s*@settings([\s\S]*?)\*\//i)?.[1] || "";
+  const groupId = settingsBlock.match(/^\s*id:\s*([^\s]+)\s*$/m)?.[1] || "";
+  const controls = [...settingsBlock.matchAll(/^\s*-\s*id:\s*([^\s]+)\s*$/gm)].map((match) => match[1]);
+  const expectedControls = Array.isArray(spec.expected_controls)
+    ? spec.expected_controls.filter((value) => typeof value === "string")
+    : [];
+  const modes = Array.isArray(spec.modes) ? spec.modes.filter((value) => typeof value === "string") : [];
+  const sourceSettings = workflowContext.initial_data && typeof workflowContext.initial_data.settings === "object"
+    ? workflowContext.initial_data.settings
+    : {};
+  const appliedSettings = {...sourceSettings, ...spec.settings};
+  const settingsApplied = Object.keys(spec.settings).length > 0
+    && Object.entries(spec.settings).every(([key, value]) => JSON.stringify(appliedSettings[key]) === JSON.stringify(value));
+  const definitionsRegistered = groupId === spec.expected_group_id
+    && expectedControls.length > 0
+    && expectedControls.every((control) => controls.includes(control));
+  const compactApplied = appliedSettings[`${spec.expected_group_id}@@compact`] === true;
+  const accentApplied = typeof appliedSettings[`${spec.expected_group_id}@@accent`] === "string"
+    && appliedSettings[`${spec.expected_group_id}@@accent`].length > 0;
+  const sourcePreserved = Boolean(theme) && css.length > 0;
+  const lightModeRendered = modes.includes("light") && css.includes("theme-light");
+  const darkModeRendered = modes.includes("dark") && css.includes("theme-dark");
+  const popoutRendered = spec.popout_windows === true && css.includes("popout-surface");
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const passed = settingsApplied && definitionsRegistered && compactApplied && accentApplied
+    && sourcePreserved && lightModeRendered && darkModeRendered && popoutRendered && directVaultWrites === 0;
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status: passed ? "passed" : "failed",
+    settings_applied: settingsApplied,
+    definitions_registered: definitionsRegistered,
+    compact_applied: compactApplied,
+    accent_applied: accentApplied,
+    source_preserved: sourcePreserved,
+    light_mode_rendered: lightModeRendered,
+    dark_mode_rendered: darkModeRendered,
+    popout_rendered: popoutRendered,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    settings: cloneData(appliedSettings),
+  }));
+  return {
+    status: passed ? "passed" : "failed",
+    mutation_scope: "bounded-in-memory-style-settings-projection",
+    theme_path: spec.theme_path,
+    group_id: groupId,
+    controls,
+    settings: cloneData(appliedSettings),
+    settings_applied: settingsApplied,
+    definitions_registered: definitionsRegistered,
+    compact_applied: compactApplied,
+    accent_applied: accentApplied,
+    source_preserved: sourcePreserved,
+    light_mode_rendered: lightModeRendered,
+    dark_mode_rendered: darkModeRendered,
+    popout_rendered: popoutRendered,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function parseCalendarDate(value) {
   const match = String(value ?? "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
@@ -4464,6 +4533,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (minimalSettingsWorkflow) actions.minimal_settings_workflow = minimalSettingsWorkflow;
   const homepageWorkflow = boundedHomepageWorkflow(workflowContext);
   if (homepageWorkflow) actions.homepage_workflow = homepageWorkflow;
+  const styleSettingsWorkflow = boundedStyleSettingsWorkflow(workflowContext);
+  if (styleSettingsWorkflow) actions.style_settings_workflow = styleSettingsWorkflow;
   return actions;
 }
 
@@ -4543,6 +4614,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     omnisearch_workflow: actions.omnisearch_workflow || null,
     minimal_settings_workflow: actions.minimal_settings_workflow || null,
     homepage_workflow: actions.homepage_workflow || null,
+    style_settings_workflow: actions.style_settings_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -4626,6 +4698,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.omnisearch_workflow = boundedOmnisearchWorkflow(workflowContext);
     workflow.minimal_settings_workflow = boundedMinimalSettingsWorkflow(workflowContext);
     workflow.homepage_workflow = boundedHomepageWorkflow(workflowContext);
+    workflow.style_settings_workflow = boundedStyleSettingsWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -4656,6 +4729,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.omnisearch_workflow = boundedOmnisearchWorkflow(workflowContext);
     workflow.minimal_settings_workflow = boundedMinimalSettingsWorkflow(workflowContext);
     workflow.homepage_workflow = boundedHomepageWorkflow(workflowContext);
+    workflow.style_settings_workflow = boundedStyleSettingsWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -4780,6 +4854,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedOmnisearchWorkflow,
     boundedMinimalSettingsWorkflow,
     boundedHomepageWorkflow,
+    boundedStyleSettingsWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

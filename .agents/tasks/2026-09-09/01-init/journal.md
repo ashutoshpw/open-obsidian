@@ -1740,6 +1740,14 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the hosted CI evidence in the requirements and state reconciliation metadata. PC09 and P3.2 remain pending/non-certified: reference Obsidian board behavior, same-user OS enforcement, human validation, signing, publication, updater and compatibility promotion remain external-pending. No plugin or compatibility row was promoted.
 - Next operation: run final state/audit/diff gates, commit and push this hosted reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.
 
+## 2026-09-12T23:40:43Z — P3.2 bounded PC08 Style Settings projection
+
+- Extended the unchanged PC08 Style Settings loaded-workflow fixture with a bounded Minimal-paired Style Settings projection. The projection parses detached `@settings` metadata, verifies the `appearance` group and `compact`/`accent` controls, preserves light/dark and popout CSS markers, restores settings across install/restart/update and records zero direct vault writes.
+- The unchanged Style Settings 1.0.9 artifact remains integrity-checked inside the isolated Electron worker; the Minimal 9.1.0 dependency remains verified. The projection is synthetic and in-memory, separate from unchanged-plugin certification, and no plugin or compatibility row was promoted.
+- Local focused loaded-workflow tests pass (24 tests, 424 expectations), as do worker syntax, typecheck, `check:fast`, `git diff --check` and the full loaded-workflow audit. Aggregate status remains `partial`; source digest is `6fe71756d9b2bcd3215f6f9a222072792065b482a39b4285f8532b8dc3838c67`, and `/home/ashutosh/Obsidian` was not accessed.
+- Updated the PC08, Minimal dependency, PLUG-002 through PLUG-005, GATE-002/C11/C11.1 and P3.3 traceability records while retaining pending-runtime and external-pending boundaries. Reference Obsidian settings/view parity, same-user OS enforcement, human validation, signing, publication, updater and compatibility promotion remain pending.
+- Next operation: run final state/audit/diff gates, commit with `[openobsidian P3.2 work] Add bounded PC08 Style Settings projection`, push `main`, inspect hosted quality/loaded-workflow/renderer-matrix/desktop-build results and reconcile without promoting compatibility.
+
 ## 2026-09-12T22:31:00Z — P3.2 bounded PC15 Omnisearch projection
 
 - Added PC15 Omnisearch 1.31.0 to the loaded-workflow target set with exact/relevance, typo-tolerant and phrase search fixtures, keyboard result navigation, link insertion, external-edit index refresh and an explicit Text Extractor 0.7.0 PDF/image/document pairing.

@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; homepage_workflow?: Record<string, unknown>; minimal_settings_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; omnisearch_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; homepage_workflow?: Record<string, unknown>; minimal_settings_workflow?: Record<string, unknown>; style_settings_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; omnisearch_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -264,6 +264,21 @@ test("PC17 and PC21 fixtures expose bounded settings and startup projections", (
   expect(rendererWorker).toContain("bounded-in-memory-homepage-projection");
   expect(loadedWorkflowAudit).toContain("minimal_settings_workflow_checks");
   expect(loadedWorkflowAudit).toContain("homepage_workflow_checks");
+});
+
+test("PC08 fixture exposes a bounded Style Settings projection paired with Minimal", () => {
+  const style = fixture.scenarios.PC08;
+  expect(style.style_settings_workflow).toMatchObject({
+    theme_path: "Themes/Minimal.css",
+    expected_group_id: "appearance",
+    expected_controls: ["compact", "accent"],
+    modes: ["light", "dark"],
+    popout_windows: true,
+  });
+  expect(style.files).toContainEqual(expect.objectContaining({path: "Themes/Minimal.css", content: expect.stringContaining(".popout-surface")}));
+  expect(rendererWorker).toContain("function boundedStyleSettingsWorkflow");
+  expect(rendererWorker).toContain("bounded-in-memory-style-settings-projection");
+  expect(loadedWorkflowAudit).toContain("style_settings_workflow_checks");
 });
 
 test("PC03 fixture and bounded projection cover DQL fields, links, tasks and safe refresh", () => {

@@ -1,0 +1,95 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T23:34:21Z",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC08", "PC17", "PC-DEP-MINIMAL"],
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "decision_id": "D15",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "1392fecd61884f81e6dc2e312b74696db965d0d9",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "6fe71756d9b2bcd3215f6f9a222072792065b482a39b4285f8532b8dc3838c67",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "id": "PC08",
+    "name": "Style Settings",
+    "version": "1.0.9",
+    "main_js_bytes": 154561,
+    "main_js_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+    "integrity": "passed",
+    "unchanged_runtime": {
+      "status": "loaded",
+      "enforcement": "electron-context-isolated-sandbox",
+      "runtime_disposition": "pending-runtime"
+    },
+    "bounded_lifecycle": "complete",
+    "persistence": "preserved via mediated-plugin-data-store",
+    "action_status": "passed",
+    "direct_vault_writes": 0,
+    "denied_capabilities": []
+  },
+  "paired_dependency": {
+    "id": "PC-DEP-MINIMAL",
+    "name": "Minimal",
+    "version": "9.1.0",
+    "sha256": "c95225a3653dcf600d006e9551c1038a06c336d03228a623bd5008b1561438a4",
+    "integrity": "verified"
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-style-settings-projection",
+    "theme_path": "Themes/Minimal.css",
+    "group_id": "appearance",
+    "controls": ["compact", "accent"],
+    "settings": {
+      "appearance@@compact": true,
+      "appearance@@accent": "#3366ff"
+    },
+    "settings_applied": true,
+    "definitions_registered": true,
+    "compact_applied": true,
+    "accent_applied": true,
+    "source_preserved": true,
+    "light_mode_rendered": true,
+    "dark_mode_rendered": true,
+    "popout_rendered": true,
+    "phases": {
+      "install": "passed",
+      "restart": "passed",
+      "update": "passed"
+    },
+    "restart_restores_settings": true,
+    "update_restores_settings": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true
+  },
+  "audit": {
+    "overall_status": "partial",
+    "all_artifacts_integrity_checked": true,
+    "no_plugin_promoted": true
+  },
+  "validation": [
+    {"command": "bun test tests/plugin-loaded-workflows.test.ts", "exit_code": 0, "result": "24 passed, 0 failed, 424 expectations"},
+    {"command": "node --check scripts/plugin-renderer-worker.cjs", "exit_code": 0, "result": "passed"},
+    {"command": "bunx tsc --noEmit", "exit_code": 0, "result": "passed"},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "passed; 161 mandatory rows remain not release-passing"},
+    {"command": "git diff --check", "exit_code": 0, "result": "passed"}
+  ],
+  "status": "pending-runtime",
+  "limitations": [
+    "The Style Settings projection is marker-free synthetic in-memory evidence and does not grant unchanged plugins privileged DOM, filesystem, process, network or credential access.",
+    "Reference Obsidian settings and view parity, visible light/dark/popout behavior, same-user macOS/Windows enforcement, human validation, signing, publication, updater and compatibility promotion remain pending.",
+    "No personal vault was accessed; /home/ashutosh/Obsidian was not used."
+  ]
+}

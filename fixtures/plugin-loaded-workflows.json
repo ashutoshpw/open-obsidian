@@ -353,10 +353,21 @@
         "version": 1,
         "activeStyle": "Minimal"
       },
+      "style_settings_workflow": {
+        "theme_path": "Themes/Minimal.css",
+        "settings": {
+          "appearance@@compact": true,
+          "appearance@@accent": "#3366ff"
+        },
+        "expected_group_id": "appearance",
+        "expected_controls": ["compact", "accent"],
+        "modes": ["light", "dark"],
+        "popout_windows": true
+      },
       "active_file": "Daily/2026-09-11.md",
       "files": [
         {"path": "Daily/2026-09-11.md", "content": "# Friday\n"},
-        {"path": "Themes/Minimal.css", "content": "/* @settings\nname: Appearance\nid: appearance\nsettings:\n  - id: compact\n    title: Compact\n    type: class-toggle\n  - id: accent\n    title: Accent\n    type: variable-color\n*/\n"}
+        {"path": "Themes/Minimal.css", "content": "/* @settings\nname: Appearance\nid: appearance\nsettings:\n  - id: compact\n    title: Compact\n    type: class-toggle\n  - id: accent\n    title: Accent\n    type: variable-color\n*/\nbody.theme-light { --text-normal: #172033; }\nbody.theme-dark { --text-normal: #edf1ff; }\n.popout-surface { --appearance-accent: var(--interactive-accent); }\n"}
       ]
     },
     "PC09": {

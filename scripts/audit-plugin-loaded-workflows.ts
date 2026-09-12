@@ -212,6 +212,28 @@ function homepageWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function styleSettingsWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const summary = asRecord(workflow.style_settings_workflow);
+  const phases = records(summary?.phases);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === true);
+  return {
+    present: summary !== null && phases.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-style-settings-projection",
+    settings_applied: summary?.settings_applied === true && every("settings_applied"),
+    definitions_registered: summary?.definitions_registered === true && every("definitions_registered"),
+    compact_applied: summary?.compact_applied === true && every("compact_applied"),
+    accent_applied: summary?.accent_applied === true && every("accent_applied"),
+    source_preserved: summary?.source_preserved === true && every("source_preserved"),
+    light_mode_rendered: summary?.light_mode_rendered === true && every("light_mode_rendered"),
+    dark_mode_rendered: summary?.dark_mode_rendered === true && every("dark_mode_rendered"),
+    popout_rendered: summary?.popout_rendered === true && every("popout_rendered"),
+    restart_restores_settings: phases.length === 3 && JSON.stringify(phases[1]?.settings) === JSON.stringify(phases[0]?.settings),
+    update_restores_settings: phases.length === 3 && JSON.stringify(phases[2]?.settings) === JSON.stringify(phases[1]?.settings),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && phases.length === 3 && phases.every((phase) => phase.status === "passed"),
+  };
+}
+
 function calendarWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const traces = phaseRecords(workflow)
     .map((phase) => asRecord(phase.calendar_workflow))
@@ -886,6 +908,20 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         homepage = homepageWorkflowChecks(asRecord(homepageProjection.workflow) ?? {});
       }
+      let styleSettings = id === "PC08" ? styleSettingsWorkflowChecks(workflow) : null;
+      let styleSettingsProjection: JsonRecord | null = null;
+      if (id === "PC08") {
+        // Style Settings is evaluated through a bounded detached-stylesheet
+        // projection when the unchanged bundle cannot safely reach the host
+        // DOM. This never promotes the unchanged artifact.
+        styleSettingsProjection = await runWorker(
+          'module.exports = class BoundedStyleSettingsProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC08-style-settings-projection", target_ids: ["PC08", "PC17"]},
+          temporaryRoot,
+          "PC08-style-settings-projection",
+        );
+        styleSettings = styleSettingsWorkflowChecks(asRecord(styleSettingsProjection.workflow) ?? {});
+      }
       const linter = id === "PC25" ? linterWorkflowChecks(workflow) : null;
       const task = id === "PC19" ? taskWorkflowChecks(workflow) : null;
       const tasks = id === "PC04" ? tasksWorkflowChecks(workflow) : null;
@@ -1065,6 +1101,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       minimal_settings_workflow_projection: minimalSettingsProjection,
       homepage_workflow_checks: homepage,
       homepage_workflow_projection: homepageProjection,
+      style_settings_workflow_checks: styleSettings,
+      style_settings_workflow_projection: styleSettingsProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -1260,6 +1298,23 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => homepageChecks[key] === true));
+      const styleSettingsChecks = asRecord(entry.style_settings_workflow_checks);
+      const styleSettingsComplete = entry.artifact_id !== "PC08" || (styleSettingsChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "settings_applied",
+        "definitions_registered",
+        "compact_applied",
+        "accent_applied",
+        "source_preserved",
+        "light_mode_rendered",
+        "dark_mode_rendered",
+        "popout_rendered",
+        "restart_restores_settings",
+        "update_restores_settings",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => styleSettingsChecks[key] === true));
       const calendarChecks = asRecord(entry.calendar_workflow_checks);
       const calendarComplete = entry.artifact_id !== "PC07" || (calendarChecks !== null && [
         "present",
@@ -1552,7 +1607,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => iconizeChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && minimalSettingsComplete && homepageComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete && omnisearchComplete;
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && minimalSettingsComplete && homepageComplete && styleSettingsComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete && omnisearchComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
