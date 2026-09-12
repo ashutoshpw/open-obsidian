@@ -157,5 +157,5 @@
     "provider-backed or subscription-backed plugin behavior",
     "signed release and updater installation/rollback"
   ],
-  "limitation": "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It records bounded settings/view/command registrations, mediated action attempts, restart/update data restoration, cleanup and return-to-Obsidian state; it does not certify stock Obsidian or human behavior."
+  "limitation": "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It records bounded settings/view/command/event registrations, mediated action attempts, renderer-local clipboard capture that never reaches the OS, restart/update data restoration, cleanup and return-to-Obsidian state; it does not certify stock Obsidian or human behavior."
 }

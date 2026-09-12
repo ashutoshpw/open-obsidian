@@ -153,9 +153,12 @@ test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () =
   }));
   expect(rendererWorker).toContain("eventHandlers");
   expect(rendererWorker).toContain("function boundedMenu()");
+  expect(rendererWorker).toContain("Workflow-mode clipboard capture is deliberately renderer-local");
+  expect(rendererWorker).toContain("synthetic clipboard payload exceeds bounded limit");
   expect(rendererWorker).toContain("getClickableTokenAt(position)");
   expect(rendererWorker).toContain("function boundedTagWorkflow");
   expect(rendererWorker).toContain('mutation_scope: "bounded-editor-only"');
   expect(loadedWorkflowAudit).toContain("tagWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("clipboard_external_writes_zero");
   expect(loadedWorkflowAudit).toContain("event_attempts_recorded");
 });

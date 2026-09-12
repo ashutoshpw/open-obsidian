@@ -25,6 +25,8 @@ const boundedLifecycleChecks = [
   "settings_attempts_recorded",
   "views_attempts_recorded",
   "event_attempts_recorded",
+  "clipboard_bounded",
+  "clipboard_external_writes_zero",
   "cleanup_after_each_phase",
   "uninstall_clears_registrations",
   "return_to_obsidian",
@@ -184,6 +186,11 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
     settings_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.settings)),
     views_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.views)),
     event_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.events)),
+    clipboard_bounded: phases.every((phase) => {
+      const clipboard = asRecord(phase.clipboard);
+      return clipboard !== null && clipboard.external === false && typeof clipboard.writes === "number" && Number.isInteger(clipboard.writes) && clipboard.writes >= 0 && clipboard.writes <= 1 && typeof clipboard.reads === "number" && Number.isInteger(clipboard.reads) && clipboard.reads >= 0;
+    }),
+    clipboard_external_writes_zero: phases.every((phase) => asRecord(phase.clipboard)?.external === false),
     restart_restores_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.savedData),
     update_restores_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.savedData),
     restart_restores_scoped_data: scopedRestart,
@@ -349,9 +356,11 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       safe_alternatives_attempted: asArray(fixture.safe_alternatives_attempted),
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
-      result: artifactLifecyclesComplete && combinationLifecycleComplete
-        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces; event callbacks and the PC24 editor-only tag fixture are recorded, while persisted-data gaps and settings/view/command action failures remain pending-runtime limitations."
-        : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",
+      result: allChecks
+        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        : artifactLifecyclesComplete && combinationLifecycleComplete
+          ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action or persistence checks remain partial; no compatibility status was promoted."
+          : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",
     };
   } finally {
     rmSync(temporaryRoot, {recursive: true, force: true});

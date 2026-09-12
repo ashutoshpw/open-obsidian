@@ -276,7 +276,7 @@ function boundedMoment(value, localeState = {name: "en", week: {dow: 0}}) {
   return moment;
 }
 
-function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false, root = "window", storageStore = null) {
+function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = false, root = "window", storageStore = null, metrics = null) {
   const document = safeDocumentObject(capabilities, allowSyntheticDocument, `${root}.document`);
   const localeState = {name: "en", week: {dow: 0}};
   const moment = (value) => boundedMoment(value, localeState);
@@ -329,6 +329,25 @@ function safeWindowObject(capabilities, runtimeApp, allowSyntheticDocument = fal
     target.appVersion = "OpenObsidian Electron";
     target._bundledLocaleWeekSpec = {dow: 0};
     target.localStorage = boundedStorage(storageStore || new Map());
+    // Workflow-mode clipboard capture is deliberately renderer-local. It is
+    // finite, observable telemetry for unchanged plugins that use
+    // navigator.clipboard, and it never touches the host/OS clipboard.
+    let clipboardText = "";
+    target.clipboard = {
+      async writeText(value) {
+        const text = String(value ?? "");
+        if (text.length > 1_048_576) throw new Error("synthetic clipboard payload exceeds bounded limit");
+        clipboardText = text;
+        if (metrics && typeof metrics === "object") {
+          metrics.clipboardWrites = Number(metrics.clipboardWrites || 0) + 1;
+          metrics.clipboardText = text;
+        }
+      },
+      async readText() {
+        if (metrics && typeof metrics === "object") metrics.clipboardReads = Number(metrics.clipboardReads || 0) + 1;
+        return clipboardText;
+      },
+    };
     target.smart_env = null;
     target.smart_env_configs = Object.create(null);
     target.all_envs = [];
@@ -1137,7 +1156,7 @@ function createSafeRequire(capabilities, requiredModules, metrics = {}) {
 }
 
 function createEvaluationArguments(capabilities, requiredModules, runtime = {}) {
-  const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true, "window", runtime.storage));
+  const safeWindow = runtime.window || (runtime.window = safeWindowObject(capabilities, runtime.app, runtime.allowSyntheticDocument === true, "window", runtime.storage, runtime.metrics));
   const localStorage = runtime.allowSyntheticDocument ? safeWindow.localStorage : undefined;
   let boundedTimerCalls = 0;
   const boundedTimer = runtime.allowSyntheticDocument
@@ -1550,6 +1569,8 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   await configureSyntheticSmartEnvironment(runtime);
   const editorBefore = pluginApp.editor.editorSnapshot();
   const operationStart = Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.length : 0;
+  const clipboardWritesStart = Number(workflowContext.metrics?.clipboardWrites || 0);
+  const clipboardReadsStart = Number(workflowContext.metrics?.clipboardReads || 0);
   const actions = await exerciseRegistrations(pluginApp, workflowContext);
   while (pluginApp.editor.canUndo()) pluginApp.editor.undo();
   const editorAfter = pluginApp.editor.editorSnapshot();
@@ -1580,6 +1601,12 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
       initialFoldedRanges: editorBefore.foldedRanges,
       finalFoldedRanges: editorAfter.foldedRanges,
       operations: Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.slice(operationStart) : [],
+    },
+    clipboard: {
+      writes: Math.max(0, Number(workflowContext.metrics?.clipboardWrites || 0) - clipboardWritesStart),
+      reads: Math.max(0, Number(workflowContext.metrics?.clipboardReads || 0) - clipboardReadsStart),
+      lastTextBytes: typeof workflowContext.metrics?.clipboardText === "string" ? workflowContext.metrics.clipboardText.length : 0,
+      external: false,
     },
     tag_workflow: actions.tag_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
@@ -1616,7 +1643,7 @@ function lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, wo
 async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   const deniedCapabilities = [];
   const requiredModules = [];
-  const metrics = {vaultWrites: 0, vaultOperations: []};
+  const metrics = {vaultWrites: 0, vaultOperations: [], clipboardWrites: 0, clipboardReads: 0, clipboardText: ""};
   const workflowContext = {...workflowConfig, metrics};
   const workflow = {supported: false, phases: [], pluginDataWrites: 0, vaultWrites: 0, vaultOperations: [], activeAfterUninstall: true, artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture"};
   try {
