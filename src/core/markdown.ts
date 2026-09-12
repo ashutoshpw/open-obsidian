@@ -1,4 +1,4 @@
-import {parseYamlMapping, serializeYamlValue, yamlInlineCommentIndex, type YamlValue} from "./yaml.js";
+import {parseYamlMapping, serializeYamlValue, yamlFlowMapEntries, yamlInlineCommentIndex, type YamlValue} from "./yaml.js";
 
 export type MarkdownLineEnding = "\r\n" | "\n" | "\r" | "mixed" | "none";
 
@@ -172,6 +172,24 @@ function nestedSequenceContinuation(lines: SourceLine[], start: number, end: num
   return nestedMap(lines, continuation, end, lines[continuation]!.indent, path, pathIndex);
 }
 
+function nestedFlowMapValue(property: SourceProperty, path: MarkdownPropertyPath, pathIndex: number): SourceProperty {
+  if (pathIndex === path.length - 1) return nestedLeafValue(property, path);
+  if (property.rawValue.startsWith("{") && property.rawValue.endsWith("}")) return nestedFlowMap(property.rawValue, property.valueStart, path, pathIndex + 1);
+  if (property.rawValue.startsWith("[") && property.rawValue.endsWith("]")) throw new Error(`Nested Markdown property path enters an unsupported flow sequence: ${pathLabel(path.slice(0, pathIndex + 2))}`);
+  throw new Error(`Nested Markdown property is inline and cannot be traversed: ${pathLabel(path.slice(0, pathIndex + 1))}`);
+}
+
+function nestedFlowMap(rawValue: string, valueStart: number, path: MarkdownPropertyPath, pathIndex: number): SourceProperty {
+  const entries = yamlFlowMapEntries(rawValue);
+  if (!entries) throw new Error(`Nested Markdown flow mapping is not represented: ${pathLabel(path)}`);
+  const wanted = path[pathIndex];
+  if (typeof wanted !== "string" || !wanted.trim()) throw new Error(`Nested Markdown flow mappings require a non-empty key: ${pathLabel(path)}`);
+  const entry = entries.find((candidate) => candidate.key === wanted);
+  if (!entry) throw new Error(`Markdown property is not represented: ${pathLabel(path)}`);
+  const property: SourceProperty = {key: entry.key, rawValue: entry.rawValue, valueStart: valueStart + entry.valueStart, valueEnd: valueStart + entry.valueEnd};
+  return nestedFlowMapValue(property, path, pathIndex);
+}
+
 function nestedSequenceItem(lines: SourceLine[], start: number, end: number, sequenceIndent: number, path: MarkdownPropertyPath, pathIndex: number): SourceProperty {
   const wanted = path[pathIndex];
   if (typeof wanted !== "string" || !wanted.trim()) throw new Error(`Nested Markdown sequence items require a mapping key: ${pathLabel(path)}`);
@@ -180,8 +198,12 @@ function nestedSequenceItem(lines: SourceLine[], start: number, end: number, seq
   return nestedSequenceBare(lines, start, end, sequenceIndent, path, pathIndex);
 }
 
-function nestedLeafChild(lines: SourceLine[], index: number, end: number, indent: number, path: MarkdownPropertyPath, pathIndex: number, property: SourceProperty): SourceProperty {
-  if (property.rawValue) throw new Error(`Nested Markdown property is inline and cannot be traversed: ${pathLabel(path.slice(0, pathIndex + 1))}`);
+function nestedInlineChild(property: SourceProperty, path: MarkdownPropertyPath, pathIndex: number): SourceProperty {
+  if (typeof path[pathIndex + 1] !== "string") throw new Error(`Nested Markdown property is inline and cannot be traversed: ${pathLabel(path.slice(0, pathIndex + 1))}`);
+  return nestedFlowMapValue(property, path, pathIndex);
+}
+
+function nestedBlockChild(lines: SourceLine[], index: number, end: number, indent: number, path: MarkdownPropertyPath, pathIndex: number): SourceProperty {
   const child = index + 1;
   if (child >= end || lines[child]!.indent <= indent) throw new Error(`Nested Markdown property has no represented child: ${pathLabel(path)}`);
   const childIndent = lines[child]!.indent;
@@ -191,6 +213,11 @@ function nestedLeafChild(lines: SourceLine[], index: number, end: number, indent
   }
   if (sequenceLine(lines[child]!)) throw new Error(`Nested Markdown property path enters an unsupported sequence: ${pathLabel(path.slice(0, pathIndex + 2))}`);
   return nestedMap(lines, child, blockEnd(lines, child, indent), childIndent, path, pathIndex + 1);
+}
+
+function nestedLeafChild(lines: SourceLine[], index: number, end: number, indent: number, path: MarkdownPropertyPath, pathIndex: number, property: SourceProperty): SourceProperty {
+  if (property.rawValue) return nestedInlineChild(property, path, pathIndex);
+  return nestedBlockChild(lines, index, end, indent, path, pathIndex);
 }
 
 function findMapProperty(lines: SourceLine[], start: number, end: number, indent: number, wanted: string, path: MarkdownPropertyPath, pathIndex: number): {index: number; property: SourceProperty} | undefined {
@@ -297,7 +324,7 @@ export function editMarkdownPropertyValue(bytes: Uint8Array, key: string, value:
  * is intentionally explicit (for example, ["metadata", "owner"] or
  * ["metadata", "children", 0, "owner"]): only the leaf scalar span is
  * replaced, so comments, unknown siblings, indentation, line endings and all
- * other source bytes remain untouched. Flow collections, ambiguous sequence
+ * other source bytes remain untouched. Flow sequences, ambiguous sequence
  * entries and block scalars are refused until their source-preserving edit
  * semantics are specified.
  */

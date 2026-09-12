@@ -139,6 +139,50 @@ function flowCollection(value: string, issues: string[], line: number): YamlValu
   return flowArray(value, issues, line) ?? flowObject(value, issues, line);
 }
 
+export type YamlFlowMapEntry = {key: string; rawValue: string; valueStart: number; valueEnd: number};
+
+function flowMapEntry(value: string, start: number, end: number): YamlFlowMapEntry | undefined {
+  const source = value.slice(start, end);
+  const parsed = pair(source);
+  if (!parsed) return undefined;
+  const colon = scanTopLevel(source, (character) => character === ":");
+  if (colon < 0) return undefined;
+  const afterColon = source.slice(colon + 1);
+  const comment = yamlInlineCommentIndex(afterColon);
+  const beforeComment = comment < 0 ? afterColon : afterColon.slice(0, comment);
+  const rawValue = beforeComment.trim();
+  const leading = beforeComment.length - beforeComment.trimStart().length;
+  const valueStart = start + colon + 1 + leading;
+  return {key: parsed.key, rawValue, valueStart, valueEnd: valueStart + rawValue.length};
+}
+
+/**
+ * Return source spans for entries in a single-line flow mapping. The caller
+ * can replace one value span without reserializing the surrounding map. A
+ * malformed entry returns undefined so source-preserving editors fail closed.
+ */
+export function yamlFlowMapEntries(value: string): YamlFlowMapEntry[] | undefined {
+  if (!value.startsWith("{") || !value.endsWith("}")) return undefined;
+  const entries: YamlFlowMapEntry[] = [];
+  let start = 1;
+  const finish = (end: number): boolean => {
+    if (value.slice(start, end).trim() === "") return true;
+    const entry = flowMapEntry(value, start, end);
+    if (!entry) return false;
+    entries.push(entry);
+    return true;
+  };
+  const state: ScanState = {quote: undefined, depth: 0};
+  for (let index = 1; index < value.length - 1; index += 1) {
+    advanceScanState(state, value, index);
+    if (!state.quote && state.depth === 0 && value[index] === ",") {
+      if (!finish(index)) return undefined;
+      start = index + 1;
+    }
+  }
+  return finish(value.length - 1) ? entries : undefined;
+}
+
 function parseNullScalar(value: string, _issues: string[], _line: number): YamlValue | undefined {
   return !value || value === "~" || /^(?:null|nil)$/i.test(value) ? null : undefined;
 }

@@ -55,12 +55,16 @@ test("nested Markdown leaf edits preserve block siblings, comments and source fr
   expect(parseMarkdown(edited).yamlIssues).toEqual([]);
 });
 
-test("nested Markdown leaf edits refuse flow, sequence and block-scalar traversal", () => {
-  const flow = Buffer.from("---\nmetadata: {owner: Ashutosh}\n---\n", "utf8");
+test("nested Markdown leaf edits support flow maps and refuse flow sequences and block scalars", () => {
+  const flow = Buffer.from("---\nmetadata: {owner: Ashutosh, nested: {name: source}} # keep this\n---\n", "utf8");
+  const flowEdited = editMarkdownNestedPropertyValue(flow, ["metadata", "nested", "name"], "changed");
+  expect(Buffer.from(flowEdited).toString("utf8")).toBe("---\nmetadata: {owner: Ashutosh, nested: {name: \"changed\"}} # keep this\n---\n");
+  expect(parseMarkdown(flowEdited).properties.find((property) => property.key === "metadata")?.value).toEqual({owner: "Ashutosh", nested: {name: "changed"}});
+  const flowSequence = Buffer.from("---\nmetadata: [owner, Ashutosh]\n---\n", "utf8");
   const sequence = Buffer.from("---\nmetadata:\n  - owner: Ashutosh\n---\n", "utf8");
   const block = Buffer.from("---\nmetadata:\n  summary: |\n    source stays authoritative\n---\n", "utf8");
 
-  expect(() => editMarkdownNestedPropertyValue(flow, ["metadata", "owner"], "Ada")).toThrow("inline and cannot be traversed");
+  expect(() => editMarkdownNestedPropertyValue(flowSequence, ["metadata", "owner"], "Ada")).toThrow("unsupported flow sequence");
   expect(() => editMarkdownNestedPropertyValue(sequence, ["metadata", "owner"], "Ada")).toThrow("unsupported sequence");
   expect(() => editMarkdownNestedPropertyValue(block, ["metadata", "summary"], "changed")).toThrow("inline value");
 });
