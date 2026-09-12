@@ -1303,6 +1303,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Local validation passed: focused loaded-workflow tests (2 tests, 82 expectations), full suite (206 tests, 1,158 expectations), `check:fast`, typecheck, compile, final audit, worker syntax check, state validation, Fallow health and `git diff --check`. No plugin row was promoted.
 - Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc17-font-size.json`. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 
+## 2026-09-12T05:52:17Z — P3.2 hosted PC17 font-size reconciliation
+
+- Reconciled metadata head `4cdf11c5c4b4290f5f7e6a9c02c08b03ef021b99` with successful quality run `34676624825`, desktop-build run `34676624808` and loaded-workflow run `34676624830`; Ubuntu, macOS and Windows jobs passed in all three workflows. The earlier implementation-head quality attempt `34676370342` failed its Electron retrieval-boundary timing check; the metadata-head rerun succeeded.
+- Hosted loaded-workflow reports independently record PC17 Minimal Theme Settings lifecycle and persistence as complete, all exercised command/settings actions as passing with zero action failures and zero vault writes on Ubuntu, macOS and Windows. Reports remain partial overall because the shared combination persistence and PC07/PC20/PC21/PC23 action limitations remain.
+- Desktop packaging, release-manifest, runtime-notice, dependency-attribution and artifact-upload checks passed on all three platforms; production signing remained skipped, so artifacts are unsigned previews. macOS/Windows loaded report downloads retain the leading Electron download line before JSON.
+- Added `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc17-font-size-ci.json` and linked it to the P3.2 reconciliation and PC17 row. Hosted source workspaces contain one transient redirected-output path (239 paths) versus the clean local 238-path source-of-record digest. No plugin was promoted, and the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+
 ## 2026-09-12T05:29:13Z — P3.2 bounded Smart Connections workflow trace
 
 - Extended the bounded renderer worker with the missing Smart Connections seams: a bounded global `app`, synthetic document/range/query support, non-thenable DOM/callable proxies, `ItemView.titleEl`, Obsidian `Setting` component fields, isolated `.smart-env` in-memory adapter storage, workflow-only SmartEnv import/embedding controls and a fresh synthetic window between lifecycle phases.
