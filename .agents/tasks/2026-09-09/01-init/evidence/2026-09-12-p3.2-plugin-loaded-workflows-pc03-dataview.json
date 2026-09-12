@@ -1,0 +1,125 @@
+{
+  "evidence_version": 1,
+  "status": "partial",
+  "recorded_at": "2026-09-12T15:11:43Z",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC03"
+  ],
+  "decision_id": "D15",
+  "fixture_id": "fixture:pc03-dataview",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "1afe1889adcfe480d6ef1e7bb88ecda618a63dc5",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "1afe1889adcfe480d6ef1e7bb88ecda618a63dc5",
+    "sha256": "bfa3ce8ea4c5a1951d5ca047aba071b24f1d30c38b9aefb44edc5fcd6915089f",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC03 now has a dated workflow fixture covering a TABLE query over frontmatter and inline fields, resolved note links, task extraction and a refresh after a simulated external edit.",
+      "The renderer worker projects Dataview rows in memory, normalizes Markdown paths and never writes the mediated vault; the query projection is repeated for install, restart and update phases.",
+      "DataviewJS is explicitly denied at the code.dynamic boundary with a visible bounded-DQL safe alternative; no dynamic query source is evaluated."
+    ],
+    "security_disposition": "The unchanged pinned artifact remains inside the context-isolated synthetic renderer. The bounded projection does not grant DOM, filesystem, network, process, credential or direct-vault capabilities and does not promote compatibility."
+  },
+  "artifact": {
+    "artifact_id": "PC03",
+    "name": "Dataview",
+    "version": "0.5.68",
+    "main_js_bytes": 2377639,
+    "main_js_sha256": "794e9eaede73920bb8d54b0eda4f5de2182d698cc638774500f24f14bcd4da0b",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "denied",
+    "denied_capabilities": ["dom.privileged"],
+    "denied_paths": ["window.IS_PAPA_WORKER"],
+    "denial": "D15 denied dom.privileged at window.IS_PAPA_WORKER"
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC03", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "integrity_checked": true,
+    "pc03": {
+      "bounded_lifecycle": "partial",
+      "renderer_status": "denied",
+      "denial": "D15 denied dom.privileged at window.IS_PAPA_WORKER",
+      "workflow_projection": {
+        "status": "passed",
+        "mutation_scope": "bounded-read-only-query-projection",
+        "query_type": "table",
+        "query_parsed": true,
+        "columns_resolved": true,
+        "fields_resolved": true,
+        "rows_match": true,
+        "links_resolved": true,
+        "tasks_detected": true,
+        "refresh_after_external_edit": true,
+        "dataviewjs_denied": true,
+        "dataviewjs_capability": "code.dynamic",
+        "dataviewjs_safe_alternative": "bounded DQL projection",
+        "direct_vault_writes": 0,
+        "phase_projections_passed": true,
+        "all_phases_passed": true
+      },
+      "checks": {
+        "present": true,
+        "bounded_read_only": true,
+        "query_parsed": true,
+        "table_query": true,
+        "columns_resolved": true,
+        "fields_resolved": true,
+        "rows_match": true,
+        "links_resolved": true,
+        "tasks_detected": true,
+        "refresh_after_external_edit": true,
+        "dataviewjs_denied": true,
+        "direct_vault_writes_zero": true,
+        "phase_projections_passed": true,
+        "status_passed": true
+      }
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_required_combinations_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "unchanged Dataview lifecycle and view behavior beyond the denied renderer preflight",
+    "reference Obsidian DQL/DataviewJS parity and refresh behavior",
+    "same-user macOS/Windows enforcement",
+    "human accessibility/input validation",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "The unchanged Dataview 0.5.68 bundle is integrity-checked but denied at a privileged renderer probe. The DQL, field, link, task and external-refresh results are bounded in-memory synthetic projections; DataviewJS is fail-closed and no stock Obsidian, reference parity, cross-platform, human or compatibility certification is claimed."
+}

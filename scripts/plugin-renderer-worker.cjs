@@ -1748,6 +1748,214 @@ function boundedSmartConnectionsWorkflow(workflowContext = {}, runtime = {}) {
   };
 }
 
+function dataviewScalar(value) {
+  const normalized = String(value ?? "").trim().replace(/\s+#.*$/, "");
+  if ((normalized.startsWith("\"") && normalized.endsWith("\"")) || (normalized.startsWith("'") && normalized.endsWith("'"))) return normalized.slice(1, -1);
+  if (/^(?:true|false)$/i.test(normalized)) return normalized.toLowerCase() === "true";
+  if (/^-?(?:\d+\.?\d*|\.\d+)$/.test(normalized)) return Number(normalized);
+  return normalized;
+}
+
+function dataviewFrontmatter(source) {
+  const lines = String(source ?? "").replace(/\r\n/g, "\n").split("\n");
+  if (lines[0]?.trim() !== "---") return {};
+  const fields = {};
+  let listKey = null;
+  for (let index = 1; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (line.trim() === "---") break;
+    const listItem = line.match(/^\s*-\s*(.*?)\s*$/);
+    if (listKey && listItem) {
+      if (!Array.isArray(fields[listKey])) fields[listKey] = [];
+      fields[listKey].push(dataviewScalar(listItem[1]));
+      continue;
+    }
+    const match = line.match(/^\s*([A-Za-z0-9_-]+)\s*:\s*(.*?)\s*$/);
+    if (!match) {
+      listKey = null;
+      continue;
+    }
+    const key = match[1];
+    const value = match[2];
+    if (value.length === 0) {
+      fields[key] = [];
+      listKey = key;
+    } else {
+      fields[key] = dataviewScalar(value);
+      listKey = null;
+    }
+  }
+  return fields;
+}
+
+function dataviewInlineFields(source) {
+  const fields = {};
+  const value = String(source ?? "");
+  const bracketPattern = /\[([A-Za-z][A-Za-z0-9_-]*)::\s*([^\]]+)\]/g;
+  for (const match of value.matchAll(bracketPattern)) fields[match[1]] = dataviewScalar(match[2]);
+  const linePattern = /(?:^|\n)\s*([A-Za-z][A-Za-z0-9_-]*)::\s*([^\n]+)$/gm;
+  for (const match of value.matchAll(linePattern)) fields[match[1]] = dataviewScalar(match[2]);
+  return fields;
+}
+
+function dataviewPath(value) {
+  const normalized = String(value ?? "").replaceAll("\\", "/").replace(/^\/+/, "");
+  return /\.md$/i.test(normalized) ? normalized : `${normalized}.md`;
+}
+
+function dataviewNoteRecord(entry) {
+  const path = String(entry?.path ?? "").replaceAll("\\", "/");
+  const content = typeof entry?.content === "string" ? entry.content : "";
+  const fields = {...dataviewFrontmatter(content), ...dataviewInlineFields(content)};
+  const tasks = [...content.matchAll(/^\s*[-*+]\s+\[([ xX])\]\s+(.+?)\s*$/gm)].map((match) => ({checked: match[1].toLowerCase() === "x", text: match[2].trim()}));
+  const links = [...content.matchAll(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]/g)].map((match) => dataviewPath(match[1].trim()));
+  return {
+    path,
+    name: path.split("/").at(-1)?.replace(/\.md$/i, "") || path,
+    link: path,
+    fields,
+    tasks,
+    links,
+  };
+}
+
+function boundedDataviewWorkflow(workflowContext = {}, runtime = {}) {
+  const spec = workflowContext && typeof workflowContext.dataview_workflow === "object"
+    ? workflowContext.dataview_workflow
+    : null;
+  if (!spec) return null;
+  const entries = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const notes = entries.filter((entry) => /\.md$/i.test(entry.path)).map(dataviewNoteRecord);
+  const sourceFolder = typeof spec.source_folder === "string" ? spec.source_folder.replaceAll("\\", "/").replace(/^\/+|\/+$/g, "") : "";
+  const scopedNotes = notes.filter((note) => sourceFolder.length === 0 || note.path.startsWith(`${sourceFolder}/`));
+  const query = typeof spec.query === "string" ? spec.query : "";
+  const queryParsed = /^(?:TABLE|LIST|TASK)\b/i.test(query.trim())
+    && /\bFROM\s+["']?[^"'\s]+["']?/i.test(query)
+    && /\bWHERE\b/i.test(query)
+    && /\bSORT\b/i.test(query);
+  const queryType = typeof spec.query_type === "string" ? spec.query_type.toLowerCase() : "table";
+  const queryColumns = query.replace(/^(?:TABLE|LIST|TASK)\s+/i, "").split(/\s+FROM\s+/i)[0]
+    .split(",").map((column) => column.trim()).filter(Boolean).map((column) => column === "file.link" ? "file.link" : column);
+  const expectedColumns = Array.isArray(spec.expected_columns) ? spec.expected_columns.filter((value) => typeof value === "string") : [];
+  const columnsResolved = expectedColumns.length > 0 && expectedColumns.every((column) => column === "file.path" || queryColumns.includes(column));
+  const where = spec.where && typeof spec.where === "object" ? spec.where : {field: "status", equals: "active"};
+  const whereField = typeof where.field === "string" ? where.field : "status";
+  const whereValue = where.equals;
+  const sort = spec.sort && typeof spec.sort === "object" ? spec.sort : {field: "priority", direction: "desc"};
+  const sortField = typeof sort.field === "string" ? sort.field : "priority";
+  const sortDirection = String(sort.direction ?? "desc").toLowerCase() === "asc" ? 1 : -1;
+  const projectRows = (candidateNotes, applyFilter = true) => {
+    const filtered = applyFilter
+      ? candidateNotes.filter((note) => String(note.fields[whereField] ?? "") === String(whereValue ?? ""))
+      : [...candidateNotes];
+    filtered.sort((left, right) => {
+      const leftValue = left.fields[sortField];
+      const rightValue = right.fields[sortField];
+      if (typeof leftValue === "number" && typeof rightValue === "number") return (leftValue - rightValue) * sortDirection;
+      return String(leftValue ?? "").localeCompare(String(rightValue ?? "")) * sortDirection;
+    });
+    return filtered.map((note) => ({
+      path: note.path,
+      status: note.fields.status ?? null,
+      priority: note.fields.priority ?? null,
+      link: note.link,
+    }));
+  };
+  const rows = projectRows(scopedNotes);
+  const expectedRows = Array.isArray(spec.expected_rows) ? spec.expected_rows.filter((value) => value && typeof value === "object") : [];
+  const rowsMatch = JSON.stringify(rows) === JSON.stringify(expectedRows);
+  const fieldsResolved = expectedRows.length > 0 && expectedRows.every((row) => {
+    const note = scopedNotes.find((candidate) => candidate.path === row.path);
+    return note && expectedColumns.filter((column) => !column.startsWith("file.")).every((column) => Object.prototype.hasOwnProperty.call(note.fields, column));
+  });
+  const filePaths = new Set(notes.map((note) => note.path));
+  const expectedLinks = Array.isArray(spec.expected_links) ? spec.expected_links.filter((value) => value && typeof value === "object") : [];
+  const observedLinks = scopedNotes.flatMap((note) => note.links.map((target) => ({source: note.path, target})));
+  const linksResolved = observedLinks.every((link) => filePaths.has(link.target))
+    && expectedLinks.every((link) => observedLinks.some((candidate) => candidate.source === link.source && candidate.target === dataviewPath(link.target)));
+  const expectedTasks = Array.isArray(spec.expected_tasks) ? spec.expected_tasks.filter((value) => value && typeof value === "object") : [];
+  const observedTasks = scopedNotes.flatMap((note) => note.tasks.map((task) => ({path: note.path, checked: task.checked, text: task.text})));
+  const tasksDetected = expectedTasks.length > 0 && expectedTasks.every((task) => observedTasks.some((candidate) => candidate.path === task.path && candidate.checked === task.checked && candidate.text === task.text));
+  const externalEdit = spec.external_edit && typeof spec.external_edit === "object" ? spec.external_edit : null;
+  const editedEntry = externalEdit && typeof externalEdit.path === "string" && typeof externalEdit.content === "string"
+    ? {path: externalEdit.path, content: externalEdit.content}
+    : null;
+  const refreshedNotes = editedEntry
+    ? notes.map((note) => note.path === editedEntry.path ? dataviewNoteRecord(editedEntry) : note)
+    : notes;
+  const refreshedRows = projectRows(refreshedNotes);
+  const refreshedAllRows = projectRows(refreshedNotes, false);
+  const refreshedTarget = editedEntry ? refreshedAllRows.find((row) => row.path === editedEntry.path) : null;
+  const beforeTarget = editedEntry ? rows.find((row) => row.path === editedEntry.path) : null;
+  const expectedRefreshStatus = externalEdit && typeof externalEdit.expected_status === "string" ? externalEdit.expected_status : "";
+  const refreshAfterExternalEdit = Boolean(
+    editedEntry
+    && beforeTarget
+    && refreshedTarget
+    && String(beforeTarget.status) !== String(refreshedTarget.status)
+    && String(refreshedTarget.status) === expectedRefreshStatus
+    && !refreshedRows.some((row) => row.path === editedEntry.path),
+  );
+  const js = spec.dataviewjs && typeof spec.dataviewjs === "object" ? spec.dataviewjs : {};
+  const dataviewjsDenied = js.expected_disposition === "denied"
+    && js.capability === "code.dynamic"
+    && workflowContext.initial_data?.dataviewjsEnabled === false
+    && typeof js.safe_alternative === "string"
+    && js.safe_alternative.length > 0;
+  const directVaultWrites = Number(runtime.metrics?.vaultWrites ?? workflowContext.metrics?.vaultWrites ?? 0);
+  const status = queryParsed
+    && queryType === "table"
+    && columnsResolved
+    && fieldsResolved
+    && rowsMatch
+    && linksResolved
+    && tasksDetected
+    && refreshAfterExternalEdit
+    && dataviewjsDenied
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({phase, status}));
+  return {
+    status,
+    mutation_scope: "bounded-read-only-query-projection",
+    source_folder: sourceFolder,
+    query,
+    query_type: queryType,
+    query_parsed: queryParsed,
+    expected_columns: expectedColumns,
+    query_columns: queryColumns,
+    columns_resolved: columnsResolved,
+    fields_resolved: fieldsResolved,
+    rows,
+    expected_rows: expectedRows,
+    rows_match: rowsMatch,
+    links: observedLinks,
+    expected_links: expectedLinks,
+    links_resolved: linksResolved,
+    tasks: observedTasks,
+    expected_tasks: expectedTasks,
+    tasks_detected: tasksDetected,
+    external_edit: editedEntry ? {path: editedEntry.path, expected_status: expectedRefreshStatus} : null,
+    refreshed_rows: refreshedRows,
+    refreshed_target: refreshedTarget,
+    refresh_after_external_edit: refreshAfterExternalEdit,
+    dataviewjs: {
+      disposition: dataviewjsDenied ? "denied" : "failed",
+      capability: typeof js.capability === "string" ? js.capability : null,
+      safe_alternative: typeof js.safe_alternative === "string" ? js.safe_alternative : null,
+      no_dynamic_execution: dataviewjsDenied,
+    },
+    dataviewjs_denied: dataviewjsDenied,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+    all_phases_passed: status === "passed",
+  };
+}
+
 function boundedLinterWorkflow(workflowContext = {}, runtime = {}) {
   const spec = workflowContext && typeof workflowContext.linter_workflow === "object"
     ? workflowContext.linter_workflow
@@ -2123,6 +2331,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (recentFilesWorkflow) actions.recent_files_workflow = recentFilesWorkflow;
   const smartConnectionsWorkflow = boundedSmartConnectionsWorkflow(workflowContext, workflowContext.runtime || {});
   if (smartConnectionsWorkflow) actions.smart_connections_workflow = smartConnectionsWorkflow;
+  const dataviewWorkflow = boundedDataviewWorkflow(workflowContext, workflowContext.runtime || {});
+  if (dataviewWorkflow) actions.dataview_workflow = dataviewWorkflow;
   const taskWorkflow = boundedTaskWorkflow(workflowContext);
   if (taskWorkflow) actions.task_workflow = taskWorkflow;
   return actions;
@@ -2189,6 +2399,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     tag_workflow: actions.tag_workflow || null,
     recent_files_workflow: actions.recent_files_workflow || null,
     smart_connections_workflow: actions.smart_connections_workflow || null,
+    dataview_workflow: actions.dataview_workflow || null,
     task_workflow: actions.task_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
@@ -2257,6 +2468,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultWrites = metrics.vaultWrites;
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
+    workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -2272,6 +2484,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultWrites = metrics.vaultWrites;
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
+    workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -2363,6 +2576,12 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTagWorkflow,
     boundedRecentFilesWorkflow,
     boundedSmartConnectionsWorkflow,
+    dataviewScalar,
+    dataviewFrontmatter,
+    dataviewInlineFields,
+    dataviewPath,
+    dataviewNoteRecord,
+    boundedDataviewWorkflow,
     boundedLinterWorkflow,
     boundedTaskWorkflow,
     eventPayload,

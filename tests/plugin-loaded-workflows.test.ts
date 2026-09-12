@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC03", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -151,6 +151,37 @@ test("PC20 fixture and bounded editor trace cover mutation history and folding",
   expect(loadedWorkflowAudit).toContain("folding_round_trip");
   expect(loadedWorkflowAudit).toContain("phase_editor_round_trip");
   expect(loadedWorkflowAudit).toContain("editor_checks: editor");
+});
+
+test("PC03 fixture and bounded projection cover DQL fields, links, tasks and safe refresh", () => {
+  const pc03 = fixture.scenarios.PC03 as typeof fixture.scenarios.PC03 & {
+    dataview_workflow?: {
+      query: string;
+      expected_columns: string[];
+      expected_rows: Array<Record<string, unknown>>;
+      expected_links: Array<Record<string, unknown>>;
+      expected_tasks: Array<Record<string, unknown>>;
+      external_edit: {path: string; expected_status: string};
+      dataviewjs: {capability: string; expected_disposition: string; safe_alternative: string};
+    };
+  };
+  expect(pc03.files).toContainEqual(expect.objectContaining({path: "Notes/Project.md", content: expect.stringContaining("[[Notes/Second]]")}));
+  expect(pc03.dataview_workflow).toMatchObject({
+    query: expect.stringContaining("TABLE status, priority, file.link"),
+    expected_columns: ["file.path", "status", "priority", "file.link"],
+    expected_rows: [
+      {path: "Notes/Project.md", status: "active", priority: 2, link: "Notes/Project.md"},
+      {path: "Notes/Second.md", status: "active", priority: 1, link: "Notes/Second.md"},
+    ],
+    external_edit: {path: "Notes/Second.md", expected_status: "paused"},
+    dataviewjs: {capability: "code.dynamic", expected_disposition: "denied", safe_alternative: "bounded DQL projection"},
+  });
+  expect(rendererWorker).toContain("function boundedDataviewWorkflow");
+  expect(rendererWorker).toContain("dataviewjs_denied");
+  expect(rendererWorker).toContain("refresh_after_external_edit");
+  expect(loadedWorkflowAudit).toContain("function dataviewWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("dataview_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("rows_match");
 });
 
 test("PC19 fixture covers note-backed tasks plus Bases view mappings", () => {

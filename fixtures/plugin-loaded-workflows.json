@@ -4,8 +4,51 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC03", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
+    "PC03": {
+      "workflow_id": "workflow:pc03",
+      "description": "Render a bounded DQL table from frontmatter and inline fields, resolve links and tasks, refresh after an external edit, and deny DataviewJS execution.",
+      "initial_data": {
+        "indexRefresh": "on-file-change",
+        "inlineFieldsEnabled": true,
+        "dataviewjsEnabled": false,
+        "queryLimit": 50
+      },
+      "dataview_workflow": {
+        "source_folder": "Notes",
+        "query": "TABLE status, priority, file.link FROM \"Notes\" WHERE status = \"active\" SORT priority DESC",
+        "query_type": "table",
+        "expected_columns": ["file.path", "status", "priority", "file.link"],
+        "expected_rows": [
+          {"path": "Notes/Project.md", "status": "active", "priority": 2, "link": "Notes/Project.md"},
+          {"path": "Notes/Second.md", "status": "active", "priority": 1, "link": "Notes/Second.md"}
+        ],
+        "expected_links": [
+          {"source": "Notes/Project.md", "target": "Notes/Second.md"}
+        ],
+        "expected_tasks": [
+          {"path": "Notes/Project.md", "checked": false, "text": "Review compatibility"}
+        ],
+        "external_edit": {
+          "path": "Notes/Second.md",
+          "content": "---\nstatus: paused\npriority: 1\n---\n\n# Second\n\n[owner:: Ashutosh]\n",
+          "expected_status": "paused"
+        },
+        "dataviewjs": {
+          "source": "return dv.pages('Notes').where(page => page.status === 'active');",
+          "capability": "code.dynamic",
+          "expected_disposition": "denied",
+          "safe_alternative": "bounded DQL projection"
+        }
+      },
+      "active_file": "Notes/Project.md",
+      "files": [
+        {"path": "Notes/Project.md", "content": "---\nstatus: active\npriority: 2\n---\n\n# Project\n\n[owner:: Ashutosh]\nSee [[Notes/Second]] for context.\n\n- [ ] Review compatibility\n"},
+        {"path": "Notes/Second.md", "content": "---\nstatus: active\npriority: 1\n---\n\n# Second\n\n[owner:: Ashutosh]\n"},
+        {"path": "Archive/Paused.md", "content": "---\nstatus: paused\npriority: 9\n---\n\n# Paused\n"}
+      ]
+    },
     "PC07": {
       "workflow_id": "workflow:pc07",
       "description": "Open/create daily notes from calendar navigation using the configured date and weekly-note settings.",

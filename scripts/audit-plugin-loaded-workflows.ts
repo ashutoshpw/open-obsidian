@@ -198,6 +198,32 @@ function smartConnectionsWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function dataviewWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const trace = asRecord(workflow.dataview_workflow);
+  const phases = records(trace?.phases);
+  const every = (key: string): boolean => phases.length === 3 && phases.every((phase) => phase[key] === "passed" || phase[key] === true);
+  const dataviewjs = asRecord(trace?.dataviewjs);
+  return {
+    present: trace !== null,
+    bounded_read_only: trace?.mutation_scope === "bounded-read-only-query-projection",
+    query_parsed: trace?.query_parsed === true,
+    table_query: trace?.query_type === "table",
+    columns_resolved: trace?.columns_resolved === true,
+    fields_resolved: trace?.fields_resolved === true,
+    rows_match: trace?.rows_match === true,
+    links_resolved: trace?.links_resolved === true,
+    tasks_detected: trace?.tasks_detected === true,
+    refresh_after_external_edit: trace?.refresh_after_external_edit === true,
+    dataviewjs_denied: trace?.dataviewjs_denied === true
+      && dataviewjs?.disposition === "denied"
+      && dataviewjs?.capability === "code.dynamic"
+      && dataviewjs?.no_dynamic_execution === true,
+    direct_vault_writes_zero: trace?.direct_vault_writes === 0 && trace?.direct_vault_writes_zero === true,
+    phase_projections_passed: every("status"),
+    status_passed: trace?.status === "passed" && trace?.all_phases_passed === true,
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -451,6 +477,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const failures = actionFailures(workflow);
       const editor = editorChecks(workflow);
       const smartConnections = id === "PC22" ? smartConnectionsWorkflowChecks(workflow) : null;
+      const dataview = id === "PC03" ? dataviewWorkflowChecks(workflow) : null;
       const linter = id === "PC25" ? linterWorkflowChecks(workflow) : null;
       const task = id === "PC19" ? taskWorkflowChecks(workflow) : null;
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
@@ -477,6 +504,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       tag_workflow_checks: id === "PC24" ? tagWorkflowChecks(workflow) : null,
       recent_files_workflow_checks: id === "PC23" ? recentFilesWorkflowChecks(workflow) : null,
       smart_connections_workflow_checks: smartConnections,
+      dataview_workflow_checks: dataview,
       linter_workflow_checks: linter,
       task_workflow_checks: task,
       disposition: "bounded-workflow-evidence-pending-runtime",
@@ -611,7 +639,24 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => taskChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && linterComplete && taskComplete;
+      const dataviewChecks = asRecord(entry.dataview_workflow_checks);
+      const dataviewComplete = entry.artifact_id !== "PC03" || (dataviewChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "query_parsed",
+        "table_query",
+        "columns_resolved",
+        "fields_resolved",
+        "rows_match",
+        "links_resolved",
+        "tasks_detected",
+        "refresh_after_external_edit",
+        "dataviewjs_denied",
+        "direct_vault_writes_zero",
+        "phase_projections_passed",
+        "status_passed",
+      ].every((key) => dataviewChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
