@@ -1,0 +1,142 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc22-local-model-exclusion",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC22"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T09:42:57Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "passed",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "1b118b778a9db3bb2b53d6ba2dbbe7a2475e9760",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "1b118b778a9db3bb2b53d6ba2dbbe7a2475e9760",
+    "sha256": "a5227f56847ebdb8ca184eb8ee7d52a2f08cd4beb467e692c2e0241159388f40",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC22 now includes local transformer model identity/provenance, a Private folder/file exclusion and expected indexed/excluded paths.",
+      "The workflow-only worker builds an in-memory candidate projection, enforces folder/path exclusions and keeps the candidate count bounded.",
+      "The trace requires local provenance, disabled remote fallback, disabled Smart Sources/Smart Blocks import and embed queues, and zero direct vault writes across install/restart/update."
+    ],
+    "security_disposition": "The unchanged pinned artifact remains inside the context-isolated synthetic renderer; direct vault writes, host DOM, filesystem/network/process/credential access and compatibility promotion remain denied or pending."
+  },
+  "loaded_workflow_audit": {
+    "status": "passed",
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "artifact_lifecycles": "all eight audited artifact lifecycles complete",
+    "artifact_persistence": "all eight audited artifact traces preserved mediated or plugin data across restart/update",
+    "artifact_actions": "all eight audited artifact action paths passed within the bounded synthetic scope",
+    "pc22": {
+      "name": "Smart Connections",
+      "version": "4.7.2",
+      "main_js_sha256": "f5b1e045e9427a7b7ffc43cd46ba7e0b9223adcc856037d4e0571dc7a9c08083",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "phases": ["install", "restart", "update"],
+      "persistence": "preserved via plugin-data-save",
+      "smart_connections_workflow": {
+        "mutation_scope": "bounded-in-memory-projection",
+        "model_identity": "local",
+        "model_provider": "transformers",
+        "model_key": "TaylorAI/bge-micro-v2",
+        "model_provenance": "bundled-local-transformers",
+        "local_model_provenance_verified": true,
+        "excluded_folders": ["Private"],
+        "excluded_paths": ["Private/Secret.md"],
+        "candidate_paths": ["Notes/Context.md", "Notes/Related.md", "Private/Secret.md"],
+        "indexed_paths": ["Notes/Context.md", "Notes/Related.md"],
+        "indexed_paths_match": true,
+        "observed_excluded_paths": ["Private/Secret.md"],
+        "excluded_paths_match": true,
+        "exclusions_enforced": true,
+        "remote_fallback_disabled": true,
+        "remote_fallback_used": false,
+        "import_queue_disabled": true,
+        "embed_queue_disabled": true,
+        "bounded_scope": true,
+        "direct_vault_writes": 0,
+        "all_phases_passed": true
+      },
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "preserved via mediated-plugin-data-store",
+      "action_status": "passed",
+      "restart_restores_scoped_data": true,
+      "update_restores_scoped_data": true,
+      "vault_writes": 0
+    },
+    "checks": {
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": true,
+      "all_artifacts_integrity_checked": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 7 tests, 165 expectations",
+    "full_command": "bun run check:fast",
+    "full_result": "passed; 211 tests, 1241 expectations",
+    "typecheck_command": "bun run typecheck",
+    "typecheck_result": "passed",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "diff_check": "passed",
+    "state_validation": "passed"
+  },
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian related-note indexing, retrieval, edit/delete refresh and exclusion comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed model behavior and remote fallback validation",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This evidence executes unchanged pinned Smart Connections bytes only inside the hidden Electron context-isolated sandbox. Local model/exclusion and queue checks are bounded projections over mediated fixture files; they do not certify stock Obsidian, provider-backed embeddings, reference behavior, same-user cross-platform enforcement, human behavior or compatibility promotion."
+}

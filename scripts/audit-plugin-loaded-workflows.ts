@@ -166,6 +166,28 @@ function recentFilesWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function smartConnectionsWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.smart_connections_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: traces.length === 3,
+    bounded_read_only: traces.length === 3 && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-projection"),
+    local_model_provenance_verified: every("local_model_provenance_verified"),
+    indexed_paths_match: every("indexed_paths_match"),
+    excluded_paths_match: every("excluded_paths_match"),
+    exclusions_enforced: every("exclusions_enforced"),
+    remote_fallback_disabled: every("remote_fallback_disabled"),
+    remote_fallback_not_used: traces.length === 3 && traces.every((trace) => trace.remote_fallback_used === false),
+    import_queue_disabled: every("import_queue_disabled"),
+    embed_queue_disabled: every("embed_queue_disabled"),
+    bounded_scope: every("bounded_scope"),
+    direct_vault_writes_zero: traces.length === 3 && traces.every((trace) => trace.direct_vault_writes === 0),
+    status_passed: traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function combinationTargetIds(): string[] {
   const combination = asRecord(fixture.combination);
   return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
@@ -270,6 +292,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const workflow = asRecord(result.workflow) ?? {};
       const failures = actionFailures(workflow);
       const editor = editorChecks(workflow);
+      const smartConnections = id === "PC22" ? smartConnectionsWorkflowChecks(workflow) : null;
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -293,6 +316,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       editor_checks: editor,
       tag_workflow_checks: id === "PC24" ? tagWorkflowChecks(workflow) : null,
       recent_files_workflow_checks: id === "PC23" ? recentFilesWorkflowChecks(workflow) : null,
+      smart_connections_workflow_checks: smartConnections,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -344,7 +368,23 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "max_length_preserved",
         "direct_vault_writes_zero",
       ].every((key) => recentFilesChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete;
+      const smartConnectionsChecks = asRecord(entry.smart_connections_workflow_checks);
+      const smartConnectionsComplete = entry.artifact_id !== "PC22" || (smartConnectionsChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "local_model_provenance_verified",
+        "indexed_paths_match",
+        "excluded_paths_match",
+        "exclusions_enforced",
+        "remote_fallback_disabled",
+        "remote_fallback_not_used",
+        "import_queue_disabled",
+        "embed_queue_disabled",
+        "bounded_scope",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => smartConnectionsChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete;
     });
     const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
     const allChecks = artifactChecksComplete && combinationChecksComplete;
@@ -388,7 +428,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, renderer-local clipboard capture, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

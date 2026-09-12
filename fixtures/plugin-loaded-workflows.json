@@ -120,15 +120,30 @@
     },
     "PC22": {
       "workflow_id": "workflow:pc22",
-      "description": "Exercise Smart Connections local-model configuration and preserve its bounded settings without remote fallback or vault writes.",
+      "description": "Exercise Smart Connections local-model configuration, folder/path exclusions and bounded indexing without remote fallback or vault writes.",
       "initial_data": {
-        "settings": {"embeddingModel": "local", "excludedFolders": []},
+        "settings": {"embeddingModel": "local", "excludedFolders": ["Private"]},
         "version": 4
+      },
+      "smart_connections_workflow": {
+        "local_model": {
+          "identity": "local",
+          "provider": "transformers",
+          "model_key": "TaylorAI/bge-micro-v2",
+          "provenance": "bundled-local-transformers"
+        },
+        "excluded_folders": ["Private"],
+        "excluded_paths": ["Private/Secret.md"],
+        "expected_indexed_paths": ["Notes/Context.md", "Notes/Related.md"],
+        "expected_excluded_paths": ["Private/Secret.md"],
+        "remote_fallback_disabled": true,
+        "max_candidates": 16
       },
       "active_file": "Notes/Context.md",
       "files": [
         {"path": "Notes/Context.md", "content": "# Context\n\nA local note for related-note indexing.\n"},
-        {"path": "Notes/Related.md", "content": "# Related\n\nA second local note.\n"}
+        {"path": "Notes/Related.md", "content": "# Related\n\nA second local note.\n"},
+        {"path": "Private/Secret.md", "content": "# Secret\n\nThis note must stay out of the local index.\n"}
       ]
     },
     "PC24": {

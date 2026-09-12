@@ -1426,6 +1426,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the CI evidence to the requirements and state metadata. Reference Obsidian stale-entry/rename/delete behavior, same-user platform enforcement, human validation, required combinations, signing, publication and updater validation remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - P3.2 and the overall goal remain active. No plugin or compatibility row was promoted; the bounded renderer evidence remains synthetic and does not certify stock Obsidian or reference parity.
 
+## 2026-09-12T09:47:00Z — P3.2 bounded PC22 Smart Connections local-model/exclusion workflow
+
+- Extended PC22 with a Private/Secret.md exclusion fixture, bundled local transformer model identity/provenance, expected indexed and excluded paths, a bounded candidate limit and an explicit remote-fallback-disabled contract.
+- Added a workflow-only Smart Connections projection that enforces folder/path exclusions in memory, records local model provenance, verifies disabled Smart Sources/Smart Blocks import/embed queues and keeps direct vault writes at zero across install/restart/update. The unchanged plugin remains inside the context-isolated synthetic renderer; no stock Obsidian or provider-backed model behavior is claimed.
+- Fresh Linux x64 / Electron 44.3.0 evidence at source digest `a5227f56847ebdb8ca184eb8ee7d52a2f08cd4beb467e692c2e0241159388f40` passes all eight audited artifact lifecycles and the PC07/PC21/PC23 combination within the bounded synthetic scope. PC22 local provenance, expected indexed/excluded paths, exclusion enforcement, disabled remote fallback/queues, bounded scope and zero writes pass in all three phases.
+- Local validation passed: focused loaded-workflow tests (7 tests, 165 expectations), `bun run check:fast` (211 tests, 1241 expectations), typecheck, worker syntax, source-tree and state validation. Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion.json`. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- Reference Obsidian related-note indexing/retrieval/edit/delete behavior, provider-backed model execution, same-user macOS/Windows enforcement, human validation, required combinations, signing, publication, updater validation and compatibility promotion remain pending; this is synthetic renderer evidence only.
+- Next operation: commit with `[openobsidian P3.2 work] Add bounded PC22 local-model exclusion workflow`, push `main`, inspect quality/desktop-build/loaded-workflow Actions on Ubuntu, macOS and Windows, and reconcile CI evidence without promoting plugin compatibility.
+
 ## 2026-09-12T09:18:44Z — P3.2 bounded PC23 Recent Files rename/delete projection
 
 - Extended the PC23 fixture with a renamed `Daily/2026-09-12.md`, deleted `Archive/old-note.md` and stale `Archive/missing.md` entries while preserving the configured order and `maxLength: 50` contract.

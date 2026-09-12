@@ -1486,6 +1486,90 @@ function boundedRecentFilesWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedSmartConnectionsWorkflow(workflowContext = {}, runtime = {}) {
+  const spec = workflowContext && typeof workflowContext.smart_connections_workflow === "object"
+    ? workflowContext.smart_connections_workflow
+    : null;
+  if (!spec) return null;
+  const model = spec.local_model && typeof spec.local_model === "object" ? spec.local_model : {};
+  const entries = Array.isArray(workflowContext.files) ? workflowContext.files : [];
+  const candidates = entries
+    .filter((entry) => entry && typeof entry.path === "string")
+    .map((entry) => ({path: entry.path.replaceAll("\\", "/"), contentBytes: typeof entry.content === "string" ? new TextEncoder().encode(entry.content).byteLength : 0}));
+  const excludedFolders = (Array.isArray(spec.excluded_folders) ? spec.excluded_folders : [])
+    .filter((value) => typeof value === "string" && value.length > 0)
+    .map((value) => value.replaceAll("\\", "/").replace(/^\/+|\/+$/g, ""));
+  const excludedPaths = (Array.isArray(spec.excluded_paths) ? spec.excluded_paths : [])
+    .filter((value) => typeof value === "string" && value.length > 0)
+    .map((value) => value.replaceAll("\\", "/").replace(/^\/+/, ""));
+  const isExcluded = (path) => excludedPaths.includes(path) || excludedFolders.some((folder) => path === folder || path.startsWith(`${folder}/`));
+  const observedExcludedPaths = candidates.filter((entry) => isExcluded(entry.path)).map((entry) => entry.path);
+  const indexedPaths = candidates.filter((entry) => !isExcluded(entry.path)).map((entry) => entry.path);
+  const expectedIndexedPaths = Array.isArray(spec.expected_indexed_paths) ? spec.expected_indexed_paths.filter((value) => typeof value === "string") : [];
+  const expectedExcludedPaths = Array.isArray(spec.expected_excluded_paths) ? spec.expected_excluded_paths.filter((value) => typeof value === "string") : [];
+  const normalizedSorted = (values) => [...new Set(values)].sort();
+  const indexedPathsMatch = JSON.stringify(normalizedSorted(indexedPaths)) === JSON.stringify(normalizedSorted(expectedIndexedPaths));
+  const excludedPathsMatch = JSON.stringify(normalizedSorted(observedExcludedPaths)) === JSON.stringify(normalizedSorted(expectedExcludedPaths));
+  const env = runtime.window?.smart_env;
+  const sourceOptions = env?.smart_sources?.opts && typeof env.smart_sources.opts === "object" ? env.smart_sources.opts : {};
+  const blockOptions = env?.smart_blocks?.opts && typeof env.smart_blocks.opts === "object" ? env.smart_blocks.opts : {};
+  const importQueueDisabled = sourceOptions.prevent_import_on_load === true && blockOptions.prevent_import_on_load === true;
+  const embedQueueDisabled = sourceOptions.process_embed_queue === false && blockOptions.process_embed_queue === false;
+  const localModelProvenance = model.identity === "local"
+    && model.provider === "transformers"
+    && typeof model.model_key === "string"
+    && model.model_key.length > 0
+    && typeof model.provenance === "string"
+    && model.provenance.includes("local");
+  const maxCandidates = Number(spec.max_candidates);
+  const boundedScope = Number.isInteger(maxCandidates) && maxCandidates > 0 && candidates.length <= maxCandidates;
+  const remoteFallbackDisabled = spec.remote_fallback_disabled === true;
+  const remoteFallbackUsed = Number(runtime.metrics?.smartConnectionsRemoteFallbacks || 0) > 0;
+  const directVaultWrites = Number(runtime.metrics?.vaultWrites || 0);
+  const status = localModelProvenance
+    && indexedPathsMatch
+    && excludedPathsMatch
+    && importQueueDisabled
+    && embedQueueDisabled
+    && remoteFallbackDisabled
+    && !remoteFallbackUsed
+    && boundedScope
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-projection",
+    model_identity: model.identity || null,
+    model_provider: model.provider || null,
+    model_key: model.model_key || null,
+    model_provenance: model.provenance || null,
+    local_model_provenance_verified: localModelProvenance,
+    excluded_folders: excludedFolders,
+    excluded_paths: excludedPaths,
+    candidate_paths: candidates.map((entry) => entry.path),
+    candidate_count: candidates.length,
+    indexed_paths: indexedPaths,
+    expected_indexed_paths: expectedIndexedPaths,
+    indexed_paths_match: indexedPathsMatch,
+    observed_excluded_paths: observedExcludedPaths,
+    expected_excluded_paths: expectedExcludedPaths,
+    excluded_paths_match: excludedPathsMatch,
+    exclusions_enforced: excludedPathsMatch && observedExcludedPaths.every((path) => !indexedPaths.includes(path)),
+    remote_fallback_disabled: remoteFallbackDisabled,
+    remote_fallback_used: remoteFallbackUsed,
+    import_queue_disabled: importQueueDisabled,
+    embed_queue_disabled: embedQueueDisabled,
+    smart_sources_import_disabled: sourceOptions.prevent_import_on_load === true,
+    smart_sources_embed_queue_disabled: sourceOptions.process_embed_queue === false,
+    smart_blocks_import_disabled: blockOptions.prevent_import_on_load === true,
+    smart_blocks_embed_queue_disabled: blockOptions.process_embed_queue === false,
+    bounded_scope: boundedScope,
+    max_candidates: maxCandidates,
+    direct_vault_writes: directVaultWrites,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -1594,6 +1678,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (tagWorkflow) actions.tag_workflow = tagWorkflow;
   const recentFilesWorkflow = boundedRecentFilesWorkflow(workflowContext);
   if (recentFilesWorkflow) actions.recent_files_workflow = recentFilesWorkflow;
+  const smartConnectionsWorkflow = boundedSmartConnectionsWorkflow(workflowContext, workflowContext.runtime || {});
+  if (smartConnectionsWorkflow) actions.smart_connections_workflow = smartConnectionsWorkflow;
   return actions;
 }
 
@@ -1614,7 +1700,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   const operationStart = Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.length : 0;
   const clipboardWritesStart = Number(workflowContext.metrics?.clipboardWrites || 0);
   const clipboardReadsStart = Number(workflowContext.metrics?.clipboardReads || 0);
-  const actions = await exerciseRegistrations(pluginApp, workflowContext);
+  const actions = await exerciseRegistrations(pluginApp, {...workflowContext, runtime});
   while (pluginApp.editor.canUndo()) pluginApp.editor.undo();
   const editorAfter = pluginApp.editor.editorSnapshot();
   await lifecycleCall(instance, "onunload", events);
@@ -1653,6 +1739,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     },
     tag_workflow: actions.tag_workflow || null,
     recent_files_workflow: actions.recent_files_workflow || null,
+    smart_connections_workflow: actions.smart_connections_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -1811,6 +1898,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     frontmatterTagValues,
     boundedTagWorkflow,
     boundedRecentFilesWorkflow,
+    boundedSmartConnectionsWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

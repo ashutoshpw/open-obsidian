@@ -202,3 +202,44 @@ test("PC23 fixture and recent-file seam remove stale entries read-only", () => {
   expect(loadedWorkflowAudit).toContain("delete_entry_removed");
   expect(loadedWorkflowAudit).toContain("direct_vault_writes_zero");
 });
+
+test("PC22 fixture and Smart Connections seam enforce local provenance and exclusions", () => {
+  const pc22 = fixture.scenarios.PC22 as typeof fixture.scenarios.PC22 & {
+    smart_connections_workflow?: {
+      local_model: {identity: string; provider: string; model_key: string; provenance: string};
+      excluded_folders: string[];
+      excluded_paths: string[];
+      expected_indexed_paths: string[];
+      expected_excluded_paths: string[];
+      remote_fallback_disabled: boolean;
+      max_candidates: number;
+    };
+  };
+  expect(pc22.smart_connections_workflow).toEqual({
+    local_model: {
+      identity: "local",
+      provider: "transformers",
+      model_key: "TaylorAI/bge-micro-v2",
+      provenance: "bundled-local-transformers",
+    },
+    excluded_folders: ["Private"],
+    excluded_paths: ["Private/Secret.md"],
+    expected_indexed_paths: ["Notes/Context.md", "Notes/Related.md"],
+    expected_excluded_paths: ["Private/Secret.md"],
+    remote_fallback_disabled: true,
+    max_candidates: 16,
+  });
+  expect(pc22.initial_data.settings).toMatchObject({embeddingModel: "local", excludedFolders: ["Private"]});
+  expect(pc22.files).toContainEqual(expect.objectContaining({path: "Private/Secret.md"}));
+  expect(rendererWorker).toContain("function boundedSmartConnectionsWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-projection"');
+  expect(rendererWorker).toContain("local_model_provenance_verified");
+  expect(rendererWorker).toContain("excluded_paths_match");
+  expect(rendererWorker).toContain("remote_fallback_used");
+  expect(rendererWorker).toContain("smart_sources_embed_queue_disabled");
+  expect(rendererWorker).toContain("smart_blocks_embed_queue_disabled");
+  expect(loadedWorkflowAudit).toContain("function smartConnectionsWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("smart_connections_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("local_model_provenance_verified");
+  expect(loadedWorkflowAudit).toContain("remote_fallback_not_used");
+});
