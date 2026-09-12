@@ -130,6 +130,55 @@ test("renderer wrapper permits plugin-local app bindings", () => {
   expect(module.exports).toEqual({name: "plugin-local"});
 });
 
+test("PC01 fixture covers bounded Excalidraw scene, links, export and reopen projection", () => {
+  const pc01 = fixture.scenarios.PC01 as typeof fixture.scenarios.PC03 & {
+    excalidraw_workflow?: {
+      source_path: string;
+      linked_asset_paths: string[];
+      note_link_path: string;
+      embed_path: string;
+      expected_note_link: string;
+      expected_embed: string;
+      export_path: string;
+      expected_export_mime: string;
+      expected_scene_id: string;
+      expected_element_count: number;
+      edit_element_id: string;
+      edit_probe_label: string;
+      scripting_interface: {name: string; version: string; operations: string[]};
+    };
+  };
+  expect(pc01.workflow_id).toBe("workflow:pc01");
+  expect(pc01.files).toContainEqual(expect.objectContaining({path: "Drawings/Scene.excalidraw", content: expect.stringContaining("scene-1")}));
+  expect(pc01.files).toContainEqual(expect.objectContaining({path: "Assets/reference.png"}));
+  expect(pc01.excalidraw_workflow).toEqual({
+    source_path: "Drawings/Scene.excalidraw",
+    linked_asset_paths: ["Assets/reference.png"],
+    note_link_path: "Notes/Context.md",
+    embed_path: "Notes/Embed.md",
+    expected_note_link: "[[Drawings/Scene.excalidraw]]",
+    expected_embed: "![[Drawings/Scene.excalidraw]]",
+    export_path: "Exports/Scene.svg",
+    expected_export_mime: "image/svg+xml",
+    expected_scene_id: "scene-1",
+    expected_element_count: 2,
+    edit_element_id: "scene-1",
+    edit_probe_label: "bounded edit",
+    scripting_interface: {
+      name: "excalidraw-api",
+      version: "2",
+      operations: ["getScene", "updateScene", "exportImage"],
+    },
+  });
+  expect(rendererWorker).toContain("function boundedExcalidrawWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-excalidraw-projection"');
+  expect(rendererWorker).toContain("scriptingInterfaceRecorded");
+  expect(rendererWorker).toContain("exportProjection");
+  expect(loadedWorkflowAudit).toContain("function excalidrawWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("bounded_excalidraw_projection");
+  expect(loadedWorkflowAudit).toContain("excalidraw_bounded_projection_complete");
+});
+
 test("PC20 fixture and bounded editor trace cover mutation history and folding", () => {
   const pc20 = fixture.scenarios.PC20;
   expect(pc20.files).toContainEqual({

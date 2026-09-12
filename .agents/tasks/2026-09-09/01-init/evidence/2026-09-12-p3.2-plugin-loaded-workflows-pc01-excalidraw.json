@@ -1,0 +1,96 @@
+{
+  "evidence_version": 1,
+  "status": "partial",
+  "recorded_at": "2026-09-12T17:05:39.582Z",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC01"
+  ],
+  "decision_id": "D14",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "schema_version": 1,
+    "head": "4da5c9e9ff82efbfcdec16fd82a83c1afa01866c",
+    "sha256": "b1b9ed8e60b32abb386324f514462ee0b3a58c899ba191a693507534b731d8fa",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "artifact_id": "PC01",
+    "name": "Excalidraw",
+    "version": "2.27.3",
+    "main_asset": {
+      "name": "main.js",
+      "bytes": 4884569,
+      "sha256": "8275e85d0f6314654a3d5ad86125d2e1b0018b4ffd60eddab2bbc8eefa0e13c1"
+    },
+    "integrity": "passed",
+    "renderer_status": "denied",
+    "renderer_denied_capabilities": ["dom.privileged"],
+    "renderer_error": "D15 denied dom.privileged at window.unpackBase64Deflate"
+  },
+  "bounded_excalidraw_projection": {
+    "status": "complete",
+    "disposition": "bounded-projection-with-d15-denial",
+    "runtime_disposition": "pending-runtime",
+    "mutation_scope": "bounded-in-memory-excalidraw-projection",
+    "source_path": "Drawings/Scene.excalidraw",
+    "source_bytes": 281,
+    "checks": {
+      "source_preserved": true,
+      "scene_parsed": true,
+      "scene_id_match": true,
+      "element_count_match": true,
+      "edit_projected": true,
+      "linked_assets_resolved": true,
+      "note_link_resolved": true,
+      "embed_resolved": true,
+      "export_projected": true,
+      "reopen_preserved": true,
+      "scripting_interface_recorded": true,
+      "direct_vault_writes_zero": true
+    },
+    "export": {
+      "path": "Exports/Scene.svg",
+      "mime": "image/svg+xml",
+      "scene_id": "scene-1"
+    },
+    "scripting_interface": {
+      "name": "excalidraw-api",
+      "version": "2",
+      "operations": ["getScene", "updateScene", "exportImage"]
+    }
+  },
+  "aggregate_checks": {
+    "all_artifact_lifecycle_traces_complete": false,
+    "all_required_combinations_complete": true,
+    "all_artifacts_integrity_checked": true,
+    "excalidraw_bounded_projection_complete": true,
+    "no_plugin_promoted": true
+  },
+  "raw_audit_sha256": "07e627c082024a96ce238a77af6f80455dcbb872d4940fde8a27d5d722b7c8b1",
+  "external_pending": [
+    "reference Obsidian Excalidraw behavior",
+    "same-user macOS/Windows enforcement",
+    "human interaction and accessibility validation",
+    "signed release, publication and updater validation",
+    "compatibility promotion"
+  ],
+  "limitation": "The unchanged Excalidraw artifact remains D15 renderer-denied. The passing workflow is a bounded synthetic in-memory projection only; it does not certify stock Obsidian, the frozen scripting runtime, cross-platform behavior or release compatibility."
+}

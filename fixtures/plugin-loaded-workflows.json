@@ -6,6 +6,45 @@
   "boundary": "electron-renderer",
   "target_ids": ["PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
+    "PC01": {
+      "workflow_id": "workflow:pc01",
+      "description": "Open and edit an existing Excalidraw scene in a bounded projection, resolve linked assets and note embeds, export an in-memory SVG, and reopen the original bytes without direct vault writes.",
+      "initial_data": {
+        "drawingFolder": "Drawings",
+        "exportFolder": "Exports",
+        "preserveSourceBytes": true,
+        "scriptApiVersion": "2"
+      },
+      "excalidraw_workflow": {
+        "source_path": "Drawings/Scene.excalidraw",
+        "linked_asset_paths": ["Assets/reference.png"],
+        "note_link_path": "Notes/Context.md",
+        "embed_path": "Notes/Embed.md",
+        "expected_note_link": "[[Drawings/Scene.excalidraw]]",
+        "expected_embed": "![[Drawings/Scene.excalidraw]]",
+        "export_path": "Exports/Scene.svg",
+        "expected_export_mime": "image/svg+xml",
+        "expected_scene_id": "scene-1",
+        "expected_element_count": 2,
+        "edit_element_id": "scene-1",
+        "edit_probe_label": "bounded edit",
+        "scripting_interface": {
+          "name": "excalidraw-api",
+          "version": "2",
+          "operations": ["getScene", "updateScene", "exportImage"]
+        }
+      },
+      "active_file": "Drawings/Scene.excalidraw",
+      "files": [
+        {
+          "path": "Drawings/Scene.excalidraw",
+          "content": "{\"type\":\"excalidraw\",\"version\":2,\"source\":\"https://excalidraw.com\",\"elements\":[{\"id\":\"scene-1\",\"type\":\"rectangle\",\"x\":0,\"y\":0},{\"id\":\"scene-2\",\"type\":\"text\",\"text\":\"Context\"}],\"appState\":{\"viewBackgroundColor\":\"#ffffff\"},\"files\":{\"asset-1\":{\"mimeType\":\"image/png\",\"id\":\"asset-1\"}}}"
+        },
+        {"path": "Assets/reference.png", "content": "bounded-png-fixture"},
+        {"path": "Notes/Context.md", "content": "# Context\n\nDrawing: [[Drawings/Scene.excalidraw]]\n"},
+        {"path": "Notes/Embed.md", "content": "# Embed\n\n![[Drawings/Scene.excalidraw]]\n"}
+      ]
+    },
     "PC03": {
       "workflow_id": "workflow:pc03",
       "description": "Render a bounded DQL table from frontmatter and inline fields, resolve links and tasks, refresh after an external edit, and deny DataviewJS execution.",

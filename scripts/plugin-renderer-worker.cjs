@@ -1903,6 +1903,109 @@ function boundedCalendarWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedExcalidrawWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.excalidraw_workflow === "object"
+    ? workflowContext.excalidraw_workflow
+    : null;
+  if (!spec || typeof spec.source_path !== "string" || typeof spec.export_path !== "string") return null;
+  const files = new Map((Array.isArray(workflowContext.files) ? workflowContext.files : [])
+    .filter((entry) => entry && typeof entry.path === "string")
+    .map((entry) => [entry.path, typeof entry.content === "string" ? entry.content : ""]));
+  const source = files.get(spec.source_path);
+  let scene = null;
+  try {
+    scene = typeof source === "string" ? JSON.parse(source) : null;
+  } catch {
+    scene = null;
+  }
+  const elements = scene && Array.isArray(scene.elements) ? scene.elements : [];
+  const expectedSceneId = typeof spec.expected_scene_id === "string" ? spec.expected_scene_id : "";
+  const expectedElementCount = Number(spec.expected_element_count);
+  const sourceBytes = typeof source === "string" ? new TextEncoder().encode(source).byteLength : 0;
+  const sourceSnapshot = typeof source === "string" ? source : null;
+  const editable = elements.find((element) => element && element.id === spec.edit_element_id);
+  const editedScene = scene && typeof scene === "object" ? JSON.parse(JSON.stringify(scene)) : null;
+  if (editedScene && Array.isArray(editedScene.elements)) {
+    const editedElement = editedScene.elements.find((element) => element && element.id === spec.edit_element_id);
+    if (editedElement && typeof spec.edit_probe_label === "string") editedElement.__boundedLabel = spec.edit_probe_label;
+  }
+  const editProjected = editable !== undefined
+    && editedScene !== null
+    && JSON.stringify(editedScene) !== JSON.stringify(scene);
+  const sourcePreserved = sourceSnapshot !== null && files.get(spec.source_path) === sourceSnapshot;
+  const linkedAssetPaths = Array.isArray(spec.linked_asset_paths)
+    ? spec.linked_asset_paths.filter((path) => typeof path === "string")
+    : [];
+  const linkedAssetsResolved = linkedAssetPaths.length > 0 && linkedAssetPaths.every((path) => files.has(path));
+  const noteEntry = typeof spec.note_link_path === "string" ? files.get(spec.note_link_path) : undefined;
+  const embedEntry = typeof spec.embed_path === "string" ? files.get(spec.embed_path) : undefined;
+  const expectedNoteLink = typeof spec.expected_note_link === "string" ? spec.expected_note_link : "";
+  const expectedEmbed = typeof spec.expected_embed === "string" ? spec.expected_embed : "";
+  const noteLinkResolved = typeof noteEntry === "string" && expectedNoteLink.length > 0 && noteEntry.includes(expectedNoteLink) && files.has(spec.source_path);
+  const embedResolved = typeof embedEntry === "string" && expectedEmbed.length > 0 && embedEntry.includes(expectedEmbed) && files.has(spec.source_path);
+  const exportMime = typeof spec.expected_export_mime === "string" ? spec.expected_export_mime : "image/svg+xml";
+  const exportPath = spec.export_path;
+  const exportProjection = `<svg xmlns="http://www.w3.org/2000/svg" data-scene="${expectedSceneId}" data-source="${spec.source_path}" data-mime="${exportMime}"></svg>`;
+  const exportProjected = exportPath.length > 0
+    && exportProjection.includes(`data-scene="${expectedSceneId}"`)
+    && exportProjection.includes(`data-source="${spec.source_path}"`)
+    && exportMime === "image/svg+xml";
+  const reopenPath = spec.source_path;
+  const reopenPreserved = reopenPath === spec.source_path && sourcePreserved && sourceBytes > 0;
+  const scripting = spec.scripting_interface && typeof spec.scripting_interface === "object" ? spec.scripting_interface : {};
+  const operations = Array.isArray(scripting.operations) ? scripting.operations.filter((value) => typeof value === "string") : [];
+  const scriptingInterfaceRecorded = scripting.name === "excalidraw-api"
+    && scripting.version === "2"
+    && ["getScene", "updateScene", "exportImage"].every((operation) => operations.includes(operation));
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = sourceBytes > 0
+    && scene?.type === "excalidraw"
+    && elements.length === expectedElementCount
+    && elements.some((element) => element && element.id === expectedSceneId)
+    && editProjected
+    && sourcePreserved
+    && linkedAssetsResolved
+    && noteLinkResolved
+    && embedResolved
+    && exportProjected
+    && reopenPreserved
+    && scriptingInterfaceRecorded
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-excalidraw-projection",
+    source_path: spec.source_path,
+    source_bytes: sourceBytes,
+    source_preserved: sourcePreserved,
+    scene_parsed: scene?.type === "excalidraw",
+    scene_id_match: elements.some((element) => element && element.id === expectedSceneId),
+    element_count_match: elements.length === expectedElementCount,
+    edit_projected: editProjected,
+    linked_asset_paths: linkedAssetPaths,
+    linked_assets_resolved: linkedAssetsResolved,
+    note_link_path: spec.note_link_path,
+    note_link_resolved: noteLinkResolved,
+    embed_path: spec.embed_path,
+    embed_resolved: embedResolved,
+    export_path: exportPath,
+    export_mime: exportMime,
+    export_projected: exportProjected,
+    reopen_path: reopenPath,
+    reopen_preserved: reopenPreserved,
+    scripting_interface: {
+      name: scripting.name,
+      version: scripting.version,
+      operations,
+      recorded: scriptingInterfaceRecorded,
+    },
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    export_projection: exportProjection,
+  };
+}
+
 function boundedSmartConnectionsWorkflow(workflowContext = {}, runtime = {}) {
   const spec = workflowContext && typeof workflowContext.smart_connections_workflow === "object"
     ? workflowContext.smart_connections_workflow
@@ -2842,6 +2945,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     activeAfterUninstall: true,
     artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture",
     targetIds: Array.isArray(workflowConfig.target_ids) ? workflowConfig.target_ids.filter((value) => typeof value === "string") : [],
+    excalidraw_workflow: boundedExcalidrawWorkflow(workflowContext),
   };
   const runtime = {app: null, allowSyntheticDocument: true, storage: new Map(), metrics};
   try {
@@ -2866,6 +2970,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
     workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
+    workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
@@ -2884,6 +2989,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
     workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
+    workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
@@ -2989,6 +3095,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     dataviewNoteRecord,
     boundedDataviewWorkflow,
     boundedCalendarWorkflow,
+    boundedExcalidrawWorkflow,
     boundedLinterWorkflow,
     boundedTaskWorkflow,
     boundedTasksWorkflow,

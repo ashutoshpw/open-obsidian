@@ -203,6 +203,28 @@ function calendarWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function excalidrawWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const trace = asRecord(workflow.excalidraw_workflow);
+  const every = (key: string): boolean => trace?.[key] === true;
+  return {
+    present: trace !== null,
+    bounded_read_only: trace?.mutation_scope === "bounded-in-memory-excalidraw-projection",
+    source_preserved: every("source_preserved"),
+    scene_parsed: every("scene_parsed"),
+    scene_id_match: every("scene_id_match"),
+    element_count_match: every("element_count_match"),
+    edit_projected: every("edit_projected"),
+    linked_assets_resolved: every("linked_assets_resolved"),
+    note_link_resolved: every("note_link_resolved"),
+    embed_resolved: every("embed_resolved"),
+    export_projected: every("export_projected"),
+    reopen_preserved: every("reopen_preserved"),
+    scripting_interface_recorded: asRecord(trace?.scripting_interface)?.recorded === true,
+    direct_vault_writes_zero: trace?.direct_vault_writes === 0 && trace?.direct_vault_writes_zero === true,
+    status_passed: trace?.status === "passed",
+  };
+}
+
 function smartConnectionsWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const traces = phaseRecords(workflow)
     .map((phase) => asRecord(phase.smart_connections_workflow))
@@ -570,6 +592,53 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       });
       sources.push({id, source: downloaded.source});
     }
+    // PC01's unchanged release bundle publishes a dynamic, privileged
+    // renderer bootstrap and is therefore intentionally denied by D15 before
+    // lifecycle execution. Keep its user-facing workflow covered by the same
+    // mediated worker, but record the bounded Excalidraw projection separately
+    // so a synthetic pass can never be mistaken for unchanged-plugin runtime
+    // certification.
+    const excalidrawDownloaded = await downloadArtifact("PC01");
+    const excalidrawConfig = {...scenario("PC01"), artifact_id: "PC01", target_ids: ["PC01"]};
+    const excalidrawResult = await runWorker(excalidrawDownloaded.source, excalidrawConfig, temporaryRoot, "PC01-excalidraw");
+    const excalidrawWorkflow = asRecord(excalidrawResult.workflow) ?? {};
+    const excalidrawChecks = excalidrawWorkflowChecks(excalidrawWorkflow);
+    const excalidrawMainAsset = mainAsset(excalidrawDownloaded.artifact);
+    const excalidrawProjectionComplete = [
+      "present",
+      "bounded_read_only",
+      "source_preserved",
+      "scene_parsed",
+      "scene_id_match",
+      "element_count_match",
+      "edit_projected",
+      "linked_assets_resolved",
+      "note_link_resolved",
+      "embed_resolved",
+      "export_projected",
+      "reopen_preserved",
+      "scripting_interface_recorded",
+      "direct_vault_writes_zero",
+      "status_passed",
+    ].every((key) => excalidrawChecks[key] === true);
+    const excalidrawProjection = {
+      artifact_id: "PC01",
+      name: string(excalidrawDownloaded.artifact.name),
+      version: string(excalidrawDownloaded.artifact.tag),
+      integrity: excalidrawDownloaded.integrity,
+      main_asset: excalidrawMainAsset
+        ? {name: string(excalidrawMainAsset.name), bytes: excalidrawMainAsset.bytes, sha256: string(excalidrawMainAsset.sha256)}
+        : null,
+      renderer_status: excalidrawResult.status,
+      renderer_denied_capabilities: asArray(excalidrawResult.deniedCapabilities),
+      renderer_error: string(excalidrawResult.error),
+      result: excalidrawResult,
+      checks: excalidrawChecks,
+      bounded_projection: excalidrawProjectionComplete ? "complete" : "partial",
+      disposition: "bounded-projection-with-d15-denial",
+      runtime_disposition: "pending-runtime",
+      no_plugin_promoted: true,
+    };
     const definitions = combinationDefinitions();
     requireCondition(definitions.length > 0, "loaded-plugin audit requires at least one combination definition");
     const combinationResults: JsonRecord[] = [];
@@ -774,7 +843,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       status: allChecks ? "passed" : "partial",
       recorded_at: new Date().toISOString(),
       checkpoint: "P3.2",
-      requirements: ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", ...targetIds],
+      requirements: ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01", ...targetIds.filter((id) => id !== "PC01")],
       decision_id: "D14",
       fixture_id: string(fixture.id),
       command: "bun run audit:plugin-loaded-workflows",
@@ -783,12 +852,14 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       artifact_results: artifactResults,
       combination: primaryCombination,
       combinations: combinationResults,
+      bounded_excalidraw_projection: excalidrawProjection,
       checks: {
         all_artifact_lifecycle_traces_complete: artifactLifecyclesComplete,
         combination_lifecycle_trace_complete: combinationLifecycleComplete,
         all_required_combinations_complete: combinationChecksComplete,
         all_bounded_traces_complete: allChecks,
         all_artifacts_integrity_checked: artifactResults.every((entry) => entry.integrity === "passed"),
+        excalidraw_bounded_projection_complete: excalidrawProjectionComplete,
         no_plugin_promoted: true,
       },
       safe_alternatives_attempted: asArray(fixture.safe_alternatives_attempted),
