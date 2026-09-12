@@ -1,0 +1,174 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc23-recent-files-rename-delete-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T09:28:52Z",
+  "source_commit": "1864893ea9c384f6f492ac0115faac8303289284",
+  "source_tree": {
+    "local_sha256": "a01897a2212cd17218a94f0f633987bae0068d3b2d58275b2445108b0c710888",
+    "local_paths": 238,
+    "hosted_report_paths": 239,
+    "hosted_report_sha256": {
+      "Linux": "f27ea2dfa0e88885316eb0c4499fa84a99c446140839532b400693544aa91176",
+      "macOS": "cb0598def06e6d062e64d4f0f90a520c1db22c7bf6f7f7d827286fc82ac37707",
+      "Windows": "73f8af014e24febaf329c4518f23d4d5212ede9c8f9bd2277a9ee5b046b32a97"
+    },
+    "report_note": "Each hosted workspace contains one transient redirected-output path beyond the clean local source-of-record digest; macOS and Windows report files retain the Electron download line before JSON. Loaded-workflow reports are retained as platform evidence, not as the canonical source digest."
+  },
+  "runs": {
+    "quality": {
+      "run_id": 34685572480,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": "success",
+        "macos-latest": "success",
+        "windows-latest": "success"
+      },
+      "tests": "210 tests across 61 files, 0 failures on each hosted platform",
+      "scope": "repository quality, contracts, tests, typecheck, compile, packaged Electron/vault checks, synthetic lifecycle, Knip and report-only Fallow health"
+    },
+    "desktop_build": {
+      "run_id": 34685572543,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": "success",
+        "macos-latest": "success",
+        "windows-latest": "success"
+      },
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "release_gate": "preview; unsigned-preview",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifacts": {
+        "Linux": {
+          "name": "openobsidian-Linux-preview-1864893ea9c384f6f492ac0115faac8303289284.zip",
+          "artifact_id": 10294773837,
+          "archive_bytes": 125946548,
+          "archive_sha256": "89d2776a9a7b04b6089a0a310560f5d6053801f50eb86855d6a4973d72e67b48",
+          "release_manifest_sha256": "b927203c5d981e91f48ba4bc22507b8bcdf53acb79836595f8c9b28d27f1a4fe"
+        },
+        "macOS": {
+          "name": "openobsidian-macOS-preview-1864893ea9c384f6f492ac0115faac8303289284.zip",
+          "artifact_id": 10295551403,
+          "archive_bytes": 397395487,
+          "archive_sha256": "e081093dc5185f039b09d741db36c404b54c55e414ed03bcaeec380412f1e43e",
+          "release_manifest_sha256": "a7ff5937e9af35b5c58e2e53ebcfaa7b5b45bd257303c4787b65c49b40bf881d"
+        },
+        "Windows": {
+          "name": "openobsidian-Windows-preview-1864893ea9c384f6f492ac0115faac8303289284.zip",
+          "artifact_id": 10295985611,
+          "archive_bytes": 163005824,
+          "archive_sha256": "ee4704bc453e22fca50ade048a90c47bc21237e72dd40e48d10e27fc5c2a3179",
+          "release_manifest_sha256": "bda6b620b5c78fc0d33712a469a19a10415b1f2b006490042d84e15ca2707a6f"
+        }
+      }
+    },
+    "loaded_workflows": {
+      "run_id": 34685572531,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": "success",
+        "macos-latest": "success",
+        "windows-latest": "success"
+      },
+      "reports": {
+        "Linux": {
+          "status": "passed",
+          "report_name": "loaded-plugin-workflows-Linux.json",
+          "report_bytes": 245519,
+          "report_sha256": "658975433498367a126a86a63db49698163bdbdc63f1a0d4b1b139b6327aecdd",
+          "artifact_name": "loaded-plugin-workflows-Linux-1864893ea9c384f6f492ac0115faac8303289284",
+          "artifact_id": 10294998491,
+          "artifact_archive_bytes": 11720,
+          "artifact_archive_sha256": "46faac196da5f83815f1a3f6aa9cef7b71613c875f8b3bf97d807c73c50dcd9e",
+          "source_tree_sha256": "f27ea2dfa0e88885316eb0c4499fa84a99c446140839532b400693544aa91176",
+          "pc23_action_status": "passed",
+          "pc23_stale_entries_removed": true,
+          "pc23_rename_entry_updated": true,
+          "pc23_delete_entry_removed": true,
+          "pc23_retained_entry_preserved": true,
+          "pc23_order_preserved": true,
+          "pc23_max_length_preserved": true,
+          "pc23_bounded_read_only": true,
+          "pc23_direct_vault_writes": 0,
+          "combination_action_status": "passed",
+          "all_bounded_traces_complete": true,
+          "vault_writes": 0
+        },
+        "macOS": {
+          "status": "passed",
+          "report_name": "loaded-plugin-workflows-macOS.json",
+          "report_bytes": 245553,
+          "report_sha256": "ecfd3de046e1ecd78670db6a8fce25e18fa0c18dcfa558614998b58c0d2061e5",
+          "artifact_name": "loaded-plugin-workflows-macOS-1864893ea9c384f6f492ac0115faac8303289284",
+          "artifact_id": 10295855853,
+          "artifact_archive_bytes": 11739,
+          "artifact_archive_sha256": "da971212d04bb0939d3cb063f6077541aea23d825316713ebbb72dce3a01b2a9",
+          "source_tree_sha256": "cb0598def06e6d062e64d4f0f90a520c1db22c7bf6f7f7d827286fc82ac37707",
+          "pc23_action_status": "passed",
+          "pc23_stale_entries_removed": true,
+          "pc23_rename_entry_updated": true,
+          "pc23_delete_entry_removed": true,
+          "pc23_retained_entry_preserved": true,
+          "pc23_order_preserved": true,
+          "pc23_max_length_preserved": true,
+          "pc23_bounded_read_only": true,
+          "pc23_direct_vault_writes": 0,
+          "combination_action_status": "passed",
+          "all_bounded_traces_complete": true,
+          "vault_writes": 0
+        },
+        "Windows": {
+          "status": "passed",
+          "report_name": "loaded-plugin-workflows-Windows.json",
+          "report_bytes": 245550,
+          "report_sha256": "3102d46f9e08b3a57c0b5d9f2a5a6d0cf0eee49c7a361bce9a22eb5494614f7a",
+          "artifact_name": "loaded-plugin-workflows-Windows-1864893ea9c384f6f492ac0115faac8303289284",
+          "artifact_id": 10295098481,
+          "artifact_archive_bytes": 11744,
+          "artifact_archive_sha256": "464ae9e85a307621d96b2d8f540e282a874bbfd5544c9cbf84f210a49af8f6a5",
+          "source_tree_sha256": "73f8af014e24febaf329c4518f23d4d5212ede9c8f9bd2277a9ee5b046b32a97",
+          "pc23_action_status": "passed",
+          "pc23_stale_entries_removed": true,
+          "pc23_rename_entry_updated": true,
+          "pc23_delete_entry_removed": true,
+          "pc23_retained_entry_preserved": true,
+          "pc23_order_preserved": true,
+          "pc23_max_length_preserved": true,
+          "pc23_bounded_read_only": true,
+          "pc23_direct_vault_writes": 0,
+          "combination_action_status": "passed",
+          "all_bounded_traces_complete": true,
+          "vault_writes": 0
+        }
+      },
+      "scope": "unchanged pinned main.js bytes in the context-isolated synthetic Electron renderer; no stock Obsidian, unchanged-plugin vault mutation, reference or human certification"
+    }
+  },
+  "security_disposition": "The PC23 recent-file seam is a bounded in-memory projection over mediated fixture files and records zero direct vault writes on every hosted platform. Direct vault writes, host DOM, filesystem/network/process/credential access and compatibility promotion remain denied or pending.",
+  "external_pending": [
+    "reference Obsidian Recent Files stale-entry, rename, delete and navigation comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "result": "Quality, preview desktop-build and loaded-workflow runs all succeeded on Ubuntu, macOS and Windows for 1864893. Hosted reports reproduce PC23 stale-entry removal, rename/basename update, delete removal, retained entry/order/maxLength preservation, mediated persistence, cleanup and zero vault writes across install/restart/update; desktop artifacts remain unsigned previews and no plugin or compatibility row is promoted."
+}
