@@ -13,6 +13,14 @@
       "summary": "Hardened the bounded worker for plugin-local app bindings, bounded vault configuration/theme seams and fail-closed CodeMirror action handling; fresh Linux audits preserve non-passed action records, zero vault writes and no compatibility promotion."
     },
     {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+      "tested_source_tree": "df0e8b5f7b7766a938382156d600c072d98b1f52c7b7dddb53358222dd555dbc",
+      "status": "partial",
+      "summary": "Quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows for c12072d; hosted reports remain partial with PC20 editor actions not-executed, PC22 lifecycle-partial, zero vault writes and no compatibility promotion."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],

@@ -1,0 +1,94 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-worker-hardening-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening.json",
+  "implementation_commit": "c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa",
+  "metadata_head": "c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa",
+  "source_tree": {
+    "sha256": "df0e8b5f7b7766a938382156d600c072d98b1f52c7b7dddb53358222dd555dbc",
+    "paths": 238,
+    "definition": "Clean local digest from bun run audit:source-tree; excludes .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "loaded_workflows": {
+    "workflow": "OpenObsidian loaded plugin workflows",
+    "run_id": 34673637543,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34673637543",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {
+        "job_id": 103499499598,
+        "conclusion": "success",
+        "recorded_status": "partial",
+        "artifact": "loaded-plugin-workflows-Linux-c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa",
+        "artifact_sha256": "f74b09f1277b9a9c45292d00ee5e80ca467a74ff9f7937d4dca286c738a1f1fb",
+        "audit_source_tree_sha256": "5de886ce98a45993659b28a0ef3d35e09d673cb2895a0582420603a22343bac8",
+        "audit_source_tree_paths": 239
+      },
+      "macos-latest": {
+        "job_id": 103499499590,
+        "conclusion": "success",
+        "recorded_status": "partial",
+        "artifact": "loaded-plugin-workflows-macOS-c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa",
+        "artifact_sha256": "cf0ee96132722f035330a7fca9035c662a226da70d926a5b6a2ab6d3f36f8417",
+        "audit_source_tree_sha256": "2da981c05ba1c46b9ea815f196b55b9e2f39e6cdef8e401326addad3776aa580",
+        "audit_source_tree_paths": 239
+      },
+      "windows-latest": {
+        "job_id": 103499499601,
+        "conclusion": "success",
+        "recorded_status": "partial",
+        "artifact": "loaded-plugin-workflows-Windows-c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa",
+        "artifact_sha256": "0f04eea6da63d1bc1a48f49f0376adbe60e405cef82acaaf89d8018d30858e8b",
+        "audit_source_tree_sha256": "58e972c6116e9699f0afd0d4059018521397ffba2c23aeae6282735f522053c3",
+        "audit_source_tree_paths": 239
+      }
+    },
+    "checks": {
+      "all_jobs_uploaded_evidence": true,
+      "all_jobs_partial": true,
+      "all_artifact_integrity_checked": true,
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": false,
+      "pc20_editor_actions_not_executed": true,
+      "non_passed_actions_retained": true,
+      "zero_vault_writes": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "quality": {
+    "workflow": "OpenObsidian quality",
+    "run_id": 34673637501,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34673637501",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103499499352, "conclusion": "success"},
+      "macos-latest": {"job_id": 103499499424, "conclusion": "success"},
+      "windows-latest": {"job_id": 103499499433, "conclusion": "success"}
+    },
+    "checks": "All Ubuntu, macOS and Windows quality jobs passed progress/contracts, tests, typecheck, compile, Electron vault round trip, synthetic plugin lifecycle, Knip and Fallow health; push-triggered changed-code Fallow review was skipped."
+  },
+  "desktop_build": {
+    "workflow": "OpenObsidian desktop build",
+    "run_id": 34673637504,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34673637504",
+    "conclusion": "success",
+    "jobs": {
+      "ubuntu-latest": {"job_id": 103499499437, "conclusion": "success", "artifact": "openobsidian-Linux-preview-c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa", "artifact_sha256": "4c92d300960bffc630497dae5c6eb0cf2ea8c62845caa2072986dc415fbec568"},
+      "macos-latest": {"job_id": 103499499297, "conclusion": "success", "artifact": "openobsidian-macOS-preview-c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa", "artifact_sha256": "40870cbe1fbaaeb2b6c9041b5b419ac4e98ee59da24f757bf066fee6b6c92fa6"},
+      "windows-latest": {"job_id": 103499499426, "conclusion": "success", "artifact": "openobsidian-Windows-preview-c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa", "artifact_sha256": "78a76d687f4334f4f99ebbd1281bf3211bf19dbcc5d6315b773b96129eee06e6"}
+    },
+    "checks": "All Ubuntu, macOS and Windows packaging, release-manifest, Electron runtime notice and dependency-attribution jobs passed; production signing was skipped and artifacts are unsigned previews."
+  },
+  "interpretation": "Hosted CI validates repository, synthetic lifecycle, packaging and cross-platform unchanged-artifact loaded-workflow infrastructure at implementation commit c12072d. Loaded-workflow reports remain partial rather than compatibility certification: PC20 editor actions are explicitly not-executed, PC22 remains lifecycle-partial, the shared combination does not prove persistence, and no plugin row is promoted.",
+  "limitations": [
+    "Hosted loaded-workflow reports execute unchanged pinned main.js bytes inside the hidden Electron context-isolated sandbox, not stock Obsidian; each per-job source digest contains one transient redirected output path (239 paths), while the clean local source digest is 238 paths.",
+    "Reference Obsidian settings, views and return behavior, same-user macOS/Windows OS enforcement, human accessibility/input, provider-backed behavior, signing, publication and updater installation/rollback remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows for implementation commit c12072d; loaded-plugin outcomes remain partial and pending-runtime with zero mediated vault writes and no compatibility promotion."
+}

@@ -20,19 +20,19 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-    "last_reconciled_head": "0dba624b84de471b36189329feaf2aff56bac5ba",
-  "updated_at": "2026-09-12T04:35:11Z",
+    "last_reconciled_head": "c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa",
+  "updated_at": "2026-09-12T04:44:49Z",
   "status": "active",
   "current_checkpoint": "P3.2",
-  "next_action": "Commit and push the bounded plugin-worker hardening, reconcile required Actions runs, and keep P3.2 partial until cross-platform/reference and human gates are available.",
-    "recent_increment": {"checkpoint":"P3.2","commit":null,"evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening.json","tested_source_tree":"df0e8b5f7b7766a938382156d600c072d98b1f52c7b7dddb53358222dd555dbc","ci_evidence":null,"ci_runs":null,"quality_rerun":false},
+  "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
+    "recent_increment": {"checkpoint":"P3.2","commit":"c12072d1889b93c8c0c7f9f3f2fcd0bb393351aa","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening.json","tested_source_tree":"df0e8b5f7b7766a938382156d600c072d98b1f52c7b7dddb53358222dd555dbc","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening-ci.json","ci_runs":[34673637501,34673637504,34673637543],"quality_rerun":true},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
     "commit_marker": "[openobsidian P3.2 work] Harden bounded plugin workflow execution",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening.json",
     "tested_source_tree": "df0e8b5f7b7766a938382156d600c072d98b1f52c7b7dddb53358222dd555dbc",
-    "next_action": "Commit and push this work slice, inspect required Actions runs, then retain action, persistence, cross-platform, reference and human limitations explicitly."
+    "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
