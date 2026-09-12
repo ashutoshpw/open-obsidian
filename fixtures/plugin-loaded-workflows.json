@@ -87,7 +87,7 @@
       },
       "active_file": "Notes/Outline.md",
       "files": [
-        {"path": "Notes/Outline.md", "content": "- Parent\n  - Child\n"}
+        {"path": "Notes/Outline.md", "content": "- First\n  - First child\n- Parent\n  - Child\n- Last\n"}
       ]
     },
     "PC22": {

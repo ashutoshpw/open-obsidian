@@ -96,3 +96,26 @@ test("renderer wrapper permits plugin-local app bindings", () => {
   expect(() => pluginLocalApp(module, module.exports, ...formalNames.slice(2).map(() => undefined))).not.toThrow();
   expect(module.exports).toEqual({name: "plugin-local"});
 });
+
+test("PC20 fixture and bounded editor trace cover mutation history and folding", () => {
+  const pc20 = fixture.scenarios.PC20;
+  expect(pc20.files).toContainEqual({
+    path: "Notes/Outline.md",
+    content: "- First\n  - First child\n- Parent\n  - Child\n- Last\n",
+  });
+  expect(rendererWorker).toContain("const history = [];");
+  expect(rendererWorker).toContain("const redoHistory = [];");
+  expect(rendererWorker).toContain("dispatch(transaction = {})");
+  expect(rendererWorker).toContain("foldedRanges()");
+  expect(rendererWorker).toContain("foldEffect: {of(value) { return {type: \"fold\", range: value}; }}");
+  expect(rendererWorker).toContain("unfoldEffect: {of(value) { return {type: \"unfold\", range: value}; }}");
+  expect(rendererWorker).toContain("canUndo() { return history.length > 0; }");
+  expect(rendererWorker).toContain("canRedo() { return redoHistory.length > 0; }");
+  expect(rendererWorker).toContain("editorSnapshot() { return snapshot(); }");
+  expect(rendererWorker).toContain("while (pluginApp.editor.canUndo()) pluginApp.editor.undo();");
+  expect(loadedWorkflowAudit).toContain("undo_restores_prior_bytes");
+  expect(loadedWorkflowAudit).toContain("redo_restores_command_bytes");
+  expect(loadedWorkflowAudit).toContain("folding_round_trip");
+  expect(loadedWorkflowAudit).toContain("phase_editor_round_trip");
+  expect(loadedWorkflowAudit).toContain("editor_checks: editor");
+});

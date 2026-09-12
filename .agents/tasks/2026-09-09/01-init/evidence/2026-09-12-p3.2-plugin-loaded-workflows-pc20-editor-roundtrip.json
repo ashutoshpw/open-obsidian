@@ -1,0 +1,119 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc20-editor-roundtrip",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC20"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T06:50:15.098Z",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "30f93d3a84d25dbd0dc5598fb51bfe85eb7fe4c7",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "30f93d3a84d25dbd0dc5598fb51bfe85eb7fe4c7",
+    "sha256": "9d3d95a3a6e61be011642b25ebc30eb8e498e0d5feddc268e5acdbffe8324cac",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seam": "Extended the finite in-memory CodeMirror-compatible adapter with bounded editor history/redo, replaceRange mutation snapshots, CodeMirror foldable/foldedRanges state, dispatch fold effects and phase cleanup back to the initial editor snapshot.",
+    "security_disposition": "The adapter mutates only the synthetic editor buffer; direct vault writes, filesystem/network/process/credential paths and privileged DOM remain denied."
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "combination": {"id": "combination:pc07-pc21-pc23", "target_ids": ["PC07", "PC21", "PC23"]},
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "pc20": {
+      "name": "Outliner",
+      "version": "4.10.2",
+      "main_js_sha256": "3d5bc634d3045ead4df9747d07ab51f16d9722f4601f9fee27e0c7fe9828fb33",
+      "integrity": "passed",
+      "bounded_lifecycle": "complete",
+      "phases": ["install", "restart", "update"],
+      "commands": [
+        "system-info",
+        "move-list-item-up",
+        "move-list-item-down",
+        "indent-list",
+        "outdent-list",
+        "fold",
+        "unfold"
+      ],
+      "editor_semantics": {
+        "editor_callbacks_per_phase": 6,
+        "editor_actions_passed": true,
+        "hierarchy_mutation_observed": true,
+        "replace_range_operations_per_phase": 3,
+        "undo_restores_prior_bytes": true,
+        "redo_restores_command_bytes": true,
+        "folding_round_trip": true,
+        "folded_range_observed": {"from": 26, "to": 42, "line": 2},
+        "phase_editor_round_trip": true,
+        "final_folded_ranges_per_phase": [],
+        "initial_and_final_value": "- First\n  - First child\n- Parent\n  - Child\n- Last\n"
+      },
+      "persistence": "preserved via mediated-plugin-data-store",
+      "restart_restores_persisted_data": true,
+      "update_restores_persisted_data": true,
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination_result": {
+      "bounded_lifecycle": "complete",
+      "persistence": "not-proven",
+      "action_status": "partial",
+      "vault_writes": 0
+    },
+    "no_plugin_promoted": true
+  },
+  "regression_validation": {
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
+    "focused_result": "passed; 3 tests, 103 expectations",
+    "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
+    "syntax_result": "passed",
+    "repository_check": "bun run check:fast passed; 207 tests, 1179 expectations",
+    "typecheck": "bun run typecheck passed",
+    "diff_check": "git diff --check passed"
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "CodeMirror and reference Obsidian hierarchy/undo parity",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "provider-backed behavior, signed release and updater installation/rollback"
+  ],
+  "limitation": "This is Linux x64 Electron renderer-boundary evidence using unchanged pinned Outliner bytes. The adapter exercises bounded callbacks against a synthetic editor buffer; it does not certify CodeMirror parity, reference Obsidian behavior, cross-platform behavior, human behavior or compatibility promotion."
+}

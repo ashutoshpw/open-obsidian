@@ -105,6 +105,26 @@ function actionFailures(workflow: JsonRecord): JsonRecord[] {
   });
 }
 
+function editorChecks(workflow: JsonRecord): JsonRecord {
+  const phases = phaseRecords(workflow);
+  const commands = phases.flatMap((phase) => records(asRecord(phase.actions)?.commands));
+  const editorActions = commands.filter((action) => string(action.callbackKind) === "editorCallback");
+  const mutatedActions = editorActions.filter((action) => asRecord(action.editor)?.mutated === true);
+  const editorPhases = phases.map((phase) => asRecord(phase.editor)).filter((editor): editor is JsonRecord => editor !== null);
+  const replacements = editorPhases.flatMap((editor) => records(editor.operations)).filter((operation) => string(operation.operation) === "replaceRange");
+  const foldOperations = editorPhases.flatMap((editor) => records(editor.operations)).filter((operation) => string(operation.operation) === "fold");
+  const unfoldOperations = editorPhases.flatMap((editor) => records(editor.operations)).filter((operation) => string(operation.operation) === "unfold");
+  return {
+    editor_callbacks: editorActions.length > 0,
+    editor_actions_passed: editorActions.every((action) => action.status === "passed"),
+    hierarchy_mutation_observed: replacements.length > 0,
+    undo_restores_prior_bytes: mutatedActions.length > 0 && mutatedActions.every((action) => asRecord(action.editor)?.undoRestored === true),
+    redo_restores_command_bytes: mutatedActions.length > 0 && mutatedActions.every((action) => asRecord(action.editor)?.redoRestored === true),
+    folding_round_trip: foldOperations.length > 0 && unfoldOperations.length > 0 && editorPhases.every((editor) => records(editor.finalFoldedRanges).length === 0),
+    phase_editor_round_trip: editorPhases.length === phases.length && editorPhases.every((editor) => string(editor.initialValue) === string(editor.finalValue) && records(editor.finalFoldedRanges).length === 0),
+  };
+}
+
 function combinationTargetIds(): string[] {
   const combination = asRecord(fixture.combination);
   return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
@@ -186,6 +206,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const checks = workflowChecks(result);
       const workflow = asRecord(result.workflow) ?? {};
       const failures = actionFailures(workflow);
+      const editor = editorChecks(workflow);
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -206,6 +227,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         persistence_source: persistenceSource,
         action_status: failures.length === 0 ? "passed" : "partial",
         action_failures: failures,
+        editor_checks: editor,
         disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -221,6 +243,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
     const combinationChecks = workflowChecks(combinationResult);
     const combinationWorkflow = asRecord(combinationResult.workflow) ?? {};
     const combinationActionFailures = actionFailures(combinationWorkflow);
+    const combinationEditor = editorChecks(combinationWorkflow);
     const artifactLifecyclesComplete = artifactResults.every((entry) => entry.bounded_lifecycle === "complete");
     const combinationLifecycleComplete = checksPass(combinationChecks, boundedLifecycleChecks);
     const artifactChecksComplete = artifactResults.every((entry) => checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed");
@@ -252,6 +275,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
             : "not-proven",
         action_status: combinationActionFailures.length === 0 ? "passed" : "partial",
         action_failures: combinationActionFailures,
+        editor_checks: combinationEditor,
         disposition: "bounded-combination-evidence-pending-runtime",
       },
       checks: {

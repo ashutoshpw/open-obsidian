@@ -319,7 +319,10 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
   let value = typeof activeEntry.content === "string" ? activeEntry.content : "";
   let cursor = {line: 0, ch: 0};
   let selections = [{anchor: {...cursor}, head: {...cursor}}];
-  const foldedLines = new Set();
+  const foldedRanges = new Map();
+  const history = [];
+  const redoHistory = [];
+  let restoring = false;
   if (!Array.isArray(metrics.editorOperations)) metrics.editorOperations = [];
 
   function lines() {
@@ -352,6 +355,97 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
     return {line: lastLine, ch: currentLines[lastLine].length};
   }
 
+  function cloneSelections() {
+    return selections.map((selection) => ({anchor: {...selection.anchor}, head: {...selection.head}}));
+  }
+
+  function snapshot() {
+    return {
+      value,
+      cursor: {...cursor},
+      selections: cloneSelections(),
+      foldedRanges: [...foldedRanges.values()].map((range) => ({...range})),
+    };
+  }
+
+  function restore(state) {
+    if (!state || typeof state !== "object") return;
+    restoring = true;
+    value = typeof state.value === "string" ? state.value : "";
+    cursor = normalizePosition(state.cursor);
+    selections = Array.isArray(state.selections) && state.selections.length > 0
+      ? state.selections.map((selection) => ({
+        anchor: normalizePosition(selection?.anchor ?? cursor),
+        head: normalizePosition(selection?.head ?? cursor),
+      }))
+      : [{anchor: {...cursor}, head: {...cursor}}];
+    foldedRanges.clear();
+    for (const range of Array.isArray(state.foldedRanges) ? state.foldedRanges : []) {
+      if (Number.isFinite(range?.from) && Number.isFinite(range?.to) && range.to > range.from) {
+        foldedRanges.set(`${range.from}:${range.to}`, {from: Math.trunc(range.from), to: Math.trunc(range.to)});
+      }
+    }
+    restoring = false;
+  }
+
+  function rememberHistory() {
+    if (restoring) return;
+    history.push(snapshot());
+    if (history.length > 128) history.shift();
+    redoHistory.length = 0;
+  }
+
+  function rangeKey(range) {
+    return `${Math.trunc(range.from)}:${Math.trunc(range.to)}`;
+  }
+
+  function currentFoldedRanges() {
+    return [...foldedRanges.values()].sort((left, right) => left.from - right.from || left.to - right.to);
+  }
+
+  function foldableRange(from, to) {
+    const start = offsetToPosition(from);
+    const currentLines = lines();
+    const lineValue = currentLines[start.line] ?? "";
+    const baseIndent = (lineValue.match(/^[ \t]*/) || [""])[0].length;
+    let lastDescendant = start.line;
+    for (let line = start.line + 1; line < currentLines.length; line += 1) {
+      const candidate = currentLines[line] ?? "";
+      if (candidate.trim() === "") {
+        lastDescendant = line;
+        continue;
+      }
+      const indent = (candidate.match(/^[ \t]*/) || [""])[0].length;
+      if (indent <= baseIndent) break;
+      lastDescendant = line;
+    }
+    if (lastDescendant === start.line) return null;
+    const range = {
+      from: positionToOffset({line: start.line, ch: lineValue.length}),
+      to: positionToOffset({line: lastDescendant, ch: currentLines[lastDescendant].length}),
+    };
+    return range.to > range.from ? range : null;
+  }
+
+  function applyFold(range, folded) {
+    if (!range || !Number.isFinite(range.from) || !Number.isFinite(range.to) || range.to <= range.from) return false;
+    const normalized = {from: Math.trunc(range.from), to: Math.trunc(range.to)};
+    if (folded) {
+      const key = rangeKey(normalized);
+      if (foldedRanges.has(key)) return false;
+      rememberHistory();
+      foldedRanges.set(key, normalized);
+      record("fold", {from: normalized.from, to: normalized.to, line: offsetToPosition(normalized.from).line});
+      return true;
+    }
+    const match = currentFoldedRanges().find((candidate) => candidate.from <= normalized.to && candidate.to >= normalized.from);
+    if (!match) return false;
+    rememberHistory();
+    foldedRanges.delete(rangeKey(match));
+    record("unfold", {from: match.from, to: match.to, line: offsetToPosition(match.from).line});
+    return true;
+  }
+
   function record(operation, details = {}) {
     metrics.editorOperations.push({operation, ...details});
   }
@@ -359,6 +453,14 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
   const firstListLine = lines().findIndex((line) => /^\s*(?:[-*+] |\d+\. )/.test(line));
   cursor = normalizePosition({line: firstListLine >= 0 ? firstListLine : 0, ch: firstListLine >= 0 ? 2 : 0});
   selections = [{anchor: {...cursor}, head: {...cursor}}];
+
+  function dispatch(transaction = {}) {
+    const effects = Array.isArray(transaction.effects) ? transaction.effects : transaction.effects ? [transaction.effects] : [];
+    for (const effect of effects) {
+      if (effect?.type === "fold") applyFold(effect.range, true);
+      if (effect?.type === "unfold") applyFold(effect.range, false);
+    }
+  }
 
   const editor = {
     cm: {
@@ -375,7 +477,7 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
         const normalized = offsetToPosition(typeof position === "number" ? position : 0);
         return {from: positionToOffset({line: normalized.line, ch: 0}), to: positionToOffset({line: normalized.line, ch: lines()[normalized.line].length})};
       },
-      dispatch() {},
+      dispatch,
     },
     getCursor() { return {...cursor}; },
     setCursor(position) {
@@ -406,12 +508,14 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
       const lower = Math.min(start, end);
       const upper = Math.max(start, end);
       const text = typeof replacement === "string" ? replacement : String(replacement ?? "");
+      rememberHistory();
       value = `${value.slice(0, lower)}${text}${value.slice(upper)}`;
       cursor = offsetToPosition(lower + text.length);
       selections = [{anchor: {...cursor}, head: {...cursor}}];
       record("replaceRange", {from: normalizePosition(from), to: normalizePosition(to), bytes: text.length});
     },
     setValue(text) {
+      rememberHistory();
       value = typeof text === "string" ? text : String(text ?? "");
       cursor = normalizePosition(cursor);
       selections = [{anchor: {...cursor}, head: {...cursor}}];
@@ -421,18 +525,59 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
     offsetToPos(offset) { return offsetToPosition(offset); },
     posToOffset(position) { return positionToOffset(position); },
     fold(line) {
-      foldedLines.add(Number(line));
-      record("fold", {line: Number(line)});
+      const number = Math.max(0, Math.trunc(Number(line) || 0));
+      applyFold(foldableRange(positionToOffset({line: number, ch: 0}), positionToOffset({line: number, ch: lines()[number]?.length ?? 0})), true);
     },
     unfold(line) {
-      foldedLines.delete(Number(line));
-      record("unfold", {line: Number(line)});
+      const number = Math.max(0, Math.trunc(Number(line) || 0));
+      const range = currentFoldedRanges().find((candidate) => offsetToPosition(candidate.from).line === number);
+      if (range) applyFold(range, false);
     },
-    getAllFoldedLines() { return [...foldedLines].sort((left, right) => left - right); },
+    getAllFoldedLines() { return currentFoldedRanges().map((range) => offsetToPosition(range.from).line); },
+    undo() {
+      const previous = history.pop();
+      if (!previous) return false;
+      redoHistory.push(snapshot());
+      restore(previous);
+      record("undo", {bytes: value.length});
+      return true;
+    },
+    redo() {
+      const next = redoHistory.pop();
+      if (!next) return false;
+      history.push(snapshot());
+      restore(next);
+      record("redo", {bytes: value.length});
+      return true;
+    },
+    canUndo() { return history.length > 0; },
+    canRedo() { return redoHistory.length > 0; },
+    editorSnapshot() { return snapshot(); },
     getZoomRange() { return null; },
     zoomOut() {},
     zoomIn() {},
     tryRefreshZoom() {},
+  };
+  metrics.editorState = {
+    foldable: foldableRange,
+    foldedRanges() {
+      const ranges = currentFoldedRanges();
+      return {
+        iter() {
+          let index = 0;
+          return {
+            get value() { return ranges[index] ?? null; },
+            get from() { return ranges[index]?.from; },
+            next() { index += 1; },
+          };
+        },
+        between(from, to, callback) {
+          for (const range of ranges) {
+            if (range.from <= to && range.to >= from && typeof callback === "function") callback(range.from, range.to);
+          }
+        },
+      };
+    },
   };
   return editor;
 }
@@ -828,7 +973,7 @@ function pluginApiSummary(pluginApp) {
   };
 }
 
-function createSafeRequire(capabilities, requiredModules) {
+function createSafeRequire(capabilities, requiredModules, metrics = {}) {
   const obsidian = createObsidianApi();
   const safeModulePattern = /^(?:@codemirror\/|@lezer\/|codemirror$|luxon$|moment$|svelte(?:\/|$)|yaml$)/;
   return function safeRequire(specifier) {
@@ -839,11 +984,12 @@ function createSafeRequire(capabilities, requiredModules) {
         iter() { return {value: null, next() {}}; },
         between() {},
       };
+      const editorState = () => metrics.editorState;
       return {
-        foldable() { return null; },
-        foldedRanges() { return emptyRanges; },
-        foldEffect: {of(value) { return value;}},
-        unfoldEffect: {of(value) { return value;}},
+        foldable(_state, from, to) { return editorState()?.foldable(from, to) ?? null; },
+        foldedRanges() { return editorState()?.foldedRanges() ?? emptyRanges; },
+        foldEffect: {of(value) { return {type: "fold", range: value}; }},
+        unfoldEffect: {of(value) { return {type: "unfold", range: value}; }},
         getIndentUnit() { return 4; },
         indentString() { return "    "; },
       };
@@ -878,7 +1024,7 @@ function createEvaluationArguments(capabilities, requiredModules, runtime = {}) 
     }
     : deniedFunction(capabilities, "resource.unbounded");
   return [
-    createSafeRequire(capabilities, requiredModules),
+    createSafeRequire(capabilities, requiredModules, runtime.metrics),
     safeDocumentObject(capabilities, runtime.allowSyntheticDocument === true),
     safeWindow,
     safeWindow,
@@ -1034,9 +1180,33 @@ async function configureSyntheticSmartEnvironment(runtime) {
 async function exerciseRegistrations(pluginApp) {
   const actions = {commands: [], views: [], settings: []};
   for (const command of pluginApp.commandHandlers) {
+    const editorBefore = command.callbackKind === "editorCallback" ? pluginApp.editor.editorSnapshot() : null;
     try {
       await awaitAction(command.callback.call(command.owner, pluginApp.editor));
-      actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "passed"});
+      const action = {id: command.id, callbackKind: command.callbackKind, status: "passed"};
+      if (editorBefore) {
+        const editorAfter = pluginApp.editor.editorSnapshot();
+        const mutated = editorBefore.value !== editorAfter.value || JSON.stringify(editorBefore.foldedRanges) !== JSON.stringify(editorAfter.foldedRanges);
+        const editorResult = {
+          mutated,
+          before: editorBefore.value,
+          after: editorAfter.value,
+          foldedBefore: editorBefore.foldedRanges,
+          foldedAfter: editorAfter.foldedRanges,
+          undoRestored: null,
+          redoRestored: null,
+        };
+        if (mutated) {
+          const undone = pluginApp.editor.undo();
+          const afterUndo = pluginApp.editor.editorSnapshot();
+          editorResult.undoRestored = undone && afterUndo.value === editorBefore.value && JSON.stringify(afterUndo.foldedRanges) === JSON.stringify(editorBefore.foldedRanges);
+          const redone = pluginApp.editor.redo();
+          const afterRedo = pluginApp.editor.editorSnapshot();
+          editorResult.redoRestored = redone && afterRedo.value === editorAfter.value && JSON.stringify(afterRedo.foldedRanges) === JSON.stringify(editorAfter.foldedRanges);
+        }
+        action.editor = editorResult;
+      }
+      actions.commands.push(action);
     } catch (error) {
       actions.commands.push({id: command.id, callbackKind: command.callbackKind, status: "failed", error: actionError(error)});
     }
@@ -1086,7 +1256,11 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   const events = ["constructed"];
   await lifecycleCall(instance, "onload", events);
   await configureSyntheticSmartEnvironment(runtime);
+  const editorBefore = pluginApp.editor.editorSnapshot();
+  const operationStart = Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.length : 0;
   const actions = await exerciseRegistrations(pluginApp);
+  while (pluginApp.editor.canUndo()) pluginApp.editor.undo();
+  const editorAfter = pluginApp.editor.editorSnapshot();
   await lifecycleCall(instance, "onunload", events);
   const registered = {
     commands: [...pluginApp.commands],
@@ -1105,6 +1279,13 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     storage: storageSnapshot(runtime.storage),
     registered,
     actions,
+    editor: {
+      initialValue: editorBefore.value,
+      finalValue: editorAfter.value,
+      initialFoldedRanges: editorBefore.foldedRanges,
+      finalFoldedRanges: editorAfter.foldedRanges,
+      operations: Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.slice(operationStart) : [],
+    },
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -1144,7 +1325,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
   try {
     const dataStore = {value: cloneData(workflowConfig.initial_data), writes: 0};
     const initialApp = createPluginApp([], dataStore, workflowContext, deniedCapabilities);
-    const runtime = {app: initialApp, allowSyntheticDocument: true, storage: new Map()};
+    const runtime = {app: initialApp, allowSyntheticDocument: true, storage: new Map(), metrics};
     const evaluatePhase = () => evaluateSource(source, deniedCapabilities, requiredModules, runtime);
     const module = evaluatePhase();
     workflow.supported = true;

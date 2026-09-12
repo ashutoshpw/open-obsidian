@@ -21,18 +21,18 @@
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
     "last_reconciled_head": "c77b3b7c65dac6d5c5ba6c3a4914d5a85758f9d8",
-  "updated_at": "2026-09-12T06:36:25Z",
+  "updated_at": "2026-09-12T06:50:15Z",
   "status": "active",
   "current_checkpoint": "P3.2",
-  "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
+  "next_action": "Commit the bounded PC20 editor semantic-compatibility slice, push main, reconcile hosted quality/desktop-build/loaded-workflow runs, and retain all synthetic/reference limitations explicitly.",
     "recent_increment": {"checkpoint":"P3.2","commit":"c77b3b7c65dac6d5c5ba6c3a4914d5a85758f9d8","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor.json","tested_source_tree":"17a30eef69335470eab17b56394f11dc026143613d9c9f9864ad3d56b0ba75dc","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor-ci.json","ci_runs":{"quality":34678234266,"desktop_build":34678234302,"loaded_workflows":34678234279},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Add bounded CodeMirror editor adapter",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor.json",
-    "tested_source_tree": "17a30eef69335470eab17b56394f11dc026143613d9c9f9864ad3d56b0ba75dc",
-    "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly."
+    "commit_marker": "[openobsidian P3.2 work] Strengthen bounded PC20 editor semantics",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc20-editor-roundtrip.json",
+    "tested_source_tree": "9d3d95a3a6e61be011642b25ebc30eb8e498e0d5feddc268e5acdbffe8324cac",
+    "next_action": "Commit the bounded PC20 editor semantic-compatibility slice, push main, reconcile hosted quality/desktop-build/loaded-workflow runs, and retain all synthetic/reference limitations explicitly."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
