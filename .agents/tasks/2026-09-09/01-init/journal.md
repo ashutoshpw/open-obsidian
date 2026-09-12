@@ -1426,6 +1426,16 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the CI evidence to the requirements and state metadata. Reference Obsidian stale-entry/rename/delete behavior, same-user platform enforcement, human validation, required combinations, signing, publication and updater validation remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - P3.2 and the overall goal remain active. No plugin or compatibility row was promoted; the bounded renderer evidence remains synthetic and does not certify stock Obsidian or reference parity.
 
+## 2026-09-12T11:20:00Z — P3.2 hosted PC19 TaskNotes reconciliation
+
+- Reconciled pushed head `51f95627882d8090c7d450acc9afb243b4a3bd90` with successful quality run `34689995288`, preview desktop-build run `34689995240` and loaded-workflow run `34689995255`; Ubuntu, macOS and Windows jobs passed across all three workflows.
+- Hosted loaded-workflow reports reproduce unchanged TaskNotes 4.12.5 integrity (`5,233,350` bytes; SHA-256 `7f82b6bbffe5ff4b03c6b1581aa193f1204cd5970700ef9641f095e0c277bc4e`), loaded renderer status, 36/36 registered command callbacks, settings display, bounded install/restart/update lifecycle cleanup and zero direct vault writes on all three platforms. Mediated plugin persistence and scoped/persisted data checks pass; the aggregate update data-restoration check remains false.
+- The two detached view actions fail consistently in every hosted phase/platform: `tasknotes-pomodoro-stats-view` reaches the bounded 1000ms timeout and `tasknotes-release-notes` raises `Cannot convert object to primitive value`. PC19 and the overall loaded-workflow reports therefore remain `partial`.
+- Desktop packaging, release-manifest, runtime-notice, dependency-attribution and artifact-upload checks passed on all three platforms. Production signing remained skipped (`RELEASE_SIGNING_CONFIGURED=false`), so the recorded platform artifacts are unsigned previews; exact loaded-report, loaded-artifact, desktop-artifact and release-manifest hashes are recorded in `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes-ci.json`.
+- Hosted source workspaces contain one transient redirected-output path (239 paths) versus the clean local 238-path source-of-record digest. Linux loaded JSON parses directly; macOS and Windows report downloads retain the leading Electron download line before JSON, which is documented and stripped only for parsing.
+- Added and linked the hosted CI evidence to requirements and state metadata. Reference Obsidian TaskNotes/Bases/calendar and lossless-writer behavior, same-user OS enforcement, human accessibility/input, required combinations, provider behavior, signing, publication, updater validation and compatibility promotion remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- No plugin or compatibility row was promoted; P3.2 and the overall goal remain active and this remains bounded synthetic renderer evidence only.
+
 ## 2026-09-12T11:00:00Z — P3.2 bounded PC19 TaskNotes workflow
 
 - Added PC19 TaskNotes to the loaded-workflow fixture with a note-backed task, YAML task metadata and Tasks/Calendar Bases mappings. The selected `/home/ashutosh/Obsidian` vault was not accessed.

@@ -20,38 +20,38 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
-  "updated_at": "2026-09-12T11:00:00Z",
+  "last_reconciled_head": "51f95627882d8090c7d450acc9afb243b4a3bd90",
+  "updated_at": "2026-09-12T11:20:00Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Keep PC19, PC25 and P3.2 pending; continue reference Obsidian, same-user cross-platform, human, signing, publication, updater, provider and required-combination validation without promoting plugin compatibility.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"637138c7e24bfaf60c97e20cc35b52b4992cd959","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes.json","tested_source_tree":"11644c9fef3082db02774a9de4e69f260f8c1bb3a938db0d34b306c4f9126db3","ci_evidence":null,"ci_runs":null,"quality_rerun":false},
+    "recent_increment": {"checkpoint":"P3.2","commit":"51f95627882d8090c7d450acc9afb243b4a3bd90","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes.json","tested_source_tree":"11644c9fef3082db02774a9de4e69f260f8c1bb3a938db0d34b306c4f9126db3","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes-ci.json","ci_runs":{"quality":34689995288,"desktop_build":34689995240,"loaded_workflows":34689995255},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
     "commit_marker": "[openobsidian P3.2 work] Add bounded PC19 TaskNotes workflow",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes.json",
     "tested_source_tree": "11644c9fef3082db02774a9de4e69f260f8c1bb3a938db0d34b306c4f9126db3",
-    "next_action": "Commit and push the PC19 bounded workflow and renderer seam hardening, reconcile quality/desktop-build/loaded-workflow matrices, then continue PC19/PC25 reference and compatibility validation without promotion.",
+    "next_action": "Keep PC19, PC25 and P3.2 pending; continue PC19/PC25 reference, same-user cross-platform, human, signing, publication, updater, provider and required-combination validation without promoting plugin compatibility.",
     "hosted_reconciliation": {
-      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc25-linter-ci.json",
-      "runs": {"quality": 34688613788, "desktop_build": 34688613783, "loaded_workflows": 34688613769},
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes-ci.json",
+      "runs": {"quality": 34689995288, "desktop_build": 34689995240, "loaded_workflows": 34689995255},
       "platforms": ["Ubuntu", "macOS", "Windows"],
       "status": "partial",
       "signing": "skipped",
       "no_plugin_promoted": true,
-      "desktop_artifact_hashes": {"Linux":"2c8c76772978cf0b1a526a48296f152adb89ce4dcaaed6e9f7396f2a8c81a117","macOS":"af573c9fb7a77b0aaacea3f226f95804a757c8c0f4c49c41310feba8b1cb46c5","Windows":"de60807a8fec05fedec1421b6272e3557ce3c3a40deb9d59335dda7690d82b14"},
-      "loaded_report_hashes": {"Linux":"11a65c189c000999f9eb504ae41b5a61e6d272d1a4379174b855077886ef54c7","macOS":"947d414c1aff7c65d26bf5f985840f484c87bdd003eed7956f2bae86978956e6","Windows":"90765492854122f228f312b3fd14bb754f6547d7d6597c086a4d652693cd9e8c"},
-      "pc25": {"renderer_status":"D15 denied at window.navigator on all three hosted platforms","workflow_projection":"passed across install/restart/update","explicit_command":"lint-file","first_open_noop":true,"lint_on_save_matches":true,"only_expected_target_affected":true,"vault_writes":0}
+      "desktop_artifact_hashes": {"Linux":"a985a4f815161ff9151d3c92b3350b547689b126ddb305f60a7a8855936b2e33","macOS":"f1420788e692b86bd90fb396c3ff4ae2c4e7c56538ae0785ee33db44731aacc0","Windows":"7c8ca88fb9dcc0a1ed5ab4bde2972cd0f0090bfac72183b97b4c9cc936a1c760"},
+      "loaded_report_hashes": {"Linux":"e6d3452e7ad18ab8f60db7dbcebaab9af215041857c0154ab00da01de6544c47","macOS":"46c4cc29b3fbd2e3343afefd50723119d83a2d68c7899faf31ee03c0d2244e40","Windows":"e73cc23efd6fb1a60bc63144e49a2a41fd7729ed97df9f1e8d157984b94ee463"},
+      "pc19": {"renderer_status":"loaded on Linux, macOS and Windows","workflow_status":"partial across install/restart/update","registered_commands":36,"command_failures":0,"settings_displayed":true,"view_failures":["tasknotes-pomodoro-stats-view: bounded action timeout after 1000ms","tasknotes-release-notes: Cannot convert object to primitive value"],"aggregate_update_restores_data":false,"scoped_and_persisted_data_checks":true,"vault_writes":0}
     }
   },
   "latest_reconciliation": {
     "checkpoint": "P3.2",
-    "commit": "4dcd4b137d79e8fc0eb80e0ab73adb03618c1384",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc25-linter-ci.json",
-    "runs": {"quality": 34688613788, "desktop_build": 34688613783, "loaded_workflows": 34688613769},
+    "commit": "51f95627882d8090c7d450acc9afb243b4a3bd90",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes-ci.json",
+    "runs": {"quality": 34689995288, "desktop_build": 34689995240, "loaded_workflows": 34689995255},
     "status": "partial",
-    "next_action": "Keep PC25 and P3.2 pending; continue reference Obsidian, same-user cross-platform, human, signing, publication, updater, provider and required-combination validation without promoting plugin compatibility."
+    "next_action": "Keep PC19, PC25 and P3.2 pending; continue reference Obsidian, same-user cross-platform, human, signing, publication, updater, provider and required-combination validation without promoting plugin compatibility."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
