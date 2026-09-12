@@ -20,19 +20,19 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e",
-  "updated_at": "2026-09-12T14:23:49Z",
+  "last_reconciled_head": "469a5381bd069224c528aa627b78aa2f3905546d",
+  "updated_at": "2026-09-12T14:47:00Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the earliest remaining P3.2 implementation slice without promoting plugin compatibility.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations.json","tested_source_tree":"692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae445ee4ada","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations-ci.json","ci_runs":{"renderer_matrix":34698467133,"quality":34698467112,"desktop_build":34698467114,"loaded_workflows":34698467125},"quality_rerun":false},
+    "recent_increment": {"checkpoint":"P3.2","commit":"469a5381bd069224c528aa627b78aa2f3905546d","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json","tested_source_tree":"90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432","quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Cover required plugin combinations",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations.json",
-    "tested_source_tree": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae445ee4ada",
-    "next_action": "Keep PC07, PC08, PC17, PC19, PC21, PC23, PLUG-002..005 and P3.2 pending/non-certified; continue reference, same-user OS, human, provider, signing, publication, updater and remaining combination validation without promoting compatibility.",
+    "commit_marker": "[openobsidian P3.2 work] Audit catalog plugin combinations",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json",
+    "tested_source_tree": "90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432",
+    "next_action": "Keep all seven catalog combinations, PC07, PC08, PC17, PC19, PC21, PC23, PLUG-002..005 and P3.2 pending/non-certified; continue reference, same-user OS, human, provider, signing, publication and updater validation without promoting compatibility.",
     "hosted_reconciliation": {
       "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations-ci.json",
       "runs": {"renderer_matrix": 34698467133, "quality": 34698467112, "desktop_build": 34698467114, "loaded_workflows": 34698467125},
@@ -47,16 +47,30 @@
       "required_combinations":["PC07 + PC21 + PC23","PC08 + PC17 + PC-DEP-MINIMAL","PC19 + Bases"],
       "combination_status":"all three bounded synthetic combinations passed lifecycle, actions, persistence, dependency integrity and zero-vault-write checks on Ubuntu, macOS and Windows",
       "pc19": {"renderer_status":"loaded on Ubuntu, macOS and Windows","workflow_status":"passed bounded install/restart/update lifecycle and actions","registered_commands":36,"command_failures":0,"settings_displayed":true,"view_failures":[],"task_projection":"revision match, stale rejection, status/checkbox update and unrelated-byte preservation pass in all three phases","scoped_and_persisted_data_checks":true,"vault_writes":0,"registrations_before_cleanup":4,"registrations_after_cleanup":0}
+    },
+    "combination_audit": {
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json",
+      "commit": "469a5381bd069224c528aa627b78aa2f3905546d",
+      "source_digest": "90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432",
+      "catalog_combinations": 7,
+      "candidate_denial_count": 7,
+      "bounded_pass_count": 2,
+      "unsupported_security_count": 0,
+      "runtime_dispositions": "all pending-runtime",
+      "no_plugin_promoted": true
     }
   },
   "latest_reconciliation": {
     "checkpoint": "P3.2",
-    "commit": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations-ci.json",
-    "runs": {"renderer_matrix": 34698467133, "quality": 34698467112, "desktop_build": 34698467114, "loaded_workflows": 34698467125},
-    "source_digest": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae445ee4ada",
-    "status": "passed",
-    "next_action": "Keep PC07, PC08, PC17, PC19, PC21, PC23, PLUG-002..005 and P3.2 pending/non-certified; continue external/reference and remaining-combination validation without promoting plugin compatibility."
+    "commit": "469a5381bd069224c528aa627b78aa2f3905546d",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json",
+    "source_digest": "90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432",
+    "status": "partial_bounded_synthetic_only",
+    "catalog_combinations": 7,
+    "bounded_passes": ["combo-minimal-style-settings", "combo-tasknotes-bases"],
+    "candidate_denial_count": 7,
+    "no_plugin_promoted": true,
+    "next_action": "Keep all seven catalog combinations and P3.2 pending/non-certified; continue reference, same-user OS, human, provider, signing, publication and updater validation without promoting compatibility."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",

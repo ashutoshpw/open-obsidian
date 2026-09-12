@@ -5,6 +5,14 @@
   "created_at": "2026-09-09T17:20:00Z",
   "reconciliation_evidence": [
     {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01", "PC02", "PC03", "PC04", "PC07", "PC08", "PC12", "PC15", "PC17", "PC19", "PC25", "PC-DEP-MINIMAL", "PC-DEP-TEXT-EXTRACTOR"],
+      "tested_source_tree": "90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432",
+      "status": "partial",
+      "summary": "Catalog-derived audit covers all seven required combinations. Every combination has visible pending-runtime matrix entries, D15 denied capabilities, safe alternatives and synthetic disabled-path checks; Minimal/Style Settings and TaskNotes/Bases retain bounded synthetic passes, while all seven remain candidate-denial/pending-runtime with no promotion."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc19-tasknotes-worker-fix-ci.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC19"],

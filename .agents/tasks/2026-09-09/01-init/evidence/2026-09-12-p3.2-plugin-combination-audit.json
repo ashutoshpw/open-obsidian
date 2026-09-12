@@ -1,0 +1,156 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-combination-audit",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01", "PC02", "PC03", "PC04", "PC07", "PC08", "PC12", "PC15", "PC17", "PC19", "PC25", "PC-DEP-MINIMAL", "PC-DEP-TEXT-EXTRACTOR"],
+  "decision_id": "D15",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-combination-audit",
+  "recorded_at": "2026-09-12T14:40:33Z",
+  "command": "bun run audit:plugin-combinations",
+  "status": "partial",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "469a5381bd069224c528aa627b78aa2f3905546d",
+    "sha256": "90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "source_evidence": {
+    "catalog": "fixtures/plugin-catalog.json",
+    "lifecycle": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-artifact-lifecycle-v2.json",
+    "d15": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.2-plugin-d15-workflow.json",
+    "bounded_loaded": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-required-combinations.json"
+  },
+  "catalog_combination_ids": [
+    "combo-templater-calendar-quickadd",
+    "combo-dataview-tasks",
+    "combo-minimal-style-settings",
+    "combo-omnisearch-text-extractor",
+    "combo-excalidraw-embeds",
+    "combo-tasknotes-bases",
+    "combo-linter-template-generated-notes"
+  ],
+  "combination_count": 7,
+  "safe_alternatives_attempted": ["mediated vault read", "preview broker", "workflow disabled"],
+  "combinations": [
+    {
+      "id": "combo-templater-calendar-quickadd",
+      "members": ["PC02", "PC07", "PC12"],
+      "denied_components": ["PC02", "PC12"],
+      "denied_capabilities": ["network.request", "process.spawn", "credentials.read", "dom.privileged", "code.dynamic", "native.abi"],
+      "disabled_path_checks": ["network.request", "process.spawn", "dom.privileged", "native.abi", "credentials.read", "code.dynamic"],
+      "visible_pending_matrix_entries": {"PC02": ["macOS", "Windows", "Linux"], "PC07": ["macOS", "Windows", "Linux"], "PC12": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "not-run", "source_combination_id": null, "vault_writes": null},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    },
+    {
+      "id": "combo-dataview-tasks",
+      "members": ["PC03", "PC04"],
+      "denied_components": ["PC03", "PC04"],
+      "denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi", "code.dynamic"],
+      "disabled_path_checks": ["network.request", "process.spawn", "dom.privileged", "native.abi", "code.dynamic"],
+      "visible_pending_matrix_entries": {"PC03": ["macOS", "Windows", "Linux"], "PC04": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "not-run", "source_combination_id": null, "vault_writes": null},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    },
+    {
+      "id": "combo-minimal-style-settings",
+      "members": ["PC08", "PC17", "PC-DEP-MINIMAL"],
+      "denied_components": ["PC08", "PC17"],
+      "denied_capabilities": ["process.spawn", "dom.privileged"],
+      "disabled_path_checks": ["process.spawn", "dom.privileged"],
+      "visible_pending_matrix_entries": {"PC08": ["macOS", "Windows", "Linux"], "PC17": ["macOS", "Windows", "Linux"], "PC-DEP-MINIMAL": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "passed", "source_combination_id": "combination:pc08-pc17-minimal", "bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "dependency_status": "verified", "dependency_artifact_id": "PC-DEP-MINIMAL", "vault_writes": 0},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    },
+    {
+      "id": "combo-omnisearch-text-extractor",
+      "members": ["PC15", "PC-DEP-TEXT-EXTRACTOR"],
+      "denied_components": ["PC15", "PC-DEP-TEXT-EXTRACTOR"],
+      "denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+      "disabled_path_checks": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+      "visible_pending_matrix_entries": {"PC15": ["macOS", "Windows", "Linux"], "PC-DEP-TEXT-EXTRACTOR": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "not-run", "source_combination_id": null, "vault_writes": null},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    },
+    {
+      "id": "combo-excalidraw-embeds",
+      "members": ["PC01"],
+      "denied_components": ["PC01"],
+      "denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+      "disabled_path_checks": ["network.request", "process.spawn", "dom.privileged", "native.abi"],
+      "visible_pending_matrix_entries": {"PC01": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "not-run", "source_combination_id": null, "vault_writes": null},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    },
+    {
+      "id": "combo-tasknotes-bases",
+      "members": ["PC19"],
+      "denied_components": ["PC19"],
+      "denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi", "code.dynamic"],
+      "disabled_path_checks": ["network.request", "process.spawn", "dom.privileged", "native.abi", "code.dynamic"],
+      "visible_pending_matrix_entries": {"PC19": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "passed", "source_combination_id": "combination:pc19-bases", "bounded_lifecycle": "complete", "persistence": "preserved", "action_status": "passed", "dependency_status": "verified", "dependency_fixture_id": "fixture:baseline:bases", "vault_writes": 0},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    },
+    {
+      "id": "combo-linter-template-generated-notes",
+      "members": ["PC25", "PC02"],
+      "denied_components": ["PC25", "PC02"],
+      "denied_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi", "credentials.read", "code.dynamic"],
+      "disabled_path_checks": ["network.request", "process.spawn", "dom.privileged", "native.abi", "credentials.read", "code.dynamic"],
+      "visible_pending_matrix_entries": {"PC25": ["macOS", "Windows", "Linux"], "PC02": ["macOS", "Windows", "Linux"]},
+      "bounded_evidence": {"status": "not-run", "source_combination_id": null, "vault_writes": null},
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "unsupported_security": false,
+      "no_plugin_promoted": true
+    }
+  ],
+  "checks": {
+    "all_catalog_combinations_covered": true,
+    "candidate_denial_count": 7,
+    "candidate_pending_count": 0,
+    "bounded_pass_count": 2,
+    "all_runtime_dispositions_pending": true,
+    "all_visible_matrix_entries_pending": true,
+    "all_disabled_path_checks_passed": true,
+    "unsupported_security_count": 0,
+    "no_plugin_promoted": true
+  },
+  "external_pending": [
+    "reference Obsidian combination behavior and lossless-writer parity",
+    "same-user macOS and Windows OS enforcement",
+    "human accessibility and input review",
+    "provider-backed, subscription-backed and local-model behavior",
+    "signed release, publication and updater installation/rollback",
+    "unchanged artifact settings, views, combinations and lifecycle certification"
+  ],
+  "limitation": "The audit derives every required combination from the catalog and reconciles only local lifecycle, D15 and bounded synthetic evidence. Denied components remain candidate-denial/pending-runtime; bounded combination passes do not certify stock Obsidian, reference behavior or compatibility promotion.",
+  "result": "All seven catalog-required combinations are visible with seven candidate-denial/pending-runtime dispositions and two bounded synthetic passes; no compatibility status or unsupported-security exception was promoted."
+}
