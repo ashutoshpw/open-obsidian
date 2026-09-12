@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T01:34:30Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C04", "C04.1"],
+  "fixture_ids": ["fixture:c04-properties", "fixture:c04-unknown-preservation"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "c17eed7c26d08a17f800a8b7fd6fa6c5d569a56d",
+    "tested_source_tree": "61c47cc887be965ead7cf7f3e8e67571c49424974a296e113361600a00681628"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {"command": "bun test tests/markdown.test.ts tests/yaml.test.ts", "exit_code": 0, "result": "17 focused tests pass with 57 expectations, including indentationless block sequences, indexed flow-sequence leaves, nested flow-map entries, exact source spans and malformed-entry refusal."},
+    {"command": "bun run audit:fallow:strict", "exit_code": 0, "result": "No issues in the four-file indentationless-sequence property increment."},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "Strict TypeScript checking passes for indentationless sequence parsing and source-preserving Markdown traversal."},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "Routine gate passes with 186 tests and 1,058 expectations; state, contracts, architecture, UX, accessibility, layout, typecheck, Knip and changed-file Fallow checks pass."},
+    {"command": "bun run compile", "exit_code": 0, "result": "Main, preload, renderer and popout bundles compile successfully."},
+    {"command": "bun run final:audit", "exit_code": 0, "result": "Final audit keeps origin/main and separate release handoffs valid; 196 rows remain 28 passing, 128 implemented, 32 pending, 0 failing, 1 unsupported-security and 7 external-pending, with 161 mandatory rows not release-passing."},
+    {"command": "bun run audit:source-tree", "exit_code": 0, "result": "235 included paths; source tree digest is 61c47cc887be965ead7cf7f3e8e67571c49424974a296e113361600a00681628."}
+  ],
+  "implemented": [
+    "Extended bounded YAML mapping reads to accept indentationless block sequences whose dash aligns with the parent mapping key.",
+    "Extended explicit numeric Markdown property paths to traverse indentationless block sequence maps while preserving CRLF/BOM, comments, sequence framing, unknown siblings and unrelated bytes.",
+    "Kept ambiguous, malformed, multiline, block-scalar and structural edits fail-closed; source bytes remain authoritative."
+  ],
+  "limitations": [
+    "This remains bounded source-span editing: no sequence insertion, deletion, reorder, multiline flow collection or whole-block structural rewrite is supported.",
+    "Reference Obsidian open-edit-save-reopen comparison, cross-platform visible validation and full YAML dialect coverage remain pending; C04/C04.1 remain implemented rather than release-passing.",
+    "No reference Obsidian instance, provider, personal vault or selected /home/ashutosh/Obsidian vault was accessed or modified."
+  ]
+}
