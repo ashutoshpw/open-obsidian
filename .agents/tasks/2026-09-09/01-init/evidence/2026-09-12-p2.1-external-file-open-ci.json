@@ -1,0 +1,66 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T03:22:00Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C08", "C08.1"],
+  "implementation_commit": "a9562a6aee598c0cfcda28b7808ea42319f7c8a7",
+  "reconciled_head": "a9562a6aee598c0cfcda28b7808ea42319f7c8a7",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-external-file-open.json",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "c62816a8f441bc947a34789c4f974dc35d5c17dfcd6a1d494efead8c16ee7335",
+    "source_tree_paths": 237
+  },
+  "ci": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34670052627,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34670052627",
+      "head_sha": "a9562a6aee598c0cfcda28b7808ea42319f7c8a7",
+      "conclusion": "success",
+      "jobs": {
+        "macos-latest": {"job_id": 103489594231, "conclusion": "success"},
+        "windows-latest": {"job_id": 103489594297, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 103489594372, "conclusion": "success"}
+      },
+      "checks": ["progress state", "contracts", "architecture", "version baseline", "vault differential", "host vault round trip", "C10 inventory", "distribution", "update/rollback", "accessibility", "typecheck", "199 tests across 60 files", "quality scorecard", "Electron compile", "Electron vault round trip", "synthetic plugin lifecycle", "Knip", "Fallow"],
+      "result": "All Ubuntu, macOS and Windows quality jobs passed."
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34670052632,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34670052632",
+      "head_sha": "a9562a6aee598c0cfcda28b7808ea42319f7c8a7",
+      "conclusion": "success",
+      "jobs": {
+        "macos-latest": {"job_id": 103489594357, "conclusion": "success", "artifact": "openobsidian-macOS-preview-a9562a6aee598c0cfcda28b7808ea42319f7c8a7", "artifact_digest": "sha256:7262129d3f222107765590b1fee4ad1a6366661ac34f9bb0f7f31fbd7e32ae40"},
+        "ubuntu-latest": {"job_id": 103489594467, "conclusion": "success", "artifact": "openobsidian-Linux-preview-a9562a6aee598c0cfcda28b7808ea42319f7c8a7", "artifact_digest": "sha256:b35d97fc7bb311ca704dcd6c8a3ab2bd92cd5b1ca8d75352215023084ed3c92a"},
+        "windows-latest": {"job_id": 103489594621, "conclusion": "success", "artifact": "openobsidian-Windows-preview-a9562a6aee598c0cfcda28b7808ea42319f7c8a7", "artifact_digest": "sha256:de829d3b5723ca3e7a36f76876aa01ae8e5b1b8433d1ca226968bdabc439e83e"}
+      },
+      "checks": ["release gate", "update/rollback manifest", "unpacked desktop build", "release-manifest hashes", "Electron runtime notices", "transitive dependency attribution", "artifact upload"],
+      "signing": "Production signing was skipped because credentials were unavailable; artifacts are unsigned previews.",
+      "result": "All Ubuntu, macOS and Windows packaging and artifact checks passed."
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34670052628,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34670052628",
+      "head_sha": "a9562a6aee598c0cfcda28b7808ea42319f7c8a7",
+      "conclusion": "success",
+      "jobs": {
+        "macos-latest": {"job_id": 103489594301, "conclusion": "success", "artifact": "loaded-plugin-workflows-macOS-a9562a6aee598c0cfcda28b7808ea42319f7c8a7", "artifact_digest": "sha256:d33f218df93afeb51f3b731e09aff148988097a09f9851bd619c895bec02d095"},
+        "windows-latest": {"job_id": 103489594393, "conclusion": "success", "artifact": "loaded-plugin-workflows-Windows-a9562a6aee598c0cfcda28b7808ea42319f7c8a7", "artifact_digest": "sha256:29993f779cf9431783be0ed34fb0b85610b7446c1a08db0a0a6bac7717e20f60"},
+        "ubuntu-latest": {"job_id": 103489594438, "conclusion": "success", "artifact": "loaded-plugin-workflows-Linux-a9562a6aee598c0cfcda28b7808ea42319f7c8a7", "artifact_digest": "sha256:0678b158a395f674b0245d8ead7b88c2186a923ba51794c2fa25d79b83ef1979"}
+      },
+      "checks": {"all_jobs_uploaded_evidence": true, "all_jobs_partial": true, "all_artifacts_integrity_checked": true, "zero_mediated_vault_writes": true, "no_plugin_promoted": true, "macos_windows_json_parse": "retains leading Electron-download output limitation"},
+      "result": "All three loaded-workflow jobs passed and uploaded partial bounded reports; this does not certify unchanged-plugin compatibility or external-file OS opening."
+    }
+  },
+  "limitations": [
+    "Hosted checks validate the mediated IPC and packaging source but do not invoke shell.openPath with installed handlers.",
+    "macOS/Windows OS opener behavior, reference rendering, human accessibility and signed release remain pending.",
+    "Loaded-workflow evidence remains partial by design and does not promote any plugin compatibility row."
+  ],
+  "result": "Commit a9562a6 is reconciled to successful quality, desktop-build and loaded-workflow runs on Ubuntu, macOS and Windows; C08/C08.1 remain implemented rather than passing until OS-handler and cross-platform/reference validation is available."
+}
