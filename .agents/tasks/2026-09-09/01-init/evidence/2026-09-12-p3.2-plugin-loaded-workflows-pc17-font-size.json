@@ -1,0 +1,180 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc17-font-size",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC07",
+    "PC17",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T05:45:11.290Z",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "31b22bd40f64411139b98aa873c95ee9650831df",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "31b22bd40f64411139b98aa873c95ee9650831df",
+    "sha256": "fee8e0f58840a4f2981caa733b02bda25b81d50b87aabcb11bcae3b53b9be9e3",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "scripts/plugin-renderer-worker.cjs",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seam": "Added plugin-local app.updateFontSize() backed by bounded in-memory vaultConfig state; it performs no mediated vault write and records a finite fontSize value or null.",
+    "security_disposition": "The bounded worker remains an isolated, non-certifying renderer boundary; direct vault writes and unbounded capabilities remain denied."
+  },
+  "regression_validation": {
+    "focused": {
+      "command": "bun test tests/plugin-loaded-workflows.test.ts",
+      "exit_code": 0,
+      "tests": 2,
+      "expectations": 82
+    },
+    "full": {
+      "command": "bun test",
+      "exit_code": 0,
+      "tests": 206,
+      "expectations": 1158
+    },
+    "typecheck": {
+      "command": "bun run typecheck",
+      "exit_code": 0
+    },
+    "compile": {
+      "command": "bun run compile",
+      "exit_code": 0
+    },
+    "check_fast": {
+      "command": "bun run check:fast",
+      "exit_code": 0
+    },
+    "final_audit": {
+      "command": "bun run final:audit",
+      "exit_code": 0
+    },
+    "syntax": {
+      "command": "node --check scripts/plugin-renderer-worker.cjs",
+      "exit_code": 0
+    },
+    "diff": {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  },
+  "loaded_workflow_audit": {
+    "command": "bun run audit:plugin-loaded-workflows",
+    "exit_code": 0,
+    "status": "partial",
+    "target_ids": ["PC07", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "required_phases": ["install", "restart", "update"],
+    "unchanged_main_js": true,
+    "integrity_checked": true,
+    "artifact_lifecycles": {
+      "PC07": "complete",
+      "PC17": "complete",
+      "PC20": "complete",
+      "PC21": "complete",
+      "PC22": "complete",
+      "PC23": "complete",
+      "PC24": "complete"
+    },
+    "persistence": {
+      "PC07": "preserved",
+      "PC17": "preserved",
+      "PC20": "preserved",
+      "PC21": "preserved",
+      "PC22": "preserved",
+      "PC23": "preserved",
+      "PC24": "preserved",
+      "combination": "not-proven"
+    },
+    "action_status": {
+      "PC07": "partial",
+      "PC17": "passed",
+      "PC20": "partial",
+      "PC21": "partial",
+      "PC22": "passed",
+      "PC23": "partial",
+      "PC24": "passed"
+    },
+    "pc17": {
+      "name": "Minimal Theme Settings",
+      "version": "9.0.0",
+      "main_js_sha256": "f754e0ce6523e433bff8e7995a848f7d7fac205399f9ab3b1258430261fd90c4",
+      "integrity": "passed",
+      "workflow_supported": true,
+      "lifecycle": {
+        "phases": ["install", "restart", "update"],
+        "versions": ["1.0.0", "1.0.0", "1.1.0"],
+        "each_phase_constructed_onload_onunload": true,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true
+      },
+      "actions": {
+        "commands_per_phase": 51,
+        "views_per_phase": 0,
+        "settings_per_phase": 1,
+        "font_size_commands": ["increase-body-font-size", "decrease-body-font-size"],
+        "failed_or_not_executed": 0
+      },
+      "persistence": {
+        "restart_restores_data": true,
+        "update_restores_data": true
+      },
+      "plugin_data_writes": 153,
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "target_ids": ["PC07", "PC21", "PC23"],
+      "bounded_lifecycle": "complete",
+      "persistence": "not-proven",
+      "action_status": "partial",
+      "action_failure_count": 12,
+      "vault_writes": 0
+    },
+    "other_action_limitations": {
+      "PC07": "DOM-dependent calendar commands/settings remain denied",
+      "PC20": "editor callbacks remain not-executed because the bounded CodeMirror adapter is uncertified",
+      "PC21": "debug-copy remains denied at the DOM boundary",
+      "PC23": "settings display remains DOM-denied"
+    },
+    "actual_vault_writes": 0,
+    "no_plugin_promoted": true,
+    "disposition": "PC17 bounded workflow actions are complete for this Linux synthetic scope after the font-size seam; cross-platform, reference Obsidian, human, provider and required-combination validation remain pending."
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "This is Linux x64 Electron renderer-boundary evidence using unchanged pinned main.js bytes. It does not certify stock Obsidian, cross-platform behavior, human behavior, required plugin combinations or compatibility promotion."
+}

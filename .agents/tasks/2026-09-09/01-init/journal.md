@@ -1296,6 +1296,13 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-worker-hardening-ci.json` to the requirements reconciliation and recent state increment. P3.2 and the overall goal remain active; reference Obsidian, same-user macOS/Windows enforcement, human validation, provider-backed behavior, signing, publication, updater and required plugin combinations remain pending.
 - Next operation: continue the next available compatibility or recovery gap without promoting plugin support, retaining action, persistence, cross-platform, reference and human limitations explicitly.
 
+## 2026-09-12T05:45:11Z — P3.2 bounded PC17 font-size seam
+
+- Added a bounded plugin-local `app.updateFontSize()` seam to `scripts/plugin-renderer-worker.cjs`; the seam reads only bounded in-memory `vaultConfig` state, records a finite `fontSize` value or `null`, and performs no mediated vault write. Added focused contract assertions for the seam.
+- Fresh Linux x64 / Electron 44.3.0 loaded-workflow evidence at commit `31b22bd40f64411139b98aa873c95ee9650831df` and source tree `fee8e0f58840a4f2981caa733b02bda25b81d50b87aabcb11bcae3b53b9be9e3` records PC17 Minimal Theme Settings lifecycle, persistence and all exercised command/settings actions as passing with zero vault writes. The overall audit remains partial because PC07/PC20/PC21/PC23 actions, shared-combination persistence, cross-platform/reference/human gates remain pending.
+- Local validation passed: focused loaded-workflow tests (2 tests, 82 expectations), full suite (206 tests, 1,158 expectations), `check:fast`, typecheck, compile, final audit, worker syntax check, state validation, Fallow health and `git diff --check`. No plugin row was promoted.
+- Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc17-font-size.json`. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+
 ## 2026-09-12T05:29:13Z — P3.2 bounded Smart Connections workflow trace
 
 - Extended the bounded renderer worker with the missing Smart Connections seams: a bounded global `app`, synthetic document/range/query support, non-thenable DOM/callable proxies, `ItemView.titleEl`, Obsidian `Setting` component fields, isolated `.smart-env` in-memory adapter storage, workflow-only SmartEnv import/embedding controls and a fresh synthetic window between lifecycle phases.
