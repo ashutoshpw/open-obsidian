@@ -135,3 +135,27 @@ test("PC08 fixture and detached DOM seam keep Style Settings bounded", () => {
   expect(rendererWorker).toContain("detachLeavesOfType(type)");
   expect(rendererWorker).toContain('String(name).toLowerCase() === "head"');
 });
+
+test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {
+  const pc24 = fixture.scenarios.PC24 as typeof fixture.scenarios.PC24 & {
+    tag_workflow?: {source_tag: string; target_tag: string; expected_unrelated_property: string; expected_unrelated_text: string};
+  };
+  expect(pc24.tag_workflow).toMatchObject({
+    source_tag: "project/open",
+    target_tag: "archive/open",
+    expected_unrelated_property: "owner: keep",
+    expected_unrelated_text: "project/opening remains plain text",
+  });
+  expect((fixture.scenarios.PC24 as typeof pc24 & {exercise_events?: string[]}).exercise_events).toEqual(["editor-menu", "changed", "delete"]);
+  expect(pc24.files).toContainEqual(expect.objectContaining({
+    path: "Notes/Tags.md",
+    content: expect.stringContaining("project/open/sub"),
+  }));
+  expect(rendererWorker).toContain("eventHandlers");
+  expect(rendererWorker).toContain("function boundedMenu()");
+  expect(rendererWorker).toContain("getClickableTokenAt(position)");
+  expect(rendererWorker).toContain("function boundedTagWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-editor-only"');
+  expect(loadedWorkflowAudit).toContain("tagWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("event_attempts_recorded");
+});

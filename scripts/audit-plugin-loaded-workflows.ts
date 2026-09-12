@@ -24,6 +24,7 @@ const boundedLifecycleChecks = [
   "command_attempts_recorded",
   "settings_attempts_recorded",
   "views_attempts_recorded",
+  "event_attempts_recorded",
   "cleanup_after_each_phase",
   "uninstall_clears_registrations",
   "return_to_obsidian",
@@ -101,7 +102,7 @@ function phaseRecords(workflow: JsonRecord): JsonRecord[] {
 function actionFailures(workflow: JsonRecord): JsonRecord[] {
   return phaseRecords(workflow).flatMap((phase) => {
     const actions = asRecord(phase.actions) ?? {};
-    return [...records(actions.commands), ...records(actions.views), ...records(actions.settings)].filter((action) => action.status !== "passed");
+    return [...records(actions.commands), ...records(actions.views), ...records(actions.settings), ...records(actions.events)].filter((action) => action.status !== "passed");
   });
 }
 
@@ -122,6 +123,26 @@ function editorChecks(workflow: JsonRecord): JsonRecord {
     redo_restores_command_bytes: mutatedActions.length > 0 && mutatedActions.every((action) => asRecord(action.editor)?.redoRestored === true),
     folding_round_trip: foldOperations.length > 0 && unfoldOperations.length > 0 && editorPhases.every((editor) => records(editor.finalFoldedRanges).length === 0),
     phase_editor_round_trip: editorPhases.length === phases.length && editorPhases.every((editor) => string(editor.initialValue) === string(editor.finalValue) && records(editor.finalFoldedRanges).length === 0),
+  };
+}
+
+function tagWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.tag_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: traces.length === 3,
+    bounded_editor_mutation: traces.length === 3 && traces.every((trace) => trace.mutation_scope === "bounded-editor-only"),
+    rename_scoped: every("rename_scoped"),
+    merge_deterministic: every("merge_deterministic"),
+    hierarchical_occurrences_preserved: every("hierarchical_occurrences_preserved"),
+    unrelated_properties_preserved: every("unrelated_properties_preserved"),
+    unrelated_text_preserved: every("unrelated_text_preserved"),
+    undo_restores_prior_bytes: every("undo_restored"),
+    redo_restores_command_bytes: every("redo_restored"),
+    plugin_rename_callback_not_invoked: traces.length === 3 && traces.every((trace) => trace.plugin_rename_callback === "not-invoked"),
+    direct_vault_writes_zero: traces.length === 3 && traces.every((trace) => trace.direct_vault_writes === 0),
   };
 }
 
@@ -162,6 +183,7 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
     command_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.commands)),
     settings_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.settings)),
     views_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.views)),
+    event_attempts_recorded: phases.every((phase) => asRecord(phase.actions) && Array.isArray(asRecord(phase.actions)?.events)),
     restart_restores_data: JSON.stringify(phases[1]?.loadedData) === JSON.stringify(phases[0]?.savedData),
     update_restores_data: JSON.stringify(phases[2]?.loadedData) === JSON.stringify(phases[1]?.savedData),
     restart_restores_scoped_data: scopedRestart,
@@ -241,10 +263,11 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         bounded_lifecycle: lifecycleComplete ? "complete" : "partial",
         persistence: persistenceComplete ? "preserved" : "not-proven",
         persistence_source: persistenceSource,
-        action_status: failures.length === 0 ? "passed" : "partial",
-        action_failures: failures,
-        editor_checks: editor,
-        disposition: "bounded-workflow-evidence-pending-runtime",
+      action_status: failures.length === 0 ? "passed" : "partial",
+      action_failures: failures,
+      editor_checks: editor,
+      tag_workflow_checks: id === "PC24" ? tagWorkflowChecks(workflow) : null,
+      disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
     }
@@ -268,7 +291,23 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
     const combinationEditor = editorChecks(combinationWorkflow);
     const artifactLifecyclesComplete = artifactResults.every((entry) => entry.bounded_lifecycle === "complete");
     const combinationLifecycleComplete = checksPass(combinationChecks, boundedLifecycleChecks);
-    const artifactChecksComplete = artifactResults.every((entry) => checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed");
+    const artifactChecksComplete = artifactResults.every((entry) => {
+      const tagChecks = asRecord(entry.tag_workflow_checks);
+      const tagComplete = entry.artifact_id !== "PC24" || (tagChecks !== null && [
+        "present",
+        "bounded_editor_mutation",
+        "rename_scoped",
+        "merge_deterministic",
+        "hierarchical_occurrences_preserved",
+        "unrelated_properties_preserved",
+        "unrelated_text_preserved",
+        "undo_restores_prior_bytes",
+        "redo_restores_command_bytes",
+        "plugin_rename_callback_not_invoked",
+        "direct_vault_writes_zero",
+      ].every((key) => tagChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete;
+    });
     const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
     const allChecks = artifactChecksComplete && combinationChecksComplete;
     return {
@@ -311,7 +350,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: artifactLifecyclesComplete && combinationLifecycleComplete
-        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces; persisted-data gaps and settings/view/command action failures remain recorded as pending-runtime limitations."
+        ? "All audited unchanged pinned artifacts and the shared combination wrapper completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces; event callbacks and the PC24 editor-only tag fixture are recorded, while persisted-data gaps and settings/view/command action failures remain pending-runtime limitations."
         : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",
     };
   } finally {

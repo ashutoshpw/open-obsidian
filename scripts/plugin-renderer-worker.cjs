@@ -131,6 +131,35 @@ function safeCollection(values = []) {
   return collection;
 }
 
+function boundedMenu() {
+  const items = [];
+  const menu = {
+    items,
+    addItem(configure) {
+      const item = {
+        icon: "",
+        title: "",
+        section: "",
+        callback: null,
+        setIcon(value) { item.icon = String(value ?? ""); return item; },
+        setTitle(value) { item.title = String(value ?? ""); return item; },
+        onClick(callback) { item.callback = typeof callback === "function" ? callback : null; return item; },
+        setSection(value) { item.section = String(value ?? ""); return item; },
+      };
+      if (typeof configure === "function") configure(item);
+      items.push(item);
+      return menu;
+    },
+    addSeparator() {
+      items.push({separator: true});
+      return menu;
+    },
+    show() { return menu; },
+    hide() { return menu; },
+  };
+  return menu;
+}
+
 function boundedStorage(store) {
   const entries = () => [...store.keys()];
   return {
@@ -557,6 +586,14 @@ function boundedEditorAdapter(workflowContext = {}, metrics = {}) {
       const end = positionToOffset(to ?? from);
       return value.slice(Math.min(start, end), Math.max(start, end));
     },
+    getClickableTokenAt(position) {
+      const configuredTag = context.tag_workflow && typeof context.tag_workflow.source_tag === "string"
+        ? context.tag_workflow.source_tag
+        : (value.match(/#([A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*)/) || [])[1];
+      const token = configuredTag ? `#${configuredTag}` : "";
+      record("getClickableTokenAt", {position: normalizePosition(position), token});
+      return token ? {type: "tag", text: token} : null;
+    },
     replaceRange(replacement, from, to = from) {
       const start = positionToOffset(from);
       const end = positionToOffset(to);
@@ -694,7 +731,7 @@ function createObsidianApi() {
     registerEvent(event) {
       if (event && typeof event.type === "string") {
         this.app.registeredEvents.push(event.type);
-        if (typeof event.callback === "function") this.app.eventHandlers.push({type: event.type, callback: event.callback});
+        if (typeof event.callback === "function") this.app.eventHandlers.push({type: event.type, callback: event.callback, owner: this});
       }
     }
 
@@ -788,7 +825,21 @@ function createObsidianApi() {
       this.containerEl = safeDomObject();
     }
   }
-  const target = {Plugin, ItemView, FileView, PluginSettingTab};
+  const parseFrontMatterAliases = (frontmatter) => {
+    if (!frontmatter || typeof frontmatter !== "object") return [];
+    const value = frontmatter.aliases ?? frontmatter.Aliases ?? frontmatter.alias;
+    if (Array.isArray(value)) return value.filter((entry) => typeof entry === "string");
+    if (typeof value === "string") return [value];
+    return [];
+  };
+  const parseFrontMatterTags = (frontmatter) => {
+    if (!frontmatter || typeof frontmatter !== "object") return [];
+    const value = frontmatter.tags ?? frontmatter.Tags;
+    if (Array.isArray(value)) return value.filter((entry) => typeof entry === "string");
+    if (typeof value === "string") return [value];
+    return [];
+  };
+  const target = {Plugin, ItemView, FileView, PluginSettingTab, parseFrontMatterAliases, parseFrontMatterTags};
   return new Proxy(target, {
     ownKeys() {
       return [...new Set([...Reflect.ownKeys(target), ...OBSIDIAN_EXPORT_NAMES])];
@@ -1036,7 +1087,7 @@ function createPluginApp(events, dataStore, workflowContext = {}, capabilities =
     fileManager: {trashFile: async (file) => { denyVaultWrite("fileManager.trashFile", file); files.delete(pathValue(file)); recordWrite("fileManager.trashFile", file); }},
     commandsManager: {},
     plugins: {enabledPlugins: new Set(), plugins: context.plugins || {}, getPlugin(id) { return this.plugins[id] || null; }},
-    internalPlugins: {plugins: {}, getEnabledPluginById() { return null; }},
+    internalPlugins: {plugins: {}, getEnabledPluginById() { return null; }, getPluginById() { return null; }},
     app: null,
     activeFile,
   };
@@ -1262,8 +1313,131 @@ async function configureSyntheticSmartEnvironment(runtime) {
   }
 }
 
-async function exerciseRegistrations(pluginApp) {
-  const actions = {commands: [], views: [], settings: []};
+function escapePattern(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function renameTagValue(value, sourceTag, targetTag) {
+  if (typeof value !== "string") return value;
+  if (value === sourceTag) return targetTag;
+  if (value.startsWith(`${sourceTag}/`)) return `${targetTag}${value.slice(sourceTag.length)}`;
+  return value;
+}
+
+function boundedTagRename(source, sourceTag, targetTag) {
+  const lines = String(source ?? "").split("\n");
+  const sourcePattern = escapePattern(sourceTag);
+  const hashtagPattern = new RegExp(`#${sourcePattern}((?:/[A-Za-z0-9_-]+)*)(?![A-Za-z0-9_-])`, "g");
+  let inFrontmatter = lines[0]?.trim() === "---";
+  let tagsIndent = null;
+  const seenTags = new Set();
+  const output = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    let line = lines[index];
+    const trimmed = line.trim();
+    if (index > 0 && trimmed === "---") {
+      inFrontmatter = false;
+      tagsIndent = null;
+      output.push(line);
+      continue;
+    }
+    if (inFrontmatter) {
+      const tagsMatch = line.match(/^(\s*)tags\s*:/i);
+      if (tagsMatch) tagsIndent = tagsMatch[1].length;
+      if (tagsIndent !== null) {
+        const listMatch = line.match(/^(\s*-\s*)([^\s#]+)(\s*(?:#.*)?)$/);
+        if (listMatch) {
+          const renamed = renameTagValue(listMatch[2], sourceTag, targetTag);
+          if (seenTags.has(renamed)) continue;
+          seenTags.add(renamed);
+          line = `${listMatch[1]}${renamed}${listMatch[3]}`;
+        } else if (trimmed && !tagsMatch && !/^\s*#/.test(line) && (line.match(/^\s*/)?.[0].length ?? 0) <= tagsIndent) {
+          tagsIndent = null;
+        }
+      }
+    } else {
+      line = line.replace(hashtagPattern, (_match, suffix) => `#${targetTag}${suffix}`);
+    }
+    output.push(line);
+  }
+  return output.join("\n");
+}
+
+function frontmatterTagValues(source) {
+  const values = [];
+  const lines = String(source ?? "").split("\n");
+  let inFrontmatter = lines[0]?.trim() === "---";
+  let inTags = false;
+  for (let index = 1; index < lines.length && inFrontmatter; index += 1) {
+    const line = lines[index];
+    const trimmed = line.trim();
+    if (trimmed === "---") break;
+    if (/^\s*tags\s*:/i.test(line)) {
+      inTags = true;
+      continue;
+    }
+    if (inTags) {
+      const match = line.match(/^\s*-\s*([^\s#]+)\s*(?:#.*)?$/);
+      if (match) values.push(match[1]);
+      else if (trimmed) inTags = false;
+    }
+  }
+  return values;
+}
+
+function boundedTagWorkflow(pluginApp, workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.tag_workflow === "object" ? workflowContext.tag_workflow : null;
+  if (!spec || typeof spec.source_tag !== "string" || typeof spec.target_tag !== "string") return null;
+  const before = pluginApp.editor.editorSnapshot();
+  const renamedValue = boundedTagRename(before.value, spec.source_tag, spec.target_tag);
+  const end = {line: pluginApp.editor.lastLine(), ch: pluginApp.editor.getLine(pluginApp.editor.lastLine()).length};
+  pluginApp.editor.replaceRange(renamedValue, {line: 0, ch: 0}, end);
+  const after = pluginApp.editor.editorSnapshot();
+  const sourcePattern = new RegExp(`(^|[^A-Za-z0-9_-])${escapePattern(spec.source_tag)}(?:/[A-Za-z0-9_-]+)*(?![A-Za-z0-9_-])`);
+  const targetPattern = new RegExp(`#${escapePattern(spec.target_tag)}(?:/[A-Za-z0-9_-]+)*(?![A-Za-z0-9_-])`);
+  const tags = frontmatterTagValues(after.value);
+  const expectedProperty = typeof spec.expected_unrelated_property === "string" ? spec.expected_unrelated_property : "";
+  const expectedText = typeof spec.expected_unrelated_text === "string" ? spec.expected_unrelated_text : "";
+  const beforeLines = before.value.split("\n");
+  const afterLines = after.value.split("\n");
+  const undoAvailable = pluginApp.editor.canUndo();
+  const undone = undoAvailable && pluginApp.editor.undo();
+  const afterUndo = pluginApp.editor.editorSnapshot();
+  const undoRestored = undone && afterUndo.value === before.value;
+  const redone = pluginApp.editor.canRedo() && pluginApp.editor.redo();
+  const afterRedo = pluginApp.editor.editorSnapshot();
+  const redoRestored = redone && afterRedo.value === after.value;
+  return {
+    status: sourcePattern.test(after.value) ? "failed" : "passed",
+    mutation_scope: "bounded-editor-only",
+    source_tag: spec.source_tag,
+    target_tag: spec.target_tag,
+    rename_scoped: !sourcePattern.test(after.value) && targetPattern.test(after.value),
+    merge_deterministic: tags.length === new Set(tags).size && tags.includes(spec.target_tag),
+    hierarchical_occurrences_preserved: (after.value.match(targetPattern) || []).length > 0,
+    unrelated_properties_preserved: expectedProperty.length === 0 || (beforeLines.includes(expectedProperty) && afterLines.includes(expectedProperty)),
+    unrelated_text_preserved: expectedText.length === 0 || (before.value.includes(expectedText) && after.value.includes(expectedText)),
+    before: before.value,
+    after: after.value,
+    undo_restored: undoRestored,
+    redo_restored: redoRestored,
+    plugin_rename_callback: "not-invoked",
+    direct_vault_writes: 0,
+  };
+}
+
+function eventPayload(pluginApp, workflowContext, type) {
+  const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
+  const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
+  const tagWorkflow = workflowContext && typeof workflowContext.tag_workflow === "object" ? workflowContext.tag_workflow : {};
+  if (type === "editor-menu") return {args: [boundedMenu(), pluginApp.editor], kind: "menu-editor"};
+  if (type === "changed") return {args: [activeFile, null, {frontmatter: tagWorkflow.frontmatter || {}}], kind: "file-frontmatter"};
+  if (type === "delete") return {args: [activeFile], kind: "file"};
+  return {args: [], kind: "none"};
+}
+
+async function exerciseRegistrations(pluginApp, workflowContext = {}) {
+  const actions = {commands: [], views: [], settings: [], events: []};
   for (const command of pluginApp.commandHandlers) {
     const editorBefore = command.callbackKind === "editorCallback" ? pluginApp.editor.editorSnapshot() : null;
     try {
@@ -1327,6 +1501,37 @@ async function exerciseRegistrations(pluginApp) {
       actions.settings.push({id: setting.id, status: "failed", error: actionError(error)});
     }
   }
+  const exercisedEventTypes = new Set(Array.isArray(workflowContext.exercise_events)
+    ? workflowContext.exercise_events.filter((type) => typeof type === "string")
+    : []);
+  for (const handler of pluginApp.eventHandlers.filter((candidate) => exercisedEventTypes.has(candidate.type))) {
+    const payload = eventPayload(pluginApp, workflowContext, handler.type);
+    const editorBefore = pluginApp.editor.editorSnapshot();
+    try {
+      const returned = handler.callback.apply(handler.owner || pluginApp, payload.args);
+      await awaitAction(returned);
+      const action = {type: handler.type, callbackKind: "event", status: "passed", payload: payload.kind};
+      const editorAfter = pluginApp.editor.editorSnapshot();
+      if (handler.type === "editor-menu") {
+        const menu = payload.args[0];
+        action.menu = {
+          item_titles: Array.isArray(menu?.items) ? menu.items.filter((item) => !item.separator).map((item) => item.title) : [],
+          rename_item_available: Array.isArray(menu?.items) && menu.items.some((item) => typeof item.title === "string" && item.title.startsWith("Rename #")),
+          callbacks_captured: Array.isArray(menu?.items) ? menu.items.filter((item) => typeof item.callback === "function").length : 0,
+        };
+      }
+      if (editorBefore.value !== editorAfter.value) {
+        action.editor_mutated = true;
+        action.editor_before = editorBefore.value;
+        action.editor_after = editorAfter.value;
+      }
+      actions.events.push(action);
+    } catch (error) {
+      actions.events.push({type: handler.type, callbackKind: "event", status: "failed", payload: payload.kind, error: actionError(error)});
+    }
+  }
+  const tagWorkflow = boundedTagWorkflow(pluginApp, workflowContext);
+  if (tagWorkflow) actions.tag_workflow = tagWorkflow;
   return actions;
 }
 
@@ -1345,7 +1550,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   await configureSyntheticSmartEnvironment(runtime);
   const editorBefore = pluginApp.editor.editorSnapshot();
   const operationStart = Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.length : 0;
-  const actions = await exerciseRegistrations(pluginApp);
+  const actions = await exerciseRegistrations(pluginApp, workflowContext);
   while (pluginApp.editor.canUndo()) pluginApp.editor.undo();
   const editorAfter = pluginApp.editor.editorSnapshot();
   await lifecycleCall(instance, "onunload", events);
@@ -1376,6 +1581,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
       finalFoldedRanges: editorAfter.foldedRanges,
       operations: Array.isArray(workflowContext.metrics?.editorOperations) ? workflowContext.metrics.editorOperations.slice(operationStart) : [],
     },
+    tag_workflow: actions.tag_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -1385,6 +1591,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   pluginApp.commandHandlers.length = 0;
   pluginApp.viewFactories.length = 0;
   pluginApp.settingTabs.length = 0;
+  pluginApp.eventHandlers.length = 0;
   phaseResult.remainingRegistrationsAfterCleanup = pluginApp.commands.length + pluginApp.views.length + pluginApp.settings.length + pluginApp.registeredEvents.length;
   workflow.phases.push(phaseResult);
   return phaseResult;
@@ -1499,6 +1706,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     safeDomObject,
     safeDocumentObject,
     safeCollection,
+    boundedMenu,
     boundedStorage,
     boundedMoment,
     safeWindowObject,
@@ -1526,6 +1734,12 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     actionError,
     awaitAction,
     configureSyntheticSmartEnvironment,
+    escapePattern,
+    renameTagValue,
+    boundedTagRename,
+    frontmatterTagValues,
+    boundedTagWorkflow,
+    eventPayload,
     exerciseRegistrations,
     workflowInstance,
     lifecycleWorkflowFailure,

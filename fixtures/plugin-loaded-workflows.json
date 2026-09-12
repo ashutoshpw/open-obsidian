@@ -127,9 +127,19 @@
         "settings": {"tagsToIgnore": []},
         "version": 1
       },
+      "tag_workflow": {
+        "source_tag": "project/open",
+        "target_tag": "archive/open",
+        "expected_unrelated_property": "owner: keep",
+        "expected_unrelated_text": "project/opening remains plain text",
+        "frontmatter": {
+          "tags": ["project/open", "project/open/sub", "archive/open"]
+        }
+      },
+      "exercise_events": ["editor-menu", "changed", "delete"],
       "active_file": "Notes/Tags.md",
       "files": [
-        {"path": "Notes/Tags.md", "content": "---\ntags:\n  - project/open\n---\n\n#project/open\n#keep\n"}
+        {"path": "Notes/Tags.md", "content": "---\ntags:\n  - project/open\n  - project/open/sub\n  - archive/open\nowner: keep\n---\n\n#project/open\n#project/open/sub\n#keep\nproject/opening remains plain text\n"}
       ]
     }
   },
