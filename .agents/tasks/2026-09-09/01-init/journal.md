@@ -1731,6 +1731,16 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the hosted CI evidence in the requirements and state reconciliation metadata. PC09 and P3.2 remain pending/non-certified: reference Obsidian board behavior, same-user OS enforcement, human validation, signing, publication, updater and compatibility promotion remain external-pending. No plugin or compatibility row was promoted.
 - Next operation: run final state/audit/diff gates, commit and push this hosted reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.
 
+## 2026-09-12T22:31:00Z — P3.2 bounded PC15 Omnisearch projection
+
+- Added PC15 Omnisearch 1.31.0 to the loaded-workflow target set with exact/relevance, typo-tolerant and phrase search fixtures, keyboard result navigation, link insertion, external-edit index refresh and an explicit Text Extractor 0.7.0 PDF/image/document pairing.
+- Added a bounded marker-free in-memory Omnisearch projection. It verifies deterministic scoring/order, fuzzy distance-one matching, quoted phrase matching, keyboard selection, wikilink insertion, stale-index replacement, extracted asset text and zero direct vault writes across install/restart/update.
+- Added the required `combination:pc15-text-extractor` dependency audit, downloading and integrity-checking Text Extractor `manifest.json` and `main.js` while keeping unchanged plugin execution separate from the projection.
+- The unchanged 718,803-byte Omnisearch artifact is integrity-checked but D15-denied at `window.__svelte`; the local aggregate audit remains `partial`, while the PC15 bounded projection and Text Extractor combination both pass. PC15 remains `pending-runtime` and no plugin or compatibility row was promoted.
+- Focused loaded-workflow tests (22 tests, 410 expectations), worker syntax, typecheck, full local loaded-workflow audit and `check:fast` pass. Source digest is `36fee3b4b8bc7f62fec6b1b626e706e7d68bb7920c56f944190e8f3617e969b9`; the selected `/home/ashutosh/Obsidian` vault was not accessed.
+- Reference Obsidian search/extraction behavior, unchanged lifecycle, same-user macOS/Windows enforcement, human validation, provider-backed extraction, signing, publication, updater and compatibility promotion remain pending. The projection is not compatibility certification.
+- Next operation: run final state/audit/diff gates, commit with `[openobsidian P3.2 work] Add bounded PC15 Omnisearch workflow`, push `main`, inspect hosted quality/loaded-workflow/renderer-matrix/desktop-build results and reconcile without promoting compatibility.
+
 ## 2026-09-12T19:40:00Z — P3.2 bounded PC02 Templater projection
 
 - Added PC02 Templater 2.25.0 to the loaded-workflow target set with a template fixture covering approved title/date/prompt values, includes, cursor placement, projected note creation/move and an unchanged control note.

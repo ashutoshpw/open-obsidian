@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC15", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -666,6 +666,70 @@
         {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
       ]
     },
+    "PC15": {
+      "workflow_id": "workflow:pc15",
+      "description": "Search Markdown and Text Extractor-backed document fixtures by relevance, tolerate a typo, match phrases, navigate results by keyboard, insert a link, and refresh the index after an external edit without direct vault writes.",
+      "initial_data": {
+        "version": "1.31.0",
+        "indexOnStartup": true,
+        "searchScope": "vault",
+        "keyboardNavigation": {"down": "ArrowDown", "up": "ArrowUp", "accept": "Enter"},
+        "textExtractorEnabled": true
+      },
+      "omnisearch_workflow": {
+        "source_path": "Notes/Omni.md",
+        "exact_query": "compatibility",
+        "expected_exact_paths": ["Notes/Omni.md", "Assets/Diagram.png", "Assets/Guide.pdf", "Notes/Reference.md"],
+        "typo_query": "compatibilty",
+        "expected_typo_paths": ["Notes/Omni.md", "Assets/Diagram.png", "Assets/Guide.pdf", "Notes/Reference.md"],
+        "phrase_query": "\"bounded renderer\"",
+        "expected_phrase_paths": ["Notes/Omni.md", "Notes/Phrase.md"],
+        "keyboard_navigation": {
+          "query": "renderer",
+          "keys": ["ArrowDown", "ArrowDown", "Enter"],
+          "expected_selected_path": "Assets/Guide.pdf"
+        },
+        "link_insertion": {
+          "editor_before": "See the result [[cursor]] for context.\n",
+          "target_path": "Notes/Reference.md",
+          "display": "reference",
+          "expected_output": "See the result [[Notes/Reference.md|reference]] for context.\n"
+        },
+        "index_refresh": {
+          "path": "Notes/Refresh.md",
+          "before": "# Refresh\n\nStale index entry.\n",
+          "after": "# Refresh\n\nCompatibility refreshed entry.\n",
+          "query": "refreshed",
+          "expected_paths": ["Notes/Refresh.md"],
+          "stale_query": "stale",
+          "expected_stale_paths": []
+        },
+        "text_extractor": {
+          "dependency_artifact_id": "PC-DEP-TEXT-EXTRACTOR",
+          "version": "0.7.0",
+          "enabled": true,
+          "expected_paths": ["Assets/Guide.pdf", "Assets/Diagram.png", "Docs/Manual.docx"],
+          "extracted": [
+            {"path": "Assets/Guide.pdf", "kind": "pdf", "expected_text": "Compatibility guide for extracted renderer content."},
+            {"path": "Assets/Diagram.png", "kind": "image", "expected_text": "renderer compatibility diagram."},
+            {"path": "Docs/Manual.docx", "kind": "document", "expected_text": "Phrase search across extracted content."}
+          ]
+        },
+        "expected_unrelated_path": "Notes/Untouched.md",
+        "expected_unrelated_content": "# Untouched\n\nThis note remains byte-identical.\n"
+      },
+      "active_file": "Notes/Omni.md",
+      "files": [
+        {"path": "Notes/Omni.md", "content": "# Omnisearch\n\nCompatibility compatibility bounded renderer search fixture.\n"},
+        {"path": "Notes/Reference.md", "content": "# Reference\n\nCompatibility and renderer relevance notes.\n"},
+        {"path": "Notes/Phrase.md", "content": "# Phrase\n\nThe bounded renderer phrase is searchable.\n"},
+        {"path": "Notes/Refresh.md", "content": "# Refresh\n\nStale index entry.\n"},
+        {"path": "Assets/Guide.pdf", "content": "PDF_TEXT: Compatibility guide for extracted renderer content."},
+        {"path": "Assets/Diagram.png", "content": "EXTRACTED_TEXT: renderer compatibility diagram."},
+        {"path": "Docs/Manual.docx", "content": "DOCUMENT_TEXT: Phrase search across extracted content."},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
+      ]
+    },
     "PC21": {
       "workflow_id": "workflow:pc21",
       "description": "Restore the configured startup target and preserve homepage settings across restart and update.",
@@ -885,6 +949,24 @@
         {
           "fixture_id": "fixture:baseline:bases",
           "paths": ["TaskNotes/Views/tasks-default.base", "TaskNotes/Views/calendar-default.base"]
+        }
+      ]
+    },
+    {
+      "id": "combination:pc15-text-extractor",
+      "target_ids": ["PC15"],
+      "scenario_id": "PC15",
+      "description": "Load Omnisearch with the pinned Text Extractor dependency fixture and verify extracted PDF, image and document text participates in the bounded search and refresh workflow.",
+      "dependency_artifacts": [
+        {
+          "artifact_id": "PC-DEP-TEXT-EXTRACTOR",
+          "assets": ["manifest.json", "main.js"]
+        }
+      ],
+      "dependency_fixtures": [
+        {
+          "fixture_id": "fixture:text-extractor",
+          "paths": ["Assets/Guide.pdf", "Assets/Diagram.png", "Docs/Manual.docx"]
         }
       ]
     }

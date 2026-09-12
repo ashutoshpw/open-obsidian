@@ -3998,6 +3998,234 @@ function boundedEditingToolbarWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedOmnisearchWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.omnisearch_workflow === "object"
+    ? workflowContext.omnisearch_workflow
+    : null;
+  if (!spec || typeof spec.source_path !== "string") return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const normalizePath = (value) => String(value ?? "").replaceAll("\\", "/").replace(/^\/+|\/+$/g, "");
+  const normalizedFiles = files.map((entry) => ({path: normalizePath(entry.path), content: entry.content}));
+  const fileContents = new Map(normalizedFiles.map((entry) => [entry.path, entry.content]));
+  const normalizeText = (value) => String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const distance = (left, right) => {
+    const a = String(left);
+    const b = String(right);
+    if (Math.abs(a.length - b.length) > 1) return 2;
+    let previous = Array.from({length: b.length + 1}, (_value, index) => index);
+    for (let row = 1; row <= a.length; row += 1) {
+      const current = [row];
+      let minimum = current[0];
+      for (let column = 1; column <= b.length; column += 1) {
+        const value = a[row - 1] === b[column - 1]
+          ? previous[column - 1]
+          : Math.min(previous[column - 1], previous[column], current[column - 1]) + 1;
+        current[column] = value;
+        minimum = Math.min(minimum, value);
+      }
+      if (minimum > 1) return 2;
+      previous = current;
+    }
+    return previous[b.length];
+  };
+  const extractorPrefix = /^(?:PDF_TEXT|EXTRACTED_TEXT|DOCUMENT_TEXT):\s*/i;
+  const extractEntry = (entry) => {
+    const extension = entry.path.split(".").at(-1)?.toLowerCase() || "";
+    const markdown = ["md", "mdx", "txt"].includes(extension);
+    const extractable = ["pdf", "png", "jpg", "jpeg", "webp", "gif", "doc", "docx", "odt"].includes(extension);
+    const extractorEnabled = initialData.textExtractorEnabled === true && spec.text_extractor?.enabled === true;
+    if (!markdown && !(extractable && extractorEnabled)) return null;
+    const text = extractable ? entry.content.replace(extractorPrefix, "") : entry.content;
+    return {path: entry.path, text, normalized: normalizeText(text), extension, extracted: extractable};
+  };
+  const buildIndex = (contents) => [...contents.entries()]
+    .map(([path, content]) => extractEntry({path, content}))
+    .filter((entry) => entry !== null);
+  const countOccurrences = (text, token) => {
+    const matches = String(text).match(new RegExp(`(?:^|\\s)${escapePattern(token)}(?=\\s|$)`, "g"));
+    return matches ? matches.length : 0;
+  };
+  const queryIndex = (query, index) => {
+    const raw = String(query ?? "").trim();
+    const phraseMatch = raw.match(/^"(.+)"$/);
+    const phrase = phraseMatch ? normalizeText(phraseMatch[1]) : "";
+    const tokens = normalizeText(phrase || raw).split(" ").filter(Boolean);
+    const results = [];
+    for (const entry of index) {
+      let score = 0;
+      let matched = 0;
+      if (phrase) {
+        const occurrences = entry.normalized.split(phrase).length - 1;
+        if (occurrences > 0) score = 1000 + occurrences * 10;
+      } else {
+        for (const token of tokens) {
+          const exactCount = countOccurrences(entry.normalized, token);
+          if (exactCount > 0) {
+            score += 100 + exactCount * 10;
+            matched += 1;
+            continue;
+          }
+          const candidates = entry.normalized.split(" ").filter(Boolean);
+          const fuzzyCount = candidates.filter((candidate) => distance(token, candidate) <= 1).length;
+          if (fuzzyCount > 0) {
+            score += 80 + fuzzyCount * 10;
+            matched += 1;
+          }
+        }
+        if (matched !== tokens.length) score = 0;
+      }
+      if (score > 0) results.push({path: entry.path, score, extracted: entry.extracted});
+    }
+    return results.sort((left, right) => right.score - left.score || left.path.localeCompare(right.path));
+  };
+  const pathsEqual = (actual, expected) => JSON.stringify(actual) === JSON.stringify(Array.isArray(expected) ? expected : []);
+  const sourcePath = normalizePath(spec.source_path);
+  const source = fileContents.get(sourcePath) || "";
+  const initialIndex = buildIndex(fileContents);
+  const exactResults = queryIndex(spec.exact_query, initialIndex);
+  const expectedExactPaths = Array.isArray(spec.expected_exact_paths) ? spec.expected_exact_paths.map(normalizePath) : [];
+  const exactPaths = exactResults.map((result) => result.path);
+  const relevanceOrdered = exactResults.every((result, index) => index === 0 || exactResults[index - 1].score >= result.score);
+  const exactSearchResultsMatch = pathsEqual(exactPaths, expectedExactPaths);
+  const typoResults = queryIndex(spec.typo_query, initialIndex);
+  const expectedTypoPaths = Array.isArray(spec.expected_typo_paths) ? spec.expected_typo_paths.map(normalizePath) : [];
+  const typoTolerant = pathsEqual(typoResults.map((result) => result.path), expectedTypoPaths)
+    && typoResults.length === expectedTypoPaths.length
+    && typoResults.every((result) => result.score <= 100);
+  const phraseResults = queryIndex(spec.phrase_query, initialIndex);
+  const expectedPhrasePaths = Array.isArray(spec.expected_phrase_paths) ? spec.expected_phrase_paths.map(normalizePath) : [];
+  const phraseSearchMatch = pathsEqual(phraseResults.map((result) => result.path), expectedPhrasePaths)
+    && phraseResults.every((result) => result.score >= 1000);
+  const keyboard = spec.keyboard_navigation && typeof spec.keyboard_navigation === "object" ? spec.keyboard_navigation : {};
+  const keyboardResults = queryIndex(keyboard.query, initialIndex);
+  let selectedIndex = -1;
+  const keyboardKeys = Array.isArray(keyboard.keys) ? keyboard.keys.filter((key) => typeof key === "string") : [];
+  for (const key of keyboardKeys) {
+    if (key === "ArrowDown") selectedIndex = Math.min(keyboardResults.length - 1, selectedIndex + 1);
+    if (key === "ArrowUp") selectedIndex = Math.max(0, selectedIndex - 1);
+  }
+  const selectedPath = selectedIndex >= 0 ? keyboardResults[selectedIndex]?.path || null : null;
+  const keyboardNavigationMatch = keyboardKeys.includes("Enter") && selectedPath === normalizePath(keyboard.expected_selected_path);
+  const link = spec.link_insertion && typeof spec.link_insertion === "object" ? spec.link_insertion : {};
+  const editorBefore = typeof link.editor_before === "string" ? link.editor_before : "";
+  const linkTarget = normalizePath(link.target_path);
+  const linkDisplay = typeof link.display === "string" && link.display.length > 0 ? `|${link.display}` : "";
+  const insertedLink = `[[${linkTarget}${linkDisplay}]]`;
+  const linkOutput = editorBefore.includes("[[cursor]]") ? editorBefore.replace("[[cursor]]", insertedLink) : editorBefore;
+  const linkInsertionMatch = linkOutput === link.expected_output && linkTarget.length > 0;
+  const refresh = spec.index_refresh && typeof spec.index_refresh === "object" ? spec.index_refresh : {};
+  const refreshedContents = new Map(fileContents);
+  const refreshPath = normalizePath(refresh.path);
+  const refreshBefore = typeof refresh.before === "string" ? refresh.before : "";
+  const refreshAfter = typeof refresh.after === "string" ? refresh.after : "";
+  const refreshSourceMatches = fileContents.get(refreshPath) === refreshBefore;
+  refreshedContents.set(refreshPath, refreshAfter);
+  const refreshedIndex = buildIndex(refreshedContents);
+  const refreshedResults = queryIndex(refresh.query, refreshedIndex).map((result) => result.path);
+  const staleResults = queryIndex(refresh.stale_query, refreshedIndex).map((result) => result.path);
+  const indexRefreshDetected = refreshSourceMatches
+    && pathsEqual(refreshedResults, Array.isArray(refresh.expected_paths) ? refresh.expected_paths.map(normalizePath) : [])
+    && pathsEqual(staleResults, Array.isArray(refresh.expected_stale_paths) ? refresh.expected_stale_paths.map(normalizePath) : []);
+  const extractor = spec.text_extractor && typeof spec.text_extractor === "object" ? spec.text_extractor : {};
+  const extractorPaths = Array.isArray(extractor.expected_paths) ? extractor.expected_paths.map(normalizePath) : [];
+  const extractedEntries = Array.isArray(extractor.extracted) ? extractor.extracted.filter((entry) => entry && typeof entry === "object") : [];
+  const extractedChecks = extractedEntries.map((entry) => {
+    const path = normalizePath(entry.path);
+    const indexed = initialIndex.find((candidate) => candidate.path === path);
+    return Boolean(indexed && indexed.extracted && indexed.text === entry.expected_text && indexed.extension === path.split(".").at(-1)?.toLowerCase());
+  });
+  const indexedExtractorPaths = initialIndex.filter((entry) => entry.extracted).map((entry) => entry.path);
+  const textExtractorDependencyConfigured = initialData.textExtractorEnabled === true
+    && extractor.enabled === true
+    && extractor.dependency_artifact_id === "PC-DEP-TEXT-EXTRACTOR"
+    && extractor.version === "0.7.0";
+  const textExtractorDependencyVerified = textExtractorDependencyConfigured
+    && pathsEqual(indexedExtractorPaths, extractorPaths)
+    && extractedChecks.length === extractedEntries.length
+    && extractedChecks.every(Boolean);
+  const expectedUnrelatedPath = normalizePath(spec.expected_unrelated_path);
+  const unrelatedFilePreserved = expectedUnrelatedPath.length > 0 && fileContents.get(expectedUnrelatedPath) === spec.expected_unrelated_content;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = source.length > 0
+    && relevanceOrdered
+    && exactSearchResultsMatch
+    && typoTolerant
+    && phraseSearchMatch
+    && keyboardNavigationMatch
+    && linkInsertionMatch
+    && indexRefreshDetected
+    && textExtractorDependencyVerified
+    && unrelatedFilePreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status,
+    relevance_ordered: relevanceOrdered,
+    exact_search_results_match: exactSearchResultsMatch,
+    typo_tolerant: typoTolerant,
+    phrase_search_match: phraseSearchMatch,
+    keyboard_navigation_match: keyboardNavigationMatch,
+    link_insertion_match: linkInsertionMatch,
+    index_refresh_detected: indexRefreshDetected,
+    text_extractor_dependency_configured: textExtractorDependencyConfigured,
+    text_extractor_dependency_verified: textExtractorDependencyVerified,
+    unrelated_file_preserved: unrelatedFilePreserved,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  }));
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-omnisearch-projection",
+    source_path: sourcePath,
+    source_preserved: fileContents.get(sourcePath) === source,
+    indexed_paths: initialIndex.map((entry) => entry.path),
+    exact_query: spec.exact_query,
+    exact_results: exactResults,
+    expected_exact_paths: expectedExactPaths,
+    exact_search_results_match: exactSearchResultsMatch,
+    relevance_ordered: relevanceOrdered,
+    typo_query: spec.typo_query,
+    typo_results: typoResults,
+    expected_typo_paths: expectedTypoPaths,
+    typo_tolerant: typoTolerant,
+    phrase_query: spec.phrase_query,
+    phrase_results: phraseResults,
+    expected_phrase_paths: expectedPhrasePaths,
+    phrase_search_match: phraseSearchMatch,
+    keyboard_navigation: keyboard,
+    keyboard_results: keyboardResults,
+    selected_path: selectedPath,
+    keyboard_navigation_match: keyboardNavigationMatch,
+    link_insertion: link,
+    inserted_link: insertedLink,
+    link_output: linkOutput,
+    link_insertion_match: linkInsertionMatch,
+    index_refresh: refresh,
+    refreshed_results: refreshedResults,
+    stale_results: staleResults,
+    index_refresh_detected: indexRefreshDetected,
+    text_extractor: extractor,
+    text_extractor_dependency_configured: textExtractorDependencyConfigured,
+    text_extractor_dependency_verified: textExtractorDependencyVerified,
+    text_extractor_paths_match: pathsEqual(indexedExtractorPaths, extractorPaths),
+    extracted_paths: indexedExtractorPaths,
+    extracted_checks: extractedChecks,
+    expected_unrelated_path: expectedUnrelatedPath,
+    unrelated_file_preserved: unrelatedFilePreserved,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -4132,6 +4360,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (quickaddWorkflow) actions.quickadd_workflow = quickaddWorkflow;
   const editingToolbarWorkflow = boundedEditingToolbarWorkflow(workflowContext);
   if (editingToolbarWorkflow) actions.editing_toolbar_workflow = editingToolbarWorkflow;
+  const omnisearchWorkflow = boundedOmnisearchWorkflow(workflowContext);
+  if (omnisearchWorkflow) actions.omnisearch_workflow = omnisearchWorkflow;
   return actions;
 }
 
@@ -4208,6 +4438,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     templater_workflow: actions.templater_workflow || null,
     quickadd_workflow: actions.quickadd_workflow || null,
     editing_toolbar_workflow: actions.editing_toolbar_workflow || null,
+    omnisearch_workflow: actions.omnisearch_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -4288,6 +4519,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
     workflow.editing_toolbar_workflow = boundedEditingToolbarWorkflow(workflowContext);
+    workflow.omnisearch_workflow = boundedOmnisearchWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -4315,6 +4547,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
     workflow.editing_toolbar_workflow = boundedEditingToolbarWorkflow(workflowContext);
+    workflow.omnisearch_workflow = boundedOmnisearchWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -4436,6 +4669,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedTemplaterWorkflow,
     boundedQuickAddWorkflow,
     boundedEditingToolbarWorkflow,
+    boundedOmnisearchWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

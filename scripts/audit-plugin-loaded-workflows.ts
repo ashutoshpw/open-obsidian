@@ -492,6 +492,33 @@ function editingToolbarWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function omnisearchWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.omnisearch_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const summary = asRecord(workflow.omnisearch_workflow);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: summary !== null && traces.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-omnisearch-projection" && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-omnisearch-projection"),
+    relevance_ordered: summary?.relevance_ordered === true && every("relevance_ordered"),
+    exact_search_results_match: summary?.exact_search_results_match === true && every("exact_search_results_match"),
+    typo_tolerant: summary?.typo_tolerant === true && every("typo_tolerant"),
+    phrase_search_match: summary?.phrase_search_match === true && every("phrase_search_match"),
+    keyboard_navigation_match: summary?.keyboard_navigation_match === true && every("keyboard_navigation_match"),
+    link_insertion_match: summary?.link_insertion_match === true && every("link_insertion_match"),
+    index_refresh_detected: summary?.index_refresh_detected === true && every("index_refresh_detected"),
+    text_extractor_dependency_configured: summary?.text_extractor_dependency_configured === true && every("text_extractor_dependency_configured"),
+    text_extractor_dependency_verified: summary?.text_extractor_dependency_verified === true && every("text_extractor_dependency_verified"),
+    text_extractor_paths_match: summary?.text_extractor_paths_match === true && every("text_extractor_dependency_verified"),
+    source_preserved: summary?.source_preserved === true,
+    unrelated_file_preserved: summary?.unrelated_file_preserved === true && every("unrelated_file_preserved"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    phase_projections_passed: traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+    status_passed: summary?.status === "passed" && traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -685,9 +712,30 @@ function taskWorkflowPasses(task: JsonRecord | null): boolean {
 
 function combinationSpecificChecks(targetIds: string[], workflow: JsonRecord): JsonRecord {
   const task = targetIds.includes("PC19") ? taskWorkflowChecks(workflow) : null;
+  const omnisearch = targetIds.includes("PC15") ? omnisearchWorkflowChecks(workflow) : null;
   return {
     task_workflow_checks: task,
     task_workflow_complete: taskWorkflowPasses(task),
+    omnisearch_workflow_checks: omnisearch,
+    omnisearch_workflow_complete: omnisearch === null || [
+      "present",
+      "bounded_read_only",
+      "relevance_ordered",
+      "exact_search_results_match",
+      "typo_tolerant",
+      "phrase_search_match",
+      "keyboard_navigation_match",
+      "link_insertion_match",
+      "index_refresh_detected",
+      "text_extractor_dependency_configured",
+      "text_extractor_dependency_verified",
+      "text_extractor_paths_match",
+      "source_preserved",
+      "unrelated_file_preserved",
+      "direct_vault_writes_zero",
+      "phase_projections_passed",
+      "status_passed",
+    ].every((key) => omnisearch[key] === true),
   };
 }
 
@@ -888,6 +936,22 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         editingToolbar = editingToolbarWorkflowChecks(asRecord(editingToolbarProjection.workflow) ?? {});
       }
+      let omnisearch = id === "PC15" ? omnisearchWorkflowChecks(workflow) : null;
+      let omnisearchProjection: JsonRecord | null = null;
+      if (id === "PC15") {
+        // Omnisearch's unchanged release is evaluated inside the denying
+        // renderer boundary. Keep the relevance, typo/phrase, keyboard,
+        // link, refresh and Text Extractor pairing contract in a separate
+        // marker-free projection; it never changes the unchanged-artifact
+        // runtime disposition or compatibility status.
+        omnisearchProjection = await runWorker(
+          'module.exports = class BoundedOmnisearchProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC15-omnisearch-projection", target_ids: ["PC15"]},
+          temporaryRoot,
+          "PC15-omnisearch-projection",
+        );
+        omnisearch = omnisearchWorkflowChecks(asRecord(omnisearchProjection.workflow) ?? {});
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -932,6 +996,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       quickadd_workflow_projection: quickAddProjection,
       editing_toolbar_workflow_checks: editingToolbar,
       editing_toolbar_workflow_projection: editingToolbarProjection,
+      omnisearch_workflow_checks: omnisearch,
+      omnisearch_workflow_projection: omnisearchProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -1009,9 +1075,43 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const failures = actionFailures(workflow);
       const editor = editorChecks(workflow);
       const specific = combinationSpecificChecks(ids, workflow);
+      let omnisearchProjection: JsonRecord | null = null;
+      if (ids.includes("PC15")) {
+        // The unchanged Omnisearch bundle is still evaluated in the combined
+        // denying renderer. Keep its Text Extractor/search contract in a
+        // marker-free projection so combined evidence cannot promote the
+        // unchanged artifact runtime.
+        omnisearchProjection = await runWorker(
+          'module.exports = class BoundedOmnisearchCombinationProjection extends require("obsidian").Plugin {};',
+          {...combinationConfig, artifact_id: `${id}-omnisearch-projection`, target_ids: ["PC15"]},
+          temporaryRoot,
+          `${id}-omnisearch-projection`,
+        );
+        const projectedChecks = omnisearchWorkflowChecks(asRecord(omnisearchProjection.workflow) ?? {});
+        specific.omnisearch_workflow_checks = projectedChecks;
+        specific.omnisearch_workflow_complete = [
+          "present",
+          "bounded_read_only",
+          "relevance_ordered",
+          "exact_search_results_match",
+          "typo_tolerant",
+          "phrase_search_match",
+          "keyboard_navigation_match",
+          "link_insertion_match",
+          "index_refresh_detected",
+          "text_extractor_dependency_configured",
+          "text_extractor_dependency_verified",
+          "text_extractor_paths_match",
+          "source_preserved",
+          "unrelated_file_preserved",
+          "direct_vault_writes_zero",
+          "phase_projections_passed",
+          "status_passed",
+        ].every((key) => projectedChecks[key] === true);
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
-      const specificComplete = specific.task_workflow_complete === true;
+      const specificComplete = specific.task_workflow_complete === true && specific.omnisearch_workflow_complete === true;
       const dependencyComplete = records(dependencies.artifacts).every((artifact) => records(artifact.assets).length > 0)
         && records(dependencies.fixtures).every((fixture) => fixture.complete === true);
       combinationResults.push({
@@ -1032,6 +1132,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         action_failures: failures,
         editor_checks: editor,
         specific_checks: specific,
+        omnisearch_workflow_projection: omnisearchProjection,
         dependency_status: dependencyComplete ? "verified" : "partial",
         disposition: "bounded-combination-evidence-pending-runtime",
       });
@@ -1294,6 +1395,26 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "phase_projections_passed",
         "status_passed",
       ].every((key) => editingToolbarChecks[key] === true));
+      const omnisearchChecks = asRecord(entry.omnisearch_workflow_checks);
+      const omnisearchComplete = entry.artifact_id !== "PC15" || (omnisearchChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "relevance_ordered",
+        "exact_search_results_match",
+        "typo_tolerant",
+        "phrase_search_match",
+        "keyboard_navigation_match",
+        "link_insertion_match",
+        "index_refresh_detected",
+        "text_extractor_dependency_configured",
+        "text_extractor_dependency_verified",
+        "text_extractor_paths_match",
+        "source_preserved",
+        "unrelated_file_preserved",
+        "direct_vault_writes_zero",
+        "phase_projections_passed",
+        "status_passed",
+      ].every((key) => omnisearchChecks[key] === true));
       const remotelySaveChecks = asRecord(entry.remotely_save_workflow_checks);
       const remotelySaveComplete = entry.artifact_id !== "PC10" || (remotelySaveChecks !== null && [
         "present",
@@ -1338,7 +1459,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => iconizeChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete;
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete && omnisearchComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
@@ -1354,7 +1475,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       status: allChecks ? "passed" : "partial",
       recorded_at: new Date().toISOString(),
       checkpoint: "P3.2",
-      requirements: ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01", ...targetIds.filter((id) => id !== "PC01")],
+      requirements: ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC01", ...targetIds.filter((id) => id !== "PC01"), ...(targetIds.includes("PC15") ? ["PC-DEP-TEXT-EXTRACTOR"] : [])],
       decision_id: "D14",
       fixture_id: string(fixture.id),
       command: "bun run audit:plugin-loaded-workflows",
@@ -1377,7 +1498,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC14 Editing Toolbar selection/customization/mode projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC14 Editing Toolbar selection/customization/mode projection, the PC15 Omnisearch relevance/typo/phrase/navigation/link/refresh and Text Extractor projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

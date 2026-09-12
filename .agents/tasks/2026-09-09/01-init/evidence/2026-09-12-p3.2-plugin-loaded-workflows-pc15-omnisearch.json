@@ -1,0 +1,81 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T22:28:28Z",
+  "checkpoint": "P3.2",
+  "requirements": ["PC15", "PC-DEP-TEXT-EXTRACTOR", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005"],
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "commands": [
+    {"command": "bun test tests/plugin-loaded-workflows.test.ts", "exit_code": 0, "result": "22 passed, 0 failed"},
+    {"command": "bun run typecheck", "exit_code": 0, "result": "passed"},
+    {"command": "node --check scripts/plugin-renderer-worker.cjs", "exit_code": 0, "result": "passed"},
+    {"command": "bun run audit:plugin-loaded-workflows", "exit_code": 0, "result": "partial overall audit; PC15 bounded projection and Text Extractor combination passed"},
+    {"command": "bun run check:fast", "exit_code": 0, "result": "passed; state remains active with 161 mandatory rows not release-passing"}
+  ],
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "36fee3b4b8bc7f62fec6b1b626e706e7d68bb7920c56f944190e8f3617e969b9",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifacts": {
+    "omnisearch": {
+      "id": "PC15",
+      "name": "Omnisearch",
+      "version": "1.31.0",
+      "main_js_bytes": 718803,
+      "main_js_sha256": "9f2456705d0840f3cccf62a8e99a6fdaf8901939936e44d4dd27fc6b2d522f31",
+      "integrity": "passed",
+      "unchanged_runtime": {"status": "denied", "capability": "dom.privileged", "path": "window.__svelte", "runtime_disposition": "pending-runtime"}
+    },
+    "text_extractor": {
+      "id": "PC-DEP-TEXT-EXTRACTOR",
+      "name": "Text Extractor",
+      "version": "0.7.0",
+      "main_js_bytes": 3037705,
+      "main_js_sha256": "1eec6b986b64717434ce5acec3e7470bc08aafb649aca5f0d33c7ccc720d5eef",
+      "manifest_sha256": "ff57053e0491b20f0c5d9becc0600c378d341a00f1fffa6efcb8b0006d2122b3",
+      "integrity": "passed"
+    }
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-omnisearch-projection",
+    "phases": ["install", "restart", "update"],
+    "relevance_ordered": true,
+    "exact_search_results_match": true,
+    "typo_tolerant": true,
+    "phrase_search_match": true,
+    "keyboard_navigation_match": true,
+    "selected_path": "Assets/Guide.pdf",
+    "link_insertion_match": true,
+    "index_refresh_detected": true,
+    "text_extractor_dependency_configured": true,
+    "text_extractor_dependency_verified": true,
+    "text_extractor_paths_match": true,
+    "source_preserved": true,
+    "unrelated_file_preserved": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true
+  },
+  "combination": {
+    "id": "combination:pc15-text-extractor",
+    "action_status": "passed",
+    "dependency_status": "verified",
+    "fixture_paths": ["Assets/Guide.pdf", "Assets/Diagram.png", "Docs/Manual.docx"],
+    "bounded_projection_status": "passed"
+  },
+  "status": "pending-runtime",
+  "no_plugin_promoted": true,
+  "limitations": [
+    "The unchanged Omnisearch artifact is denied inside the context-isolated renderer at window.__svelte; the projection is marker-free synthetic evidence.",
+    "Search and Text Extractor checks exercise deterministic in-memory fixtures only. Reference Obsidian behavior, same-user macOS/Windows enforcement, human validation, provider-backed extraction, signing, updater and compatibility promotion remain pending."
+  ]
+}

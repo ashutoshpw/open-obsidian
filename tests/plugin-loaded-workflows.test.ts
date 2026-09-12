@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; omnisearch_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC15", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -47,6 +47,13 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
       target_ids: ["PC19"],
       scenario_id: "PC19",
       dependency_fixtures: [{fixture_id: "fixture:baseline:bases", paths: ["TaskNotes/Views/tasks-default.base", "TaskNotes/Views/calendar-default.base"]}],
+    }),
+    expect.objectContaining({
+      id: "combination:pc15-text-extractor",
+      target_ids: ["PC15"],
+      scenario_id: "PC15",
+      dependency_artifacts: [{artifact_id: "PC-DEP-TEXT-EXTRACTOR", assets: ["manifest.json", "main.js"]}],
+      dependency_fixtures: [{fixture_id: "fixture:text-extractor", paths: ["Assets/Guide.pdf", "Assets/Diagram.png", "Docs/Manual.docx"]}],
     }),
   ]);
   expect(fixture.required_combinations.every((combination) => combination.target_ids.every((id) => fixture.target_ids.includes(id)))).toBe(true);
@@ -720,6 +727,63 @@ test("PC14 fixture and bounded projection preserve toolbar edits, customization 
   expect(loadedWorkflowAudit).toContain("editing_toolbar_workflow_checks");
   expect(loadedWorkflowAudit).toContain("customization_restored_on_restart");
   expect(loadedWorkflowAudit).toContain("direct_vault_writes_zero");
+});
+
+test("PC15 fixture and bounded projection cover search, navigation, links, refresh and Text Extractor pairing", () => {
+  const pc15 = fixture.scenarios.PC15 as typeof fixture.scenarios.PC03 & {
+    omnisearch_workflow?: {
+      source_path: string;
+      exact_query: string;
+      expected_exact_paths: string[];
+      typo_query: string;
+      expected_typo_paths: string[];
+      phrase_query: string;
+      expected_phrase_paths: string[];
+      keyboard_navigation: {query: string; keys: string[]; expected_selected_path: string};
+      link_insertion: {editor_before: string; target_path: string; display: string; expected_output: string};
+      index_refresh: {path: string; before: string; after: string; query: string; expected_paths: string[]; stale_query: string; expected_stale_paths: string[]};
+      text_extractor: {dependency_artifact_id: string; version: string; enabled: boolean; expected_paths: string[]; extracted: Array<{path: string; kind: string; expected_text: string}>};
+      expected_unrelated_path: string;
+      expected_unrelated_content: string;
+    };
+  };
+  expect(pc15.workflow_id).toBe("workflow:pc15");
+  expect(pc15.initial_data).toMatchObject({version: "1.31.0", indexOnStartup: true, textExtractorEnabled: true});
+  expect(pc15.omnisearch_workflow).toEqual({
+    source_path: "Notes/Omni.md",
+    exact_query: "compatibility",
+    expected_exact_paths: ["Notes/Omni.md", "Assets/Diagram.png", "Assets/Guide.pdf", "Notes/Reference.md"],
+    typo_query: "compatibilty",
+    expected_typo_paths: ["Notes/Omni.md", "Assets/Diagram.png", "Assets/Guide.pdf", "Notes/Reference.md"],
+    phrase_query: "\"bounded renderer\"",
+    expected_phrase_paths: ["Notes/Omni.md", "Notes/Phrase.md"],
+    keyboard_navigation: {query: "renderer", keys: ["ArrowDown", "ArrowDown", "Enter"], expected_selected_path: "Assets/Guide.pdf"},
+    link_insertion: {editor_before: "See the result [[cursor]] for context.\n", target_path: "Notes/Reference.md", display: "reference", expected_output: "See the result [[Notes/Reference.md|reference]] for context.\n"},
+    index_refresh: {path: "Notes/Refresh.md", before: "# Refresh\n\nStale index entry.\n", after: "# Refresh\n\nCompatibility refreshed entry.\n", query: "refreshed", expected_paths: ["Notes/Refresh.md"], stale_query: "stale", expected_stale_paths: []},
+    text_extractor: {
+      dependency_artifact_id: "PC-DEP-TEXT-EXTRACTOR",
+      version: "0.7.0",
+      enabled: true,
+      expected_paths: ["Assets/Guide.pdf", "Assets/Diagram.png", "Docs/Manual.docx"],
+      extracted: [
+        {path: "Assets/Guide.pdf", kind: "pdf", expected_text: "Compatibility guide for extracted renderer content."},
+        {path: "Assets/Diagram.png", kind: "image", expected_text: "renderer compatibility diagram."},
+        {path: "Docs/Manual.docx", kind: "document", expected_text: "Phrase search across extracted content."},
+      ],
+    },
+    expected_unrelated_path: "Notes/Untouched.md",
+    expected_unrelated_content: "# Untouched\n\nThis note remains byte-identical.\n",
+  });
+  expect(pc15.files).toContainEqual(expect.objectContaining({path: "Assets/Guide.pdf", content: expect.stringContaining("PDF_TEXT:")}));
+  expect(pc15.files).toContainEqual(expect.objectContaining({path: "Assets/Diagram.png", content: expect.stringContaining("EXTRACTED_TEXT:")}));
+  expect(pc15.files).toContainEqual(expect.objectContaining({path: "Docs/Manual.docx", content: expect.stringContaining("DOCUMENT_TEXT:")}));
+  expect(rendererWorker).toContain("function boundedOmnisearchWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-omnisearch-projection"');
+  expect(rendererWorker).toContain("keyboard_navigation_match");
+  expect(rendererWorker).toContain("text_extractor_dependency_verified");
+  expect(loadedWorkflowAudit).toContain("function omnisearchWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("omnisearch_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("omnisearch_workflow_complete");
 });
 
 test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {
