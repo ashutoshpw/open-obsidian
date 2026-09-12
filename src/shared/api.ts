@@ -7,6 +7,7 @@ export const CHANNELS = {
   listFiles: "vault:list-files",
   search: "vault:search",
   readFile: "vault:read",
+  readAttachment: "vault:read-attachment",
   writeFile: "vault:write",
   popoutOpen: "popout:open",
   reviewChanges: "chronicle:review-changes",
@@ -92,6 +93,17 @@ export type VaultReadResponse = {
   relativePath: string;
   base64: string;
   revision: string;
+};
+
+export type AttachmentReadRequest = {sourcePath: string; target: string};
+
+export type AttachmentReadResponse = {
+  relativePath: string;
+  base64: string;
+  revision: string;
+  bytes: number;
+  mimeType: string;
+  kind: "image" | "audio" | "video";
 };
 
 export type VaultWriteRequest = {
@@ -352,6 +364,13 @@ export function validateVaultWriteRequest(value: unknown): VaultWriteRequest {
   return {relativePath: value.relativePath, expectedRevision: value.expectedRevision ?? null, base64: value.base64};
 }
 
+export function validateAttachmentReadRequest(value: unknown): AttachmentReadRequest {
+  if (!isRecord(value)) throw new Error("Invalid attachment read request");
+  const sourcePath = validateWorkspacePath(value.sourcePath, "attachment source path");
+  if (typeof value.target !== "string" || value.target.length === 0 || value.target.length > 4096 || value.target.includes("\0")) throw new Error("Invalid attachment target");
+  return {sourcePath, target: value.target};
+}
+
 export function validateChronicleDiffRequest(value: unknown): ChronicleDiffRequest {
   if (value === undefined || value === null) return {};
   if (!isRecord(value) || (value.relativePath !== undefined && typeof value.relativePath !== "string") || (value.staged !== undefined && typeof value.staged !== "boolean")) throw new Error("Invalid Chronicle diff request");
@@ -610,6 +629,7 @@ export type OpenObsidianAPI = {
   listFiles: () => Promise<VaultFileSummary[]>;
   search: (query: string) => Promise<VaultSearchResult[]>;
   readFile: (relativePath: string) => Promise<VaultReadResponse>;
+  readAttachment: (request: AttachmentReadRequest) => Promise<AttachmentReadResponse | null>;
   writeFile: (request: VaultWriteRequest) => Promise<VaultReadResponse>;
   openPopout: (request: PopoutOpenRequest) => Promise<PopoutOpenResponse>;
   reviewChanges: () => Promise<ChronicleCommitReview>;

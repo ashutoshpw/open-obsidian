@@ -4,6 +4,7 @@ import {existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync} from "nod
 import {fileURLToPath} from "node:url";
 import {dirname, isAbsolute, join, resolve} from "node:path";
 import {applyAIChangeSet, draftLocalAIChange, organizationSuggestions, undoAIChange, type AppliedAIChange} from "../core/ai-changes.js";
+import {canInlineAttachment, inlineAttachmentInfo, resolveInlineAttachmentTarget} from "../core/attachments.js";
 import {createFetchProviderTransport, createProviderRetrievalModel, describeProvider, ProviderUsageLedger} from "../core/providers.js";
 import {exportPortableConversation} from "../core/model-lifecycle.js";
 import {chronicleDiff, chronicleHistory, commitChronicleSelection, inspectVaultGitState, restoreChronicleFile, reviewChronicleChanges} from "../core/chronicle.js";
@@ -24,7 +25,7 @@ import {discoverVaultConfiguration} from "../core/configuration.js";
 import {ElectronCredentialStore} from "./provider-credentials.js";
 import {parseLaunchArguments, parseDeepLinkIntent, type LaunchIntent} from "../shared/entry-points.js";
 import {parseAppearanceSettings, type VaultAppearance} from "../shared/ui/index.js";
-import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {CHANNELS, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validatePopoutOpenRequest, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState, type AIApplyChangeResponse, type AIChangeSet, type AIOrganizationResponse, type AIUndoChangeResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseValue, type CanvasCreateNoteResponse, type CanvasView, type ConflictReadResponse, type ConflictResolutionResponse, type ConversationExportRequest, type GraphView, type HistoryCleanupResult, type HistoryPlanSummary, type HistoryPolicy, type NoteContext, type PopoutIntent, type PopoutOpenResponse, type ProviderSettings, type ProviderStatus, type RetrievalResponse, type SyncToolDisposition, type VaultFileSummary, type VaultHistoryRecord, type VaultSearchResult, type VaultSummary, type VaultWriteRequest, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
@@ -287,6 +288,35 @@ function readFile(event: Electron.IpcMainInvokeEvent, relativePath: unknown): ob
   if (session) assertPopoutPath(session, relativePath);
   const read = requireVault().read(relativePath);
   return {relativePath: read.relativePath, base64: Buffer.from(read.bytes).toString("base64"), revision: read.revision};
+}
+
+function inlineAttachmentEntry(store: VaultStore, request: ReturnType<typeof validateAttachmentReadRequest>): {relativePath: string; bytes: number} | null {
+  const snapshot = store.scan().after;
+  const resolvedPath = resolveInlineAttachmentTarget(request.sourcePath, request.target, snapshot.entries);
+  if (!resolvedPath) return null;
+  const entry = snapshot.entries.find((candidate) => candidate.relativePath === resolvedPath && candidate.kind === "file");
+  return entry ? {relativePath: resolvedPath, bytes: entry.bytes} : null;
+}
+
+function inlineAttachmentCandidate(store: VaultStore, request: ReturnType<typeof validateAttachmentReadRequest>): {relativePath: string; mimeType: string; kind: "image" | "audio" | "video"} | null {
+  const entry = inlineAttachmentEntry(store, request);
+  if (!entry) return null;
+  if (!canInlineAttachment(entry.relativePath, entry.bytes)) return null;
+  const info = inlineAttachmentInfo(entry.relativePath);
+  if (!info) return null;
+  return {relativePath: entry.relativePath, mimeType: info.mimeType, kind: info.kind};
+}
+
+function readAttachment(event: Electron.IpcMainInvokeEvent, value: unknown): AttachmentReadResponse | null {
+  const request = validateAttachmentReadRequest(value);
+  const session = popoutSessionForEvent(event);
+  if (session) assertPopoutPath(session, request.sourcePath);
+  const store = requireVault();
+  const candidate = inlineAttachmentCandidate(store, request);
+  if (!candidate) return null;
+  const read = store.read(candidate.relativePath);
+  if (!canInlineAttachment(read.relativePath, read.bytes.byteLength)) return null;
+  return {relativePath: read.relativePath, base64: Buffer.from(read.bytes).toString("base64"), revision: read.revision, bytes: read.bytes.byteLength, mimeType: candidate.mimeType, kind: candidate.kind};
 }
 
 function writeFile(event: Electron.IpcMainInvokeEvent, value: unknown): object {
@@ -688,6 +718,7 @@ function registerVaultHandlers(): void {
   ipcMain.handle(CHANNELS.listFiles, listFiles);
   ipcMain.handle(CHANNELS.search, searchFiles);
   ipcMain.handle(CHANNELS.readFile, readFile);
+  ipcMain.handle(CHANNELS.readAttachment, readAttachment);
   ipcMain.handle(CHANNELS.writeFile, writeFile);
   ipcMain.handle(CHANNELS.popoutOpen, openPopout);
   ipcMain.handle(CHANNELS.reviewChanges, reviewChanges);

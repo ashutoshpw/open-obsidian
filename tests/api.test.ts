@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
+import {CHANNELS, DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, validateAIDraftRequest, validateAIApplyChangeRequest, validateAIOrganizationScope, validateAIUndoChangeRequest, validateAttachmentReadRequest, validateCanvasCreateNoteRequest, validateCanvasTextEditRequest, validateChronicleCommitRequest, validateChronicleDiffRequest, validateChronicleRestoreRequest, validateConflictReadRequest, validateConflictResolutionRequest, validateConversationExportRequest, validateHistoryPolicy, validateProviderCredentialRequest, validateProviderSettings, validateRetrievalRequest, validateTaskToggleRequest, validateVaultWriteRequest, validateWorkspaceSettings, validateWorkspaceState} from "../src/shared/api.js";
 
 test("vault IPC validation accepts canonical payloads and normalizes omitted revisions", () => {
   expect(validateVaultWriteRequest({relativePath: "note.md", base64: "aGk="})).toEqual({relativePath: "note.md", expectedRevision: null, base64: "aGk="});
@@ -12,6 +12,14 @@ test("vault IPC validation rejects malformed payloads before the broker", () => 
   expect(() => validateVaultWriteRequest({relativePath: "", base64: "aGk="})).toThrow("Invalid vault write request");
   expect(() => validateVaultWriteRequest({relativePath: "note.md", expectedRevision: 7, base64: "aGk="})).toThrow("Invalid vault write request");
   expect(() => validateVaultWriteRequest({relativePath: "note.md", base64: "not-base64!"})).toThrow("Invalid vault write request");
+});
+
+test("attachment IPC validation bounds the source note and leaves target resolution to the vault broker", () => {
+  expect(CHANNELS.readAttachment).toBe("vault:read-attachment");
+  expect(validateAttachmentReadRequest({sourcePath: "Notes/readme.md", target: "Images/photo.png"})).toEqual({sourcePath: "Notes/readme.md", target: "Images/photo.png"});
+  expect(() => validateAttachmentReadRequest({sourcePath: "../outside.md", target: "photo.png"})).toThrow("Invalid workspace attachment source path");
+  expect(() => validateAttachmentReadRequest({sourcePath: "Notes/readme.md", target: "https://example.com/photo.png\0"})).toThrow("Invalid attachment target");
+  expect(() => validateAttachmentReadRequest({sourcePath: "Notes/readme.md", target: ""})).toThrow("Invalid attachment target");
 });
 
 test("Chronicle IPC validation keeps diff, commit and restore actions typed", () => {

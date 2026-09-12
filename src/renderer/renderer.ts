@@ -1,4 +1,4 @@
-import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
+import {DEFAULT_HISTORY_POLICY, DEFAULT_PROVIDER_SETTINGS, DEFAULT_WORKSPACE_SETTINGS, DEFAULT_WORKSPACE_STATE, type AIChangeSet, type AIOrganizationResponse, type AttachmentReadResponse, type BaseEvaluationView, type BaseResponse, type BaseScalar, type BaseValue, type CanvasNodeView, type CanvasView, type ConversationTurn, type EditorMode, type GraphView, type HistoryPolicy, type NoteContext, type OpenObsidianAPI, type ProviderMode, type ProviderSettings, type ProviderStatus, type ProviderUsageCaps, type RetrievalCitation, type RetrievalProgress, type RetrievalRequest, type RetrievalResponse, type SyncToolDisposition, type VaultHistoryRecord, type WorkspaceSettings, type WorkspaceState} from "../shared/api.js";
 import type {LaunchIntent} from "../shared/entry-points.js";
 import {decodeBase64, encodeBase64} from "../shared/base64.js";
 import {layoutGraph, parseInlineMarkdown, parseMarkdownPreview, resolveKeyboardCommand, styleMatchesName, themeStyleName, type KeyboardCommandId, type MarkdownInlineSegment, type MarkdownPreviewBlock, type ThemeMode, type ThemeStyleAsset, type VaultAppearance} from "../shared/ui/index.js";
@@ -183,6 +183,7 @@ let selectedPath: string | null = null;
 let selectedRevision: string | null = null;
 let dirty = false;
 let requestId = 0;
+let previewGeneration = 0;
 let changeReview: Awaited<ReturnType<OpenObsidianAPI["reviewChanges"]>> | null = null;
 let workspaceSettings: WorkspaceSettings = {...DEFAULT_WORKSPACE_SETTINGS, historyPolicy: {...DEFAULT_HISTORY_POLICY}};
 let workspaceState: WorkspaceState = {...DEFAULT_WORKSPACE_STATE, settings: workspaceSettings, openTabs: [], navigationHistory: []};
@@ -1038,11 +1039,84 @@ function previewEmbedSegment(segment: Extract<MarkdownInlineSegment, {kind: "emb
   Object.entries(previewEmbedData(segment)).forEach(([key, value]) => {
     embed.dataset[key] = value;
   });
+  embed.dataset.label = segment.text || segment.target;
   const description = previewEmbedDescription(segment);
   embed.title = description.title;
   embed.setAttribute("aria-label", description.title);
   embed.textContent = description.text;
   return embed;
+}
+
+function attachmentDimension(value: string | undefined): number | undefined {
+  if (!value) return undefined;
+  const dimension = Number(value);
+  return Number.isSafeInteger(dimension) && dimension > 0 ? dimension : undefined;
+}
+
+function createAttachmentElement(response: AttachmentReadResponse): HTMLImageElement | HTMLAudioElement | HTMLVideoElement {
+  if (response.kind === "image") return document.createElement("img");
+  if (response.kind === "audio") return document.createElement("audio");
+  return document.createElement("video");
+}
+
+function applyAttachmentDimensions(element: HTMLImageElement | HTMLAudioElement | HTMLVideoElement, placeholder: HTMLElement): void {
+  const width = attachmentDimension(placeholder.dataset.width);
+  const height = attachmentDimension(placeholder.dataset.height);
+  if (width !== undefined) element.setAttribute("width", String(width));
+  if (height !== undefined) element.setAttribute("height", String(height));
+}
+
+function applyAttachmentPlayback(element: HTMLImageElement | HTMLAudioElement | HTMLVideoElement): void {
+  if (element instanceof HTMLImageElement) {
+    element.decoding = "async";
+    element.loading = "lazy";
+    return;
+  }
+  element.controls = true;
+  element.preload = "metadata";
+}
+
+function previewAttachmentElement(response: AttachmentReadResponse, placeholder: HTMLElement): HTMLElement {
+  const label = placeholder.dataset.label || response.relativePath;
+  const element = createAttachmentElement(response);
+  element.className = `markdown-attachment markdown-attachment-${response.kind}`;
+  element.dataset.target = response.relativePath;
+  element.dataset.mimeType = response.mimeType;
+  element.dataset.bytes = String(response.bytes);
+  element.dataset.revision = response.revision;
+  const fragment = placeholder.dataset.fragment;
+  if (fragment) element.dataset.fragment = fragment;
+  element.setAttribute("aria-label", label);
+  if (element instanceof HTMLImageElement) {
+    element.alt = label;
+  }
+  applyAttachmentPlayback(element);
+  applyAttachmentDimensions(element, placeholder);
+  element.src = `data:${response.mimeType};base64,${response.base64}`;
+  return element;
+}
+
+async function requestPreviewAttachment(sourcePath: string, target: string | undefined): Promise<AttachmentReadResponse | null> {
+  if (!api || !target) return null;
+  try {
+    return await api.readAttachment({sourcePath, target});
+  } catch {
+    return null;
+  }
+}
+
+async function hydratePreviewEmbed(sourcePath: string, generation: number, placeholder: HTMLElement): Promise<void> {
+  const response = await requestPreviewAttachment(sourcePath, placeholder.dataset.target);
+  if (!response) return;
+  if (generation !== previewGeneration) return;
+  if (!placeholder.isConnected) return;
+  placeholder.replaceWith(previewAttachmentElement(response, placeholder));
+}
+
+async function hydratePreviewEmbeds(sourcePath: string, generation: number): Promise<void> {
+  if (!api || !notePreview) return;
+  const placeholders = [...notePreview.querySelectorAll<HTMLElement>(".markdown-embed")];
+  await Promise.all(placeholders.map((placeholder) => hydratePreviewEmbed(sourcePath, generation, placeholder)));
 }
 
 const markdownInlineSpecialRenderers: Partial<Record<MarkdownInlineSegment["kind"], (segment: MarkdownInlineSegment) => Node>> = {
@@ -1173,6 +1247,7 @@ function previewElement(block: MarkdownPreviewBlock): HTMLElement {
 
 function renderNotePreview(value: string): void {
   if (!notePreview) return;
+  const generation = ++previewGeneration;
   notePreview.replaceChildren(...parseMarkdownPreview(value).map(previewElement));
   const tasks = selectedPath ? extractMarkdownTasks(value, selectedPath).map((task) => ({...task, revision: selectedRevision ?? undefined})) : [];
   notePreview.querySelectorAll<HTMLInputElement>(".task-line input").forEach((checkbox, index) => {
@@ -1186,6 +1261,7 @@ function renderNotePreview(value: string): void {
     checkbox.addEventListener("change", () => void toggleTaskItem(task, checkbox));
   });
   renderTaskContext();
+  if (selectedPath) void hydratePreviewEmbeds(selectedPath, generation);
 }
 
 function renderEditorMode(): void {
