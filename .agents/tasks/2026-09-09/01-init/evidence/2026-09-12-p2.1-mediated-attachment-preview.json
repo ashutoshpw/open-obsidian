@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T02:27:38Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C02.1", "C03", "C03.1", "C08"],
+  "fixture_ids": ["fixture:c02-dialects", "fixture:c03-links", "fixture:c03-link-forms", "fixture:c08-attachments"],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "218d68a9445cbb2c7b73a9e6c9de4742d041d03d",
+    "tested_source_tree": "4eaec04571f565773f18af038d4256051860a20ddebd8d112bcbdb2a3db2eeb9"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "command": "bun test tests/attachments.test.ts tests/api.test.ts tests/markdown-preview.test.ts",
+      "exit_code": 0,
+      "result": "26 focused tests pass with 109 expectations, covering MIME/size policy, note-relative resolution, symlink and traversal rejection, ambiguous basenames, IPC validation and inline embed parsing."
+    },
+    {
+      "command": "bun run audit:fallow:strict",
+      "exit_code": 0,
+      "result": "No changed-code issues; only the two inherited renderer complexity findings remain excluded by the audit gate."
+    },
+    {
+      "command": "bun run typecheck",
+      "exit_code": 0,
+      "result": "Strict TypeScript checking passes for the mediated attachment IPC contract, vault broker and renderer hydration path."
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "Routine gate passes with 194 tests and 1,091 expectations; state, contracts, architecture, accessibility, layout, typecheck, Knip and changed-file Fallow checks pass."
+    },
+    {
+      "command": "bun run compile",
+      "exit_code": 0,
+      "result": "Main, preload, renderer and popout bundles compile successfully."
+    },
+    {
+      "command": "bun run final:audit",
+      "exit_code": 0,
+      "result": "Local final audit passes on main at 218d68a9445cbb2c7b73a9e6c9de4742d041d03d while origin/main remains 9320765697a8e2df95520be9fdbe6d29bc6f4775 before push; implementation readiness remains 196 rows with 28 passing, 128 implemented, 32 pending, 0 failing, 1 unsupported-security and 7 external-pending."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "236 included paths; source tree digest is 4eaec04571f565773f18af038d4256051860a20ddebd8d112bcbdb2a3db2eeb9."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "No whitespace errors."
+    }
+  ],
+  "implemented": [
+    "Added a mediated vault-relative attachment read IPC channel that resolves only scanned regular files, rejects external URLs/traversal/symlinks and enforces an 8 MiB preview cap.",
+    "Added an extension allowlist for raster images, audio and video; SVG, PDF and unknown binaries remain inert and no external URL is navigated.",
+    "Added accessible image/audio/video renderer hydration through bounded data URLs, preserving embed labels, fragments and dimensions while retaining generation checks for stale previews.",
+    "Added focused policy, resolver and IPC validation tests without changing authoritative vault bytes."
+  ],
+  "limitations": [
+    "PDF, SVG, unknown-binary, transclusion and external-open behavior remain pending; their placeholders do not load or navigate.",
+    "This evidence is local implementation evidence only; visible Electron, reference-Obsidian, human accessibility and cross-platform attachment behavior remain pending until hosted/runtime checks complete.",
+    "No provider, account, credential, personal vault or external reference runtime was accessed or modified."
+  ]
+}
