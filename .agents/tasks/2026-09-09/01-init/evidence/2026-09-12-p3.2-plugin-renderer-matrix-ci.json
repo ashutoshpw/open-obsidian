@@ -1,0 +1,171 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-renderer-matrix-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "D11",
+    "D15",
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-007",
+    "PC01",
+    "PC02",
+    "PC03",
+    "PC04",
+    "PC05",
+    "PC06",
+    "PC07",
+    "PC08",
+    "PC09",
+    "PC10",
+    "PC11",
+    "PC12",
+    "PC13",
+    "PC14",
+    "PC15",
+    "PC16",
+    "PC17",
+    "PC18",
+    "PC19",
+    "PC20",
+    "PC21",
+    "PC22",
+    "PC23",
+    "PC24",
+    "PC25",
+    "PC-DEP-MINIMAL",
+    "PC-DEP-TEXT-EXTRACTOR"
+  ],
+  "decision_id": "D15",
+  "recorded_at": "2026-09-12T13:26:02Z",
+  "source_commit": "aeebf7291d2edc253c8c3e46215cb13e938b89a0",
+  "status": "passed",
+  "source_tree": {
+    "local_sha256": "738c0c0e092985020d2a92638fa7a59433b004ffe77c4e49dc19d51fa4da38a3",
+    "local_paths": 239,
+    "definition": "The clean local digest is the source of record; hosted jobs create only their own redirected report output outside this source-of-record digest."
+  },
+  "failed_attempt": {
+    "run_id": 34696134641,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34696134641",
+    "conclusion": "failure",
+    "ubuntu_job_id": 103559824413,
+    "ubuntu_conclusion": "success",
+    "macos_job_id": 103559824558,
+    "macos_failure": "Several renderer workers exceeded the 20-second timeout when all 27 artifacts were launched concurrently.",
+    "windows_job_id": 103559824562,
+    "windows_failure": "The hard-coded /tmp temporary root was unavailable on Windows (ENOENT from mkdtemp).",
+    "disposition": "Fixed with host-native tmpdir() and a bounded four-worker audit queue; no compatibility status changed."
+  },
+  "run": {
+    "workflow": "OpenObsidian plugin renderer matrix",
+    "run_id": 34696274512,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34696274512",
+    "conclusion": "success",
+    "platforms": [
+      "Ubuntu",
+      "macOS",
+      "Windows"
+    ],
+    "jobs": {
+      "ubuntu-latest": {
+        "job_id": 103560193007,
+        "conclusion": "success"
+      },
+      "macos-latest": {
+        "job_id": 103560192906,
+        "conclusion": "success"
+      },
+      "windows-latest": {
+        "job_id": 103560193006,
+        "conclusion": "success"
+      }
+    },
+    "checks": "Every pinned main.js artifact and the mediated renderer fixture completed the isolated renderer lifecycle probe on all three hosted platforms; all report summaries passed with zero ordinary renderer failures."
+  },
+  "reports": {
+    "Linux": {
+      "artifact_name": "plugin-renderer-lifecycle-Linux-aeebf7291d2edc253c8c3e46215cb13e938b89a0",
+      "artifact_id": 10299190960,
+      "artifact_archive_bytes": 3239,
+      "artifact_archive_sha256": "4948f7fa8e900e9c052678df41ff8ca0688af817d18649850ac339fd2e541274",
+      "report_name": "plugin-renderer-lifecycle-Linux.json",
+      "report_bytes": 32293,
+      "report_sha256": "ca1f4af2306bd60f0589922226ff098527d36436b4aac50b1060459d0b8a5866",
+      "report_parse": "direct JSON lines plus summary",
+      "rows": 28,
+      "counts": {
+        "renderer-loaded": 4,
+        "renderer-denied": 23,
+        "not-applicable": 1,
+        "worker-error": 0,
+        "renderer-failed": 0,
+        "integrity-failed": 0
+      },
+      "summary": "PLUGIN ARTIFACT LIFECYCLE: passed; 23 denied, 4 loaded, 0 ordinary renderer failures, 1 not-applicable"
+    },
+    "macOS": {
+      "artifact_name": "plugin-renderer-lifecycle-macOS-aeebf7291d2edc253c8c3e46215cb13e938b89a0",
+      "artifact_id": 10299026287,
+      "artifact_archive_bytes": 3256,
+      "artifact_archive_sha256": "801295b17ff59ead5a337f749cb65ed22b9c829d61e66476e9ad057ccfa44eea",
+      "report_name": "plugin-renderer-lifecycle-macOS.json",
+      "report_bytes": 32324,
+      "report_sha256": "ae61d2406613817b98d1735e71bca43c38b0b8388feadc86e2d1975f5a22718d",
+      "report_parse": "JSON lines after stripping the leading Electron download line",
+      "rows": 28,
+      "counts": {
+        "renderer-loaded": 4,
+        "renderer-denied": 23,
+        "not-applicable": 1,
+        "worker-error": 0,
+        "renderer-failed": 0,
+        "integrity-failed": 0
+      },
+      "summary": "PLUGIN ARTIFACT LIFECYCLE: passed; 23 denied, 4 loaded, 0 ordinary renderer failures, 1 not-applicable"
+    },
+    "Windows": {
+      "artifact_name": "plugin-renderer-lifecycle-Windows-aeebf7291d2edc253c8c3e46215cb13e938b89a0",
+      "artifact_id": 10298846686,
+      "artifact_archive_bytes": 3260,
+      "artifact_archive_sha256": "7bc0cd04d6c7db789781ada40fca0fc663cccdc68d7d720e374980437a12b10b",
+      "report_name": "plugin-renderer-lifecycle-Windows.json",
+      "report_bytes": 32324,
+      "report_sha256": "ae61d2406613817b98d1735e71bca43c38b0b8388feadc86e2d1975f5a22718d",
+      "report_parse": "JSON lines after stripping the leading Electron download line",
+      "rows": 28,
+      "counts": {
+        "renderer-loaded": 4,
+        "renderer-denied": 23,
+        "not-applicable": 1,
+        "worker-error": 0,
+        "renderer-failed": 0,
+        "integrity-failed": 0
+      },
+      "summary": "PLUGIN ARTIFACT LIFECYCLE: passed; 23 denied, 4 loaded, 0 ordinary renderer failures, 1 not-applicable"
+    }
+  },
+  "checks": {
+    "all_platform_jobs_passed": true,
+    "all_reports_have_28_rows": true,
+    "all_pinned_artifact_integrity_checks_passed": true,
+    "all_renderer_workers_completed": true,
+    "ordinary_renderer_failures_zero": true,
+    "all_denials_recorded_inside_isolated_wrapper": true,
+    "no_plugin_promoted": true
+  },
+  "limitation": "This matrix proves only cross-platform isolated renderer lifecycle behavior and unchanged artifact integrity. It does not certify stock Obsidian, same-user OS isolation against a hostile extension, reference settings/views/workflows, human behavior, provider-backed behavior, required combinations, signing, publication, updater behavior or compatibility promotion.",
+  "external_pending": [
+    "reference Obsidian workflow behavior",
+    "same-user OS enforcement against unchanged extensions",
+    "human validation",
+    "provider-backed or subscription-backed plugin behavior",
+    "required plugin combinations",
+    "signed release and updater installation/rollback"
+  ],
+  "result": "All 27 pinned plugin/dependency artifacts completed cross-platform isolated lifecycle probes with unchanged-byte integrity checks, 23 explicit renderer denials, four loaded lifecycle traces and one non-applicable theme dependency; the evidence remains non-certifying and no plugin or compatibility row was promoted."
+}

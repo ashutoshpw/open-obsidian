@@ -20,19 +20,19 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "035677060cb1ec14d9ca5258d3386aedeb164c72",
-  "updated_at": "2026-09-12T13:22:45Z",
+  "last_reconciled_head": "aeebf7291d2edc253c8c3e46215cb13e938b89a0",
+  "updated_at": "2026-09-12T13:26:02Z",
   "status": "active",
   "current_checkpoint": "P3.2",
-  "next_action": "Commit and push the renderer-matrix portability fix, inspect the rerun Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"035677060cb1ec14d9ca5258d3386aedeb164c72","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot.json","tested_source_tree":"28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot-ci.json","ci_runs":{"quality":34694646965,"desktop_build":34694646948,"loaded_workflows":34694646984},"quality_rerun":true},
+  "next_action": "Commit the renderer-matrix evidence reconciliation, push it, and continue P3.2 implementation without promoting plugin compatibility.",
+    "recent_increment": {"checkpoint":"P3.2","commit":"aeebf7291d2edc253c8c3e46215cb13e938b89a0","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-renderer-matrix-ci.json","tested_source_tree":"738c0c0e092985020d2a92638fa7a59433b004ffe77c4e49dc19d51fa4da38a3","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-renderer-matrix-ci.json","ci_runs":{"renderer_matrix":34696274512,"quality":34696274552,"desktop_build":34696274507,"loaded_workflows":34696274413},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2 work] Fix renderer matrix portability",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot.json",
-    "tested_source_tree": "28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d",
-    "next_action": "Commit and push the renderer-matrix portability fix, inspect the rerun Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility.",
+    "commit_marker": "[openobsidian P3.2 work] Reconcile renderer lifecycle matrix",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-renderer-matrix-ci.json",
+    "tested_source_tree": "738c0c0e092985020d2a92638fa7a59433b004ffe77c4e49dc19d51fa4da38a3",
+    "next_action": "Commit the renderer-matrix evidence reconciliation, push it, and continue P3.2 implementation without promoting plugin compatibility.",
     "hosted_reconciliation": {
       "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot-ci.json",
       "runs": {"quality": 34694646965, "desktop_build": 34694646948, "loaded_workflows": 34694646984},
@@ -43,16 +43,17 @@
       "quality_rerun": {"initial_attempt": 1, "initial_failed_macos_job": 103555921720, "final_attempt": 2, "final_macos_job": 103556153503},
       "desktop_artifact_hashes": {"Linux":"d29c4cd3e28b26161595e02d069a2b156d544d3f0c541ced5b7bea6f6fd9faf9","macOS":"b6abc10f6ecedc96426c826b9cad4dd499f2ba4c56f16b943efa36602f445833","Windows":"cfee03ca417d64a87387ea8185af31d50f4d1aee1cbdced57e503701f11dbef1"},
       "loaded_report_hashes": {"Linux":"3d41eccf3ce697b234dfa4a586634fe6bdf4787c46d3aa57cc5379082872753b","macOS":"aa3c53fbfb1038ab72ab4668a40ce0adc40851dd35901d92653d9f3fc3ecbdfd","Windows":"0446163f94a56862b011a54929590d7279f1c69ec99d034cd5c9026e19a31547"},
-      "pc19": {"renderer_status":"loaded on Linux, macOS and Windows","workflow_status":"passed bounded install/restart/update lifecycle and actions","registered_commands":36,"command_failures":0,"settings_displayed":true,"view_failures":[],"aggregate_restart_restores_data":false,"aggregate_update_restores_data":false,"scoped_and_persisted_data_checks":true,"plugin_data_writes":9,"vault_writes":0,"registrations_before_cleanup":4,"registrations_after_cleanup":0}
+      "pc19": {"renderer_status":"loaded on Linux, macOS and Windows","workflow_status":"passed bounded install/restart/update lifecycle and actions","registered_commands":36,"command_failures":0,"settings_displayed":true,"view_failures":[],"aggregate_restart_restores_data":false,"aggregate_update_restores_data":false,"scoped_and_persisted_data_checks":true,"plugin_data_writes":9,"vault_writes":0,"registrations_before_cleanup":4,"registrations_after_cleanup":0},
+      "renderer_matrix": {"evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-renderer-matrix-ci.json","run":34696274512,"platforms":["Ubuntu","macOS","Windows"],"status":"passed","artifacts_per_platform":28,"renderer_denials_per_platform":23,"renderer_loaded_per_platform":4,"ordinary_failures_per_platform":0,"no_plugin_promoted":true}
     }
   },
   "latest_reconciliation": {
     "checkpoint": "P3.2",
-    "commit": "035677060cb1ec14d9ca5258d3386aedeb164c72",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-persistence-snapshot-ci.json",
-    "runs": {"quality": 34694646965, "desktop_build": 34694646948, "loaded_workflows": 34694646984},
+    "commit": "aeebf7291d2edc253c8c3e46215cb13e938b89a0",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-renderer-matrix-ci.json",
+    "runs": {"renderer_matrix": 34696274512, "quality": 34696274552, "desktop_build": 34696274507, "loaded_workflows": 34696274413},
     "status": "passed",
-    "next_action": "Commit and push the renderer-matrix portability fix, inspect the rerun Ubuntu/macOS/Windows reports, then reconcile P3.2 without promoting plugin compatibility."
+    "next_action": "Commit the renderer-matrix evidence reconciliation, push it, and continue P3.2 implementation without promoting plugin compatibility."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",

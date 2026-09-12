@@ -283,6 +283,14 @@
       "tested_source_tree": "28c39a9dca6dccf1c07069f3f636e2a0f299c0e622d274250fc2c9f4913b907d",
       "status": "passed",
       "summary": "Hosted quality, unsigned preview desktop-build and loaded-workflow runs 34694646965, 34694646948 and 34694646984 passed on Ubuntu, macOS and Windows for 0356770 after the isolated macOS quality retry. All ten unchanged artifact traces and the PC07/PC21/PC23 combination pass bounded lifecycle, mediated persistence, actions, cleanup and zero direct vault writes; TaskNotes scoped first/latest persistence and Linter lifecycle/actions pass, while reference, same-user OS, human, signing, provider, required-combination and compatibility-promotion gates remain pending."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-renderer-matrix-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["D11", "D15", "GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-007", "PC01", "PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25", "PC-DEP-MINIMAL", "PC-DEP-TEXT-EXTRACTOR"],
+      "tested_source_tree": "738c0c0e092985020d2a92638fa7a59433b004ffe77c4e49dc19d51fa4da38a3",
+      "status": "passed",
+      "summary": "Cross-platform renderer-matrix run 34696274512 passed on Ubuntu, macOS and Windows after the recorded portability retry. All 27 pinned plugin/dependency artifacts completed isolated lifecycle probes with 28 rows per platform, 23 renderer denials, four loaded traces, one non-applicable Minimal dependency, zero integrity/worker/ordinary failures and no compatibility promotion; reference, hostile same-user OS, full workflow, combination and release gates remain pending."
     }
   ],
   "source_snapshots": {
