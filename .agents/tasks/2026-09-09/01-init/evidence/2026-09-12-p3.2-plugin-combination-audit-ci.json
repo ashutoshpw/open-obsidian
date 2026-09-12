@@ -1,0 +1,148 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-combination-audit-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC01",
+    "PC02",
+    "PC03",
+    "PC04",
+    "PC07",
+    "PC08",
+    "PC12",
+    "PC15",
+    "PC17",
+    "PC19",
+    "PC25",
+    "PC-DEP-MINIMAL",
+    "PC-DEP-TEXT-EXTRACTOR"
+  ],
+  "decision_id": "D15",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-combination-audit",
+  "recorded_at": "2026-09-12T14:54:53Z",
+  "head": "55d45317cf0795f1e07d0d4a2e8778cbc4eab82b",
+  "status": "passed",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-combination-audit.json",
+  "source_tree": {
+    "local_sha256": "90f5a8c89490f16329569378ba058427acac304d8c5a32fe2405e0ea31d09432",
+    "definition": "The clean local source digest is the source of record for the implementation commit; hosted quality workspaces contain transient runner output and are not used as the source digest."
+  },
+  "workflows": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34700365444,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34700365444",
+      "conclusion": "success",
+      "jobs": {
+        "Ubuntu": {"job_id": 103570925253, "conclusion": "success"},
+        "macOS": {"job_id": 103570925194, "conclusion": "success"},
+        "Windows": {"job_id": 103570925085, "conclusion": "success"}
+      },
+      "combination_step": "Reconcile catalog-required plugin combinations completed successfully on every job."
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34700365385,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34700365385",
+      "conclusion": "success",
+      "jobs": {
+        "Ubuntu": {"job_id": 103570925324, "conclusion": "success"},
+        "macOS": {"job_id": 103570925320, "conclusion": "success"},
+        "Windows": {"job_id": 103570925102, "conclusion": "success"}
+      }
+    },
+    "renderer_matrix": {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 34700365356,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34700365356",
+      "conclusion": "success",
+      "jobs": {
+        "Ubuntu": {"job_id": 103570925028, "conclusion": "success"},
+        "macOS": {"job_id": 103570924941, "conclusion": "success"},
+        "Windows": {"job_id": 103570925097, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34700365322,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34700365322",
+      "conclusion": "success",
+      "jobs": {
+        "Ubuntu": {"job_id": 103570924920, "conclusion": "success"},
+        "macOS": {"job_id": 103570925093, "conclusion": "success"},
+        "Windows": {"job_id": 103570925023, "conclusion": "success"}
+      },
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "release_disposition": "unsigned preview artifacts only"
+    }
+  },
+  "combination_audit": {
+    "workflow_step": "Reconcile catalog-required plugin combinations",
+    "all_platforms": "passed",
+    "platform_results": {
+      "Ubuntu": {
+        "quality_job_id": 103570925253,
+        "audit_status": "partial",
+        "combination_count": 7,
+        "candidate_denial_count": 7,
+        "candidate_pending_count": 0,
+        "bounded_pass_count": 2,
+        "unsupported_security_count": 0,
+        "all_catalog_combinations_covered": true,
+        "all_runtime_dispositions_pending": true,
+        "no_plugin_promoted": true,
+        "result": "All 7 catalog-required combinations are visible with 7 candidate-denial/pending-runtime dispositions and 2 bounded synthetic passes; no compatibility status or unsupported-security exception was promoted."
+      },
+      "macOS": {
+        "quality_job_id": 103570925194,
+        "audit_status": "partial",
+        "combination_count": 7,
+        "candidate_denial_count": 7,
+        "candidate_pending_count": 0,
+        "bounded_pass_count": 2,
+        "unsupported_security_count": 0,
+        "all_catalog_combinations_covered": true,
+        "all_runtime_dispositions_pending": true,
+        "no_plugin_promoted": true,
+        "result": "All 7 catalog-required combinations are visible with 7 candidate-denial/pending-runtime dispositions and 2 bounded synthetic passes; no compatibility status or unsupported-security exception was promoted."
+      },
+      "Windows": {
+        "quality_job_id": 103570925085,
+        "audit_status": "partial",
+        "combination_count": 7,
+        "candidate_denial_count": 7,
+        "candidate_pending_count": 0,
+        "bounded_pass_count": 2,
+        "unsupported_security_count": 0,
+        "all_catalog_combinations_covered": true,
+        "all_runtime_dispositions_pending": true,
+        "no_plugin_promoted": true,
+        "result": "All 7 catalog-required combinations are visible with 7 candidate-denial/pending-runtime dispositions and 2 bounded synthetic passes; no compatibility status or unsupported-security exception was promoted."
+      }
+    },
+    "checks": {
+      "combination_count": 7,
+      "candidate_denial_count": 7,
+      "candidate_pending_count": 0,
+      "bounded_pass_count": 2,
+      "unsupported_security_count": 0,
+      "all_catalog_combinations_covered": true,
+      "all_runtime_dispositions_pending": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "limitations": [
+    "The quality step validates the catalog-derived audit and its synthetic D15 boundaries; it does not certify stock Obsidian or reference behavior.",
+    "Same-user macOS and Windows OS enforcement, human accessibility/input, provider-backed behavior, signing, publication, updater installation/rollback and compatibility promotion remain pending.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Hosted quality, loaded-workflow, renderer-matrix and desktop-build runs succeeded on Ubuntu, macOS and Windows for 55d4531. The combination step reports seven catalog combinations, seven candidate denials, two bounded synthetic passes and no promotion; all runtime dispositions remain pending."
+}
