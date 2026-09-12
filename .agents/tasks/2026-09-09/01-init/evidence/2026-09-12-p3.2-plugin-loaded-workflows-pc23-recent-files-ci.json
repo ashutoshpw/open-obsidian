@@ -1,0 +1,138 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc23-recent-files-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC23"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T09:05:02Z",
+  "source_commit": "924b0265097f85d386ce9d94fa024e0732231238",
+  "source_tree": {
+    "local_sha256": "b023d5ce11ce85d05e0d88672d7d9eaf259129fce3bebe6169ed17a302f9035c",
+    "local_paths": 238,
+    "hosted_report_paths": 239,
+    "hosted_report_sha256": {
+      "Linux": "4f1cb124e258cef543b5c65d8cc54a04dcd1496b52f0230e680c942d83d9bb9b",
+      "macOS": "4684c61e460edd770b892e7df49782ed059e56a72a17fe88e7fbcc195d7f1ccd",
+      "Windows": "f92cbe5c3f3fb4448c000f3b25fd79dc7d38280216c8b2c1a7802e189ee73b9b"
+    },
+    "report_note": "Each hosted workspace contains one transient redirected-output path beyond the clean local source-of-record digest; macOS and Windows report downloads also begin with the Electron download line. Loaded-workflow JSON files are retained as platform evidence, not as the canonical source digest."
+  },
+  "runs": {
+    "quality": {
+      "run_id": 34684631906,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": "success",
+        "macos-latest": "success",
+        "windows-latest": "success"
+      },
+      "tests": "210 tests across 61 files, 0 failures on each hosted platform",
+      "scope": "repository quality, contracts, tests, typecheck, compile, packaged Electron/vault checks, synthetic lifecycle, Knip and report-only Fallow health"
+    },
+    "desktop_build": {
+      "run_id": 34684631907,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": "success",
+        "macos-latest": "success",
+        "windows-latest": "success"
+      },
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "release_gate": "preview; unsigned-preview",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifacts": {
+        "Linux": {
+          "name": "openobsidian-Linux-preview-924b0265097f85d386ce9d94fa024e0732231238.zip",
+          "artifact_id": 10294384968,
+          "sha256": "f59d2280d93450ebdb28dcc0fbf00e3aec9785c6b1211be1a8b077a554c8ad74"
+        },
+        "macOS": {
+          "name": "openobsidian-macOS-preview-924b0265097f85d386ce9d94fa024e0732231238.zip",
+          "artifact_id": 10295331931,
+          "sha256": "b40caeb9fa606142b8a356fb31af5aca80d9b98159b3f9a78856ecb4ff22ea40"
+        },
+        "Windows": {
+          "name": "openobsidian-Windows-preview-924b0265097f85d386ce9d94fa024e0732231238.zip",
+          "artifact_id": 10295042435,
+          "sha256": "e931a389eeea54ac8b1f2bf4d0d07f3b4e90b05197897014174f6f2dd6848424"
+        }
+      }
+    },
+    "loaded_workflows": {
+      "run_id": 34684631905,
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": "success",
+        "macos-latest": "success",
+        "windows-latest": "success"
+      },
+      "reports": {
+        "Linux": {
+          "status": "passed",
+          "source_tree_sha256": "40fc8389fd9f5bdbe331475738ff71637d345ba9360095ae727a459ff2bcb4af",
+          "pc23_action_status": "passed",
+          "pc23_stale_entries_removed": true,
+          "pc23_retained_entry_preserved": true,
+          "pc23_order_preserved": true,
+          "pc23_max_length_preserved": true,
+          "pc23_direct_vault_writes": 0,
+          "combination_action_status": "passed",
+          "all_bounded_traces_complete": true,
+          "vault_writes": 0
+        },
+        "macOS": {
+          "status": "passed",
+          "source_tree_sha256": "def211948e3c2378c484b33e18d84f7c8eb1e03a389d0e0fd5440ec3d2c675b6",
+          "pc23_action_status": "passed",
+          "pc23_stale_entries_removed": true,
+          "pc23_retained_entry_preserved": true,
+          "pc23_order_preserved": true,
+          "pc23_max_length_preserved": true,
+          "pc23_direct_vault_writes": 0,
+          "combination_action_status": "passed",
+          "all_bounded_traces_complete": true,
+          "vault_writes": 0
+        },
+        "Windows": {
+          "status": "passed",
+          "source_tree_sha256": "59b163bdeb98b9d2d862549ab170388f0dc58c9b2f4b7f5423206f1055e86dd2",
+          "pc23_action_status": "passed",
+          "pc23_stale_entries_removed": true,
+          "pc23_retained_entry_preserved": true,
+          "pc23_order_preserved": true,
+          "pc23_max_length_preserved": true,
+          "pc23_direct_vault_writes": 0,
+          "combination_action_status": "passed",
+          "all_bounded_traces_complete": true,
+          "vault_writes": 0
+        }
+      },
+      "scope": "unchanged pinned main.js bytes in the context-isolated synthetic Electron renderer; no stock Obsidian, unchanged-plugin vault mutation, reference or human certification"
+    }
+  },
+  "security_disposition": "The PC23 recent-file seam is a bounded in-memory projection over mediated fixture files and records zero direct vault writes on every hosted platform. Direct vault writes, host DOM, filesystem/network/process/credential access and compatibility promotion remain denied or pending.",
+  "external_pending": [
+    "reference Obsidian Recent Files stale-entry, rename, delete and navigation comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "required plugin combinations and alternating launches",
+    "signed release and updater installation/rollback"
+  ],
+  "result": "Quality, preview desktop-build and loaded-workflow runs all succeeded on Ubuntu, macOS and Windows for 924b026. Hosted reports reproduce PC23 stale-entry projection checks across install/restart/update, all eight bounded artifact traces, mediated persistence, cleanup and zero vault writes; artifacts remain unsigned previews and no plugin or compatibility row is promoted."
+}
