@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T01:50:41Z",
+  "checkpoint": "P2.1",
+  "requirements": [
+    "C03",
+    "C03.1"
+  ],
+  "fixture_ids": [
+    "fixture:c03-links",
+    "fixture:c03-link-forms",
+    "fixture:c03-rename-move"
+  ],
+  "environment": {
+    "os": "Linux",
+    "architecture": "x64",
+    "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
+    "branch": "main",
+    "bun_version": "1.4.2",
+    "implementation_commit": "8dca65f8ab0304ebc5187f18e47290439a2758dc",
+    "tested_source_tree": "c06b92eb46fcae493578639ce9489c84e4cf667888c120f212db93db1148a882"
+  },
+  "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+  "observations": [
+    {
+      "command": "bun test tests/links.test.ts tests/vault-index.test.ts tests/note-context.test.ts",
+      "exit_code": 0,
+      "result": "9 focused tests pass with 35 expectations, including unique heading and block-ID resolution, current-note subpaths, duplicate-heading ambiguity, missing-subpath refusal, fenced-code exclusion, backlinks and path-only rename behavior."
+    },
+    {
+      "command": "bun run audit:fallow:strict",
+      "exit_code": 0,
+      "result": "No issues in the four-file heading/block link increment."
+    },
+    {
+      "command": "bun run typecheck",
+      "exit_code": 0,
+      "result": "Strict TypeScript checking passes for source-aware link resolution and vault-index content plumbing."
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "Routine gate passes with 188 tests and 1,067 expectations; state, contracts, architecture, UX, accessibility, layout, typecheck, Knip and changed-file Fallow checks pass."
+    },
+    {
+      "command": "bun run compile",
+      "exit_code": 0,
+      "result": "Main, preload, renderer and popout bundles compile successfully."
+    },
+    {
+      "command": "bun run final:audit",
+      "exit_code": 0,
+      "result": "Final audit keeps origin/main and separate release handoffs valid; 196 rows remain 28 passing, 128 implemented, 32 pending, 0 failing, 1 unsupported-security and 7 external-pending, with 161 mandatory rows not release-passing."
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "235 included paths; source tree digest is c06b92eb46fcae493578639ce9489c84e4cf667888c120f212db93db1148a882."
+    }
+  ],
+  "implemented": [
+    "Added optional source-aware resolution for headings and block IDs, including same-note #subpaths, case-insensitive normalized headings, exact block IDs and duplicate detection.",
+    "Excluded fenced code from heading/block identity discovery and preserved path-only resolution for rename planning and source-only callers.",
+    "Passed all Markdown files from the vault index into link resolution so missing subpaths remain unresolved and duplicate headings remain ambiguous without changing source bytes."
+  ],
+  "limitations": [
+    "This slice validates source identities but does not implement heading/block navigation, transclusion rendering, filesystem rename execution or full Obsidian dialect parity.",
+    "Reference Obsidian open-edit-save-reopen comparison, cross-platform visible validation and duplicate-basename/heading behavior against the reference remain pending; C03/C03.1 remain implemented rather than release-passing.",
+    "No reference Obsidian instance, provider, personal vault or selected /home/ashutosh/Obsidian vault was accessed or modified."
+  ]
+}

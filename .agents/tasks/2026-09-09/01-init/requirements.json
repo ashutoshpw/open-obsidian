@@ -19,6 +19,22 @@
       "tested_source_tree": "79de753ac8506fd18ec3c9a7865a14d1c1e3d5ae0f7adb5d272078c2fef4fa44",
       "status": "partial",
       "summary": "Fresh quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows for the lifecycle storage-boundary fix; hosted unchanged-plugin reports remain partial with zero vault writes and no compatibility promotion."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-heading-block-link-resolution.json",
+      "checkpoint": "P2.1",
+      "requirements": ["C03", "C03.1"],
+      "tested_source_tree": "c06b92eb46fcae493578639ce9489c84e4cf667888c120f212db93db1148a882",
+      "status": "implemented",
+      "summary": "Source-aware unique heading/block-ID resolution, same-note subpaths, duplicate ambiguity, missing-subpath refusal and fenced-code exclusion pass focused local tests."
+    },
+    {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-heading-block-link-resolution-ci.json",
+      "checkpoint": "P2.1",
+      "requirements": ["C03", "C03.1"],
+      "tested_source_tree": "c06b92eb46fcae493578639ce9489c84e4cf667888c120f212db93db1148a882",
+      "status": "implemented",
+      "summary": "Quality, desktop-build and loaded-workflow runs passed on Ubuntu, macOS and Windows; loaded workflow evidence remains partial and no release status was promoted."
     }
   ],
   "source_snapshots": {
