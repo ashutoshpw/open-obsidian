@@ -1426,6 +1426,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the CI evidence to the requirements and state metadata. Reference Obsidian stale-entry/rename/delete behavior, same-user platform enforcement, human validation, required combinations, signing, publication and updater validation remain pending; the selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
 - P3.2 and the overall goal remain active. No plugin or compatibility row was promoted; the bounded renderer evidence remains synthetic and does not certify stock Obsidian or reference parity.
 
+## 2026-09-12T10:04:31Z — P3.2 hosted PC22 Smart Connections local-model/exclusion reconciliation
+
+- Reconciled pushed head `96b3eac03bb3433629437a7278470269f1925048` with successful quality run `34686901647`, preview desktop-build run `34686901642` and loaded-workflow run `34686901661`; Ubuntu, macOS and Windows jobs passed across all three workflows.
+- Hosted loaded-workflow reports reproduce PC22 Smart Connections 4.7.2 integrity, bounded install/restart/update/uninstall/return-to-Obsidian lifecycle, local `transformers` provenance for `TaylorAI/bge-micro-v2`, `Notes/Context.md` and `Notes/Related.md` indexing, `Private/Secret.md` exclusion, disabled remote fallback and disabled Smart Sources/Smart Blocks import/embed queues with zero vault writes. The bounded candidate projection remains capped at 16 entries and passes in all three phases.
+- Desktop packaging, release-manifest, runtime-notice, dependency-attribution and artifact-upload checks passed on all three platforms. Production signing remained skipped (`RELEASE_SIGNING_CONFIGURED=false`), so the recorded archives are unsigned previews; archive and release-manifest hashes are recorded in `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion-ci.json`.
+- Hosted source workspaces contain one transient redirected-output path (239 paths) versus the clean local 238-path source-of-record digest. Linux loaded JSON parses directly; macOS and Windows report downloads retain the leading Electron download line before JSON, which is documented and stripped only for parsing.
+- Added and linked the hosted CI evidence to requirements and state metadata. PC22 and P3.2 remain pending: reference Obsidian related-note behavior, provider-backed model execution, same-user platform enforcement, human validation, required combinations, signing, publication, updater and compatibility promotion remain external-pending. The selected `/home/ashutosh/Obsidian` vault was not accessed or modified.
+- No plugin or compatibility row was promoted; this remains bounded synthetic renderer evidence only.
+
 ## 2026-09-12T09:47:00Z — P3.2 bounded PC22 Smart Connections local-model/exclusion workflow
 
 - Extended PC22 with a Private/Secret.md exclusion fixture, bundled local transformer model identity/provenance, expected indexed and excluded paths, a bounded candidate limit and an explicit remote-fallback-disabled contract.

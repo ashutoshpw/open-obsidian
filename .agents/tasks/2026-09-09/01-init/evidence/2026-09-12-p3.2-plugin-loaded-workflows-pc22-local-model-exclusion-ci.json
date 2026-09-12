@@ -1,0 +1,199 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc22-local-model-exclusion-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC22"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T10:02:00Z",
+  "source_commit": "96b3eac03bb3433629437a7278470269f1925048",
+  "source_tree": {
+    "local_sha256": "a5227f56847ebdb8ca184eb8ee7d52a2f08cd4beb467e692c2e0241159388f40",
+    "local_paths": 238,
+    "hosted_report_paths": 239,
+    "hosted_report_sha256": {
+      "Linux": "5c1440abfc54eb77fa2f5180f51bb4cfd27bef395ace8dc857db0ce39b873821",
+      "macOS": "c861c3c6fd095d80b837256e191fb3cc24fceee3e400e6c95d904d7fe3d11c7f",
+      "Windows": "6c540cddadc9814826b0c399acbc68c7ae43419274b7bdd4777a959d522383fb"
+    },
+    "hosted_report_source_tree_sha256": {
+      "Linux": "7de87d6429613dcf1d5b564f207f89bf1c304daa37f34897e7581c2fac8e9f4c",
+      "macOS": "63c7e83ab9a7412c0561bc9d18778a917f44346b47730414bbb44268940aca29",
+      "Windows": "ffc0beea6bf944616af0a15cd6877db027e794bf2e4fa698d7589384db9c81b1"
+    },
+    "definition": "Clean local digest is the source of record; hosted audit workspaces contain one transient redirected-output path (239 paths versus 238 locally)."
+  },
+  "runs": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34686901647,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34686901647",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103535349616, "conclusion": "success"},
+        "macos-latest": {"job_id": 103535349584, "conclusion": "success"},
+        "windows-latest": {"job_id": 103535349515, "conclusion": "success"}
+      },
+      "checks": "Progress/contracts, architecture, version baseline, vault differential, core workflows, distribution/update metadata, accessibility, typecheck, tests, quality scorecard, Electron compile/vault round trip, synthetic lifecycle, Knip and report-only Fallow health passed on all three jobs; changed-code Fallow was skipped on this push-triggered run."
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34686901642,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34686901642",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103535349491, "conclusion": "success"},
+        "macos-latest": {"job_id": 103535349391, "conclusion": "success"},
+        "windows-latest": {"job_id": 103535349474, "conclusion": "success"}
+      },
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "release_gate": "preview; unsigned-preview",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifacts": {
+        "Linux": {
+          "name": "openobsidian-Linux-preview-96b3eac03bb3433629437a7278470269f1925048",
+          "artifact_id": 10295468389,
+          "archive_bytes": 125946548,
+          "archive_sha256": "a85f45cc8c1d17e0689006d129f3f9878df7b9fb7a83031255b48ff19f852809",
+          "release_manifest_sha256": "19bdc9f668e07ed5c029f451be9fda25e2809c845af553cff5c04aceb591ca4a"
+        },
+        "macOS": {
+          "name": "openobsidian-macOS-preview-96b3eac03bb3433629437a7278470269f1925048",
+          "artifact_id": 10295588186,
+          "archive_bytes": 397395487,
+          "archive_sha256": "59acb5bdcc6f32f232fb21f1dd7f207cd7bb32c8f238adf1fa0d3b6c25bd1266",
+          "release_manifest_sha256": "b47279090961da8d12c65fa0069d0704da967e5eac4478fab3953e665ba01ba7"
+        },
+        "Windows": {
+          "name": "openobsidian-Windows-preview-96b3eac03bb3433629437a7278470269f1925048",
+          "artifact_id": 10295977620,
+          "archive_bytes": 163005824,
+          "archive_sha256": "80e30a46de62485d07b71e0023121a9825450b97d0fe2c52ee50d55addce468c",
+          "release_manifest_sha256": "9ecb79051f12594eac71d5781a81b725cbf15e1b4c13c703b9276109cb06227c"
+        }
+      }
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34686901661,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34686901661",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103535349591, "conclusion": "success"},
+        "macos-latest": {"job_id": 103535349592, "conclusion": "success"},
+        "windows-latest": {"job_id": 103535349522, "conclusion": "success"}
+      },
+      "artifacts": {
+        "Linux": {
+          "name": "loaded-plugin-workflows-Linux-96b3eac03bb3433629437a7278470269f1925048",
+          "artifact_id": 10295423794,
+          "artifact_archive_bytes": 12422,
+          "artifact_archive_sha256": "3fbc95bbc6ba3d2edbf722ebd482b61db4892710456e5d05122a3e4d183848c4",
+          "report_name": "loaded-Linux.json",
+          "report_bytes": 259863,
+          "report_sha256": "5c1440abfc54eb77fa2f5180f51bb4cfd27bef395ace8dc857db0ce39b873821",
+          "report_parse": "direct JSON",
+          "status": "passed"
+        },
+        "macOS": {
+          "name": "loaded-plugin-workflows-macOS-96b3eac03bb3433629437a7278470269f1925048",
+          "artifact_id": 10295707958,
+          "artifact_archive_bytes": 12449,
+          "artifact_archive_sha256": "63a8324ccc11858fe6491457f9e532264409a71d4a931ac3766b6f60fb90bb0d",
+          "report_name": "loaded-macOS.json",
+          "report_bytes": 259897,
+          "report_sha256": "c861c3c6fd095d80b837256e191fb3cc24fceee3e400e6c95d904d7fe3d11c7f",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "passed"
+        },
+        "Windows": {
+          "name": "loaded-plugin-workflows-Windows-96b3eac03bb3433629437a7278470269f1925048",
+          "artifact_id": 10295732946,
+          "artifact_archive_bytes": 12446,
+          "artifact_archive_sha256": "4511bcffe1f4686ee43743dbb2a2e75e0c84944b7649e899e7f73136fc3ebcc5",
+          "report_name": "loaded-Windows.json",
+          "report_bytes": 259894,
+          "report_sha256": "6c540cddadc9814826b0c399acbc68c7ae43419274b7bdd4777a959d522383fb",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "status": "passed"
+        }
+      },
+      "checks": {
+        "all_jobs_uploaded_evidence": true,
+        "all_jobs_conclusion": "success",
+        "all_artifact_lifecycle_traces_complete": true,
+        "all_artifacts_integrity_checked": true,
+        "pc22_lifecycle": "complete",
+        "pc22_actions": "passed",
+        "pc22_persistence": "preserved",
+        "pc22_local_model_provenance": "verified",
+        "pc22_indexed_paths": ["Notes/Context.md", "Notes/Related.md"],
+        "pc22_excluded_paths": ["Private/Secret.md"],
+        "pc22_exclusions_enforced": true,
+        "pc22_remote_fallback_disabled": true,
+        "pc22_remote_fallback_used": false,
+        "pc22_import_queue_disabled": true,
+        "pc22_embed_queue_disabled": true,
+        "pc22_bounded_scope": true,
+        "pc22_direct_vault_writes": 0,
+        "zero_vault_writes": true,
+        "no_plugin_promoted": true
+      },
+      "pc22": {
+        "name": "Smart Connections",
+        "version": "4.7.2",
+        "model_identity": "local",
+        "model_provider": "transformers",
+        "model_key": "TaylorAI/bge-micro-v2",
+        "model_provenance": "bundled-local-transformers",
+        "phases": ["install", "restart", "update"],
+        "candidate_paths": ["Notes/Context.md", "Notes/Related.md", "Private/Secret.md"],
+        "candidate_count": 3,
+        "max_candidates": 16,
+        "indexed_paths": ["Notes/Context.md", "Notes/Related.md"],
+        "excluded_folders": ["Private"],
+        "excluded_paths": ["Private/Secret.md"],
+        "remote_fallback_disabled": true,
+        "remote_fallback_used": false,
+        "smart_sources_import_disabled": true,
+        "smart_sources_embed_queue_disabled": true,
+        "smart_blocks_import_disabled": true,
+        "smart_blocks_embed_queue_disabled": true,
+        "bounded_read_only_projection": true,
+        "direct_vault_writes": 0,
+        "cleanup_after_each_phase": true,
+        "uninstall_clears_registrations": true,
+        "return_to_obsidian": true
+      }
+    }
+  },
+  "security_disposition": "Unchanged pinned Smart Connections bytes run only inside the context-isolated synthetic Electron renderer. The local-model/exclusion checks are bounded projections over mediated fixture files; direct vault writes, host DOM, filesystem/network/process/credential access and compatibility promotion remain denied or pending.",
+  "external_pending": [
+    "reference Obsidian related-note indexing, retrieval, edit/delete refresh and exclusion comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed model behavior and remote fallback validation",
+    "required plugin combinations and alternating launches",
+    "signed release, publication and updater installation/rollback"
+  ],
+  "limitations": [
+    "Hosted report source digests contain one transient redirected-output path beyond the clean local 238-path source-of-record digest.",
+    "macOS and Windows report files retain the leading Electron download line before JSON; the raw report hashes above cover the downloaded files, and parsing was performed after removing that line.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified."
+  ],
+  "result": "Quality, unsigned preview desktop-build and loaded-workflow runs all succeeded on Ubuntu, macOS and Windows for 96b3eac. PC22 local transformer provenance, exclusion enforcement, disabled remote/import/embed paths, bounded projection, lifecycle cleanup and zero-vault-write checks passed in the hosted synthetic scope; PC22 and P3.2 remain pending and no compatibility row is promoted."
+}

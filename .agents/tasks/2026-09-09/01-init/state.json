@@ -20,27 +20,38 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "1864893ea9c384f6f492ac0115faac8303289284",
-  "updated_at": "2026-09-12T09:47:00Z",
+  "last_reconciled_head": "96b3eac03bb3433629437a7278470269f1925048",
+  "updated_at": "2026-09-12T10:04:31Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the next available compatibility or recovery gap without promoting plugin support; retain action, persistence, cross-platform, reference and human limitations explicitly.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"1864893ea9c384f6f492ac0115faac8303289284","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc23-recent-files-rename-delete-ci.json","tested_source_tree":"a01897a2212cd17218a94f0f633987bae0068d3b2d58275b2445108b0c710888","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc23-recent-files-rename-delete-ci.json","ci_runs":{"quality":34685572480,"desktop_build":34685572543,"loaded_workflows":34685572531},"quality_rerun":false},
+    "recent_increment": {"checkpoint":"P3.2","commit":"96b3eac03bb3433629437a7278470269f1925048","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion-ci.json","tested_source_tree":"a5227f56847ebdb8ca184eb8ee7d52a2f08cd4beb467e692c2e0241159388f40","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion-ci.json","ci_runs":{"quality":34686901647,"desktop_build":34686901642,"loaded_workflows":34686901661},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
     "commit_marker": "[openobsidian P3.2 work] Add bounded PC22 local-model exclusion workflow",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion.json",
     "tested_source_tree": "a5227f56847ebdb8ca184eb8ee7d52a2f08cd4beb467e692c2e0241159388f40",
-    "next_action": "Commit and push this PC22 bounded local-model/exclusion workflow slice, then reconcile the three hosted Actions workflows without promoting plugin compatibility.",
+    "next_action": "Keep PC22 and P3.2 pending; continue reference Obsidian, provider-backed, same-user cross-platform, human, signing, updater and required-combination validation without promoting plugin compatibility.",
     "hosted_reconciliation": {
-      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc23-recent-files-rename-delete-ci.json",
-      "runs": {"quality": 34685572480, "desktop_build": 34685572543, "loaded_workflows": 34685572531},
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion-ci.json",
+      "runs": {"quality": 34686901647, "desktop_build": 34686901642, "loaded_workflows": 34686901661},
       "platforms": ["Ubuntu", "macOS", "Windows"],
       "status": "partial",
       "signing": "skipped",
-      "no_plugin_promoted": true
+      "no_plugin_promoted": true,
+      "desktop_artifact_hashes": {"Linux":"a85f45cc8c1d17e0689006d129f3f9878df7b9fb7a83031255b48ff19f852809","macOS":"59acb5bdcc6f32f232fb21f1dd7f207cd7bb32c8f238adf1fa0d3b6c25bd1266","Windows":"80e30a46de62485d07b71e0023121a9825450b97d0fe2c52ee50d55addce468c"},
+      "loaded_report_hashes": {"Linux":"5c1440abfc54eb77fa2f5180f51bb4cfd27bef395ace8dc857db0ce39b873821","macOS":"c861c3c6fd095d80b837256e191fb3cc24fceee3e400e6c95d904d7fe3d11c7f","Windows":"6c540cddadc9814826b0c399acbc68c7ae43419274b7bdd4777a959d522383fb"},
+      "pc22": {"lifecycle":"complete","actions":"passed","local_model_provenance":"verified","indexed_paths":["Notes/Context.md","Notes/Related.md"],"excluded_paths":["Private/Secret.md"],"remote_fallback_disabled":true,"import_queue_disabled":true,"embed_queue_disabled":true,"vault_writes":0}
     }
+  },
+  "latest_reconciliation": {
+    "checkpoint": "P3.2",
+    "commit": "96b3eac03bb3433629437a7278470269f1925048",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc22-local-model-exclusion-ci.json",
+    "runs": {"quality": 34686901647, "desktop_build": 34686901642, "loaded_workflows": 34686901661},
+    "status": "partial",
+    "next_action": "Keep PC22 and P3.2 pending; continue reference Obsidian, provider-backed, same-user cross-platform, human, signing, updater and required-combination validation without promoting plugin compatibility."
   },
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
