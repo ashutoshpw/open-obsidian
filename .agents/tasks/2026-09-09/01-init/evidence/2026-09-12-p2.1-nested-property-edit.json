@@ -10,7 +10,7 @@
     "working_directory": "/home/ashutosh/PROJECTS/ashutoshpw/open-obsidian",
     "branch": "main",
     "bun_version": "1.4.2",
-    "implementation_commit": "pending worktree commit",
+    "implementation_commit": "d1200ec7fd5e9847096dba911e4366e16e52b82f",
     "tested_source_tree": "2013995a3b79f3012278081fe57d0c8fcfe8ae571e27192878a6cd13c08ff7b4"
   },
   "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
