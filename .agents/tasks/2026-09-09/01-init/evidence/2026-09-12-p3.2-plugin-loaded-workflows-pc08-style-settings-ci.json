@@ -1,0 +1,113 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc08-style-settings-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC08",
+    "PC21"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-12T07:59:00Z",
+  "head": "73da2134c2805b764dce004179b1316fd067eaed",
+  "status": "partial",
+  "hosted": {
+    "quality": {
+      "run_id": 34682022723,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34682022723",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "tests": {
+        "Ubuntu": "208 pass, 0 fail, 1196 expectations",
+        "macOS": "208 pass, 0 fail, 1196 expectations",
+        "Windows": "208 pass, 0 fail, 1197 expectations"
+      },
+      "changed_code_fallow": "skipped on push; workflow condition runs it only for pull requests"
+    },
+    "desktop_build": {
+      "run_id": 34682022712,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34682022712",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "release_mode": "preview",
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "packaged_runtime_and_dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifact_sha256": {
+        "Linux": "95b2d23f67c75ab1a3cd15116f25580f95f773101ed1aa0554d15e2e6e934e0b",
+        "macOS": "2f5981572a365b8960f40563b527094f2c84e91c83003f55982667b744f71bd4",
+        "Windows": "a92e186304cc9c98e2831d4331d6a0308fbbddf5c6393760dd6a8c188fc13a6d"
+      }
+    },
+    "loaded_workflows": {
+      "run_id": 34682022726,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34682022726",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "Ubuntu": 103522275571,
+        "macOS": 103522275649,
+        "Windows": 103522275466
+      },
+      "report_source_trees": {
+        "Linux": {"sha256": "2a75e120c7cbd082f7b94e77339c83567876ed70ecf990b8f5ac59afbcb3a55c", "paths": 239},
+        "macOS": {"sha256": "adf3e6f4acaa184c7ddcc875c41fba22d5ca9494529100ceff2a6bc4a36b699d", "paths": 239},
+        "Windows": {"sha256": "5ab3d723317ae62dc09ab2079b58d07795f9406083ffb308fa74d5db8aa6d2b0", "paths": 239}
+      },
+      "report_note": "Each hosted report contains one transient redirected-output path beyond the clean local 238-path source-of-record digest; macOS and Windows downloads begin with the Electron download line before JSON."
+    }
+  },
+  "local_source_of_record": {
+    "head": "73da2134c2805b764dce004179b1316fd067eaed",
+    "sha256": "cf536c9ca4bbb4935a889b8e7294a203a0b11d561a49647376d52388b3179669",
+    "paths": 238,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "loaded_workflow_reconciliation": {
+    "target_ids": ["PC07", "PC08", "PC17", "PC20", "PC21", "PC22", "PC23", "PC24"],
+    "unchanged_main_js": true,
+    "integrity_checked_on_all_platforms": true,
+    "pc08": {
+      "name": "Style Settings",
+      "version": "1.0.9",
+      "bounded_lifecycle": "complete on Ubuntu, macOS and Windows",
+      "persistence": "preserved via mediated-plugin-data-store",
+      "actions": "settings/view/command actions passed on all three hosted platforms",
+      "cleanup_and_return_to_obsidian": "passed",
+      "vault_writes": 0,
+      "denied_capabilities": []
+    },
+    "combination": {
+      "id": "combination:pc07-pc21-pc23",
+      "bounded_lifecycle": "complete on all three hosted platforms",
+      "persistence": "preserved via mediated-plugin-data-store",
+      "action_status": "partial",
+      "representative_failure": "D15 denied dom.privileged at window.clipboard",
+      "vault_writes": 0
+    },
+    "overall": {
+      "status": "partial",
+      "all_artifact_lifecycle_traces_complete": true,
+      "combination_lifecycle_trace_complete": true,
+      "all_bounded_traces_complete": false,
+      "no_plugin_promoted": true
+    }
+  },
+  "external_pending": [
+    "reference Obsidian settings, view rendering and return-to-Obsidian comparison",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input review",
+    "provider-backed or subscription-backed plugin behavior",
+    "signed release and updater installation/rollback"
+  ],
+  "limitation": "Hosted jobs validate the unchanged artifacts only inside the isolated synthetic Electron renderer and packaging workflows. The PC08 result is not stock Obsidian compatibility certification, light/dark or popout rendering parity, human validation or a promotion decision.",
+  "result": "Quality, preview desktop-build and loaded-workflow runs succeeded on Ubuntu, macOS and Windows for 73da213. All hosted loaded reports reproduce PC08 bounded lifecycle, mediated persistence, actions, cleanup and zero vault writes; the overall result remains partial for the shared D15 clipboard denial and explicit external gates."
+}
