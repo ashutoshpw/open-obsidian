@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC03", "PC04", "PC05", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -43,6 +43,38 @@
         {"path": "Assets/reference.png", "content": "bounded-png-fixture"},
         {"path": "Notes/Context.md", "content": "# Context\n\nDrawing: [[Drawings/Scene.excalidraw]]\n"},
         {"path": "Notes/Embed.md", "content": "# Embed\n\n![[Drawings/Scene.excalidraw]]\n"}
+      ]
+    },
+    "PC05": {
+      "workflow_id": "workflow:pc05",
+      "description": "Navigate, edit and format a Markdown table in a bounded projection, calculate a changed total, and preserve unrelated source text without direct vault writes.",
+      "initial_data": {
+        "autoAlign": true,
+        "calculateTotals": true,
+        "numericAlignment": "right",
+        "version": "0.23.2"
+      },
+      "table_workflow": {
+        "source_path": "Notes/Table.md",
+        "expected_headers": ["Item", "Qty", "Price", "Total"],
+        "expected_row_count": 2,
+        "edit_row": {
+          "key_column": "Item",
+          "key": "Widget",
+          "quantity_column": "Qty",
+          "quantity": 3,
+          "price_column": "Price",
+          "total_column": "Total",
+          "expected_total": "37.50"
+        },
+        "expected_output": "# Pricing\n\nBefore table text.\n\n| Item | Qty | Price | Total |\n| --- | --- | --- | --- |\n| Widget | 3 | 12.50 | 37.50 |\n| Gizmo | 1 | 4.00 | 4.00 |\n\nAfter table text.\n",
+        "untouched_path": "Notes/Untouched.md",
+        "expected_untouched_content": "# Untouched\n\nThis note remains byte-identical.\n"
+      },
+      "active_file": "Notes/Table.md",
+      "files": [
+        {"path": "Notes/Table.md", "content": "# Pricing\n\nBefore table text.\n\n| Item | Qty | Price | Total |\n| --- | ---: | ---: | ---: |\n| Widget | 2 | 12.50 | 25.00 |\n| Gizmo | 1 | 4.00 | 4.00 |\n\nAfter table text.\n"},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
       ]
     },
     "PC03": {

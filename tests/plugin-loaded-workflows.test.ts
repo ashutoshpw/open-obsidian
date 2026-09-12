@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC03", "PC04", "PC05", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -271,6 +271,34 @@ test("PC04 fixture and bounded projection cover task query, grouping and surgica
   expect(loadedWorkflowAudit).toContain("function tasksWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("tasks_workflow_checks");
   expect(loadedWorkflowAudit).toContain("create_task_projected");
+});
+
+test("PC05 fixture and bounded projection cover table edits, calculation and serialization", () => {
+  const pc05 = fixture.scenarios.PC05 as typeof fixture.scenarios.PC03 & {
+    table_workflow?: {
+      source_path: string;
+      expected_headers: string[];
+      expected_row_count: number;
+      edit_row: {key: string; expected_total: string};
+      expected_output: string;
+      untouched_path: string;
+    };
+  };
+  expect(pc05.files).toContainEqual(expect.objectContaining({path: "Notes/Table.md", content: expect.stringContaining("| Widget | 2 | 12.50 | 25.00 |" )}));
+  expect(pc05.table_workflow).toMatchObject({
+    source_path: "Notes/Table.md",
+    expected_headers: ["Item", "Qty", "Price", "Total"],
+    expected_row_count: 2,
+    edit_row: {key: "Widget", expected_total: "37.50"},
+    untouched_path: "Notes/Untouched.md",
+    expected_output: expect.stringContaining("| Widget | 3 | 12.50 | 37.50 |"),
+  });
+  expect(rendererWorker).toContain("function boundedTableWorkflow");
+  expect(rendererWorker).toContain("bounded-in-memory-table-projection");
+  expect(rendererWorker).toContain("parseMarkdownTable");
+  expect(loadedWorkflowAudit).toContain("function tableWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("table_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("serialization_match");
 });
 
 test("PC07 fixture and bounded projection cover daily paths, templates and weekly integration", () => {

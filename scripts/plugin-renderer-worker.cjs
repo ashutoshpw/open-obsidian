@@ -2298,6 +2298,169 @@ function boundedDataviewWorkflow(workflowContext = {}, runtime = {}) {
   };
 }
 
+function splitMarkdownTableLine(line) {
+  const normalized = String(line ?? "").trim();
+  if (!normalized.includes("|")) return [];
+  const withoutLeading = normalized.startsWith("|") ? normalized.slice(1) : normalized;
+  const withoutTrailing = withoutLeading.endsWith("|") ? withoutLeading.slice(0, -1) : withoutLeading;
+  return withoutTrailing.split("|").map((cell) => cell.trim());
+}
+
+function parseMarkdownTable(source) {
+  const lines = String(source ?? "").replace(/\r\n/g, "\n").split("\n");
+  const isSeparator = (line) => splitMarkdownTableLine(line).length > 0
+    && splitMarkdownTableLine(line).every((cell) => /^:?-{3,}:?$/.test(cell));
+  let start = -1;
+  for (let index = 0; index < lines.length - 1; index += 1) {
+    if (splitMarkdownTableLine(lines[index]).length > 0 && isSeparator(lines[index + 1])) {
+      start = index;
+      break;
+    }
+  }
+  if (start < 0) return null;
+  const headers = splitMarkdownTableLine(lines[start]);
+  let end = start + 2;
+  const rows = [];
+  while (end < lines.length) {
+    const cells = splitMarkdownTableLine(lines[end]);
+    if (cells.length !== headers.length || cells.length === 0) break;
+    rows.push(cells);
+    end += 1;
+  }
+  return {
+    lines,
+    start,
+    end,
+    headers,
+    rows,
+    before: lines.slice(0, start),
+    after: lines.slice(end),
+  };
+}
+
+function formatMarkdownTable(headers, rows) {
+  const lines = [
+    `| ${headers.join(" | ")} |`,
+    `| ${headers.map(() => "---").join(" | ")} |`,
+    ...rows.map((row) => `| ${row.join(" | ")} |`),
+  ];
+  return lines;
+}
+
+function boundedTableWorkflow(workflowContext = {}, runtime = {}) {
+  const spec = workflowContext && typeof workflowContext.table_workflow === "object"
+    ? workflowContext.table_workflow
+    : null;
+  if (!spec) return null;
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const sourcePath = typeof spec.source_path === "string" ? spec.source_path : "";
+  const sourceEntry = files.find((entry) => entry.path === sourcePath) || null;
+  const source = sourceEntry ? sourceEntry.content : "";
+  const parsed = parseMarkdownTable(source);
+  const expectedHeaders = Array.isArray(spec.expected_headers) ? spec.expected_headers.filter((value) => typeof value === "string") : [];
+  const headersMatch = parsed !== null && JSON.stringify(parsed.headers) === JSON.stringify(expectedHeaders);
+  const expectedRowCount = Number(spec.expected_row_count);
+  const rowCountMatch = parsed !== null && Number.isInteger(expectedRowCount) && parsed.rows.length === expectedRowCount;
+  const edit = spec.edit_row && typeof spec.edit_row === "object" ? spec.edit_row : {};
+  const keyColumn = typeof edit.key_column === "string" ? edit.key_column : "";
+  const quantityColumn = typeof edit.quantity_column === "string" ? edit.quantity_column : "";
+  const priceColumn = typeof edit.price_column === "string" ? edit.price_column : "";
+  const totalColumn = typeof edit.total_column === "string" ? edit.total_column : "";
+  const keyIndex = parsed ? parsed.headers.indexOf(keyColumn) : -1;
+  const quantityIndex = parsed ? parsed.headers.indexOf(quantityColumn) : -1;
+  const priceIndex = parsed ? parsed.headers.indexOf(priceColumn) : -1;
+  const totalIndex = parsed ? parsed.headers.indexOf(totalColumn) : -1;
+  const rowIndex = parsed && keyIndex >= 0 ? parsed.rows.findIndex((row) => row[keyIndex] === edit.key) : -1;
+  const quantity = Number(edit.quantity);
+  const price = rowIndex >= 0 && priceIndex >= 0 ? Number(parsed.rows[rowIndex][priceIndex]) : Number.NaN;
+  const calculatedTotal = Number.isFinite(quantity) && Number.isFinite(price) ? (quantity * price).toFixed(2) : "";
+  const expectedTotal = typeof edit.expected_total === "string" ? edit.expected_total : "";
+  const editedRows = parsed ? parsed.rows.map((row, index) => {
+    if (index !== rowIndex) return [...row];
+    const edited = [...row];
+    if (quantityIndex >= 0) edited[quantityIndex] = String(edit.quantity);
+    if (totalIndex >= 0) edited[totalIndex] = calculatedTotal;
+    return edited;
+  }) : [];
+  const formattedLines = parsed ? formatMarkdownTable(parsed.headers, editedRows) : [];
+  const outputLines = parsed ? [...parsed.before, ...formattedLines, ...parsed.after] : [];
+  const output = outputLines.join("\n");
+  const expectedOutput = typeof spec.expected_output === "string" ? spec.expected_output.replace(/\r\n/g, "\n") : "";
+  const navigationRecorded = parsed !== null && sourcePath === workflowContext.active_file && parsed.start >= 0 && parsed.end > parsed.start;
+  const editProjected = rowIndex >= 0 && quantityIndex >= 0 && totalIndex >= 0 && editedRows[rowIndex]?.[quantityIndex] === String(edit.quantity);
+  const calculationMatch = editProjected && calculatedTotal === expectedTotal && editedRows[rowIndex]?.[totalIndex] === expectedTotal;
+  const formattingApplied = formattedLines.length === editedRows.length + 2
+    && formattedLines[0] === `| ${expectedHeaders.join(" | ")} |`
+    && formattedLines[1] === `| ${expectedHeaders.map(() => "---").join(" | ")} |`;
+  const serializationMatch = output === expectedOutput;
+  const outputBefore = outputLines.slice(0, parsed?.start ?? 0);
+  const outputAfter = outputLines.slice((parsed?.start ?? 0) + formattedLines.length);
+  const unrelatedContentPreserved = parsed !== null
+    && JSON.stringify(parsed.before) === JSON.stringify(outputBefore)
+    && JSON.stringify(parsed.after) === JSON.stringify(outputAfter);
+  const untouchedPath = typeof spec.untouched_path === "string" ? spec.untouched_path : "";
+  const untouchedEntry = files.find((entry) => entry.path === untouchedPath);
+  const expectedUntouched = typeof spec.expected_untouched_content === "string" ? spec.expected_untouched_content : "";
+  const untouchedFilePreserved = Boolean(untouchedEntry && untouchedEntry.content === expectedUntouched);
+  const settingsApplied = workflowContext.initial_data?.autoAlign === true && workflowContext.initial_data?.calculateTotals === true;
+  const directVaultWrites = Number(runtime.metrics?.vaultWrites ?? workflowContext.metrics?.vaultWrites ?? 0);
+  const status = sourceEntry !== null
+    && parsed !== null
+    && settingsApplied
+    && headersMatch
+    && rowCountMatch
+    && navigationRecorded
+    && editProjected
+    && calculationMatch
+    && formattingApplied
+    && serializationMatch
+    && unrelatedContentPreserved
+    && untouchedFilePreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status,
+    serialization_match: serializationMatch,
+    calculation_match: calculationMatch,
+  }));
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-table-projection",
+    source_path: sourcePath,
+    source_bytes: new TextEncoder().encode(source).byteLength,
+    table_start_line: parsed ? parsed.start : null,
+    table_end_line: parsed ? parsed.end : null,
+    navigation_recorded: navigationRecorded,
+    headers: parsed ? parsed.headers : [],
+    expected_headers: expectedHeaders,
+    headers_match: headersMatch,
+    rows: parsed ? parsed.rows : [],
+    edited_rows: editedRows,
+    expected_row_count: expectedRowCount,
+    row_count_match: rowCountMatch,
+    edit_row: edit.key || null,
+    edit_projected: editProjected,
+    calculated_total: calculatedTotal,
+    expected_total: expectedTotal,
+    calculation_match: calculationMatch,
+    formatting_applied: formattingApplied,
+    output,
+    expected_output: expectedOutput,
+    serialization_match: serializationMatch,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    untouched_path: untouchedPath,
+    untouched_file_preserved: untouchedFilePreserved,
+    settings_applied: settingsApplied,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function boundedLinterWorkflow(workflowContext = {}, runtime = {}) {
   const spec = workflowContext && typeof workflowContext.linter_workflow === "object"
     ? workflowContext.linter_workflow
@@ -2828,6 +2991,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (smartConnectionsWorkflow) actions.smart_connections_workflow = smartConnectionsWorkflow;
   const dataviewWorkflow = boundedDataviewWorkflow(workflowContext, workflowContext.runtime || {});
   if (dataviewWorkflow) actions.dataview_workflow = dataviewWorkflow;
+  const tableWorkflow = boundedTableWorkflow(workflowContext, workflowContext.runtime || {});
+  if (tableWorkflow) actions.table_workflow = tableWorkflow;
   const taskWorkflow = boundedTaskWorkflow(workflowContext);
   if (taskWorkflow) actions.task_workflow = taskWorkflow;
   const tasksWorkflow = boundedTasksWorkflow(workflowContext);
@@ -2898,6 +3063,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     calendar_workflow: actions.calendar_workflow || null,
     smart_connections_workflow: actions.smart_connections_workflow || null,
     dataview_workflow: actions.dataview_workflow || null,
+    table_workflow: actions.table_workflow || null,
     task_workflow: actions.task_workflow || null,
     tasks_workflow: actions.tasks_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
@@ -2969,6 +3135,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
+    workflow.table_workflow = boundedTableWorkflow(workflowContext, runtime);
     workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
@@ -2988,6 +3155,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.vaultOperations = metrics.vaultOperations;
     workflow.linter_workflow = boundedLinterWorkflow(workflowContext, runtime);
     workflow.dataview_workflow = boundedDataviewWorkflow(workflowContext, runtime);
+    workflow.table_workflow = boundedTableWorkflow(workflowContext, runtime);
     workflow.calendar_workflow = boundedCalendarWorkflow(workflowContext);
     workflow.excalidraw_workflow = boundedExcalidrawWorkflow(workflowContext);
     workflow.tasks_workflow = boundedTasksWorkflow(workflowContext);
@@ -3094,6 +3262,10 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     dataviewPath,
     dataviewNoteRecord,
     boundedDataviewWorkflow,
+    splitMarkdownTableLine,
+    parseMarkdownTable,
+    formatMarkdownTable,
+    boundedTableWorkflow,
     boundedCalendarWorkflow,
     boundedExcalidrawWorkflow,
     boundedLinterWorkflow,

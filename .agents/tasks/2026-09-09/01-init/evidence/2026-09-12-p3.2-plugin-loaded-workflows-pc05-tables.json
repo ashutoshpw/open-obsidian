@@ -1,0 +1,122 @@
+{
+  "evidence_version": 1,
+  "status": "partial",
+  "recorded_at": "2026-09-12T17:41:15Z",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC05"],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "base_head": "fbd66bc337c9b9da65f49da210b5071221709ff9",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "fbd66bc337c9b9da65f49da210b5071221709ff9",
+    "sha256": "83f15dbd530530e560b37fc392719a0137b6d51d160ed18708dfe2b8383205cc",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "implementation": {
+    "files": [
+      "fixtures/plugin-loaded-workflows.json",
+      "scripts/plugin-renderer-worker.cjs",
+      "scripts/audit-plugin-loaded-workflows.ts",
+      "tests/plugin-loaded-workflows.test.ts"
+    ],
+    "bounded_seams": [
+      "PC05 now has a dated table fixture covering Markdown table discovery/navigation, a Widget row edit, numeric total calculation and an untouched-note control.",
+      "The renderer worker parses and serializes the table entirely in memory for install, restart and update projections; unrelated source lines and the untouched note remain byte-identical and no mediated vault write is invoked.",
+      "The unchanged Advanced Tables bundle remains inside the context-isolated renderer and is D15-denied before lifecycle execution; the table projection is synthetic and cannot promote compatibility."
+    ],
+    "security_disposition": "The bounded projection grants no DOM, filesystem, network, process, credential, dynamic-code or direct-vault capability and records the unchanged artifact denial separately."
+  },
+  "artifact": {
+    "artifact_id": "PC05",
+    "name": "Advanced Tables",
+    "version": "0.23.2",
+    "main_js_bytes": 272036,
+    "main_js_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "denied",
+    "denied_capabilities": ["dom.privileged"],
+    "denied_paths": ["window.Function"],
+    "denial": "D15 denied dom.privileged at window.Function"
+  },
+  "loaded_workflow_audit": {
+    "status": "partial",
+    "target_ids": ["PC03", "PC04", "PC05", "PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "required_phases": ["install", "restart", "update"],
+    "renderer_boundary": "electron-context-isolated-sandbox",
+    "integrity_checked": true,
+    "pc05": {
+      "bounded_lifecycle": "partial",
+      "renderer_status": "denied",
+      "denial": "D15 denied dom.privileged at window.Function",
+      "action_status": "passed",
+      "workflow_projection": {
+        "status": "passed",
+        "mutation_scope": "bounded-in-memory-table-projection",
+        "source_path": "Notes/Table.md",
+        "navigation_recorded": true,
+        "headers_match": true,
+        "row_count_match": true,
+        "edit_projected": true,
+        "calculated_total": "37.50",
+        "calculation_match": true,
+        "formatting_applied": true,
+        "serialization_match": true,
+        "unrelated_content_preserved": true,
+        "untouched_file_preserved": true,
+        "settings_applied": true,
+        "direct_vault_writes": 0,
+        "phase_projections_passed": true,
+        "all_phases_passed": true
+      },
+      "checks": {
+        "present": true,
+        "bounded_read_only": true,
+        "source_path_match": true,
+        "navigation_recorded": true,
+        "headers_match": true,
+        "row_count_match": true,
+        "edit_projected": true,
+        "calculation_match": true,
+        "formatting_applied": true,
+        "serialization_match": true,
+        "unrelated_content_preserved": true,
+        "untouched_file_preserved": true,
+        "settings_applied": true,
+        "direct_vault_writes_zero": true,
+        "phase_projections_passed": true,
+        "status_passed": true
+      }
+    },
+    "overall_checks": {
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": true,
+      "all_required_combinations_complete": true,
+      "all_bounded_traces_complete": false,
+      "all_artifacts_integrity_checked": true,
+      "excalidraw_bounded_projection_complete": true,
+      "no_plugin_promoted": true
+    }
+  },
+  "safe_alternatives_attempted": ["mediated vault read", "bounded renderer preview", "workflow disabled"],
+  "external_pending": [
+    "unchanged Advanced Tables lifecycle and command behavior beyond the denied renderer preflight",
+    "reference Obsidian table formatting, calculation and Markdown round-trip parity",
+    "same-user macOS/Windows enforcement",
+    "human accessibility/input validation",
+    "signed release, updater installation/rollback and compatibility promotion"
+  ],
+  "limitation": "The unchanged Advanced Tables 0.23.2 bundle is integrity-checked but D15-denied at window.Function. Table navigation, edit, calculation and serialization are bounded in-memory synthetic projections; no stock Obsidian, reference parity, cross-platform, human or compatibility certification is claimed."
+}
