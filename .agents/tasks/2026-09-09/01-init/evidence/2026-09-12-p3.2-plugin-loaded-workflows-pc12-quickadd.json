@@ -1,0 +1,66 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T21:16:00Z",
+  "checkpoint": "P3.2",
+  "requirements": ["PC12", "C11", "PLUG-002"],
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "7a9ea54f2c5cb2afea83ffe6d1c733cbaea3a77ae97899af42495b2b9da71aaf",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "id": "PC12",
+    "name": "QuickAdd",
+    "version": "2.24.2",
+    "main_js_bytes": 1184148,
+    "main_js_sha256": "9cfce437aaff293b7f72e3a5d86243e8ecc9677b4cdc89556e28b8bb8e1adf19",
+    "manifest_json_bytes": 372,
+    "manifest_json_sha256": "94cc0726bba84fa05ceba5acc1372e99cd3093f21c264722fe0be47fc5df93db",
+    "styles_css_bytes": 38408,
+    "styles_css_sha256": "4a4e1610afae6c5d072d7b23c4cba42c8aaf0d616daa6ee78fb3ab6d7b7a33dd",
+    "integrity": "passed",
+    "unchanged_runtime": {
+      "status": "denied",
+      "capability": "dom.privileged",
+      "path": "window.__svelte",
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "candidate_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi", "code.dynamic"]
+    }
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-quickadd-projection",
+    "phases": ["install", "restart", "update"],
+    "capture_choice_configured": true,
+    "template_expanded": true,
+    "generated_file_output": true,
+    "prompt_order_preserved": true,
+    "command_order_preserved": true,
+    "macro_order_preserved": true,
+    "linked_script_denied": true,
+    "linked_script_capability": "code.dynamic",
+    "no_dynamic_execution": true,
+    "source_preserved": true,
+    "unrelated_content_preserved": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true
+  },
+  "status": "pending-runtime",
+  "no_plugin_promoted": true,
+  "limitations": [
+    "The unchanged QuickAdd artifact is denied inside the context-isolated renderer before lifecycle completion at window.__svelte; the projection is marker-free synthetic evidence.",
+    "The projection denies the linked automation script under code.dynamic and does not execute it; reference Obsidian capture/macro behavior, same-user macOS/Windows enforcement, human validation, signing, updater and compatibility promotion remain pending."
+  ]
+}

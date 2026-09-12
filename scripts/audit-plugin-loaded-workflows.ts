@@ -440,6 +440,33 @@ function templaterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function quickAddWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.quickadd_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const summary = asRecord(workflow.quickadd_workflow);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: summary !== null && traces.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-quickadd-projection" && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-quickadd-projection"),
+    capture_choice_configured: summary?.capture_choice_configured === true && every("capture_choice_configured"),
+    template_expanded: summary?.template_expanded === true && every("template_expanded"),
+    generated_file_output: summary?.generated_file_output === true && every("generated_file_output"),
+    prompt_order_recorded: summary?.prompt_order_recorded === true && every("prompt_order_preserved"),
+    prompt_order_preserved: summary?.prompt_order_preserved === true && every("prompt_order_preserved"),
+    command_order_recorded: summary?.command_order_recorded === true && every("command_order_preserved"),
+    command_order_preserved: summary?.command_order_preserved === true && every("command_order_preserved"),
+    macro_order_recorded: summary?.macro_order_recorded === true && every("macro_order_preserved"),
+    macro_order_preserved: summary?.macro_order_preserved === true && every("macro_order_preserved"),
+    linked_script_denied: summary?.linked_script_denied === true && every("linked_script_denied"),
+    no_dynamic_execution: summary?.no_dynamic_execution === true && every("no_dynamic_execution"),
+    source_preserved: summary?.source_preserved === true && every("source_preserved"),
+    unrelated_file_preserved: summary?.unrelated_content_preserved === true && every("unrelated_file_preserved"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    status_passed: summary?.status === "passed" && traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -804,6 +831,22 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         templater = templaterWorkflowChecks(asRecord(templaterProjection.workflow) ?? {});
       }
+      let quickAdd = id === "PC12" ? quickAddWorkflowChecks(workflow) : null;
+      let quickAddProjection: JsonRecord | null = null;
+      if (id === "PC12") {
+        // QuickAdd's unchanged release reaches dynamic/privileged capabilities
+        // that D15 denies before lifecycle completion. Keep the configured
+        // capture, expansion, ordering and linked-script boundary in a
+        // separate marker-free synthetic projection; it never changes the
+        // unchanged-artifact runtime disposition or compatibility status.
+        quickAddProjection = await runWorker(
+          'module.exports = class BoundedQuickAddProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC12-quickadd-projection", target_ids: ["PC12"]},
+          temporaryRoot,
+          "PC12-quickadd-projection",
+        );
+        quickAdd = quickAddWorkflowChecks(asRecord(quickAddProjection.workflow) ?? {});
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -844,6 +887,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       kanban_workflow_projection: kanbanProjection,
       templater_workflow_checks: templater,
       templater_workflow_projection: templaterProjection,
+      quickadd_workflow_checks: quickAdd,
+      quickadd_workflow_projection: quickAddProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -1168,6 +1213,26 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => templaterChecks[key] === true));
+      const quickAddChecks = asRecord(entry.quickadd_workflow_checks);
+      const quickAddComplete = entry.artifact_id !== "PC12" || (quickAddChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "capture_choice_configured",
+        "template_expanded",
+        "generated_file_output",
+        "prompt_order_recorded",
+        "prompt_order_preserved",
+        "command_order_recorded",
+        "command_order_preserved",
+        "macro_order_recorded",
+        "macro_order_preserved",
+        "linked_script_denied",
+        "no_dynamic_execution",
+        "source_preserved",
+        "unrelated_file_preserved",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => quickAddChecks[key] === true));
       const remotelySaveChecks = asRecord(entry.remotely_save_workflow_checks);
       const remotelySaveComplete = entry.artifact_id !== "PC10" || (remotelySaveChecks !== null && [
         "present",
@@ -1212,7 +1277,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => iconizeChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete;
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
@@ -1251,7 +1316,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

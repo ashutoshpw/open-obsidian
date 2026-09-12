@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -634,6 +634,44 @@ test("PC11 fixture and bounded projection preserve Iconize assignments and asset
   expect(loadedWorkflowAudit).toContain("function iconizeWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("iconize_workflow_checks");
   expect(loadedWorkflowAudit).toContain("restart_restores_assignments");
+});
+
+test("PC12 fixture and bounded projection preserve QuickAdd ordering and deny linked scripts", () => {
+  const pc12 = fixture.scenarios.PC12 as typeof fixture.scenarios.PC03 & {
+    quickadd_workflow?: {
+      capture_choice: {id: string; name: string; type: string; template_path: string; output_path: string; enabled: boolean};
+      template_expansion: {template_path: string; expected_output: string};
+      generated_file: {path: string; content: string};
+      prompt_order: Array<{name: string; value: string}>;
+      command_order: string[];
+      macro_order: string[];
+      linked_automation_script: {path: string; capability: string; disposition: string; safe_alternative: string};
+      expected_unrelated_path: string;
+      expected_unrelated_content: string;
+    };
+  };
+  expect(pc12.workflow_id).toBe("workflow:pc12");
+  expect(pc12.initial_data).toMatchObject({version: "2.24.2", currentDate: "2026-09-12"});
+  expect(pc12.quickadd_workflow).toEqual({
+    capture_choice: {id: "capture-task", name: "Capture task", type: "Capture", template_path: "Templates/Task.md", output_path: "Inbox/Review-compatibility.md", enabled: true},
+    template_expansion: {template_path: "Templates/Task.md", expected_output: "# Review compatibility\n\nPriority: High\nCreated: 2026-09-12\n"},
+    generated_file: {path: "Inbox/Review-compatibility.md", content: "# Review compatibility\n\nPriority: High\nCreated: 2026-09-12\n"},
+    prompt_order: [{name: "Task", value: "Review compatibility"}, {name: "Priority", value: "High"}],
+    command_order: ["prompt-task", "prompt-priority", "capture-task", "create-generated-file"],
+    macro_order: ["prompt-task", "prompt-priority", "capture-task", "linked-normalize"],
+    linked_automation_script: {path: "Scripts/normalize.js", capability: "code.dynamic", disposition: "denied", safe_alternative: "mediated macro step without script execution"},
+    expected_unrelated_path: "Notes/Untouched.md",
+    expected_unrelated_content: "# Untouched\n\nThis note remains byte-identical.\n",
+  });
+  expect(pc12.files).toContainEqual(expect.objectContaining({path: "Scripts/normalize.js", content: expect.stringContaining("module.exports") }));
+  expect(rendererWorker).toContain("function boundedQuickAddWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-quickadd-projection"');
+  expect(rendererWorker).toContain("prompt_order_preserved");
+  expect(rendererWorker).toContain("macro_order_preserved");
+  expect(rendererWorker).toContain("linked_script_denied");
+  expect(loadedWorkflowAudit).toContain("function quickAddWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("quickadd_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("no_dynamic_execution");
 });
 
 test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {

@@ -3692,6 +3692,163 @@ function boundedTemplaterWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedQuickAddWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.quickadd_workflow === "object"
+    ? workflowContext.quickadd_workflow
+    : null;
+  if (!spec || typeof spec.capture_choice !== "object" || typeof spec.template_expansion !== "object" || typeof spec.generated_file !== "object") return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const normalize = (value) => typeof value === "string" ? value.replaceAll("\\", "/").replace(/^\/+|\/+$/g, "") : "";
+  const fileContents = new Map(files.map((entry) => [normalize(entry.path), entry.content]));
+  const configuredChoices = Array.isArray(initialData.choices) ? initialData.choices.filter((choice) => choice && typeof choice === "object") : [];
+  const captureChoice = spec.capture_choice;
+  const choiceId = typeof captureChoice.id === "string" ? captureChoice.id : "";
+  const configuredChoice = configuredChoices.find((choice) => choice.id === choiceId);
+  const choiceFieldsMatch = configuredChoice
+    && configuredChoice.id === captureChoice.id
+    && configuredChoice.name === captureChoice.name
+    && configuredChoice.type === captureChoice.type
+    && configuredChoice.enabled === true
+    && normalize(configuredChoice.template_path) === normalize(captureChoice.template_path)
+    && normalize(configuredChoice.output_path) === normalize(captureChoice.output_path);
+  const captureChoiceConfigured = Boolean(choiceFieldsMatch && choiceId.length > 0);
+
+  const expansion = spec.template_expansion;
+  const templatePath = normalize(expansion.template_path);
+  const source = fileContents.get(templatePath) || "";
+  const prompts = initialData.prompts && typeof initialData.prompts === "object" ? initialData.prompts : {};
+  const expectedPromptOrder = Array.isArray(spec.prompt_order) ? spec.prompt_order : [];
+  const promptOrderRecorded = expectedPromptOrder.length > 0
+    && expectedPromptOrder.every((entry) => entry && typeof entry.name === "string" && typeof entry.value === "string")
+    && expectedPromptOrder.every((entry) => prompts[entry.name] === entry.value);
+  const promptOrder = expectedPromptOrder.map((entry) => entry?.name).filter((value) => typeof value === "string");
+  const promptOrderPreserved = promptOrderRecorded && promptOrder.length === expectedPromptOrder.length;
+  const currentDate = typeof initialData.currentDate === "string" ? initialData.currentDate : "";
+  let expanded = source;
+  let valueTokensResolved = source.length > 0;
+  expanded = expanded.replace(/\{\{VALUE:([^}]+)\}\}/g, (_match, name) => {
+    const key = String(name).trim();
+    const value = prompts[key];
+    if (typeof value !== "string") {
+      valueTokensResolved = false;
+      return "";
+    }
+    return value;
+  });
+  expanded = expanded.replace(/\{\{DATE\}\}/g, () => currentDate);
+  const expectedOutput = typeof expansion.expected_output === "string" ? expansion.expected_output : "";
+  const templateExpanded = source.length > 0
+    && source.includes("{{VALUE:")
+    && source.includes("{{DATE}}")
+    && valueTokensResolved
+    && currentDate.length > 0
+    && expanded === expectedOutput;
+
+  const generated = spec.generated_file;
+  const generatedPath = normalize(generated.path);
+  const generatedContent = typeof generated.content === "string" ? generated.content : "";
+  const generatedFileOutput = generatedPath.length > 0
+    && generatedPath === normalize(captureChoice.output_path)
+    && generatedContent === expanded
+    && expanded === expectedOutput
+    && !fileContents.has(generatedPath);
+
+  const configuredCommandOrder = Array.isArray(initialData.command_order) ? initialData.command_order : [];
+  const expectedCommandOrder = Array.isArray(spec.command_order) ? spec.command_order : [];
+  const commandOrderPreserved = expectedCommandOrder.length > 0
+    && JSON.stringify(configuredCommandOrder) === JSON.stringify(expectedCommandOrder);
+  const macros = Array.isArray(initialData.macros) ? initialData.macros : [];
+  const configuredMacroOrder = macros.map((macro) => macro && typeof macro.id === "string" ? macro.id : "");
+  const expectedMacroOrder = Array.isArray(spec.macro_order) ? spec.macro_order : [];
+  const macroOrderPreserved = expectedMacroOrder.length > 0
+    && configuredMacroOrder.every((id) => id.length > 0)
+    && JSON.stringify(configuredMacroOrder) === JSON.stringify(expectedMacroOrder);
+
+  const linkedScript = spec.linked_automation_script;
+  const linkedScriptPath = normalize(linkedScript?.path);
+  const linkedScriptSource = linkedScriptPath.length > 0 ? fileContents.get(linkedScriptPath) || "" : "";
+  const linkedScriptDenied = linkedScriptPath.length > 0
+    && linkedScriptSource.length > 0
+    && fileContents.has(linkedScriptPath)
+    && linkedScript?.capability === "code.dynamic"
+    && linkedScript?.disposition === "denied";
+  const dynamicExecutions = Number(workflowContext.metrics?.dynamicExecutions || 0);
+  const noDynamicExecution = linkedScriptDenied
+    && dynamicExecutions === 0
+    && !expanded.includes(linkedScriptSource);
+  const sourcePreserved = fileContents.get(templatePath) === source;
+  const unrelatedPath = normalize(spec.expected_unrelated_path);
+  const unrelatedContentPreserved = unrelatedPath.length > 0
+    && fileContents.get(unrelatedPath) === spec.expected_unrelated_content;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = captureChoiceConfigured
+    && templateExpanded
+    && generatedFileOutput
+    && promptOrderPreserved
+    && commandOrderPreserved
+    && macroOrderPreserved
+    && linkedScriptDenied
+    && noDynamicExecution
+    && sourcePreserved
+    && unrelatedContentPreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status,
+    capture_choice_configured: captureChoiceConfigured,
+    template_expanded: templateExpanded,
+    generated_file_output: generatedFileOutput,
+    prompt_order_preserved: promptOrderPreserved,
+    command_order_preserved: commandOrderPreserved,
+    macro_order_preserved: macroOrderPreserved,
+    linked_script_denied: linkedScriptDenied,
+    no_dynamic_execution: noDynamicExecution,
+    source_preserved: sourcePreserved,
+    unrelated_file_preserved: unrelatedContentPreserved,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  }));
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-quickadd-projection",
+    capture_choice: captureChoice,
+    capture_choice_configured: captureChoiceConfigured,
+    template_expansion: expansion,
+    template_path: templatePath,
+    template_source: source,
+    expanded_output: expanded,
+    expected_output: expectedOutput,
+    template_expanded: templateExpanded,
+    generated_file: generated,
+    generated_file_output: generatedFileOutput,
+    generated_path: generatedPath,
+    prompt_order: expectedPromptOrder,
+    prompt_order_recorded: promptOrderRecorded,
+    prompt_order_preserved: promptOrderPreserved,
+    command_order: expectedCommandOrder,
+    command_order_recorded: commandOrderPreserved,
+    command_order_preserved: commandOrderPreserved,
+    macro_order: expectedMacroOrder,
+    macro_order_recorded: macroOrderPreserved,
+    macro_order_preserved: macroOrderPreserved,
+    linked_automation_script: linkedScript,
+    linked_script_path: linkedScriptPath,
+    linked_script_denied: linkedScriptDenied,
+    no_dynamic_execution: noDynamicExecution,
+    source_preserved: sourcePreserved,
+    unrelated_path: unrelatedPath,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    unrelated_file_preserved: unrelatedContentPreserved,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -3822,6 +3979,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (kanbanWorkflow) actions.kanban_workflow = kanbanWorkflow;
   const templaterWorkflow = boundedTemplaterWorkflow(workflowContext);
   if (templaterWorkflow) actions.templater_workflow = templaterWorkflow;
+  const quickaddWorkflow = boundedQuickAddWorkflow(workflowContext);
+  if (quickaddWorkflow) actions.quickadd_workflow = quickaddWorkflow;
   return actions;
 }
 
@@ -3896,6 +4055,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     iconize_workflow: actions.iconize_workflow || null,
     kanban_workflow: actions.kanban_workflow || null,
     templater_workflow: actions.templater_workflow || null,
+    quickadd_workflow: actions.quickadd_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -3974,6 +4134,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.iconize_workflow = boundedIconizeWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
+    workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -3999,6 +4160,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.iconize_workflow = boundedIconizeWorkflow(workflowContext);
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
+    workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -4118,6 +4280,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     parseKanbanBoard,
     boundedKanbanWorkflow,
     boundedTemplaterWorkflow,
+    boundedQuickAddWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,

@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -563,6 +563,73 @@
         {"path": "Notes/Guide.md", "content": "# Guide\n\nConfigured asset icon.\n"},
         {"path": "Projects/Plan.md", "content": "# Plan\n\nFolder icon fixture.\n"},
         {"path": "Icons/guide.svg", "content": "<svg xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M1 1h8v8H1z\"/></svg>"},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
+      ]
+    },
+    "PC12": {
+      "workflow_id": "workflow:pc12",
+      "description": "Run a configured QuickAdd capture choice with deterministic prompts, command and macro ordering, expand its template into a generated file, and deny the linked automation script under D15 without direct vault writes.",
+      "initial_data": {
+        "version": "2.24.2",
+        "currentDate": "2026-09-12",
+        "prompts": {
+          "Task": "Review compatibility",
+          "Priority": "High"
+        },
+        "choices": [
+          {
+            "id": "capture-task",
+            "name": "Capture task",
+            "type": "Capture",
+            "enabled": true,
+            "template_path": "Templates/Task.md",
+            "output_path": "Inbox/Review-compatibility.md"
+          }
+        ],
+        "command_order": ["prompt-task", "prompt-priority", "capture-task", "create-generated-file"],
+        "macros": [
+          {"id": "prompt-task", "type": "prompt", "name": "Task"},
+          {"id": "prompt-priority", "type": "prompt", "name": "Priority"},
+          {"id": "capture-task", "type": "capture", "choice_id": "capture-task"},
+          {"id": "linked-normalize", "type": "script", "path": "Scripts/normalize.js"}
+        ]
+      },
+      "quickadd_workflow": {
+        "capture_choice": {
+          "id": "capture-task",
+          "name": "Capture task",
+          "type": "Capture",
+          "template_path": "Templates/Task.md",
+          "output_path": "Inbox/Review-compatibility.md",
+          "enabled": true
+        },
+        "template_expansion": {
+          "template_path": "Templates/Task.md",
+          "expected_output": "# Review compatibility\n\nPriority: High\nCreated: 2026-09-12\n"
+        },
+        "generated_file": {
+          "path": "Inbox/Review-compatibility.md",
+          "content": "# Review compatibility\n\nPriority: High\nCreated: 2026-09-12\n"
+        },
+        "prompt_order": [
+          {"name": "Task", "value": "Review compatibility"},
+          {"name": "Priority", "value": "High"}
+        ],
+        "command_order": ["prompt-task", "prompt-priority", "capture-task", "create-generated-file"],
+        "macro_order": ["prompt-task", "prompt-priority", "capture-task", "linked-normalize"],
+        "linked_automation_script": {
+          "path": "Scripts/normalize.js",
+          "capability": "code.dynamic",
+          "disposition": "denied",
+          "safe_alternative": "mediated macro step without script execution"
+        },
+        "expected_unrelated_path": "Notes/Untouched.md",
+        "expected_unrelated_content": "# Untouched\n\nThis note remains byte-identical.\n"
+      },
+      "active_file": "Templates/Task.md",
+      "files": [
+        {"path": "Templates/Task.md", "content": "# {{VALUE:Task}}\n\nPriority: {{VALUE:Priority}}\nCreated: {{DATE}}\n"},
+        {"path": "Scripts/normalize.js", "content": "module.exports = (value) => value.trim();\n"},
         {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
       ]
     },
