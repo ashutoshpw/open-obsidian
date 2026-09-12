@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {parseYamlMapping, serializeYamlValue, yamlFlowMapEntries} from "../src/core/yaml.js";
+import {parseYamlMapping, serializeYamlValue, yamlFlowMapEntries, yamlFlowSequenceEntries} from "../src/core/yaml.js";
 
 test("bounded YAML reader preserves nested maps, arrays and scalar types", () => {
   const result = parseYamlMapping("tags:\n  - one\n  - two\nmetadata:\n  owner: Ashutosh # source comment\n  numbers: [1, true, null]\n  children:\n    - key: value\n      count: 2\n");
@@ -37,4 +37,15 @@ test("flow YAML map spans preserve nested source boundaries and refuse malformed
     {key: "tags", rawValue: "[one, two]", valueStart: 48, valueEnd: 58},
   ]);
   expect(yamlFlowMapEntries("{owner: broken, nope}")).toBeUndefined();
+});
+
+test("flow YAML sequence spans preserve nested source boundaries and refuse malformed entries", () => {
+  const source = "[owner, {name: source}, [one, two]]";
+  expect(yamlFlowSequenceEntries(source)).toEqual([
+    {index: 0, rawValue: "owner", valueStart: 1, valueEnd: 6},
+    {index: 1, rawValue: "{name: source}", valueStart: 8, valueEnd: 22},
+    {index: 2, rawValue: "[one, two]", valueStart: 24, valueEnd: 34},
+  ]);
+  expect(yamlFlowSequenceEntries("[owner,, tail]")).toBeUndefined();
+  expect(yamlFlowSequenceEntries("[owner, {name: source]")).toBeUndefined();
 });

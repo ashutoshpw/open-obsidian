@@ -140,6 +140,26 @@ function flowCollection(value: string, issues: string[], line: number): YamlValu
 }
 
 export type YamlFlowMapEntry = {key: string; rawValue: string; valueStart: number; valueEnd: number};
+export type YamlFlowSequenceEntry = {index: number; rawValue: string; valueStart: number; valueEnd: number};
+
+type FlowEntryRange = {start: number; end: number};
+
+function flowEntryRanges(value: string, opening: string, closing: string): FlowEntryRange[] | undefined {
+  if (!value.startsWith(opening) || !value.endsWith(closing)) return undefined;
+  const ranges: FlowEntryRange[] = [];
+  let start = 1;
+  const state: ScanState = {quote: undefined, depth: 0};
+  for (let index = 1; index < value.length - 1; index += 1) {
+    advanceScanState(state, value, index);
+    if (!state.quote && state.depth === 0 && value[index] === ",") {
+      ranges.push({start, end: index});
+      start = index + 1;
+    }
+  }
+  if (state.quote || state.depth !== 0) return undefined;
+  ranges.push({start, end: value.length - 1});
+  return ranges;
+}
 
 function flowMapEntry(value: string, start: number, end: number): YamlFlowMapEntry | undefined {
   const source = value.slice(start, end);
@@ -162,25 +182,43 @@ function flowMapEntry(value: string, start: number, end: number): YamlFlowMapEnt
  * malformed entry returns undefined so source-preserving editors fail closed.
  */
 export function yamlFlowMapEntries(value: string): YamlFlowMapEntry[] | undefined {
-  if (!value.startsWith("{") || !value.endsWith("}")) return undefined;
+  const ranges = flowEntryRanges(value, "{", "}");
+  if (!ranges) return undefined;
   const entries: YamlFlowMapEntry[] = [];
-  let start = 1;
-  const finish = (end: number): boolean => {
-    if (value.slice(start, end).trim() === "") return true;
-    const entry = flowMapEntry(value, start, end);
-    if (!entry) return false;
+  for (const range of ranges) {
+    if (value.slice(range.start, range.end).trim() === "") continue;
+    const entry = flowMapEntry(value, range.start, range.end);
+    if (!entry) return undefined;
     entries.push(entry);
-    return true;
-  };
-  const state: ScanState = {quote: undefined, depth: 0};
-  for (let index = 1; index < value.length - 1; index += 1) {
-    advanceScanState(state, value, index);
-    if (!state.quote && state.depth === 0 && value[index] === ",") {
-      if (!finish(index)) return undefined;
-      start = index + 1;
-    }
   }
-  return finish(value.length - 1) ? entries : undefined;
+  return entries;
+}
+
+function flowSequenceEntry(value: string, start: number, end: number, index: number): YamlFlowSequenceEntry | undefined {
+  const source = value.slice(start, end);
+  const rawValue = source.trim();
+  if (!rawValue) return undefined;
+  const leading = source.length - source.trimStart().length;
+  return {index, rawValue, valueStart: start + leading, valueEnd: start + leading + rawValue.length};
+}
+
+/**
+ * Return source spans for entries in a single-line flow sequence. The caller
+ * can replace one indexed entry without reserializing the surrounding list.
+ * Empty, unbalanced or otherwise malformed entries return undefined so
+ * source-preserving editors fail closed.
+ */
+export function yamlFlowSequenceEntries(value: string): YamlFlowSequenceEntry[] | undefined {
+  const ranges = flowEntryRanges(value, "[", "]");
+  if (!ranges) return undefined;
+  if (value.slice(1, -1).trim() === "") return [];
+  const entries: YamlFlowSequenceEntry[] = [];
+  for (const range of ranges) {
+    const entry = flowSequenceEntry(value, range.start, range.end, entries.length);
+    if (!entry) return undefined;
+    entries.push(entry);
+  }
+  return entries;
 }
 
 function parseNullScalar(value: string, _issues: string[], _line: number): YamlValue | undefined {
