@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; task_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   safe_alternatives_attempted: string[];
   external_pending: string[];
@@ -143,9 +143,20 @@ test("PC19 fixture covers note-backed tasks plus Bases view mappings", () => {
     "open-tasks-view": "TaskNotes/Views/tasks-default.base",
     "open-calendar-view": "TaskNotes/Views/calendar-default.base",
   });
+  expect(pc19.task_workflow).toEqual({
+    target_path: "Notes/Task.md",
+    expected_initial_status: "open",
+    final_status: "done",
+    expected_revision: "e2acd09d",
+    stale_revision: "00000000",
+  });
   expect(pc19.active_file).toBe("Notes/Task.md");
   expect(rendererWorker).toContain("return {id: command.id};");
   expect(rendererWorker).toContain("registerDomEvent(_target, _type, _callback, _options)");
+  expect(rendererWorker).toContain("function boundedTaskWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-revision-aware-writer"');
+  expect(loadedWorkflowAudit).toContain("function taskWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("task_workflow_checks");
 });
 
 test("PC08 fixture and detached DOM seam keep Style Settings bounded", () => {

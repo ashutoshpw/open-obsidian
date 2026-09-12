@@ -216,6 +216,27 @@ function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function taskWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.task_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: traces.length === 3,
+    bounded_revision_aware: traces.length === 3 && traces.every((trace) => trace.mutation_scope === "bounded-revision-aware-writer"),
+    query_matched: every("query_matched"),
+    bases_mappings_present: every("bases_mappings_present"),
+    source_revision_matched: every("revision_matched"),
+    stale_revision_rejected: every("stale_revision_rejected"),
+    status_updated: every("status_updated"),
+    task_checkbox_updated: every("task_checkbox_updated"),
+    unrelated_content_preserved: every("unrelated_content_preserved"),
+    revision_advanced: every("revision_advanced"),
+    direct_vault_writes_zero: every("direct_vault_writes_zero"),
+    status_passed: traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function combinationTargetIds(): string[] {
   const combination = asRecord(fixture.combination);
   return asArray(combination?.target_ids).filter((value): value is string => typeof value === "string");
@@ -330,6 +351,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const editor = editorChecks(workflow);
       const smartConnections = id === "PC22" ? smartConnectionsWorkflowChecks(workflow) : null;
       const linter = id === "PC25" ? linterWorkflowChecks(workflow) : null;
+      const task = id === "PC19" ? taskWorkflowChecks(workflow) : null;
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -355,6 +377,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       recent_files_workflow_checks: id === "PC23" ? recentFilesWorkflowChecks(workflow) : null,
       smart_connections_workflow_checks: smartConnections,
       linter_workflow_checks: linter,
+      task_workflow_checks: task,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -436,7 +459,22 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => linterChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && linterComplete;
+      const taskChecks = asRecord(entry.task_workflow_checks);
+      const taskComplete = entry.artifact_id !== "PC19" || (taskChecks !== null && [
+        "present",
+        "bounded_revision_aware",
+        "query_matched",
+        "bases_mappings_present",
+        "source_revision_matched",
+        "stale_revision_rejected",
+        "status_updated",
+        "task_checkbox_updated",
+        "unrelated_content_preserved",
+        "revision_advanced",
+        "direct_vault_writes_zero",
+        "status_passed",
+      ].every((key) => taskChecks[key] === true));
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && smartConnectionsComplete && linterComplete && taskComplete;
     });
     const combinationChecksComplete = combinationLifecycleComplete && persistencePasses(combinationChecks) && combinationActionFailures.length === 0;
     const allChecks = artifactChecksComplete && combinationChecksComplete;

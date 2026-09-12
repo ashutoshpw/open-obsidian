@@ -118,6 +118,13 @@
           "open-calendar-view": "TaskNotes/Views/calendar-default.base"
         }
       },
+      "task_workflow": {
+        "target_path": "Notes/Task.md",
+        "expected_initial_status": "open",
+        "final_status": "done",
+        "expected_revision": "e2acd09d",
+        "stale_revision": "00000000"
+      },
       "active_file": "Notes/Task.md",
       "files": [
         {"path": "Notes/Task.md", "content": "---\ntags:\n  - task\nstatus: open\n---\n\n- [ ] Review compatibility #task\n"},

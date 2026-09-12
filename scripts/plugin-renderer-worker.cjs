@@ -1917,6 +1917,102 @@ function boundedLinterWorkflow(workflowContext = {}, runtime = {}) {
   };
 }
 
+function boundedTaskWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.task_workflow === "object"
+    ? workflowContext.task_workflow
+    : null;
+  if (!spec) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const targetPath = typeof spec.target_path === "string" ? spec.target_path : "";
+  const target = files.find((entry) => entry.path === targetPath) || null;
+  const source = target ? String(target.content).replace(/\r\n/g, "\n") : "";
+  const revision = (value) => {
+    let hash = 2166136261;
+    for (const character of String(value ?? "")) {
+      hash ^= character.codePointAt(0) || 0;
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  };
+  const sourceRevision = revision(source);
+  const expectedRevision = typeof spec.expected_revision === "string" ? spec.expected_revision : "";
+  const revisionMatches = expectedRevision.length > 0 && sourceRevision === expectedRevision;
+  const staleRevision = typeof spec.stale_revision === "string" ? spec.stale_revision : "stale-revision";
+  const staleRevisionRejected = staleRevision !== sourceRevision;
+  const lines = source.split("\n");
+  const statusIndex = lines.findIndex((line) => /^\s*status\s*:/i.test(line));
+  const tagMatch = lines.some((line) => /^\s*-\s*task\s*$/i.test(line));
+  const taskLineIndex = lines.findIndex((line) => /^\s*[-*+]\s+\[[ xX]\]\s+.+/.test(line));
+  const taskLine = taskLineIndex >= 0 ? lines[taskLineIndex] : "";
+  const initialChecked = taskLine.length > 0 && /\[[xX]\]/.test(taskLine);
+  const expectedStatus = typeof spec.expected_initial_status === "string" ? spec.expected_initial_status : "open";
+  const finalStatus = typeof spec.final_status === "string" ? spec.final_status : "done";
+  const queryMatched = target !== null
+    && tagMatch
+    && statusIndex >= 0
+    && new RegExp(`^\\s*status\\s*:\\s*${escapePattern(expectedStatus)}\\s*$`, "i").test(lines[statusIndex] || "")
+    && taskLineIndex >= 0
+    && !initialChecked;
+  const outputLines = [...lines];
+  if (statusIndex >= 0 && revisionMatches && staleRevisionRejected) outputLines[statusIndex] = outputLines[statusIndex].replace(/^(\s*status\s*:\s*).*/i, `$1${finalStatus}`);
+  if (taskLineIndex >= 0 && revisionMatches && staleRevisionRejected) outputLines[taskLineIndex] = outputLines[taskLineIndex].replace(/\[ \]/, "[x]");
+  const output = outputLines.join("\n");
+  const outputRevision = revision(output);
+  const statusUpdated = statusIndex >= 0 && new RegExp(`^\\s*status\\s*:\\s*${escapePattern(finalStatus)}\\s*$`, "i").test(outputLines[statusIndex] || "");
+  const taskCheckboxUpdated = taskLineIndex >= 0 && /\[[xX]\]/.test(outputLines[taskLineIndex] || "");
+  const removeMutableValues = (value) => String(value ?? "")
+    .replace(/^\s*status\s*:\s*[^\n]*$/gim, "status: <status>")
+    .replace(/\[[xX ]\]/g, "[ ]");
+  const unrelatedContentPreserved = removeMutableValues(source) === removeMutableValues(output);
+  const mappings = initialData.commandFileMapping && typeof initialData.commandFileMapping === "object" ? initialData.commandFileMapping : {};
+  const baseFiles = new Map(files.filter((entry) => entry.path.endsWith(".base")).map((entry) => [entry.path, entry.content]));
+  const basesMappingsPresent = Object.entries(mappings).length > 0 && Object.entries(mappings).every(([command, path]) => {
+    if (typeof path !== "string") return false;
+    const content = baseFiles.get(path);
+    return typeof content === "string" && content.includes("views:") && (command.includes("tasks") ? content.includes("Tasks") : command.includes("calendar") ? content.includes("Calendar") : true);
+  });
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = target !== null
+    && revisionMatches
+    && staleRevisionRejected
+    && queryMatched
+    && basesMappingsPresent
+    && statusUpdated
+    && taskCheckboxUpdated
+    && unrelatedContentPreserved
+    && outputRevision !== sourceRevision
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  return {
+    status,
+    mutation_scope: "bounded-revision-aware-writer",
+    target_path: targetPath,
+    task_tag: typeof initialData.taskTag === "string" ? initialData.taskTag : null,
+    initial_status: expectedStatus,
+    final_status: finalStatus,
+    query_matched: queryMatched,
+    bases_mappings_present: basesMappingsPresent,
+    source_revision: sourceRevision,
+    expected_revision: expectedRevision,
+    revision_matched: revisionMatches,
+    stale_revision: staleRevision,
+    stale_revision_rejected: staleRevisionRejected,
+    output_revision: outputRevision,
+    revision_advanced: outputRevision !== sourceRevision,
+    status_updated: statusUpdated,
+    task_checkbox_updated: taskCheckboxUpdated,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    input: source,
+    output,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -2027,6 +2123,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (recentFilesWorkflow) actions.recent_files_workflow = recentFilesWorkflow;
   const smartConnectionsWorkflow = boundedSmartConnectionsWorkflow(workflowContext, workflowContext.runtime || {});
   if (smartConnectionsWorkflow) actions.smart_connections_workflow = smartConnectionsWorkflow;
+  const taskWorkflow = boundedTaskWorkflow(workflowContext);
+  if (taskWorkflow) actions.task_workflow = taskWorkflow;
   return actions;
 }
 
@@ -2091,6 +2189,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     tag_workflow: actions.tag_workflow || null,
     recent_files_workflow: actions.recent_files_workflow || null,
     smart_connections_workflow: actions.smart_connections_workflow || null,
+    task_workflow: actions.task_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -2256,6 +2355,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedRecentFilesWorkflow,
     boundedSmartConnectionsWorkflow,
     boundedLinterWorkflow,
+    boundedTaskWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,
