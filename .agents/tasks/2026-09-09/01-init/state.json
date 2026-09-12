@@ -25,7 +25,7 @@
   "status": "active",
   "current_checkpoint": "P6.2",
   "next_action": "Run C14 reference-vault round trips and execute the listed external handoffs when the reference runtime, consented fixtures, credentials and release authority are available.",
-    "recent_increment": {"checkpoint":"P2.1","commit":"2c7919709c65ab8578a74ababb8bcc948b005c60","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-sequence-property-edit.json","tested_source_tree":"87d2eefa7a89de13d00e3b1cac2a3f6b8ea8b3b53d8838215ca1c13502be61dd","ci_runs":[]},
+    "recent_increment": {"checkpoint":"P2.1","commit":"2c7919709c65ab8578a74ababb8bcc948b005c60","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-sequence-property-edit.json","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-sequence-property-edit-ci.json","tested_source_tree":"87d2eefa7a89de13d00e3b1cac2a3f6b8ea8b3b53d8838215ca1c13502be61dd","ci_runs":[34663403607,34663403662,34663403648]},
   "ownership": {
     "product-ux": "Product journeys, UX, accessibility, localization and competitive scorecard",
     "vault-filesystem": "Vault engine, Markdown/properties/links, attachments, watchers, recovery and Chronicle",
