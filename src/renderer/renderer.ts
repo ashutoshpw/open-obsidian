@@ -998,7 +998,7 @@ function appendPreviewInline(element: HTMLElement, value: string): void {
   parseInlineMarkdown(value).forEach((segment) => element.append(previewInlineSegment(segment)));
 }
 
-type MarkdownStyledSegment = Exclude<MarkdownInlineSegment, {kind: "text" | "link" | "wiki-link"}>;
+type MarkdownStyledSegment = Exclude<MarkdownInlineSegment, {kind: "text" | "link" | "wiki-link" | "embed"}>;
 const markdownInlineTags: Record<MarkdownStyledSegment["kind"], keyof HTMLElementTagNameMap> = {highlight: "mark", strong: "strong", emphasis: "em", strikethrough: "del", code: "code"};
 
 function previewLinkSegment(segment: Extract<MarkdownInlineSegment, {kind: "link" | "wiki-link"}>): HTMLElement {
@@ -1010,10 +1010,52 @@ function previewLinkSegment(segment: Extract<MarkdownInlineSegment, {kind: "link
   return link;
 }
 
+function previewEmbedData(segment: Extract<MarkdownInlineSegment, {kind: "embed"}>): Record<string, string> {
+  const data: Record<string, string> = {target: segment.target};
+  if (segment.fragment) data.fragment = segment.fragment;
+  if (segment.width !== undefined) data.width = String(segment.width);
+  if (segment.height !== undefined) data.height = String(segment.height);
+  return data;
+}
+
+function previewEmbedDimensions(segment: Extract<MarkdownInlineSegment, {kind: "embed"}>): string {
+  if (segment.width === undefined) return "";
+  const size = segment.height === undefined ? String(segment.width) : `${segment.width}x${segment.height}`;
+  return ` · ${size}px`;
+}
+
+function previewEmbedDescription(segment: Extract<MarkdownInlineSegment, {kind: "embed"}>): {title: string; text: string} {
+  const location = segment.target || "current note";
+  const fragment = segment.fragment ? `#${segment.fragment}` : "";
+  const dimensions = previewEmbedDimensions(segment);
+  const title = `Embedded content: ${location}${fragment}${dimensions}`;
+  return {title, text: `[embed: ${segment.text || `${location}${fragment}`}${dimensions}]`};
+}
+
+function previewEmbedSegment(segment: Extract<MarkdownInlineSegment, {kind: "embed"}>): HTMLElement {
+  const embed = document.createElement("span");
+  embed.className = "markdown-embed";
+  Object.entries(previewEmbedData(segment)).forEach(([key, value]) => {
+    embed.dataset[key] = value;
+  });
+  const description = previewEmbedDescription(segment);
+  embed.title = description.title;
+  embed.setAttribute("aria-label", description.title);
+  embed.textContent = description.text;
+  return embed;
+}
+
+const markdownInlineSpecialRenderers: Partial<Record<MarkdownInlineSegment["kind"], (segment: MarkdownInlineSegment) => Node>> = {
+  link: (segment) => previewLinkSegment(segment as Extract<MarkdownInlineSegment, {kind: "link" | "wiki-link"}>),
+  "wiki-link": (segment) => previewLinkSegment(segment as Extract<MarkdownInlineSegment, {kind: "link" | "wiki-link"}>),
+  embed: (segment) => previewEmbedSegment(segment as Extract<MarkdownInlineSegment, {kind: "embed"}>),
+};
+
 function previewInlineSegment(segment: MarkdownInlineSegment): Node {
   if (segment.kind === "text") return document.createTextNode(segment.text);
-  if (segment.kind === "link" || segment.kind === "wiki-link") return previewLinkSegment(segment);
-  const element = document.createElement(markdownInlineTags[segment.kind]);
+  const specialRenderer = markdownInlineSpecialRenderers[segment.kind];
+  if (specialRenderer) return specialRenderer(segment);
+  const element = document.createElement(markdownInlineTags[segment.kind as MarkdownStyledSegment["kind"]]);
   element.textContent = segment.text;
   return element;
 }

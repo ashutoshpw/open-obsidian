@@ -98,3 +98,20 @@ test("shared inline Markdown segments are safe for DOM or native renderers", () 
     {kind: "text", text: " <script>"},
   ]);
 });
+
+test("inline embeds preserve targets, fragments, labels and dimensions without loading assets", () => {
+  expect(parseInlineMarkdown("![[Images/photo.png#crop|320x180]] ![[Note#Overview|caption]] ![Alt text](Images/photo.png#crop|320x180)")).toEqual([
+    {kind: "embed", text: "Images/photo.png", target: "Images/photo.png", fragment: "crop", width: 320, height: 180},
+    {kind: "text", text: " "},
+    {kind: "embed", text: "caption", target: "Note", fragment: "Overview"},
+    {kind: "text", text: " "},
+    {kind: "embed", text: "Alt text", target: "Images/photo.png", fragment: "crop", width: 320, height: 180},
+  ]);
+});
+
+test("inline embeds keep one-dimensional sizing structured and escaped syntax inert", () => {
+  expect(parseInlineMarkdown("![[diagram.svg|640]] \\![[not-an-embed]]")).toEqual([
+    {kind: "embed", text: "diagram.svg", target: "diagram.svg", width: 640},
+    {kind: "text", text: " \\![[not-an-embed]]"},
+  ]);
+});

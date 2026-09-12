@@ -6,7 +6,8 @@ export type MarkdownInlineSegment =
   | {kind: "strikethrough"; text: string}
   | {kind: "code"; text: string}
   | {kind: "link"; text: string; target: string}
-  | {kind: "wiki-link"; text: string; target: string};
+  | {kind: "wiki-link"; text: string; target: string}
+  | {kind: "embed"; text: string; target: string; fragment?: string; width?: number; height?: number};
 
 export type MarkdownPreviewBlock =
   | {kind: "heading"; level: number; text: string}
@@ -197,6 +198,35 @@ function wikiLinkInline(value: string): ParsedInline | null {
   return match ? {segment: {kind: "wiki-link", text: match[2] ?? match[1]!, target: match[1]!}, length: match[0].length} : null;
 }
 
+function embedDimensions(value: string): {width?: number; height?: number} | null {
+  const match = /^(\d+)(?:x(\d+))?$/i.exec(value.trim());
+  if (!match) return null;
+  const width = Number(match[1]);
+  const height = match[2] === undefined ? undefined : Number(match[2]);
+  if (!Number.isSafeInteger(width) || width <= 0 || height !== undefined && (!Number.isSafeInteger(height) || height <= 0)) return null;
+  return height === undefined ? {width} : {width, height};
+}
+
+function embedSegment(value: string, label: string): Exclude<MarkdownInlineSegment, {kind: "text"}> {
+  const [targetAndFragment, option] = value.split("|", 2);
+  const hash = targetAndFragment.indexOf("#");
+  const target = hash < 0 ? targetAndFragment : targetAndFragment.slice(0, hash);
+  const fragment = hash < 0 ? undefined : targetAndFragment.slice(hash + 1);
+  const dimensions = option === undefined ? null : embedDimensions(option);
+  const text = dimensions || option === undefined ? label || target : option;
+  return {kind: "embed", text, target, ...(fragment ? {fragment} : {}), ...(dimensions ?? {})};
+}
+
+function wikiEmbedInline(value: string): ParsedInline | null {
+  const match = /^!\[\[([^\]\n]+)\]\]/.exec(value);
+  return match ? {segment: embedSegment(match[1]!, ""), length: match[0].length} : null;
+}
+
+function markdownEmbedInline(value: string): ParsedInline | null {
+  const match = /^!\[([^\]\n]*)\]\(([^)\s]+)(?:\s+(?:"[^"\n]*"|'[^'\n]*'))?\)/.exec(value);
+  return match ? {segment: embedSegment(match[2]!, match[1]!), length: match[0].length} : null;
+}
+
 function linkInline(value: string): ParsedInline | null {
   const match = /^\[([^\]\n]+)\]\(([^)\s]+)(?:\s+["'][^)"]*["'])?\)/.exec(value);
   return match ? {segment: {kind: "link", text: match[1]!, target: match[2]!}, length: match[0].length} : null;
@@ -205,6 +235,8 @@ function linkInline(value: string): ParsedInline | null {
 const inlineMatchers: readonly InlineMatcher[] = [
   (value) => styledInline("highlight", /^==([^=\n]+)==/, value),
   (value) => styledInline("code", /^`([^`\n]+)`/, value),
+  wikiEmbedInline,
+  markdownEmbedInline,
   wikiLinkInline,
   linkInline,
   (value) => styledInline("strong", /^\*\*([^*\n]+)\*\*|^__([^_\n]+)__/, value),
@@ -214,6 +246,7 @@ const inlineMatchers: readonly InlineMatcher[] = [
 
 function inlineAt(value: string, index: number): ParsedInline | null {
   if (index > 0 && value[index - 1] === "\\") return null;
+  if (index > 1 && value[index - 1] === "!" && value[index - 2] === "\\") return null;
   const suffix = value.slice(index);
   for (const matcher of inlineMatchers) {
     const parsed = matcher(suffix);
