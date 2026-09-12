@@ -1,0 +1,89 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T21:50:12Z",
+  "checkpoint": "P3.2",
+  "requirements": ["PC14", "C11", "PLUG-002"],
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "commands": [
+    {
+      "command": "bun test tests/plugin-loaded-workflows.test.ts",
+      "exit_code": 0,
+      "result": "21 passed, 0 failed"
+    },
+    {
+      "command": "bun run audit:plugin-loaded-workflows",
+      "exit_code": 0,
+      "result": "partial overall audit; PC14 bounded projection passed"
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "command": "bun run validate:state",
+      "exit_code": 0,
+      "result": "structure check passed; goal remains active"
+    },
+    {
+      "command": "bun run final:audit",
+      "exit_code": 0,
+      "result": "implementation and external release readiness remain separate"
+    }
+  ],
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "sha256": "f3a677f7f778686263487166fcf09a7b38372dd6daf372783e64cbb73b5e1b1a",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "id": "PC14",
+    "name": "Editing Toolbar",
+    "version": "4.1.3",
+    "main_js_bytes": 1699317,
+    "main_js_sha256": "9b389790e6decc763d09686cf5f6ddfde93c67f44f4d5e46014541521e646b7b",
+    "manifest_json_bytes": 405,
+    "manifest_json_sha256": "1a32cb69a8536e6f4711de3214fa4e2c8135fb1a410b396b7f32bcf6afeea2cd",
+    "integrity": "passed",
+    "unchanged_runtime": {
+      "status": "denied",
+      "capability": "dom.privileged",
+      "path": "window.addEventListener",
+      "disposition": "candidate-denial",
+      "runtime_disposition": "pending-runtime",
+      "candidate_capabilities": ["network.request", "process.spawn", "dom.privileged", "native.abi"]
+    }
+  },
+  "bounded_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-in-memory-editing-toolbar-projection",
+    "phases": ["install", "restart", "update"],
+    "toolbar_rendered": true,
+    "selection_edits_match": true,
+    "customization_persisted": true,
+    "customization_restored_on_restart": true,
+    "customization_restored_on_update": true,
+    "source_mode_behavior": true,
+    "live_preview_behavior": true,
+    "popout_behavior": true,
+    "source_preserved": true,
+    "unrelated_content_preserved": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true
+  },
+  "status": "pending-runtime",
+  "no_plugin_promoted": true,
+  "limitations": [
+    "The unchanged Editing Toolbar artifact is denied inside the context-isolated renderer at window.addEventListener; the projection is marker-free synthetic evidence.",
+    "The projection records deterministic in-memory selection edits, toolbar customization and mode/popout behavior only; reference Obsidian behavior, same-user macOS/Windows enforcement, human validation, signing, updater and compatibility promotion remain pending."
+  ]
+}

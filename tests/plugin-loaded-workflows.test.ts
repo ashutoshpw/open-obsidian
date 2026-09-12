@@ -10,7 +10,7 @@ type LoadedWorkflowFixture = {
   boundary: string;
   target_ids: string[];
   required_phases: string[];
-  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
+  scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
@@ -31,7 +31,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.checkpoint).toBe("P3.2");
   expect(fixture.decision_id).toBe("D14");
   expect(fixture.boundary).toBe("electron-renderer");
-  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
+  expect(fixture.target_ids).toEqual(["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"]);
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
@@ -672,6 +672,54 @@ test("PC12 fixture and bounded projection preserve QuickAdd ordering and deny li
   expect(loadedWorkflowAudit).toContain("function quickAddWorkflowChecks");
   expect(loadedWorkflowAudit).toContain("quickadd_workflow_checks");
   expect(loadedWorkflowAudit).toContain("no_dynamic_execution");
+});
+
+test("PC14 fixture and bounded projection preserve toolbar edits, customization and modes", () => {
+  const pc14 = fixture.scenarios.PC14 as typeof fixture.scenarios.PC03 & {
+    editing_toolbar_workflow?: {
+      source_path: string;
+      selection: string;
+      commands: Array<{id: string; command: string; selection: string; prefix?: string; suffix?: string; target?: string}>;
+      expected_output: string;
+      customization: {order: string[]; hidden: string[]};
+      source_mode: {name: string; expected_content: string; selection_preserved: boolean};
+      live_preview_mode: {name: string; expected_rendered: string; selection_preserved: boolean};
+      popout: {enabled: boolean; path: string; mode: string; expected_content: string};
+      expected_unrelated_path: string;
+      expected_unrelated_content: string;
+    };
+  };
+  expect(pc14.workflow_id).toBe("workflow:pc14");
+  expect(pc14.initial_data).toMatchObject({version: "4.1.3", modes: ["source", "live-preview", "popout"]});
+  expect(pc14.initial_data.toolbar_items).toEqual([
+    {id: "bold", label: "Bold", command: "toggle-bold", enabled: true},
+    {id: "link", label: "Link", command: "insert-link", enabled: true},
+  ]);
+  expect(pc14.editing_toolbar_workflow).toEqual({
+    source_path: "Notes/Edit.md",
+    selection: "world",
+    commands: [
+      {id: "bold", command: "toggle-bold", selection: "world", prefix: "**", suffix: "**"},
+      {id: "link", command: "insert-link", selection: "**world**", target: "https://example.com"},
+    ],
+    expected_output: "Hello [**world**](https://example.com)\n",
+    customization: {order: ["bold", "link"], hidden: []},
+    source_mode: {name: "source", expected_content: "Hello world\n", selection_preserved: true},
+    live_preview_mode: {name: "live-preview", expected_rendered: "Hello [**world**](https://example.com)\n", selection_preserved: true},
+    popout: {enabled: true, path: "Notes/Edit.md", mode: "source", expected_content: "Hello [**world**](https://example.com)\n"},
+    expected_unrelated_path: "Notes/Untouched.md",
+    expected_unrelated_content: "# Untouched\n\nThis note remains byte-identical.\n",
+  });
+  expect(rendererWorker).toContain("function boundedEditingToolbarWorkflow");
+  expect(rendererWorker).toContain('mutation_scope: "bounded-in-memory-editing-toolbar-projection"');
+  expect(rendererWorker).toContain("selection_edits_match");
+  expect(rendererWorker).toContain("customization_persisted");
+  expect(rendererWorker).toContain("live_preview_behavior");
+  expect(rendererWorker).toContain("popout_behavior");
+  expect(loadedWorkflowAudit).toContain("function editingToolbarWorkflowChecks");
+  expect(loadedWorkflowAudit).toContain("editing_toolbar_workflow_checks");
+  expect(loadedWorkflowAudit).toContain("customization_restored_on_restart");
+  expect(loadedWorkflowAudit).toContain("direct_vault_writes_zero");
 });
 
 test("PC24 fixture and event seam keep Tag Wrangler mutations editor-only", () => {

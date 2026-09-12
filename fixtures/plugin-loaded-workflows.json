@@ -4,7 +4,7 @@
   "checkpoint": "P3.2",
   "decision_id": "D14",
   "boundary": "electron-renderer",
-  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+  "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
   "scenarios": {
     "PC01": {
       "workflow_id": "workflow:pc01",
@@ -630,6 +630,39 @@
       "files": [
         {"path": "Templates/Task.md", "content": "# {{VALUE:Task}}\n\nPriority: {{VALUE:Priority}}\nCreated: {{DATE}}\n"},
         {"path": "Scripts/normalize.js", "content": "module.exports = (value) => value.trim();\n"},
+        {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
+      ]
+    },
+    "PC14": {
+      "workflow_id": "workflow:pc14",
+      "description": "Load a configured Editing Toolbar, apply deterministic bold and link commands to a selection, preserve customization through restart and update, and record source/live-preview/popout behavior without direct vault writes.",
+      "initial_data": {
+        "version": "4.1.3",
+        "toolbar_items": [
+          {"id": "bold", "label": "Bold", "command": "toggle-bold", "enabled": true},
+          {"id": "link", "label": "Link", "command": "insert-link", "enabled": true}
+        ],
+        "toolbar_customization": {"order": ["bold", "link"], "hidden": []},
+        "modes": ["source", "live-preview", "popout"]
+      },
+      "editing_toolbar_workflow": {
+        "source_path": "Notes/Edit.md",
+        "selection": "world",
+        "commands": [
+          {"id": "bold", "command": "toggle-bold", "selection": "world", "prefix": "**", "suffix": "**"},
+          {"id": "link", "command": "insert-link", "selection": "**world**", "target": "https://example.com"}
+        ],
+        "expected_output": "Hello [**world**](https://example.com)\n",
+        "customization": {"order": ["bold", "link"], "hidden": []},
+        "source_mode": {"name": "source", "expected_content": "Hello world\n", "selection_preserved": true},
+        "live_preview_mode": {"name": "live-preview", "expected_rendered": "Hello [**world**](https://example.com)\n", "selection_preserved": true},
+        "popout": {"enabled": true, "path": "Notes/Edit.md", "mode": "source", "expected_content": "Hello [**world**](https://example.com)\n"},
+        "expected_unrelated_path": "Notes/Untouched.md",
+        "expected_unrelated_content": "# Untouched\n\nThis note remains byte-identical.\n"
+      },
+      "active_file": "Notes/Edit.md",
+      "files": [
+        {"path": "Notes/Edit.md", "content": "Hello world\n"},
         {"path": "Notes/Untouched.md", "content": "# Untouched\n\nThis note remains byte-identical.\n"}
       ]
     },

@@ -467,6 +467,31 @@ function quickAddWorkflowChecks(workflow: JsonRecord): JsonRecord {
   };
 }
 
+function editingToolbarWorkflowChecks(workflow: JsonRecord): JsonRecord {
+  const traces = phaseRecords(workflow)
+    .map((phase) => asRecord(phase.editing_toolbar_workflow))
+    .filter((trace): trace is JsonRecord => trace !== null);
+  const summary = asRecord(workflow.editing_toolbar_workflow);
+  const every = (key: string): boolean => traces.length === 3 && traces.every((trace) => trace[key] === true);
+  return {
+    present: summary !== null && traces.length === 3,
+    bounded_read_only: summary?.mutation_scope === "bounded-in-memory-editing-toolbar-projection" && traces.every((trace) => trace.mutation_scope === "bounded-in-memory-editing-toolbar-projection"),
+    toolbar_rendered: summary?.toolbar_rendered === true && every("toolbar_rendered"),
+    selection_edits_match: summary?.selection_edits_match === true && every("selection_edits_match"),
+    customization_persisted: summary?.customization_persisted === true && every("customization_persisted"),
+    customization_restored_on_restart: summary?.customization_restored_on_restart === true && every("customization_persisted"),
+    customization_restored_on_update: summary?.customization_restored_on_update === true && every("customization_persisted"),
+    source_mode_behavior: summary?.source_mode_behavior === true && every("source_mode_behavior"),
+    live_preview_behavior: summary?.live_preview_behavior === true && every("live_preview_behavior"),
+    popout_behavior: summary?.popout_behavior === true && every("popout_behavior"),
+    source_preserved: summary?.source_preserved === true && every("source_preserved"),
+    unrelated_file_preserved: summary?.unrelated_file_preserved === true && every("unrelated_file_preserved"),
+    direct_vault_writes_zero: summary?.direct_vault_writes === 0 && every("direct_vault_writes_zero"),
+    phase_projections_passed: traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+    status_passed: summary?.status === "passed" && traces.length === 3 && traces.every((trace) => trace.status === "passed"),
+  };
+}
+
 function linterWorkflowChecks(workflow: JsonRecord): JsonRecord {
   const trace = asRecord(workflow.linter_workflow);
   const phases = records(trace?.phases);
@@ -847,6 +872,22 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         );
         quickAdd = quickAddWorkflowChecks(asRecord(quickAddProjection.workflow) ?? {});
       }
+      let editingToolbar = id === "PC14" ? editingToolbarWorkflowChecks(workflow) : null;
+      let editingToolbarProjection: JsonRecord | null = null;
+      if (id === "PC14") {
+        // Editing Toolbar's unchanged release reaches privileged DOM/native
+        // capabilities that D15 denies before lifecycle completion. Keep its
+        // configured toolbar, selection editing and mode/popout contract in a
+        // separate marker-free synthetic projection; it never changes the
+        // unchanged-artifact runtime disposition or compatibility status.
+        editingToolbarProjection = await runWorker(
+          'module.exports = class BoundedEditingToolbarProjection extends require("obsidian").Plugin {};',
+          {...config, artifact_id: "PC14-editing-toolbar-projection", target_ids: ["PC14"]},
+          temporaryRoot,
+          "PC14-editing-toolbar-projection",
+        );
+        editingToolbar = editingToolbarWorkflowChecks(asRecord(editingToolbarProjection.workflow) ?? {});
+      }
       const lifecycleComplete = checksPass(checks, boundedLifecycleChecks);
       const persistenceComplete = persistencePasses(checks);
       const persistenceSource = checks.restart_restores_data === true && checks.update_restores_data === true
@@ -889,6 +930,8 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       templater_workflow_projection: templaterProjection,
       quickadd_workflow_checks: quickAdd,
       quickadd_workflow_projection: quickAddProjection,
+      editing_toolbar_workflow_checks: editingToolbar,
+      editing_toolbar_workflow_projection: editingToolbarProjection,
       disposition: "bounded-workflow-evidence-pending-runtime",
       });
       sources.push({id, source: downloaded.source});
@@ -1233,6 +1276,24 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => quickAddChecks[key] === true));
+      const editingToolbarChecks = asRecord(entry.editing_toolbar_workflow_checks);
+      const editingToolbarComplete = entry.artifact_id !== "PC14" || (editingToolbarChecks !== null && [
+        "present",
+        "bounded_read_only",
+        "toolbar_rendered",
+        "selection_edits_match",
+        "customization_persisted",
+        "customization_restored_on_restart",
+        "customization_restored_on_update",
+        "source_mode_behavior",
+        "live_preview_behavior",
+        "popout_behavior",
+        "source_preserved",
+        "unrelated_file_preserved",
+        "direct_vault_writes_zero",
+        "phase_projections_passed",
+        "status_passed",
+      ].every((key) => editingToolbarChecks[key] === true));
       const remotelySaveChecks = asRecord(entry.remotely_save_workflow_checks);
       const remotelySaveComplete = entry.artifact_id !== "PC10" || (remotelySaveChecks !== null && [
         "present",
@@ -1277,7 +1338,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         "direct_vault_writes_zero",
         "status_passed",
       ].every((key) => iconizeChecks[key] === true));
-      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete;
+      return checksPass(asRecord(entry.checks) as Record<string, boolean>, boundedLifecycleChecks) && persistencePasses(asRecord(entry.checks) as Record<string, boolean>) && entry.action_status === "passed" && tagComplete && recentFilesComplete && calendarComplete && smartConnectionsComplete && dataviewComplete && linterComplete && taskComplete && tasksComplete && tableComplete && gitComplete && remotelySaveComplete && iconizeComplete && kanbanComplete && templaterComplete && quickAddComplete && editingToolbarComplete;
     });
     const combinationChecksComplete = combinationResults.every((entry) => {
       const checks = asRecord(entry.checks) as Record<string, boolean>;
@@ -1316,7 +1377,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC14 Editing Toolbar selection/customization/mode projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

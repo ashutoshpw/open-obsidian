@@ -1640,6 +1640,15 @@ This file is append-only. Entries use UTC timestamps and describe the exact hand
 - Added and linked the hosted CI evidence in the requirements and state reconciliation metadata. PC01 and P3.2 remain pending/non-certified: reference Excalidraw behavior and scripting, same-user OS enforcement, human validation, signing, publication, updater and compatibility promotion remain external-pending. No plugin or compatibility row was promoted.
 - Next operation: run final state, audit and diff gates, commit and push this hosted reconciliation, verify SHA parity and clean status, then continue the next dependency-ready P3.2 slice without promoting compatibility.
 
+## 2026-09-12T21:51:44Z — P3.2 bounded PC14 Editing Toolbar projection
+
+- Added PC14 Editing Toolbar 4.1.3 to the loaded-workflow target set with a configured Bold/Link toolbar, deterministic selection commands, persisted customization, source/live-preview/popout mode records and an unchanged control note.
+- Added a bounded marker-free in-memory Editing Toolbar projection. It verifies toolbar rendering, applies the configured bold and link commands in order, preserves customization through install/restart/update, records source/live-preview/popout behavior and records zero direct vault writes.
+- The unchanged 1,699,317-byte Editing Toolbar artifact passes integrity but remains D15 renderer-denied at `window.addEventListener`; the local projection passes all install/restart/update checks. Evidence: `.agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc14-editing-toolbar.json`, source digest `f3a677f7f778686263487166fcf09a7b38372dd6daf372783e64cbb73b5e1b1a`.
+- Focused loaded-workflow tests (21 tests, 392 expectations), worker syntax, typecheck, `check:fast`, state validation, final audit, full local loaded-workflow audit and diff checks pass with aggregate status still `partial`; PC14 remains pending-runtime and no plugin or compatibility row was promoted. The selected `/home/ashutosh/Obsidian` vault was not accessed.
+- Reference Obsidian Editing Toolbar behavior, unchanged lifecycle, same-user macOS/Windows enforcement, human validation, signing, publication, updater and compatibility promotion remain pending; the projection is not compatibility certification.
+- Next operation: persist the PC14 implementation metadata, commit with `[openobsidian P3.2 work] Add bounded PC14 Editing Toolbar workflow`, push `main`, inspect hosted quality/loaded-workflow/renderer-matrix/desktop-build results and reconcile without promoting compatibility.
+
 ## 2026-09-12T20:47:15Z — P3.2 bounded PC11 Iconize workflow
 
 - Added PC11 Iconize 2.14.7 to the loaded-workflow target set with a fixture covering file and folder icon assignments, configured rules, file/folder rename transfer, SVG asset resolution, sidebar/tab rendering and an untouched-note control.

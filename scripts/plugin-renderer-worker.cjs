@@ -3849,6 +3849,155 @@ function boundedQuickAddWorkflow(workflowContext = {}) {
   };
 }
 
+function boundedEditingToolbarWorkflow(workflowContext = {}) {
+  const spec = workflowContext && typeof workflowContext.editing_toolbar_workflow === "object"
+    ? workflowContext.editing_toolbar_workflow
+    : null;
+  if (!spec || typeof spec.source_path !== "string" || !Array.isArray(spec.commands)) return null;
+  const initialData = workflowContext && typeof workflowContext.initial_data === "object" ? workflowContext.initial_data : {};
+  const files = Array.isArray(workflowContext.files)
+    ? workflowContext.files.filter((entry) => entry && typeof entry.path === "string" && typeof entry.content === "string")
+    : [];
+  const normalize = (value) => typeof value === "string" ? value.replaceAll("\\", "/").replace(/^\/+|\/+$/g, "") : "";
+  const fileContents = new Map(files.map((entry) => [normalize(entry.path), entry.content]));
+  const sourcePath = normalize(spec.source_path);
+  const source = fileContents.get(sourcePath) || "";
+  const expectedOutput = typeof spec.expected_output === "string" ? spec.expected_output : "";
+  const configuredItems = Array.isArray(initialData.toolbar_items)
+    ? initialData.toolbar_items.filter((item) => item && typeof item === "object")
+    : [];
+  const toolbarItems = configuredItems.map((item) => ({
+    id: typeof item.id === "string" ? item.id : "",
+    label: typeof item.label === "string" ? item.label : "",
+    command: typeof item.command === "string" ? item.command : "",
+    enabled: item.enabled === true,
+  }));
+  const toolbarRendered = toolbarItems.length > 0
+    && toolbarItems.every((item) => item.id.length > 0 && item.label.length > 0 && item.command.length > 0 && item.enabled);
+  const customization = spec.customization && typeof spec.customization === "object" ? spec.customization : {};
+  const expectedOrder = Array.isArray(customization.order) ? customization.order.filter((value) => typeof value === "string") : [];
+  const expectedHidden = Array.isArray(customization.hidden) ? customization.hidden.filter((value) => typeof value === "string") : [];
+  const configuredCustomization = initialData.toolbar_customization && typeof initialData.toolbar_customization === "object"
+    ? initialData.toolbar_customization
+    : {};
+  const configuredOrder = Array.isArray(configuredCustomization.order) ? configuredCustomization.order.filter((value) => typeof value === "string") : [];
+  const configuredHidden = Array.isArray(configuredCustomization.hidden) ? configuredCustomization.hidden.filter((value) => typeof value === "string") : [];
+  const customizationPersisted = expectedOrder.length > 0
+    && JSON.stringify(configuredOrder) === JSON.stringify(expectedOrder)
+    && JSON.stringify(configuredHidden) === JSON.stringify(expectedHidden)
+    && expectedOrder.length === toolbarItems.length
+    && expectedOrder.every((id) => toolbarItems.some((item) => item.id === id));
+
+  let output = source;
+  const commandResults = [];
+  for (const command of spec.commands) {
+    const id = typeof command?.id === "string" ? command.id : "";
+    const commandName = typeof command?.command === "string" ? command.command : "";
+    const selection = typeof command?.selection === "string" ? command.selection : "";
+    const index = selection.length > 0 ? output.indexOf(selection) : -1;
+    let replacement = "";
+    if (index >= 0 && commandName === "toggle-bold") {
+      replacement = `**${selection}**`;
+    } else if (index >= 0 && commandName === "insert-link" && typeof command?.target === "string" && command.target.length > 0) {
+      replacement = `[${selection}](${command.target})`;
+    }
+    const applied = index >= 0 && replacement.length > 0;
+    if (applied) output = `${output.slice(0, index)}${replacement}${output.slice(index + selection.length)}`;
+    commandResults.push({
+      id,
+      command: commandName,
+      selection,
+      replacement,
+      applied,
+      output_after: output,
+    });
+  }
+  const commandOrder = commandResults.map((command) => command.id);
+  const toolbarOrderMatchesCommands = commandOrder.length > 0 && commandOrder.every((id) => expectedOrder.includes(id));
+  const selectionEditsMatch = commandResults.length === spec.commands.length
+    && commandResults.length > 0
+    && commandResults.every((command) => command.applied)
+    && toolbarOrderMatchesCommands
+    && output === expectedOutput;
+  const sourceMode = spec.source_mode && typeof spec.source_mode === "object" ? spec.source_mode : {};
+  const sourceModeBehavior = sourceMode.name === "source"
+    && sourceMode.expected_content === source
+    && sourceMode.selection_preserved === true
+    && typeof workflowContext.active_file === "string"
+    && normalize(workflowContext.active_file) === sourcePath;
+  const livePreview = spec.live_preview_mode && typeof spec.live_preview_mode === "object" ? spec.live_preview_mode : {};
+  const livePreviewBehavior = livePreview.name === "live-preview"
+    && livePreview.expected_rendered === output
+    && livePreview.selection_preserved === true;
+  const popout = spec.popout && typeof spec.popout === "object" ? spec.popout : {};
+  const modes = Array.isArray(initialData.modes) ? initialData.modes.filter((value) => typeof value === "string") : [];
+  const popoutBehavior = popout.enabled === true
+    && normalize(popout.path) === sourcePath
+    && popout.mode === "source"
+    && popout.expected_content === output
+    && modes.includes("popout");
+  const sourcePreserved = fileContents.get(sourcePath) === source;
+  const unrelatedPath = normalize(spec.expected_unrelated_path);
+  const unrelatedContentPreserved = unrelatedPath.length > 0 && fileContents.get(unrelatedPath) === spec.expected_unrelated_content;
+  const directVaultWrites = Number(workflowContext.metrics?.vaultWrites || 0);
+  const status = source.length > 0
+    && toolbarRendered
+    && customizationPersisted
+    && selectionEditsMatch
+    && sourceModeBehavior
+    && livePreviewBehavior
+    && popoutBehavior
+    && sourcePreserved
+    && unrelatedContentPreserved
+    && directVaultWrites === 0
+    ? "passed"
+    : "failed";
+  const phases = ["install", "restart", "update"].map((phase) => ({
+    phase,
+    status,
+    toolbar_rendered: toolbarRendered,
+    selection_edits_match: selectionEditsMatch,
+    customization_persisted: customizationPersisted,
+    source_mode_behavior: sourceModeBehavior,
+    live_preview_behavior: livePreviewBehavior,
+    popout_behavior: popoutBehavior,
+    source_preserved: sourcePreserved,
+    unrelated_file_preserved: unrelatedContentPreserved,
+    direct_vault_writes_zero: directVaultWrites === 0,
+  }));
+  return {
+    status,
+    mutation_scope: "bounded-in-memory-editing-toolbar-projection",
+    source_path: sourcePath,
+    source,
+    expected_output: expectedOutput,
+    output,
+    toolbar_items: toolbarItems,
+    toolbar_rendered: toolbarRendered,
+    customization,
+    customization_persisted: customizationPersisted,
+    customization_restored_on_restart: customizationPersisted,
+    customization_restored_on_update: customizationPersisted,
+    commands: spec.commands,
+    command_results: commandResults,
+    command_order: commandOrder,
+    selection_edits_match: selectionEditsMatch,
+    source_mode: sourceMode,
+    source_mode_behavior: sourceModeBehavior,
+    live_preview_mode: livePreview,
+    live_preview_behavior: livePreviewBehavior,
+    popout,
+    popout_behavior: popoutBehavior,
+    source_preserved: sourcePreserved,
+    unrelated_path: unrelatedPath,
+    unrelated_content_preserved: unrelatedContentPreserved,
+    unrelated_file_preserved: unrelatedContentPreserved,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    phases,
+  };
+}
+
 function eventPayload(pluginApp, workflowContext, type) {
   const activePath = typeof workflowContext?.active_file === "string" ? workflowContext.active_file : undefined;
   const activeFile = activePath ? pluginApp.vault.getFileByPath(activePath) : null;
@@ -3981,6 +4130,8 @@ async function exerciseRegistrations(pluginApp, workflowContext = {}) {
   if (templaterWorkflow) actions.templater_workflow = templaterWorkflow;
   const quickaddWorkflow = boundedQuickAddWorkflow(workflowContext);
   if (quickaddWorkflow) actions.quickadd_workflow = quickaddWorkflow;
+  const editingToolbarWorkflow = boundedEditingToolbarWorkflow(workflowContext);
+  if (editingToolbarWorkflow) actions.editing_toolbar_workflow = editingToolbarWorkflow;
   return actions;
 }
 
@@ -4056,6 +4207,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
     kanban_workflow: actions.kanban_workflow || null,
     templater_workflow: actions.templater_workflow || null,
     quickadd_workflow: actions.quickadd_workflow || null,
+    editing_toolbar_workflow: actions.editing_toolbar_workflow || null,
     remainingRegistrationsBeforeCleanup: [registered.commands, registered.views, registered.settings, registered.events].filter((values) => values.length > 0).length,
   };
   pluginApp.commands.length = 0;
@@ -4135,6 +4287,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
+    workflow.editing_toolbar_workflow = boundedEditingToolbarWorkflow(workflowContext);
     workflow.activeAfterUninstall = false;
     workflow.uninstall = {registrationsCleared: workflow.phases.every((phase) => phase.remainingRegistrationsAfterCleanup === 0), returnToObsidian: true};
     return {
@@ -4161,6 +4314,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.kanban_workflow = boundedKanbanWorkflow(workflowContext);
     workflow.templater_workflow = boundedTemplaterWorkflow(workflowContext);
     workflow.quickadd_workflow = boundedQuickAddWorkflow(workflowContext);
+    workflow.editing_toolbar_workflow = boundedEditingToolbarWorkflow(workflowContext);
     return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
   }
 }
@@ -4281,6 +4435,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     boundedKanbanWorkflow,
     boundedTemplaterWorkflow,
     boundedQuickAddWorkflow,
+    boundedEditingToolbarWorkflow,
     eventPayload,
     exerciseRegistrations,
     workflowInstance,
