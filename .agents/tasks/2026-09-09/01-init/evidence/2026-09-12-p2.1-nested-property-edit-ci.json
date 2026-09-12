@@ -1,0 +1,146 @@
+{
+  "evidence_version": 1,
+  "recorded_at": "2026-09-12T00:38:07Z",
+  "checkpoint": "P2.1",
+  "requirements": ["C04", "C04.1"],
+  "implementation_commit": "d1200ec7fd5e9847096dba911e4366e16e52b82f",
+  "reconciled_head": "e004d87306efd3af39eda312631c1220be9fa409",
+  "source_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-nested-property-edit.json",
+  "environment": {
+    "branch": "main",
+    "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+    "tested_source_tree": "2013995a3b79f3012278081fe57d0c8fcfe8ae571e27192878a6cd13c08ff7b4",
+    "source_tree_paths": 235,
+    "source_tree_definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out.",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "ci": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34662046130,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34662046130",
+      "head_sha": "e004d87306efd3af39eda312631c1220be9fa409",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103466384957, "conclusion": "success"},
+        "macos-latest": {"job_id": 103466384877, "conclusion": "success"},
+        "windows-latest": {"job_id": 103466384798, "conclusion": "success"}
+      },
+      "checks": [
+        "progress state",
+        "frozen contracts",
+        "architecture",
+        "version baseline",
+        "vault differential fixture",
+        "host vault round trip",
+        "C10 workflow inventory",
+        "distribution metadata",
+        "update/rollback contract",
+        "accessibility contract",
+        "typecheck",
+        "tests",
+        "quality scorecard",
+        "Electron compile",
+        "Electron vault round trip",
+        "synthetic plugin lifecycle",
+        "Knip",
+        "Fallow health"
+      ],
+      "changed_code_review": "Skipped by the push-triggered workflow; local strict Fallow audit passed before the implementation commit.",
+      "result": "All quality matrix jobs passed on Ubuntu, macOS and Windows."
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34662046135,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34662046135",
+      "head_sha": "e004d87306efd3af39eda312631c1220be9fa409",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {
+          "job_id": 103466384753,
+          "conclusion": "success",
+          "artifact": "openobsidian-Linux-preview-e004d87306efd3af39eda312631c1220be9fa409",
+          "artifact_sha256": "f3ee5da633402bc2c250001217cef97f6d3897e195d3dca7d7ed64f940c0c7e2"
+        },
+        "macos-latest": {
+          "job_id": 103466384868,
+          "conclusion": "success",
+          "artifact": "openobsidian-macOS-preview-e004d87306efd3af39eda312631c1220be9fa409",
+          "artifact_sha256": "923762c49bd7b8443cbacd63cf855e4622ae2fe9ba0862feace328d85dca9d62"
+        },
+        "windows-latest": {
+          "job_id": 103466384887,
+          "conclusion": "success",
+          "artifact": "openobsidian-Windows-preview-e004d87306efd3af39eda312631c1220be9fa409",
+          "artifact_sha256": "df8c1c56a40f14340853c1bd1bb9dc9417e074892c2722f56464f7b8d80cdc13"
+        }
+      },
+      "checks": [
+        "release gate",
+        "update/rollback manifest",
+        "unpacked desktop build",
+        "release-manifest sha256 hashes",
+        "Electron runtime notices",
+        "transitive dependency attribution",
+        "artifact upload"
+      ],
+      "signing": "Production signing was skipped because credentials were unavailable; artifacts are unsigned previews.",
+      "result": "All desktop matrix jobs passed packaging, release-manifest, Electron runtime notice, transitive attribution and artifact-upload checks."
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34662046129,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34662046129",
+      "head_sha": "e004d87306efd3af39eda312631c1220be9fa409",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu-latest": {
+          "job_id": 103466384882,
+          "conclusion": "success",
+          "recorded_status": "partial",
+          "artifact": "loaded-plugin-workflows-Linux-e004d87306efd3af39eda312631c1220be9fa409",
+          "artifact_sha256": "f077cf30bdfd1cced8717a70bccf5bbd9df56ca6c4807869f4e9433940a07452",
+          "audit_source_tree_sha256": "a631d8f3b32426cde7d17cfb3a3b83309f5cf24454a8ec29d44861e509c2ed02",
+          "audit_source_tree_paths": 236
+        },
+        "macos-latest": {
+          "job_id": 103466384888,
+          "conclusion": "success",
+          "recorded_status": "partial",
+          "artifact": "loaded-plugin-workflows-macOS-e004d87306efd3af39eda312631c1220be9fa409",
+          "artifact_sha256": "993d103ebfc1c884bf4a317a0058863cebe879ce80c19500f5856f622dc4f365",
+          "audit_source_tree_sha256": "ab1ca3b9d1b56fa5c2baabf8ea741998f57b0da083a605b309323b936ad7a380",
+          "audit_source_tree_paths": 236
+        },
+        "windows-latest": {
+          "job_id": 103466384790,
+          "conclusion": "success",
+          "recorded_status": "partial",
+          "artifact": "loaded-plugin-workflows-Windows-e004d87306efd3af39eda312631c1220be9fa409",
+          "artifact_sha256": "6c11aac1e5cf7bd4d97ddc01b603a80067f86a38682b5b55b5dd2dbecc9126c0",
+          "audit_source_tree_sha256": "49ca8b0fada04730aa36441b4190096b2baaff1a643c640beb9641cb70084c39",
+          "audit_source_tree_paths": 236
+        }
+      },
+      "checks": {
+        "all_jobs_uploaded_evidence": true,
+        "all_jobs_partial": true,
+        "all_artifacts_integrity_checked": true,
+        "zero_mediated_vault_writes": true,
+        "no_plugin_promoted": true,
+        "bounded_artifact_lifecycles_complete": true,
+        "bounded_actions_remain_partial_except_pc24": true,
+        "combination_persistence_not_proven": true
+      },
+      "result": "All Ubuntu, macOS and Windows loaded-workflow jobs passed and uploaded partial reports for the seven unchanged pinned artifacts plus their combination. The reports record zero mediated vault writes and no compatibility promotion; action, persistence, reference-runtime and human gates remain pending."
+    }
+  },
+  "limitations": [
+    "Hosted quality and desktop-build matrices validate repository contracts, synthetic lifecycle and packaging behavior on Ubuntu, macOS and Windows; they do not prove reference Obsidian property round trips.",
+    "Loaded-workflow reports execute unchanged pinned plugin bytes inside the bounded Electron sandbox, not stock Obsidian. Their per-job source digests include one transient redirected-output path (236 paths), while the clean local source digest has 235 paths.",
+    "Full YAML dialect coverage, sequence/flow/block-scalar editing, reference Obsidian reopen/save comparison, same-user OS enforcement, human accessibility/input, signing, publication and updater validation remain pending.",
+    "No reference Obsidian instance, provider endpoint, account, credential, personal vault or selected /home/ashutosh/Obsidian vault was accessed or modified."
+  ],
+  "result": "The nested-property implementation commit is reconciled to successful hosted quality, desktop-build and loaded-workflow runs on Ubuntu, macOS and Windows. CI confirms implementation-boundary health only; C04/C04.1 remain implemented rather than release-passing, with unsupported YAML and plugin/reference boundaries explicit."
+}
