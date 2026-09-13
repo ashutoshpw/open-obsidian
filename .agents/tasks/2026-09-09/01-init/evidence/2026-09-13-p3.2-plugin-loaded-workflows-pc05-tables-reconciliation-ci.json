@@ -1,0 +1,204 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc05-tables-reconciliation-ci",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC05"
+  ],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-13T03:05:00Z",
+  "source_commit": "18288b86a77ada744c27cb92b930dcd6dbbb434e",
+  "status": "partial",
+  "source_tree": {
+    "local_sha256": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
+    "local_paths": 246,
+    "hosted_report_paths": 247,
+    "hosted_source_tree_sha256": {
+      "Linux": "cc06514c7997d3031e58b6e9480c05be100c8f581ace63f9b9c6023026b76226",
+      "macOS": "73a090dbcc1a02b0a267c1c97fae41993129c5daa6b769663ad4b17aebab6afe",
+      "Windows": "dd0a5d62720c4c7e7ab7a7a85f81423221109e1b2d6c648ba735ca07256fb9e9"
+    },
+    "definition": "The clean local digest is the source of record; each hosted loaded-workflow workspace contains one transient redirected-output path beyond the local 246-path digest."
+  },
+  "artifact": {
+    "artifact_id": "PC05",
+    "name": "Advanced Tables",
+    "version": "0.23.2",
+    "main_js_bytes": 272036,
+    "main_js_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+    "integrity": "passed on all three hosted platforms",
+    "unchanged_main_js": true,
+    "loaded_workflow_status": "D15-denied unchanged execution with bounded projection recorded",
+    "renderer_status": "renderer-denied on all three hosted platforms",
+    "denied_capabilities": ["dom.privileged"],
+    "renderer_denied_capabilities": ["dom.privileged"],
+    "renderer_denied_paths": ["window.Function"],
+    "denial": "D15 denied dom.privileged at window.Function"
+  },
+  "runs": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34731807222,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34731807222",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "tests": {
+        "Ubuntu": "233 pass, 0 fail, 1602 expectations",
+        "macOS": "233 pass, 0 fail, 1602 expectations",
+        "Windows": "233 pass, 0 fail, 1603 expectations"
+      },
+      "scope": "Repository contracts, typecheck, tests, quality scorecard, Electron/vault checks, synthetic lifecycle, catalog-combination audit, Knip and report-only Fallow health passed; no stock Obsidian or reference-plugin certification is implied."
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34731807257,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34731807257",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "target_count": 21,
+      "required_phases": ["install", "restart", "update"],
+      "ordinary_loaded_workflows": 11,
+      "denied_loaded_workflows": 10,
+      "artifacts": {
+        "Linux": {
+          "name": "loaded-plugin-workflows-Linux-18288b86a77ada744c27cb92b930dcd6dbbb434e",
+          "artifact_id": 10310051046,
+          "artifact_archive_bytes": 171462,
+          "artifact_archive_sha256": "a501e96f317ad1b012ae0b6aba8d0784f2f9ebd055995f0fa0ec137673d9fb96",
+          "report_name": "loaded-plugin-workflows-Linux.json",
+          "report_bytes": 2928139,
+          "report_sha256": "399325632a693893c38bd612d39fb901dac2f6302453ddd7afe0d964b92979db",
+          "report_parse": "direct JSON",
+          "pc05": {"integrity": "passed", "projection": "passed", "renderer": "denied", "direct_vault_writes": 0}
+        },
+        "macOS": {
+          "name": "loaded-plugin-workflows-macOS-18288b86a77ada744c27cb92b930dcd6dbbb434e",
+          "artifact_id": 10309297497,
+          "artifact_archive_bytes": 171484,
+          "artifact_archive_sha256": "c6e58e6a89e146121a49dcc8ce6c840d85f2917a206b9bc604137d3abd624ba8",
+          "report_name": "loaded-plugin-workflows-macOS.json",
+          "report_bytes": 2928173,
+          "report_sha256": "e02436e7d7ebfec0021d5c273010ee854b032540cc0fb87ea1a92c8fd02520f4",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "pc05": {"integrity": "passed", "projection": "passed", "renderer": "denied", "direct_vault_writes": 0}
+        },
+        "Windows": {
+          "name": "loaded-plugin-workflows-Windows-18288b86a77ada744c27cb92b930dcd6dbbb434e",
+          "artifact_id": 10310225320,
+          "artifact_archive_bytes": 171499,
+          "artifact_archive_sha256": "fddf380209abe7fe56f354bbb5e83770e31855201b5c14f5a231671f596287c6",
+          "report_name": "loaded-plugin-workflows-Windows.json",
+          "report_bytes": 2928170,
+          "report_sha256": "1d95b506886495e4a2cffb7294d5dd9125b2c193e9121e9e0b75bbf1d6fa3d66",
+          "report_parse": "JSON after stripping the leading Electron download line",
+          "pc05": {"integrity": "passed", "projection": "passed", "renderer": "denied", "direct_vault_writes": 0}
+        }
+      }
+    },
+    "renderer_matrix": {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 34731807210,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34731807210",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "rows_per_platform": 28,
+      "renderer_loaded": 4,
+      "renderer_denied": 23,
+      "not_applicable": 1,
+      "ordinary_failures": 0,
+      "reports": {
+        "Linux": {"artifact_id": 10310066096, "report_sha256": "5e45b3adc8dd720e79750beb2e331ac83e4b4304ba037b8f9ae565e8c23e7dca", "pc05": {"status": "renderer-denied", "denied_path": "window.Function"}},
+        "macOS": {"artifact_id": 10309581746, "report_sha256": "c924b998e5015a55c614ddca1734f310c117a95d85c8c7a6f63312b1fbf95ede", "pc05": {"status": "renderer-denied", "denied_path": "window.Function"}},
+        "Windows": {"artifact_id": 10309616671, "report_sha256": "c924b998e5015a55c614ddca1734f310c117a95d85c8c7a6f63312b1fbf95ede", "pc05": {"status": "renderer-denied", "denied_path": "window.Function"}}
+      }
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34731807216,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34731807216",
+      "conclusion": "success",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "release_gate": "preview; unsigned-preview",
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "release_manifest_sha256": {
+        "Linux": "0a55bf5a20fd0234384186a310fcd1080e336dc4aec2f8090f31bea2c928ca3e",
+        "macOS": "711230b4d2ab8390b246e3b048208172289a3cd138109cb1582bf20eeb095cb5",
+        "Windows": "039dd80a5838531c72a6658ef2ec5abd9b23d7d92414a56d7f4bdf58017b2d72"
+      }
+    }
+  },
+  "loaded_workflow_reconciliation": {
+    "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC15", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "pc05": {
+      "name": "Advanced Tables",
+      "version": "0.23.2",
+      "integrity": "passed",
+      "unchanged_execution": "D15-denied at window.Function",
+      "bounded_lifecycle": "partial because unchanged execution is denied",
+      "persistence": "preserved",
+      "persistence_source": "plugin-data-save",
+      "action_status": "passed",
+      "workflow_projection": {
+        "status": "passed on Ubuntu, macOS and Windows",
+        "mutation_scope": "bounded-in-memory-table-projection",
+        "source_path": "Notes/Table.md",
+        "source_bytes": 169,
+        "navigation_recorded": true,
+        "headers_match": true,
+        "row_count_match": true,
+        "edit_projected": true,
+        "calculated_total": "37.50",
+        "calculation_match": true,
+        "formatting_applied": true,
+        "serialization_match": true,
+        "unrelated_content_preserved": true,
+        "untouched_file_preserved": true,
+        "settings_applied": true,
+        "direct_vault_writes": 0,
+        "phase_projections_passed": true,
+        "phases": [
+          {"phase": "install", "status": "passed", "serialization_match": true, "calculation_match": true},
+          {"phase": "restart", "status": "passed", "serialization_match": true, "calculation_match": true},
+          {"phase": "update", "status": "passed", "serialization_match": true, "calculation_match": true}
+        ]
+      },
+      "denial_recovery": "passed on all three hosted platforms",
+      "direct_vault_writes": 0
+    },
+    "platform_reports": {
+      "Linux": {"source_tree_sha256": "cc06514c7997d3031e58b6e9480c05be100c8f581ace63f9b9c6023026b76226", "report_sha256": "399325632a693893c38bd612d39fb901dac2f6302453ddd7afe0d964b92979db", "pc05_workflow_status": "passed projection; unchanged denied", "pc05_direct_vault_writes": 0, "pc05_renderer_status": "denied", "overall_report_status": "partial", "no_plugin_promoted": true},
+      "macOS": {"source_tree_sha256": "73a090dbcc1a02b0a267c1c97fae41993129c5daa6b769663ad4b17aebab6afe", "report_sha256": "e02436e7d7ebfec0021d5c273010ee854b032540cc0fb87ea1a92c8fd02520f4", "pc05_workflow_status": "passed projection; unchanged denied", "pc05_direct_vault_writes": 0, "pc05_renderer_status": "denied", "overall_report_status": "partial", "no_plugin_promoted": true},
+      "Windows": {"source_tree_sha256": "dd0a5d62720c4c7e7ab7a7a85f81423221109e1b2d6c648ba735ca07256fb9e9", "report_sha256": "1d95b506886495e4a2cffb7294d5dd9125b2c193e9121e9e0b75bbf1d6fa3d66", "pc05_workflow_status": "passed projection; unchanged denied", "pc05_direct_vault_writes": 0, "pc05_renderer_status": "denied", "overall_report_status": "partial", "no_plugin_promoted": true}
+    },
+    "overall": {"status": "partial", "unchanged_main_js": true, "integrity_checked_on_all_platforms": true, "no_plugin_promoted": true}
+  },
+  "security_disposition": "Unchanged Advanced Tables 0.23.2 bytes are integrity-checked and denied at dom.privileged/window.Function inside the context-isolated synthetic renderer. The separate table projection is bounded in-memory, preserves unrelated source bytes and records zero direct vault writes; this is not unchanged-plugin or compatibility certification.",
+  "external_pending": [
+    "reference Obsidian table navigation/edit/calculation/serialization behavior",
+    "unchanged Advanced Tables lifecycle and round-trip certification",
+    "same-user macOS/Windows enforcement beyond hosted runner isolation",
+    "human accessibility/input validation",
+    "signed release, publication and updater installation/rollback",
+    "compatibility promotion"
+  ],
+  "limitations": [
+    "Hosted loaded-workflow source digests contain one transient redirected-output path beyond the clean local source-of-record digest.",
+    "macOS and Windows loaded-workflow report files retain the leading Electron download line before JSON; raw report hashes cover downloaded files and parsing stripped that line only.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified.",
+    "Hosted desktop artifacts are unsigned previews; production signing and updater installation/rollback were not exercised.",
+    "The table projection is bounded synthetic in-memory evidence separate from the unchanged artifact's denied renderer lifecycle and reference Obsidian behavior."
+  ],
+  "result": "Hosted quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34731807222, 34731807257, 34731807210 and 34731807216 succeeded on Ubuntu, macOS and Windows for 18288b8. Advanced Tables 0.23.2 remains integrity-checked and D15-denied at window.Function; its bounded table navigation/edit/calculation/formatting/serialization projection passes install/restart/update with zero direct vault writes. PC05 and P3.2 remain partial/pending-runtime, reference and compatibility gates remain external-pending, and no plugin or compatibility row was promoted."
+}
