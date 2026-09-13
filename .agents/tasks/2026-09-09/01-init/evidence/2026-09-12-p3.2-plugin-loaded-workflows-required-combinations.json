@@ -31,13 +31,13 @@
     "display": "xvfb-run",
     "bun": "1.4.2",
     "branch": "main",
-    "base_head": "pending-implementation-commit",
+    "base_head": "37404e9e311f38428c4d7de15f7b2a27f0c5c7b4",
     "selected_vault": "/home/ashutosh/Obsidian",
     "selected_vault_accessed": false
   },
   "source_tree": {
-    "head": "pending-implementation-commit",
-    "sha256": "pending-source-digest",
+    "head": "37404e9e311f38428c4d7de15f7b2a27f0c5c7b4",
+    "sha256": "b0cb439c0903666b01ecdfb238510a98016e9820de4f77ab10f6e7ced32148e2",
     "paths": 243,
     "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
   },
@@ -163,7 +163,7 @@
   },
   "regression_validation": {
     "focused_command": "bun test tests/plugin-loaded-workflows.test.ts tests/plugin-combination-audit.test.ts",
-    "focused_result": "passed; 28 tests, 516 expectations",
+    "focused_result": "passed; 28 tests, 517 expectations",
     "full_command": "bun run check:fast",
     "full_result": "passed; 232 tests, 1588 expectations",
     "typecheck": "passed; bun run typecheck",
