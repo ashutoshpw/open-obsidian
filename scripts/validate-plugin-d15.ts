@@ -1,6 +1,7 @@
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {buildPluginCompatibilityMatrix} from "../src/plugins/compatibility-matrix.js";
+import {buildD15BoundedWorkflowEvidence, validateD15BoundedWorkflowEvidence, type BoundedWorkflowEvidence, type BoundedWorkflowFixture} from "../src/plugins/d15-bounded-workflows.js";
 import {buildD15WorkflowEvidence, validateD15WorkflowEvidence, type D15ArtifactResult, type D15CatalogEntry, type D15WorkflowConfig} from "../src/plugins/d15-workflow-evidence.js";
 import {asArray, asRecord, type JsonRecord} from "./json.js";
 
@@ -45,7 +46,9 @@ function catalogEntries(value: unknown): D15CatalogEntry[] {
   });
 }
 
-export function buildD15Evidence(): ReturnType<typeof buildD15WorkflowEvidence> {
+export type D15EvidenceWithBoundedWorkflows = ReturnType<typeof buildD15WorkflowEvidence> & {bounded_workflow_projections: BoundedWorkflowEvidence};
+
+export function buildD15Evidence(): D15EvidenceWithBoundedWorkflows {
   const config = readJson(configPath) as unknown as D15WorkflowConfig;
   const artifactEvidence = readJson(artifactEvidencePath);
   const catalog = readJson("fixtures/plugin-catalog.json");
@@ -61,7 +64,11 @@ export function buildD15Evidence(): ReturnType<typeof buildD15WorkflowEvidence> 
   });
   failures.push(...matrixFailures);
   if (failures.length > 0) throw new Error(failures.join("\n"));
-  return evidence;
+  const boundedFixture = readJson("fixtures/plugin-d15-bounded-workflows.json") as unknown as BoundedWorkflowFixture;
+  const boundedEvidence = buildD15BoundedWorkflowEvidence(boundedFixture);
+  const boundedFailures = validateD15BoundedWorkflowEvidence(boundedEvidence, boundedFixture);
+  if (boundedFailures.length > 0) throw new Error(boundedFailures.join("\n"));
+  return {...evidence, bounded_workflow_projections: boundedEvidence};
 }
 
 if (import.meta.main) {

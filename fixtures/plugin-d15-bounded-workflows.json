@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "id": "fixture:d15-bounded-workflows",
+  "checkpoint": "P3.2",
+  "decision_id": "D15",
+  "boundary": "electron-renderer",
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "preview broker",
+    "workflow disabled"
+  ],
+  "automatic_writer_policy": {
+    "disabled_by_default": true,
+    "writers": [
+      "plugin-owned automatic vault writers",
+      "remote-sync automatic push",
+      "scheduled background imports"
+    ]
+  },
+  "workflows": [
+    {
+      "artifact_id": "PC13",
+      "workflow_id": "workflow:pc13",
+      "selected_context_paths": ["Notes/Context.md"],
+      "excluded_context_paths": ["Private/Secret.md"],
+      "configured_cli": null,
+      "provider_available": false,
+      "change_path": "Notes/Generated.md",
+      "session_history": [{"role": "user", "content": "Draft a bounded note", "created_at": "2026-09-13T00:00:00Z"}]
+    },
+    {
+      "artifact_id": "PC16",
+      "workflow_id": "workflow:pc16",
+      "selected_context_paths": ["Notes/Selected.md"],
+      "excluded_context_paths": ["Private/Secret.md"],
+      "configured_cli": null,
+      "provider_available": false,
+      "change_path": "Notes/Reviewed.md",
+      "session_history": [{"role": "user", "content": "Summarize selected context", "created_at": "2026-09-13T00:00:00Z"}]
+    },
+    {
+      "artifact_id": "PC18",
+      "workflow_id": "workflow:pc18",
+      "selected_context_paths": [],
+      "excluded_context_paths": [],
+      "configured_cli": null,
+      "provider_available": false,
+      "change_path": "Imports/",
+      "existing_paths": ["Notes/Existing.md", "Attachments/keep.png"],
+      "source_files": [
+        {"source_path": "Export/Note.md", "destination_path": "Notes/Imported.md", "kind": "note", "link_targets": ["Attachments/image.png"]},
+        {"source_path": "Export/Existing.md", "destination_path": "Notes/Existing.md", "kind": "note", "link_targets": []},
+        {"source_path": "Export/image.png", "destination_path": "Attachments/image.png", "kind": "attachment", "link_targets": []}
+      ],
+      "unrelated_paths": ["Notes/Untouched.md", "Attachments/keep.png"]
+    }
+  ],
+  "external_pending": [
+    "configured agent CLI and provider credentials",
+    "reference Obsidian plugin behavior and unchanged artifact lifecycle",
+    "same-user macOS/Windows process, credential and network enforcement",
+    "human validation and compatibility promotion"
+  ],
+  "limitation": "These records are bounded synthetic projections with automatic writers disabled. They prove safe unavailable, approval and collision paths without executing unchanged plugin code, contacting a provider or CLI, or writing a vault; they do not certify stock Obsidian compatibility."
+}

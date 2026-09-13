@@ -1,0 +1,162 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-d15-bounded-workflows",
+  "checkpoint": "P3.2",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC13",
+    "PC16",
+    "PC18"
+  ],
+  "decision_id": "D15",
+  "recorded_at": "2026-09-13T01:56:08Z",
+  "environment": {
+    "platform": "Linux x64",
+    "kernel": "5.15.0-185-generic",
+    "node": "24.21.0",
+    "bun": "1.4.2",
+    "branch": "main",
+    "base_head": "262d5d722982b317b4d4f7736b3eeaade946af2d",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_tree": {
+    "head": "262d5d722982b317b4d4f7736b3eeaade946af2d",
+    "sha256": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
+    "paths": 246,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "fixture": {
+    "path": "fixtures/plugin-d15-bounded-workflows.json",
+    "id": "fixture:d15-bounded-workflows",
+    "automatic_writers_disabled_by_default": true,
+    "safe_alternatives_attempted": [
+      "mediated vault read",
+      "preview broker",
+      "workflow disabled"
+    ]
+  },
+  "bounded_projections": {
+    "status": "passed",
+    "runtime_disposition": "pending-runtime",
+    "passed_count": 3,
+    "direct_vault_writes": 0,
+    "unsupported_security_count": 0,
+    "no_plugin_promoted": true,
+    "workflows": [
+      {
+        "artifact_id": "PC13",
+        "workflow_id": "workflow:pc13",
+        "status": "passed",
+        "denied_capability": "process.spawn",
+        "selected_context_visible": true,
+        "cli_status": "unavailable",
+        "process_spawn_denied": true,
+        "tool_approval_required": true,
+        "tool_dispatches": 0,
+        "approval_bypass": false,
+        "session_cancellation": "recoverable",
+        "session_history_preserved": true,
+        "file_change_preview_required": true,
+        "file_change_applied": false,
+        "provider_contacted": false,
+        "direct_vault_writes": 0
+      },
+      {
+        "artifact_id": "PC16",
+        "workflow_id": "workflow:pc16",
+        "status": "passed",
+        "denied_capability": "filesystem.direct",
+        "selected_context_visible": true,
+        "provider_status": "unavailable",
+        "provider_failure_readable": true,
+        "credentials_exposed": false,
+        "network_contacted": false,
+        "history_preserved": true,
+        "cancellation": "recoverable",
+        "additional_work_stopped": true,
+        "file_change_preview_required": true,
+        "file_change_applied": false,
+        "direct_vault_writes": 0
+      },
+      {
+        "artifact_id": "PC18",
+        "workflow_id": "workflow:pc18",
+        "status": "passed",
+        "denied_capability": "network.request",
+        "attachment_link_mapping_recorded": true,
+        "collision_policy": "review-required-before-apply",
+        "collision_policy_explicit": true,
+        "imported_files_projected": 3,
+        "unrelated_notes_preserved": true,
+        "network_request_denied": true,
+        "direct_vault_writes": 0
+      }
+    ]
+  },
+  "validation": [
+    {
+      "command": "jq empty fixtures/plugin-d15-bounded-workflows.json",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "command": "bun run typecheck",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "command": "bun run audit:plugin-d15-bounded",
+      "exit_code": 0,
+      "result": "3 bounded workflows passed; all runtime dispositions pending-runtime; zero direct vault writes"
+    },
+    {
+      "command": "bun run validate:plugin-d15",
+      "exit_code": 0,
+      "result": "23 synthetic D15 recovery records and three bounded projections passed; no unsupported-security or plugin promotion"
+    },
+    {
+      "command": "bun test tests/plugin-d15-workflow.test.ts",
+      "exit_code": 0,
+      "result": "2 passed, 0 failed, 19 expectations"
+    },
+    {
+      "command": "bun test tests/check-fast.test.ts",
+      "exit_code": 0,
+      "result": "1 passed, 0 failed, 4 expectations"
+    },
+    {
+      "command": "bun run check:fast",
+      "exit_code": 0,
+      "result": "233 passed, 0 failed, 1602 expectations; 161 mandatory rows remain not release-passing"
+    },
+    {
+      "command": "bun run validate:state",
+      "exit_code": 0,
+      "result": "structure check passed; goal remains active with 196 rows and no failing or blocked rows"
+    },
+    {
+      "command": "bun run audit:source-tree",
+      "exit_code": 0,
+      "result": "source digest recorded above"
+    }
+  ],
+  "status": "partial",
+  "limitations": [
+    "These are bounded in-memory projections with automatic writers disabled; unchanged PC13, PC16 and PC18 code was not executed for the workflow paths.",
+    "No configured CLI or provider credentials were read, no network or process was contacted, and the selected personal vault was not accessed or modified.",
+    "Reference Obsidian behavior, unchanged artifact lifecycle, same-user macOS/Windows enforcement, human validation, signing, publication, updater and compatibility promotion remain pending.",
+    "No plugin or compatibility row was promoted and no unsupported-security exception was classified."
+  ]
+}
