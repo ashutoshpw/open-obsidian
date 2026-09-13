@@ -20,33 +20,33 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "c51e98f9012f0df5a301eede767f71813b3c52c5",
-  "updated_at": "2026-09-13T07:33:46Z",
+  "last_reconciled_head": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+  "updated_at": "2026-09-13T07:48:44Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
   "recent_increment": {
     "checkpoint": "P3.2",
-    "commit": "c51e98f9012f0df5a301eede767f71813b3c52c5",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
+    "commit": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
     "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
     "ci_runs": {
-      "quality": 34743378403,
-      "loaded_workflows": 34743378410,
-      "renderer_matrix": 34743378395,
-      "desktop_build": 34743378455
+      "quality": 34745898861,
+      "loaded_workflows": 34745898865,
+      "renderer_matrix": 34745898881,
+      "desktop_build": 34745898879
     },
     "quality_rerun": false
   },
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2] Reconcile current-head PC09 Kanban CI evidence",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
-    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc09-kanban-ci.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
-    "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc08-style-settings-current-head-ci.json",
+    "commit_marker": "[openobsidian P3.2] Reconcile current-head PC10 Remotely Save CI evidence",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-reconciliation-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
     "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
     "recovery_contract": {
@@ -65,12 +65,12 @@
       "no_plugin_promoted": true
     },
     "hosted_reconciliation": {
-      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
       "runs": {
-        "quality": 34743378403,
-        "loaded_workflows": 34743378410,
-        "renderer_matrix": 34743378395,
-        "desktop_build": 34743378455
+        "quality": 34745898861,
+        "loaded_workflows": 34745898865,
+        "renderer_matrix": 34745898881,
+        "desktop_build": 34745898879
       },
       "platforms": [
         "Ubuntu",
@@ -78,15 +78,15 @@
         "Windows"
       ],
       "status": "partial",
-      "loaded_workflow_status": "PC09 bounded Markdown-board projection passed board parsing, card move/edit, metadata/link preservation and serialization/reopen in all three hosted reports; unchanged Kanban is D15-denied at window.TYPED_ARRAY_SUPPORT and renderer-denied at window.localStorage with dom.privileged denied",
+      "loaded_workflow_status": "PC10 bounded backend/configuration projection passed explicit network/credential denial, text/binary sync plans, interrupted-transfer resume, rename/delete, encryption metadata and protected conflict/version retention in all three hosted reports; unchanged Remotely Save is D15-denied at window.__core-js_shared__ and renderer-denied at the same path with dom.privileged denied",
       "loaded_workflow_target_count": 21,
       "special_target_count": 1,
-      "pc09": {
-        "version": "2.0.51",
+      "pc10": {
+        "version": "0.5.25",
         "integrity": "passed",
         "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-        "kanban_projection": "passed",
-        "renderer_status": "denied at window.localStorage; dom.privileged denied",
+        "remotely_save_projection": "passed",
+        "renderer_status": "denied at window.__core-js_shared__; dom.privileged denied",
         "direct_vault_writes": 0
       },
       "ordinary_loaded_workflows": 11,
@@ -100,7 +100,7 @@
         "renderer_denied": 23,
         "not_applicable": 1,
         "ordinary_failures": 0,
-        "pc09": "renderer-denied at window.localStorage; dom.privileged denied"
+        "pc10": "renderer-denied at window.__core-js_shared__; dom.privileged denied"
       },
       "direct_vault_writes": 0,
       "unsupported_security_count": 0,
@@ -109,8 +109,9 @@
       "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
       "no_plugin_promoted": true,
       "external_pending": [
-        "reference Obsidian board navigation/edit/reopen behavior",
-        "unchanged Kanban lifecycle and round-trip certification",
+        "provisioned test backend and credentials for provider-backed text/binary sync",
+        "unchanged Remotely Save lifecycle beyond the D15 renderer denial",
+        "reference Obsidian and two-device sync/rename/delete/conflict comparison",
         "same-user macOS/Windows enforcement beyond hosted runner isolation",
         "human accessibility/input validation",
         "signed release, publication and updater installation/rollback",
@@ -120,25 +121,25 @@
   },
   "latest_reconciliation": {
     "checkpoint": "P3.2",
-    "commit": "c51e98f9012f0df5a301eede767f71813b3c52c5",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
+    "commit": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "runs": {
-      "quality": 34743378403,
-      "loaded_workflows": 34743378410,
-      "renderer_matrix": 34743378395,
-      "desktop_build": 34743378455
+      "quality": 34745898861,
+      "loaded_workflows": 34745898865,
+      "renderer_matrix": 34745898881,
+      "desktop_build": 34745898879
     },
     "status": "partial_bounded_synthetic_only",
-    "plugin": "PC09 Kanban 2.0.51",
+    "plugin": "PC10 Remotely Save 0.5.25",
     "loaded_workflow_target_count": 21,
     "special_target_count": 1,
-    "pc09": {
+    "pc10": {
       "integrity": "passed",
       "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-      "kanban_projection": "passed in all three hosted reports",
+      "remotely_save_projection": "passed in all three hosted reports",
       "direct_vault_writes": 0,
-      "renderer_status": "denied at window.localStorage; dom.privileged denied"
+      "renderer_status": "denied at window.__core-js_shared__; dom.privileged denied"
     },
     "ordinary_loaded_workflows": 11,
     "denied_loaded_workflows": 10,
@@ -151,7 +152,7 @@
       "renderer_denied": 23,
       "not_applicable": 1,
       "ordinary_failures": 0,
-      "pc09": "renderer-denied at window.localStorage; dom.privileged denied"
+      "pc10": "renderer-denied at window.__core-js_shared__; dom.privileged denied"
     },
     "direct_vault_writes": 0,
     "unsupported_security_count": 0,
@@ -160,8 +161,9 @@
     "release_gate": "unsigned-preview",
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
     "external_pending": [
-      "reference Obsidian board navigation/edit/reopen behavior",
-      "unchanged Kanban lifecycle and round-trip certification",
+      "provisioned test backend and credentials for provider-backed text/binary sync",
+      "unchanged Remotely Save lifecycle beyond the D15 renderer denial",
+      "reference Obsidian and two-device sync/rename/delete/conflict comparison",
       "same-user macOS/Windows enforcement beyond hosted runner isolation",
       "human accessibility/input validation",
       "signed release, publication and updater installation/rollback",
@@ -874,7 +876,8 @@
         "Reconciled implementation commit 37404e9 with hosted quality attempt 2, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34729967011, 34729967002, 34729967012 and 34729967010; all four required combination recoveries pass 4/4 on Ubuntu, macOS and Windows while the aggregate remains partial and no plugin or compatibility row is promoted.",
         "Added bounded PC13 Claudian, PC16 Copilot and PC18 Importer projections: unavailable CLI/provider states, selected context/history preservation, mandatory tool approval, preview-only file changes, recoverable cancellation, attachment/link mapping, explicit collision review, network denial and zero direct vault writes; all runtime dispositions remain pending-runtime and no plugin or compatibility row was promoted.",
         "Reconciled current-head hosted PC04 Tasks evidence at source commit 7b938d3 with quality 34740394896, loaded-workflow 34740394864, renderer-matrix 34740394871 and unsigned preview desktop-build 34740394917 on Ubuntu, macOS and Windows; Tasks 8.4.0 integrity and the bounded query/filter/group/create/complete projection pass in all three lifecycle phases with zero direct vault writes, while renderer denial, reference parity, same-user enforcement, human validation, signing, updater and compatibility promotion remain pending.",
-        "Reconciled current-head hosted PC09 Kanban evidence at source commit c51e98f with quality 34743378403, loaded-workflow 34743378410, renderer-matrix 34743378395 and unsigned preview desktop-build 34743378455 on Ubuntu, macOS and Windows; the bounded board projection passes while unchanged execution remains D15-denied, and no plugin or compatibility row was promoted."
+        "Reconciled current-head hosted PC09 Kanban evidence at source commit c51e98f with quality 34743378403, loaded-workflow 34743378410, renderer-matrix 34743378395 and unsigned preview desktop-build 34743378455 on Ubuntu, macOS and Windows; the bounded board projection passes while unchanged execution remains D15-denied, and no plugin or compatibility row was promoted.",
+        "Reconciled current-head hosted PC10 Remotely Save evidence at source commit 02b13f3 with quality 34745898861, loaded-workflow 34745898865, renderer-matrix 34745898881 and unsigned preview desktop-build 34745898879 on Ubuntu, macOS and Windows; the bounded backend/configuration, sync-plan, transfer-recovery, rename/delete, encryption-metadata and protected-conflict projection passes while unchanged execution remains D15-denied, and no plugin or compatibility row was promoted."
       ],
       "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
       "evidence": [
@@ -926,6 +929,7 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc04-tasks-current-head-ci.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
+        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-required-combinations-recovery-ci.json"
       ],
       "commit_marker": "[openobsidian P3.2 work] Add bounded D15 workflows",
@@ -966,25 +970,25 @@
       ],
       "recent_reconciliation": {
         "checkpoint": "P3.2",
-        "commit": "c51e98f9012f0df5a301eede767f71813b3c52c5",
-        "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
+        "commit": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+        "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
         "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
         "runs": {
-          "quality": 34743378403,
-          "loaded_workflows": 34743378410,
-          "renderer_matrix": 34743378395,
-          "desktop_build": 34743378455
+          "quality": 34745898861,
+          "loaded_workflows": 34745898865,
+          "renderer_matrix": 34745898881,
+          "desktop_build": 34745898879
         },
         "status": "partial_bounded_synthetic_only",
-        "plugin": "PC09 Kanban 2.0.51",
+        "plugin": "PC10 Remotely Save 0.5.25",
         "loaded_workflow_target_count": 21,
         "special_target_count": 1,
-        "pc09": {
+        "pc10": {
           "integrity": "passed",
           "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-          "kanban_projection": "passed in all three hosted reports",
+          "remotely_save_projection": "passed in all three hosted reports",
           "direct_vault_writes": 0,
-          "renderer_status": "denied at window.localStorage; dom.privileged denied"
+          "renderer_status": "denied at window.__core-js_shared__; dom.privileged denied"
         },
         "ordinary_loaded_workflows": 11,
         "denied_loaded_workflows": 10,
@@ -997,7 +1001,7 @@
           "renderer_denied": 23,
           "not_applicable": 1,
           "ordinary_failures": 0,
-          "pc09": "renderer-denied at window.localStorage; dom.privileged denied"
+          "pc10": "renderer-denied at window.__core-js_shared__; dom.privileged denied"
         },
         "direct_vault_writes": 0,
         "unsupported_security_count": 0,
@@ -1006,8 +1010,9 @@
         "release_gate": "unsigned-preview",
         "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
         "external_pending": [
-          "reference Obsidian board navigation/edit/reopen behavior",
-          "unchanged Kanban lifecycle and round-trip certification",
+          "provisioned test backend and credentials for provider-backed text/binary sync",
+          "unchanged Remotely Save lifecycle beyond the D15 renderer denial",
+          "reference Obsidian and two-device sync/rename/delete/conflict comparison",
           "same-user macOS/Windows enforcement beyond hosted runner isolation",
           "human accessibility/input validation",
           "signed release, publication and updater installation/rollback",
@@ -1368,21 +1373,21 @@
     }
   },
   "active_p3_2_slice": {
-    "slice": "Current-head hosted PC09 Kanban reconciliation",
+    "slice": "Current-head hosted PC10 Remotely Save reconciliation",
     "status": "partial_bounded_synthetic_only",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
-    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc09-kanban-ci.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
-    "commit": "c51e98f9012f0df5a301eede767f71813b3c52c5",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-reconciliation-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "commit": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "artifacts": {
-      "plugin_id": "PC09",
-      "version": "2.0.51",
+      "plugin_id": "PC10",
+      "version": "0.5.25",
       "integrity": "passed on all three hosted platforms",
       "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-      "kanban_projection": "passed",
-      "persistence": "bounded source/link preservation and deterministic serialization/reopen passed",
-      "renderer_status": "renderer-denied at window.localStorage; dom.privileged denied on Ubuntu, macOS and Windows",
+      "remotely_save_projection": "passed",
+      "persistence": "bounded sync-plan, conflict/version and deterministic transfer recovery projection passed",
+      "renderer_status": "renderer-denied at window.__core-js_shared__; dom.privileged denied on Ubuntu, macOS and Windows",
       "direct_vault_writes": 0,
       "unsupported_security_count": 0
     },
@@ -1390,10 +1395,10 @@
     "no_plugin_promoted": true,
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
     "hosted_runs": {
-      "quality": 34743378403,
-      "loaded_workflows": 34743378410,
-      "renderer_matrix": 34743378395,
-      "desktop_build": 34743378455
+      "quality": 34745898861,
+      "loaded_workflows": 34745898865,
+      "renderer_matrix": 34745898881,
+      "desktop_build": 34745898879
     },
     "hosted_platforms": [
       "Ubuntu",
@@ -1404,17 +1409,17 @@
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false; hosted artifacts remain unsigned previews"
   },
   "latest_p3_2_slice": {
-    "slice": "Current-head hosted PC09 Kanban reconciliation",
+    "slice": "Current-head hosted PC10 Remotely Save reconciliation",
     "status": "partial_bounded_synthetic_only",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc09-kanban-reconciliation-ci.json",
-    "commit": "c51e98f9012f0df5a301eede767f71813b3c52c5",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "commit": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "hosted_runs": {
-      "quality": 34743378403,
-      "loaded_workflows": 34743378410,
-      "renderer_matrix": 34743378395,
-      "desktop_build": 34743378455
+      "quality": 34745898861,
+      "loaded_workflows": 34745898865,
+      "renderer_matrix": 34745898881,
+      "desktop_build": 34745898879
     },
     "hosted_platforms": [
       "Ubuntu",
@@ -1422,12 +1427,12 @@
       "Windows"
     ],
     "hosted_status": "partial",
-    "plugin": "PC09 Kanban 2.0.51",
+    "plugin": "PC10 Remotely Save 0.5.25",
     "integrity": "passed on all three hosted platforms",
     "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-    "kanban_projection": "passed board parse, card move/edit, metadata/link preservation and serialization/reopen in all three bounded phases",
-    "persistence": "bounded source/link preservation and deterministic serialization/reopen passed",
-    "renderer_status": "renderer-denied at window.localStorage; dom.privileged denied on Ubuntu, macOS and Windows",
+    "remotely_save_projection": "passed backend/configuration, sync-plan, transfer recovery, rename/delete, encryption metadata and protected conflict/version checks in all three bounded phases",
+    "persistence": "bounded sync-plan, conflict/version and deterministic transfer recovery projection passed",
+    "renderer_status": "renderer-denied at window.__core-js_shared__; dom.privileged denied on Ubuntu, macOS and Windows",
     "required_combination_recoveries": "4/4 inherited hosted contract",
     "ordinary_loaded_workflows": 11,
     "denied_loaded_workflows": 10,
@@ -1438,7 +1443,7 @@
       "renderer_denied": 23,
       "not_applicable": 1,
       "ordinary_failures": 0,
-      "pc09": "renderer-denied at window.localStorage; dom.privileged denied"
+      "pc10": "renderer-denied at window.__core-js_shared__; dom.privileged denied"
     },
     "direct_vault_writes": 0,
     "unsupported_security_count": 0,
@@ -1446,15 +1451,15 @@
     "no_plugin_promoted": true,
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false; hosted artifacts remain unsigned previews",
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
-    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc09-kanban-ci.json",
+    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-reconciliation-ci.json",
     "artifacts": {
-      "plugin_id": "PC09",
-      "version": "2.0.51",
+      "plugin_id": "PC10",
+      "version": "0.5.25",
       "integrity": "passed on all three hosted platforms",
       "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-      "kanban_projection": "passed",
-      "persistence": "bounded source/link preservation and deterministic serialization/reopen passed",
-      "renderer_status": "renderer-denied at window.localStorage; dom.privileged denied on Ubuntu, macOS and Windows",
+      "remotely_save_projection": "passed",
+      "persistence": "bounded sync-plan, conflict/version and deterministic transfer recovery projection passed",
+      "renderer_status": "renderer-denied at window.__core-js_shared__; dom.privileged denied on Ubuntu, macOS and Windows",
       "direct_vault_writes": 0,
       "unsupported_security_count": 0
     }

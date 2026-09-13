@@ -1,0 +1,167 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-pc10-remotely-save-current-head-ci",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC10"],
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "fixture_id": "fixture:plugin-loaded-workflows",
+  "recorded_at": "2026-09-13T07:48:44Z",
+  "source_commit": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+  "status": "partial",
+  "source_tree": {
+    "local_sha256": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
+    "local_paths": 246,
+    "hosted_report_paths": 247,
+    "hosted_source_tree_sha256": {
+      "Linux": "cc06514c7997d3031e58b6e9480c05be100c8f581ace63f9b9c6023026b76226",
+      "macOS": "73a090dbcc1a02b0a267c1c97fae41993129c5daa6b769663ad4b17aebab6afe",
+      "Windows": "dd0a5d62720c4c7e7ab7a7a85f81423221109e1b2d6c648ba735ca07256fb9e9"
+    },
+    "definition": "The clean local digest is the source of record; each hosted loaded-workflow workspace contains one transient redirected-output path beyond the local 246-path digest."
+  },
+  "artifact": {
+    "artifact_id": "PC10",
+    "name": "Remotely Save",
+    "version": "0.5.25",
+    "main_js_bytes": 4249067,
+    "main_js_sha256": "b3afbd27f15188b9784618c958607869baa434dc0abcf072774f99362c11fa04",
+    "manifest_json_bytes": 374,
+    "manifest_json_sha256": "71d9c0b616003f3a696880e7aa88296e5b31555757e933a12d2900b96c4caa90",
+    "styles_css_bytes": 3125,
+    "styles_css_sha256": "87584e7d538ca58c527afbb2625b09ea282bcae7bf784b7cce33ca92e9e0dfb3",
+    "integrity": "passed on all three hosted platforms",
+    "unchanged_main_js": true,
+    "loaded_workflow_status": "D15-denied unchanged execution with bounded projection recorded",
+    "renderer_status": "renderer-denied on all three hosted platforms",
+    "denied_capabilities": ["network.request", "process.spawn", "credentials.read", "dom.privileged", "native.abi", "code.dynamic"],
+    "renderer_denied_capabilities": ["dom.privileged"],
+    "denied_paths": ["window.__core-js_shared__"],
+    "renderer_denied_paths": ["window.__core-js_shared__"],
+    "denial": "D15 denied dom.privileged at window.__core-js_shared__"
+  },
+  "runs": {
+    "quality": {
+      "workflow": "OpenObsidian quality",
+      "run_id": 34745898861,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34745898861",
+      "conclusion": "success",
+      "head_sha": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103693671295, "conclusion": "success", "tests": "233 pass, 0 fail, 1602 expectations"},
+        "macos-latest": {"job_id": 103693671209, "conclusion": "success", "tests": "233 pass, 0 fail, 1602 expectations"},
+        "windows-latest": {"job_id": 103693671334, "conclusion": "success", "tests": "233 pass, 0 fail, 1603 expectations"}
+      },
+      "scope": "Repository contracts, typecheck, tests, quality scorecard, Electron/vault checks, synthetic lifecycle, catalog-combination audit, Knip and report-only Fallow health passed; no stock Obsidian, reference-plugin or live provider certification is implied."
+    },
+    "loaded_workflows": {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 34745898865,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34745898865",
+      "conclusion": "success",
+      "head_sha": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "target_count": 21,
+      "required_phases": ["install", "restart", "update"],
+      "ordinary_loaded_workflows": 11,
+      "denied_loaded_workflows": 10,
+      "denied_workflow_recoveries": "10/10",
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103693671308, "conclusion": "success"},
+        "macos-latest": {"job_id": 103693671253, "conclusion": "success"},
+        "windows-latest": {"job_id": 103693671322, "conclusion": "success"}
+      },
+      "artifacts": {
+        "Linux": {"name": "loaded-plugin-workflows-Linux-02b13f3d50ba61025f66abd6d566bcdff865a87c", "artifact_id": 10314455434, "artifact_archive_bytes": 171463, "artifact_archive_sha256": "cd6b67273805b344bb4519cdd76f17c71248fe004ba7a8d089d3ec40e02c8a57", "report_name": "loaded-plugin-workflows-Linux.json", "report_bytes": 2928139, "report_sha256": "d79f11fde021213fdc0f7a433f1abc409adea6412e14a55ca79095e9615a62b8", "report_parse": "direct JSON"},
+        "macOS": {"name": "loaded-plugin-workflows-macOS-02b13f3d50ba61025f66abd6d566bcdff865a87c", "artifact_id": 10313932301, "artifact_archive_bytes": 171489, "artifact_archive_sha256": "15428cea410390567cea290458cf362744d87b6cdfdccd79833269dd1c89cffa", "report_name": "loaded-plugin-workflows-macOS.json", "report_bytes": 2928173, "report_sha256": "fd91133ff2d1a21d11b282cdd0f8cffb97995fc23b07cdb0cff5ca7b20782776", "report_parse": "JSON after stripping the leading Electron download line"},
+        "Windows": {"name": "loaded-plugin-workflows-Windows-02b13f3d50ba61025f66abd6d566bcdff865a87c", "artifact_id": 10314066925, "artifact_archive_bytes": 171492, "artifact_archive_sha256": "d17fe1a43a54b61bc9ac32a6591363023cfec5a4b213f0834734d16040385aaf", "report_name": "loaded-plugin-workflows-Windows.json", "report_bytes": 2928170, "report_sha256": "fc4c086e84673ca989a13077e4040df279a95d8bbd44037fdbb2dd9a7dd3a9c0", "report_parse": "JSON after stripping the leading Electron download line"}
+      }
+    },
+    "renderer_matrix": {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 34745898881,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34745898881",
+      "conclusion": "success",
+      "head_sha": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "rows_per_platform": 28,
+      "renderer_loaded": 4,
+      "renderer_denied": 23,
+      "not_applicable": 1,
+      "ordinary_failures": 0,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 103693671301, "conclusion": "success"},
+        "macos-latest": {"job_id": 103693671409, "conclusion": "success"},
+        "windows-latest": {"job_id": 103693671399, "conclusion": "success"}
+      },
+      "reports": {
+        "Linux": {"artifact_id": 10314216632, "report_sha256": "5e45b3adc8dd720e79750beb2e331ac83e4b4304ba037b8f9ae565e8c23e7dca", "artifact_archive_bytes": 3221, "artifact_archive_sha256": "d86f4ce8b84a703be880c9612cd4bf57133dadeafb7a6faad2014f81b7ebd670", "report_bytes": 32301, "report_parse": "JSONL after stripping the trailing human-readable summary", "pc10": {"status": "renderer-denied", "denied_path": "window.__core-js_shared__"}},
+        "macOS": {"artifact_id": 10314271494, "report_sha256": "c924b998e5015a55c614ddca1734f310c117a95d85c8c7a6f63312b1fbf95ede", "artifact_archive_bytes": 3238, "artifact_archive_sha256": "7447b634cd96179c58bb2782bf279c8ce07d8c2d881dd41d32eb36c88ff1b375", "report_bytes": 32332, "report_parse": "JSONL after stripping the trailing human-readable summary and leading Electron download line", "pc10": {"status": "renderer-denied", "denied_path": "window.__core-js_shared__"}},
+        "Windows": {"artifact_id": 10314256606, "report_sha256": "c924b998e5015a55c614ddca1734f310c117a95d85c8c7a6f63312b1fbf95ede", "artifact_archive_bytes": 3242, "artifact_archive_sha256": "e585e8b7c3e98c69bf18c7691feb731ca58da0510ad320d3554f9df00c16884e", "report_bytes": 32332, "report_parse": "JSONL after stripping the trailing human-readable summary and leading Electron download line", "pc10": {"status": "renderer-denied", "denied_path": "window.__core-js_shared__"}}
+      }
+    },
+    "desktop_build": {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 34745898879,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/34745898879",
+      "conclusion": "success",
+      "head_sha": "02b13f3d50ba61025f66abd6d566bcdff865a87c",
+      "platforms": ["Ubuntu", "macOS", "Windows"],
+      "release_gate": "preview; unsigned-preview",
+      "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
+      "packaged_runtime": "passed",
+      "dependency_attribution": "passed",
+      "artifact_upload": "passed",
+      "artifacts": {
+        "Linux": {"name": "openobsidian-Linux-preview-02b13f3d50ba61025f66abd6d566bcdff865a87c", "artifact_id": 10314251498, "archive_bytes": 125946548, "archive_sha256": "982f65a8e52ebffa4c1716831604b9ea400d3a90c1e0e5025284944976b8be4e", "release_manifest_sha256": null, "manifest_hash_note": "The archive digest is from the GitHub artifact API; the large archive and manifest were not downloaded separately."},
+        "macOS": {"name": "openobsidian-macOS-preview-02b13f3d50ba61025f66abd6d566bcdff865a87c", "artifact_id": 10313957212, "archive_bytes": 397395487, "archive_sha256": "43b937ef98e54ea7acc63f7e9b360dca24a647d20a92dfea7906c09c9bbb83be", "release_manifest_sha256": null, "manifest_hash_note": "The archive digest is from the GitHub artifact API; the large archive and manifest were not downloaded separately."},
+        "Windows": {"name": "openobsidian-Windows-preview-02b13f3d50ba61025f66abd6d566bcdff865a87c", "artifact_id": 10314031986, "archive_bytes": 163005824, "archive_sha256": "097899b1a7b10e247873330c2f0699ff30af2dd6d0523b0fa57f05c550c54eef", "release_manifest_sha256": null, "manifest_hash_note": "The archive digest is from the GitHub artifact API; the large archive and manifest were not downloaded separately."}
+      }
+    }
+  },
+  "loaded_workflow_reconciliation": {
+    "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC15", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "pc10": {
+      "name": "Remotely Save",
+      "version": "0.5.25",
+      "integrity": "passed",
+      "unchanged_execution": "D15-denied at window.__core-js_shared__",
+      "bounded_lifecycle": "partial because unchanged execution is denied",
+      "action_status": "passed for bounded projection",
+      "workflow_projection": {
+        "status": "passed on Ubuntu, macOS and Windows",
+        "mutation_scope": "bounded-in-memory-remotely-save-projection",
+        "backend_configured": true,
+        "live_contact_disabled": true,
+        "network_denied": true,
+        "credential_read_denied": true,
+        "network_contacted": false,
+        "credentials_read": false,
+        "text_sync_plan_recorded": true,
+        "binary_sync_plan_recorded": true,
+        "interrupted_transfer_resumed": true,
+        "rename_delete_handled": true,
+        "encryption_metadata_preserved": true,
+        "conflict_versions_retained": true,
+        "version_retention_preserved": true,
+        "direct_vault_writes": 0,
+        "direct_vault_writes_zero": true,
+        "phase_projections_passed": true,
+        "phases": [{"phase": "install", "status": "passed"}, {"phase": "restart", "status": "passed"}, {"phase": "update", "status": "passed"}]
+      },
+      "denial_recovery": "passed on all three hosted platforms",
+      "direct_vault_writes": 0
+    },
+    "platform_reports": {
+      "Linux": {"source_tree_sha256": "cc06514c7997d3031e58b6e9480c05be100c8f581ace63f9b9c6023026b76226", "report_sha256": "d79f11fde021213fdc0f7a433f1abc409adea6412e14a55ca79095e9615a62b8", "pc10_workflow_status": "passed projection; unchanged denied", "pc10_direct_vault_writes": 0, "pc10_renderer_status": "denied", "pc10_renderer_denied_path": "window.__core-js_shared__", "overall_report_status": "partial", "no_plugin_promoted": true},
+      "macOS": {"source_tree_sha256": "73a090dbcc1a02b0a267c1c97fae41993129c5daa6b769663ad4b17aebab6afe", "report_sha256": "fd91133ff2d1a21d11b282cdd0f8cffb97995fc23b07cdb0cff5ca7b20782776", "pc10_workflow_status": "passed projection; unchanged denied", "pc10_direct_vault_writes": 0, "pc10_renderer_status": "denied", "pc10_renderer_denied_path": "window.__core-js_shared__", "overall_report_status": "partial", "no_plugin_promoted": true},
+      "Windows": {"source_tree_sha256": "dd0a5d62720c4c7e7ab7a7a85f81423221109e1b2d6c648ba735ca07256fb9e9", "report_sha256": "fc4c086e84673ca989a13077e4040df279a95d8bbd44037fdbb2dd9a7dd3a9c0", "pc10_workflow_status": "passed projection; unchanged denied", "pc10_direct_vault_writes": 0, "pc10_renderer_status": "denied", "pc10_renderer_denied_path": "window.__core-js_shared__", "overall_report_status": "partial", "no_plugin_promoted": true}
+    },
+    "overall": {"status": "partial", "unchanged_main_js": true, "integrity_checked_on_all_platforms": true, "no_plugin_promoted": true}
+  },
+  "security_disposition": "Unchanged pinned Remotely Save 0.5.25 bytes are integrity-checked and denied at dom.privileged/window.__core-js_shared__ inside the context-isolated synthetic renderer. The separate bounded projection records backend configuration without live contact, explicit network and credential denial, text/binary sync plans, interrupted-transfer resume, rename/delete planning, encryption metadata preservation, protected conflict/version retention and zero direct vault writes across install/restart/update; no provider credentials, backend endpoint, reference Obsidian or live vault was used.",
+  "external_pending": ["provisioned test backend and credentials for provider-backed text/binary sync", "unchanged Remotely Save lifecycle beyond the D15 renderer denial", "reference Obsidian and two-device sync/rename/delete/conflict comparison", "same-user macOS/Windows OS enforcement beyond hosted runner isolation", "human accessibility/input review", "signed release, publication and updater installation/rollback", "compatibility promotion"],
+  "limitations": ["Hosted loaded-workflow source digests contain one transient redirected-output path beyond the clean local source-of-record digest.", "macOS and Windows loaded-workflow report files retain the leading Electron download line before JSON; raw report hashes cover downloaded files and parsing stripped that line only.", "The renderer matrix report is JSONL with a trailing human-readable summary line; raw report hashes include that line and PC10 extraction parsed the 28 JSON rows.", "The selected /home/ashutosh/Obsidian vault was not accessed or modified.", "Hosted desktop artifacts are unsigned previews; production signing and updater installation/rollback were not exercised.", "The Remotely Save projection is bounded synthetic in-memory evidence separate from the unchanged artifact's denied renderer lifecycle and reference/provider behavior."],
+  "result": "Hosted current-head quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34745898861, 34745898865, 34745898881 and 34745898879 succeeded on Ubuntu, macOS and Windows for 02b13f3. Remotely Save 0.5.25 remains integrity-checked and D15-denied at window.__core-js_shared__; its bounded backend/configuration, explicit network/credential denial, text/binary sync-plan, interrupted-transfer resume, rename/delete, encryption metadata and protected conflict/version projection passes install/restart/update with zero direct vault writes. PC10 and P3.2 remain partial/pending-runtime, live provider/reference and compatibility gates remain external-pending, and no plugin or compatibility row was promoted."
+}
