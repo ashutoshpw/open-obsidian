@@ -13,6 +13,14 @@
       "summary": "Local Electron 44.3.0 loaded-workflow audit verifies unchanged Style Settings 1.0.9 integrity and a bounded Minimal-paired settings projection: detached @settings metadata exposes the appearance group with compact/accent controls, light/dark and popout markers are preserved, settings survive install/restart/update and direct vault writes remain zero. The aggregate audit remains partial; reference, same-user OS, human, signing, publication, updater and compatibility gates remain pending, and no plugin was promoted."
     },
     {
+      "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc08-style-settings-projection-ci.json",
+      "checkpoint": "P3.2",
+      "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC08", "PC17", "PC-DEP-MINIMAL"],
+      "tested_source_tree": "6fe71756d9b2bcd3215f6f9a222072792065b482a39b4285f8532b8dc3838c67",
+      "status": "partial",
+      "summary": "Hosted quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs succeeded on Ubuntu, macOS and Windows for 3fb4e94. The Minimal-paired PC08 Style Settings projection passed settings metadata, light/dark and popout markers, install/restart/update retention and zero direct vault writes on all three hosted platforms; unchanged PC08 renderer execution remains D15-denied at window.localStorage, aggregate status remains partial and no plugin was promoted."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p3.2-plugin-loaded-workflows-pc17-pc21.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC17", "PC21", "PC-DEP-MINIMAL"],
