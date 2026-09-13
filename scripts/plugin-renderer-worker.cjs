@@ -4546,6 +4546,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   dataStore.loadDataCallsByPlugin = Object.create(null);
   dataStore.savedByPlugin = Object.create(null);
   const pluginApp = createPluginApp([], dataStore, workflowContext, capabilities);
+  runtime.app = pluginApp;
   globalThis.app = pluginApp;
   const instance = new Constructor(pluginApp, {id: manifestId, version});
   pluginApp.plugins.plugins[manifestId] = instance;
@@ -4632,6 +4633,7 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
 
 function applyDeniedWorkflowRecovery(workflow, runtime, metrics, deniedCapabilities) {
   const app = runtime && runtime.app && typeof runtime.app === "object" ? runtime.app : null;
+  const dataStore = runtime && runtime.dataStore && typeof runtime.dataStore === "object" ? runtime.dataStore : null;
   const registrationCollections = ["commands", "views", "settings", "registeredEvents", "commandHandlers", "viewFactories", "settingTabs", "eventHandlers"];
   const registrationsBefore = Object.fromEntries(registrationCollections.map((name) => [name, Array.isArray(app?.[name]) ? app[name].length : 0]));
   for (const name of registrationCollections) {
@@ -4659,6 +4661,12 @@ function applyDeniedWorkflowRecovery(workflow, runtime, metrics, deniedCapabilit
     direct_vault_writes: directVaultWrites,
     direct_vault_writes_zero: directVaultWrites === 0,
     artifact_execution: "not-executed-after-denial",
+    persistence: {
+      persisted_data_by_plugin: cloneData(dataStore?.scopedValues || {}),
+      saved_data_by_plugin: cloneData(dataStore?.savedByPlugin || {}),
+      writes: Number(dataStore?.writes || 0),
+      deterministic: JSON.stringify(dataStore?.scopedValues || {}) === JSON.stringify(dataStore?.savedByPlugin || {}),
+    },
   };
 }
 
@@ -4696,6 +4704,22 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     excalidraw_workflow: boundedExcalidrawWorkflow(workflowContext),
     denial_recovery: null,
   };
+  if (workflowConfig.automatic_writer_policy && typeof workflowConfig.automatic_writer_policy === "object") {
+    workflow.automatic_writer_policy = {
+      disabled_by_default: workflowConfig.automatic_writer_policy.disabled_by_default === true,
+      writers: Array.isArray(workflowConfig.automatic_writer_policy.writers)
+        ? workflowConfig.automatic_writer_policy.writers.filter((value) => typeof value === "string")
+      : [],
+    };
+  }
+  if (workflowConfig.recovery_probe && typeof workflowConfig.recovery_probe === "object") {
+    workflow.recovery_probe = {
+      denied_capability: typeof workflowConfig.recovery_probe.denied_capability === "string" ? workflowConfig.recovery_probe.denied_capability : "",
+      trigger: typeof workflowConfig.recovery_probe.trigger === "string" ? workflowConfig.recovery_probe.trigger : "",
+      state_marker: typeof workflowConfig.recovery_probe.state_marker === "string" ? workflowConfig.recovery_probe.state_marker : "",
+      mutation_scope: typeof workflowConfig.recovery_probe.mutation_scope === "string" ? workflowConfig.recovery_probe.mutation_scope : "",
+    };
+  }
   const runtime = {app: null, allowSyntheticDocument: true, storage: new Map(), metrics};
   try {
     const dataStore = {
@@ -4703,6 +4727,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
       initialByPlugin: cloneData(workflowConfig.initial_data_by_plugin),
       writes: 0,
     };
+    runtime.dataStore = dataStore;
     const initialApp = createPluginApp([], dataStore, workflowContext, deniedCapabilities);
     runtime.app = initialApp;
     const evaluatePhase = () => evaluateSource(source, deniedCapabilities, requiredModules, runtime);

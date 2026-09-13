@@ -107,6 +107,12 @@ function combinedSource(sources: Array<{id: string; source: string}>): string {
   return `const {Plugin} = require("obsidian");\nconst children = [${modules}];\nconst constructors = children.map(({exports}) => typeof exports === "function" ? exports : exports && exports.default).filter((value) => typeof value === "function");\nmodule.exports = class CombinedLoadedArtifacts extends Plugin {\n  constructor(app, manifest) { super(app, manifest); this.children = constructors.map((Constructor, index) => new Constructor(app, {id: children[index].id, version: manifest.version})); }\n  async onload() { for (const child of this.children) if (typeof child.onload === "function") await child.onload(); }\n  async onunload() { for (const child of [...this.children].reverse()) if (typeof child.onunload === "function") await child.onunload(); }\n};\n`;
 }
 
+function combinedRecoverySource(ids: string[], stateMarker: string): string {
+  const lastId = ids.at(-1) ?? "";
+  const children = ids.map((id) => `({id: ${JSON.stringify(id)}, Constructor: class CombinationRecovery_${id.replace(/[^a-z0-9]/gi, "_")} extends Plugin {\n    onload() {\n      const loaded = this.loadData();\n      this.addCommand({id: ${JSON.stringify(`combination-recovery:${id}`)}, callback() {}});\n      const prior = loaded && typeof loaded === "object" && !Array.isArray(loaded) ? loaded : {};\n      this.saveData({...prior, ${JSON.stringify(stateMarker)}: {plugin_id: ${JSON.stringify(id)}, writer_mode: "disabled", recovery: "pre-denial"}});\n      ${id === lastId ? 'process.spawn("combination-recovery");' : ""}\n    }\n  }})`).join(",\n");
+  return `const {Plugin} = require("obsidian");\nconst children = [${children}];\nmodule.exports = class CombinedRecoveryProbe extends Plugin {\n  constructor(app, manifest) { super(app, manifest); this.children = children.map(({id, Constructor}) => new Constructor(app, {id, version: manifest.version})); }\n  async onload() { for (const child of this.children) await child.onload(); }\n  async onunload() { for (const child of [...this.children].reverse()) if (typeof child.onunload === "function") await child.onunload(); }\n};\n`;
+}
+
 function phaseRecords(workflow: JsonRecord): JsonRecord[] {
   return records(workflow.phases);
 }
@@ -772,6 +778,76 @@ function denialRecoveryChecks(result: JsonRecord): JsonRecord {
   };
 }
 
+function combinationRecoveryChecks(result: JsonRecord, targetIds: string[], recoveryProbe: JsonRecord): JsonRecord {
+  const workflow = asRecord(result.workflow) ?? {};
+  const recovery = asRecord(workflow.denial_recovery);
+  const persistence = asRecord(recovery?.persistence);
+  const persisted = asRecord(persistence?.persisted_data_by_plugin) ?? {};
+  const saved = asRecord(persistence?.saved_data_by_plugin) ?? {};
+  const marker = string(recoveryProbe.state_marker) || "__combination_recovery";
+  const configuredProbe = asRecord(workflow.recovery_probe);
+  const members = targetIds.map((id) => {
+    const persistedValue = asRecord(persisted[id]);
+    const savedValue = asRecord(saved[id]);
+    const persistedMarker = asRecord(persistedValue?.[marker]);
+    const savedMarker = asRecord(savedValue?.[marker]);
+    return {
+      id,
+      persisted: persistedValue !== null,
+      saved: savedValue !== null,
+      marker_present: persistedMarker !== null && savedMarker !== null,
+      marker_matches: persistedMarker?.plugin_id === id && savedMarker?.plugin_id === id,
+      persisted_saved_equal: JSON.stringify(persistedValue) === JSON.stringify(savedValue),
+    };
+  });
+  const policy = asRecord(workflow.automatic_writer_policy);
+  const deniedCapability = string(recoveryProbe.denied_capability);
+  const deniedCapabilities = asArray(result.deniedCapabilities).filter((value): value is string => typeof value === "string");
+  const directVaultWrites = recovery?.direct_vault_writes;
+  const passed = result.status === "denied"
+    && deniedCapabilities.includes(deniedCapability)
+    && configuredProbe?.denied_capability === deniedCapability
+    && configuredProbe?.trigger === string(recoveryProbe.trigger)
+    && configuredProbe?.state_marker === marker
+    && configuredProbe?.mutation_scope === string(recoveryProbe.mutation_scope)
+    && recovery?.status === "passed"
+    && recovery?.mutation_scope === "bounded-denial-recovery"
+    && recovery?.trigger === "d15-capability-denial"
+    && recovery?.registrations_cleared === true
+    && recovery?.remaining_registrations === 0
+    && asRecord(recovery?.registrations_before)?.commands === targetIds.length
+    && asRecord(recovery?.registrations_before)?.commandHandlers === targetIds.length
+    && recovery?.active_plugin_after_recovery === false
+    && recovery?.return_to_obsidian === true
+    && directVaultWrites === 0
+    && recovery?.direct_vault_writes_zero === true
+    && recovery?.artifact_execution === "not-executed-after-denial"
+    && persistence?.deterministic === true
+    && members.length === targetIds.length
+    && members.every((member) => member.persisted && member.saved && member.marker_present && member.marker_matches && member.persisted_saved_equal)
+    && policy?.disabled_by_default === true;
+  return {
+    required: true,
+    status: passed ? "passed" : "failed",
+    passed,
+    trigger: recovery?.trigger,
+    registrations_cleared: recovery?.registrations_cleared === true,
+    registrations_before: asRecord(recovery?.registrations_before) ?? {},
+    return_to_obsidian: recovery?.return_to_obsidian === true,
+    active_plugin_after_recovery: recovery?.active_plugin_after_recovery === true,
+    active_plugin_after_recovery_cleared: recovery?.active_plugin_after_recovery === false,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    artifact_execution: recovery?.artifact_execution,
+    denied_capability: deniedCapability,
+    denied_capability_observed: deniedCapabilities.includes(deniedCapability),
+    probe_configured: configuredProbe !== null,
+    automatic_writers_disabled: policy?.disabled_by_default === true,
+    automatic_writers: Array.isArray(policy?.writers) ? policy.writers : [],
+    persisted_state_deterministic: persistence?.deterministic === true,
+    member_state: members,
+  };
+}
+
 function checksPass(checks: Record<string, boolean>, names: readonly string[]): boolean {
   return names.every((name) => checks[name] === true);
 }
@@ -1200,12 +1276,14 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const baseScenario = scenario(scenarioId);
       const definitionFiles = records(definition.files);
       const id = string(definition.id) || `combination:${ids.map((value) => value.toLowerCase()).join("-")}`;
+      const automaticWriterPolicy = asRecord(definition.automatic_writer_policy) ?? asRecord(fixture.automatic_writer_policy);
       const combinationConfig = {
         ...baseScenario,
         artifact_id: id,
         files: mergeCombinationFiles(records(baseScenario.files), definitionFiles),
         initial_data_by_plugin: Object.fromEntries(ids.map((pluginId) => [pluginId, asRecord(scenario(pluginId).initial_data) ?? {}])),
         target_ids: ids,
+        ...(automaticWriterPolicy ? {automatic_writer_policy: automaticWriterPolicy} : {}),
       };
       const dependencies = await verifyCombinationDependencies(definition, combinationConfig);
       const result = await runWorker(combinedSource(sourceEntries), combinationConfig, temporaryRoot, `combination-${id.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`);
@@ -1253,6 +1331,23 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const specificComplete = specific.task_workflow_complete === true && specific.omnisearch_workflow_complete === true;
       const dependencyComplete = records(dependencies.artifacts).every((artifact) => records(artifact.assets).length > 0)
         && records(dependencies.fixtures).every((fixture) => fixture.complete === true);
+      const recoveryProbe = asRecord(fixture.recovery_probe) ?? {};
+      const recoveryInitialData = Object.fromEntries(ids.map((pluginId) => [pluginId, asRecord(scenario(pluginId).initial_data) ?? {}]));
+      const recoveryConfig = {
+        ...combinationConfig,
+        artifact_id: `${id}-recovery`,
+        initial_data: asRecord(baseScenario.initial_data) ?? {},
+        initial_data_by_plugin: recoveryInitialData,
+        recovery_probe: recoveryProbe,
+        target_ids: ids,
+      };
+      const recoveryResult = await runWorker(
+        combinedRecoverySource(ids, string(recoveryProbe.state_marker) || "__combination_recovery"),
+        recoveryConfig,
+        temporaryRoot,
+        `${id}-recovery`,
+      );
+      const recoveryChecks = combinationRecoveryChecks(recoveryResult, ids, recoveryProbe);
       combinationResults.push({
         id,
         target_ids: ids,
@@ -1267,12 +1362,18 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
           : persistenceComplete
             ? "mediated-plugin-data-store"
             : "not-proven",
+        vault_writes: typeof workflow.vaultWrites === "number" ? workflow.vaultWrites : null,
         action_status: failures.length === 0 && specificComplete ? "passed" : "partial",
         action_failures: failures,
         editor_checks: editor,
         specific_checks: specific,
         omnisearch_workflow_projection: omnisearchProjection,
         dependency_status: dependencyComplete ? "verified" : "partial",
+        combination_recovery: {
+          result: recoveryResult,
+          checks: recoveryChecks,
+          state_marker: string(recoveryProbe.state_marker) || "__combination_recovery",
+        },
         disposition: "bounded-combination-evidence-pending-runtime",
       });
     }
@@ -1648,8 +1749,11 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       return checksPass(checks, boundedLifecycleChecks)
         && persistencePasses(checks)
         && entry.action_status === "passed"
-        && entry.dependency_status === "verified";
+        && entry.dependency_status === "verified"
+        && asRecord(entry.combination_recovery)?.checks !== undefined
+        && asRecord(asRecord(entry.combination_recovery)?.checks)?.passed === true;
     });
+    const combinationRecoveryComplete = combinationResults.every((entry) => asRecord(asRecord(entry.combination_recovery)?.checks)?.passed === true);
     const allChecks = artifactChecksComplete && combinationChecksComplete;
     requireCondition(primaryCombination !== undefined, "loaded-plugin audit primary combination is missing");
     return {
@@ -1671,6 +1775,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         all_artifact_lifecycle_traces_complete: artifactLifecyclesComplete,
         combination_lifecycle_trace_complete: combinationLifecycleComplete,
         all_required_combinations_complete: combinationChecksComplete,
+        all_required_combination_recoveries_complete: combinationRecoveryComplete,
         all_bounded_traces_complete: allChecks,
         all_artifacts_integrity_checked: artifactResults.every((entry) => entry.integrity === "passed"),
         all_denied_workflow_recoveries_complete: artifactResults.every((entry) => asRecord(entry.denial_recovery_checks)?.passed === true),
@@ -1681,7 +1786,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       external_pending: asArray(fixture.external_pending),
       limitation: string(fixture.limitation),
       result: allChecks
-        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC14 Editing Toolbar selection/customization/mode projection, the PC15 Omnisearch relevance/typo/phrase/navigation/link/refresh and Text Extractor projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
+        ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed bounded install/restart/update/uninstall/return-to-Obsidian traces with mediated persistence, settings/view/command/event actions, dependency fixture verification, deterministic deny-clear-return recovery with automatic writers disabled, renderer-local clipboard capture, the PC07 calendar path/template/weekly projection, the PC10 text/binary sync-plan and recovery projection, the PC11 icon assignment/rename/asset projection, the PC12 QuickAdd capture/template/order/script-boundary projection, the PC14 Editing Toolbar selection/customization/mode projection, the PC15 Omnisearch relevance/typo/phrase/navigation/link/refresh and Text Extractor projection, the PC22 local-model/exclusion projection, the PC23 stale-entry/rename/delete projection, cleanup and zero vault writes; stock Obsidian, reference, cross-platform, human and compatibility certification remain pending."
         : artifactLifecyclesComplete && combinationLifecycleComplete
           ? "All audited unchanged pinned artifacts and all required synthetic combination wrappers completed the bounded install/restart/update/uninstall/return-to-Obsidian lifecycle traces, but one or more bounded action, dependency or persistence checks remain partial; no compatibility status was promoted."
           : "One or more bounded loaded-plugin lifecycle traces were partial; no compatibility status was promoted.",

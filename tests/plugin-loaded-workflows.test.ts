@@ -12,6 +12,8 @@ type LoadedWorkflowFixture = {
   required_phases: string[];
   scenarios: Record<string, {workflow_id: string; description: string; initial_data: Record<string, unknown>; active_file?: string; files: Array<{path: string; content: string}>; calendar_workflow?: Record<string, unknown>; homepage_workflow?: Record<string, unknown>; minimal_settings_workflow?: Record<string, unknown>; style_settings_workflow?: Record<string, unknown>; task_workflow?: Record<string, unknown>; table_workflow?: Record<string, unknown>; git_workflow?: Record<string, unknown>; remotely_save_workflow?: Record<string, unknown>; iconize_workflow?: Record<string, unknown>; quickadd_workflow?: Record<string, unknown>; editing_toolbar_workflow?: Record<string, unknown>; omnisearch_workflow?: Record<string, unknown>; kanban_workflow?: Record<string, unknown>; templater_workflow?: Record<string, unknown>}>;
   combination: {id: string; target_ids: string[]};
+  automatic_writer_policy: {disabled_by_default: boolean; writers: string[]; limitation: string};
+  recovery_probe: {denied_capability: string; trigger: string; state_marker: string; mutation_scope: string};
   required_combinations: Array<{id: string; target_ids: string[]; scenario_id?: string; dependency_artifacts?: Array<{artifact_id: string; assets: string[]}>; dependency_fixtures?: Array<{fixture_id: string; paths: string[]}>; files?: Array<{path: string; content: string}>}>;
   safe_alternatives_attempted: string[];
   external_pending: string[];
@@ -35,6 +37,16 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(fixture.required_phases).toEqual(["install", "restart", "update"]);
   expect(fixture.combination).toMatchObject({id: "combination:pc07-pc21-pc23", target_ids: ["PC07", "PC21", "PC23"]});
   expect(fixture.combination.target_ids.every((id) => fixture.target_ids.includes(id))).toBe(true);
+  expect(fixture.automatic_writer_policy).toMatchObject({
+    disabled_by_default: true,
+    writers: ["plugin-owned automatic vault writers", "remote-sync automatic push", "scheduled background imports"],
+  });
+  expect(fixture.recovery_probe).toEqual({
+    denied_capability: "process.spawn",
+    trigger: "process.spawn('combination-recovery')",
+    state_marker: "__combination_recovery",
+    mutation_scope: "bounded-denial-recovery",
+  });
   expect(fixture.required_combinations).toEqual([
     expect.objectContaining({
       id: "combination:pc08-pc17-minimal",
@@ -91,6 +103,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).not.toContain('status: "not-executed"');
   expect(rendererWorker).toContain("globalThis.app = runtime.window?.app || runtime.app || null");
   expect(rendererWorker).toContain("globalThis.app = pluginApp");
+  expect(rendererWorker).toContain("runtime.app = pluginApp");
   expect(rendererWorker).toContain("updateFontSize() {");
   expect(rendererWorker).toContain("this.fontSize = typeof value === \"number\" && Number.isFinite(value) ? value : null;");
   expect(rendererWorker).toContain("titleEl: safeDomObject()");
@@ -100,6 +113,8 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(rendererWorker).toContain("dataStore.initialByPlugin");
   expect(rendererWorker).toContain("loadedSnapshotsByPlugin");
   expect(rendererWorker).toContain("persistedDataByPlugin");
+  expect(rendererWorker).toContain("persisted_data_by_plugin");
+  expect(rendererWorker).toContain("deterministic: JSON.stringify(dataStore?.scopedValues");
   expect(rendererWorker).toContain("targetIds: Array.isArray(workflowConfig.target_ids)");
   expect(rendererWorker).toContain("detach() {");
   expect(rendererWorker).toContain("env.smart_sources.opts.prevent_import_on_load = true");
@@ -110,6 +125,8 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(loadedWorkflowAudit).toContain("combinationDefinitions");
   expect(loadedWorkflowAudit).toContain("verifyCombinationDependencies");
   expect(loadedWorkflowAudit).toContain("all_required_combinations_complete");
+  expect(loadedWorkflowAudit).toContain("combinedRecoverySource");
+  expect(loadedWorkflowAudit).toContain("all_required_combination_recoveries_complete");
   expect(loadedWorkflowAudit).toContain("all_denied_workflow_recoveries_complete");
 
   for (const id of fixture.target_ids) {

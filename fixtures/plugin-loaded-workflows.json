@@ -945,6 +945,21 @@
     "target_ids": ["PC07", "PC21", "PC23"],
     "description": "Load the three unchanged marker-free artifacts in one mediated renderer workflow and verify registrations are cleaned on return to Obsidian."
   },
+  "automatic_writer_policy": {
+    "disabled_by_default": true,
+    "writers": [
+      "plugin-owned automatic vault writers",
+      "remote-sync automatic push",
+      "scheduled background imports"
+    ],
+    "limitation": "This policy is enforced only by the bounded synthetic renderer fixture; stock Obsidian and provider-backed writer scheduling remain pending."
+  },
+  "recovery_probe": {
+    "denied_capability": "process.spawn",
+    "trigger": "process.spawn('combination-recovery')",
+    "state_marker": "__combination_recovery",
+    "mutation_scope": "bounded-denial-recovery"
+  },
   "required_combinations": [
     {
       "id": "combination:pc08-pc17-minimal",

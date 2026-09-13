@@ -120,7 +120,10 @@ function d15Evidence(value: JsonRecord): CombinationD15Evidence {
 
 function boundedEvidence(value: JsonRecord): ExistingBoundedCombinationEvidence[] {
   const loaded = asRecord(value.loaded_workflow_audit);
-  return records(loaded?.required_combinations).map((combination) => ({
+  return records(loaded?.required_combinations ?? loaded?.combinations).map((combination) => {
+    const recovery = asRecord(combination.combination_recovery);
+    const recoveryChecks = asRecord(recovery?.checks);
+    return {
     id: requiredString(combination, "id", "bounded combination evidence"),
     target_ids: strings(combination.target_ids),
     bounded_lifecycle: string(combination.bounded_lifecycle),
@@ -130,7 +133,12 @@ function boundedEvidence(value: JsonRecord): ExistingBoundedCombinationEvidence[
     vault_writes: typeof combination.vault_writes === "number" ? combination.vault_writes : -1,
     dependency_artifact_id: asRecord(combination.dependency_artifact)?.id === undefined ? null : string(asRecord(combination.dependency_artifact)?.id),
     dependency_fixture_id: asRecord(combination.dependency_fixture)?.id === undefined ? null : string(asRecord(combination.dependency_fixture)?.id),
-  }));
+    recovery_status: recoveryChecks?.status === undefined ? null : string(recoveryChecks.status),
+    automatic_writers_disabled: recoveryChecks?.automatic_writers_disabled === undefined ? null : recoveryChecks.automatic_writers_disabled === true,
+    persisted_state_deterministic: recoveryChecks?.persisted_state_deterministic === undefined ? null : recoveryChecks.persisted_state_deterministic === true,
+    recovery_member_count: Array.isArray(recoveryChecks?.member_state) ? recoveryChecks.member_state.length : null,
+  };
+  });
 }
 
 export function buildPluginCombinationAudit() {

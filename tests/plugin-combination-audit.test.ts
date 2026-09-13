@@ -14,6 +14,7 @@ type CombinationAuditFixture = {
   d15_evidence_path: string;
   bounded_loaded_evidence_path: string;
   safe_alternatives_attempted: string[];
+  limitation: string;
   bounded_evidence: Array<{catalog_id: string; source_combination_id: string; expected_status: string}>;
 };
 
@@ -37,6 +38,7 @@ test("catalog combination audit fixture keeps source and pending boundaries expl
   expect(fixture.d15_evidence_path).toContain("plugin-d15-workflow.json");
   expect(fixture.bounded_loaded_evidence_path).toContain("required-combinations.json");
   expect(fixture.safe_alternatives_attempted).toEqual(["mediated vault read", "preview broker", "workflow disabled"]);
+  expect(fixture.limitation).toContain("deterministic persisted-state deny-clear-return recovery");
   expect(fixture.bounded_evidence).toEqual([
     expect.objectContaining({catalog_id: "combo-minimal-style-settings", source_combination_id: "combination:pc08-pc17-minimal", expected_status: "passed"}),
     expect.objectContaining({catalog_id: "combo-tasknotes-bases", source_combination_id: "combination:pc19-bases", expected_status: "passed"}),
@@ -89,6 +91,10 @@ test("existing bounded Minimal and Bases traces remain visible without promotion
     dependency_status: "verified",
     dependency_artifact_id: "PC-DEP-MINIMAL",
     vault_writes: 0,
+    recovery_status: "passed",
+    automatic_writers_disabled: true,
+    persisted_state_deterministic: true,
+    recovery_member_count: 2,
   });
   expect(tasknotes?.bounded_evidence).toMatchObject({
     status: "passed",
@@ -99,6 +105,10 @@ test("existing bounded Minimal and Bases traces remain visible without promotion
     dependency_status: "verified",
     dependency_fixture_id: "fixture:baseline:bases",
     vault_writes: 0,
+    recovery_status: "passed",
+    automatic_writers_disabled: true,
+    persisted_state_deterministic: true,
+    recovery_member_count: 1,
   });
   expect(minimal?.disposition).toBe("candidate-denial");
   expect(tasknotes?.disposition).toBe("candidate-denial");

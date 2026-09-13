@@ -35,5 +35,5 @@
     "signed release, publication and updater installation/rollback",
     "unchanged artifact settings, views, combinations and lifecycle certification"
   ],
-  "limitation": "The audit derives every required combination from the catalog and reconciles only local lifecycle, D15 and bounded synthetic evidence. Denied components remain candidate-denial/pending-runtime; bounded combination passes do not certify stock Obsidian, reference behavior or compatibility promotion."
+  "limitation": "The audit derives every required combination from the catalog and reconciles only local lifecycle, D15 and bounded synthetic evidence. Required combinations disable automatic writers in the fixture and record deterministic persisted-state deny-clear-return recovery; denied components remain candidate-denial/pending-runtime, and bounded combination passes do not certify stock Obsidian, reference behavior or compatibility promotion."
 }

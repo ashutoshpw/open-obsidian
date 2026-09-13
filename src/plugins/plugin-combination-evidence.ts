@@ -60,6 +60,10 @@ export type ExistingBoundedCombinationEvidence = {
   vault_writes: number;
   dependency_artifact_id?: string | null;
   dependency_fixture_id?: string | null;
+  recovery_status?: string | null;
+  automatic_writers_disabled?: boolean | null;
+  persisted_state_deterministic?: boolean | null;
+  recovery_member_count?: number | null;
   [key: string]: unknown;
 };
 
@@ -127,6 +131,10 @@ export type CombinationBoundedEvidence = {
   vault_writes: number | null;
   dependency_artifact_id: string | null;
   dependency_fixture_id: string | null;
+  recovery_status: string | null;
+  automatic_writers_disabled: boolean | null;
+  persisted_state_deterministic: boolean | null;
+  recovery_member_count: number | null;
   expected_status: "passed" | "partial" | "not-run" | null;
   note: string;
 };
@@ -223,6 +231,10 @@ function boundedResult(
       vault_writes: null,
       dependency_artifact_id: null,
       dependency_fixture_id: null,
+      recovery_status: null,
+      automatic_writers_disabled: null,
+      persisted_state_deterministic: null,
+      recovery_member_count: null,
       expected_status: null,
       note: "No bounded loaded-workflow trace is recorded for this catalog combination.",
     };
@@ -239,6 +251,10 @@ function boundedResult(
       vault_writes: null,
       dependency_artifact_id: null,
       dependency_fixture_id: null,
+      recovery_status: null,
+      automatic_writers_disabled: null,
+      persisted_state_deterministic: null,
+      recovery_member_count: null,
       expected_status: binding.expected_status,
       note: `Bounded source combination ${binding.source_combination_id} is missing from the loaded-workflow evidence.`,
     };
@@ -247,7 +263,11 @@ function boundedResult(
     && source.persistence === "preserved"
     && source.action_status === "passed"
     && source.dependency_status === "verified"
-    && source.vault_writes === 0;
+    && source.vault_writes === 0
+    && source.recovery_status === "passed"
+    && source.automatic_writers_disabled === true
+    && source.persisted_state_deterministic === true
+    && source.recovery_member_count === source.target_ids.length;
   const status = passed ? "passed" : "partial";
   return {
     status,
@@ -259,10 +279,14 @@ function boundedResult(
     vault_writes: source.vault_writes,
     dependency_artifact_id: source.dependency_artifact_id ?? null,
     dependency_fixture_id: source.dependency_fixture_id ?? null,
+    recovery_status: source.recovery_status ?? null,
+    automatic_writers_disabled: source.automatic_writers_disabled ?? null,
+    persisted_state_deterministic: source.persisted_state_deterministic ?? null,
+    recovery_member_count: source.recovery_member_count ?? null,
     expected_status: binding.expected_status,
     note: passed
-      ? "Bounded synthetic lifecycle, persistence, dependency and zero-vault-write checks pass; runtime compatibility remains pending."
-      : "A bounded loaded-workflow record exists, but one or more lifecycle, persistence, dependency or zero-vault-write checks remain partial.",
+      ? "Bounded synthetic lifecycle, persistence, dependency, deterministic deny-clear-return recovery and zero-vault-write checks pass; runtime compatibility remains pending."
+      : "A bounded loaded-workflow record exists, but one or more lifecycle, persistence, dependency, recovery or zero-vault-write checks remain partial.",
   };
 }
 

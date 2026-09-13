@@ -21,9 +21,9 @@
   "decision_id": "D14",
   "security_boundary_decision_id": "D15",
   "fixture_id": "fixture:plugin-loaded-workflows",
-  "recorded_at": "2026-09-12T14:17:23Z",
+  "recorded_at": "2026-09-13T01:15:00Z",
   "command": "bun run audit:plugin-loaded-workflows",
-  "status": "passed",
+  "status": "partial",
   "environment": {
     "platform": "Linux x64",
     "architecture": "x64",
@@ -31,14 +31,14 @@
     "display": "xvfb-run",
     "bun": "1.4.2",
     "branch": "main",
-    "base_head": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e8",
+    "base_head": "pending-implementation-commit",
     "selected_vault": "/home/ashutosh/Obsidian",
     "selected_vault_accessed": false
   },
   "source_tree": {
-    "head": "99fbfefbaf1fe7f2c6199f23caf5ee3bfffcd5e8",
-    "sha256": "692fa477228454c387f9a4b609e0165946eae12cfacff34ec6bae44545ee4ada",
-    "paths": 239,
+    "head": "pending-implementation-commit",
+    "sha256": "pending-source-digest",
+    "paths": 243,
     "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
   },
   "implementation": {
@@ -52,27 +52,36 @@
       "The audit accepts a primary and additional required-combination definition, merges only declared fixture files and loads unchanged pinned main.js bytes through the same context-isolated renderer wrapper.",
       "Minimal + Minimal Theme Settings + Style Settings verifies the pinned Minimal 9.1.0 manifest/theme.css assets before running the PC08/PC17 wrapper.",
       "TaskNotes + Bases verifies the declared file-based Bases fixture paths before exercising the PC19 task projection and all lifecycle phases.",
-      "Combination traces record target IDs in the worker, per-plugin mediated persistence, cleanup, return-to-Obsidian state and zero direct vault writes."
+      "Combination traces record target IDs in the worker, per-plugin mediated persistence, cleanup, return-to-Obsidian state and zero direct vault writes.",
+      "Required combinations disable competing automatic writers by default and run a separate process.spawn denial probe that records each member's persisted marker, registration cleanup and deterministic deny-clear-return recovery."
     ],
     "security_disposition": "Unchanged pinned artifacts remain inside the context-isolated synthetic renderer. Dependency assets and Bases fixture bytes are integrity-checked or mediated in memory; no host vault, OS clipboard or direct vault writer is accessed."
   },
   "loaded_workflow_audit": {
-    "status": "passed",
-    "target_ids": ["PC07", "PC08", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
+    "status": "partial",
+    "target_ids": ["PC02", "PC03", "PC04", "PC05", "PC06", "PC07", "PC08", "PC09", "PC10", "PC11", "PC12", "PC14", "PC15", "PC17", "PC19", "PC20", "PC21", "PC22", "PC23", "PC24", "PC25"],
     "required_phases": ["install", "restart", "update"],
-    "artifact_lifecycles": "all ten audited unchanged artifact lifecycles complete",
-    "artifact_actions": "all ten audited bounded action paths pass",
-    "artifact_persistence": "all ten audited bounded persistence checks pass",
+    "artifact_lifecycles": "21 audited unchanged artifact traces retain explicit loaded/denied lifecycle dispositions",
+    "artifact_actions": "bounded action paths remain partial where unchanged renderer execution is denied",
+    "artifact_persistence": "bounded persistence is preserved where the synthetic lifecycle loads",
     "artifact_vault_writes": 0,
     "required_combinations": [
       {
-        "id": "combination:pc07-pc21-pc23",
+      "id": "combination:pc07-pc21-pc23",
         "target_ids": ["PC07", "PC21", "PC23"],
         "bounded_lifecycle": "complete",
         "persistence": "preserved",
         "action_status": "passed",
         "dependency_status": "verified",
-        "vault_writes": 0
+      "vault_writes": 0,
+      "combination_recovery": {
+        "checks": {
+          "status": "passed",
+          "automatic_writers_disabled": true,
+          "persisted_state_deterministic": true,
+          "member_state": [{"id": "PC07"}, {"id": "PC21"}, {"id": "PC23"}]
+        }
+      }
       },
       {
         "id": "combination:pc08-pc17-minimal",
@@ -89,7 +98,15 @@
             "theme.css": {"bytes": 265574, "sha256": "c95225a3653dcf600d006e9551c1038a06c336d03228a623bd5008b1561438a4"}
           }
         },
-        "vault_writes": 0
+      "vault_writes": 0,
+      "combination_recovery": {
+        "checks": {
+          "status": "passed",
+          "automatic_writers_disabled": true,
+          "persisted_state_deterministic": true,
+          "member_state": [{"id": "PC08"}, {"id": "PC17"}]
+        }
+      }
       },
       {
         "id": "combination:pc19-bases",
@@ -106,23 +123,49 @@
           }
         },
         "task_workflow": "revision match, stale rejection, status/checkbox update, unrelated-content preservation and revision advance pass",
-        "vault_writes": 0
+      "vault_writes": 0,
+      "combination_recovery": {
+        "checks": {
+          "status": "passed",
+          "automatic_writers_disabled": true,
+          "persisted_state_deterministic": true,
+          "member_state": [{"id": "PC19"}]
+        }
+      }
+    },
+    {
+      "id": "combination:pc15-text-extractor",
+      "target_ids": ["PC15"],
+      "bounded_lifecycle": "partial",
+      "persistence": "preserved",
+      "action_status": "passed",
+      "dependency_status": "verified",
+      "vault_writes": 0,
+      "combination_recovery": {
+        "checks": {
+          "status": "passed",
+          "automatic_writers_disabled": true,
+          "persisted_state_deterministic": true,
+          "member_state": [{"id": "PC15"}]
+        }
+      }
       }
     ],
     "checks": {
-      "all_artifact_lifecycle_traces_complete": true,
-      "combination_lifecycle_trace_complete": true,
-      "all_required_combinations_complete": true,
-      "all_bounded_traces_complete": true,
+      "all_artifact_lifecycle_traces_complete": false,
+      "combination_lifecycle_trace_complete": false,
+      "all_required_combinations_complete": false,
+      "all_required_combination_recoveries_complete": true,
+      "all_bounded_traces_complete": false,
       "all_artifacts_integrity_checked": true,
       "no_plugin_promoted": true
     }
   },
   "regression_validation": {
-    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts",
-    "focused_result": "passed; 9 tests, 210 expectations",
+    "focused_command": "bun test tests/plugin-loaded-workflows.test.ts tests/plugin-combination-audit.test.ts",
+    "focused_result": "passed; 28 tests, 516 expectations",
     "full_command": "bun run check:fast",
-    "full_result": "passed; 213 tests, 1286 expectations",
+    "full_result": "passed; 232 tests, 1588 expectations",
     "typecheck": "passed; bun run typecheck",
     "syntax_command": "node --check scripts/plugin-renderer-worker.cjs",
     "syntax_result": "passed",
@@ -135,7 +178,8 @@
     "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
     "human accessibility/input review",
     "provider-backed behavior, signing, publication and updater installation/rollback",
-    "remaining required plugin combinations, compatibility promotion and release-track certification"
+    "remaining required plugin combinations, compatibility promotion and release-track certification",
+    "stock Obsidian automatic-writer scheduling and human recovery behavior"
   ],
-  "limitation": "This evidence exercises unchanged pinned artifacts only inside the hidden Electron context-isolated sandbox. Passing combinations are bounded synthetic implementation evidence; they do not certify stock Obsidian, reference behavior, hostile same-user OS isolation, human behavior or compatibility promotion."
+  "limitation": "This evidence exercises unchanged pinned artifacts only inside the hidden Electron context-isolated sandbox. Required-combination recovery probes disable automatic writers and preserve deterministic per-member persisted markers through a synthetic process denial, but they remain bounded implementation evidence and do not certify stock Obsidian, reference behavior, hostile same-user OS isolation, human behavior or compatibility promotion."
 }
