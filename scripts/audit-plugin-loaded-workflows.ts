@@ -740,6 +740,38 @@ function workflowChecks(result: JsonRecord): Record<string, boolean> {
   };
 }
 
+function denialRecoveryChecks(result: JsonRecord): JsonRecord {
+  const required = result.status === "denied";
+  const workflow = asRecord(result.workflow) ?? {};
+  const recovery = asRecord(workflow.denial_recovery);
+  if (!required) {
+    return {required: false, status: "not-applicable", passed: true};
+  }
+  const directVaultWrites = recovery?.direct_vault_writes;
+  const passed = recovery !== null
+    && recovery.status === "passed"
+    && recovery.mutation_scope === "bounded-denial-recovery"
+    && recovery.trigger === "d15-capability-denial"
+    && recovery.registrations_cleared === true
+    && recovery.remaining_registrations === 0
+    && recovery.active_plugin_after_recovery === false
+    && recovery.return_to_obsidian === true
+    && directVaultWrites === 0
+    && recovery.direct_vault_writes_zero === true
+    && recovery.artifact_execution === "not-executed-after-denial";
+  return {
+    required: true,
+    status: passed ? "passed" : "failed",
+    passed,
+    registrations_cleared: recovery?.registrations_cleared === true,
+    return_to_obsidian: recovery?.return_to_obsidian === true,
+    active_plugin_after_recovery: recovery?.active_plugin_after_recovery === true,
+    active_plugin_after_recovery_cleared: recovery?.active_plugin_after_recovery === false,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    artifact_execution: recovery?.artifact_execution,
+  };
+}
+
 function checksPass(checks: Record<string, boolean>, names: readonly string[]): boolean {
   return names.every((name) => checks[name] === true);
 }
@@ -875,6 +907,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
       const config = {...scenario(id), artifact_id: id};
       const result = await runWorker(downloaded.source, config, temporaryRoot, id);
       const checks = workflowChecks(result);
+      const denialRecovery = denialRecoveryChecks(result);
       const workflow = asRecord(result.workflow) ?? {};
       const failures = actionFailures(workflow);
       const editor = editorChecks(workflow);
@@ -1066,6 +1099,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         denied_capabilities: asArray(result.deniedCapabilities),
         result,
         checks,
+        denial_recovery_checks: denialRecovery,
         bounded_lifecycle: lifecycleComplete ? "complete" : "partial",
         persistence: persistenceComplete ? "preserved" : "not-proven",
         persistence_source: persistenceSource,
@@ -1639,6 +1673,7 @@ export async function runLoadedPluginWorkflowAudit(): Promise<JsonRecord> {
         all_required_combinations_complete: combinationChecksComplete,
         all_bounded_traces_complete: allChecks,
         all_artifacts_integrity_checked: artifactResults.every((entry) => entry.integrity === "passed"),
+        all_denied_workflow_recoveries_complete: artifactResults.every((entry) => asRecord(entry.denial_recovery_checks)?.passed === true),
         excalidraw_bounded_projection_complete: excalidrawProjectionComplete,
         no_plugin_promoted: true,
       },

@@ -1,0 +1,52 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-loaded-workflows-denial-recovery",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005"],
+  "decision_id": "D15",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "recorded_at": "2026-09-13T00:16:27Z",
+  "environment": {
+    "platform": "Linux x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "bun": "1.4.2",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "tested_source_tree": {
+    "head": "e7030f252f830d0487cd94d2e32cdb44a13d4c43",
+    "sha256": "80339934e53466b3cf8f88e9331af722381c6933b15019d259341fd4846d0efb",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "status": "partial",
+  "aggregate_checks": {
+    "all_denied_workflow_recoveries_complete": true,
+    "all_artifacts_integrity_checked": true,
+    "no_plugin_promoted": true,
+    "all_artifact_lifecycle_traces_complete": false,
+    "all_required_combinations_complete": false
+  },
+  "denied_workflow_recovery": {
+    "required_count": 10,
+    "passed_count": 10,
+    "artifact_ids": ["PC02", "PC03", "PC05", "PC06", "PC09", "PC10", "PC11", "PC12", "PC14", "PC15"],
+    "status": "passed",
+    "mutation_scope": "bounded-denial-recovery",
+    "registrations_cleared": true,
+    "return_to_obsidian": true,
+    "active_plugin_after_recovery": false,
+    "direct_vault_writes": 0,
+    "artifact_execution": "not-executed-after-denial"
+  },
+  "ordinary_loaded_workflows": 11,
+  "renderer_denials": 10,
+  "runtime_dispositions": "all pending-runtime",
+  "limitations": [
+    "The recovery path clears only mediated renderer registrations after a D15 denial; it is not stock Obsidian lifecycle certification.",
+    "PC13, PC16 and PC18 remain covered by the separate D15 recovery contract because they are outside the loaded marker-free target set.",
+    "Same-user macOS/Windows enforcement, reference Obsidian, human accessibility/input, signing, publication and updater checks remain pending."
+  ]
+}

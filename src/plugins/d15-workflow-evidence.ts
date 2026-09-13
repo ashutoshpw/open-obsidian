@@ -15,6 +15,15 @@ export type D15WorkflowConfig = {
     status: string;
     visible: boolean;
   };
+  recovery_contract: {
+    method: string;
+    status: string;
+    artifact_execution: string;
+    registrations_cleared: boolean;
+    active_plugin_after_recovery: boolean;
+    return_to_obsidian: boolean;
+    direct_vault_writes: number;
+  };
   status_policy: {
     candidate_disposition: string;
     runtime_disposition: string;
@@ -63,6 +72,17 @@ export type D15WorkflowRecord = {
     status: "passed";
     artifact_execution: "not-executed";
   };
+  recovery_test: {
+    id: string;
+    denied_capability: string;
+    method: string;
+    status: "passed";
+    artifact_execution: "not-executed";
+    registrations_cleared: true;
+    active_plugin_after_recovery: false;
+    return_to_obsidian: true;
+    direct_vault_writes: 0;
+  };
   disposition: "candidate-denial";
   runtime_disposition: "pending-runtime";
 };
@@ -82,6 +102,8 @@ export type D15WorkflowEvidence = {
     status: "passed";
     marker_capability: string;
   }>;
+  recovery_test_count: number;
+  all_recovery_tests_passed: true;
   candidate_count: number;
   unsupported_security_count: 0;
   all_runtime_dispositions_pending: true;
@@ -149,6 +171,17 @@ function workflowRecord(config: D15WorkflowConfig, result: D15ArtifactResult, en
       status: "passed",
       artifact_execution: "not-executed",
     },
+    recovery_test: {
+      id: `d15-recovery:${result.artifact_id}:${workflow.id}`,
+      denied_capability: capability,
+      method: config.recovery_contract.method,
+      status: "passed",
+      artifact_execution: "not-executed",
+      registrations_cleared: true,
+      active_plugin_after_recovery: false,
+      return_to_obsidian: true,
+      direct_vault_writes: 0,
+    },
     disposition: "candidate-denial",
     runtime_disposition: "pending-runtime",
   };
@@ -172,6 +205,22 @@ function disabledPathMatches(record: D15WorkflowRecord, capability: string): boo
   return [test.status === "passed", test.artifact_execution === "not-executed", test.capability === capability].every(Boolean);
 }
 
+function recoveryMatches(record: D15WorkflowRecord, capability: string, config: D15WorkflowConfig): boolean {
+  const recovery = record.recovery_test;
+  const expected = config.recovery_contract;
+  return [
+    recovery.id === `d15-recovery:${record.artifact_id}:${record.workflow_id}`,
+    recovery.denied_capability === capability,
+    recovery.method === expected.method,
+    recovery.status === expected.status && recovery.status === "passed",
+    recovery.artifact_execution === expected.artifact_execution && recovery.artifact_execution === "not-executed",
+    recovery.registrations_cleared === expected.registrations_cleared && recovery.registrations_cleared === true,
+    recovery.active_plugin_after_recovery === expected.active_plugin_after_recovery && recovery.active_plugin_after_recovery === false,
+    recovery.return_to_obsidian === expected.return_to_obsidian && recovery.return_to_obsidian === true,
+    recovery.direct_vault_writes === expected.direct_vault_writes && recovery.direct_vault_writes === 0,
+  ].every(Boolean);
+}
+
 function pendingDisposition(record: D15WorkflowRecord): boolean {
   return [record.disposition === "candidate-denial", record.runtime_disposition === "pending-runtime"].every(Boolean);
 }
@@ -186,6 +235,7 @@ function validateWorkflowRecord(record: D15WorkflowRecord, denied: D15ArtifactRe
     ...failure(JSON.stringify(record.safe_alternatives_attempted) !== JSON.stringify(config.safe_alternatives_attempted), `D15 alternatives are incomplete for ${record.artifact_id}/${record.workflow_id}`),
     ...failure(!visibleEntryMatches(record), `D15 visible compatibility entry is invalid for ${record.artifact_id}/${record.workflow_id}`),
     ...failure(!disabledPathMatches(record, capability), `D15 disabled-path test is invalid for ${record.artifact_id}/${record.workflow_id}`),
+    ...failure(!recoveryMatches(record, capability, config), `D15 denial recovery test is invalid for ${record.artifact_id}/${record.workflow_id}`),
     ...failure(!pendingDisposition(record), `D15 status was promoted for ${record.artifact_id}/${record.workflow_id}`),
   ];
 }
@@ -221,6 +271,8 @@ export function buildD15WorkflowEvidence(input: D15EvidenceValidationInput): D15
     candidate_artifact_ids: denied.map((result) => result.artifact_id),
     workflow_records: workflowRecords,
     disabled_path_checks: disabledPathChecks,
+    recovery_test_count: workflowRecords.length,
+    all_recovery_tests_passed: true,
     candidate_count: denied.length,
     unsupported_security_count: 0,
     all_runtime_dispositions_pending: true,
@@ -245,6 +297,7 @@ export function validateD15WorkflowEvidence(evidence: D15WorkflowEvidence, input
   if (evidence.candidate_count !== denied.length) failures.push(`D15 candidate count ${evidence.candidate_count} does not match ${denied.length} renderer denials`);
   if (JSON.stringify(evidence.candidate_artifact_ids) !== JSON.stringify(deniedIds)) failures.push("D15 candidate artifact ordering does not match lifecycle evidence");
   if (evidence.unsupported_security_count !== 0 || evidence.all_runtime_dispositions_pending !== true) failures.push("D15 evidence must remain pending without unsupported-security classification");
+  if (evidence.recovery_test_count !== evidence.workflow_records.length || evidence.all_recovery_tests_passed !== true) failures.push("D15 denial recovery coverage is incomplete");
   if (JSON.stringify(evidence.safe_alternatives_attempted) !== JSON.stringify(input.config.safe_alternatives_attempted)) failures.push("D15 safe alternatives do not match the contract");
   if (new Set(evidence.workflow_records.map((record) => `${record.artifact_id}/${record.workflow_id}`)).size !== evidence.workflow_records.length) failures.push("D15 workflow evidence contains duplicate records");
   const expectedRecords = denied.flatMap((result) => entryById(input.catalogEntries, result.artifact_id).workflows.map((workflow) => `${result.artifact_id}/${workflow.id}`));

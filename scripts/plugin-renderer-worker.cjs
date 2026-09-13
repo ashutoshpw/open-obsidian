@@ -4630,8 +4630,41 @@ async function workflowInstance(module, workflow, dataStore, phase, version, wor
   return phaseResult;
 }
 
-function lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow) {
+function applyDeniedWorkflowRecovery(workflow, runtime, metrics, deniedCapabilities) {
+  const app = runtime && runtime.app && typeof runtime.app === "object" ? runtime.app : null;
+  const registrationCollections = ["commands", "views", "settings", "registeredEvents", "commandHandlers", "viewFactories", "settingTabs", "eventHandlers"];
+  const registrationsBefore = Object.fromEntries(registrationCollections.map((name) => [name, Array.isArray(app?.[name]) ? app[name].length : 0]));
+  for (const name of registrationCollections) {
+    if (Array.isArray(app?.[name])) app[name].length = 0;
+  }
+  const remainingRegistrations = registrationCollections.reduce((count, name) => count + (Array.isArray(app?.[name]) ? app[name].length : 0), 0);
+  const directVaultWrites = Number(metrics?.vaultWrites || workflow.vaultWrites || 0);
+  const registrationsCleared = remainingRegistrations === 0;
+  workflow.activeAfterUninstall = false;
+  workflow.uninstall = {
+    registrationsCleared,
+    returnToObsidian: registrationsCleared,
+    recovery: "d15-denial",
+  };
+  workflow.denial_recovery = {
+    status: registrationsCleared && directVaultWrites === 0 ? "passed" : "failed",
+    mutation_scope: "bounded-denial-recovery",
+    trigger: "d15-capability-denial",
+    denied_capabilities: [...deniedCapabilities],
+    registrations_before: registrationsBefore,
+    registrations_cleared: registrationsCleared,
+    remaining_registrations: remainingRegistrations,
+    active_plugin_after_recovery: workflow.activeAfterUninstall,
+    return_to_obsidian: workflow.uninstall.returnToObsidian,
+    direct_vault_writes: directVaultWrites,
+    direct_vault_writes_zero: directVaultWrites === 0,
+    artifact_execution: "not-executed-after-denial",
+  };
+}
+
+function lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow, runtime, metrics) {
   const message = error instanceof Error ? error.message : String(error);
+  if (deniedCapabilities.length > 0) applyDeniedWorkflowRecovery(workflow, runtime, metrics, deniedCapabilities);
   return {
     status: deniedCapabilities.length > 0 ? "denied" : "failed",
     enforcement: "electron-context-isolated-sandbox",
@@ -4661,6 +4694,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     artifactId: typeof workflowConfig.artifact_id === "string" ? workflowConfig.artifact_id : "renderer-workflow-fixture",
     targetIds: Array.isArray(workflowConfig.target_ids) ? workflowConfig.target_ids.filter((value) => typeof value === "string") : [],
     excalidraw_workflow: boundedExcalidrawWorkflow(workflowContext),
+    denial_recovery: null,
   };
   const runtime = {app: null, allowSyntheticDocument: true, storage: new Map(), metrics};
   try {
@@ -4730,7 +4764,7 @@ async function rendererLifecycleWorkflowProbe(source, workflowConfig = {}) {
     workflow.minimal_settings_workflow = boundedMinimalSettingsWorkflow(workflowContext);
     workflow.homepage_workflow = boundedHomepageWorkflow(workflowContext);
     workflow.style_settings_workflow = boundedStyleSettingsWorkflow(workflowContext);
-    return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow);
+    return lifecycleWorkflowFailure(error, requiredModules, deniedCapabilities, workflow, runtime, metrics);
   }
 }
 
@@ -4858,6 +4892,7 @@ function rendererScript(source, mode = "probe", workflowConfig = {}) {
     eventPayload,
     exerciseRegistrations,
     workflowInstance,
+    applyDeniedWorkflowRecovery,
     lifecycleWorkflowFailure,
     rendererLifecycleWorkflowProbe,
   ].map((functionDefinition) => functionDefinition.toString()).join("\n");

@@ -12,6 +12,7 @@
     "safe_alternatives_attempted",
     "visible_compatibility_entry",
     "disabled_path_test",
+    "recovery_test",
     "disposition",
     "runtime_disposition"
   ],
@@ -34,6 +35,15 @@
     "matrix_source": "src/plugins/compatibility-matrix.ts",
     "status": "pending-runtime",
     "visible": true
+  },
+  "recovery_contract": {
+    "method": "synthetic deny-clear-return contract",
+    "status": "passed",
+    "artifact_execution": "not-executed",
+    "registrations_cleared": true,
+    "active_plugin_after_recovery": false,
+    "return_to_obsidian": true,
+    "direct_vault_writes": 0
   },
   "status_policy": {
     "candidate_disposition": "candidate-denial",

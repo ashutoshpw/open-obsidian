@@ -1,0 +1,47 @@
+{
+  "evidence_version": 1,
+  "id": "fixture:plugin-d15-denial-recovery",
+  "checkpoint": "P3.2",
+  "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC13", "PC16", "PC18"],
+  "decision_id": "D15",
+  "command": "bun run validate:plugin-d15",
+  "recorded_at": "2026-09-13T00:16:08Z",
+  "environment": {
+    "platform": "Linux x64",
+    "bun": "1.4.2",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "tested_source_tree": {
+    "head": "e7030f252f830d0487cd94d2e32cdb44a13d4c43",
+    "sha256": "80339934e53466b3cf8f88e9331af722381c6933b15019d259341fd4846d0efb",
+    "paths": 243,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "recovery_contract": {
+    "method": "synthetic deny-clear-return contract",
+    "artifact_execution": "not-executed",
+    "registrations_cleared": true,
+    "active_plugin_after_recovery": false,
+    "return_to_obsidian": true,
+    "direct_vault_writes": 0
+  },
+  "candidate_count": 23,
+  "recovery_test_count": 23,
+  "all_recovery_tests_passed": true,
+  "candidate_artifact_ids": ["PC01", "PC02", "PC03", "PC04", "PC05", "PC06", "PC08", "PC09", "PC10", "PC11", "PC12", "PC13", "PC14", "PC15", "PC16", "PC17", "PC18", "PC19", "PC20", "PC22", "PC24", "PC25", "PC-DEP-TEXT-EXTRACTOR"],
+  "representative_recovery_records": [
+    {"artifact_id": "PC13", "workflow_id": "workflow:pc13", "denied_capability": "filesystem.direct", "status": "passed", "artifact_execution": "not-executed", "registrations_cleared": true, "active_plugin_after_recovery": false, "return_to_obsidian": true, "direct_vault_writes": 0},
+    {"artifact_id": "PC16", "workflow_id": "workflow:pc16", "denied_capability": "filesystem.direct", "status": "passed", "artifact_execution": "not-executed", "registrations_cleared": true, "active_plugin_after_recovery": false, "return_to_obsidian": true, "direct_vault_writes": 0},
+    {"artifact_id": "PC18", "workflow_id": "workflow:pc18", "denied_capability": "network.request", "status": "passed", "artifact_execution": "not-executed", "registrations_cleared": true, "active_plugin_after_recovery": false, "return_to_obsidian": true, "direct_vault_writes": 0}
+  ],
+  "unsupported_security_count": 0,
+  "runtime_dispositions": "all pending-runtime",
+  "status": "passed",
+  "limitations": [
+    "This is a synthetic fail-closed recovery contract; it does not execute PC13, PC16 or PC18 unsafe paths.",
+    "macOS/Windows renderer enforcement, reference Obsidian behavior, human validation, signing, publication and updater checks remain pending.",
+    "No plugin or compatibility row was promoted and no unsupported-security exception was classified."
+  ]
+}

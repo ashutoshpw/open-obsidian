@@ -67,6 +67,8 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(workflow).toContain('test -f "$sandbox_helper"');
   expect(workflow).toContain('sudo chmod 4755 "$sandbox_helper"');
   expect(rendererWorker).toContain("deniedPaths");
+  expect(rendererWorker).toContain("bounded-denial-recovery");
+  expect(rendererWorker).toContain("denial_recovery");
   expect(rendererWorker).toContain('"vault.direct-write"');
   expect(rendererWorker).toContain("boundedStorage");
   expect(rendererWorker).toContain("persistedData");
@@ -108,6 +110,7 @@ test("loaded-plugin workflow fixture keeps pinned scope and lifecycle boundaries
   expect(loadedWorkflowAudit).toContain("combinationDefinitions");
   expect(loadedWorkflowAudit).toContain("verifyCombinationDependencies");
   expect(loadedWorkflowAudit).toContain("all_required_combinations_complete");
+  expect(loadedWorkflowAudit).toContain("all_denied_workflow_recoveries_complete");
 
   for (const id of fixture.target_ids) {
     const scenario = fixture.scenarios[id];
