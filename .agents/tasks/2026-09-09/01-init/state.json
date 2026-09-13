@@ -20,19 +20,19 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "262d5d722982b317b4d4f7736b3eeaade946af2d",
-  "updated_at": "2026-09-13T01:56:08Z",
+  "last_reconciled_head": "18288b86a77ada744c27cb92b930dcd6dbbb434e",
+  "updated_at": "2026-09-13T02:21:33Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
-    "recent_increment": {"checkpoint":"P3.2","commit":"262d5d722982b317b4d4f7736b3eeaade946af2d","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json","tested_source_tree":"2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6","ci_evidence":null,"ci_runs":{},"quality_rerun":false},
+    "recent_increment": {"checkpoint":"P3.2","commit":"18288b86a77ada744c27cb92b930dcd6dbbb434e","evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json","tested_source_tree":"2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6","ci_evidence":".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json","ci_runs":{"quality":34731807222,"loaded_workflows":34731807257,"renderer_matrix":34731807210,"desktop_build":34731807216},"quality_rerun":false},
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
     "commit_marker": "[openobsidian P3.2 work] Add bounded D15 workflows",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json",
     "secondary_evidence": null,
-    "ci_evidence": null,
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json",
     "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-recovery.json",
     "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
@@ -52,8 +52,8 @@
       "no_plugin_promoted": true
     },
     "hosted_reconciliation": {
-      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-required-combinations-recovery-ci.json",
-      "runs": {"quality": 34729967011, "loaded_workflows": 34729967002, "renderer_matrix": 34729967012, "desktop_build": 34729967010},
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json",
+      "runs": {"quality": 34731807222, "loaded_workflows": 34731807257, "renderer_matrix": 34731807210, "desktop_build": 34731807216},
       "platforms": ["Ubuntu", "macOS", "Windows"],
       "status": "partial",
       "loaded_workflow_status": "partial",
@@ -70,15 +70,15 @@
       "release_gate": "unsigned-preview",
       "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
       "no_plugin_promoted": true,
-      "external_pending": ["reference Obsidian combination behavior and unchanged artifact lifecycle certification", "macOS/Windows renderer and OS enforcement beyond hosted runner isolation", "same-user cross-platform enforcement and human accessibility/input review", "provider/CLI/backend endpoint behavior and credentials", "signed release, publication and updater installation/rollback", "runtime certification and compatibility promotion"]
+      "external_pending": ["reference Obsidian behavior and unchanged artifact lifecycle certification", "macOS/Windows renderer and OS enforcement beyond hosted runner isolation", "same-user cross-platform enforcement and human accessibility/input review", "provider/CLI/backend endpoint behavior and credentials", "signed release, publication and updater installation/rollback", "runtime certification and compatibility promotion"]
     }
   },
   "latest_reconciliation": {
     "checkpoint": "P3.2",
-    "commit": "37404e9e311f38428c4d7de15f7b2a27f0c5c7b4",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-required-combinations-recovery-ci.json",
-    "source_digest": "b0cb439c0903666b01ecdfb238510a98016e9820de4f77ab10f6e7ced32148e2",
-    "runs": {"quality": 34729967011, "loaded_workflows": 34729967002, "renderer_matrix": 34729967012, "desktop_build": 34729967010},
+    "commit": "18288b86a77ada744c27cb92b930dcd6dbbb434e",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json",
+    "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
+    "runs": {"quality": 34731807222, "loaded_workflows": 34731807257, "renderer_matrix": 34731807210, "desktop_build": 34731807216},
     "status": "partial_bounded_synthetic_only",
     "loaded_workflow_target_count": 21,
     "ordinary_loaded_workflows": 11,
@@ -229,8 +229,8 @@
     "status": "partial_bounded_synthetic_only",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json",
     "secondary_evidence": null,
-    "ci_evidence": null,
-    "commit": "262d5d722982b317b4d4f7736b3eeaade946af2d",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json",
+    "commit": "18288b86a77ada744c27cb92b930dcd6dbbb434e",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "artifacts": {
       "bounded_workflow_count": 3,
@@ -250,25 +250,21 @@
     "runtime_disposition": "pending-runtime",
     "no_plugin_promoted": true,
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status.",
-    "hosted_runs": {},
-    "hosted_platforms": [
-      "Linux"
-    ],
-    "hosted_status": "not-run_for_this_local_slice",
-    "signing": "not applicable to local-only slice; prior hosted previews remain unsigned"
+    "hosted_runs": {"quality": 34731807222, "loaded_workflows": 34731807257, "renderer_matrix": 34731807210, "desktop_build": 34731807216},
+    "hosted_platforms": ["Ubuntu", "macOS", "Windows"],
+    "hosted_status": "partial",
+    "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false; hosted artifacts remain unsigned previews"
   },
   "latest_p3_2_slice": {
     "slice": "Bounded PC13/PC16/PC18 D15 workflows",
     "status": "partial_bounded_synthetic_only",
     "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json",
-    "ci_evidence": null,
-    "commit": "262d5d722982b317b4d4f7736b3eeaade946af2d",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json",
+    "commit": "18288b86a77ada744c27cb92b930dcd6dbbb434e",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
-    "hosted_runs": {},
-    "hosted_platforms": [
-      "Linux"
-    ],
-    "hosted_status": "not-run_for_this_local_slice",
+    "hosted_runs": {"quality": 34731807222, "loaded_workflows": 34731807257, "renderer_matrix": 34731807210, "desktop_build": 34731807216},
+    "hosted_platforms": ["Ubuntu", "macOS", "Windows"],
+    "hosted_status": "partial",
     "required_combination_recoveries": "4/4",
     "ordinary_loaded_workflows": 11,
     "denied_loaded_workflows": 10,
@@ -284,7 +280,7 @@
     "unsupported_security_count": 0,
     "runtime_disposition": "pending-runtime",
     "no_plugin_promoted": true,
-    "signing": "not applicable to local-only slice; prior hosted previews remain unsigned",
+    "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false; hosted artifacts remain unsigned previews",
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status.",
     "secondary_evidence": null,
     "artifacts": {

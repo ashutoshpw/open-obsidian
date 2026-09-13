@@ -24,6 +24,14 @@
         "summary": "Local bounded synthetic projections for PC13 Claudian, PC16 Copilot and PC18 Importer pass unavailable CLI/provider, approval, preview-change, collision-review and network-denial paths with zero direct vault writes. All runtime dispositions remain pending-runtime; unchanged plugin, provider/CLI, reference, same-user cross-platform, human, signing, publication, updater and compatibility gates remain pending."
     },
     {
+        "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows-ci.json",
+        "checkpoint": "P3.2",
+        "requirements": ["GATE-002", "C11", "C11.1", "PC13", "PC16", "PC18", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005"],
+        "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
+        "status": "partial",
+        "summary": "Hosted quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34731807222, 34731807257, 34731807210 and 34731807216 succeeded on Ubuntu, macOS and Windows for 18288b8. Loaded reports contain 11 ordinary targets and 10 denied targets with 10/10 deny-clear-return recovery; renderer matrices contain 23 D15 denials, four loaded traces, one not-applicable dependency and zero ordinary failures per platform. The PC13/PC16/PC18 projections remain synthetic pending-runtime evidence, no plugin or compatibility row was promoted, and reference, provider/CLI, human, signing, publication and updater gates remain pending."
+    },
+    {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-required-combinations-recovery-ci.json",
       "checkpoint": "P3.2",
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC07", "PC08", "PC15", "PC17", "PC19", "PC21", "PC23", "PC-DEP-MINIMAL", "PC-DEP-TEXT-EXTRACTOR"],
