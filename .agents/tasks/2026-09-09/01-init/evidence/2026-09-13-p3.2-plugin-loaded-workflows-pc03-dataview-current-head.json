@@ -1,0 +1,259 @@
+{
+  "id": "fixture:plugin-loaded-workflows-pc03-dataview-current-head",
+  "evidence_version": 1,
+  "recorded_at": "2026-09-13T04:26:04Z",
+  "checkpoint": "P3.2",
+  "decision_id": "D14",
+  "security_boundary_decision_id": "D15",
+  "status": "partial",
+  "command": "bun run audit:plugin-loaded-workflows",
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "electron": "44.3.0",
+    "display": "xvfb-run",
+    "branch": "main",
+    "selected_vault": "/home/ashutosh/Obsidian",
+    "selected_vault_accessed": false
+  },
+  "source_commit": "9d4175d82431b843f745cb85b70828d1835219ab",
+  "source_tree": {
+    "schema_version": 1,
+    "generated_at": "2026-09-13T04:22:57.595Z",
+    "head": "9d4175d82431b843f745cb85b70828d1835219ab",
+    "sha256": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
+    "paths": 246,
+    "definition": "SHA-256 over sorted tracked and untracked paths plus a NUL separator, file bytes and a trailing NUL separator for each path, excluding .agents, .git, node_modules, .fallow, dist and out."
+  },
+  "artifact": {
+    "artifact_id": "PC03",
+    "name": "Dataview",
+    "version": "0.5.68",
+    "main_js_bytes": 2377639,
+    "main_js_sha256": "794e9eaede73920bb8d54b0eda4f5de2182d698cc638774500f24f14bcd4da0b",
+    "integrity": "passed",
+    "unchanged_main_js": true,
+    "renderer_status": "denied",
+    "denied_capabilities": [
+      "dom.privileged"
+    ],
+    "denied_paths": [
+      "window.IS_PAPA_WORKER"
+    ],
+    "denial": "D15 denied dom.privileged at window.IS_PAPA_WORKER"
+  },
+  "unchanged_artifact": {
+    "bounded_lifecycle": "partial",
+    "action_status": "passed",
+    "checks": {
+      "loaded": false,
+      "workflow_supported": false,
+      "required_phases": false,
+      "version_progression": false,
+      "lifecycle_started": true,
+      "settings_registration_recorded": true,
+      "views_registration_recorded": true,
+      "command_attempts_recorded": true,
+      "settings_attempts_recorded": true,
+      "views_attempts_recorded": true,
+      "event_attempts_recorded": true,
+      "clipboard_bounded": true,
+      "clipboard_external_writes_zero": true,
+      "restart_restores_data": true,
+      "update_restores_data": true,
+      "restart_restores_scoped_data": false,
+      "update_restores_scoped_data": false,
+      "restart_restores_persisted_data": true,
+      "update_restores_persisted_data": true,
+      "storage_recorded": true,
+      "cleanup_after_each_phase": true,
+      "uninstall_clears_registrations": true,
+      "return_to_obsidian": true,
+      "no_vault_writes": true
+    },
+    "denial_recovery": {
+      "required": true,
+      "status": "passed",
+      "passed": true,
+      "registrations_cleared": true,
+      "return_to_obsidian": true,
+      "active_plugin_after_recovery": false,
+      "active_plugin_after_recovery_cleared": true,
+      "direct_vault_writes_zero": true,
+      "artifact_execution": "not-executed-after-denial"
+    },
+    "persistence": "preserved",
+    "direct_vault_writes": 0
+  },
+  "dataview_projection": {
+    "status": "passed",
+    "mutation_scope": "bounded-read-only-query-projection",
+    "source_folder": "Notes",
+    "query": "TABLE status, priority, file.link FROM \"Notes\" WHERE status = \"active\" SORT priority DESC",
+    "query_type": "table",
+    "query_parsed": true,
+    "expected_columns": [
+      "file.path",
+      "status",
+      "priority",
+      "file.link"
+    ],
+    "query_columns": [
+      "status",
+      "priority",
+      "file.link"
+    ],
+    "columns_resolved": true,
+    "fields_resolved": true,
+    "rows": [
+      {
+        "path": "Notes/Project.md",
+        "status": "active",
+        "priority": 2,
+        "link": "Notes/Project.md"
+      },
+      {
+        "path": "Notes/Second.md",
+        "status": "active",
+        "priority": 1,
+        "link": "Notes/Second.md"
+      }
+    ],
+    "expected_rows": [
+      {
+        "path": "Notes/Project.md",
+        "status": "active",
+        "priority": 2,
+        "link": "Notes/Project.md"
+      },
+      {
+        "path": "Notes/Second.md",
+        "status": "active",
+        "priority": 1,
+        "link": "Notes/Second.md"
+      }
+    ],
+    "rows_match": true,
+    "links": [
+      {
+        "source": "Notes/Project.md",
+        "target": "Notes/Second.md"
+      }
+    ],
+    "expected_links": [
+      {
+        "source": "Notes/Project.md",
+        "target": "Notes/Second.md"
+      }
+    ],
+    "links_resolved": true,
+    "tasks": [
+      {
+        "path": "Notes/Project.md",
+        "checked": false,
+        "text": "Review compatibility"
+      }
+    ],
+    "expected_tasks": [
+      {
+        "path": "Notes/Project.md",
+        "checked": false,
+        "text": "Review compatibility"
+      }
+    ],
+    "tasks_detected": true,
+    "external_edit": {
+      "path": "Notes/Second.md",
+      "expected_status": "paused"
+    },
+    "refreshed_rows": [
+      {
+        "path": "Notes/Project.md",
+        "status": "active",
+        "priority": 2,
+        "link": "Notes/Project.md"
+      }
+    ],
+    "refreshed_target": {
+      "path": "Notes/Second.md",
+      "status": "paused",
+      "priority": 1,
+      "link": "Notes/Second.md"
+    },
+    "refresh_after_external_edit": true,
+    "dataviewjs": {
+      "disposition": "denied",
+      "capability": "code.dynamic",
+      "safe_alternative": "bounded DQL projection",
+      "no_dynamic_execution": true
+    },
+    "dataviewjs_denied": true,
+    "direct_vault_writes": 0,
+    "direct_vault_writes_zero": true,
+    "phases": [
+      {
+        "phase": "install",
+        "status": "passed"
+      },
+      {
+        "phase": "restart",
+        "status": "passed"
+      },
+      {
+        "phase": "update",
+        "status": "passed"
+      }
+    ],
+    "all_phases_passed": true
+  },
+  "checks": {
+    "projection_status": {
+      "present": true,
+      "bounded_read_only": true,
+      "query_parsed": true,
+      "table_query": true,
+      "columns_resolved": true,
+      "fields_resolved": true,
+      "rows_match": true,
+      "links_resolved": true,
+      "tasks_detected": true,
+      "refresh_after_external_edit": true,
+      "dataviewjs_denied": true,
+      "direct_vault_writes_zero": true,
+      "phase_projections_passed": true,
+      "status_passed": true
+    },
+    "no_plugin_promoted": true,
+    "runtime_disposition": "pending-runtime"
+  },
+  "result": "The unchanged Dataview 0.5.68 asset passed integrity and reached the D15 renderer denial at window.IS_PAPA_WORKER. Its bounded three-phase DQL projection passed table parsing, expected columns/fields/rows, links, tasks, external refresh and denied DataviewJS with zero direct vault writes. This is implementation-boundary evidence only; reference Obsidian parity and compatibility remain pending.",
+  "requirements": [
+    "GATE-002",
+    "C11",
+    "C11.1",
+    "PLUG-002",
+    "PLUG-003",
+    "PLUG-004",
+    "PLUG-005",
+    "PC03"
+  ],
+  "safe_alternatives_attempted": [
+    "mediated vault read",
+    "bounded renderer preview",
+    "workflow disabled"
+  ],
+  "external_pending": [
+    "reference Obsidian Dataview DQL/DataviewJS rendering and refresh behavior",
+    "unchanged Dataview lifecycle/view behavior beyond the denied renderer preflight",
+    "same-user macOS/Windows OS enforcement beyond hosted runner isolation",
+    "human accessibility/input validation",
+    "signed release, publication and updater installation/rollback",
+    "runtime certification and compatibility promotion"
+  ],
+  "limitations": [
+    "This fixture executes unchanged pinned main.js bytes only inside the hidden Electron context-isolated sandbox. It records bounded settings/view/command/event registrations, mediated action attempts, renderer-local clipboard capture that never reaches the OS, restart/update data restoration, cleanup and return-to-Obsidian state; it does not certify stock Obsidian or human behavior.",
+    "The local audit ran on Linux x64 under Electron 44.3.0; hosted Ubuntu/macOS/Windows validation is required for this source head.",
+    "The bounded DQL projection is synthetic in-memory evidence and does not replace stock Obsidian or reference-vault comparison.",
+    "The selected /home/ashutosh/Obsidian vault was not accessed or modified; no provider, credential or live backend endpoint was contacted."
+  ]
+}
