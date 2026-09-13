@@ -74,7 +74,7 @@
       "requirements": ["GATE-002", "C11", "C11.1", "PLUG-002", "PLUG-003", "PLUG-004", "PLUG-005", "PC09"],
       "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
       "status": "partial",
-      "summary": "Hosted quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34731807222, 34731807257, 34731807210 and 34731807216 succeeded on Ubuntu, macOS and Windows for 18288b8. Hosted Kanban 2.0.51 reports reproduce integrity and D15 denial at window.TYPED_ARRAY_SUPPORT; the bounded Markdown-board parsing/move/edit/serialization/reopen projection passes with zero direct vault writes, while unchanged lifecycle, reference, same-user cross-platform, human, signing, updater and compatibility gates remain pending."
+      "summary": "Hosted current-head quality, loaded-workflow, renderer-matrix and unsigned preview desktop-build runs 34743378403, 34743378410, 34743378395 and 34743378455 succeeded on Ubuntu, macOS and Windows for c51e98f. Hosted Kanban 2.0.51 reports reproduce integrity and D15 denial at window.TYPED_ARRAY_SUPPORT; the bounded Markdown-board parsing/move/edit/serialization/reopen projection passes with zero direct vault writes across install/restart/update, while unchanged lifecycle, reference, same-user cross-platform, human, signing, publication, updater and compatibility gates remain pending."
     },
     {
       "path": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc06-git-reconciliation-ci.json",
