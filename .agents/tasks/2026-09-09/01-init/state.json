@@ -20,33 +20,33 @@
   },
   "branch": "main",
   "baseline_commit": "4bd4e9b79fa511a051f9a8c798a324a78bf991d6",
-  "last_reconciled_head": "adc467ffaa412a0518f5cf6273e5ff3aab121b1b",
-  "updated_at": "2026-09-13T08:11:02Z",
+  "last_reconciled_head": "d5250e21414abd3286cfed6c5d867b197cf31f3f",
+  "updated_at": "2026-09-13T08:35:49Z",
   "status": "active",
   "current_checkpoint": "P3.2",
   "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
   "recent_increment": {
     "checkpoint": "P3.2",
-    "commit": "adc467ffaa412a0518f5cf6273e5ff3aab121b1b",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
+    "commit": "d5250e21414abd3286cfed6c5d867b197cf31f3f",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
     "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
     "ci_runs": {
-      "quality": 34746836188,
-      "loaded_workflows": 34746836190,
-      "renderer_matrix": 34746836292,
-      "desktop_build": 34746836253
+      "quality": 34747540001,
+      "loaded_workflows": 34747539956,
+      "renderer_matrix": 34747539960,
+      "desktop_build": 34747540022
     },
-    "quality_rerun": false
+    "quality_rerun": true
   },
   "current_work": {
     "checkpoint": "P3.2",
     "status": "in_progress",
-    "commit_marker": "[openobsidian P3.2] Reconcile current-head PC11 Iconize CI evidence",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
-    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-reconciliation-ci.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
-    "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc10-remotely-save-current-head-ci.json",
+    "commit_marker": "[openobsidian P3.2] Reconcile current-head PC12 QuickAdd CI evidence",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
+    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-reconciliation-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
+    "previous_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
     "tested_source_tree": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
     "recovery_contract": {
@@ -65,12 +65,12 @@
       "no_plugin_promoted": true
     },
     "hosted_reconciliation": {
-      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
+      "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
       "runs": {
-        "quality": 34746836188,
-        "loaded_workflows": 34746836190,
-        "renderer_matrix": 34746836292,
-        "desktop_build": 34746836253
+        "quality": 34747540001,
+        "loaded_workflows": 34747539956,
+        "renderer_matrix": 34747539960,
+        "desktop_build": 34747540022
       },
       "platforms": [
         "Ubuntu",
@@ -78,15 +78,15 @@
         "Windows"
       ],
       "status": "partial",
-      "loaded_workflow_status": "PC11 bounded file/folder assignment, rename, configured-rule, asset, sidebar and tab projection passed in all three hosted reports; unchanged Iconize is D15-denied at window.setImmediate and renderer-denied at the same path with dom.privileged denied",
+      "loaded_workflow_status": "PC12 bounded capture/template/generated-file/order/linked-script-denial projection passed in all three hosted reports; unchanged QuickAdd is D15-denied at window.__svelte and renderer-denied at the same path with dom.privileged denied",
       "loaded_workflow_target_count": 21,
       "special_target_count": 1,
-      "pc11": {
-        "version": "2.14.7",
+      "pc12": {
+        "version": "2.24.2",
         "integrity": "passed",
         "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-        "iconize_projection": "passed",
-        "renderer_status": "denied at window.setImmediate; dom.privileged denied",
+        "quickadd_projection": "passed",
+        "renderer_status": "denied at window.__svelte; dom.privileged denied",
         "direct_vault_writes": 0
       },
       "ordinary_loaded_workflows": 11,
@@ -100,7 +100,7 @@
         "renderer_denied": 23,
         "not_applicable": 1,
         "ordinary_failures": 0,
-        "pc11": "renderer-denied at window.setImmediate; dom.privileged denied"
+        "pc12": "renderer-denied at window.__svelte; dom.privileged denied"
       },
       "direct_vault_writes": 0,
       "unsupported_security_count": 0,
@@ -109,8 +109,8 @@
       "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
       "no_plugin_promoted": true,
       "external_pending": [
-        "unchanged Iconize lifecycle beyond the D15 renderer denial",
-        "reference Obsidian sidebar/tab icon rendering and configured-asset comparison",
+        "unchanged QuickAdd lifecycle beyond the D15 renderer denial",
+        "reference Obsidian capture/template/macro behavior and linked-script execution",
         "same-user macOS/Windows enforcement beyond hosted runner isolation",
         "human accessibility/input validation",
         "signed release, publication and updater installation/rollback",
@@ -120,25 +120,25 @@
   },
   "latest_reconciliation": {
     "checkpoint": "P3.2",
-    "commit": "adc467ffaa412a0518f5cf6273e5ff3aab121b1b",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
+    "commit": "d5250e21414abd3286cfed6c5d867b197cf31f3f",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "runs": {
-      "quality": 34746836188,
-      "loaded_workflows": 34746836190,
-      "renderer_matrix": 34746836292,
-      "desktop_build": 34746836253
+      "quality": 34747540001,
+      "loaded_workflows": 34747539956,
+      "renderer_matrix": 34747539960,
+      "desktop_build": 34747540022
     },
     "status": "partial_bounded_synthetic_only",
-    "plugin": "PC11 Iconize 2.14.7",
+    "plugin": "PC12 QuickAdd 2.24.2",
     "loaded_workflow_target_count": 21,
     "special_target_count": 1,
-    "pc11": {
+    "pc12": {
       "integrity": "passed",
       "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-      "iconize_projection": "passed in all three hosted reports",
+      "quickadd_projection": "passed in all three hosted reports",
       "direct_vault_writes": 0,
-      "renderer_status": "denied at window.setImmediate; dom.privileged denied"
+      "renderer_status": "denied at window.__svelte; dom.privileged denied"
     },
     "ordinary_loaded_workflows": 11,
     "denied_loaded_workflows": 10,
@@ -151,7 +151,7 @@
       "renderer_denied": 23,
       "not_applicable": 1,
       "ordinary_failures": 0,
-      "pc11": "renderer-denied at window.setImmediate; dom.privileged denied"
+      "pc12": "renderer-denied at window.__svelte; dom.privileged denied"
     },
     "direct_vault_writes": 0,
     "unsupported_security_count": 0,
@@ -160,8 +160,8 @@
     "release_gate": "unsigned-preview",
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
     "external_pending": [
-      "unchanged Iconize lifecycle beyond the D15 renderer denial",
-      "reference Obsidian sidebar/tab icon rendering and configured-asset comparison",
+      "unchanged QuickAdd lifecycle beyond the D15 renderer denial",
+      "reference Obsidian capture/template/macro behavior and linked-script execution",
       "same-user macOS/Windows enforcement beyond hosted runner isolation",
       "human accessibility/input validation",
       "signed release, publication and updater installation/rollback",
@@ -966,29 +966,30 @@
         "Hosted source workspaces contain one transient redirected-output path and macOS/Windows reports retain the leading Electron download line; desktop previews are unsigned because RELEASE_SIGNING_CONFIGURED=false, and same-user OS, human/provider, publication and updater gates remain pending.",
         "The bounded PC13/PC16/PC18 projections pass only in memory with automatic writers disabled; unchanged artifacts, configured CLI/provider access, reference behavior, same-user macOS/Windows enforcement, human validation, signing, publication, updater and compatibility promotion remain pending.",
         "No hosted workflow was run for this local slice; the selected /home/ashutosh/Obsidian vault was not accessed, no credentials or provider/CLI endpoint was contacted, and no plugin or compatibility row was promoted.",
-        "Hosted current-head PC04 Tasks reports reproduce 8.4.0 integrity and the bounded query/filter/group/create/complete projection with date/status/recurrence preservation, surgical source-note output and zero direct vault writes; the renderer matrix remains D15-denied at window.navigator, and reference/lossless-writer, same-user OS, human, signing, updater and compatibility promotion remain pending."
+        "Hosted current-head PC04 Tasks reports reproduce 8.4.0 integrity and the bounded query/filter/group/create/complete projection with date/status/recurrence preservation, surgical source-note output and zero direct vault writes; the renderer matrix remains D15-denied at window.navigator, and reference/lossless-writer, same-user OS, human, signing, updater and compatibility promotion remain pending.",
+        "Reconciled current-head hosted PC12 QuickAdd evidence at source commit d5250e2 with quality 34747540001, loaded-workflow 34747539956, renderer-matrix 34747539960 and unsigned preview desktop-build 34747540022 on Ubuntu, macOS and Windows; the bounded capture/template/generated-file/order/linked-script-denial projection passes while unchanged execution remains D15-denied, and no plugin or compatibility row was promoted."
       ],
       "recent_reconciliation": {
         "checkpoint": "P3.2",
-        "commit": "adc467ffaa412a0518f5cf6273e5ff3aab121b1b",
-        "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
+        "commit": "d5250e21414abd3286cfed6c5d867b197cf31f3f",
+        "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
         "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
         "runs": {
-          "quality": 34746836188,
-          "loaded_workflows": 34746836190,
-          "renderer_matrix": 34746836292,
-          "desktop_build": 34746836253
+          "quality": 34747540001,
+          "loaded_workflows": 34747539956,
+          "renderer_matrix": 34747539960,
+          "desktop_build": 34747540022
         },
         "status": "partial_bounded_synthetic_only",
-        "plugin": "PC11 Iconize 2.14.7",
+        "plugin": "PC12 QuickAdd 2.24.2",
         "loaded_workflow_target_count": 21,
         "special_target_count": 1,
-        "pc11": {
+        "pc12": {
           "integrity": "passed",
           "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-          "iconize_projection": "passed in all three hosted reports",
+          "quickadd_projection": "passed in all three hosted reports",
           "direct_vault_writes": 0,
-          "renderer_status": "denied at window.setImmediate; dom.privileged denied"
+          "renderer_status": "denied at window.__svelte; dom.privileged denied"
         },
         "ordinary_loaded_workflows": 11,
         "denied_loaded_workflows": 10,
@@ -1001,7 +1002,7 @@
           "renderer_denied": 23,
           "not_applicable": 1,
           "ordinary_failures": 0,
-          "pc11": "renderer-denied at window.setImmediate; dom.privileged denied"
+          "pc12": "renderer-denied at window.__svelte; dom.privileged denied"
         },
         "direct_vault_writes": 0,
         "unsupported_security_count": 0,
@@ -1010,8 +1011,8 @@
         "release_gate": "unsigned-preview",
         "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false",
         "external_pending": [
-          "unchanged Iconize lifecycle beyond the D15 renderer denial",
-          "reference Obsidian sidebar/tab icon rendering and configured-asset comparison",
+          "unchanged QuickAdd lifecycle beyond the D15 renderer denial",
+          "reference Obsidian capture/template/macro behavior and linked-script execution",
           "same-user macOS/Windows enforcement beyond hosted runner isolation",
           "human accessibility/input validation",
           "signed release, publication and updater installation/rollback",
@@ -1372,21 +1373,21 @@
     }
   },
   "active_p3_2_slice": {
-    "slice": "Current-head hosted PC11 Iconize reconciliation",
+    "slice": "Current-head hosted PC12 QuickAdd reconciliation",
     "status": "partial_bounded_synthetic_only",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
-    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-reconciliation-ci.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
-    "commit": "adc467ffaa412a0518f5cf6273e5ff3aab121b1b",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
+    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-reconciliation-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
+    "commit": "d5250e21414abd3286cfed6c5d867b197cf31f3f",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "artifacts": {
-      "plugin_id": "PC11",
-      "version": "2.14.7",
+      "plugin_id": "PC12",
+      "version": "2.24.2",
       "integrity": "passed on all three hosted platforms",
       "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-      "iconize_projection": "passed",
-      "persistence": "bounded assignment, rename, asset, sidebar/tab and deterministic restoration projection passed",
-      "renderer_status": "renderer-denied at window.setImmediate; dom.privileged denied on Ubuntu, macOS and Windows",
+      "quickadd_projection": "passed",
+      "persistence": "bounded capture, template, generated-file, order and linked-script-denial projection passed",
+      "renderer_status": "renderer-denied at window.__svelte; dom.privileged denied on Ubuntu, macOS and Windows",
       "direct_vault_writes": 0,
       "unsupported_security_count": 0
     },
@@ -1394,10 +1395,10 @@
     "no_plugin_promoted": true,
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
     "hosted_runs": {
-      "quality": 34746836188,
-      "loaded_workflows": 34746836190,
-      "renderer_matrix": 34746836292,
-      "desktop_build": 34746836253
+      "quality": 34747540001,
+      "loaded_workflows": 34747539956,
+      "renderer_matrix": 34747539960,
+      "desktop_build": 34747540022
     },
     "hosted_platforms": [
       "Ubuntu",
@@ -1408,17 +1409,17 @@
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false; hosted artifacts remain unsigned previews"
   },
   "latest_p3_2_slice": {
-    "slice": "Current-head hosted PC11 Iconize reconciliation",
+    "slice": "Current-head hosted PC12 QuickAdd reconciliation",
     "status": "partial_bounded_synthetic_only",
-    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
-    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-current-head-ci.json",
-    "commit": "adc467ffaa412a0518f5cf6273e5ff3aab121b1b",
+    "evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
+    "ci_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-current-head-ci.json",
+    "commit": "d5250e21414abd3286cfed6c5d867b197cf31f3f",
     "source_digest": "2941d5ccd3e4ec98bbc07bb3513c97e533887aa926e78c5312f95694f61b98f6",
     "hosted_runs": {
-      "quality": 34746836188,
-      "loaded_workflows": 34746836190,
-      "renderer_matrix": 34746836292,
-      "desktop_build": 34746836253
+      "quality": 34747540001,
+      "loaded_workflows": 34747539956,
+      "renderer_matrix": 34747539960,
+      "desktop_build": 34747540022
     },
     "hosted_platforms": [
       "Ubuntu",
@@ -1426,12 +1427,12 @@
       "Windows"
     ],
     "hosted_status": "partial",
-    "plugin": "PC11 Iconize 2.14.7",
+    "plugin": "PC12 QuickAdd 2.24.2",
     "integrity": "passed on all three hosted platforms",
     "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-    "iconize_projection": "passed file/folder assignment, rename, configured-rule, asset, sidebar/tab and restoration checks in all three bounded phases",
-    "persistence": "bounded assignment, rename, asset, sidebar/tab and deterministic restoration projection passed",
-    "renderer_status": "renderer-denied at window.setImmediate; dom.privileged denied on Ubuntu, macOS and Windows",
+    "quickadd_projection": "passed capture, template, generated-file, prompt/command/macro ordering and linked-script-denial checks in all three bounded phases",
+    "persistence": "bounded capture, template, generated-file, ordering and deterministic restoration projection passed",
+    "renderer_status": "renderer-denied at window.__svelte; dom.privileged denied on Ubuntu, macOS and Windows",
     "required_combination_recoveries": "4/4 inherited hosted contract",
     "ordinary_loaded_workflows": 11,
     "denied_loaded_workflows": 10,
@@ -1442,7 +1443,7 @@
       "renderer_denied": 23,
       "not_applicable": 1,
       "ordinary_failures": 0,
-      "pc11": "renderer-denied at window.setImmediate; dom.privileged denied"
+      "pc12": "renderer-denied at window.__svelte; dom.privileged denied"
     },
     "direct_vault_writes": 0,
     "unsupported_security_count": 0,
@@ -1450,15 +1451,15 @@
     "no_plugin_promoted": true,
     "signing": "skipped; RELEASE_SIGNING_CONFIGURED=false; hosted artifacts remain unsigned previews",
     "next_action": "Continue the next dependency-ready P3.2 compatibility or recovery slice without promoting plugin or compatibility status; retain runtime, reference, same-user cross-platform, human, provider, signing, publication and updater limitations explicitly.",
-    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc11-iconize-reconciliation-ci.json",
+    "secondary_evidence": ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-loaded-workflows-pc12-quickadd-reconciliation-ci.json",
     "artifacts": {
-      "plugin_id": "PC11",
-      "version": "2.14.7",
+      "plugin_id": "PC12",
+      "version": "2.24.2",
       "integrity": "passed on all three hosted platforms",
       "bounded_lifecycle": "partial because unchanged execution is D15-denied",
-      "iconize_projection": "passed",
-      "persistence": "bounded assignment, rename, asset, sidebar/tab and deterministic restoration projection passed",
-      "renderer_status": "renderer-denied at window.setImmediate; dom.privileged denied on Ubuntu, macOS and Windows",
+      "quickadd_projection": "passed",
+      "persistence": "bounded capture, template, generated-file, ordering and deterministic restoration projection passed",
+      "renderer_status": "renderer-denied at window.__svelte; dom.privileged denied on Ubuntu, macOS and Windows",
       "direct_vault_writes": 0,
       "unsupported_security_count": 0
     }
