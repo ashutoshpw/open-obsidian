@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T22:10:52+00:00",
+  "updated_at": "2026-10-07T22:24:05+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "787b2e88fd155471e25751daf1dd2b7cd04bbc96",
+  "last_reconciled_head": "932db6523f6c7ea8f34c5566f76456830d4a883e",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Commit and push the PC08 debounce shim and independent Rust format/test parallel group; review exact-SHA Rust and companion CI, and keep R1.2 pending until PC05/PC08 pass on all three platforms.",
+  "next_action": "Commit and push the PC08 empty/error-state and asynchronous-error diagnostics with the longer settle window; inspect exact-SHA reports and continue until PC05/PC08 probes pass on Linux, macOS and Windows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -33,7 +33,7 @@
         "three-os-native-build",
         "unchanged-plugin-feasibility"
       ],
-      "implementation_sha": "787b2e88fd155471e25751daf1dd2b7cd04bbc96"
+      "implementation_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e"
     },
     "R2": {
       "status": "pending",
@@ -94,7 +94,8 @@
     "Rust CI run 37687350370 passed formatting, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed its settings and editor probes; PC08 loaded but reported missing Component.addChild when the settings tab was displayed. The exact artifacts are summarized in evidence/r1.2-plugin-runtime-desktop-a363c77.json. Implemented child ownership/loading/unloading in the probe's Component shim and changed plugin initialization to use Component.load(). Companion inventory, quality, desktop, renderer and loaded-plugin runs passed on a363c776da4c575b4d69b12be2e44eb041166479. The follow-up exact-SHA Rust matrix is pending.",
     "Rust CI 37688923005 for ca83049 passed Ubuntu formatting, workspace tests, Clippy, layering and native builds on all three OSes; PC05 passed its end-to-end probe, while PC08 rendered zero settings controls on all three. All five companion workflows passed on the same SHA. Evidence: evidence/r1.2-plugin-runtime-desktop-ca83049.json. The Style Settings source uses text-backed stylesheet content and a 100 ms parse debounce; the follow-up now supplies and hash-verifies the PC08 theme CSS fixture before a 150 ms settle.",
     "Rust CI 37690956028 for 2332189 passed Ubuntu formatting, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed on all three; PC08 theme fixture hash was verified and CSS parsed, then settings generation reported missing Setting.then. All five companion workflows passed. Evidence: evidence/r1.2-plugin-runtime-desktop-2332189.json. Added the documented Setting.then chaining method, observed PC08 search/extra-button/dynamic-slider hooks, and exact expected control-ID reporting for the next exact-SHA run.",
-    "Rust CI run 37692387013 on 787b2e88fd155471e25751daf1dd2b7cd04bbc96 passed format, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed unchanged-bundle checks on every platform; PC08 verified the theme fixture and parsed CSS, then exposed the missing documented Obsidian debounce export. All five companion workflows passed. Reports, artifact digests and limitations are recorded in evidence/r1.2-plugin-runtime-desktop-787b2e8.json."
+    "Rust CI run 37692387013 on 787b2e88fd155471e25751daf1dd2b7cd04bbc96 passed format, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed unchanged-bundle checks on every platform; PC08 verified the theme fixture and parsed CSS, then exposed the missing documented Obsidian debounce export. All five companion workflows passed. Reports, artifact digests and limitations are recorded in evidence/r1.2-plugin-runtime-desktop-787b2e8.json.",
+    "Rust CI run 37694605581 on 932db6523f6c7ea8f34c5566f76456830d4a883e passed workspace tests, Clippy, layering and native builds on all platforms; Ubuntu formatting also passed. The Rust parallel group ran formatting and tests concurrently on Ubuntu, while the macOS and Windows test groups passed. PC05 passed on all platforms. PC08 no longer hit debounce but still rendered neither expected control on all three platforms. All five companion workflows passed; exact artifact and report hashes are in evidence/r1.2-plugin-runtime-desktop-932db65.json."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -754,6 +755,74 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37692387022",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37694605581,
+      "head_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605581",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605581/job/113043101569"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605581/job/113043101953"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605581/job/113043101850"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37694605599,
+      "head_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605599",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37694605467,
+      "head_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605467",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37694605865,
+      "head_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605865",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37694605575,
+      "head_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605575",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37694605469,
+      "head_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605469",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -778,8 +847,8 @@
     },
     "R1.2": {
       "status": "in_progress",
-      "implementation_sha": "787b2e88fd155471e25751daf1dd2b7cd04bbc96",
-      "evidence": "evidence/r1.2-plugin-runtime-desktop-787b2e8.json",
+      "implementation_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+      "evidence": "evidence/r1.2-plugin-runtime-desktop-932db65.json",
       "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
       "candidate_plugins": [
         "PC05",
@@ -790,7 +859,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Push the documented Obsidian debounce shim and independent format/test parallel CI group; inspect exact-SHA CI and preserve Pending status until both unchanged plugin probes pass on Linux, macOS and Windows."
+      "next_action": "Push the bounded PC08 settings-state and asynchronous-error diagnostics plus the 300 ms settle window; inspect exact-SHA CI for the source of the missing expected controls and retain Pending status."
     }
   },
   "ci_preparation": {

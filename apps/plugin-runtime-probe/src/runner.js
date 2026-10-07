@@ -15,6 +15,7 @@
   Object.defineProperty(globalThis, "activeDocument", {configurable: true, value: document});
   const capabilityDenials = [];
   const cspViolations = [];
+  const asynchronousErrors = [];
   const attemptedModules = [];
   const apiCalls = [];
   const registrations = {commands: [], views: [], settingTabs: [], events: []};
@@ -28,6 +29,12 @@
 
   document.addEventListener("securitypolicyviolation", (event) => {
     cspViolations.push({directive: event.effectiveDirective, blockedURI: event.blockedURI});
+  });
+  window.addEventListener("error", (event) => {
+    asynchronousErrors.push(String(event.error?.message ?? event.message ?? "unknown WebView error").slice(0, 240));
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    asynchronousErrors.push(String(event.reason?.message ?? event.reason ?? "unknown WebView rejection").slice(0, 240));
   });
 
   function remember(list, value) {
@@ -549,8 +556,8 @@
       if (typeof plugin.load === "function") await plugin.load();
       else if (typeof plugin.onload === "function") await plugin.onload();
       // Some legacy plugins start asyncOnload work without returning its promise.
-      // Style Settings debounces CSS parsing for 100 ms after onload.
-      const startupSettleMs = config.pluginId === "PC08" ? 150 : 50;
+      // Style Settings schedules CSS parsing 100 ms after onload.
+      const startupSettleMs = config.pluginId === "PC08" ? 300 : 50;
       await new Promise((resolve) => setTimeout(resolve, startupSettleMs));
       pluginStatus = "loaded";
       for (const {tab} of registrations.settingTabs.slice(0, 3)) {
@@ -584,10 +591,11 @@
       certification: "feasibility-only",
       plugin: {status: pluginStatus, error: pluginError, moduleExports: typeof module.exports},
       api: {requiredModules: attemptedModules, calls: apiCalls, commands: registrations.commands.map((command) => String(command.id ?? command.name ?? "")), settingTabs: registrations.settingTabs.length, views: registrations.views.map((view) => String(view.type ?? "")), events: registrations.events.length},
-      dom: {bodyChildren: document.body.children.length, pluginRootChildren: root.children.length, settingControls: root.querySelectorAll("input,select,button").length, styleSettingIds: Array.from(root.querySelectorAll(".setting-item[data-id]"), (element) => element.dataset.id).filter(Boolean), stylesheetCount: document.styleSheets.length, stylesheetRuleCount},
+      dom: {bodyChildren: document.body.children.length, pluginRootChildren: root.children.length, settingControls: root.querySelectorAll("input,select,button").length, styleSettingIds: Array.from(root.querySelectorAll(".setting-item[data-id]"), (element) => element.dataset.id).filter(Boolean), styleSettingsMessages: Array.from(document.querySelectorAll(".style-settings-empty,.style-settings-error"), (element) => element.textContent.trim().replace(/\s+/g, " ").slice(0, 280)), stylesheetCount: document.styleSheets.length, stylesheetRuleCount},
       editorWorkflow,
       capabilityProbe,
       capabilityDenials,
+      asynchronousErrors,
       policy: {csp: "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'none'; frame-ancestors 'none'", navigation: "localhost probe document only", newWindows: "denied", downloads: "denied", permissions: "denied", nodeIntegration: false, ipc: "report-channel-only"},
     };
     if (typeof ipcPostMessage === "function") ipcPostMessage(nativeJsonStringify({token: config.sessionToken, report}));

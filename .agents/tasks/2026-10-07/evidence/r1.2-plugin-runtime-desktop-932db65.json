@@ -1,0 +1,93 @@
+{
+  "phase": "R1.2",
+  "source_sha": "932db6523f6c7ea8f34c5566f76456830d4a883e",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37694605581,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37694605581",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113043101569,
+      "artifact_id": 11515247024,
+      "artifact_sha256": "c9748545c637dc0f969febc8864da50c0aaf56f5f3addadf84dcf69015d25b3d",
+      "report_sha256": "ff6eccc4879432fdac4321a206a1072626359120f205bac6ef13c3be3367dbe1",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 loaded but expected setting IDs compact and accent were absent from the rendered DOM"
+    },
+    "windows": {
+      "job_id": 113043101953,
+      "artifact_id": 11514932731,
+      "artifact_sha256": "9f8efa1219a4810dcbd150439c5619e1aeff5c7abff81b33d92b5c8004d4a377",
+      "report_sha256": "9d75683fc7f27937238e3730812378015265f06750c96401fa9c1b35fa6fad34",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 loaded but expected setting IDs compact and accent were absent from the rendered DOM"
+    },
+    "macos": {
+      "job_id": 113043101850,
+      "artifact_id": 11515815379,
+      "artifact_sha256": "6adefe5e30203f6db5e9e477975bb20ad0d65030aff04eee66856dff769839a3",
+      "report_sha256": "4cbdfb146925f2cbeee31e824c13476bacdd5a20f0a7d32a928bd1b7e1c3ecee",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 loaded but expected setting IDs compact and accent were absent from the rendered DOM"
+    }
+  },
+  "shared_probe_result": {
+    "wry_version": "0.57.0",
+    "legacy_compatibility_state": "Pending",
+    "capability_denials": "passed on all three platforms",
+    "PC05": {
+      "version": "0.23.2",
+      "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+      "integrity": "passed",
+      "plugin_loaded": true,
+      "setting_controls": 5,
+      "editor_callbacks": "1/1 completed and changed the synthetic note on all three platforms"
+    },
+    "PC08": {
+      "version": "1.0.9",
+      "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+      "integrity": "passed",
+      "theme_fixture": {
+        "path": "Themes/Minimal.css",
+        "sha256": "4445ec64a79343de33a14a8a829a4155e1377f3428f8bc87251901b588754155",
+        "verified_on_all_platforms": true
+      },
+      "stylesheet_rules": 110,
+      "settings_controls": 1,
+      "settings_ids": [],
+      "failure": "The missing debounce exception was resolved, but the expected controls were still absent on every platform"
+    }
+  },
+  "ci_gates": {
+    "inventory_run": 37694605599,
+    "inventory": "passed",
+    "quality_run": 37694605467,
+    "quality": "passed",
+    "desktop_run": 37694605865,
+    "desktop": "passed",
+    "plugin_renderer_run": 37694605575,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37694605469,
+    "loaded_plugins": "passed"
+  },
+  "parallel_steps": {
+    "workflow": ".github/workflows/rust.yml",
+    "ubuntu": "cargo fmt and cargo test started together and both passed in the parallel group",
+    "macos": "format check skipped by its Linux-only condition; workspace tests and the parallel group passed",
+    "windows": "format check skipped by its Linux-only condition; workspace tests and the parallel group passed"
+  },
+  "finding": "The exact-SHA matrix passed all workspace gates and native builds. The new Rust parallel group completed successfully; Ubuntu formatting and tests ran concurrently. PC05 passed integrity, capability and editor checks everywhere. PC08's debounce API error disappeared, but its expected controls were still missing on all three WebViews despite a verified theme fixture and 110 parsed stylesheet rules. The follow-up extends the settle window and records bounded empty/error DOM messages and asynchronous WebView errors to identify the rendering gap. R1.2 remains in progress and compatibility remains Pending.",
+  "scope": "These probes do not certify broad legacy compatibility or WebView isolation."
+}
