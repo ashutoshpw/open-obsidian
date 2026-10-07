@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T23:05:40+00:00",
+  "updated_at": "2026-10-07T23:17:23+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "f355fdf73c29e5f29eadbf3e141e60f4659d370e",
+  "last_reconciled_head": "f87dd5b496e17394e8141a792215b6ddae63f52f",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Run exact-SHA Rust and companion GitHub Actions for the Setting.setHeading shim; inspect all gates and PC08 expected controls, keeping compatibility Pending.",
+  "next_action": "Run exact-SHA Rust and companion GitHub Actions for the Setting.setClass shim; inspect PC08 control IDs and keep compatibility Pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -98,7 +98,8 @@
     "Rust CI run 37694605581 on 932db6523f6c7ea8f34c5566f76456830d4a883e passed workspace tests, Clippy, layering and native builds on all platforms; Ubuntu formatting also passed. The Rust parallel group ran formatting and tests concurrently on Ubuntu, while the macOS and Windows test groups passed. PC05 passed on all platforms. PC08 no longer hit debounce but still rendered neither expected control on all three platforms. All five companion workflows passed; exact artifact and report hashes are in evidence/r1.2-plugin-runtime-desktop-932db65.json.",
     "Rust CI run 37696015863 on 397363e7626c577519200b27fdef1d023d725d42 passed format, workspace tests, Clippy, layering and native preview builds on all three OSes. PC05 passed. The new diagnostics showed PC08 initialization stopped at the missing Workspace.trigger event API on Linux, macOS and Windows. All five companion workflows passed; exact reports and artifact digests are recorded in evidence/r1.2-plugin-runtime-desktop-397363e.json.",
     "Rust CI run 37697107538 on 43b1209703f20a7d2142b241d1bc29883dda1b8d passed format, workspace tests, Clippy, layering and native preview builds on all three OSes. PC05 passed. The Workspace.on/trigger shim removed the prior asynchronous exception, but PC08 still rendered no expected IDs and emitted no captured async or DOM error messages. The five companion workflows passed; exact reports and artifact digests are in evidence/r1.2-plugin-runtime-desktop-43b1209.json.",
-    "Rust CI run 37698233935 on f355fdf73c29e5f29eadbf3e141e60f4659d370e passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on Ubuntu, macOS and Windows. PC05 passed on every platform. PC08 verified the pinned theme fixture and 110 CSS rules, then bounded console diagnostics showed the same missing Setting.setHeading error on all three WebViews. Exact report hashes, artifact digests and five green companion workflow IDs are in evidence/r1.2-plugin-runtime-desktop-f355fdf.json. The follow-up adds the documented heading class to the fixture and preserves compatibility as Pending; no local executable validation was run."
+    "Rust CI run 37698233935 on f355fdf73c29e5f29eadbf3e141e60f4659d370e passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on Ubuntu, macOS and Windows. PC05 passed on every platform. PC08 verified the pinned theme fixture and 110 CSS rules, then bounded console diagnostics showed the same missing Setting.setHeading error on all three WebViews. Exact report hashes, artifact digests and five green companion workflow IDs are in evidence/r1.2-plugin-runtime-desktop-f355fdf.json. The follow-up adds the documented heading class to the fixture and preserves compatibility as Pending; no local executable validation was run.",
+    "Rust CI run 37700260331 on f87dd5b496e17394e8141a792215b6ddae63f52f passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on all three platforms. PC05 passed. PC08 progressed through the Setting.setHeading shim and then showed a missing Setting.setClass method on all three WebViews. Five companion workflows passed on the exact SHA; reports, artifact hashes and run IDs are in evidence/r1.2-plugin-runtime-desktop-f87dd5b.json. The follow-up adds Setting.setClass and keeps compatibility Pending; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -986,8 +987,8 @@
     },
     "R1.2": {
       "status": "in_progress",
-      "implementation_sha": "f355fdf73c29e5f29eadbf3e141e60f4659d370e",
-      "evidence": "evidence/r1.2-plugin-runtime-desktop-f355fdf.json",
+      "implementation_sha": "f87dd5b496e17394e8141a792215b6ddae63f52f",
+      "evidence": "evidence/r1.2-plugin-runtime-desktop-f87dd5b.json",
       "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
       "candidate_plugins": [
         "PC05",
@@ -998,7 +999,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Run exact-SHA Rust and companion GitHub Actions for the Setting.setHeading shim; verify PC08 control IDs and keep compatibility Pending."
+      "next_action": "Run exact-SHA Rust and companion GitHub Actions for the Setting.setClass shim; verify PC08 controls and keep compatibility Pending."
     }
   },
   "ci_preparation": {

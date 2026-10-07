@@ -316,6 +316,7 @@
     setName(value) { this.nameEl.textContent = String(value); return this; }
     setDesc(value) { this.descEl.textContent = String(value); return this; }
     setTooltip(value) { this.settingEl.title = String(value); return this; }
+    setClass(value) { this.settingEl.classList.add(...String(value).split(/\s+/).filter(Boolean)); return this; }
     setHeading() { this.settingEl.classList.add("setting-item-heading"); return this; }
     then(callback) { callback(this); return this; }
     addText(callback) {

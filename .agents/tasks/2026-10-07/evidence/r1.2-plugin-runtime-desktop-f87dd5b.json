@@ -1,0 +1,91 @@
+{
+  "phase": "R1.2",
+  "source_sha": "f87dd5b496e17394e8141a792215b6ddae63f52f",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37700260331,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37700260331",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113061745651,
+      "artifact_id": 11517308459,
+      "artifact_sha256": "6690bbc1b6138f120829168b85242d938efe7d2377d897effb4e110065878afa",
+      "report_sha256": "3e631ac1a111bd289579aca85392b5da7e406442c806c1df0c87068ab2a990bf",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 called the missing Setting.setClass API while rendering and did not render expected control IDs"
+    },
+    "windows": {
+      "job_id": 113061745417,
+      "artifact_id": 11517576779,
+      "artifact_sha256": "ed3529528e0aa2a30d9e9523a4f562a8ae4a17fd35d93cb377e444cd7af94a14",
+      "report_sha256": "37d45557706449f540933e091af84752e412b380c919f03304eeb2b8baa47c9b",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 called the missing Setting.setClass API while rendering and did not render expected control IDs"
+    },
+    "macos": {
+      "job_id": 113061745521,
+      "artifact_id": 11517571948,
+      "artifact_sha256": "976c3e5f38a390e7a795b6cadb2b2ab6b272661f9426865cc9f360dae1c1f1eb",
+      "report_sha256": "286664dc7e0729c995f2c8d16d827f036cc3675538f53b5943d513ce60ae726c",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 called the missing Setting.setClass API while rendering and did not render expected control IDs"
+    }
+  },
+  "shared_probe_result": {
+    "wry_version": "0.57.0",
+    "legacy_compatibility_state": "Pending",
+    "capability_denials": "passed on all three platforms",
+    "PC05": {
+      "version": "0.23.2",
+      "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+      "integrity": "passed",
+      "plugin_loaded": true,
+      "setting_controls": 5,
+      "editor_callbacks": "1/1 completed and changed the synthetic note on all three platforms"
+    },
+    "PC08": {
+      "version": "1.0.9",
+      "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+      "integrity": "passed",
+      "theme_fixture": {
+        "path": "Themes/Minimal.css",
+        "sha256": "4445ec64a79343de33a14a8a829a4155e1377f3428f8bc87251901b588754155",
+        "verified_on_all_platforms": true
+      },
+      "stylesheet_rules": 110,
+      "settings_controls": 1,
+      "settings_ids": [],
+      "empty_or_settings_error_messages": [],
+      "asynchronous_errors": [],
+      "console_errors": [
+        "Style Settings failed to render a section because this.settingEl.setClass is not a function"
+      ]
+    }
+  },
+  "ci_gates": {
+    "inventory_run": 37700260426,
+    "inventory": "passed",
+    "quality_run": 37700260137,
+    "quality": "passed",
+    "desktop_run": 37700260351,
+    "desktop": "passed",
+    "plugin_renderer_run": 37700260266,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37700260222,
+    "loaded_plugins": "passed"
+  },
+  "finding": "The exact-SHA Rust matrix passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on all three platforms. PC05 passed everywhere. PC08 verified its unchanged bundle and pinned theme fixture, and Setting.setHeading advanced execution to the next missing method, Setting.setClass, on all three WebViews. The follow-up adds the documented class method to the compatibility fixture. No local executable validation was run. R1.2 and compatibility remain pending.",
+  "scope": "These probes do not certify broad legacy compatibility or WebView isolation."
+}
