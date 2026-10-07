@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T20:02:15+00:00",
+  "updated_at": "2026-10-07T20:05:58+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "ce6097ab2625bddb34905b85a47a35b7e7fa602e",
+  "last_reconciled_head": "3b509255b65c3b8d669cc225df3af75147392e61",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Commit and push the locked R1.2 Wry probe slice to origin/main; inspect exact-SHA formatting, Clippy, workspace tests, layering, release build and unchanged-plugin feasibility results on Linux, macOS and Windows.",
+  "next_action": "Commit and push the small CI corrections to origin/main; inspect the fresh inventory, quality and three-OS Rust runs while the original Rust run continues on its exact SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -83,7 +83,7 @@
     "Hardened the Wry probe boundary after source review: navigation is limited to the exact localhost probe document, custom protocol assets reject unexpected hosts, frame ancestors are denied, and browser autofill is disabled where supported. No local executable validation was run.",
     "GitHub Actions lockfile resolver run 37678837444 passed for source ce6097ab2625bddb34905b85a47a35b7e7fa602e; its Cargo.lock artifact was retrieved and hashed, and the temporary resolver workflow was removed. This run generated dependency metadata only; implementation validation remains pending."
   ],
-  "push_status": "pushed",
+  "push_status": "pending",
   "ci_results": [
     {
       "name": "inventory",
@@ -570,7 +570,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Push the locked Wry probe source slice and inspect exact-SHA Rust and unchanged-plugin feasibility runs on Linux/macOS/Windows."
+      "next_action": "Push the CI fixes for the audit script's nullable report access, MIG-015's canonical owner mapping and the newly inventoried R1 audit script; inspect fresh exact-SHA results, while retaining run 37679025109 as pending until all three OS jobs finish."
     }
   },
   "ci_preparation": {

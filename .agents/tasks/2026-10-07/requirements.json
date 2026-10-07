@@ -10286,7 +10286,7 @@
         "clause": "Before broad native UI investment, prototype unchanged JavaScript/DOM plugin compatibility and enforced capability denial on the supported operating systems."
       },
       "checkpoint": "R1",
-      "owner": "crates/plugins and apps/plugin-runtime-probe",
+      "owner": "crates/plugins",
       "mandatory": true,
       "acceptance_criteria": "GitHub CI on Linux, macOS and Windows records runtime identity and artifact hashes, exercises representative JavaScript API, DOM/theme and editor workflows, verifies denied filesystem/process/network/credential capabilities, and records unsupported paths under D15 without counting mock projections as unchanged-artifact certification.",
       "fixture_ids": [
@@ -10327,7 +10327,7 @@
       "legacy_evidence_paths": [],
       "legacy_checkpoint": null,
       "migration_phase": "R1",
-      "rust_owner": "crates/plugins and apps/plugin-runtime-probe",
+      "rust_owner": "crates/plugins",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
       "migration_acceptance": "Complete the compatibility feasibility gate before broad native UI investment; all acceptance execution occurs on GitHub Actions.",

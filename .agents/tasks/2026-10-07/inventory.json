@@ -1833,6 +1833,15 @@
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
+      "path": "scripts/audit-rust-plugin-runtime.ts",
+      "sha256": "bc72ca85d7501bfe78d6c1dc6000fd23935865c65252fb8cb02e66d63b82d221",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "R1.2 CI harness downloads hash-pinned legacy plugin assets and invokes the Rust WebView feasibility probe; acceptance remains pending until exact-SHA GitHub Actions runs pass."
+    },
+    {
       "path": "scripts/audit-theme-assets.ts",
       "sha256": "2586ca82c799c2bbe83b420143ddd940dc237bff7c88ee0d861422ee7abf039b",
       "rust_owner": "xtask",

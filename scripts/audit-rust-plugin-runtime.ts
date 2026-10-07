@@ -81,7 +81,7 @@ function checkReport(pluginId: string, report: Record<string, unknown>): string[
   if (plugin?.status !== "loaded") problems.push(`unchanged ${pluginId} bundle did not complete onload`);
   if (capabilityProbe?.passed !== true) problems.push("filesystem/process/network/credential denial probe did not pass");
   if (runtime?.host !== "wry" || typeof runtime.userAgent !== "string" || !runtime.userAgent || typeof runtime.webviewEngineVersion !== "string") problems.push("WebView runtime identity is incomplete");
-  if (runtime.legacyCompatibilityState !== "Pending") problems.push("legacy compatibility state was reported as something other than pending");
+  if (runtime?.legacyCompatibilityState !== "Pending") problems.push("legacy compatibility state was reported as something other than pending");
   if (capabilityProbe?.nativeNetworkBlockedByCsp !== true) problems.push("the browser did not report a connect-src CSP denial");
   if (typeof dom?.bodyChildren !== "number" || typeof dom.pluginRootChildren !== "number") problems.push("browser DOM execution metrics are missing");
   if (pluginId === "PC05" && !(typeof editor?.completedCallbacks === "number" && editor.completedCallbacks > 0)) {
