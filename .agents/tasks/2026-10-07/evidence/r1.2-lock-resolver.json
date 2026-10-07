@@ -1,0 +1,27 @@
+{
+  "recorded_at": "2026-10-07T20:01:47Z",
+  "source_sha": "ce6097ab2625bddb34905b85a47a35b7e7fa602e",
+  "workflow": "Temporary Rust lockfile resolver",
+  "run_id": 37678837444,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37678837444",
+  "job_id": 112989271065,
+  "status": "completed",
+  "conclusion": "success",
+  "local_validation_run": false,
+  "artifact": {
+    "id": 11508186485,
+    "name": "openobsidian-cargo-lock-ce6097ab2625bddb34905b85a47a35b7e7fa602e",
+    "size_bytes": 32778,
+    "sha256": "7b72eb720f50343361e9b99363ebad8ee3b545440adad5b42426e4bffb7fe46d"
+  },
+  "lockfile": {
+    "retrieved_from_github_actions": true,
+    "bytes": 139659,
+    "sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9"
+  },
+  "notes": [
+    "The resolver ran cargo generate-lockfile on GitHub Actions for the pushed Wry probe source SHA.",
+    "The temporary resolver workflow is removed from the pending locked source slice.",
+    "This run generated a lockfile only; it does not validate compilation, formatting, tests, Clippy or plugin runtime behavior."
+  ]
+}

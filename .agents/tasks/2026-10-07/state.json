@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T20:00:41+00:00",
+  "updated_at": "2026-10-07T20:02:15+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "e80fb58113ce04f2a55326efa8c059c5dc618bd5",
+  "last_reconciled_head": "ce6097ab2625bddb34905b85a47a35b7e7fa602e",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Commit and push the R1.2 Wry probe plus temporary Cargo.lock resolver to origin/main with push-triggered CI skipped; manually run the resolver, retrieve Cargo.lock, remove the resolver and push the locked probe slice for exact-SHA GitHub CI on Linux, macOS and Windows.",
+  "next_action": "Commit and push the locked R1.2 Wry probe slice to origin/main; inspect exact-SHA formatting, Clippy, workspace tests, layering, release build and unchanged-plugin feasibility results on Linux, macOS and Windows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -80,9 +80,10 @@
     "R1.1 native workspace, Cargo.lock, minimal eframe shell and layering gate passed the exact-SHA Rust GitHub Actions matrix on Linux, macOS and Windows; all legacy quality/package/plugin workflows also passed. Evidence: evidence/r1.1-ci.json; Linux preview artifact recorded there.",
     "Reconciled the updated goal documentation requirement as MIG-016 and added RM-08; R0.2 historical mapping count remains 211 and current requirements count is 212.",
     "Started R1.2 with a Wry 0.57.0 system-WebView feasibility probe for unchanged PC05 Advanced Tables and PC08 Style Settings bundles; runtime reports retain Pending/non-certifying status and include bundle/manifest/stylesheet hashes, WebView identity, DOM/editor metrics and capability denials.",
-    "Hardened the Wry probe boundary after source review: navigation is limited to the exact localhost probe document, custom protocol assets reject unexpected hosts, frame ancestors are denied, and browser autofill is disabled where supported. No local executable validation was run."
+    "Hardened the Wry probe boundary after source review: navigation is limited to the exact localhost probe document, custom protocol assets reject unexpected hosts, frame ancestors are denied, and browser autofill is disabled where supported. No local executable validation was run.",
+    "GitHub Actions lockfile resolver run 37678837444 passed for source ce6097ab2625bddb34905b85a47a35b7e7fa602e; its Cargo.lock artifact was retrieved and hashed, and the temporary resolver workflow was removed. This run generated dependency metadata only; implementation validation remains pending."
   ],
-  "push_status": "pending",
+  "push_status": "pushed",
   "ci_results": [
     {
       "name": "inventory",
@@ -564,8 +565,12 @@
       "evidence": null,
       "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
       "candidate_plugins": ["PC05", "PC08"],
-      "temporary_lock_workflow": ".github/workflows/rust-lock-resolver.yml",
-      "next_action": "Commit and push the coherent probe slice and temporary lock resolver with push-triggered CI skipped, manually run the resolver and retrieve Cargo.lock, remove the resolver, then inspect locked Rust and unchanged-plugin feasibility runs for the resulting exact SHA on Linux/macOS/Windows."
+      "lock_resolver_run": 37678837444,
+      "lock_resolver_source_sha": "ce6097ab2625bddb34905b85a47a35b7e7fa602e",
+      "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
+      "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
+      "temporary_lock_workflow": "removed",
+      "next_action": "Push the locked Wry probe source slice and inspect exact-SHA Rust and unchanged-plugin feasibility runs on Linux/macOS/Windows."
     }
   },
   "ci_preparation": {
