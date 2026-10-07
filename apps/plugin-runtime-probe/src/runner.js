@@ -640,6 +640,19 @@
     for (const sheet of Array.from(document.styleSheets)) {
       try { stylesheetRuleCount += sheet.cssRules.length; } catch {}
     }
+    const styleSettingRows = Array.from(root.querySelectorAll(".setting-item")).slice(0, 16).map((row) => ({
+      id: String(row.dataset.id ?? "").slice(0, 100),
+      classes: Array.from(row.classList).slice(0, 16),
+      text: row.textContent.trim().replace(/\s+/g, " ").slice(0, 240),
+      controls: Array.from(row.querySelectorAll("input,select,button")).slice(0, 8).map((control) => ({
+        tag: control.tagName.toLowerCase(),
+        type: String(control.type ?? "").slice(0, 32),
+        id: String(control.id ?? "").slice(0, 100),
+        name: String(control.name ?? "").slice(0, 100),
+        ariaLabel: String(control.getAttribute("aria-label") ?? "").slice(0, 100),
+        checked: "checked" in control ? Boolean(control.checked) : null,
+      })),
+    }));
     const report = {
       status: capabilityProbe.passed && pluginStatus === "loaded" ? "passed" : "failed",
       artifact: {id: config.pluginId, manifestId: manifest.id, version: config.pluginVersion, sha256: config.artifactSha256, manifestSha256: config.manifestSha256, bytes: new TextEncoder().encode(bundleSource).byteLength},
@@ -650,7 +663,7 @@
       certification: "feasibility-only",
       plugin: {status: pluginStatus, error: pluginError, moduleExports: typeof module.exports},
       api: {requiredModules: attemptedModules, calls: apiCalls, commands: registrations.commands.map((command) => String(command.id ?? command.name ?? "")), settingTabs: registrations.settingTabs.length, views: registrations.views.map((view) => String(view.type ?? "")), events: registrations.events.length},
-      dom: {bodyChildren: document.body.children.length, pluginRootChildren: root.children.length, settingControls: root.querySelectorAll("input,select,button").length, styleSettingIds: Array.from(root.querySelectorAll(".setting-item[data-id]"), (element) => element.dataset.id).filter(Boolean), styleSettingsMessages: Array.from(document.querySelectorAll(".style-settings-empty,.style-settings-error"), (element) => element.textContent.trim().replace(/\s+/g, " ").slice(0, 280)), stylesheetCount: document.styleSheets.length, stylesheetRuleCount},
+      dom: {bodyChildren: document.body.children.length, pluginRootChildren: root.children.length, settingControls: root.querySelectorAll("input,select,button").length, styleSettingIds: Array.from(root.querySelectorAll(".setting-item[data-id]"), (element) => element.dataset.id).filter(Boolean), styleSettingRows, styleSettingsMessages: Array.from(document.querySelectorAll(".style-settings-empty,.style-settings-error"), (element) => element.textContent.trim().replace(/\s+/g, " ").slice(0, 280)), stylesheetCount: document.styleSheets.length, stylesheetRuleCount},
       editorWorkflow,
       capabilityProbe,
       capabilityDenials,
