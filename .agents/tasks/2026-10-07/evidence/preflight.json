@@ -1,0 +1,44 @@
+{
+  "recorded_at": "2026-10-07T18:25:36.989595+00:00",
+  "baseline_sha": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
+  "remote_sha": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
+  "branch": "main",
+  "origin": "https://github.com/ashutoshpw/open-obsidian.git",
+  "git_push_dry_run": {
+    "exit_code": 128,
+    "result": "HTTP 403; permission denied to w3research"
+  },
+  "baseline_quality": {
+    "run_id": 37260381406,
+    "result": "success",
+    "platforms": [
+      "ubuntu-latest",
+      "macos-latest",
+      "windows-latest"
+    ]
+  },
+  "baseline_desktop_build": {
+    "run_id": 34748436496,
+    "result": "success",
+    "limitation": "Historical unsigned previews; artifacts may have expired."
+  },
+  "baseline_plugin_renderer": {
+    "run_id": 34748436223,
+    "result": "success"
+  },
+  "baseline_loaded_plugins": {
+    "run_id": 34748436643,
+    "result": "queued",
+    "limitation": "Not passing evidence."
+  },
+  "baseline_refresh": {
+    "run_id": 37261648547,
+    "result": "failure",
+    "cause": "Upstream selection snapshot hashes/downloads/ranking and release pins changed."
+  },
+  "actions_policy_read": "HTTP 403; present runner quota/capacity not verified",
+  "main_protected": false,
+  "local_tests_run": false,
+  "migration_ci": "not_run",
+  "readiness": "Local R0 preparation can proceed; CI-backed milestones require restored push access."
+}

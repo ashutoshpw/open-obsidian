@@ -1,0 +1,30 @@
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5656952Z SELECTION ERROR: stats snapshot hash changed: expected 99c0b10ab6b02d01a9ed7474585d599511638706f35eda00582ad1e3eb997c37, got c2535da5ca124d4160e5747dfcacf21a93d56f96e27bab4d11a1e6414cf0a450
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5659323Z SELECTION ERROR: registry snapshot hash changed: expected 76fe1fa4957b03eac436123a27e4818e2efb3cd8259a3cb95b741991423766e7, got 47009354d3e7908438da80ac4992a1f9a4964e5fcf1d54402a50d0e06beb932d
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5660922Z SELECTION ERROR: obsidian-excalidraw-plugin download snapshot changed: expected 7837439, got 8339520
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5662388Z SELECTION ERROR: templater-obsidian download snapshot changed: expected 5545597, got 5805655
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5663673Z SELECTION ERROR: dataview download snapshot changed: expected 4931109, got 5082782
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5665212Z SELECTION ERROR: obsidian-tasks-plugin download snapshot changed: expected 4203635, got 4352744
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5666679Z SELECTION ERROR: table-editor-obsidian download snapshot changed: expected 3180678, got 3248385
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5667995Z SELECTION ERROR: obsidian-git download snapshot changed: expected 3119400, got 3241254
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5669284Z SELECTION ERROR: calendar download snapshot changed: expected 3085881, got 3161947
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5670678Z SELECTION ERROR: obsidian-style-settings download snapshot changed: expected 2665411, got 2740099
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5672082Z SELECTION ERROR: obsidian-kanban download snapshot changed: expected 2644322, got 2720481
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5673378Z SELECTION ERROR: remotely-save download snapshot changed: expected 2216022, got 2281641
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5675338Z SELECTION ERROR: obsidian-icon-folder download snapshot changed: expected 2213970, got 2252230
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5676642Z SELECTION ERROR: quickadd download snapshot changed: expected 2089718, got 2189945
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5677933Z SELECTION ERROR: realclaudian download snapshot changed: expected 2053650, got 2310792
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5679235Z SELECTION ERROR: editing-toolbar download snapshot changed: expected 1860031, got 1973811
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5680522Z SELECTION ERROR: omnisearch download snapshot changed: expected 1850420, got 1962113
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5681753Z SELECTION ERROR: copilot download snapshot changed: expected 1845334, got 2325427
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5683132Z SELECTION ERROR: obsidian-minimal-settings download snapshot changed: expected 1792641, got 1833522
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5684518Z SELECTION ERROR: obsidian-importer download snapshot changed: expected 1647030, got 1758380
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5686062Z SELECTION ERROR: tasknotes download snapshot changed: expected 1422632, got 1915792
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5687352Z SELECTION ERROR: obsidian-outliner download snapshot changed: expected 1395484, got 1435640
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5688633Z SELECTION ERROR: homepage download snapshot changed: expected 1319450, got 1368242
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5689926Z SELECTION ERROR: smart-connections download snapshot changed: expected 1192397, got 1226919
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5691276Z SELECTION ERROR: recent-files-obsidian download snapshot changed: expected 1183033, got 1204498
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5692559Z SELECTION ERROR: tag-wrangler download snapshot changed: expected 1083951, got 1116409
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5693852Z SELECTION ERROR: obsidian-linter download snapshot changed: expected 1046498, got 1176094
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5701333Z SELECTION ERROR: top-25 ranking changed: expected obsidian-excalidraw-plugin,templater-obsidian,dataview,obsidian-tasks-plugin,table-editor-obsidian,obsidian-git,calendar,obsidian-style-settings,obsidian-kanban,remotely-save,obsidian-icon-folder,quickadd,realclaudian,editing-toolbar,omnisearch,copilot,obsidian-minimal-settings,obsidian-importer,tasknotes,obsidian-outliner,homepage,smart-connections,recent-files-obsidian,tag-wrangler,obsidian-linter, got obsidian-excalidraw-plugin,templater-obsidian,dataview,obsidian-tasks-plugin,table-editor-obsidian,obsidian-git,calendar,obsidian-style-settings,obsidian-kanban,copilot,realclaudian,remotely-save,obsidian-icon-folder,quickadd,editing-toolbar,omnisearch,tasknotes,obsidian-minimal-settings,obsidian-importer,obsidian-outliner,homepage,smart-connections,recent-files-obsidian,obsidian-linter,tag-wrangler
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5708245Z error: script "verify:plugin-selection" exited with code 1
+verify	UNKNOWN STEP	2026-10-05T04:00:15.5721318Z ##[error]Process completed with exit code 1.
