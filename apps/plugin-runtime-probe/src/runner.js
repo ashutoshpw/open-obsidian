@@ -16,6 +16,12 @@
   const capabilityDenials = [];
   const cspViolations = [];
   const asynchronousErrors = [];
+  const consoleErrors = [];
+  const originalConsoleError = console.error.bind(console);
+  console.error = (...args) => {
+    consoleErrors.push(args.map((value) => value instanceof Error ? `${value.name}: ${value.message}` : String(value)).join(" ").slice(0, 360));
+    originalConsoleError(...args);
+  };
   const attemptedModules = [];
   const apiCalls = [];
   const registrations = {commands: [], views: [], settingTabs: [], events: []};
@@ -608,6 +614,7 @@
       capabilityProbe,
       capabilityDenials,
       asynchronousErrors,
+      consoleErrors,
       policy: {csp: "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'none'; frame-ancestors 'none'", navigation: "localhost probe document only", newWindows: "denied", downloads: "denied", permissions: "denied", nodeIntegration: false, ipc: "report-channel-only"},
     };
     if (typeof ipcPostMessage === "function") ipcPostMessage(nativeJsonStringify({token: config.sessionToken, report}));
