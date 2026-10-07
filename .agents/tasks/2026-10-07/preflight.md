@@ -11,3 +11,7 @@ The dry run is complete with a blocking access finding. No local application tes
 - R0 tracking is initialized. All legacy statuses remain historical; Rust acceptance starts pending. Owners are provisional until reviewed clause by clause.
 
 Next: restore push access, push the R0.1 commit, obtain migration inventory CI results and review mappings. R0 is not complete.
+
+## Access resolution and R0.1 acceptance
+
+Write access was restored and the prepared commits were pushed at 74049947d4816049ce187b9f3d23e1e804c52b59. All five push workflows passed. See evidence/r0.1-ci.json for exact-SHA results and platform jobs. The original 403 findings are historical; the access blocker is resolved. R0.2 mapping review is next.
