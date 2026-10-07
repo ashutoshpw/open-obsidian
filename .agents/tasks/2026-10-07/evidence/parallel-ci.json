@@ -1,0 +1,1608 @@
+{
+  "recorded_at": "2026-10-07T18:37:09.532439+00:00",
+  "implementation_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+  "local_checks_run": false,
+  "source_documentation": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsparallel",
+  "change": "Native parallel group of nine independent read-only quality checks and two post-package audits; implicit wait gates runtime checks and upload.",
+  "runs": [
+    {
+      "name": "quality",
+      "run_id": 37667876075,
+      "head_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667876075",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:34Z",
+          "completedAt": "2026-10-07T18:35:30Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667876075/job/112951676280",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:34Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:36Z",
+              "completedAt": "2026-10-07T18:34:38Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:38Z",
+              "completedAt": "2026-10-07T18:34:39Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:39Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Validate progress state",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Validate frozen contracts",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Validate architecture manifest",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Verify version baseline policy",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Validate vault differential fixture contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Validate C10 core workflow inventory",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Verify distribution metadata",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Verify update/rollback manifest contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Check renderer accessibility contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Type-check source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:42Z"
+            },
+            {
+              "name": "Parallel group",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:42Z"
+            },
+            {
+              "name": "Run host vault round-trip report",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:42Z",
+              "completedAt": "2026-10-07T18:34:42Z"
+            },
+            {
+              "name": "Run tests",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:42Z",
+              "completedAt": "2026-10-07T18:34:46Z"
+            },
+            {
+              "name": "Run executable quality scorecard",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:46Z",
+              "completedAt": "2026-10-07T18:34:46Z"
+            },
+            {
+              "name": "Compile Electron shell",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:46Z",
+              "completedAt": "2026-10-07T18:34:46Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:46Z",
+              "completedAt": "2026-10-07T18:34:46Z"
+            },
+            {
+              "name": "Run Electron vault round-trip report",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:46Z",
+              "completedAt": "2026-10-07T18:35:04Z"
+            },
+            {
+              "name": "Run synthetic plugin lifecycle audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:04Z",
+              "completedAt": "2026-10-07T18:35:25Z"
+            },
+            {
+              "name": "Reconcile catalog-required plugin combinations",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:25Z",
+              "completedAt": "2026-10-07T18:35:25Z"
+            },
+            {
+              "name": "Run Knip audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:25Z",
+              "completedAt": "2026-10-07T18:35:27Z"
+            },
+            {
+              "name": "Run Fallow health audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:27Z",
+              "completedAt": "2026-10-07T18:35:28Z"
+            },
+            {
+              "name": "Review changed code with Fallow",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:35:28Z",
+              "completedAt": "2026-10-07T18:35:28Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:28Z",
+              "completedAt": "2026-10-07T18:35:29Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:29Z",
+              "completedAt": "2026-10-07T18:35:29Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:29Z",
+              "completedAt": "2026-10-07T18:35:29Z"
+            }
+          ]
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:34Z",
+          "completedAt": "2026-10-07T18:35:58Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667876075/job/112951676805",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:36Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:44Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:44Z",
+              "completedAt": "2026-10-07T18:34:56Z"
+            },
+            {
+              "name": "Validate progress state",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:56Z",
+              "completedAt": "2026-10-07T18:34:57Z"
+            },
+            {
+              "name": "Validate frozen contracts",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Validate architecture manifest",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Verify version baseline policy",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Validate vault differential fixture contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Validate C10 core workflow inventory",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Verify distribution metadata",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Verify update/rollback manifest contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Check renderer accessibility contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:58Z",
+              "completedAt": "2026-10-07T18:35:00Z"
+            },
+            {
+              "name": "Type-check source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:58Z",
+              "completedAt": "2026-10-07T18:35:03Z"
+            },
+            {
+              "name": "Parallel group",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:58Z",
+              "completedAt": "2026-10-07T18:35:03Z"
+            },
+            {
+              "name": "Run host vault round-trip report",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:03Z",
+              "completedAt": "2026-10-07T18:35:04Z"
+            },
+            {
+              "name": "Run tests",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:04Z",
+              "completedAt": "2026-10-07T18:35:16Z"
+            },
+            {
+              "name": "Run executable quality scorecard",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:16Z",
+              "completedAt": "2026-10-07T18:35:16Z"
+            },
+            {
+              "name": "Compile Electron shell",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:16Z",
+              "completedAt": "2026-10-07T18:35:17Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:35:17Z",
+              "completedAt": "2026-10-07T18:35:17Z"
+            },
+            {
+              "name": "Run Electron vault round-trip report",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:17Z",
+              "completedAt": "2026-10-07T18:35:25Z"
+            },
+            {
+              "name": "Run synthetic plugin lifecycle audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:25Z",
+              "completedAt": "2026-10-07T18:35:47Z"
+            },
+            {
+              "name": "Reconcile catalog-required plugin combinations",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:47Z",
+              "completedAt": "2026-10-07T18:35:47Z"
+            },
+            {
+              "name": "Run Knip audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:47Z",
+              "completedAt": "2026-10-07T18:35:50Z"
+            },
+            {
+              "name": "Run Fallow health audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:50Z",
+              "completedAt": "2026-10-07T18:35:54Z"
+            },
+            {
+              "name": "Review changed code with Fallow",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:35:54Z",
+              "completedAt": "2026-10-07T18:35:54Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:54Z",
+              "completedAt": "2026-10-07T18:35:54Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:54Z",
+              "completedAt": "2026-10-07T18:35:56Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:56Z",
+              "completedAt": "2026-10-07T18:35:56Z"
+            }
+          ]
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:39Z",
+          "completedAt": "2026-10-07T18:35:37Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667876075/job/112951676818",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:39Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:44Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:44Z",
+              "completedAt": "2026-10-07T18:34:45Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:45Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Validate progress state",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Validate frozen contracts",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Validate architecture manifest",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Verify version baseline policy",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Validate vault differential fixture contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Validate C10 core workflow inventory",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Verify distribution metadata",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Verify update/rollback manifest contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Check renderer accessibility contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Type-check source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:48Z"
+            },
+            {
+              "name": "Parallel group",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:48Z"
+            },
+            {
+              "name": "Run host vault round-trip report",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:48Z",
+              "completedAt": "2026-10-07T18:34:48Z"
+            },
+            {
+              "name": "Run tests",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:48Z",
+              "completedAt": "2026-10-07T18:34:54Z"
+            },
+            {
+              "name": "Run executable quality scorecard",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:54Z",
+              "completedAt": "2026-10-07T18:34:54Z"
+            },
+            {
+              "name": "Compile Electron shell",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:54Z",
+              "completedAt": "2026-10-07T18:34:54Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:34:54Z",
+              "completedAt": "2026-10-07T18:34:54Z"
+            },
+            {
+              "name": "Run Electron vault round-trip report",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:54Z",
+              "completedAt": "2026-10-07T18:35:07Z"
+            },
+            {
+              "name": "Run synthetic plugin lifecycle audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:07Z",
+              "completedAt": "2026-10-07T18:35:31Z"
+            },
+            {
+              "name": "Reconcile catalog-required plugin combinations",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:31Z",
+              "completedAt": "2026-10-07T18:35:31Z"
+            },
+            {
+              "name": "Run Knip audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:31Z",
+              "completedAt": "2026-10-07T18:35:32Z"
+            },
+            {
+              "name": "Run Fallow health audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:32Z",
+              "completedAt": "2026-10-07T18:35:33Z"
+            },
+            {
+              "name": "Review changed code with Fallow",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:35:33Z",
+              "completedAt": "2026-10-07T18:35:33Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:33Z",
+              "completedAt": "2026-10-07T18:35:34Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:34Z",
+              "completedAt": "2026-10-07T18:35:34Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:34Z",
+              "completedAt": "2026-10-07T18:35:36Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37667875966,
+      "head_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875966",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:33Z",
+          "completedAt": "2026-10-07T18:36:05Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875966/job/112951675575",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:34Z",
+              "completedAt": "2026-10-07T18:34:35Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:40Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:43Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:43Z",
+              "completedAt": "2026-10-07T18:35:09Z"
+            },
+            {
+              "name": "Validate release gate before packaging",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:09Z",
+              "completedAt": "2026-10-07T18:35:09Z"
+            },
+            {
+              "name": "Verify update/rollback manifest contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:09Z",
+              "completedAt": "2026-10-07T18:35:10Z"
+            },
+            {
+              "name": "Configure production signing environment",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:35:10Z",
+              "completedAt": "2026-10-07T18:35:10Z"
+            },
+            {
+              "name": "Build unpacked desktop application",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:10Z",
+              "completedAt": "2026-10-07T18:35:26Z"
+            },
+            {
+              "name": "Validate release gate and write release-manifest.json sha256 hashes",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:26Z",
+              "completedAt": "2026-10-07T18:35:27Z"
+            },
+            {
+              "name": "Audit packaged Electron runtime notices",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:27Z",
+              "completedAt": "2026-10-07T18:35:28Z"
+            },
+            {
+              "name": "Audit transitive dependency attribution",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:27Z",
+              "completedAt": "2026-10-07T18:35:28Z"
+            },
+            {
+              "name": "Parallel group",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:27Z",
+              "completedAt": "2026-10-07T18:35:28Z"
+            },
+            {
+              "name": "Upload platform artifact",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:28Z",
+              "completedAt": "2026-10-07T18:35:40Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:40Z",
+              "completedAt": "2026-10-07T18:35:40Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:40Z",
+              "completedAt": "2026-10-07T18:35:41Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:41Z",
+              "completedAt": "2026-10-07T18:35:41Z"
+            }
+          ]
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:39Z",
+          "completedAt": "2026-10-07T18:36:14Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875966/job/112951675907",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:42Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:42Z",
+              "completedAt": "2026-10-07T18:34:44Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:44Z",
+              "completedAt": "2026-10-07T18:34:46Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:46Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Validate release gate before packaging",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:48Z"
+            },
+            {
+              "name": "Verify update/rollback manifest contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:48Z",
+              "completedAt": "2026-10-07T18:34:48Z"
+            },
+            {
+              "name": "Configure production signing environment",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:34:48Z",
+              "completedAt": "2026-10-07T18:34:48Z"
+            },
+            {
+              "name": "Build unpacked desktop application",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:48Z",
+              "completedAt": "2026-10-07T18:34:56Z"
+            },
+            {
+              "name": "Validate release gate and write release-manifest.json sha256 hashes",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:56Z",
+              "completedAt": "2026-10-07T18:34:57Z"
+            },
+            {
+              "name": "Audit packaged Electron runtime notices",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:34:57Z"
+            },
+            {
+              "name": "Audit transitive dependency attribution",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:34:57Z"
+            },
+            {
+              "name": "Parallel group",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:34:57Z"
+            },
+            {
+              "name": "Upload platform artifact",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:57Z",
+              "completedAt": "2026-10-07T18:35:28Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:28Z",
+              "completedAt": "2026-10-07T18:35:29Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:29Z",
+              "completedAt": "2026-10-07T18:35:29Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:29Z",
+              "completedAt": "2026-10-07T18:35:30Z"
+            }
+          ]
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:34Z",
+          "completedAt": "2026-10-07T18:34:58Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875966/job/112951675987",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:36Z",
+              "completedAt": "2026-10-07T18:34:38Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:38Z",
+              "completedAt": "2026-10-07T18:34:40Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:40Z"
+            },
+            {
+              "name": "Validate release gate before packaging",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:40Z"
+            },
+            {
+              "name": "Verify update/rollback manifest contract",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:40Z"
+            },
+            {
+              "name": "Configure production signing environment",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:40Z"
+            },
+            {
+              "name": "Build unpacked desktop application",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:44Z"
+            },
+            {
+              "name": "Validate release gate and write release-manifest.json sha256 hashes",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:44Z",
+              "completedAt": "2026-10-07T18:34:45Z"
+            },
+            {
+              "name": "Audit packaged Electron runtime notices",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:45Z",
+              "completedAt": "2026-10-07T18:34:45Z"
+            },
+            {
+              "name": "Audit transitive dependency attribution",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:45Z",
+              "completedAt": "2026-10-07T18:34:45Z"
+            },
+            {
+              "name": "Parallel group",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:45Z",
+              "completedAt": "2026-10-07T18:34:45Z"
+            },
+            {
+              "name": "Upload platform artifact",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:45Z",
+              "completedAt": "2026-10-07T18:34:55Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:55Z",
+              "completedAt": "2026-10-07T18:34:56Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:56Z",
+              "completedAt": "2026-10-07T18:34:56Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:56Z",
+              "completedAt": "2026-10-07T18:34:56Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37667875876,
+      "head_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875876",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:33Z",
+          "completedAt": "2026-10-07T18:34:38Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875876/job/112951674608",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:34Z",
+              "completedAt": "2026-10-07T18:34:34Z"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:34Z",
+              "completedAt": "2026-10-07T18:34:35Z"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:35Z"
+            },
+            {
+              "name": "Check migration traceability and baseline inventory",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:36Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:36Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:36Z",
+              "completedAt": "2026-10-07T18:34:36Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37667875978,
+      "head_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875978",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:33Z",
+          "completedAt": "2026-10-07T18:35:19Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875978/job/112951675805",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:34Z",
+              "completedAt": "2026-10-07T18:34:35Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:41Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:41Z",
+              "completedAt": "2026-10-07T18:34:44Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:44Z",
+              "completedAt": "2026-10-07T18:34:59Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:34:59Z",
+              "completedAt": "2026-10-07T18:34:59Z"
+            },
+            {
+              "name": "Run all unchanged plugin renderer lifecycle probes",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:59Z",
+              "completedAt": "2026-10-07T18:35:15Z"
+            },
+            {
+              "name": "Upload renderer lifecycle evidence",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:15Z",
+              "completedAt": "2026-10-07T18:35:16Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:16Z",
+              "completedAt": "2026-10-07T18:35:16Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:16Z",
+              "completedAt": "2026-10-07T18:35:18Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:18Z",
+              "completedAt": "2026-10-07T18:35:18Z"
+            }
+          ]
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:33Z",
+          "completedAt": "2026-10-07T18:34:52Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875978/job/112951676086",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:34Z",
+              "completedAt": "2026-10-07T18:34:35Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:35Z",
+              "completedAt": "2026-10-07T18:34:37Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:37Z",
+              "completedAt": "2026-10-07T18:34:38Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:38Z",
+              "completedAt": "2026-10-07T18:34:39Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:39Z",
+              "completedAt": "2026-10-07T18:34:43Z"
+            },
+            {
+              "name": "Run all unchanged plugin renderer lifecycle probes",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:43Z",
+              "completedAt": "2026-10-07T18:34:49Z"
+            },
+            {
+              "name": "Upload renderer lifecycle evidence",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:49Z",
+              "completedAt": "2026-10-07T18:34:50Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:50Z",
+              "completedAt": "2026-10-07T18:34:50Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:50Z",
+              "completedAt": "2026-10-07T18:34:50Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:50Z",
+              "completedAt": "2026-10-07T18:34:50Z"
+            }
+          ]
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:40Z",
+          "completedAt": "2026-10-07T18:35:26Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875978/job/112951676181",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:40Z",
+              "completedAt": "2026-10-07T18:34:42Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:42Z",
+              "completedAt": "2026-10-07T18:34:45Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:45Z",
+              "completedAt": "2026-10-07T18:34:47Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:47Z",
+              "completedAt": "2026-10-07T18:34:49Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:34:49Z",
+              "completedAt": "2026-10-07T18:34:49Z"
+            },
+            {
+              "name": "Run all unchanged plugin renderer lifecycle probes",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:34:49Z",
+              "completedAt": "2026-10-07T18:35:19Z"
+            },
+            {
+              "name": "Upload renderer lifecycle evidence",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:19Z",
+              "completedAt": "2026-10-07T18:35:21Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:21Z",
+              "completedAt": "2026-10-07T18:35:21Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:21Z",
+              "completedAt": "2026-10-07T18:35:22Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:22Z",
+              "completedAt": "2026-10-07T18:35:23Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37667875884,
+      "head_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875884",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:34:33Z",
+          "completedAt": "2026-10-07T18:36:36Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875884/job/112951675261",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:32Z",
+              "completedAt": "2026-10-07T18:35:33Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:33Z",
+              "completedAt": "2026-10-07T18:35:38Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:38Z",
+              "completedAt": "2026-10-07T18:35:41Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:41Z",
+              "completedAt": "2026-10-07T18:36:07Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:36:07Z",
+              "completedAt": "2026-10-07T18:36:07Z"
+            },
+            {
+              "name": "Run unchanged loaded-workflow audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:07Z",
+              "completedAt": "2026-10-07T18:36:32Z"
+            },
+            {
+              "name": "Upload loaded-workflow evidence",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:32Z",
+              "completedAt": "2026-10-07T18:36:33Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:33Z",
+              "completedAt": "2026-10-07T18:36:33Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:33Z",
+              "completedAt": "2026-10-07T18:36:35Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:35Z",
+              "completedAt": "2026-10-07T18:36:35Z"
+            }
+          ]
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:35:40Z",
+          "completedAt": "2026-10-07T18:36:31Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875884/job/112951675569",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:40Z",
+              "completedAt": "2026-10-07T18:35:42Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:42Z",
+              "completedAt": "2026-10-07T18:35:44Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:44Z",
+              "completedAt": "2026-10-07T18:35:46Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:46Z",
+              "completedAt": "2026-10-07T18:35:47Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "skipped",
+              "startedAt": "2026-10-07T18:35:47Z",
+              "completedAt": "2026-10-07T18:35:47Z"
+            },
+            {
+              "name": "Run unchanged loaded-workflow audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:47Z",
+              "completedAt": "2026-10-07T18:36:28Z"
+            },
+            {
+              "name": "Upload loaded-workflow evidence",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:28Z",
+              "completedAt": "2026-10-07T18:36:29Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:29Z",
+              "completedAt": "2026-10-07T18:36:29Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:29Z",
+              "completedAt": "2026-10-07T18:36:30Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:36:30Z",
+              "completedAt": "2026-10-07T18:36:30Z"
+            }
+          ]
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "startedAt": "2026-10-07T18:35:12Z",
+          "completedAt": "2026-10-07T18:35:44Z",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37667875884/job/112951675608",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:13Z",
+              "completedAt": "2026-10-07T18:35:14Z"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:14Z",
+              "completedAt": "2026-10-07T18:35:15Z"
+            },
+            {
+              "name": "Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:15Z",
+              "completedAt": "2026-10-07T18:35:16Z"
+            },
+            {
+              "name": "Install locked dependencies",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:16Z",
+              "completedAt": "2026-10-07T18:35:17Z"
+            },
+            {
+              "name": "Configure Electron Linux sandbox helper",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:17Z",
+              "completedAt": "2026-10-07T18:35:21Z"
+            },
+            {
+              "name": "Run unchanged loaded-workflow audit",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:21Z",
+              "completedAt": "2026-10-07T18:35:41Z"
+            },
+            {
+              "name": "Upload loaded-workflow evidence",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:41Z",
+              "completedAt": "2026-10-07T18:35:42Z"
+            },
+            {
+              "name": "Post Set up Bun",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:42Z",
+              "completedAt": "2026-10-07T18:35:42Z"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:42Z",
+              "completedAt": "2026-10-07T18:35:42Z"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "startedAt": "2026-10-07T18:35:42Z",
+              "completedAt": "2026-10-07T18:35:42Z"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Three-OS preview CI passed; production signing/tag paths were not executed.",
+    "No end-to-end speedup claim: runner startup/cache/queue variance was not controlled.",
+    "Rust implementation remains pending R0 mapping review."
+  ]
+}
