@@ -7,6 +7,7 @@
   const ipcPostMessage = window.ipc?.postMessage?.bind(window.ipc);
   const root = document.getElementById("openobsidian-plugin-root");
   Object.defineProperty(globalThis, "activeWindow", {configurable: true, value: window});
+  Object.defineProperty(globalThis, "activeDocument", {configurable: true, value: document});
   const capabilityDenials = [];
   const cspViolations = [];
   const attemptedModules = [];
@@ -320,6 +321,7 @@
     workspace: {
       getActiveFile() { return {path: config.editorText?.activeFile ?? "Notes/Table.md", basename: "Table", extension: "md"}; },
       getActiveViewOfType() { return {editor: makeEditor(), file: this.getActiveFile(), contentEl: root}; },
+      onLayoutReady(callback) { if (typeof callback === "function") queueMicrotask(callback); },
       getLeaf() { return {app, containerEl: safeElement("section", {parent: root}), app}; },
       getLeavesOfType(type) { return registrations.views.filter((view) => view.type === type).map((view) => ({view: view.creator({app, containerEl: root})})); },
       getRightLeaf() { return this.getLeaf(); },
@@ -332,8 +334,9 @@
       detachLeavesOfType() {},
       iterateAllLeaves(callback) { if (typeof callback === "function") callback(this.getLeaf()); },
     },
+    commands: {removeCommand() {}},
     fileManager: {generateMarkdownLink(file) { return `[[${file?.path ?? ""}]]`; }},
-    plugins: {enabledPlugins: new Set([config.pluginManifest.id]), manifests: {[config.pluginManifest.id]: config.pluginManifest}},
+    plugins: {plugins: {}, enabledPlugins: new Set([config.pluginManifest.id]), manifests: {[config.pluginManifest.id]: config.pluginManifest}},
     setting: {open() {}},
     appId: "openobsidian-rust-probe",
   };
