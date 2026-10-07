@@ -4,7 +4,7 @@
 
 Migrate OpenObsidian to a native Rust desktop application using the same applicable Rust stack and architecture as [storytold/photocraft](https://github.com/storytold/photocraft). Port the application core, desktop shell, UI, platform services and delivery tooling while preserving the existing product contracts, vault safety and honest compatibility reporting. Deliver working macOS, Windows and Linux builds. A workspace scaffold or a window that opens is not completion.
 
-This task file defines future migration work; creating it does not mean the migration has started or passed validation. Read this file fully on start and resume.
+Migration work started from `d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79`; the R0.1 inventory milestone and parallel CI preparation have since passed. Read this file fully on start and resume. Passing preparation checks does not imply Rust implementation has started or passed.
 
 ## Authority and baseline
 
@@ -101,7 +101,7 @@ Each row is a phase, not a required single commit. Split into smaller numbered m
 | Phase | Deliverable | Required GitHub CI acceptance |
 | --- | --- | --- |
 | R0: inventory and traceability | Map existing requirements/modules/tests/fixtures to Rust owners; record current pending gaps, dependency decisions and reference pins; initialize migration progress files. | CI validates the migration inventory and runs the current baseline, recording inherited failures separately. |
-| R1: workspace and native foundation | Cargo workspace, lockfile/toolchain, crate boundaries, minimal native eframe app, xtask alias, logging and three-OS Rust workflows. | Locked workspace build/tests, fmt, Clippy and layering pass; native preview artifacts produced. |
+| R1: workspace, feasibility and native foundation | Cargo workspace, lockfile/toolchain, crate boundaries, a narrow unchanged-plugin isolation/UI feasibility spike, minimal native eframe app, xtask alias, logging and three-OS Rust workflows. Complete the compatibility spike before broad native UI investment. | Locked workspace build/tests, fmt, Clippy and layering pass; representative JavaScript/DOM plugin workflows and denied capabilities are evidenced across the OS matrix; native preview artifacts produced. |
 | R2: vault and document safety | Port source-preserving document models, revision hashing, scoped IO, transactions, journal/recovery, attachments, history, watcher and rename/merge behavior. | Rust fixture/differential, property and failure-injection suites cover existing safety cases on all three OSes; unchanged bytes and recovered files are verified. |
 | R3: native workspace and core workflows | Port the editor and workspace contracts, previews, indices/navigation, graph/Canvas/Bases, keyboard/accessibility and multiwindow behavior. | egui interaction/snapshot checks plus end-to-end synthetic vault workflows pass; editing and persistence agree with fixtures. |
 | R4: extensions and appearance | Implement bounded wasmi host and compatibility policy; resolve legacy bundle/theme execution and supported native appearance projection. | Artifact integrity, resource limits, capability denial, lifecycle/restart/recovery and required plugin combinations are exercised; each legacy compatibility row has evidence and an honest disposition. |

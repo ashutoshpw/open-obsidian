@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T18:37:09.532439+00:00",
+  "updated_at": "2026-10-07T18:43:14.593997+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+  "last_reconciled_head": "f216a92c72e0632487642e7bf2d16f6bda25dfb1",
   "current_phase": "R0",
   "current_milestone": "R0.2",
-  "next_action": "Review provisional ownership and runtime-specific acceptance clauses, freeze feasibility/dependency decisions, then obtain R0.2 CI before R1.",
+  "next_action": "Push the reviewed R0.2 mapping and decisions; obtain exact-SHA GitHub inventory and baseline results, then start R1.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -63,7 +63,9 @@
     "Inspected origin/main, repository permissions and existing exact-SHA CI",
     "Created provisional full legacy requirement mapping and source inventory",
     "Committed R0.1 locally as b1dbd9f; actual push failed HTTP 403; migration CI remains unrun",
-    "All five exact-SHA R0.1 workflows passed, including all three-OS baseline jobs; access blocker resolved"
+    "All five exact-SHA R0.1 workflows passed, including all three-OS baseline jobs; access blocker resolved",
+    "Reviewed 196 legacy requirements and 15 Rust migration-specific requirements; mapped all 231 inventoried files to Rust responsibilities.",
+    "Reviewed all 196 inherited requirements and 15 migration-specific requirements; reconciled 231 source, test, fixture and tooling mappings."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -203,8 +205,11 @@
       "evidence": "evidence/r0.1-ci.json"
     },
     "R0.2": {
-      "status": "pending",
-      "next_action": "Review provisional ownership and runtime-specific acceptance clauses, freeze feasibility/dependency decisions, then obtain R0.2 CI before R1."
+      "status": "in_progress",
+      "reviewed_requirement_count": 211,
+      "evidence": null,
+      "decisions": "decisions.md",
+      "next_action": "Push the reviewed R0.2 mapping and decisions; obtain exact-SHA GitHub inventory and baseline results, then start R1."
     }
   },
   "ci_preparation": {

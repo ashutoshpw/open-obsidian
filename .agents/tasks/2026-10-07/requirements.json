@@ -43,10 +43,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "INIT-002",
@@ -86,10 +88,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "INIT-003",
@@ -129,10 +133,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "INIT-004",
@@ -172,10 +178,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "INIT-005",
@@ -216,10 +224,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "INIT-006",
@@ -259,10 +269,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "INIT-007",
@@ -302,10 +314,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-validation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "D01",
@@ -334,7 +348,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -346,10 +360,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.3-p6.1-packaged-runtime.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "D02",
@@ -392,8 +408,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "D03",
@@ -435,8 +453,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "D04",
@@ -478,8 +498,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "D05",
@@ -523,10 +545,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p4.1-model-seams-ci.json"
       ],
       "legacy_checkpoint": "P4.1",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R5",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "D06",
@@ -567,10 +591,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-ux-surfaces.json"
       ],
       "legacy_checkpoint": "P2.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "D07",
@@ -614,8 +640,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "D08",
@@ -655,10 +683,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p1.3-architecture.json"
       ],
       "legacy_checkpoint": "P1.3",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "D09",
@@ -698,10 +728,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p5.2-p6.1-hardening.json"
       ],
       "legacy_checkpoint": "P6.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Keep desktop targets macOS, Windows and Linux; mobile remains a separately scoped future expansion."
     },
     {
       "id": "D10",
@@ -744,8 +776,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "D11",
@@ -788,8 +822,10 @@
       "legacy_checkpoint": "P1.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "D12",
@@ -832,10 +868,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-transitive-attribution.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R1",
+      "migration_phase": "R6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Build and audit Rust preview packages and third-party notices on supported runners; keep production signing external."
     },
     {
       "id": "D13",
@@ -878,10 +916,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p4.3-provider-transport-ci.json"
       ],
       "legacy_checkpoint": "P4.3",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R5",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "D14",
@@ -924,8 +964,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "D15",
@@ -977,8 +1019,10 @@
       "legacy_checkpoint": "P1.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "D16",
@@ -1022,8 +1066,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "D17",
@@ -1063,10 +1109,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p5.2-p6.1-hardening.json"
       ],
       "legacy_checkpoint": "P5.2",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R5",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "D18",
@@ -1106,10 +1154,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p6.2-final-audit.json"
       ],
       "legacy_checkpoint": "P6.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "D19",
@@ -1149,10 +1199,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p6.2-final-audit.json"
       ],
       "legacy_checkpoint": "P6.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "D20",
@@ -1194,8 +1246,10 @@
       "legacy_checkpoint": "P6.1",
       "migration_phase": "R6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Build and audit Rust preview packages and third-party notices on supported runners; keep production signing external."
     },
     {
       "id": "D21",
@@ -1238,10 +1292,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-obsidian-layout.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "GATE-001",
@@ -1282,8 +1338,10 @@
       "legacy_checkpoint": "P1.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "GATE-002",
@@ -1347,8 +1405,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "GATE-003",
@@ -1392,8 +1452,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "GATE-004",
@@ -1437,8 +1499,10 @@
       "legacy_checkpoint": "P4.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "GATE-005",
@@ -1480,8 +1544,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "PROD-001",
@@ -1525,8 +1591,10 @@
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "PROD-002",
@@ -1555,7 +1623,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "external_pending",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -1566,10 +1634,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-comparison-scorecard.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R7",
+      "rust_owner": "release-handoff",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "PROD-003",
@@ -1611,8 +1681,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "PROD-004",
@@ -1656,8 +1728,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "PROD-005",
@@ -1699,8 +1773,10 @@
       "legacy_checkpoint": "P1.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "PROD-006",
@@ -1744,8 +1820,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "PROD-007",
@@ -1785,10 +1863,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-workspace-shell.json"
       ],
       "legacy_checkpoint": "P2.2",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "PROD-008",
@@ -1831,10 +1911,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p4.1-model-seams-ci.json"
       ],
       "legacy_checkpoint": "P4.1",
-      "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R5",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "PROD-009",
@@ -1875,10 +1957,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p4.2-reviewed-ai.json"
       ],
       "legacy_checkpoint": "P4.2",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R5",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "PROD-010",
@@ -1922,8 +2006,10 @@
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "BASE-001",
@@ -1964,10 +2050,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "BASE-002",
@@ -2007,10 +2095,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "BASE-003",
@@ -2050,10 +2140,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-comparison-scorecard.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "BASE-004",
@@ -2093,10 +2185,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-paid-service-boundary.json"
       ],
       "legacy_checkpoint": "P3.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "BASE-005",
@@ -2137,10 +2231,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-live-source-drift.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "BASE-006",
@@ -2180,10 +2276,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-differential-fixture.json"
       ],
       "legacy_checkpoint": "P1.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "C01",
@@ -2226,8 +2324,10 @@
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C01 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C01.1",
@@ -2270,8 +2370,10 @@
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C01 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C01.2",
@@ -2320,8 +2422,10 @@
       "legacy_checkpoint": "P1.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C01 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C02",
@@ -2364,9 +2468,11 @@
       ],
       "legacy_checkpoint": "P2.2",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C02 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C02.1",
@@ -2412,9 +2518,11 @@
       ],
       "legacy_checkpoint": "P2.2",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C02 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C02.2",
@@ -2462,9 +2570,11 @@
       ],
       "legacy_checkpoint": "P1.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C02 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C03",
@@ -2512,10 +2622,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.3-rename-execution-ci.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R6",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C03 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C03.1",
@@ -2564,9 +2676,11 @@
       ],
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C03 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C03.2",
@@ -2608,10 +2722,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.3-rename-execution-ci.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R6",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C03 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C04",
@@ -2655,10 +2771,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-12-p2.1-nested-property-edit-ci.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C04 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C04.1",
@@ -2703,9 +2821,11 @@
       ],
       "legacy_checkpoint": "P2.2",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C04 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C05",
@@ -2749,8 +2869,10 @@
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement global/local graph navigation and filters in the native UI, with derived graph state and CI interaction evidence."
     },
     {
       "id": "C05.1",
@@ -2794,8 +2916,10 @@
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Opening graph remains read-only and must not create vault files."
     },
     {
       "id": "C06",
@@ -2836,10 +2960,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json"
       ],
       "legacy_checkpoint": "P3.1",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C06 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C06.1",
@@ -2880,10 +3006,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p3.1-interactive-models.json"
       ],
       "legacy_checkpoint": "P3.1",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C06 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C07",
@@ -2927,9 +3055,11 @@
       ],
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C07 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C07.1",
@@ -2973,9 +3103,11 @@
       ],
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C07 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C08",
@@ -3023,8 +3155,10 @@
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C08 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C08.1",
@@ -3068,8 +3202,10 @@
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C08 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C09",
@@ -3112,10 +3248,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-minimal-pair-ci.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/platform",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C09 behavior to crates/platform, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C09.1",
@@ -3155,10 +3293,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-config-policy.json"
       ],
       "legacy_checkpoint": "P3.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/platform",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C09 behavior to crates/platform, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C10",
@@ -3205,10 +3345,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-popout-workflow.json"
       ],
       "legacy_checkpoint": "P2.2",
-      "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C10 behavior to crates/ui-egui, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C10.1",
@@ -3254,8 +3396,10 @@
       "legacy_checkpoint": "P5.2",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C10 behavior to crates/ui-egui, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C11",
@@ -3313,10 +3457,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-13-p3.2-plugin-d15-bounded-workflows.json"
       ],
       "legacy_checkpoint": "P3.2",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R4",
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "C11.1",
@@ -3376,8 +3522,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "C12",
@@ -3427,8 +3575,10 @@
       "legacy_checkpoint": "P3.3",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "C13",
@@ -3473,8 +3623,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C13 behavior to crates/engine, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C14",
@@ -3514,10 +3666,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p6.2-exit-portability.json"
       ],
       "legacy_checkpoint": "P6.2",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C14 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C15",
@@ -3562,8 +3716,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C15 behavior to crates/engine, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "C15.1",
@@ -3607,8 +3763,10 @@
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Port C15 behavior to crates/engine, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
     },
     {
       "id": "PC01",
@@ -3660,8 +3818,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC02",
@@ -3714,8 +3874,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC03",
@@ -3768,8 +3930,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC04",
@@ -3822,8 +3986,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC05",
@@ -3876,8 +4042,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC06",
@@ -3930,8 +4098,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC07",
@@ -3991,8 +4161,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC08",
@@ -4046,8 +4218,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC09",
@@ -4099,8 +4273,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC10",
@@ -4153,8 +4329,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC11",
@@ -4207,8 +4385,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC12",
@@ -4261,8 +4441,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC13",
@@ -4314,8 +4496,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC14",
@@ -4367,8 +4551,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC15",
@@ -4428,8 +4614,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC16",
@@ -4481,8 +4669,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC17",
@@ -4551,8 +4741,10 @@
       "legacy_checkpoint": "P3.3",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC18",
@@ -4604,8 +4796,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC19",
@@ -4664,8 +4858,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC20",
@@ -4726,8 +4922,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC21",
@@ -4787,8 +4985,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC22",
@@ -4846,8 +5046,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC23",
@@ -4909,8 +5111,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC24",
@@ -4968,8 +5172,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC25",
@@ -5022,8 +5228,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC-DEP-MINIMAL",
@@ -5074,8 +5282,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PC-DEP-TEXT-EXTRACTOR",
@@ -5125,8 +5335,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-001",
@@ -5168,8 +5380,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-002",
@@ -5237,8 +5451,10 @@
       "legacy_checkpoint": "P1.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-003",
@@ -5298,8 +5514,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-004",
@@ -5359,8 +5577,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-005",
@@ -5420,8 +5640,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-006",
@@ -5464,8 +5686,10 @@
       "legacy_checkpoint": "P3.2",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "PLUG-007",
@@ -5513,8 +5737,10 @@
       "legacy_checkpoint": "P1.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-008",
@@ -5556,8 +5782,10 @@
       "legacy_checkpoint": "P1.1",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-009",
@@ -5605,8 +5833,10 @@
       "legacy_checkpoint": "P1.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "PLUG-010",
@@ -5648,8 +5878,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "RESEARCH-001",
@@ -5689,10 +5921,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "RESEARCH-002",
@@ -5732,10 +5966,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "RESEARCH-003",
@@ -5775,10 +6011,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "RESEARCH-004",
@@ -5818,10 +6056,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "RESEARCH-005",
@@ -5863,10 +6103,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-pin-manifest.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "A01",
@@ -5911,8 +6153,10 @@
       "legacy_checkpoint": "P4.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A01.1",
@@ -5957,8 +6201,10 @@
       "legacy_checkpoint": "P4.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A02",
@@ -6005,8 +6251,10 @@
       "legacy_checkpoint": "P4.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A02.1",
@@ -6054,8 +6302,10 @@
       "legacy_checkpoint": "P4.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A03",
@@ -6098,8 +6348,10 @@
       "legacy_checkpoint": "P4.2",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A04",
@@ -6142,8 +6394,10 @@
       "legacy_checkpoint": "P4.2",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A05",
@@ -6187,8 +6441,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A06",
@@ -6235,8 +6491,10 @@
       "legacy_checkpoint": "P4.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A07",
@@ -6280,8 +6538,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A08",
@@ -6325,8 +6585,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "A09",
@@ -6369,8 +6631,10 @@
       "legacy_checkpoint": "P4.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "AI-001",
@@ -6412,8 +6676,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "AI-002",
@@ -6457,8 +6723,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "AI-003",
@@ -6502,8 +6770,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "AI-004",
@@ -6547,8 +6817,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "UX-001",
@@ -6595,8 +6867,10 @@
       "legacy_checkpoint": "P2.2",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "UX-002",
@@ -6637,10 +6911,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-workspace-restart.json"
       ],
       "legacy_checkpoint": "P2.2",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "UX-003",
@@ -6684,10 +6960,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-electron-renderer-workflow-ci.json"
       ],
       "legacy_checkpoint": "P2.2",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R3",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "UX-004",
@@ -6730,8 +7008,10 @@
       "legacy_checkpoint": "P5.2",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "UX-005",
@@ -6773,8 +7053,10 @@
       "legacy_checkpoint": "P5.2",
       "migration_phase": "R3",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Implement the documented native egui workflow with keyboard/accessibility acceptance and CI interaction evidence."
     },
     {
       "id": "ARCH-001",
@@ -6803,7 +7085,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -6815,10 +7097,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.3-p6.1-packaged-runtime.json"
       ],
       "legacy_checkpoint": "P1.3",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-002",
@@ -6847,7 +7131,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -6859,10 +7143,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p1.3-architecture.json"
       ],
       "legacy_checkpoint": "P1.3",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-003",
@@ -6891,7 +7177,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -6903,10 +7189,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.3-p6.1-packaged-runtime.json"
       ],
       "legacy_checkpoint": "P1.3",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-004",
@@ -6935,7 +7223,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -6948,10 +7236,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-cross-platform-ci.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-005",
@@ -6980,7 +7270,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -6991,10 +7281,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-chronicle-recovery.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-006",
@@ -7023,7 +7315,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -7037,10 +7329,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-cross-platform-ci.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-007",
@@ -7069,7 +7363,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -7081,10 +7375,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-runtime-linux.json"
       ],
       "legacy_checkpoint": "P1.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-008",
@@ -7113,7 +7409,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -7130,10 +7426,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-lifecycle-linux.json"
       ],
       "legacy_checkpoint": "P1.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-009",
@@ -7162,7 +7460,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -7174,10 +7472,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-runtime-linux.json"
       ],
       "legacy_checkpoint": "P1.2",
-      "migration_phase": "R4",
-      "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "ARCH-010",
@@ -7206,7 +7506,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "superseded",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -7217,10 +7517,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p1.1-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R6",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Replaced by native Rust architecture in the migration goal; historical source/evidence are retained.",
+      "migration_disposition": "superseded",
+      "migration_acceptance": "The prior Electron/TypeScript architecture proposal is superseded by the native Rust architecture specified in this migration goal."
     },
     {
       "id": "SYNC-001",
@@ -7261,10 +7563,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.1-electron-vault-cross-platform-ci.json"
       ],
       "legacy_checkpoint": "P2.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "SYNC-002",
@@ -7307,10 +7611,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip-ci.json"
       ],
       "legacy_checkpoint": "P1.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "SYNC-003",
@@ -7350,10 +7656,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-chronicle-recovery.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "SYNC-004",
@@ -7399,10 +7707,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip-ci.json"
       ],
       "legacy_checkpoint": "P1.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "SYNC-005",
@@ -7442,10 +7752,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-conflict-retention.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "SYNC-006",
@@ -7487,10 +7799,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.2-workspace-state.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "SYNC-007",
@@ -7532,10 +7846,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-uninstall-cleanup.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "Q-001",
@@ -7575,10 +7891,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p5.1-quality-program.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "Q-002",
@@ -7619,10 +7937,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-golden-edit-coverage-ci.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "Q-003",
@@ -7663,10 +7983,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-golden-edit-coverage-ci.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R4",
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "Q-004",
@@ -7709,8 +8031,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "Q-005",
@@ -7754,8 +8078,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "Q-006",
@@ -7799,8 +8125,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R1",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Record and enforce this cross-cutting contract in Rust workspace tooling and GitHub CI."
     },
     {
       "id": "Q-007",
@@ -7842,10 +8170,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-cross-platform-ci.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R5",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Measure indexed search latency and update visibility against the frozen synthetic workloads in GitHub CI."
     },
     {
       "id": "Q-008",
@@ -7889,8 +8219,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Measure indexing/search resource use at the frozen vault sizes in GitHub CI and document budgets before final acceptance."
     },
     {
       "id": "Q-009",
@@ -7933,8 +8265,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R1",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Record and enforce this cross-cutting contract in Rust workspace tooling and GitHub CI."
     },
     {
       "id": "Q-010",
@@ -7974,8 +8308,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "Q-011",
@@ -8004,7 +8340,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "external_pending",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -8018,10 +8354,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p2.2-electron-renderer-workflow-ci.json"
       ],
       "legacy_checkpoint": "P5.2",
-      "migration_phase": "R3",
-      "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R7",
+      "rust_owner": "release-handoff",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "Q-012",
@@ -8063,8 +8401,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "Q-013",
@@ -8106,8 +8446,10 @@
       "legacy_checkpoint": "P5.1",
       "migration_phase": "R2",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "Q-014",
@@ -8150,8 +8492,10 @@
       "legacy_checkpoint": "P6.1",
       "migration_phase": "R6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Build and audit Rust preview packages and third-party notices on supported runners; keep production signing external."
     },
     {
       "id": "Q-015",
@@ -8193,8 +8537,10 @@
       "legacy_checkpoint": "P5.2",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "Q-016",
@@ -8236,8 +8582,10 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "Q-017",
@@ -8280,8 +8628,10 @@
       "legacy_checkpoint": "P6.1",
       "migration_phase": "R6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Build and audit Rust preview packages and third-party notices on supported runners; keep production signing external."
     },
     {
       "id": "Q-018",
@@ -8322,10 +8672,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.3-p6.1-packaged-runtime.json"
       ],
       "legacy_checkpoint": "P6.1",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R6",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Build and audit Rust preview packages and third-party notices on supported runners; keep production signing external."
     },
     {
       "id": "Q-019",
@@ -8365,8 +8717,10 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "DEL-001",
@@ -8406,10 +8760,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-reconciliation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "DEL-002",
@@ -8449,10 +8805,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p1.3-architecture.json"
       ],
       "legacy_checkpoint": "P1.3",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "DEL-003",
@@ -8494,8 +8852,10 @@
       "legacy_checkpoint": "P0.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "DEL-004",
@@ -8537,8 +8897,10 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "RISK-001",
@@ -8580,8 +8942,10 @@
       "legacy_checkpoint": "P1.3",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "RISK-002",
@@ -8629,8 +8993,10 @@
       "legacy_checkpoint": "P1.2",
       "migration_phase": "R4",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "RISK-003",
@@ -8677,10 +9043,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.2-plugin-lifecycle-linux.json"
       ],
       "legacy_checkpoint": "P1.2",
-      "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R4",
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Evaluate each unchanged artifact/workflow under enforced isolation and preview; record evidence-backed D15 denials visibly."
     },
     {
       "id": "RISK-004",
@@ -8726,10 +9094,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p1.1-host-permission-roundtrip-ci.json"
       ],
       "legacy_checkpoint": "P1.1",
-      "migration_phase": "R1",
-      "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Use lossless parse representations and surgical edits; golden fixtures prove unknown syntax remains intact."
     },
     {
       "id": "RISK-005",
@@ -8770,10 +9140,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.3-conflict-retention.json"
       ],
       "legacy_checkpoint": "P2.3",
-      "migration_phase": "R5",
-      "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
     },
     {
       "id": "RISK-006",
@@ -8818,8 +9190,10 @@
       "legacy_checkpoint": "P4.1",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "RISK-007",
@@ -8863,8 +9237,10 @@
       "legacy_checkpoint": "P4.3",
       "migration_phase": "R5",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Preserve the typed, revision-aware workflow and enforce provider, context, privacy and approval rules in GitHub CI."
     },
     {
       "id": "RISK-008",
@@ -8904,10 +9280,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p0.2-validation.json"
       ],
       "legacy_checkpoint": "P0.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Retain scope through upstream drift and record pin refreshes without silently replacing required compatibility targets."
     },
     {
       "id": "RISK-009",
@@ -8952,8 +9330,10 @@
       "legacy_checkpoint": "P0.2",
       "migration_phase": "R6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Build and audit Rust preview packages and third-party notices on supported runners; keep production signing external."
     },
     {
       "id": "RISK-010",
@@ -8993,10 +9373,12 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p6.2-final-audit.json"
       ],
       "legacy_checkpoint": "P6.2",
-      "migration_phase": "R1",
+      "migration_phase": "R0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Reconcile this product contract and source evidence in migration traceability, keeping upstream drift and historical results visible."
     },
     {
       "id": "P7-001",
@@ -9025,7 +9407,7 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
+      "status": "external_pending",
       "evidence_paths": [],
       "tested_source_tree": null,
       "blocker": null,
@@ -9038,8 +9420,10 @@
       "legacy_checkpoint": "P7.1",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "EXT-001",
@@ -9079,8 +9463,10 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "EXT-002",
@@ -9120,8 +9506,10 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "EXT-003",
@@ -9161,8 +9549,10 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
     },
     {
       "id": "EXT-004",
@@ -9202,8 +9592,665 @@
       "legacy_checkpoint": "P6.2",
       "migration_phase": "R7",
       "rust_owner": "release-handoff",
-      "mapping_status": "provisional",
-      "runtime_override": "Rust goal supersedes Electron/Bun/runtime clauses; preserve other product requirements."
+      "mapping_status": "reviewed",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
+      "migration_disposition": "release_external",
+      "migration_acceptance": "Record prerequisites, owners and verification for human validation, live services, signing or publication; automated fixtures do not pass external requirements."
+    },
+    {
+      "id": "MIG-001",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Mandatory execution workflow: GitHub CI only",
+        "clause": "All executable validation, tests, builds, lint, format and audits run in GitHub Actions only."
+      },
+      "checkpoint": "R0",
+      "owner": "xtask",
+      "mandatory": true,
+      "acceptance_criteria": "Every migration commit records an exact SHA and CI run; no local validation is counted.",
+      "fixture_ids": [
+        "fixture:mig-001"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D19",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Every migration commit records an exact SHA and CI run; no local validation is counted.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-002",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Mandatory execution workflow: GitHub CI only",
+        "clause": "Use small phase commits, push to origin/main when CI evidence is needed and after each milestone, and record exact-SHA results."
+      },
+      "checkpoint": "R0",
+      "owner": "xtask",
+      "mandatory": true,
+      "acceptance_criteria": "The branch history and state evidence link each milestone commit and completed required CI.",
+      "fixture_ids": [
+        "fixture:mig-002"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D19",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "The branch history and state evidence link each milestone commit and completed required CI.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-003",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Mandatory execution workflow: GitHub CI only",
+        "clause": "Keep platform builds/tests on GitHub hosted Linux, macOS and Windows runners, with appropriate Rust toolchains and dependencies."
+      },
+      "checkpoint": "R1",
+      "owner": "xtask",
+      "mandatory": true,
+      "acceptance_criteria": "Required matrix jobs pass on Linux, macOS and Windows for the accepted implementation SHA.",
+      "fixture_ids": [
+        "fixture:mig-003"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D19",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Required matrix jobs pass on Linux, macOS and Windows for the accepted implementation SHA.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-004",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Reference stack: source-verified Photocraft analysis",
+        "clause": "Use Rust 2024, minimum Rust 1.95, Cargo resolver 3 workspace organized by crates/apps/xtask, with committed Cargo.lock and locked CI builds."
+      },
+      "checkpoint": "R1",
+      "owner": "apps/openobsidian",
+      "mandatory": true,
+      "acceptance_criteria": "CI builds the desktop workspace with --locked under the declared minimum toolchain policy.",
+      "fixture_ids": [
+        "fixture:mig-004"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D17",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "apps/openobsidian",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "CI builds the desktop workspace with --locked under the declared minimum toolchain policy.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-005",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Reference stack: source-verified Photocraft analysis",
+        "clause": "Implement the desktop application and renderer natively in egui/eframe 0.36 with wgpu, accessibility and native Linux window support."
+      },
+      "checkpoint": "R1",
+      "owner": "crates/ui-egui",
+      "mandatory": true,
+      "acceptance_criteria": "Three-OS CI compiles the native app and publishes preview artifacts without an Electron or HTML renderer entry point.",
+      "fixture_ids": [
+        "fixture:mig-005"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D17",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Three-OS CI compiles the native app and publishes preview artifacts without an Electron or HTML renderer entry point.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-006",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Reference stack: source-verified Photocraft analysis",
+        "clause": "Use typed Serde data models, thiserror errors, log logging and Rayon for bounded CPU-parallel domain work; keep UI work cancellable."
+      },
+      "checkpoint": "R1",
+      "owner": "crates/engine",
+      "mandatory": true,
+      "acceptance_criteria": "Layer checks and Rust CI validate dependency boundaries and cancellable work units.",
+      "fixture_ids": [
+        "fixture:mig-006"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D17",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Layer checks and Rust CI validate dependency boundaries and cancellable work units.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-007",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Reference stack: source-verified Photocraft analysis",
+        "clause": "Forbid unsafe code workspace-wide and document any necessary isolated platform adapter before introducing it."
+      },
+      "checkpoint": "R1",
+      "owner": "apps/openobsidian",
+      "mandatory": true,
+      "acceptance_criteria": "Workspace lint and Clippy deny unsafe, with any reviewed exception confined to the platform adapter.",
+      "fixture_ids": [
+        "fixture:mig-007"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D17",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "apps/openobsidian",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Workspace lint and Clippy deny unsafe, with any reviewed exception confined to the platform adapter.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-008",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Product invariants and migration risks",
+        "clause": "WASM plugin support does not certify Obsidian JavaScript/DOM bundles; evaluate a separately isolated mediated JavaScript runtime and retain every legacy compatibility row."
+      },
+      "checkpoint": "R4",
+      "owner": "crates/plugins",
+      "mandatory": true,
+      "acceptance_criteria": "Legacy artifact versions/hashes receive workflow-level runtime or evidence-backed D15 denial; WASM projections are labeled separately.",
+      "fixture_ids": [
+        "fixture:mig-008"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D15",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R4",
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Legacy artifact versions/hashes receive workflow-level runtime or evidence-backed D15 denial; WASM projections are labeled separately.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-009",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Product invariants and migration risks",
+        "clause": "Preserve Electron encrypted credentials during transition and provide an explicit native OS credential migration or safe user re-entry path with no plaintext fallback."
+      },
+      "checkpoint": "R5",
+      "owner": "crates/platform",
+      "mandatory": true,
+      "acceptance_criteria": "CI exercises encrypted-store detection, successful migration and unavailable/key-loss recovery without recording secrets.",
+      "fixture_ids": [
+        "fixture:mig-009"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D11",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R5",
+      "rust_owner": "crates/platform",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "CI exercises encrypted-store detection, successful migration and unavailable/key-loss recovery without recording secrets.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-010",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Current project and target architecture",
+        "clause": "Use egui native widgets and painting for the app UI; no JavaScript or browser UI may remain in the delivered application after cutover."
+      },
+      "checkpoint": "R6",
+      "owner": "crates/ui-egui",
+      "mandatory": true,
+      "acceptance_criteria": "Packaged-runtime inventory contains no shipped renderer HTML/JS/Electron runtime after equivalent workflows pass.",
+      "fixture_ids": [
+        "fixture:mig-010"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D01",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R6",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Packaged-runtime inventory contains no shipped renderer HTML/JS/Electron runtime after equivalent workflows pass.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-011",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Mandatory execution workflow: GitHub CI only",
+        "clause": "Use GitHub Actions native parallel step groups only for independent operations and make the group barrier precede every dependent test or artifact publication."
+      },
+      "checkpoint": "R0",
+      "owner": "xtask",
+      "mandatory": true,
+      "acceptance_criteria": "Three-OS quality and package jobs pass with explicit waits and no dependent operation starts before its prerequisite group.",
+      "fixture_ids": [
+        "fixture:mig-011"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D19",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R0",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Three-OS quality and package jobs pass with explicit waits and no dependent operation starts before its prerequisite group.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-012",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Product invariants and migration risks",
+        "clause": "Keep app-owned preferences/layout separate from authoritative vault data; preserve SHA-256 revisions and do not substitute Photocraft BLAKE3."
+      },
+      "checkpoint": "R2",
+      "owner": "crates/vault",
+      "mandatory": true,
+      "acceptance_criteria": "Golden vault fixtures prove byte fidelity, SHA-256 revisions and separation of app state on three operating systems.",
+      "fixture_ids": [
+        "fixture:mig-012"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D02",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R2",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Golden vault fixtures prove byte fidelity, SHA-256 revisions and separation of app state on three operating systems.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-013",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Current project and target architecture",
+        "clause": "Retain a mediated capability boundary for plugin and AI writes; Rust in-process modules do not claim isolation for untrusted extensions."
+      },
+      "checkpoint": "R4",
+      "owner": "crates/plugins",
+      "mandatory": true,
+      "acceptance_criteria": "Capability-denial and preview tests demonstrate no direct plugin filesystem/process/provider credential bypass.",
+      "fixture_ids": [
+        "fixture:mig-013"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D11",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R4",
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Capability-denial and preview tests demonstrate no direct plugin filesystem/process/provider credential bypass.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-014",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Phases and acceptance",
+        "clause": "Use separate dependency-aligned crates for document, vault, engine, platform, plugins, native UI and testkit plus openobsidian desktop/CLI apps and xtask."
+      },
+      "checkpoint": "R1",
+      "owner": "xtask",
+      "mandatory": true,
+      "acceptance_criteria": "Cargo metadata and CI layering gate show the approved dependency graph and no UI-to-privileged cycle.",
+      "fixture_ids": [
+        "fixture:mig-014"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D17",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Cargo metadata and CI layering gate show the approved dependency graph and no UI-to-privileged cycle.",
+      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence."
+    },
+    {
+      "id": "MIG-015",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Phases and acceptance / R1",
+        "clause": "Before broad native UI investment, prototype unchanged JavaScript/DOM plugin compatibility and enforced capability denial on the supported operating systems."
+      },
+      "checkpoint": "R1",
+      "owner": "crates/plugins",
+      "mandatory": true,
+      "acceptance_criteria": "GitHub CI on Linux, macOS and Windows records runtime identity and artifact hashes, exercises representative JavaScript API, DOM/theme and editor workflows, verifies denied filesystem/process/network/credential capabilities, and records unsupported paths under D15 without counting mock projections as unchanged-artifact certification.",
+      "fixture_ids": [
+        "fixture:compatibility-manifest",
+        "fixture:plugin-renderer-probe",
+        "fixture:plugin-isolation"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07",
+          "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        }
+      ],
+      "applicable_platforms": [
+        "macOS",
+        "Windows",
+        "Linux"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "D15",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R1",
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Complete the compatibility feasibility gate before broad native UI investment; all acceptance execution occurs on GitHub Actions.",
+      "runtime_override": "Rust migration-specific acceptance requirement; verify only in GitHub CI."
     }
-  ]
+  ],
+  "reviewed_at": "2026-10-07T18:43:14.593997+00:00",
+  "mapping_review": {
+    "status": "complete",
+    "reviewed_requirement_count": 211,
+    "legacy_requirement_count": 196,
+    "new_migration_requirement_count": 15,
+    "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending; external items remain external_pending. Migration-only rows add native-stack, CI, packaging, credential and early plugin-feasibility gates."
+  }
 }

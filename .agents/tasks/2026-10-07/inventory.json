@@ -5,1623 +5,2196 @@
     {
       "path": "src/core/ai-changes.ts",
       "sha256": "841fe8c152e6d997cca6a5c1a78be19a0ea21e134d243256c3a75f09cde40fb4",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/attachments.ts",
       "sha256": "7a29a4da3018e4eb8f012b29d162da22604411aaa183c4399079446a350d6f8c",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/bases-native.ts",
       "sha256": "1c90c6744e9e09291fd1806506eac964b342dfc8308fd0c9e6d5dad4255f1846",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/bases.ts",
       "sha256": "669551d13e815c92fc8cfc2e252d90d05ea00ca35f6041bc158c875f499aa1dd",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/canvas.ts",
       "sha256": "b5c70dcb2f94f74eecbceb01fe6250463787c30af95424ca613ebf8c0028cf17",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/chronicle.ts",
       "sha256": "fe63afe025178d274df9cc3310093ec766db7d90a6096f1e67164f97bf46598a",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/configuration.ts",
       "sha256": "0d9c75a301d05026ab4e2a3ec4700635e0e8b90a27ea67be314c408dba56fada",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/platform",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/credentials.ts",
       "sha256": "50a3ec7168dac9b583e4fc84a23475469c6d98800d65ce0249033f3717a35bb7",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/platform",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/embedded-base.ts",
       "sha256": "0dcf151b64aac5697eff3d75f0b974a95aad71417efc52822755397f2d64e927",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/graph.ts",
       "sha256": "7f88ae9921a6e4db9372b79b358678f1df855a6cf64f317dceb9374e12ec74d6",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/history.ts",
       "sha256": "324bea854467a767acf20279c77fc21fb17a81abbdbd62d72b635aae19509732",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/links.ts",
       "sha256": "d0ef90394bb44eea964493c0fc0a42d42bf7c2a1766f0cd62994c86217c659b4",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/localization.ts",
       "sha256": "6fe603541055c6415adba8d24a4a03392c141a8c1d964f54cf0c07827cb941d1",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/markdown-preview.ts",
       "sha256": "bd6dda81dca2e6444476843a37244f4390461dd4e6a94e115b1cdbb385733960",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/markdown.ts",
       "sha256": "1cc2a9d993c6fab7166f1f5b7b339cb5bdcd175c87818b0881e437ff673195ce",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/merge.ts",
       "sha256": "b5e8b3f7aec8cc3fc9740c4a675b487b587e479bce7afb9abd5eb3b2de00f98f",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/model-lifecycle.ts",
       "sha256": "2fe740a151c3b62ac709ec1e3310e486ada0847ba6e1df652d690f05972834a8",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/note-context.ts",
       "sha256": "222646e1cd4b81980663dec2d345744c61e465a021eb4e94ab5292ce5c3cceaa",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/note-workflows.ts",
       "sha256": "a93bbabd9c9e10be0025f676aea35e89b08ca0b677cfe168639992005a0d17f9",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/path-scope.ts",
       "sha256": "ea70c31e758e298c93eff0797eaaf6931bb8d1b9052cddd6a5920320c6db85c1",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/privacy.ts",
       "sha256": "719072e0a7587e27999fad53d26d2ecbd5b849aee62450abbf19110f6f937a74",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/providers.ts",
       "sha256": "1d4aa81a51994f0ec488fa089538c29b2a59859c20c5be2ef269a71b40025dbb",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/rename-plan.ts",
       "sha256": "1000ad21c082d822e387def10fc90dd7ffc92283fa3770f25961e37faee46489",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/retrieval.ts",
       "sha256": "fabd9784aa997a8c2d8f7ef2d43544bcd49653b5d4aa2eeb964b159a7c99dc7d",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/storage-protection.ts",
       "sha256": "675b4b5b333bcce1aebe397346a32a30001e6afccf16604f528836e3fdfbf3df",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/platform",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/sync-tools.ts",
       "sha256": "84927f9218e9f03d98c47537cc2c09744b4127f18f9f492bb16e307a4c6bad2e",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/transclusion.ts",
       "sha256": "71caf25f90e4235e12ed4e41b0ef60d345945a45f42d72e1530ecff2fa064b56",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/vault-index.ts",
       "sha256": "36894631407605d2352588f84748527b11819ae2aa1a1f3e8c6f4b8e15376547",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/vault.ts",
       "sha256": "86af1fd635dc8b89521d8d59d3e1afe75b40931bb6a94e225432a81d0c85cf21",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/watcher.ts",
       "sha256": "515e7d3068bb5a5eb410bf2adbe12a9cae6a657718d76157ff9575d3dcc5954c",
       "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/workflows.ts",
       "sha256": "4a56d58a12f677458e387841ec32c37057054dbcc4fad7c1668f9886837441c9",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/core/yaml.ts",
       "sha256": "47935a50e5c7573a491ca79baf92e946e56959b582a9324dcb2cd4a0306ce06f",
-      "rust_owner": "crates/vault",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/electron/main.ts",
       "sha256": "8a7ad31980d0d761a3b48f91e83cedebb851dc0f71bba925dde217e4dd5b5700",
       "rust_owner": "crates/platform",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/electron/preload.ts",
       "sha256": "d5ecfb366e8af7351bfdbee3bd3e8ca646e7f5bdc0971002a0b9f2adf9eb40a6",
       "rust_owner": "crates/platform",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/electron/provider-credentials.ts",
       "sha256": "14af7283023e3bd614375f50461e933f8a2bb8942b14ee64cbd262c5d3f5e052",
       "rust_owner": "crates/platform",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/bundle-prescreen.ts",
       "sha256": "6aad9609f966f0658b63a2135d5fb27e8b0ba0f3ea56cd733342953768244ba8",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/compatibility-matrix.ts",
       "sha256": "4258e0e800ac6533669df04fcd090b98523bd77a2fb4aef0e6a3980f3dd57667",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/d15-bounded-workflows.ts",
       "sha256": "eaff88aca87300f8e42568157508c8a4c5d6a88aa7e10d0f3df695a23471f1c7",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/d15-workflow-evidence.ts",
       "sha256": "fa31e43cb3428193b47cc1fbeb16327ed0157396ecede68a82720fecb165cf05",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/fixture-runner.ts",
       "sha256": "502339ed7ad103825f334ea0e14ccb02e32d75aefe4643948a4a775aceacaa75",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/plugin-combination-evidence.ts",
       "sha256": "eb490698728bbef713ef45926e7bf8792ca627f225e0c1396e84a77701b98a35",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/policy.ts",
       "sha256": "e5447f488c6906f4e28319dd01cf6426258b19b50237382769d0b58b24506e74",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/plugins/runtime-probe.ts",
       "sha256": "c3f45f8632de3b39b9905cee2014c2dfde20e4b5bd456cb4968750eda03334bc",
       "rust_owner": "crates/plugins",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/renderer/index.html",
       "sha256": "7e4ad1cbcb5eb88e70d4353b1fa69f1b1bea7f43d6b2c77e1a2e1fe88cd01090",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/renderer/popout.html",
       "sha256": "ecb8138fb20a5566eedb5bb6ca800d7ce8d565231e8a2db60c8898243d07a097",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/renderer/popout.ts",
       "sha256": "7ddadc5b3e0bac77aaa9de0364d7ef7674201d416d544c84c7a406ab0aefe87d",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/renderer/renderer.ts",
       "sha256": "224b3c4541b0a9eba534259c161ca24dd77f01540993df1546b86a5e85cfd06a",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/renderer/theme-preview.ts",
       "sha256": "6af0282d3dedd71a0800f9267c48d48f9aae4de90980e9a9a3ce900a10fb2a3e",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/api.ts",
       "sha256": "bd0f8523bc99073897cdf6106480d350096e69f81bf9da1b8987bffdd405796d",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/base64.ts",
       "sha256": "df890b0790ffdb1ea84b2f1cd115f2e550a86eba753c54daa2c5ea6a198970a2",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/entry-points.ts",
       "sha256": "e46f0b997ea0af17d101c33a49aa7dd41fddff5085ad215b38fd9dd9b73a965e",
       "rust_owner": "crates/engine",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/README.md",
       "sha256": "51d2567c2644463e22ef5ca1d00cafb64720a81398529c0a455a01877bc5304c",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/design-system.ts",
       "sha256": "c3de2201500e7709ee6971d8c1d785ffbaad63cdab63fc7a89958f1e581e606a",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/graph.ts",
       "sha256": "4dfe507f391e982f6e4cabc037060dd6df292be238300c41a79c83e8bf24a3d2",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/index.ts",
       "sha256": "2d97051f8ed34bde100a2997574f7e86c867a9d766a4c2b6b360be2657dad0a6",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/keyboard.ts",
       "sha256": "5b776aa5fc68b3db4fdb74f443c1fa3c2f6afcd4294ef227691a73007c10851d",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/markdown-preview.ts",
       "sha256": "956d91c16cad9a1bc7806e3a91b62dc6b756636e4b2439ade15740ecea50a25e",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/note-workflows.ts",
       "sha256": "fa1b9c122408b7c45c8e776ae24adfc6c4c6a27df2e8abef84b3eb019ae98ddb",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/themes.ts",
       "sha256": "bc494c06c2cd7334d19f48ac6773ddefc8284e64be258ecfdd06df6a2cd45104",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/uninstall.ts",
       "sha256": "f5ebcbaced9774b234097d2ef8da5d9178bcb09824d3f8194d4df86fc0118ed6",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/workflows.ts",
       "sha256": "43f3e0e12ca3d38b054cd1f9d941cec55b67b51d833f1afcdfd4ebefbcbea4ac",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "src/shared/ui/workspace.ts",
       "sha256": "a25e632db5878d7ff8f0fbdc36f6e6d75759d26d621e4e8da4ef35aec514d7a2",
       "rust_owner": "crates/ui-egui",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "tests/ai-changes.test.ts",
       "sha256": "7aa0af8fb6066774b79859cda8bc4ddf8ca9a3842c0f204e60cb6f99088f0b38",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/api.test.ts",
       "sha256": "9019942d9a603cf4a5fa5f250c48938260676ab94513c2f3d7237e8813f33426",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/architecture-dom-compatibility.test.ts",
       "sha256": "b8fdcf41149655805bc0961634d87fed543b945670c20097a0e3041d2c72344a",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/architecture-private-internals.test.ts",
       "sha256": "2545d80ca4a48444620bb2174954e8a01f0c200c407fe29b77432bcc6d9a9fcd",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/attachments.test.ts",
       "sha256": "9d209ba8234a7b6b4ae4a0234a2aac9af0ad0a888d0d751a7616a98cb9008d14",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/bases.test.ts",
       "sha256": "812db10433e2c30716087b5d93dcfa61183f86149d10ddd50a0970c9e20e19fe",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/benchmark.test.ts",
       "sha256": "82f2493ff6c695fe34f29c88b1cc31de38a16cc3900de2820bd57fe371c54db6",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/bundle-prescreen.test.ts",
       "sha256": "dc7fbef85be757bb2c2722bb398435b344219748a17e91f61108aaf9f1d806fe",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/canvas-graph.test.ts",
       "sha256": "9453ea0879229cf0f78a44a5ffbcc37fb864d24962edc37b6075edb0027293b0",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/check-fast.test.ts",
       "sha256": "571825a78dec21033d791188ddff8de871ff737b1745635df1214845e56a656d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/chronicle.test.ts",
       "sha256": "b88f947bb21611d83320874ef353ad2fc303567963583d11cf1d230ef7db8ae7",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/comparison-scorecard.test.ts",
       "sha256": "7bf033541dce419cf35dfa9e89cb4affcac636b36d1a145b137098b3043661be",
       "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/compatibility-coverage.test.ts",
       "sha256": "4fe8e4be276c44f42e42a5304a8e8329c4fd9520d7a18a87de89058b619c249f",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/compatibility-pins.test.ts",
       "sha256": "55bf0b1fa17b3320ef738e9808eea2e98c7c6143d66d5ea37d33f927a35ba974",
       "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/configuration.test.ts",
       "sha256": "be03cafff65b6fac811079104a06ff46f19b1085d4f04a7fb322231332e4930d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/core-workflows.test.ts",
       "sha256": "89e8c1a7786baf8f57b833f5c5f108c7e68c7ea9851255ccb729f0e2d570ebc5",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/distribution.test.ts",
       "sha256": "3fd79d47ac7be078c4c49b027a34671c4eb56ee5f0e961e18a8dde43746795d0",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/electron-vault-audit.test.ts",
       "sha256": "5a6ff8b57b877fad78758546c1a0ad792c30ab65f770b55ed86908b6095582ce",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/entry-points.test.ts",
       "sha256": "547dbc49f58445e4e61aae104995efcc2bfedf71d9f4ce91b4592a0e79b91234",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/exit-portability.test.ts",
       "sha256": "9b33733e3831e7858a65db69edb2c8deb984688886df5046b2316d73444387af",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/final-audit.test.ts",
       "sha256": "97bd9c392c0b9e8cc0bdb8253e2880a4ab669cf25d72fd706a4ed35a0d4cec2f",
       "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/golden-edit-fidelity.test.ts",
       "sha256": "50aa41385966507b3215396006e8fd1b353dec111f4739c48c3e1f00937460c1",
       "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/history-watcher.test.ts",
       "sha256": "2f86b26a2b83c73beee3e7e2e0ec52d87f5a85087b741693db48c23b28782960",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/input-matrix.test.ts",
       "sha256": "5777b96987e2c50d742ab769d1dd9d3e6679c9e8b0f2f9faeb7d6dd1adf8ac9f",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/links.test.ts",
       "sha256": "c0e215d257a99edc71008432305eb6140e18605b1b6e93b210c7eb165615a81e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/markdown-preview.test.ts",
       "sha256": "0b4281c01508c970d46411546d1c4c39945ac5113bbb1d26474e344c83bbe291",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/markdown.test.ts",
       "sha256": "a0ed7a98f40cd767cab873009b6c7f6a959c8f09c5bc865287e9725b6a9cd082",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/merge.test.ts",
       "sha256": "7eb2753159c75b6cad2479efd94fd64e6e674e54eb7d52a8f980e4efb3586fca",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/minimal-theme-audit.test.ts",
       "sha256": "c121b4b532da6c4059be0cf947f96095e7a6ff434ee45abc11d491d3bbcd57ef",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/note-context.test.ts",
       "sha256": "212e39698fe7d2a65cb9b0b24bbad80049f69cc4ecde9a22f990722a4f159299",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/note-workflows.test.ts",
       "sha256": "0098e5c0d9df0910f8bdf2cdf9c864dce895ea26dfb3f6f81f80dbdca09ede64",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-combination-audit.test.ts",
       "sha256": "1a490d82348a3c796b96a915d695502201e0bf35a3c37f15299849fb8889843f",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-compatibility-matrix.test.ts",
       "sha256": "1a5980c127e08cacf95f7328ff9557d3ff8c4a0bee2d67de24d1a5a483883e8c",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-d15-workflow.test.ts",
       "sha256": "16c630d5b90da24f1bb23f0bc1c6553a706542ac5b3a61b3bebe94c2a87a7fef",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-fixture-runner.test.ts",
       "sha256": "7bc7cc07829e5efcd6b5cf392893ca6dc4cd69ef86e26c0c410d9c00a609e427",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-loaded-workflows.test.ts",
       "sha256": "d86c282ed41a57682de95f6f6dd254e937cceea49158b242e0cd809768a0302b",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-policy.test.ts",
       "sha256": "c2d8b60b7b0714e451ad321e3c8b7df336af228718b2cd122adc59804b6bfb55",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-prerequisites.test.ts",
       "sha256": "96c0b77e679020926d35b0b4f100eb2ee0a63d6db48ad47388434da1282b48d6",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-renderer-lifecycle.test.ts",
       "sha256": "a121ca4b24331f774d1bec492a7e3409e410fa4b171e6a7505caa809e99db90e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/plugin-renderer-probe.test.ts",
       "sha256": "cb8aece621a350dff21eea55c1f55e10ae762243c0d7222004856c8262a86e7e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/popout.test.ts",
       "sha256": "0c439013938e4521ec768b9a1994c41e30431fa60bb6ef3cb9163e2dceaded58",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/primary-references.test.ts",
       "sha256": "90fd8b962001ac27de5b6d1c8fb52d07f087ee4eb4cf3947deb9ed052e9da346",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/privacy-accessibility-localization.test.ts",
       "sha256": "6dc46be21c28f865a4dd9a0d596cb2d352dda19c979fb90ee4739848e167d0ad",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/providers.test.ts",
       "sha256": "3f4bd59de12bc522c0a38055a54c656590dbe6d2917016a4adcaf9c7b6361ea9",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/quality-program.test.ts",
       "sha256": "2d9f8e014d23d14c1c2ed710fc98449439f50ba1784934c9cb736d1865c97655",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/release-gate.test.ts",
       "sha256": "f0e0b9d8dae241c02c50b5901cc0367015f456d8bf6d3f55650f330b243bb661",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/rename-execution.test.ts",
       "sha256": "754c76c7a0b73d30ae22dcc9fd0a59e02cbe75b0a2d35436c1c6bfbce9a0130e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/rename-plan.test.ts",
       "sha256": "b2f0236b6b0fb1fde992e645227d04dce4e778fae88000180d8602cbebf9a18d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/retrieval.test.ts",
       "sha256": "7430d72010bd0657ac9e51e0a1704d5a102b99ba2bea01d405269d779db4945c",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/shared-ui.test.ts",
       "sha256": "f0e10145003193b6e1b0e1299d6a2caa27a4a8b2cbbede3cd2a79c0e8fc692b5",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/status.test.ts",
       "sha256": "1e0092cc9386148f8c6b39895838212bbe1fcd0c832f808dbcf4d6702be3b349",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/storage-protection.test.ts",
       "sha256": "96a02edb6c2428a27d73f25309284841fc4db64ab622f9b9bf121b3e4e029c7e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/sync-tools.test.ts",
       "sha256": "1724464725471b5d82317b039c39a587e1f6f22d5cac6e24f66fbb6a041c0d30",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/update-rollback.test.ts",
       "sha256": "2352cd0552e33d67515fdacd63cd2dbc340240ff9895685f47400de7070def97",
       "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/ux-surfaces.test.ts",
       "sha256": "29be45cad0fa9ef686f1f58bded06f291f93cce8e9a8f05de4fc456400dc23b1",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/vault-differential.test.ts",
       "sha256": "9f968c5f07411edb3a17c09aa711950cf520f11512dc804dc1bdfc407e7ebfe2",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/vault-index.test.ts",
       "sha256": "5fa0f617f8b76d6c341788b60e8dadb1aa9d62334cda6c3ee29f557c315a14d7",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/vault.test.ts",
       "sha256": "a492ed023eb13fdff2581308bba326a888a17013077dce35930a80695de936a8",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/version-baseline.test.ts",
       "sha256": "2a479c6d25d90d875f422c8579bfafb2b877ce97f190fbd1a92d374e136f0153",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/workflows.test.ts",
       "sha256": "ead2f89cb6023f123903cc09dcde9c63c5100c45485a29721c22836a4d66d803",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/workspace-contract.test.ts",
       "sha256": "53cd1fcb6e513995f38984cb356f37c5593cd9bc57eea6927e141ea8b6ba0109",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "tests/yaml.test.ts",
       "sha256": "ccebd3f10eb2055c1ed8d3a9ab480800a626765aefe1ef689ee404b0acd3c5c9",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "test_harness": "crates/testkit"
     },
     {
       "path": "fixtures/ai-changes.json",
       "sha256": "e0e07ca228bc076d976af400e73e171101b0d52964795f6c6f87584061e7d1a7",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/arch-dom-compatibility.json",
       "sha256": "156fc888c84e419494d3c2bd793cd96cdf4e6599c0dc42326f2f67883da67a12",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/baseline-ledger.json",
       "sha256": "2d35c8cb5eb7ee83243cbfbc7fefd825338eff77bc9f82257e5a4cdf9c3b8366",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/bases-native.yaml",
       "sha256": "52ed4c2e05afc5aabcd1cdc37cf0e7dc13b5f65a406cd2fae199eb5697455b83",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/c10-core-workflows.json",
       "sha256": "f4d924ffc67ad080d768705392fcaf1dcc5b79517284cd53e59b9a0e67b29184",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/c10-input-matrix.json",
       "sha256": "6bb92f1895eee9ad9089363c3054bcc8453023b019a3d573ac21351daae914d3",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/c12-themes.json",
       "sha256": "c083ca9877841abb52bc7f2ac7a9909ba8e96e9020e0d0fc12aa34f1e2fbe7a4",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/comparison-scorecard.json",
       "sha256": "9269e88ec5d88a56b268d2ab383f1665cc782930938195eada4d2475d8b254c2",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/compatibility-coverage.json",
       "sha256": "4b189ba606d6eeaddedf9972c64075432bc484cf6ccadee92dff80fced376b64",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/compatibility-manifest.json",
       "sha256": "a363d8edeb3d18cd7ca58bd55aaef7cbe4ef7679a4a4ad3c03983663c5c0f679",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/delivery-workflows.json",
       "sha256": "244c13d01f27b0e1dae57f8bb65c7f1dce211e4d87259c041b2df8f001e3ae39",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/derived-surfaces.json",
       "sha256": "4566f93a8620876b08ce64fcf3cb0ea5e0c3936f7ba85427839e38a8cf287bd4",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/electron-vault-roundtrip.json",
       "sha256": "d1c1ac11c71d2e6c2158f94a6a1ac6c721f9fd162b64dd611213fe164c6d9782",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/entry-points.json",
       "sha256": "6dd713ba419a925585b0be73a89647675f45c423f094d92ee4790b25425c3982",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/evaluation-protocol.json",
       "sha256": "0a12c9b3d402992ef7657049fa2c7491686bb83c3cb9a27b1e1a1e8749604bdb",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/exit-portability.json",
       "sha256": "f0a7589ae8c486357033a66f2cf3a463271033749a51b30ca1095adb27c6fb2d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/golden-edit-fidelity.json",
       "sha256": "9db6b89d40253992194e1b6eb82d2dd973cc4fd5efa5de514a6e682a22e7b230",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/grounded-retrieval.json",
       "sha256": "712162792b2b4e2955bc884266bf061a1af8cccd6ea3b7092bcdf04aac3436a2",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/markdown-dialects.json",
       "sha256": "4dc63a7f5ff560f6f82316e79166ab7f5bd71ad05c2be886d455034719ad3f7a",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/markdown-property-preservation.json",
       "sha256": "add690104d26065e8eb25abe49f9bc2247c1831024a61ec42d638e15e3624143",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/model-lifecycle.json",
       "sha256": "83b42064bee9df155c2959dd221734e16085890da2267ccbbd4b124603dc4884",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/paid-service-boundary.json",
       "sha256": "8e4402510222abaf82ec810ae54d40d763a4d76b5065406f8a14a67407518b1d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/pc17-minimal-settings.json",
       "sha256": "fc39a7abd78e38a4bccaf5579c2b719f6ecd6b9dec9933854cd9761b6f4d77d8",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/performance-benchmark.json",
       "sha256": "a919cbe253589d6ab2d85dc0d227bf0c337340cef9e533051c6d3e57b98f1205",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-catalog.json",
       "sha256": "503561d1f5d47f2e575f535f76a108b76173d6dcc1ff6800e320f38391dab39d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-combination-audit.json",
       "sha256": "937c3a2eabfec3afc520a5c8dbf1d21eeedb036d58604346c839ff7a619ba6fa",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-d15-bounded-workflows.json",
       "sha256": "fa48a97dde5badf9538fe67e12518499a417144c55a34b823335274e95b7ff3d",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-d15-workflows.json",
       "sha256": "648a8a488c9d2b7c068f4dc98acbcd53b7805e21b75142a89902cb54e53e4a1f",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-external-prerequisites.json",
       "sha256": "50e244923c225df4c89546fcba4d394285dfdd53d17d2e021e995d62589c1d5c",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-isolation.json",
       "sha256": "57286a39aef26dedc16a1e2a38f80c87b911b4ade04d42467f8968d874ea63d7",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-loaded-workflows.json",
       "sha256": "da7a24db8f1267377642e7491fff3815d0d1792ca986fe322489b8bfd5d7de21",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-renderer-lifecycle.json",
       "sha256": "43fc8e173af3ed69bc8e925a38e052ae93cc0060c40c1a342b16a90825249f57",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/plugin-renderer-probe.json",
       "sha256": "fe1b60cbdce4e96134364ce08dd08162b1d8788a944f26e2d72b181a64f7a2f7",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/plugins",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R4",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/privacy-defaults.json",
       "sha256": "335b59e7d5de1c632280ed0a63eb918280c473d2e177c9bb227cc6078f2249a0",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/provider-data-flow.json",
       "sha256": "12c59e7273d77ea11c37371946dab4596b09511388ff14b37990cb5c0996a3e6",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/provider-modes.json",
       "sha256": "07989c0715aabf3c1049f4c0303fefc6a906d78aeea87480a8979bcd7b7dc785",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/quality-scorecard.json",
       "sha256": "e3b02924216ca2d143056664f9b343cfcadc72bb59e200e20791ac677cd05b99",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/release-handoff.json",
       "sha256": "7cfd8112ab14822297dc9458c83a5af807c1ac5ef5ce8343f8d3702db092b93e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/rename-plan.json",
       "sha256": "77c0fdab2b3bccdf8ec0d9d0fe3b734092640f158248b28c010268f0fb1392c7",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/retrieval-model.json",
       "sha256": "65c5fcda09d384d03e2f58da3f0a065b453762bda0f24b3986f44eaeb353681e",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R5",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/update-rollback.json",
       "sha256": "372df502112dbe097d2b331e1c531c6a3f9e2244a475290a742bceae14f54228",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/ux-accessibility.json",
       "sha256": "3b92d0a245c2e0f3362dfb9e87da9d5320009d1b039669007c29a4160204385c",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/ux-localization.json",
       "sha256": "1ac8eacdfd1da5e30314dbc3efa0336c67a6ac0b48c229975c28c25399a67888",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/ux-surfaces.json",
       "sha256": "5e9413a3efbbb7105b953b13a178a93c20140aec2bdae240ff94d39ebe68266f",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R3",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/vault-differential.json",
       "sha256": "d85762cd2e12d1373bb6b30e25926e89691add9baef0ff59982a8c9da626baa2",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/vault-safety-failure-matrix.json",
       "sha256": "ee62447326d32dfdb5e671324dff6ee2c90eeaf60257c8384ce795e2b40757ac",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/vault-safety.json",
       "sha256": "01a2a757a06962a0e44f34b940c69d9422163080832cadf6a6abc8f838aa14c1",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/version-baseline.json",
       "sha256": "52f0682513463763f2318923673dc49f10d56ec874a5efe14958c3d32d9673f0",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "fixtures/workspace-journeys.json",
       "sha256": "50bcfcc5ecce86b791be8c08364082475433082f8153089e3ce6cf7ecb3a89d1",
-      "rust_owner": "crates/testkit",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R1",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "fixture_reader": "crates/testkit"
     },
     {
       "path": "config/architecture-manifest.json",
       "sha256": "d1f8947d09c858684ed69fbe7ec3842f71049a7218c56ed5b1d500f88e5e3149",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "config/dependency-pins.json",
       "sha256": "f8b185b174ec3cbad9da216e4d0dc81d3453ed750f14ceba121b65f02463b70b",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "config/distribution-audit.json",
       "sha256": "31676c822fb7ba4546ee33140f939ed7c0514e60d1471c9284f057388dd5e3ed",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "config/launch-contract.json",
       "sha256": "209b86c64f0961003b15809a9371854cb0db502ef528dbdc58674a93caeabc13",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "config/primary-references.json",
       "sha256": "5615464ce9598760dd53d4f2896180f2e1a9165363d84d60e0f23dd8bb4137d6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/README.md",
       "sha256": "08d8beef7eb0e386496162e3ebc9eb1794d1cbe80658a61addb509b90ec11d28",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-compatibility-coverage.ts",
       "sha256": "8dd67a9dfb9ecc3f86469be681f569ab7b6d681763c4cdb8d3f553b072c0af4a",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-dependency-attribution.ts",
       "sha256": "9422061d53f337ace8f210b5f44258755d405102b73350d6fd9ca6f2d7c294d2",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-electron-vault.ts",
       "sha256": "f7990a20905c45e0a32746d058b32692acff5b806b0c779c96c801b515d5b46d",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-exit-portability.ts",
       "sha256": "6303ed616cbc4021dcb9ee628dc531e1465f199b960befc4107dcbda64ddfb6f",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-minimal-theme.ts",
       "sha256": "92ee268f87ff851cc2d161cb5b61b5e069cd1a907cbf7ae451699ba3d6b0bab5",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-packaged-runtime.ts",
       "sha256": "b724b5352f7ebf5117a0169af2f5236a6d3961ef0717bcf4a3b63d360cba4294",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-plugin-bundles.ts",
       "sha256": "29a8ab5fd63ad1a90f71d2875c49a656542893668086820d4b89f676c9db3557",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-plugin-combinations.ts",
       "sha256": "f526a45afff0e9d90677d112b432ef545275a70254c5ec8585872b6e1d53e1cc",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-plugin-d15-bounded-workflows.ts",
       "sha256": "2b6f7c0f8df183bde3d62b4b4ad49c439906ce6e7c213c168aa8d3f2cce0bafc",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-plugin-lifecycle.ts",
       "sha256": "8ed2cedad3beab2df34ab24aa9646a6de2a04aeb000c14aa628cb84a98805f32",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-plugin-loaded-workflows.ts",
       "sha256": "264a61f0655dfab80ef7814689d75ae50631042eb13c463440405076af3538cc",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-plugin-renderer.ts",
       "sha256": "340c13f64fc38818f1d7d36248f31ff1a378ce1e2afd4316c2ffe6d17161d20f",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/audit-theme-assets.ts",
       "sha256": "2586ca82c799c2bbe83b420143ddd940dc237bff7c88ee0d861422ee7abf039b",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/benchmark.ts",
       "sha256": "143185705d52cda784a4f53c5e064a7e8ef671722961899029ab130753022659",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/check-accessibility.ts",
       "sha256": "c065767d494bc660d6bb772fb7e1d80eabf5103c9f70782a8b39662fa2dfc5de",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/check-fast.ts",
       "sha256": "e5b7d315daa33dcaab84ba29086bc1ffe17e28ba90a8f92e2758681113dae72e",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/comparison-scorecard.ts",
       "sha256": "5da4e822ce6e0c7ec371823b35a994d235d3233ac17d69f1b113e24f04e357c6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/final-audit.ts",
       "sha256": "f82b4b921b3210bf9689a7d10773995053104da842c657f8f288c91d49cae1aa",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/golden-edit-fidelity.ts",
       "sha256": "3d8f9dd5b39e805cfc51fc616608826dda6f7b2ee01fc7a6f7a88b73fdd7a8f2",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/html-audit.ts",
       "sha256": "d784f5346313b0ff83dfc9c71a16903e048a9788343a8ad442b384a91af7abf4",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/json.ts",
       "sha256": "faf2d292e953d0ac2964583dc5d894143bac4e6c96c13c7367210ad75b541fb3",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/metrics.ts",
       "sha256": "29e2bd9a37540e8b84ae51aabc87d2c81971accf47433cdf5b22637faf2af2a2",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/plugin-audit-helpers.ts",
       "sha256": "d832dfebcb5fa955f55fdee2bb8b179afa87d7d2cd8c62152fa35ad7352acdde",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/plugin-renderer-worker.cjs",
       "sha256": "171d6b26ccfa8bc85a52f4a3aad394eb398c8f02fec46051df90cdc67e2d2321",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/quality-program.ts",
       "sha256": "3e58b50569595248387a4f0f8be9d9eb5a06fc382eeaaa128cea1669f5a4da8b",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/release-gate.ts",
       "sha256": "39a1c226dc8f40bc5a557205439efa5082478c02db333850e8d356ad39440b6a",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/source-tree-digest.ts",
       "sha256": "81138b2b5a2e347ad8ede0ff8bf4c2b3f8b1cec3262938b83938118b63ba5e91",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/status.ts",
       "sha256": "d13f406cf38d39403692598b0d64567b68929b6cbe467f3b9bb8ef69a4d592e4",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/update-rollback.ts",
       "sha256": "55fc81e439b753fd7ef213a1485b60de509181cac3d81b78af0484ecd83cf1ed",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-architecture.ts",
       "sha256": "55e72af9174285a6f261ee12366b78fab758b8d5ef60842ac06895c2b39a8176",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-contracts.ts",
       "sha256": "ef33ce8dcfb9eddde7c2687905a31c646ea16813f64fa8947778cfeec2747975",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-core-workflows.ts",
       "sha256": "62c3427ab5d036f03ceefcfffa174994c14fab6aeb220aad206353fc4a82c11d",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-differential-fixtures.ts",
       "sha256": "fe19827df7c5f03d984116ce5496b9511e8a0dae1b65d1984813e9c5f6d17ee0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-entry-points.ts",
       "sha256": "b7401c48c7af476e895b2bea38526054cd48af9f6f0f1bf27a3621098036ea0b",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-input-matrix.ts",
       "sha256": "3cd9a10deb0f5264dc9b1ea1de7b41af97323f6930c4d4295cee0ac3f7826d77",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-layout.ts",
       "sha256": "381845b2ee9e28186e99bb61a8c9d16990c2b6e17195b1a670c9f8027bfa71a9",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-paid-service-boundary.ts",
       "sha256": "668637a55d2418aafc0761f5bed3e8c7cc1d430f24c84dbc46fdeb0f6d1bc4ea",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-plugin-d15.ts",
       "sha256": "b7f736b049843bbf0d1644d9004bb6f31df3f6bbb760f91ad8d3e74fbd8220ef",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-plugin-external-prerequisites.ts",
       "sha256": "76bc635a3d30c4d45da663598bccc7aa72d4589cd597763777cc8ef255942ac5",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-plugin-matrix.ts",
       "sha256": "c54d66ff3ac7248a4a3eaa4d664daec1a52e5fbe3fce2f858133916ea14552b6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/validate-ux-surfaces.ts",
       "sha256": "21522cf6473830498a86a4ed15a173f75289f1dde588defefa100e8ad1856d70",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/vault-roundtrip.ts",
       "sha256": "04bcb3bd06c415ca4669d53dfe8d5c498f554f8b0b428af39340b9a4bd52a85b",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/verify-compatibility-pins.ts",
       "sha256": "454a5bbeb6009ab14b97f63920424f0fec2dc27583f212a1892d7acfc24afeea",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/verify-distribution.ts",
       "sha256": "70f7173e33d6381be482d747191f77aabfc16d039e65ec5be4637247c8a72378",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/verify-plugin-selection.ts",
       "sha256": "3556bda95310329c7c4129b64dbdab7e476715c66d4aedef8311e914babfdbc0",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/verify-primary-references.ts",
       "sha256": "54e2aaa39f7a553853d93ff117e3b8b3aa4e9be76f0599b1f95f7b1478356802",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": "scripts/verify-version-baseline.ts",
       "sha256": "82b0b1b228808a138c569275db5919fc9483a10ede576f02f7e98f14d62c8dd6",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": ".github/workflows/compatibility-pins.yml",
       "sha256": "6f2162fe41879c202e6f07bfc36a29f62adef5a07f4a98b39dab932324c713ca",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": ".github/workflows/desktop-build.yml",
       "sha256": "400f901742e79ec3f46276b9ccb383a8facdfbcd270be54ebad9691203de8767",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
+      "mapping_status": "reviewed",
       "status": "pending",
       "baseline_sha256": "f413e4c691b5c8dec186a2566dc4f573a52224c8de49960405f1ce959b24f014",
-      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers."
+      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers.",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": ".github/workflows/plugin-loaded-workflows.yml",
       "sha256": "d83a7d01f6d0d7aacba100190fbeed6d50c2d400c66658c0c8b26a76de787903",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": ".github/workflows/plugin-renderer-matrix.yml",
       "sha256": "c833af78697f039896d9eea333c399e512dc62d4e277047a604387f5b06c67ca",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
-      "status": "pending"
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
       "path": ".github/workflows/quality.yml",
       "sha256": "5e020a6f8ba1c8d3bf21447fd099014b318d2b9b3f452609cc75f8e67cbec5a7",
       "rust_owner": "xtask",
-      "mapping_status": "provisional",
+      "mapping_status": "reviewed",
       "status": "pending",
       "baseline_sha256": "87197aaf1cfee74e304872cde7352f6a5e4371fb0997ceab7025cfb2788cb55d",
-      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers."
+      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers.",
+      "migration_phase": "R0",
+      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     }
   ],
   "spec_hashes": {
@@ -1641,5 +2214,19 @@
     ".agents/tasks/2026-09-09/01-init/references/sync-recovery/index.md": "d0d48aaf8a78963c59dd9fc0ef89b7f23e6b237fac08feeda2d2314b0c181699",
     ".agents/tasks/2026-09-09/01-init/references/ux-accessibility/index.md": "7f9d020434c29fc661a7ebe500f5e93dc3721477e358b54675446719f99f0ccd",
     ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
+  },
+  "reviewed_at": "2026-10-07T18:43:14.593997+00:00",
+  "mapping_policy": "Source and acceptance rows were manually reconciled to Rust responsibility boundaries. Test/fixture owners name their semantic target; test_harness/fixture_reader name the shared testkit. Mapping does not imply implementation or acceptance.",
+  "target_architecture": {
+    "crates/doc": "Lossless Markdown/YAML/link/Canvas/Bases document models and source transforms.",
+    "crates/vault": "Root-scoped IO, revisions, journaled writes, recovery, history, merge, rename, attachments and watchers.",
+    "crates/engine": "Cross-document workflows, indexing, graph/retrieval, AI/provider orchestration, approvals and Chronicle workflows.",
+    "crates/platform": "OS dialogs/clipboard/file-open, app preferences, credential store and OS storage protection.",
+    "crates/plugins": "Bounded extension runtime, legacy compatibility evaluation, capability policy, preview broker and artifact evidence.",
+    "crates/ui-egui": "Native eframe/egui shell, editing/workspace/navigation, previews and interactive workflows.",
+    "crates/testkit": "Synthetic vaults, golden fixtures, fault injection and shared test support.",
+    "apps/openobsidian": "Native desktop composition and startup.",
+    "apps/openobsidian-cli": "Scoped CLI entry points.",
+    "xtask": "Layering, CI inventory/contracts, release, license and evidence tools."
   }
 }
