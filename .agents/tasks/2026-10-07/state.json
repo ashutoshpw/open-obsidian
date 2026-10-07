@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T20:05:58+00:00",
+  "updated_at": "2026-10-07T20:08:50+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "3b509255b65c3b8d669cc225df3af75147392e61",
+  "last_reconciled_head": "e264e9f65da1cad16e23b55cec3a510379ebd072",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Commit and push the small CI corrections to origin/main; inspect the fresh inventory, quality and three-OS Rust runs while the original Rust run continues on its exact SHA.",
+  "next_action": "Commit and push the CI-reported Rust formatting and Wry navigation callback signature correction; inspect fresh exact-SHA format/test/build/probe results while retaining earlier results by source SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -81,7 +81,8 @@
     "Reconciled the updated goal documentation requirement as MIG-016 and added RM-08; R0.2 historical mapping count remains 211 and current requirements count is 212.",
     "Started R1.2 with a Wry 0.57.0 system-WebView feasibility probe for unchanged PC05 Advanced Tables and PC08 Style Settings bundles; runtime reports retain Pending/non-certifying status and include bundle/manifest/stylesheet hashes, WebView identity, DOM/editor metrics and capability denials.",
     "Hardened the Wry probe boundary after source review: navigation is limited to the exact localhost probe document, custom protocol assets reject unexpected hosts, frame ancestors are denied, and browser autofill is disabled where supported. No local executable validation was run.",
-    "GitHub Actions lockfile resolver run 37678837444 passed for source ce6097ab2625bddb34905b85a47a35b7e7fa602e; its Cargo.lock artifact was retrieved and hashed, and the temporary resolver workflow was removed. This run generated dependency metadata only; implementation validation remains pending."
+    "GitHub Actions lockfile resolver run 37678837444 passed for source ce6097ab2625bddb34905b85a47a35b7e7fa602e; its Cargo.lock artifact was retrieved and hashed, and the temporary resolver workflow was removed. This run generated dependency metadata only; implementation validation remains pending.",
+    "Rust CI 37679025109 reported Linux rustfmt differences and a Wry navigation callback signature mismatch on macOS/Windows; no plugin probe ran. Corrected from GitHub output. The following exact-SHA inventory and quality matrices passed on e264e9f65da1cad16e23b55cec3a510379ebd072; its Rust CI is pending."
   ],
   "push_status": "pending",
   "ci_results": [
@@ -570,7 +571,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Push the CI fixes for the audit script's nullable report access, MIG-015's canonical owner mapping and the newly inventoried R1 audit script; inspect fresh exact-SHA results, while retaining run 37679025109 as pending until all three OS jobs finish."
+      "next_action": "Push the CI-reported Rust formatting and navigation callback type fix; inspect the new exact-SHA Rust matrix for compile, Clippy, layering, release build and plugin feasibility results across Linux/macOS/Windows."
     }
   },
   "ci_preparation": {

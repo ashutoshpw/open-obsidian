@@ -1,5 +1,5 @@
 use openobsidian_plugins::LegacyCompatibility;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
     borrow::Cow,
@@ -8,8 +8,8 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -19,7 +19,7 @@ use winit::{
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy},
     window::{Window, WindowId},
 };
-use wry::{http::header, NewWindowResponse, PermissionResponse, WebView, WebViewBuilder};
+use wry::{NewWindowResponse, PermissionResponse, WebView, WebViewBuilder, http::header};
 
 const HTML: &str = r#"<!doctype html>
 <html lang="en">
@@ -103,7 +103,7 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                     let _ = ipc_proxy.send_event(ProbeEvent::Report(body.clone()));
                 }
             })
-            .with_navigation_handler(is_internal_document)
+            .with_navigation_handler(|url| is_internal_document(&url))
             .with_new_window_req_handler(|_, _| NewWindowResponse::Deny)
             .with_download_started_handler(|_, _| false)
             .with_permission_handler(|_| PermissionResponse::Deny)
@@ -119,7 +119,9 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
                 self.window = Some(window);
                 self._webview = Some(webview);
             }
-            Err(error) => self.finish_error(event_loop, format!("webview creation failed: {error}")),
+            Err(error) => {
+                self.finish_error(event_loop, format!("webview creation failed: {error}"))
+            }
         }
     }
 
@@ -138,7 +140,12 @@ impl ApplicationHandler<ProbeEvent> for ProbeApp {
         }
     }
 
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _window_id: WindowId, event: WindowEvent) {
+    fn window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        _window_id: WindowId,
+        event: WindowEvent,
+    ) {
         if matches!(event, WindowEvent::CloseRequested) {
             self.finish_error(event_loop, "probe window closed before report".to_owned());
         }
@@ -205,17 +212,18 @@ fn run() -> Result<Value, String> {
     if plugin_manifest["version"].as_str() != Some(arguments.plugin_version.as_str()) {
         return Err(format!(
             "manifest version {:?} does not match pinned release {}",
-            plugin_manifest["version"].as_str(), arguments.plugin_version
+            plugin_manifest["version"].as_str(),
+            arguments.plugin_version
         ));
     }
 
     let stylesheet = match &arguments.stylesheet_path {
         Some(path) => {
-            let bytes = fs::read(path).map_err(|error| format!("could not read stylesheet: {error}"))?;
-            let expected = arguments
-                .stylesheet_sha256
-                .as_deref()
-                .ok_or_else(|| "stylesheet hash is required when a stylesheet is provided".to_owned())?;
+            let bytes =
+                fs::read(path).map_err(|error| format!("could not read stylesheet: {error}"))?;
+            let expected = arguments.stylesheet_sha256.as_deref().ok_or_else(|| {
+                "stylesheet hash is required when a stylesheet is provided".to_owned()
+            })?;
             let actual = sha256(&bytes);
             if !actual.eq_ignore_ascii_case(expected) {
                 return Err(format!(
@@ -318,7 +326,8 @@ fn parse_arguments() -> Result<Arguments, String> {
 }
 
 fn read_pc05_workflow(path: &Path) -> Result<Value, String> {
-    let bytes = fs::read(path).map_err(|error| format!("could not read workflow fixture: {error}"))?;
+    let bytes =
+        fs::read(path).map_err(|error| format!("could not read workflow fixture: {error}"))?;
     let fixture: Value = serde_json::from_slice(&bytes)
         .map_err(|error| format!("could not parse workflow fixture: {error}"))?;
     let scenario = &fixture["scenarios"]["PC05"];
@@ -356,7 +365,11 @@ fn serve_request(
             b"host denied".to_vec(),
         )
     } else if method != wry::http::Method::GET {
-        (wry::http::StatusCode::METHOD_NOT_ALLOWED, "text/plain", b"method denied".to_vec())
+        (
+            wry::http::StatusCode::METHOD_NOT_ALLOWED,
+            "text/plain",
+            b"method denied".to_vec(),
+        )
     } else {
         match path {
             "/index.html" | "/" => (
