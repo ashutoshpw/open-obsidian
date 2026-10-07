@@ -1,0 +1,154 @@
+{
+  "milestone": "R0.2",
+  "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+  "recorded_at": "2026-10-07",
+  "validation_environment": "GitHub Actions only",
+  "runs": [
+    {
+      "workflow": "Rust migration inventory",
+      "name": "Rust migration inventory",
+      "run_id": 37669022715,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022715",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "databaseId": 112955630230,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022715/job/112955630230"
+        }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "name": "OpenObsidian quality",
+      "run_id": 37669022778,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955631084,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778/job/112955631084"
+        },
+        {
+          "name": "windows-latest",
+          "databaseId": 112955631447,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778/job/112955631447"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955631605,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778/job/112955631605"
+        }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "name": "OpenObsidian desktop build",
+      "run_id": 37669022762,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "databaseId": 112955631814,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762/job/112955631814"
+        },
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955632012,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762/job/112955632012"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955632102,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762/job/112955632102"
+        }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37669022845,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "databaseId": 112955630485,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845/job/112955630485"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955630895,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845/job/112955630895"
+        },
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955631041,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845/job/112955631041"
+        }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37669022789,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "databaseId": 112955631359,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789/job/112955631359"
+        },
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955631990,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789/job/112955631990"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955632092,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789/job/112955632092"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*", "xtask"]
+default-members = ["crates/*", "apps/openobsidian", "apps/openobsidian-cli", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+license = "AGPL-3.0-only"
+
+[workspace.dependencies]
+# Photocraft-aligned foundation
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+log = "0.4"
+rayon = "1"
+eframe = { version = "0.36", default-features = false, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11", "persistence"] }
+egui = "0.36"
+egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+
+# OpenObsidian-specific: SHA-256 preserves the existing vault revision contract.
+sha2 = "0.10"
+
+# Internal workspace crates
+openobsidian-doc = { path = "crates/doc" }
+openobsidian-vault = { path = "crates/vault" }
+openobsidian-engine = { path = "crates/engine" }
+openobsidian-platform = { path = "crates/platform" }
+openobsidian-plugins = { path = "crates/plugins" }
+openobsidian-ui-egui = { path = "crates/ui-egui" }
+openobsidian-testkit = { path = "crates/testkit" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

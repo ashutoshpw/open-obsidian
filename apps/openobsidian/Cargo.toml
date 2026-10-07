@@ -1,0 +1,15 @@
+[package]
+name = "openobsidian"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+openobsidian-engine = { workspace = true }
+openobsidian-platform = { workspace = true }
+openobsidian-plugins = { workspace = true }
+openobsidian-ui-egui = { workspace = true }

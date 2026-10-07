@@ -2,17 +2,17 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T18:43:14.593997+00:00",
+  "updated_at": "2026-10-07T18:49:52+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "f216a92c72e0632487642e7bf2d16f6bda25dfb1",
-  "current_phase": "R0",
-  "current_milestone": "R0.2",
-  "next_action": "Push the reviewed R0.2 mapping and decisions; obtain exact-SHA GitHub inventory and baseline results, then start R1.",
+  "last_reconciled_head": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+  "current_phase": "R1",
+  "current_milestone": "R1.1",
+  "next_action": "Commit and push the R1.1 native workspace foundation, inspect its exact-SHA Rust and legacy GitHub Actions runs, and retrieve the generated Cargo.lock artifact before further edits.",
   "blockers": [],
   "phases": {
     "R0": {
-      "status": "in_progress",
+      "status": "complete",
       "required_ci": [
         "inventory",
         "quality",
@@ -20,11 +20,18 @@
         "plugin-renderer",
         "loaded-plugins"
       ],
-      "implementation_sha": "74049947d4816049ce187b9f3d23e1e804c52b59"
+      "implementation_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74"
     },
     "R1": {
-      "status": "pending",
-      "required_ci": [],
+      "status": "in_progress",
+      "required_ci": [
+        "rust-inventory",
+        "fmt",
+        "clippy",
+        "workspace-tests",
+        "layering",
+        "three-os-native-build"
+      ],
       "implementation_sha": null
     },
     "R2": {
@@ -65,7 +72,9 @@
     "Committed R0.1 locally as b1dbd9f; actual push failed HTTP 403; migration CI remains unrun",
     "All five exact-SHA R0.1 workflows passed, including all three-OS baseline jobs; access blocker resolved",
     "Reviewed 196 legacy requirements and 15 Rust migration-specific requirements; mapped all 231 inventoried files to Rust responsibilities.",
-    "Reviewed all 196 inherited requirements and 15 migration-specific requirements; reconciled 231 source, test, fixture and tooling mappings."
+    "Reviewed all 196 inherited requirements and 15 migration-specific requirements; reconciled 231 source, test, fixture and tooling mappings.",
+    "R0.2 inventory and all four existing platform CI workflows passed on exact SHA d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74; exact-SHA jobs recorded in evidence/r0.2-ci.json.",
+    "Added the minimal Cargo workspace, read-only vault session, native eframe shell, platform/plugin interfaces, shared test helper, layering xtask and three-OS Rust workflow locally; all executable validation remains pending GitHub Actions."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -196,6 +205,147 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37666896720/job/112948323041"
         }
       ]
+    },
+    {
+      "name": "R0.2 Rust migration inventory",
+      "run_id": 37669022715,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022715",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "databaseId": 112955630230,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022715/job/112955630230"
+        }
+      ]
+    },
+    {
+      "name": "R0.2 OpenObsidian quality",
+      "run_id": 37669022778,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955631084,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778/job/112955631084"
+        },
+        {
+          "name": "windows-latest",
+          "databaseId": 112955631447,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778/job/112955631447"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955631605,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022778/job/112955631605"
+        }
+      ]
+    },
+    {
+      "name": "R0.2 OpenObsidian desktop build",
+      "run_id": 37669022762,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "databaseId": 112955631814,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762/job/112955631814"
+        },
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955632012,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762/job/112955632012"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955632102,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022762/job/112955632102"
+        }
+      ]
+    },
+    {
+      "name": "R0.2 OpenObsidian plugin renderer matrix",
+      "run_id": 37669022845,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "databaseId": 112955630485,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845/job/112955630485"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955630895,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845/job/112955630895"
+        },
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955631041,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022845/job/112955631041"
+        }
+      ]
+    },
+    {
+      "name": "R0.2 OpenObsidian loaded plugin workflows",
+      "run_id": 37669022789,
+      "head_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "databaseId": 112955631359,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789/job/112955631359"
+        },
+        {
+          "name": "ubuntu-latest",
+          "databaseId": 112955631990,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789/job/112955631990"
+        },
+        {
+          "name": "macos-latest",
+          "databaseId": 112955632092,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669022789/job/112955632092"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -205,11 +355,17 @@
       "evidence": "evidence/r0.1-ci.json"
     },
     "R0.2": {
-      "status": "in_progress",
+      "status": "complete",
+      "implementation_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74",
       "reviewed_requirement_count": 211,
+      "evidence": "evidence/r0.2-ci.json",
+      "decisions": "decisions.md"
+    },
+    "R1.1": {
+      "status": "in_progress",
+      "implementation_sha": null,
       "evidence": null,
-      "decisions": "decisions.md",
-      "next_action": "Push the reviewed R0.2 mapping and decisions; obtain exact-SHA GitHub inventory and baseline results, then start R1."
+      "next_action": "Push the workspace scaffold and Rust CI, inspect its exact-SHA CI, then commit the GitHub-generated Cargo.lock and rerun with the committed lockfile."
     }
   },
   "ci_preparation": {
