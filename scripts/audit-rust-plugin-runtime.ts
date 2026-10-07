@@ -12,11 +12,15 @@ const manifest = readJson(root, "fixtures/compatibility-manifest.json");
 const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
 const workflowFixturePath = "fixtures/plugin-loaded-workflows.json";
 const pc08Scenario = asRecord(asRecord(readJson(root, workflowFixturePath).scenarios)?.PC08);
-const pc08ThemePath = string(asRecord(pc08Scenario?.style_settings_workflow)?.theme_path);
+const pc08Workflow = asRecord(pc08Scenario?.style_settings_workflow);
+const pc08ThemePath = string(pc08Workflow?.theme_path);
+const pc08ExpectedControlIds = Array.isArray(pc08Workflow?.expected_controls)
+  ? pc08Workflow.expected_controls.filter((control): control is string => typeof control === "string")
+  : [];
 const pc08ThemeCss = records(pc08Scenario?.files)
   .find((file) => string(file.path) === pc08ThemePath)?.content;
-if (!pc08ThemePath || typeof pc08ThemeCss !== "string") {
-  throw new Error("PC08 workflow fixture must contain its configured theme CSS file");
+if (!pc08ThemePath || typeof pc08ThemeCss !== "string" || pc08ExpectedControlIds.length === 0) {
+  throw new Error("PC08 workflow fixture must contain its configured theme CSS file and expected controls");
 }
 const pc08ThemeSha256 = createHash("sha256").update(pc08ThemeCss, "utf8").digest("hex");
 const binaryName = process.platform === "win32" ? "openobsidian-plugin-runtime-probe.exe" : "openobsidian-plugin-runtime-probe";
@@ -99,10 +103,16 @@ function checkReport(pluginId: string, report: Record<string, unknown>): string[
   }
   if (pluginId === "PC08") {
     const themeFixture = asRecord(report.themeSettingsFixture);
+    const styleSettingIds = Array.isArray(dom?.styleSettingIds)
+      ? dom.styleSettingIds.filter((id): id is string => typeof id === "string")
+      : [];
     if (!(typeof api?.settingTabs === "number" && api.settingTabs > 0)) problems.push("Style Settings did not register its Obsidian settings API");
     if (!(typeof dom?.settingControls === "number" && dom.settingControls > 0)) problems.push("Style Settings did not render a control into the browser DOM");
     if (!(typeof stylesheet?.ruleCount === "number" && stylesheet.ruleCount > 0)) problems.push("Style Settings stylesheet did not load into the browser WebView");
     if (themeFixture?.path !== pc08ThemePath || themeFixture.sha256 !== pc08ThemeSha256) problems.push("Style Settings theme fixture identity/hash differs from the PC08 workflow fixture");
+    for (const controlId of pc08ExpectedControlIds) {
+      if (!styleSettingIds.includes(controlId)) problems.push(`Style Settings did not render expected control ${controlId}`);
+    }
   }
   return problems;
 }

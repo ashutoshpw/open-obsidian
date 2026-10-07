@@ -70,6 +70,10 @@
       hasClass(name) { return this.classList.contains(name); },
       setText(value) { this.textContent = String(value ?? ""); },
       setAttr(name, value) { this.setAttribute(String(name), String(value)); },
+      onClickEvent(callback, options) {
+        this.addEventListener("click", callback, options);
+        this.addEventListener("auxclick", callback, options);
+      },
       appendText(value) { this.append(document.createTextNode(String(value ?? ""))); },
     };
     for (const [name, method] of Object.entries(methods)) {
@@ -291,11 +295,14 @@
     constructor(containerEl) {
       this.settingEl = safeElement("div", {cls: "setting-item", parent: containerEl});
       this.infoEl = safeElement("div", {cls: "setting-item-info", parent: this.settingEl});
+      this.nameEl = safeElement("div", {cls: "setting-item-name", parent: this.infoEl});
+      this.descEl = safeElement("div", {cls: "setting-item-description", parent: this.infoEl});
       this.controlEl = safeElement("div", {cls: "setting-item-control", parent: this.settingEl});
     }
-    setName(value) { this.infoEl.createDiv({cls: "setting-item-name", text: value}); return this; }
-    setDesc(value) { this.infoEl.createDiv({cls: "setting-item-description", text: value}); return this; }
+    setName(value) { this.nameEl.textContent = String(value); return this; }
+    setDesc(value) { this.descEl.textContent = String(value); return this; }
     setTooltip(value) { this.settingEl.title = String(value); return this; }
+    then(callback) { callback(this); return this; }
     addText(callback) {
       const inputEl = safeElement("input", {type: "text", parent: this.controlEl});
       return this.applyControl(callback, {inputEl, setValue(value) { inputEl.value = String(value); return this; }, getValue() { return inputEl.value; }, setPlaceholder(value) { inputEl.placeholder = String(value); return this; }, onChange(callback) { inputEl.addEventListener("change", () => callback(inputEl.value)); return this; }});
@@ -313,10 +320,23 @@
       const control = {buttonEl, setButtonText(value) { buttonEl.textContent = String(value); return this; }, setCta() { buttonEl.classList.add("mod-cta"); return this; }, setWarning() { buttonEl.classList.add("mod-warning"); return this; }, onClick(callback) { buttonEl.addEventListener("click", callback); return this; }};
       return this.applyControl(callback, control);
     }
-    addExtraButton(callback) { return this.addButton(callback); }
+    addExtraButton(callback) {
+      const extraSettingsEl = safeElement("button", {cls: "clickable-icon", parent: this.controlEl});
+      const control = {
+        extraSettingsEl,
+        setIcon(value) { extraSettingsEl.dataset.icon = String(value); extraSettingsEl.setAttribute("aria-label", String(value)); return this; },
+        setTooltip(value) { extraSettingsEl.title = String(value); return this; },
+        onClick(callback) { extraSettingsEl.addEventListener("click", callback); return this; },
+      };
+      return this.applyControl(callback, control);
+    }
+    addSearch(callback) {
+      const inputEl = safeElement("input", {type: "search", parent: this.controlEl});
+      return this.applyControl(callback, {inputEl, setValue(value) { inputEl.value = String(value); return this; }, getValue() { return inputEl.value; }, setPlaceholder(value) { inputEl.placeholder = String(value); return this; }, onChange(callback) { inputEl.addEventListener("input", () => callback(inputEl.value)); return this; }});
+    }
     addSlider(callback) {
       const sliderEl = safeElement("input", {type: "range", parent: this.controlEl});
-      return this.applyControl(callback, {sliderEl, setLimits(min, max, step) { sliderEl.min = String(min); sliderEl.max = String(max); sliderEl.step = String(step); return this; }, setValue(value) { sliderEl.value = String(value); return this; }, getValue() { return Number(sliderEl.value); }, onChange(callback) { sliderEl.addEventListener("input", () => callback(Number(sliderEl.value))); return this; }});
+      return this.applyControl(callback, {sliderEl, setDynamicTooltip() { return this; }, setLimits(min, max, step) { sliderEl.min = String(min); sliderEl.max = String(max); sliderEl.step = String(step); return this; }, setValue(value) { sliderEl.value = String(value); return this; }, getValue() { return Number(sliderEl.value); }, onChange(callback) { sliderEl.addEventListener("input", () => callback(Number(sliderEl.value))); return this; }});
     }
     applyControl(callback, control) { if (typeof callback === "function") callback(control); return this; }
   }
@@ -530,7 +550,7 @@
       certification: "feasibility-only",
       plugin: {status: pluginStatus, error: pluginError, moduleExports: typeof module.exports},
       api: {requiredModules: attemptedModules, calls: apiCalls, commands: registrations.commands.map((command) => String(command.id ?? command.name ?? "")), settingTabs: registrations.settingTabs.length, views: registrations.views.map((view) => String(view.type ?? "")), events: registrations.events.length},
-      dom: {bodyChildren: document.body.children.length, pluginRootChildren: root.children.length, settingControls: root.querySelectorAll("input,select,button").length, stylesheetCount: document.styleSheets.length, stylesheetRuleCount},
+      dom: {bodyChildren: document.body.children.length, pluginRootChildren: root.children.length, settingControls: root.querySelectorAll("input,select,button").length, styleSettingIds: Array.from(root.querySelectorAll(".setting-item[data-id]"), (element) => element.dataset.id).filter(Boolean), stylesheetCount: document.styleSheets.length, stylesheetRuleCount},
       editorWorkflow,
       capabilityProbe,
       capabilityDenials,
