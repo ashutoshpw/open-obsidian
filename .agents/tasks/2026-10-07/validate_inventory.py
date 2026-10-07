@@ -26,8 +26,8 @@ valid_owners = {
     "apps/openobsidian-cli", "xtask", "release-handoff",
 }
 valid_dispositions = {"retained", "superseded", "release_external"}
-if len(requirements) != len(legacy_by_id) + 15:
-    errors.append("Migration inventory must include all legacy requirements and 15 goal-specific requirements")
+if len(requirements) != len(legacy_by_id) + 16:
+    errors.append("Migration inventory must include all legacy requirements and 16 goal-specific requirements")
 if state.get("milestones", {}).get("R0.1", {}).get("status") != "complete":
     errors.append("R0.1 must have passed GitHub CI before R0.2")
 
@@ -55,9 +55,9 @@ for row in requirements:
         errors.append(f"{row['id']}: Rust pass lacks migration evidence")
 
 new_rows = [row for row in requirements if row["id"] not in legacy_by_id]
-expected_new = {f"MIG-{index:03d}" for index in range(1, 16)}
+expected_new = {f"MIG-{index:03d}" for index in range(1, 17)}
 if {row["id"] for row in new_rows} != expected_new:
-    errors.append("Goal-specific acceptance rows must cover MIG-001 through MIG-015")
+    errors.append("Goal-specific acceptance rows must cover MIG-001 through MIG-016")
 for row in new_rows:
     if row.get("source", {}).get("path") != ".agents/tasks/2026-10-07/goal.md":
         errors.append(f"{row['id']}: migration requirement must cite this goal")

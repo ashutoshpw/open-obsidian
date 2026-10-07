@@ -9617,6 +9617,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9660,6 +9665,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9703,6 +9713,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9746,6 +9761,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9789,6 +9809,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9796,9 +9821,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r1.1-ci.json"
+      ],
+      "tested_source_tree": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D17",
@@ -9832,6 +9859,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9875,6 +9907,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9882,9 +9919,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r1.1-ci.json"
+      ],
+      "tested_source_tree": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D17",
@@ -9918,6 +9957,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -9961,6 +10005,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10004,6 +10053,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10047,6 +10101,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10054,9 +10113,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r1.1-ci.json"
+      ],
+      "tested_source_tree": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D19",
@@ -10090,6 +10151,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10133,6 +10199,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10176,6 +10247,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10183,9 +10259,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r1.1-ci.json"
+      ],
+      "tested_source_tree": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D17",
@@ -10221,6 +10299,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07",
           "sha256": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
         }
       ],
       "applicable_platforms": [
@@ -10243,14 +10326,60 @@
       "migration_disposition": "retained",
       "migration_acceptance": "Complete the compatibility feasibility gate before broad native UI investment; all acceptance execution occurs on GitHub Actions.",
       "runtime_override": "Rust migration-specific acceptance requirement; verify only in GitHub CI."
+    },
+    {
+      "id": "MIG-016",
+      "parent_id": null,
+      "source": {
+        "path": ".agents/tasks/2026-10-07/goal.md",
+        "heading": "Product invariants and migration risks / repository documentation",
+        "clause": "Keep all related repository documentation current throughout the migration; update affected docs in each phase and audit at cutover for obsolete Electron guidance, broken links and mismatches with shipped Rust behavior while keeping historical records clearly historical."
+      },
+      "checkpoint": "R7",
+      "owner": "xtask",
+      "mandatory": true,
+      "acceptance_criteria": "Documentation affected by each phase is updated with that phase. A final GitHub CI documentation audit checks changed documentation, links, stale Electron-specific instructions and alignment with shipped behavior; historical records remain clearly historical and unsupported/pending behavior is not described as available.",
+      "fixture_ids": [
+        "fixture:release-handoff"
+      ],
+      "reference_versions": [
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-documentation-update",
+          "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
+        }
+      ],
+      "applicable_platforms": [
+        "all"
+      ],
+      "status": "pending",
+      "evidence_paths": [],
+      "tested_source_tree": null,
+      "blocker": null,
+      "gate_class": "implementation",
+      "decision_id": "RM-08",
+      "legacy_status": null,
+      "legacy_evidence_paths": [],
+      "legacy_checkpoint": null,
+      "migration_phase": "R7",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "migration_disposition": "retained",
+      "migration_acceptance": "Update affected documentation as each phase lands and run the final documentation consistency audit in GitHub CI before cutover.",
+      "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-07T18:43:14.593997+00:00",
+  "reviewed_at": "2026-10-07T19:22:20+00:00",
   "mapping_review": {
     "status": "complete",
-    "reviewed_requirement_count": 211,
+    "reviewed_requirement_count": 212,
     "legacy_requirement_count": 196,
-    "new_migration_requirement_count": 15,
-    "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending; external items remain external_pending. Migration-only rows add native-stack, CI, packaging, credential and early plugin-feasibility gates."
+    "new_migration_requirement_count": 16,
+    "r0_2_reviewed_requirement_count": 211,
+    "post_r0_2_additions": [
+      "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
+    ],
+    "goal_sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87",
+    "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

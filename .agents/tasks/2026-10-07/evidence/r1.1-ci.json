@@ -1,0 +1,491 @@
+{
+  "milestone": "R1.1",
+  "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+  "recorded_at": "2026-10-07T19:22:20Z",
+  "validation_environment": "GitHub Actions only; no local builds, tests, formatters, lints or runtime checks were used.",
+  "toolchain": {
+    "requested": "stable",
+    "minimum_declared_by_workspace": "1.95.0",
+    "observed_rustc_all_platforms": "1.99.0 (b940084d7 2026-09-28)",
+    "components": [
+      "clippy",
+      "rustfmt"
+    ]
+  },
+  "lockfile": {
+    "path": "Cargo.lock",
+    "sha256": "25051ef0743c78183f90260bd7908c7c97cd10a79ad6a613ef53cdf37c532201",
+    "size_bytes": 103055,
+    "format_version": 4,
+    "selected_stack_dependencies": {
+      "eframe": "0.36.2",
+      "egui": "0.36.2",
+      "serde": "1.0.229",
+      "serde_json": "1.0.151",
+      "thiserror": "2.0.21",
+      "log": "0.4.34",
+      "sha2": "0.10.9"
+    }
+  },
+  "runs": [
+    {
+      "workflow": "rust-migration-inventory.yml",
+      "name": "Rust migration inventory",
+      "run_id": 37671110921,
+      "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110921",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 112962806181,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110921/job/112962806181"
+        }
+      ]
+    },
+    {
+      "workflow": "quality.yml",
+      "name": "OpenObsidian quality",
+      "run_id": 37671111067,
+      "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111067",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 112962806435,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111067/job/112962806435"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 112962806628,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111067/job/112962806628"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 112962806644,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111067/job/112962806644"
+        }
+      ]
+    },
+    {
+      "workflow": "desktop-build.yml",
+      "name": "OpenObsidian desktop build",
+      "run_id": 37671110915,
+      "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110915",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 112962805195,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110915/job/112962805195"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 112962805497,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110915/job/112962805497"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 112962805535,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110915/job/112962805535"
+        }
+      ]
+    },
+    {
+      "workflow": "plugin-renderer-matrix.yml",
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37671110973,
+      "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110973",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 112962806932,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110973/job/112962806932"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 112962807247,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110973/job/112962807247"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 112962807303,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110973/job/112962807303"
+        }
+      ]
+    },
+    {
+      "workflow": "plugin-loaded-workflows.yml",
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37671110997,
+      "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110997",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 112962806216,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110997/job/112962806216"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 112962806491,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110997/job/112962806491"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 112962806507,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671110997/job/112962806507"
+        }
+      ]
+    },
+    {
+      "workflow": "rust.yml",
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37671111006,
+      "head_sha": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111006",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 112962805590,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111006/job/112962805590",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install Linux system dependencies (egui/winit)",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Set up Rust",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Cache Cargo outputs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check formatting",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Run workspace tests",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run Clippy",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check crate dependency layers",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build native preview",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload Linux preview executable",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Cache Cargo outputs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 112962805869,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111006/job/112962805869",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install Linux system dependencies (egui/winit)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Set up Rust",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Cache Cargo outputs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check formatting",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run workspace tests",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run Clippy",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check crate dependency layers",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build native preview",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload Linux preview executable",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Cache Cargo outputs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 112962806015,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37671111006/job/112962806015",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check out source",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install Linux system dependencies (egui/winit)",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Set up Rust",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Cache Cargo outputs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check formatting",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Run workspace tests",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run Clippy",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Check crate dependency layers",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Build native preview",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Upload Linux preview executable",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Cache Cargo outputs",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Check out source",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifact_id": 11504289362,
+      "name": "openobsidian-rust-preview-f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+      "size_bytes": 8008660,
+      "digest": "sha256:35c974281903afa0208ad4a9d5d1b1419cb78c13bdc5173aa4935d4b74de8038",
+      "url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11504289362/zip",
+      "expired": false,
+      "platform": "ubuntu-latest",
+      "contents": "native release preview executable",
+      "file_sha256": "65d37b19f076826ab056919873fa0851c4a8eae1da188887b173b04218a84ac2",
+      "file_size_bytes": 20776344
+    }
+  ],
+  "recovered_bootstrap_failure": {
+    "run_id": 37669853135,
+    "head_sha": "05ed884e1538a31d5229fe2e92f718f452030b48",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669853135",
+    "status": "completed",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "rust (windows-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      },
+      {
+        "name": "rust (macos-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      },
+      {
+        "name": "rust (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "failed_steps": [
+          "Check formatting"
+        ]
+      }
+    ],
+    "diagnosis": "Ubuntu reported Rustfmt layout differences; macOS and Windows reported eframe 0.36 App::ui API compile errors. Both were corrected before the passing implementation SHA."
+  },
+  "limitations": [
+    "This records the minimal native workspace and shell only; it does not claim product workflow parity.",
+    "Unchanged JavaScript/DOM plugin execution and capability-denial feasibility remain pending under MIG-015.",
+    "The eframe app is a minimal preview, not a finished editor or plugin host."
+  ],
+  "workspace_dependencies_declared_but_not_yet_used": [
+    "egui_extras",
+    "rayon"
+  ],
+  "goal_sha256_at_implementation": "a1896496f58e215a273e7b4bd0d85f25937fa030095cbf02d530bdadd31e93c1",
+  "goal_sha256_current_after_documentation_update": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
+}
