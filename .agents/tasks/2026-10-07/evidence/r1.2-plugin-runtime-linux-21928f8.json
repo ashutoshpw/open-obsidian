@@ -1,0 +1,27 @@
+{
+  "phase": "R1.2",
+  "source_sha": "21928f8658ef948853d351da13734b1523be81d5",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37680987992,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992",
+  "job_id": 112996658714,
+  "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992/job/112996658714",
+  "job_conclusion": "failure",
+  "failed_step": "Run unchanged plugin Wry feasibility probes",
+  "artifact": {
+    "id": 11509255875,
+    "name": "rust-plugin-runtime-Linux-21928f8658ef948853d351da13734b1523be81d5.zip",
+    "sha256": "3223dd1c7380b132429fdcada358ce7601d57d059c816cd6fcb094f63276f98c",
+    "download_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992/artifacts/11509255875"
+  },
+  "result": {
+    "plugins": ["PC05", "PC08"],
+    "integrity": "passed",
+    "runtime_status": "failed",
+    "plugins_executed": 0,
+    "failure": "Probe exited during winit X11 XKB event-loop initialization before Wry created a WebView.",
+    "inference": "The runner installed libxkbcommon-dev but not the libxkbcommon X11 runtime library. Ubuntu package metadata describes libxkbcommon-x11-0 as the library for the XKB X11 protocol; add it to the headless CI dependencies and rerun."
+  },
+  "scope": "Failure is an environment dependency result; it does not establish plugin runtime compatibility. Reports remain feasibility-only and legacy certification remains Pending.",
+  "local_validation": "none; executable validation was performed only by GitHub Actions"
+}

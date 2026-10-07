@@ -8,7 +8,7 @@ This is an R1.2 compatibility experiment. It does not make legacy plugins a supp
 
 Existing Obsidian plugins are JavaScript bundles that expect CommonJS `require`, Obsidian API classes and browser DOM behavior. The Rust `wasmi` host planned for Rust-era extensions cannot execute those JavaScript bundles or provide a DOM. Wry provides a native system WebView while the application UI remains egui/eframe.
 
-The experiment uses Wry `=0.57.0` and winit `0.30`. Linux uses GTK 3 with WebKitGTK 4.1, macOS uses WKWebView and Windows uses WebView2. These dependencies are specific to legacy compatibility and are not part of the Photocraft Rust stack. Wry documents [the platform engines, Linux dependencies and Wayland GTK integration](https://github.com/tauri-apps/wry/blob/wry-v0.57.0/README.md); the current headless CI probe uses X11 under Xvfb. Wry's crate metadata lists its dual MIT/Apache-2.0 license in the [0.57.0 manifest](https://docs.rs/crate/wry/0.57.0/source/Cargo.toml.orig).
+The experiment uses Wry `=0.57.0` and winit `0.30`. Linux uses GTK 3 with WebKitGTK 4.1, macOS uses WKWebView and Windows uses WebView2. These dependencies are specific to legacy compatibility and are not part of the Photocraft Rust stack. Wry documents [the platform engines, Linux dependencies and Wayland GTK integration](https://github.com/tauri-apps/wry/blob/wry-v0.57.0/README.md); the current headless CI probe uses X11 under Xvfb. Its Ubuntu runner installs `libxkbcommon-x11-0` for winit's XKB/X11 event-loop initialization. Wry's crate metadata lists its dual MIT/Apache-2.0 license in the [0.57.0 manifest](https://docs.rs/crate/wry/0.57.0/source/Cargo.toml.orig).
 
 ## Probe boundary
 
