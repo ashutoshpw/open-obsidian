@@ -72,6 +72,10 @@
     return element;
   }
 
+  function createSpan(options = {}) {
+    return safeElement("span", {...(typeof options === "object" && options !== null ? options : {cls: options})});
+  }
+
   function installObsidianDomExtensions() {
     const methods = {
       createEl(tag, options = {}) { return safeElement(tag, {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
@@ -93,6 +97,7 @@
     for (const [name, method] of Object.entries(methods)) {
       Object.defineProperty(Element.prototype, name, {configurable: true, writable: true, value: method});
     }
+    globalThis.createSpan = createSpan;
   }
 
   function safeModule(name) {
@@ -474,6 +479,7 @@
     Platform: {isDesktop: true, isMobile: false, isMacOS: navigator.platform.includes("Mac"), isWin: navigator.platform.includes("Win"), isLinux: navigator.platform.includes("Linux"), isDesktopApp: true, isMobileApp: false},
     normalizePath(value) { return String(value).replace(/\\/g, "/").replace(/^\/+|\/+$/g, ""); },
     setIcon(element, icon) { element.dataset.icon = String(icon); },
+    createSpan,
     addIcon() {},
     parseYaml(text) { return JSON.parse(String(text)); },
     stringifyYaml(value) { return JSON.stringify(value, null, 2); },
