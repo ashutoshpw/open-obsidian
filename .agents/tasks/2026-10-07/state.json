@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T20:34:01+00:00",
+  "updated_at": "2026-10-07T20:43:01+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "21928f8658ef948853d351da13734b1523be81d5",
+  "last_reconciled_head": "d96d781b21ae17386dda1403fa5813a31f04fb8f",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Inspect the exact-SHA CI triggered for the Modal/DOM shim plus the Ubuntu XKB/X11 dependency; review plugin evidence across Linux/macOS/Windows before deciding R1.2 status.",
+  "next_action": "Run exact-SHA GitHub Actions for the atomic unique temporary-vault directory fix; confirm Windows tests and all quality, build and plugin-feasibility gates, then decide R1.2 status.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -85,7 +85,9 @@
     "Rust CI 37679025109 reported Linux rustfmt differences and a Wry navigation callback signature mismatch on macOS/Windows; no plugin probe ran. Corrected from GitHub output. The following exact-SHA inventory and quality matrices passed on e264e9f65da1cad16e23b55cec3a510379ebd072; its Rust CI is pending.",
     "Rust CI source SHA 21928f8658ef948853d351da13734b1523be81d5 passed Linux format, tests, Clippy, layering and release build, then failed before WebView creation in winit's X11 XKB event-loop initialization. Artifact 11509255875 records pinned PC05/PC08 integrity passing but zero plugins executed. Added Ubuntu's libxkbcommon-x11-0 runtime dependency to CI and documented the environment finding; rerun on exact source SHA before promoting feasibility.",
     "On source SHA 21928f8658ef948853d351da13734b1523be81d5 the macOS and Windows Wry probes launched and passed capability denials, but both verified unchanged bundles failed on an Obsidian Modal superclass missing from the test shim. Reports are summarized in evidence/r1.2-plugin-runtime-desktop-21928f8.json. Static inspection of the SHA-verified bundle assets confirmed Modal subclasses; the probe now adds a minimal Modal DOM/API and uses string DOM helper arguments as CSS classes.",
-    "Exact-SHA inventory run 37682834615 identified a missing next_action JSON key in the R1.2 state entry; corrected from the GitHub parser diagnostic. Quality run 37682834698 passed macOS/Windows but Ubuntu's Electron vault round-trip audit failed before retrieval; the next exact-SHA matrix must record a fresh result."
+    "Exact-SHA inventory run 37682834615 identified a missing next_action JSON key in the R1.2 state entry; corrected from the GitHub parser diagnostic. Quality run 37682834698 passed macOS/Windows but Ubuntu's Electron vault round-trip audit failed before retrieval; the next exact-SHA matrix must record a fresh result.",
+    "The XKB/X11 Linux dependency update on source SHA ee263c65c5fc303633b5611bf30ad9b3d5a984e3 allowed the Linux Wry/WebKitGTK probe to start and pass its direct capability checks; both plugins then reached the missing Modal shim. Evidence: evidence/r1.2-linux-xkb-runtime-ee263c6.json. The Modal/DOM fix is in the subsequent exact-SHA Rust run.",
+    "Exact-SHA inventory, quality, desktop, renderer and loaded-plugin workflows passed on d96d781b21ae17386dda1403fa5813a31f04fb8f. Rust CI run 37683082486 exposed a Windows vault test failure from likely concurrent temporary-directory name collisions; the test helper now uses process-scoped atomic directory allocation. Linux and macOS Rust jobs were still running when this state was updated."
   ],
   "push_status": "pending",
   "ci_results": [
@@ -574,7 +576,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Inspect exact-SHA GitHub CI for the Modal/DOM compatibility shim and Ubuntu XKB/X11 runtime dependency; review format, tests, Clippy, layer checks, release builds and unchanged-plugin reports across Linux/macOS/Windows."
+      "next_action": "Inspect exact-SHA GitHub CI for the atomic temporary-directory allocation fix, then review format, tests, Clippy, layer checks, release builds and unchanged-plugin reports across Linux/macOS/Windows."
     }
   },
   "ci_preparation": {

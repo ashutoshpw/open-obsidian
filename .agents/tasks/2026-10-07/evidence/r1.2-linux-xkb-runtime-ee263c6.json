@@ -1,0 +1,29 @@
+{
+  "phase": "R1.2",
+  "source_sha": "ee263c65c5fc303633b5611bf30ad9b3d5a984e3",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37682048928,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37682048928",
+  "job_id": 113000293317,
+  "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37682048928/job/113000293317",
+  "job_conclusion": "failure",
+  "failed_step": "Run unchanged plugin Wry feasibility probes",
+  "artifact": {
+    "id": 11510616191,
+    "name": "rust-plugin-runtime-Linux-ee263c65c5fc303633b5611bf30ad9b3d5a984e3.zip",
+    "sha256": "61d3af8724681ccd9905935f00d4a7a3d6e8973046f977eff25a3294df291671",
+    "download_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37682048928/artifacts/11510616191"
+  },
+  "result": {
+    "platform": "Linux X11 under Xvfb",
+    "wry_version": "0.57.0",
+    "webkit_engine_version": "2.52.6",
+    "webview_started": true,
+    "pinned_PC05_PC08_integrity": "passed",
+    "capability_denial_probes": "passed",
+    "plugin_startup": "failed for both bundles because the compatibility shim did not yet export Obsidian Modal",
+    "xkb_x11_runtime_dependency": "confirmed by successful Wry event-loop and WebView startup after adding libxkbcommon-x11-0"
+  },
+  "scope": "This run confirms Linux headless WebView startup and capability-probe execution only; it does not certify unchanged plugin compatibility.",
+  "local_validation": "none; executable validation was performed only by GitHub Actions"
+}

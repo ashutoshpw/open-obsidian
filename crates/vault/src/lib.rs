@@ -129,19 +129,27 @@ mod tests {
     use super::VaultRoot;
     use std::fs;
     use std::path::PathBuf;
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
     struct TempDir(PathBuf);
 
     impl TempDir {
         fn new() -> Self {
-            let nonce = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let path = std::env::temp_dir().join(format!("openobsidian-vault-{nonce}"));
-            fs::create_dir_all(&path).unwrap();
-            Self(path)
+            let temp_root = std::env::temp_dir();
+            loop {
+                let id = NEXT_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed);
+                let path = temp_root.join(format!(
+                    "openobsidian-vault-{}-{id}",
+                    std::process::id()
+                ));
+                match fs::create_dir(&path) {
+                    Ok(()) => return Self(path),
+                    Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                    Err(error) => panic!("creating test vault {}: {error}", path.display()),
+                }
+            }
         }
     }
 
