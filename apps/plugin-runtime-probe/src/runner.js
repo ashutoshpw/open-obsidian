@@ -58,7 +58,8 @@
     if (typeof options === "string") options = {text: options};
     if (options.id) element.id = String(options.id);
     if (options.cls) {
-      for (const className of String(options.cls).split(/\s+/).filter(Boolean)) element.classList.add(className);
+      const classes = Array.isArray(options.cls) ? options.cls : String(options.cls).split(/\s+/);
+      for (const className of classes.flatMap((value) => String(value).split(/\s+/)).filter(Boolean)) element.classList.add(className);
     }
     if (options.text !== undefined) element.textContent = String(options.text);
     if (options.attr && typeof options.attr === "object") {
@@ -72,16 +73,46 @@
     return element;
   }
 
-  function createSpan(options = {}) {
-    return safeElement("span", {...(typeof options === "object" && options !== null ? options : {cls: options})});
+  function domOptions(options) {
+    return typeof options === "object" && options !== null ? options : {cls: options};
+  }
+
+  function createEl(tag, options = {}, callback) {
+    const element = safeElement(tag, domOptions(options));
+    if (typeof callback === "function") callback(element);
+    return element;
+  }
+
+  function createDiv(options = {}, callback) {
+    return createEl("div", options, callback);
+  }
+
+  function createSpan(options = {}, callback) {
+    return createEl("span", options, callback);
+  }
+
+  function createFragment(callback) {
+    const fragment = document.createDocumentFragment();
+    if (typeof callback === "function") callback(fragment);
+    return fragment;
   }
 
   function installObsidianDomExtensions() {
     const methods = {
-      createEl(tag, options = {}) { return safeElement(tag, {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
-      createDiv(options = {}) { return safeElement("div", {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
-      createSpan(options = {}) { return safeElement("span", {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
+      createEl(tag, options = {}, callback) {
+        const element = safeElement(tag, {...domOptions(options), parent: this});
+        if (typeof callback === "function") callback(element);
+        return element;
+      },
+      createDiv(options = {}, callback) { return this.createEl("div", options, callback); },
+      createSpan(options = {}, callback) { return this.createEl("span", options, callback); },
       empty() { this.replaceChildren(); },
+      appendText(value) { this.append(document.createTextNode(String(value ?? ""))); },
+    };
+    for (const [name, method] of Object.entries(methods)) {
+      Object.defineProperty(Node.prototype, name, {configurable: true, writable: true, value: method});
+    }
+    const elementMethods = {
       addClass(...names) { this.classList.add(...names.flatMap((name) => String(name).split(/\s+/).filter(Boolean))); },
       removeClass(...names) { this.classList.remove(...names.flatMap((name) => String(name).split(/\s+/).filter(Boolean))); },
       toggleClass(name, force) { return this.classList.toggle(name, force); },
@@ -92,12 +123,11 @@
         this.addEventListener("click", callback, options);
         this.addEventListener("auxclick", callback, options);
       },
-      appendText(value) { this.append(document.createTextNode(String(value ?? ""))); },
     };
-    for (const [name, method] of Object.entries(methods)) {
+    for (const [name, method] of Object.entries(elementMethods)) {
       Object.defineProperty(Element.prototype, name, {configurable: true, writable: true, value: method});
     }
-    globalThis.createSpan = createSpan;
+    Object.assign(globalThis, {createEl, createDiv, createSpan, createFragment});
   }
 
   function safeModule(name) {
@@ -479,7 +509,10 @@
     Platform: {isDesktop: true, isMobile: false, isMacOS: navigator.platform.includes("Mac"), isWin: navigator.platform.includes("Win"), isLinux: navigator.platform.includes("Linux"), isDesktopApp: true, isMobileApp: false},
     normalizePath(value) { return String(value).replace(/\\/g, "/").replace(/^\/+|\/+$/g, ""); },
     setIcon(element, icon) { element.dataset.icon = String(icon); },
+    createEl,
+    createDiv,
     createSpan,
+    createFragment,
     addIcon() {},
     parseYaml(text) { return JSON.parse(String(text)); },
     stringifyYaml(value) { return JSON.stringify(value, null, 2); },

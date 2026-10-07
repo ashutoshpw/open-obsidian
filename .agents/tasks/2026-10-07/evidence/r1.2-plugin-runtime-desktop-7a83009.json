@@ -1,0 +1,90 @@
+{
+  "phase": "R1.2",
+  "source_sha": "7a83009025b7dbe8ced99b4f366a36882a82b4cc",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37702519338,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37702519338",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113069092088,
+      "artifact_id": 11518382747,
+      "artifact_sha256": "39c0e4eb82dcaab2d6613d6fd5ead9867bad4b7009ffe21c9466b5051ac98f07",
+      "report_sha256": "7fd2904a6c40e6a61ebccb4abaefb917bbd5573d4f7e3a9580857de67dbfe0b1",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 rendered the appearance group and controls but did not expose expected control IDs compact or accent"
+    },
+    "windows": {
+      "job_id": 113069092312,
+      "artifact_id": 11518582759,
+      "artifact_sha256": "326ca7a5d6a65843780b7e936d60dcdbfbdc2cfd50c6376f20c6fb9d7a7e6ba7",
+      "report_sha256": "a2b711b8b32328ebcb81a28d238d470e7e5d68ca952ca8b14972c9c1ff092e11",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 rendered the appearance group and controls but did not expose expected control IDs compact or accent"
+    },
+    "macos": {
+      "job_id": 113069092404,
+      "artifact_id": 11518047890,
+      "artifact_sha256": "936072ecdbb2348310c97b23a91f63382a14f82fccdf0fbf81ba462e61ecd109",
+      "report_sha256": "f50af3d705080957e965e897133557a5e7c960e76c96e38b0e5a2a947256eb6c",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 rendered the appearance group and controls but did not expose expected control IDs compact or accent"
+    }
+  },
+  "shared_probe_result": {
+    "wry_version": "0.57.0",
+    "legacy_compatibility_state": "Pending",
+    "capability_denials": "passed on all three platforms",
+    "PC05": {
+      "version": "0.23.2",
+      "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+      "integrity": "passed",
+      "plugin_loaded": true,
+      "setting_controls": 5,
+      "editor_callbacks": "1/1 completed and changed the synthetic note on all three platforms"
+    },
+    "PC08": {
+      "version": "1.0.9",
+      "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+      "integrity": "passed",
+      "theme_fixture": {
+        "path": "Themes/Minimal.css",
+        "sha256": "4445ec64a79343de33a14a8a829a4155e1377f3428f8bc87251901b588754155",
+        "verified_on_all_platforms": true
+      },
+      "stylesheet_rules": 110,
+      "settings_controls": 3,
+      "settings_ids": ["appearance"],
+      "expected_control_ids": ["compact", "accent"],
+      "empty_or_settings_error_messages": [],
+      "asynchronous_errors": [],
+      "console_errors": []
+    }
+  },
+  "ci_gates": {
+    "inventory_run": 37702519355,
+    "inventory": "passed",
+    "quality_run": 37702519420,
+    "quality": "passed",
+    "desktop_run": 37702519361,
+    "desktop": "passed",
+    "plugin_renderer_run": 37702519378,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37702519304,
+    "loaded_plugins": "passed"
+  },
+  "finding": "The exact-SHA Rust matrix passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on all three platforms. PC05 passed everywhere. PC08 advanced through the Setting and createSpan shims and now reports three controls with no JavaScript errors, but exposes only the appearance group ID instead of compact and accent. Static inspection of the exact pinned PC08 bundle found it relies on callback-aware Node createEl/createDiv/createSpan helpers, global createEl/createFragment functions and DocumentFragment helpers; the follow-up adds these documented operations. No local executable validation was run. R1.2 and compatibility remain pending.",
+  "scope": "These probes do not certify broad legacy compatibility or WebView isolation."
+}
