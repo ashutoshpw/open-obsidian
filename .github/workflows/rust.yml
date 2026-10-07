@@ -41,11 +41,6 @@ jobs:
       - name: Cache Cargo outputs
         uses: Swatinem/rust-cache@v2
 
-      # The first workspace push bootstraps Cargo.lock in GitHub Actions. Commit the uploaded
-      # lockfile in the next small slice; all later jobs verify the committed graph with --locked.
-      - name: Generate workspace lockfile
-        run: cargo generate-lockfile
-
       - name: Check formatting
         if: runner.os == 'Linux'
         run: cargo fmt --all -- --check
@@ -61,14 +56,6 @@ jobs:
 
       - name: Build native preview
         run: cargo build --workspace --release --locked
-
-      - name: Upload generated Cargo.lock
-        if: always() && runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: openobsidian-cargo-lock
-          path: Cargo.lock
-          if-no-files-found: warn
 
       - name: Upload Linux preview executable
         if: success() && runner.os == 'Linux'

@@ -40,7 +40,11 @@ fn check_layers() -> Result<(), String> {
         .as_array()
         .ok_or_else(|| "cargo metadata omitted packages".to_owned())?
         .iter()
-        .filter(|package| package["id"].as_str().is_some_and(|id| members.contains(id)))
+        .filter(|package| {
+            package["id"]
+                .as_str()
+                .is_some_and(|id| members.contains(id))
+        })
         .filter_map(|package| {
             Some((
                 package["id"].as_str()?.to_owned(),
@@ -119,6 +123,9 @@ fn check_layers() -> Result<(), String> {
         Ok(())
     } else {
         violations.sort();
-        Err(format!("forbidden workspace dependencies: {}", violations.join(", ")))
+        Err(format!(
+            "forbidden workspace dependencies: {}",
+            violations.join(", ")
+        ))
     }
 }

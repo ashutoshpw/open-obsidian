@@ -26,7 +26,8 @@ mod tests {
 
     #[test]
     fn untouched_document_bytes_round_trip_exactly() {
-        let bytes = b"\xef\xbb\xbf---\r\nunknown: [value, {nested: true}]\r\n---\r\ntext\r\n".to_vec();
+        let bytes =
+            b"\xef\xbb\xbf---\r\nunknown: [value, {nested: true}]\r\n---\r\ntext\r\n".to_vec();
         assert_eq!(RawDocument::from_bytes(bytes.clone()).into_bytes(), bytes);
     }
 }

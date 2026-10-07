@@ -72,7 +72,11 @@ impl VaultRoot {
     }
 }
 
-fn scan_directory(root: &Path, directory: &Path, output: &mut Vec<VaultEntry>) -> Result<(), VaultError> {
+fn scan_directory(
+    root: &Path,
+    directory: &Path,
+    output: &mut Vec<VaultEntry>,
+) -> Result<(), VaultError> {
     for entry in fs::read_dir(directory)? {
         let entry = entry?;
         let file_type = entry.file_type()?;
@@ -84,10 +88,15 @@ fn scan_directory(root: &Path, directory: &Path, output: &mut Vec<VaultEntry>) -
         if file_type.is_dir() {
             scan_directory(root, &path, output)?;
         } else if file_type.is_file()
-            && path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+            && path
+                .extension()
+                .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
         {
             output.push(VaultEntry {
-                relative_path: path.strip_prefix(root).map_err(|_| VaultError::OutsideRoot(path.clone()))?.to_path_buf(),
+                relative_path: path
+                    .strip_prefix(root)
+                    .map_err(|_| VaultError::OutsideRoot(path.clone()))?
+                    .to_path_buf(),
             });
         }
     }
@@ -97,7 +106,9 @@ fn scan_directory(root: &Path, directory: &Path, output: &mut Vec<VaultEntry>) -
 fn validate_relative_path(path: &Path) -> Result<(), VaultError> {
     if path.as_os_str().is_empty()
         || path.is_absolute()
-        || path.components().any(|component| !matches!(component, Component::Normal(_)))
+        || path
+            .components()
+            .any(|component| !matches!(component, Component::Normal(_)))
     {
         return Err(VaultError::InvalidPath);
     }
@@ -124,7 +135,10 @@ mod tests {
 
     impl TempDir {
         fn new() -> Self {
-            let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let nonce = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos();
             let path = std::env::temp_dir().join(format!("openobsidian-vault-{nonce}"));
             fs::create_dir_all(&path).unwrap();
             Self(path)
@@ -149,7 +163,10 @@ mod tests {
         let entries = vault.scan_markdown().unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].relative_path, PathBuf::from("nested/note.MD"));
-        assert_eq!(vault.read("nested/note.MD").unwrap().document.as_bytes(), bytes);
+        assert_eq!(
+            vault.read("nested/note.MD").unwrap().document.as_bytes(),
+            bytes
+        );
         assert_eq!(fs::read(note).unwrap(), bytes);
     }
 

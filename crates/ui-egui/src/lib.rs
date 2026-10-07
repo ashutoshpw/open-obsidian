@@ -6,7 +6,7 @@ pub fn run() -> eframe::Result {
     eframe::run_native(
         "OpenObsidian",
         options,
-        Box::new(|_creation_context| Ok(Box::new(OpenObsidianApp))),
+        Box::new(|_creation_context| Ok(Box::new(OpenObsidianApp::default()))),
     )
 }
 
@@ -16,19 +16,17 @@ struct OpenObsidianApp {
 }
 
 impl eframe::App for OpenObsidianApp {
-    fn update(&mut self, context: &eframe::egui::Context, _frame: &mut eframe::Frame) {
-        eframe::egui::CentralPanel::default().show(context, |ui| {
-            ui.heading("OpenObsidian");
-            ui.label("Native Rust migration is in progress.");
-            match &self.session {
-                Some(session) => {
-                    ui.label(format!("{} Markdown files found.", session.entries().len()));
-                }
-                None => {
-                    ui.label("No vault is open in this preview.");
-                }
+    fn ui(&mut self, ui: &mut eframe::egui::Ui, _frame: &mut eframe::Frame) {
+        ui.heading("OpenObsidian");
+        ui.label("Native Rust migration is in progress.");
+        match &self.session {
+            Some(session) => {
+                ui.label(format!("{} Markdown files found.", session.entries().len()));
             }
-            ui.label("Editing and plugin compatibility are not available in this preview.");
-        });
+            None => {
+                ui.label("No vault is open in this preview.");
+            }
+        }
+        ui.label("Editing and plugin compatibility are not available in this preview.");
     }
 }
