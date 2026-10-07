@@ -10286,13 +10286,14 @@
         "clause": "Before broad native UI investment, prototype unchanged JavaScript/DOM plugin compatibility and enforced capability denial on the supported operating systems."
       },
       "checkpoint": "R1",
-      "owner": "crates/plugins",
+      "owner": "crates/plugins and apps/plugin-runtime-probe",
       "mandatory": true,
       "acceptance_criteria": "GitHub CI on Linux, macOS and Windows records runtime identity and artifact hashes, exercises representative JavaScript API, DOM/theme and editor workflows, verifies denied filesystem/process/network/credential capabilities, and records unsupported paths under D15 without counting mock projections as unchanged-artifact certification.",
       "fixture_ids": [
         "fixture:compatibility-manifest",
         "fixture:plugin-renderer-probe",
-        "fixture:plugin-isolation"
+        "fixture:plugin-isolation",
+        "fixture:plugin-loaded-workflows"
       ],
       "reference_versions": [
         {
@@ -10304,6 +10305,11 @@
           "kind": "rust-migration-goal",
           "version": "2026-10-07-documentation-update",
           "sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87"
+        },
+        {
+          "kind": "rust-migration-goal",
+          "version": "2026-10-07-r1.2-wry-feasibility",
+          "sha256": "31249dccddc77766db332ce08d5ae641ad88d5ad06c440f025d7685401af22d6"
         }
       ],
       "applicable_platforms": [
@@ -10321,7 +10327,7 @@
       "legacy_evidence_paths": [],
       "legacy_checkpoint": null,
       "migration_phase": "R1",
-      "rust_owner": "crates/plugins",
+      "rust_owner": "crates/plugins and apps/plugin-runtime-probe",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
       "migration_acceptance": "Complete the compatibility feasibility gate before broad native UI investment; all acceptance execution occurs on GitHub Actions.",
@@ -10369,7 +10375,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-07T19:22:20+00:00",
+  "reviewed_at": "2026-10-07T19:58:51+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
@@ -10379,7 +10385,7 @@
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."
     ],
-    "goal_sha256": "89ed20b10116ecc814509f368935a284fa94f209b54a2055f71815cbd4099c87",
+    "goal_sha256": "31249dccddc77766db332ce08d5ae641ad88d5ad06c440f025d7685401af22d6",
     "policy": "Every inherited requirement was reviewed by ID and assigned a Rust owner, migration phase, acceptance criterion and retained/superseded/external disposition. Historical status/evidence remain preserved separately. Rust acceptance remains pending unless current exact-SHA migration evidence is attached; external items remain external_pending."
   }
 }

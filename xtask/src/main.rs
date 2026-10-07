@@ -88,6 +88,10 @@ fn check_layers() -> Result<(), String> {
             ]),
         ),
         ("openobsidian-cli", BTreeSet::from(["openobsidian-engine"])),
+        (
+            "openobsidian-plugin-runtime-probe",
+            BTreeSet::from(["openobsidian-plugins"]),
+        ),
         ("xtask", BTreeSet::from([])),
     ]);
 

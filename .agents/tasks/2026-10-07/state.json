@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T19:22:20+00:00",
+  "updated_at": "2026-10-07T20:00:41+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb",
+  "last_reconciled_head": "e80fb58113ce04f2a55326efa8c059c5dc618bd5",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Design and implement the smallest native Rust unchanged-JavaScript/DOM plugin feasibility harness against the approved unchanged artifacts; verify representative API, editor/theme DOM and denied capabilities in GitHub CI on Linux, macOS and Windows before broader UI work.",
+  "next_action": "Commit and push the R1.2 Wry probe plus temporary Cargo.lock resolver to origin/main with push-triggered CI skipped; manually run the resolver, retrieve Cargo.lock, remove the resolver and push the locked probe slice for exact-SHA GitHub CI on Linux, macOS and Windows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -78,9 +78,11 @@
     "Added the minimal Cargo workspace, read-only vault session, native eframe shell, platform/plugin interfaces, shared test helper, layering xtask and three-OS Rust workflow locally; all executable validation remains pending GitHub Actions.",
     "GitHub Rust CI identified formatting-only differences and the eframe 0.36 App::ui API; corrected both from CI output and retrieved Cargo.lock from exact-SHA run 37669853135 (artifact digest e12ecff53e0b4613a3077731c3862ff674f7db738d7dc8aa392a9dde20fd128b). Fresh CI is pending for the correction.",
     "R1.1 native workspace, Cargo.lock, minimal eframe shell and layering gate passed the exact-SHA Rust GitHub Actions matrix on Linux, macOS and Windows; all legacy quality/package/plugin workflows also passed. Evidence: evidence/r1.1-ci.json; Linux preview artifact recorded there.",
-    "Reconciled the updated goal documentation requirement as MIG-016 and added RM-08; R0.2 historical mapping count remains 211 and current requirements count is 212."
+    "Reconciled the updated goal documentation requirement as MIG-016 and added RM-08; R0.2 historical mapping count remains 211 and current requirements count is 212.",
+    "Started R1.2 with a Wry 0.57.0 system-WebView feasibility probe for unchanged PC05 Advanced Tables and PC08 Style Settings bundles; runtime reports retain Pending/non-certifying status and include bundle/manifest/stylesheet hashes, WebView identity, DOM/editor metrics and capability denials.",
+    "Hardened the Wry probe boundary after source review: navigation is limited to the exact localhost probe document, custom protocol assets reject unexpected hosts, frame ancestors are denied, and browser autofill is disabled where supported. No local executable validation was run."
   ],
-  "push_status": "pushed",
+  "push_status": "pending",
   "ci_results": [
     {
       "name": "inventory",
@@ -560,7 +562,10 @@
       "status": "in_progress",
       "implementation_sha": null,
       "evidence": null,
-      "next_action": "Inspect the existing unchanged-plugin cohort and prototype a Rust-hosted JavaScript/DOM compatibility path with enforced filesystem/process/network/credential denials; run it only in the GitHub Actions OS matrix. The updated documentation requirement is tracked as MIG-016 for R7."
+      "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
+      "candidate_plugins": ["PC05", "PC08"],
+      "temporary_lock_workflow": ".github/workflows/rust-lock-resolver.yml",
+      "next_action": "Commit and push the coherent probe slice and temporary lock resolver with push-triggered CI skipped, manually run the resolver and retrieve Cargo.lock, remove the resolver, then inspect locked Rust and unchanged-plugin feasibility runs for the resulting exact SHA on Linux/macOS/Windows."
     }
   },
   "ci_preparation": {
