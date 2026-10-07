@@ -53,9 +53,9 @@
 
   function installObsidianDomExtensions() {
     const methods = {
-      createEl(tag, options = {}) { return safeElement(tag, {...(typeof options === "object" ? options : {text: options}), parent: this}); },
-      createDiv(options = {}) { return safeElement("div", {...(typeof options === "object" ? options : {text: options}), parent: this}); },
-      createSpan(options = {}) { return safeElement("span", {...(typeof options === "object" ? options : {text: options}), parent: this}); },
+      createEl(tag, options = {}) { return safeElement(tag, {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
+      createDiv(options = {}) { return safeElement("div", {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
+      createSpan(options = {}) { return safeElement("span", {...(typeof options === "object" ? options : {cls: options}), parent: this}); },
       empty() { this.replaceChildren(); },
       addClass(...names) { this.classList.add(...names.flatMap((name) => String(name).split(/\s+/).filter(Boolean))); },
       removeClass(...names) { this.classList.remove(...names.flatMap((name) => String(name).split(/\s+/).filter(Boolean))); },
@@ -205,6 +205,38 @@
     display() { this.containerEl.empty(); }
   }
 
+  class Modal {
+    constructor(app) {
+      this.app = app;
+      this.containerEl = safeElement("div", {cls: "modal-container"});
+      this.modalEl = safeElement("div", {cls: "modal", parent: this.containerEl});
+      this.titleEl = safeElement("div", {cls: "modal-title", parent: this.modalEl});
+      this.contentEl = safeElement("div", {cls: "modal-content", parent: this.modalEl});
+      this.scope = {};
+      this.shouldRestoreSelection = true;
+      this.closeCallback = null;
+    }
+    open() {
+      if (!this.containerEl.isConnected) document.body.append(this.containerEl);
+      void this.onOpen();
+    }
+    close() {
+      this.onClose();
+      this.containerEl.remove();
+      if (typeof this.closeCallback === "function") this.closeCallback();
+    }
+    onOpen() {}
+    onClose() {}
+    setTitle(title) { this.titleEl.textContent = String(title); return this; }
+    setContent(content) {
+      this.contentEl.replaceChildren();
+      if (typeof content === "string") this.contentEl.textContent = content;
+      else if (content) this.contentEl.append(content);
+      return this;
+    }
+    setCloseCallback(callback) { this.closeCallback = callback; return this; }
+  }
+
   class ItemView extends Component {
     constructor(leaf) {
       super();
@@ -310,6 +342,7 @@
     Component,
     Plugin,
     PluginSettingTab,
+    Modal,
     ItemView,
     Setting,
     Notice,

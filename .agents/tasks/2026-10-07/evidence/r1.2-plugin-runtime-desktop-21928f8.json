@@ -1,0 +1,89 @@
+{
+  "phase": "R1.2",
+  "source_sha": "21928f8658ef948853d351da13734b1523be81d5",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37680987992,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992",
+  "platform_results": [
+    {
+      "platform": "macOS",
+      "job_id": 112996658329,
+      "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992/job/112996658329",
+      "job_conclusion": "failure",
+      "artifact": {
+        "id": 11510040712,
+        "name": "rust-plugin-runtime-macOS-21928f8658ef948853d351da13734b1523be81d5.zip",
+        "sha256": "43150ffec7af8497233828bd5e5bb8832e88fccda81c3ab336e7bdf16e21b0e1",
+        "download_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992/artifacts/11510040712"
+      },
+      "runtime": {
+        "host": "wry",
+        "wry_version": "0.57.0",
+        "architecture": "aarch64",
+        "webview_engine_version": "21624.5.1.11.3"
+      },
+      "capability_probe": "passed",
+      "plugins": [
+        {
+          "id": "PC05",
+          "version": "0.23.2",
+          "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+          "manifest_sha256": "698b4f77445e07d887f33450eaf533a28e099b7b483f642fa883362ffbd8ffe9",
+          "integrity": "passed",
+          "status": "failed",
+          "error": "The superclass is not a constructor."
+        },
+        {
+          "id": "PC08",
+          "version": "1.0.9",
+          "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+          "manifest_sha256": "9cffdc20cf2aa1354820e0050b694b0f9b576446e3d5d44a36ae8b0187e5bfb8",
+          "integrity": "passed",
+          "status": "failed",
+          "error": "The superclass is not a constructor."
+        }
+      ]
+    },
+    {
+      "platform": "Windows",
+      "job_id": 112996659079,
+      "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992/job/112996659079",
+      "job_conclusion": "failure",
+      "artifact": {
+        "id": 11510475254,
+        "name": "rust-plugin-runtime-Windows-21928f8658ef948853d351da13734b1523be81d5.zip",
+        "sha256": "a6b6b12496a4968ea4fefced70f2f45faa5406e67847d2793f15d0e890b85367",
+        "download_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37680987992/artifacts/11510475254"
+      },
+      "runtime": {
+        "host": "wry",
+        "wry_version": "0.57.0",
+        "architecture": "x86_64",
+        "webview_engine_version": "153.0.4234.48"
+      },
+      "capability_probe": "passed",
+      "plugins": [
+        {
+          "id": "PC05",
+          "version": "0.23.2",
+          "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+          "manifest_sha256": "698b4f77445e07d887f33450eaf533a28e099b7b483f642fa883362ffbd8ffe9",
+          "integrity": "passed",
+          "status": "failed",
+          "error": "Class extends value undefined is not a constructor or null"
+        },
+        {
+          "id": "PC08",
+          "version": "1.0.9",
+          "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+          "manifest_sha256": "9cffdc20cf2aa1354820e0050b694b0f9b576446e3d5d44a36ae8b0187e5bfb8",
+          "integrity": "passed",
+          "status": "failed",
+          "error": "Class extends value undefined is not a constructor or null"
+        }
+      ]
+    }
+  ],
+  "assessment": "Both desktop WebViews started and denied the direct filesystem, process, credential and network probes. The pinned bundles passed integrity verification but failed on an API superclass missing from the probe shim. Static inspection of both SHA-verified release bundles found subclasses of Obsidian Modal; the shim now provides a minimal Modal surface. This is not plugin compatibility certification.",
+  "local_validation": "none; executable validation was performed only by GitHub Actions"
+}
