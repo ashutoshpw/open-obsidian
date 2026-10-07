@@ -393,6 +393,39 @@
     appId: "openobsidian-rust-probe",
   };
 
+  function debounce(callback, timeout = 0, resetTimer = true) {
+    let timer = null;
+    let pendingArgs = [];
+    let pendingThis = null;
+    let result;
+    const debounced = function (...args) {
+      pendingArgs = args;
+      pendingThis = this;
+      if (timer !== null) {
+        if (resetTimer) clearTimeout(timer);
+        else return debounced;
+      }
+      timer = setTimeout(() => {
+        timer = null;
+        result = callback.apply(pendingThis, pendingArgs);
+      }, Math.max(0, Number(timeout) || 0));
+      return debounced;
+    };
+    debounced.cancel = () => {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      return debounced;
+    };
+    debounced.run = () => {
+      if (timer === null) return undefined;
+      clearTimeout(timer);
+      timer = null;
+      result = callback.apply(pendingThis, pendingArgs);
+      return result;
+    };
+    return debounced;
+  }
+
   const obsidianApi = {
     App: class App {},
     Component,
@@ -417,6 +450,7 @@
     addIcon() {},
     parseYaml(text) { return JSON.parse(String(text)); },
     stringifyYaml(value) { return JSON.stringify(value, null, 2); },
+    debounce,
     requestUrl() { return deny("network.request", "obsidian.requestUrl"); },
   };
 

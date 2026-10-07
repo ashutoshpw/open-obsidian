@@ -46,12 +46,13 @@ jobs:
         with:
           bun-version-file: package.json
 
-      - name: Check formatting
-        if: runner.os == 'Linux'
-        run: cargo fmt --all -- --check
-
-      - name: Run workspace tests
-        run: cargo test --workspace --locked
+      # Formatting does not share Cargo's build directory with tests, so run it concurrently.
+      - parallel:
+          - name: Check formatting
+            if: runner.os == 'Linux'
+            run: cargo fmt --all -- --check
+          - name: Run workspace tests
+            run: cargo test --workspace --locked
 
       - name: Run Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
