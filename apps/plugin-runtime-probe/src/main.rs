@@ -433,7 +433,7 @@ fn is_internal_document(url: &str) -> bool {
         _ => false,
     };
     let document_path = path
-        .split(|character| character == '?' || character == '#')
+        .split(['?', '#'])
         .next()
         .unwrap_or_default();
     host_allowed && (document_path.is_empty() || document_path == "index.html")
