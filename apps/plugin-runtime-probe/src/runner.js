@@ -6,6 +6,7 @@
   const nativeFetch = typeof window.fetch === "function" ? window.fetch.bind(window) : null;
   const ipcPostMessage = window.ipc?.postMessage?.bind(window.ipc);
   const root = document.getElementById("openobsidian-plugin-root");
+  Object.defineProperty(globalThis, "activeWindow", {configurable: true, value: window});
   const capabilityDenials = [];
   const cspViolations = [];
   const attemptedModules = [];
@@ -457,6 +458,8 @@
       if (typeof PluginClass !== "function") throw new Error("unchanged bundle did not export a plugin constructor");
       plugin = new PluginClass(app, manifest);
       if (typeof plugin.onload === "function") await plugin.onload();
+      // Some legacy plugins start asyncOnload work without returning its promise.
+      await new Promise((resolve) => setTimeout(resolve, 50));
       pluginStatus = "loaded";
       for (const {tab} of registrations.settingTabs.slice(0, 3)) {
         try { if (typeof tab?.display === "function") { await tab.display(); apiCalls.push("displaySettingTab"); } }

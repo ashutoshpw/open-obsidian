@@ -140,10 +140,8 @@ mod tests {
             let temp_root = std::env::temp_dir();
             loop {
                 let id = NEXT_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed);
-                let path = temp_root.join(format!(
-                    "openobsidian-vault-{}-{id}",
-                    std::process::id()
-                ));
+                let path =
+                    temp_root.join(format!("openobsidian-vault-{}-{id}", std::process::id()));
                 match fs::create_dir(&path) {
                     Ok(()) => return Self(path),
                     Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
