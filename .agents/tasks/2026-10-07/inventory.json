@@ -1593,10 +1593,12 @@
     },
     {
       "path": ".github/workflows/desktop-build.yml",
-      "sha256": "f413e4c691b5c8dec186a2566dc4f573a52224c8de49960405f1ce959b24f014",
+      "sha256": "400f901742e79ec3f46276b9ccb383a8facdfbcd270be54ebad9691203de8767",
       "rust_owner": "xtask",
       "mapping_status": "provisional",
-      "status": "pending"
+      "status": "pending",
+      "baseline_sha256": "f413e4c691b5c8dec186a2566dc4f573a52224c8de49960405f1ce959b24f014",
+      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers."
     },
     {
       "path": ".github/workflows/plugin-loaded-workflows.yml",
@@ -1614,10 +1616,12 @@
     },
     {
       "path": ".github/workflows/quality.yml",
-      "sha256": "87197aaf1cfee74e304872cde7352f6a5e4371fb0997ceab7025cfb2788cb55d",
+      "sha256": "5e020a6f8ba1c8d3bf21447fd099014b318d2b9b3f452609cc75f8e67cbec5a7",
       "rust_owner": "xtask",
       "mapping_status": "provisional",
-      "status": "pending"
+      "status": "pending",
+      "baseline_sha256": "87197aaf1cfee74e304872cde7352f6a5e4371fb0997ceab7025cfb2788cb55d",
+      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers."
     }
   ],
   "spec_hashes": {

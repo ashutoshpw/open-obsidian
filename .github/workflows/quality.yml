@@ -37,26 +37,28 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Validate progress state
         run: bun run validate:state
-      - name: Validate frozen contracts
-        run: bun run validate:contracts
-      - name: Validate architecture manifest
-        run: bun run validate:architecture
-      - name: Verify version baseline policy
-        run: bun run verify:version-baseline
-      - name: Validate vault differential fixture contract
-        run: bun run validate:differential
+      # These checks only read source/contracts; wait for all before runtime tests.
+      - parallel:
+          - name: Validate frozen contracts
+            run: bun run validate:contracts
+          - name: Validate architecture manifest
+            run: bun run validate:architecture
+          - name: Verify version baseline policy
+            run: bun run verify:version-baseline
+          - name: Validate vault differential fixture contract
+            run: bun run validate:differential
+          - name: Validate C10 core workflow inventory
+            run: bun run validate:workflows
+          - name: Verify distribution metadata
+            run: bun run verify:distribution
+          - name: Verify update/rollback manifest contract
+            run: bun run release:update-check
+          - name: Check renderer accessibility contract
+            run: bun run check:accessibility
+          - name: Type-check source
+            run: bun run typecheck
       - name: Run host vault round-trip report
         run: bun run audit:vault-roundtrip
-      - name: Validate C10 core workflow inventory
-        run: bun run validate:workflows
-      - name: Verify distribution metadata
-        run: bun run verify:distribution
-      - name: Verify update/rollback manifest contract
-        run: bun run release:update-check
-      - name: Check renderer accessibility contract
-        run: bun run check:accessibility
-      - name: Type-check source
-        run: bun run typecheck
       - name: Run tests
         run: bun test
       - name: Run executable quality scorecard
