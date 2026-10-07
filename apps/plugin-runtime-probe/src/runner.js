@@ -19,6 +19,7 @@
   const attemptedModules = [];
   const apiCalls = [];
   const registrations = {commands: [], views: [], settingTabs: [], events: []};
+  const workspaceListeners = new Map();
   const editorWorkflow = {
     registeredCallbacks: 0,
     invokedCallbacks: 0,
@@ -386,7 +387,18 @@
       getRightLeaf() { return this.getLeaf(); },
       getLeftLeaf() { return this.getLeaf(); },
       getMostRecentLeaf() { return this.getLeaf(); },
-      on(name, callback) { registrations.events.push({kind: "workspace", name}); return {name, callback}; },
+      on(name, callback) {
+        registrations.events.push({kind: "workspace", name});
+        if (typeof callback === "function") {
+          const listeners = workspaceListeners.get(name) ?? [];
+          listeners.push(callback);
+          workspaceListeners.set(name, listeners);
+        }
+        return {name, callback};
+      },
+      trigger(name, ...args) {
+        for (const callback of workspaceListeners.get(name) ?? []) callback(...args);
+      },
       registerHoverLinkSource() {},
       revealLeaf() { return Promise.resolve(); },
       openLinkText() { return Promise.resolve(); },
