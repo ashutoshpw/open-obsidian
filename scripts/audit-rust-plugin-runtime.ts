@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import {mkdtempSync, rmSync, writeFileSync} from "node:fs";
 import {spawn} from "node:child_process";
 import {tmpdir} from "node:os";
@@ -9,6 +10,15 @@ const root = resolve(import.meta.dir, "..");
 const selectedIds = ["PC05", "PC08"];
 const manifest = readJson(root, "fixtures/compatibility-manifest.json");
 const byId = new Map(records(manifest.artifacts).map((artifact) => [string(artifact.id), artifact]));
+const workflowFixturePath = "fixtures/plugin-loaded-workflows.json";
+const pc08Scenario = asRecord(asRecord(readJson(root, workflowFixturePath).scenarios)?.PC08);
+const pc08ThemePath = string(asRecord(pc08Scenario?.style_settings_workflow)?.theme_path);
+const pc08ThemeCss = records(pc08Scenario?.files)
+  .find((file) => string(file.path) === pc08ThemePath)?.content;
+if (!pc08ThemePath || typeof pc08ThemeCss !== "string") {
+  throw new Error("PC08 workflow fixture must contain its configured theme CSS file");
+}
+const pc08ThemeSha256 = createHash("sha256").update(pc08ThemeCss, "utf8").digest("hex");
 const binaryName = process.platform === "win32" ? "openobsidian-plugin-runtime-probe.exe" : "openobsidian-plugin-runtime-probe";
 const binaryPath = resolve(root, "target/release", binaryName);
 const timeoutMs = 45_000;
@@ -88,9 +98,11 @@ function checkReport(pluginId: string, report: Record<string, unknown>): string[
     problems.push("Advanced Tables did not complete an editor callback against the DOM-backed editor fixture");
   }
   if (pluginId === "PC08") {
+    const themeFixture = asRecord(report.themeSettingsFixture);
     if (!(typeof api?.settingTabs === "number" && api.settingTabs > 0)) problems.push("Style Settings did not register its Obsidian settings API");
     if (!(typeof dom?.settingControls === "number" && dom.settingControls > 0)) problems.push("Style Settings did not render a control into the browser DOM");
     if (!(typeof stylesheet?.ruleCount === "number" && stylesheet.ruleCount > 0)) problems.push("Style Settings stylesheet did not load into the browser WebView");
+    if (themeFixture?.path !== pc08ThemePath || themeFixture.sha256 !== pc08ThemeSha256) problems.push("Style Settings theme fixture identity/hash differs from the PC08 workflow fixture");
   }
   return problems;
 }
@@ -123,8 +135,9 @@ async function auditArtifact(pluginId: string, temporaryRoot: string): Promise<P
     `--sha256=${string(bundleAsset.sha256)}`,
     `--manifest=${manifestPath}`,
     `--manifest-sha256=${string(manifestAsset.sha256)}`,
-    "--workflow-fixture=fixtures/plugin-loaded-workflows.json",
+    `--workflow-fixture=${workflowFixturePath}`,
   ];
+  if (pluginId === "PC08") args.push(`--theme-settings-sha256=${pc08ThemeSha256}`);
 
   const stylesheetAsset = assetByName(artifact, "styles.css");
   if (stylesheetAsset) {

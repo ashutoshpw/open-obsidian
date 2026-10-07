@@ -6,6 +6,11 @@
   const nativeFetch = typeof window.fetch === "function" ? window.fetch.bind(window) : null;
   const ipcPostMessage = window.ipc?.postMessage?.bind(window.ipc);
   const root = document.getElementById("openobsidian-plugin-root");
+  if (typeof config.themeSettingsCss === "string") {
+    const themeSettingsStyle = document.createElement("style");
+    themeSettingsStyle.textContent = config.themeSettingsCss;
+    document.head.append(themeSettingsStyle);
+  }
   Object.defineProperty(globalThis, "activeWindow", {configurable: true, value: window});
   Object.defineProperty(globalThis, "activeDocument", {configurable: true, value: document});
   const capabilityDenials = [];
@@ -490,7 +495,9 @@
       if (typeof plugin.load === "function") await plugin.load();
       else if (typeof plugin.onload === "function") await plugin.onload();
       // Some legacy plugins start asyncOnload work without returning its promise.
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Style Settings debounces CSS parsing for 100 ms after onload.
+      const startupSettleMs = config.pluginId === "PC08" ? 150 : 50;
+      await new Promise((resolve) => setTimeout(resolve, startupSettleMs));
       pluginStatus = "loaded";
       for (const {tab} of registrations.settingTabs.slice(0, 3)) {
         try { if (typeof tab?.display === "function") { await tab.display(); apiCalls.push("displaySettingTab"); } }
@@ -517,6 +524,7 @@
       status: capabilityProbe.passed && pluginStatus === "loaded" ? "passed" : "failed",
       artifact: {id: config.pluginId, manifestId: manifest.id, version: config.pluginVersion, sha256: config.artifactSha256, manifestSha256: config.manifestSha256, bytes: new TextEncoder().encode(bundleSource).byteLength},
       stylesheet: {sha256: config.stylesheetSha256, ruleCount: stylesheetRuleCount},
+      themeSettingsFixture: config.themeSettingsFixture,
       runtime: {...config.runtime, userAgent: navigator.userAgent, platform: navigator.platform, language: navigator.language, legacyCompatibilityState: config.legacyCompatibilityState},
       execution: "unchanged-bundle-in-wry-webview",
       certification: "feasibility-only",

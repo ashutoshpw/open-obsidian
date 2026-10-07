@@ -1834,7 +1834,7 @@
     },
     {
       "path": "scripts/audit-rust-plugin-runtime.ts",
-      "sha256": "bc72ca85d7501bfe78d6c1dc6000fd23935865c65252fb8cb02e66d63b82d221",
+      "sha256": "5512175aa85bea4298332b91285382caea2e1999c905bae1af27fe8ad13c20ce",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",

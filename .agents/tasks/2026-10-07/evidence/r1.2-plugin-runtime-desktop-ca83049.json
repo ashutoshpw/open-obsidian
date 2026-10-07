@@ -1,0 +1,82 @@
+{
+  "phase": "R1.2",
+  "source_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37688923005,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923005",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113023801012,
+      "artifact_id": 11512304443,
+      "artifact_sha256": "97dd5e43149c75ef89c6dbf5ddfc5f84c68c7fbed5ebd298066c340307982256",
+      "report_sha256": "afce6498d6f53b747c30b0f687028106cf4a1e4202caceb737cdf6a6cc6831a7",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 loaded and displayed its settings tab but rendered zero controls"
+    },
+    "windows": {
+      "job_id": 113023801286,
+      "artifact_id": 11512324487,
+      "artifact_sha256": "0f59ae0e54964efd276ea22556295f0f2cbf8766806629dae7238f97f583d49d",
+      "report_sha256": "9a2c3663679bc99ff93720c5ebe6bedf0d50237f22ba6da75dd9dae71ee296f4",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 loaded and displayed its settings tab but rendered zero controls"
+    },
+    "macos": {
+      "job_id": 113023801313,
+      "artifact_id": 11513195479,
+      "artifact_sha256": "6a9587a2e4a7de16b1c7c62fb41cf1e20f8a0cce42f68b790093ee6ada5de924",
+      "report_sha256": "0be0b70c428bd7d8a6f2f4178c1b70bb71a6cb76a8fd87e9a3b3769f351c6868",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 loaded and displayed its settings tab but rendered zero controls"
+    }
+  },
+  "shared_probe_result": {
+    "wry_version": "0.57.0",
+    "legacy_compatibility_state": "Pending",
+    "capability_denials": "passed on all three platforms",
+    "PC05": {
+      "version": "0.23.2",
+      "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+      "integrity": "passed",
+      "plugin_loaded": true,
+      "setting_controls": 5,
+      "editor_callbacks": "1/1 completed and changed the synthetic note on all three platforms"
+    },
+    "PC08": {
+      "version": "1.0.9",
+      "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+      "integrity": "passed",
+      "plugin_loaded": true,
+      "settings_tab_displayed": true,
+      "setting_controls": 0,
+      "failure": "the unchanged bundle parsed no theme settings from the stylesheet ownerNode text"
+    }
+  },
+  "ci_gates": {
+    "inventory_run": 37688922999,
+    "inventory": "passed",
+    "quality_run": 37688923001,
+    "quality": "passed",
+    "desktop_run": 37688922972,
+    "desktop": "passed",
+    "plugin_renderer_run": 37688923030,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37688922938,
+    "loaded_plugins": "passed"
+  },
+  "finding": "PC08 scans document.styleSheets ownerNode.textContent for @settings and debounces parsing for 100 ms. The probe supplied the pinned plugin stylesheet as an external link, whose ownerNode has no text, and waited only 50 ms after plugin load. Follow-up injects the existing PC08 Themes/Minimal.css fixture as a text-backed style element, verifies its SHA-256 from both the audit script and Rust host, and waits 150 ms before displaying/checking controls.",
+  "scope": "The unchanged-bundle check remains feasibility-only; these results do not certify broad legacy compatibility or isolation."
+}

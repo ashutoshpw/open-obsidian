@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T21:21:32+00:00",
+  "updated_at": "2026-10-07T21:37:46+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "a363c776da4c575b4d69b12be2e44eb041166479",
+  "last_reconciled_head": "ca83049f5019e0218f74a552e7808caef3ca378c",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Push the PC08 Component child-lifecycle fixture; review its exact-SHA three-OS reports and continue only from observed missing APIs.",
+  "next_action": "Push the PC08 theme settings fixture, then review exact-SHA three-platform probe reports; keep R1.2 pending until both unchanged plugins pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -91,7 +91,8 @@
     "The d96d781 macOS Rust job built the preview, passed tests/Clippy/layer checks and ran the Wry probe. Artifact 11509358621 showed PC05 had not registered commands because the fixture did not wait for its asyncOnload work; PC08 required Obsidian's activeWindow alias. Recorded in evidence/r1.2-plugin-runtime-macos-d96d781.json and corrected in the probe fixture.",
     "Rust CI run 37684304691 reported one rustfmt-only difference in the temporary vault helper on Linux; the exact CI-requested layout is applied. On macOS and Windows, workspace tests, Clippy, layering and native preview builds passed, while unchanged PC05/PC08 probes exposed the asynchronous-startup and activeWindow fixture gaps. Inventory, quality, desktop, renderer and loaded-plugin workflows passed on ec27f5aa156d494a444b779b27bdfe300a39ffca. Exact reports and digests are in evidence/r1.2-plugin-runtime-desktop-ec27f5a.json.",
     "Rust CI run 37685943499 passed format, workspace tests, Clippy, layering and native builds on all three OSes. Unchanged Advanced Tables PC05 passed integrity, capability-denial and editor-workflow checks on all platforms. Style Settings PC08 reached the verified bundle but required workspace.onLayoutReady; its reports and CI digests are recorded in evidence/r1.2-plugin-runtime-desktop-d8c908d.json. Inventory, quality, desktop, renderer and loaded-plugin workflows passed on the same SHA. Added the observed activeDocument, app.commands.removeCommand, app.plugins.plugins and workspace.onLayoutReady fixture methods; the exact-SHA rerun is pending.",
-    "Rust CI run 37687350370 passed formatting, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed its settings and editor probes; PC08 loaded but reported missing Component.addChild when the settings tab was displayed. The exact artifacts are summarized in evidence/r1.2-plugin-runtime-desktop-a363c77.json. Implemented child ownership/loading/unloading in the probe's Component shim and changed plugin initialization to use Component.load(). Companion inventory, quality, desktop, renderer and loaded-plugin runs passed on a363c776da4c575b4d69b12be2e44eb041166479. The follow-up exact-SHA Rust matrix is pending."
+    "Rust CI run 37687350370 passed formatting, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed its settings and editor probes; PC08 loaded but reported missing Component.addChild when the settings tab was displayed. The exact artifacts are summarized in evidence/r1.2-plugin-runtime-desktop-a363c77.json. Implemented child ownership/loading/unloading in the probe's Component shim and changed plugin initialization to use Component.load(). Companion inventory, quality, desktop, renderer and loaded-plugin runs passed on a363c776da4c575b4d69b12be2e44eb041166479. The follow-up exact-SHA Rust matrix is pending.",
+    "Rust CI 37688923005 for ca83049 passed Ubuntu formatting, workspace tests, Clippy, layering and native builds on all three OSes; PC05 passed its end-to-end probe, while PC08 rendered zero settings controls on all three. All five companion workflows passed on the same SHA. Evidence: evidence/r1.2-plugin-runtime-desktop-ca83049.json. The Style Settings source uses text-backed stylesheet content and a 100 ms parse debounce; the follow-up now supplies and hash-verifies the PC08 theme CSS fixture before a 150 ms settle."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -547,6 +548,74 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37669853135/job/112958508008"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37688923005,
+      "head_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923005",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923005/job/113023801012"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923005/job/113023801286"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923005/job/113023801313"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37688922999,
+      "head_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688922999",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37688923001,
+      "head_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923001",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37688922972,
+      "head_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688922972",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37688923030,
+      "head_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688923030",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37688922938,
+      "head_sha": "ca83049f5019e0218f74a552e7808caef3ca378c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37688922938",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -574,7 +643,10 @@
       "implementation_sha": null,
       "evidence": null,
       "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
-      "candidate_plugins": ["PC05", "PC08"],
+      "candidate_plugins": [
+        "PC05",
+        "PC08"
+      ],
       "lock_resolver_run": 37678837444,
       "lock_resolver_source_sha": "ce6097ab2625bddb34905b85a47a35b7e7fa602e",
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",

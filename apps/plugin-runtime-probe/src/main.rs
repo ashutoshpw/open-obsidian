@@ -54,6 +54,7 @@ struct Arguments {
     manifest_sha256: String,
     stylesheet_path: Option<PathBuf>,
     stylesheet_sha256: Option<String>,
+    theme_settings_sha256: Option<String>,
     workflow_fixture: PathBuf,
 }
 
@@ -236,6 +237,32 @@ fn run() -> Result<Value, String> {
     };
 
     let workflow = read_pc05_workflow(&arguments.workflow_fixture)?;
+    let (theme_settings_path, theme_settings_css) = if arguments.plugin_id == "PC08" {
+        let (path, css) = read_pc08_theme_css(&arguments.workflow_fixture)?;
+        (Some(path), Some(css))
+    } else {
+        (None, None)
+    };
+    let theme_settings_css_sha256 = match theme_settings_css.as_deref() {
+        Some(css) => {
+            let actual = sha256(css.as_bytes());
+            let expected = arguments
+                .theme_settings_sha256
+                .as_deref()
+                .ok_or_else(|| "PC08 theme settings stylesheet hash is required".to_owned())?;
+            if !actual.eq_ignore_ascii_case(expected) {
+                return Err(format!(
+                    "PC08 theme settings stylesheet integrity mismatch: expected {expected}, got {actual}"
+                ));
+            }
+            Some(actual)
+        }
+        None => None,
+    };
+    let theme_settings_fixture = theme_settings_css_sha256
+        .as_ref()
+        .zip(theme_settings_path.as_ref())
+        .map(|(sha256, path)| json!({"path":path,"sha256":sha256}));
     let session_token = create_session_token(&bundle_sha256);
     let config = json!({
         "pluginId": arguments.plugin_id,
@@ -244,6 +271,8 @@ fn run() -> Result<Value, String> {
         "manifestSha256": manifest_sha256,
         "pluginManifest": plugin_manifest,
         "stylesheetSha256": arguments.stylesheet_sha256,
+        "themeSettingsCss": theme_settings_css,
+        "themeSettingsFixture": theme_settings_fixture,
         "runtime": {
             "host": "wry",
             "wryVersion": "0.57.0",
@@ -318,6 +347,7 @@ fn parse_arguments() -> Result<Arguments, String> {
         manifest_sha256: required("manifest-sha256")?,
         stylesheet_path: values.get("stylesheet").map(PathBuf::from),
         stylesheet_sha256: values.get("stylesheet-sha256").cloned(),
+        theme_settings_sha256: values.get("theme-settings-sha256").cloned(),
         workflow_fixture: values
             .get("workflow-fixture")
             .map(PathBuf::from)
@@ -346,6 +376,29 @@ fn read_pc05_workflow(path: &Path) -> Result<Value, String> {
         "activeFile": "Notes/Table.md",
         "initialData": scenario["initial_data"],
     }))
+}
+
+fn read_pc08_theme_css(path: &Path) -> Result<(String, String), String> {
+    let bytes =
+        fs::read(path).map_err(|error| format!("could not read workflow fixture: {error}"))?;
+    let fixture: Value = serde_json::from_slice(&bytes)
+        .map_err(|error| format!("could not parse workflow fixture: {error}"))?;
+    let scenario = &fixture["scenarios"]["PC08"];
+    let theme_path = scenario["style_settings_workflow"]["theme_path"]
+        .as_str()
+        .ok_or_else(|| "PC08 theme settings fixture is missing its theme_path".to_owned())?;
+    let content = scenario["files"]
+        .as_array()
+        .and_then(|files| {
+            files.iter().find_map(|file| {
+                (file["path"].as_str() == Some(theme_path))
+                    .then(|| file["content"].as_str())
+                    .flatten()
+            })
+        })
+        .map(str::to_owned)
+        .ok_or_else(|| format!("PC08 theme settings fixture is missing {theme_path}"))?;
+    Ok((theme_path.to_owned(), content))
 }
 
 fn serve_request(
