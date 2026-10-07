@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-07T21:08:39+00:00",
+  "updated_at": "2026-10-07T21:21:32+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "d8c908d45f2a4c2bcb10c841b12bdd2964e3b199",
+  "last_reconciled_head": "a363c776da4c575b4d69b12be2e44eb041166479",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Push the PC08 layout-ready and remaining verified Obsidian shim APIs; review exact-SHA CI and all three WebView reports before deciding R1.2 status.",
+  "next_action": "Push the PC08 Component child-lifecycle fixture; review its exact-SHA three-OS reports and continue only from observed missing APIs.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -90,7 +90,8 @@
     "Exact-SHA inventory, quality, desktop, renderer and loaded-plugin workflows passed on d96d781b21ae17386dda1403fa5813a31f04fb8f. Rust CI run 37683082486 exposed a Windows vault test failure from likely concurrent temporary-directory name collisions; the test helper now uses process-scoped atomic directory allocation. Linux and macOS Rust jobs were still running when this state was updated.",
     "The d96d781 macOS Rust job built the preview, passed tests/Clippy/layer checks and ran the Wry probe. Artifact 11509358621 showed PC05 had not registered commands because the fixture did not wait for its asyncOnload work; PC08 required Obsidian's activeWindow alias. Recorded in evidence/r1.2-plugin-runtime-macos-d96d781.json and corrected in the probe fixture.",
     "Rust CI run 37684304691 reported one rustfmt-only difference in the temporary vault helper on Linux; the exact CI-requested layout is applied. On macOS and Windows, workspace tests, Clippy, layering and native preview builds passed, while unchanged PC05/PC08 probes exposed the asynchronous-startup and activeWindow fixture gaps. Inventory, quality, desktop, renderer and loaded-plugin workflows passed on ec27f5aa156d494a444b779b27bdfe300a39ffca. Exact reports and digests are in evidence/r1.2-plugin-runtime-desktop-ec27f5a.json.",
-    "Rust CI run 37685943499 passed format, workspace tests, Clippy, layering and native builds on all three OSes. Unchanged Advanced Tables PC05 passed integrity, capability-denial and editor-workflow checks on all platforms. Style Settings PC08 reached the verified bundle but required workspace.onLayoutReady; its reports and CI digests are recorded in evidence/r1.2-plugin-runtime-desktop-d8c908d.json. Inventory, quality, desktop, renderer and loaded-plugin workflows passed on the same SHA. Added the observed activeDocument, app.commands.removeCommand, app.plugins.plugins and workspace.onLayoutReady fixture methods; the exact-SHA rerun is pending."
+    "Rust CI run 37685943499 passed format, workspace tests, Clippy, layering and native builds on all three OSes. Unchanged Advanced Tables PC05 passed integrity, capability-denial and editor-workflow checks on all platforms. Style Settings PC08 reached the verified bundle but required workspace.onLayoutReady; its reports and CI digests are recorded in evidence/r1.2-plugin-runtime-desktop-d8c908d.json. Inventory, quality, desktop, renderer and loaded-plugin workflows passed on the same SHA. Added the observed activeDocument, app.commands.removeCommand, app.plugins.plugins and workspace.onLayoutReady fixture methods; the exact-SHA rerun is pending.",
+    "Rust CI run 37687350370 passed formatting, workspace tests, Clippy, layering and native builds on all three OSes. PC05 passed its settings and editor probes; PC08 loaded but reported missing Component.addChild when the settings tab was displayed. The exact artifacts are summarized in evidence/r1.2-plugin-runtime-desktop-a363c77.json. Implemented child ownership/loading/unloading in the probe's Component shim and changed plugin initialization to use Component.load(). Companion inventory, quality, desktop, renderer and loaded-plugin runs passed on a363c776da4c575b4d69b12be2e44eb041166479. The follow-up exact-SHA Rust matrix is pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -579,7 +580,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Inspect exact-SHA GitHub CI for the PC08 layout-ready and additional Obsidian shim APIs, then review tests, Clippy, layer checks, release builds and unchanged-plugin reports across Linux/macOS/Windows."
+      "next_action": "Inspect exact-SHA GitHub CI for the PC08 Component child-lifecycle update, then review tests, Clippy, layer checks, release builds and unchanged-plugin reports across Linux/macOS/Windows."
     }
   },
   "ci_preparation": {

@@ -159,6 +159,19 @@
   }
 
   class Component {
+    constructor() {
+      this._children = new Set();
+      this._loaded = false;
+    }
+    addChild(component) {
+      this._children.add(component);
+      if (this._loaded && typeof component?.load === "function") component.load();
+      return component;
+    }
+    removeChild(component) {
+      if (this._children.delete(component) && this._loaded && typeof component?.unload === "function") component.unload();
+      return component;
+    }
     register(callback) { registrations.events.push({kind: "cleanup", owner: this}); return callback; }
     registerEvent(event) { registrations.events.push({kind: "event", event, owner: this}); return event; }
     registerDomEvent(element, name, callback, options) {
@@ -166,8 +179,22 @@
       registrations.events.push({kind: "dom", name, owner: this});
     }
     registerInterval() { registrations.events.push({kind: "interval", owner: this}); return 0; }
-    load() { return Promise.resolve(); }
-    unload() { return Promise.resolve(); }
+    load() {
+      if (this._loaded) return;
+      this._loaded = true;
+      const result = this.onload();
+      for (const child of this._children) child.load?.();
+      return result;
+    }
+    unload() {
+      if (!this._loaded) return;
+      this._loaded = false;
+      for (const child of this._children) child.unload?.();
+      this._children.clear();
+      return this.onunload();
+    }
+    onload() {}
+    onunload() {}
   }
 
   class Plugin extends Component {
@@ -460,7 +487,8 @@
       const PluginClass = module.exports?.default ?? module.exports;
       if (typeof PluginClass !== "function") throw new Error("unchanged bundle did not export a plugin constructor");
       plugin = new PluginClass(app, manifest);
-      if (typeof plugin.onload === "function") await plugin.onload();
+      if (typeof plugin.load === "function") await plugin.load();
+      else if (typeof plugin.onload === "function") await plugin.onload();
       // Some legacy plugins start asyncOnload work without returning its promise.
       await new Promise((resolve) => setTimeout(resolve, 50));
       pluginStatus = "loaded";
