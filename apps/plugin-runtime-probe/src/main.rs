@@ -432,10 +432,7 @@ fn is_internal_document(url: &str) -> bool {
         "http" | "https" => host.eq_ignore_ascii_case("openobsidian-plugin.localhost"),
         _ => false,
     };
-    let document_path = path
-        .split(['?', '#'])
-        .next()
-        .unwrap_or_default();
+    let document_path = path.split(['?', '#']).next().unwrap_or_default();
     host_allowed && (document_path.is_empty() || document_path == "index.html")
 }
 
