@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T20:24:04Z",
+  "updated_at": "2026-10-08T20:27:50Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "ebece9002b2c574433012bc914e3d1b00466ca07",
-  "current_milestone": "R2.6.39",
-  "next_action": "Continue R2 with the next product-level read-only flow needed to close parent C01 and C01.2; add reference-application round trips before accepting those requirements. Use GitHub Actions only.",
+  "current_milestone": "R2.6.40",
+  "next_action": "Run all six required GitHub Actions workflows for R2.6.40 on the exact source SHA. Keep C01 and C01.2 open pending broader product read-only and reference-application evidence; use GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -7798,6 +7798,20 @@
         "The fixture slice does not certify every supported or unknown vault content combination."
       ],
       "next_action": "Continue R2 with the next product-level read-only flow needed to close parent C01 and C01.2; add reference-application round trips before accepting those requirements. Use GitHub Actions only."
+    },
+    "R2.6.40": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Exercise existing-vault link, transclusion and rename-preview UI flows against the arbitrary-content fixture and verify the complete path/type/byte tree remains unchanged after each operation and UI close.",
+      "ci_attempts": [],
+      "evidence": null,
+      "accepted_slice": [],
+      "remaining": [
+        "Exact-SHA GitHub Actions validation is pending.",
+        "Parent C01 and C01.2 product-level read-only and reference-application coverage remain open."
+      ],
+      "next_action": "Commit the UI no-op fixture interaction and validate it only through all six required exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {

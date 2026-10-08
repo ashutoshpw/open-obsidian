@@ -2022,6 +2022,98 @@ mod tests {
     }
 
     #[test]
+    fn egui_existing_vault_link_and_rename_previews_preserve_every_path_and_byte() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+        let before_tree = existing_vault_tree_snapshot(&vault_path);
+
+        let operations = &fixture["expected"]["read_only_operations"];
+        let link_source = operations["link_source"]
+            .as_str()
+            .expect("fixture must identify the source note");
+        let rename = &operations["rename_preview"];
+        let old_path = PathBuf::from(
+            rename["old_path"]
+                .as_str()
+                .expect("fixture must identify the original note path"),
+        );
+        let new_path = rename["new_path"]
+            .as_str()
+            .expect("fixture must identify the preview destination")
+            .to_owned();
+        let expected_link_count = operations["links"]
+            .as_array()
+            .expect("fixture must list resolved links")
+            .len();
+        let expected_embed_count = usize::try_from(
+            operations["embed_count"]
+                .as_u64()
+                .expect("fixture must identify its embed count"),
+        )
+        .expect("embed count must fit usize");
+        let expected_rename_updates = usize::try_from(
+            rename["update_count"]
+                .as_u64()
+                .expect("fixture must identify preview updates"),
+        )
+        .expect("preview update count must fit usize");
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open selected existing vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(PathBuf::from(link_source)),
+            rename_source_path: Some(old_path.clone()),
+            rename_destination_path: new_path,
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+
+        let app = harness.state();
+        assert!(app.link_error.is_none());
+        assert!(app.note_embed_error.is_none());
+        assert_eq!(app.link_resolutions.len(), expected_link_count);
+        let embed_report = app
+            .note_embed_report
+            .as_ref()
+            .expect("the UI should resolve the fixture's note embeds");
+        assert_eq!(embed_report.embeds.len(), expected_embed_count);
+        harness.get_by_label("Resolved: 2");
+        harness.get_by_label("Note transclusions");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_tree);
+
+        harness.get_by_label("Build rename preview").click();
+        harness.step();
+        assert!(harness.state().rename_receiver.is_some());
+        wait_for_rename(&mut harness);
+
+        let preview = harness
+            .state()
+            .rename_preview
+            .as_ref()
+            .expect("the UI should build a read-only rename preview");
+        assert_eq!(preview.plan.update_count, expected_rename_updates);
+        assert!(vault_path.join(&old_path).is_file());
+        assert!(!vault_path.join(&new_path).exists());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_tree);
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_tree);
+        assert!(existing_vault_tree_snapshot(&app_data_path).is_empty());
+    }
+
+    #[test]
     fn history_labels_distinguish_protected_conflicts() {
         assert_eq!(history_kind_label(VaultHistoryKind::Recovery), "Recovery");
         assert_eq!(history_kind_label(VaultHistoryKind::Failed), "Failed write");
