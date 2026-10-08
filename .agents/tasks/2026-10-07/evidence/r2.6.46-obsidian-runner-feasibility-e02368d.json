@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.46",
+  "source_sha": "e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5",
+  "implementation_commits": [
+    "6a2f7ee7d92dd9b20429f98ec6fa2d5ebfc96c1e",
+    "e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5"
+  ],
+  "scope": {
+    "workflow": ".github/workflows/obsidian-reference-feasibility.yml",
+    "runner": "ubuntu-24.04",
+    "purpose": "Verify that a checksum-pinned official Obsidian desktop renderer can start on a GitHub Actions Linux runner and preserve diagnostic evidence.",
+    "checks": [
+      "Download the official Obsidian 1.14.4 Linux x86_64 AppImage and verify its pinned SHA-256 before extraction.",
+      "Launch the extracted app under Xvfb with a temporary profile and local Chrome DevTools Protocol endpoint.",
+      "Read the rendered page title, URL and visible text; capture a renderer screenshot and process log as a CI artifact."
+    ]
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "release_source": "https://github.com/obsidianmd/obsidian-releases/releases/tag/v1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "appimage_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner_os": "Linux",
+    "runner_image": "ubuntu-24.04",
+    "renderer": {
+      "title": "Obsidian",
+      "url": "app://obsidian.md/starter.html",
+      "visible_text_characters": 697,
+      "visible_text_excerpt": "Version 1.14.4; Quick start; Create new vault; Open folder as vault"
+    },
+    "browser": "Chrome/150.0.7871.250",
+    "devtools_protocol_version": "1.3"
+  },
+  "attempts": [
+    {
+      "source_sha": "6a2f7ee7d92dd9b20429f98ec6fa2d5ebfc96c1e",
+      "run_id": 37855438930,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37855438930",
+      "conclusion": "failure",
+      "finding": "The first script queried the local DevTools endpoint immediately after process launch, before it began listening.",
+      "correction": "Poll for the DevTools endpoint with a bounded timeout before reading the page target."
+    },
+    {
+      "source_sha": "e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5",
+      "run_id": 37856059473,
+      "job_id": 113580399619,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856059473",
+      "conclusion": "success",
+      "artifact": {
+        "id": 11584081724,
+        "name": "obsidian-reference-runner-e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5",
+        "size_bytes": 37788,
+        "digest": "sha256:1d89a01c0a362201c52186178e0ade7b0406f0c13d8749703b9e9e867c77a194"
+      },
+      "artifact_files": {
+        "obsidian-reference-runtime-report.json": "sha256:6bf075355af15bb48d3c3072a6ee798c796f0c51ae22cec4fd0fdccca47af11f",
+        "obsidian-reference-first-run.png": "sha256:2785aecf7ac1dce69ee3d6b8b5712ec03808e21a2018c1115eb81054b2e3d28c",
+        "obsidian.log": "sha256:a1eec883ca09b968f6c8cf64a5a341effc4936d22eaf5b1f380bbc5aa5309f33"
+      }
+    }
+  ],
+  "required_ci": {
+    "source_sha": "e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5",
+    "conclusion": "All six required GitHub Actions workflows passed on the exact source SHA.",
+    "workflows": [
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37856056862,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856056862",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 113580384820, "conclusion": "success"},
+          {"name": "rust (macos-latest)", "job_id": 113580385028, "conclusion": "success"},
+          {"name": "rust (windows-latest)", "job_id": 113580384592, "conclusion": "success"}
+        ]
+      },
+      {"name": "Rust migration inventory", "run_id": 37856056817, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856056817", "job_id": 113580384074, "conclusion": "success"},
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37856056808,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856056808",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113580384968, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113580384818, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113580384651, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37856056834,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856056834",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113580384714, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113580385226, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113580385328, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37856056842,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856056842",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113580385406, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113580384840, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113580385326, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37856056876,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37856056876",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113580385485, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113580385352, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113580384896, "conclusion": "success"}
+        ]
+      }
+    ]
+  },
+  "acceptance_limits": [
+    "The probe opened Obsidian's first-run screen, not a vault.",
+    "No Obsidian-authored fixture was created, and OpenObsidian was not launched against a vault.",
+    "C01, C01.2-01 and C01.2-03 remain pending; this result establishes Linux runner feasibility only."
+  ],
+  "next_action": "Add a user-selected existing-vault startup path to the native desktop, then use the same checked-in fixture content in a pinned Obsidian author/open/reopen workflow and compare vault and app-data snapshots in GitHub Actions."
+}
