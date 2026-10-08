@@ -322,6 +322,14 @@ async function captureObsidianScreenshot(connection: DevToolsConnection, filenam
   await writeFile(join(reportDirectory, filename), Buffer.from(base64, "base64"));
 }
 
+async function captureX11Screenshot(filename: string): Promise<string> {
+  const xwdPath = join(reportDirectory, filename.replace(/\.png$/i, ".xwd"));
+  const pngPath = join(reportDirectory, filename);
+  execFileSync("xwd", ["-root", "-silent", "-out", xwdPath], {stdio: "ignore"});
+  execFileSync("convert", [xwdPath, pngPath], {stdio: "ignore"});
+  return pngPath;
+}
+
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
   const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
@@ -354,20 +362,29 @@ async function chooseVaultDirectory(connection: DevToolsConnection): Promise<voi
     picker_window_id: pickerWindow.windowId,
     picker_window_title: pickerWindow.title,
   };
+  const pickerScreenshots = [await captureX11Screenshot("obsidian-folder-picker-initial.png")];
+  (report.obsidian_authoring as Record<string, unknown>).folder_picker_screenshots = pickerScreenshots;
 
   xdotool("key", "ctrl+l");
   xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
+  pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-path-entered.png"));
   xdotool("key", "Return");
 
-  const waitForPickerClose = () => waitFor("Obsidian folder picker to close", async () => activeWindowId(), (windowId) => windowId === initialWindowId, 12_000);
-  try {
-    await waitForPickerClose();
-  } catch {
+  const pickerStillActive = () => activeWindowId() !== initialWindowId;
+  await delay(1_000);
+  pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-after-location-submit.png"));
+  if (pickerStillActive()) {
+    xdotool("key", "alt+o");
+    await delay(1_000);
+  }
+  if (pickerStillActive()) {
     xdotool("key", "Return");
-    await waitForPickerClose();
+    await delay(1_000);
+  }
+  if (pickerStillActive()) {
+    await waitFor("Obsidian folder picker to close", async () => activeWindowId(), (windowId) => windowId === initialWindowId, 15_000);
   }
   (report.obsidian_authoring as Record<string, unknown>).folder_picker_closed = true;
-  await delay(1_000);
 
   const isVaultLoaded = (body: string) => body.trim().length > 0 && !body.includes("Open folder as vault") && !body.includes("Create new vault");
   const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
@@ -525,10 +542,7 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
 }
 
 async function captureOpenObsidianScreenshot(): Promise<{pngPath: string; ocrText: string}> {
-  const xwdPath = join(reportDirectory, "openobsidian-vault.xwd");
-  const pngPath = join(reportDirectory, "openobsidian-vault.png");
-  execFileSync("xwd", ["-root", "-silent", "-out", xwdPath], {stdio: "ignore"});
-  execFileSync("convert", [xwdPath, pngPath], {stdio: "ignore"});
+  const pngPath = await captureX11Screenshot("openobsidian-vault.png");
   const ocrText = execFileSync("tesseract", [pngPath, "stdout", "--psm", "6"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
   return {pngPath, ocrText};
 }

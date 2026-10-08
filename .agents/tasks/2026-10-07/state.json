@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T23:32:05Z",
+  "updated_at": "2026-10-08T23:39:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
+  "last_reconciled_head": "0a0440a0d7bfecf1385db43a7807cba4cc7bc6bf",
   "current_milestone": "R2.6.48",
-  "next_action": "Push the CI-informed correction for the native file-picker DevTools timeout; obtain a fresh exact-SHA round-trip run and all six required project workflow results, then continue from the recorded evidence. Keep C01 and C01.2 open.",
+  "next_action": "Push the CI-informed GTK picker diagnostic correction; inspect its GitHub Actions screenshots and obtain a fresh exact-SHA round-trip run plus all six required project workflow results. Keep C01 and C01.2 open.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -180,7 +180,8 @@
     "R2.6.44 added bounded, source-preserving existing-note preview; exact corrected source SHA 37a1f7cd80003be356ed7ed1ad273f6fa97f4f53 passed all six required GitHub Actions workflows. Evidence: evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json. Parent C01 and C01.2 remain open.",
     "R2.6.45 added an asynchronous existing-vault note-list refresh and full vault/app-data no-op assertions. Exact corrected source SHA b6153f9ea900ef64baf66a65054c0835652b6687 passed all six GitHub Actions workflows; see evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json. C01 and C01.2 remain open.",
     "R2.6.46 pinned the official Obsidian 1.14.4 Linux AppImage, launched its first-run renderer on ubuntu-24.04 in GitHub Actions, and captured DOM, screenshot, and log evidence. The corrected feasibility run and all six required workflows passed on exact source SHA e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5; see evidence/r2.6.46-obsidian-runner-feasibility-e02368d.json. No vault was opened; C01 and C01.2 remain pending.",
-    "R2.6.47 added --open-vault PATH startup, initializes private app data outside the selected folder, and passes the initial VaultSession into the egui shell. Argument and UI preservation tests passed on Ubuntu, macOS, and Windows on corrected exact SHA fe1b9343e9b0ae969fc627fb06623f990f225c9d; all six required workflows passed. Evidence: evidence/r2.6.47-existing-vault-launch-fe1b934.json. The desktop process has not yet been launched against an Obsidian-authored fixture; C01/C01.2 remain open."
+    "R2.6.47 added --open-vault PATH startup, initializes private app data outside the selected folder, and passes the initial VaultSession into the egui shell. Argument and UI preservation tests passed on Ubuntu, macOS, and Windows on corrected exact SHA fe1b9343e9b0ae969fc627fb06623f990f225c9d; all six required workflows passed. Evidence: evidence/r2.6.47-existing-vault-launch-fe1b934.json. The desktop process has not yet been launched against an Obsidian-authored fixture; C01/C01.2 remain open.",
+    "R2.6.48 runner correction on 0a0440a0d7bfecf1385db43a7807cba4cc7bc6bf passed all six required project workflows, but the Obsidian round-trip workflow failed because the native folder picker remained open after the path-entry and Return keystrokes. The report confirms no fixture authoring, OpenObsidian launch, or reopen acceptance occurred. Evidence and exact run/job IDs: evidence/r2.6.48-roundtrip-ci-0a0440a.json. Added X11 screenshots around picker input and a GTK Open mnemonic attempt for the next CI run; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
