@@ -1601,9 +1601,9 @@ mod tests {
             case["expected_references"].as_array().unwrap().len()
         );
         assert!(
-            app.link_status.as_deref().is_some_and(|status| {
-                status.contains(current_path.to_str().unwrap())
-            })
+            app.link_status
+                .as_deref()
+                .is_some_and(|status| { status.contains(current_path.to_str().unwrap()) })
         );
         for (actual, expected) in app
             .link_resolutions
