@@ -1333,7 +1333,7 @@ mod tests {
         assert_eq!(fs::read(vault_temp.0.join("A.md")).unwrap(), b"[[Old]]\n");
         assert_eq!(fs::read(vault_temp.0.join("B.md")).unwrap(), b"[[Old]]\n");
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
-        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"failed\""));
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"rolled_back\""));
     }
 
     #[test]
@@ -1366,7 +1366,7 @@ mod tests {
         assert!(!vault_temp.0.join("Archive/New.md").exists());
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         assert!(journal.contains("\"operation\":\"rename\",\"state\":\"prepared\""));
-        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"failed\""));
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"rolled_back\""));
         assert!(!journal.contains("\"operation\":\"rename\",\"state\":\"committed\""));
     }
 

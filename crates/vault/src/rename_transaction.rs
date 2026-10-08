@@ -264,11 +264,9 @@ impl VaultStore {
             } else {
                 "recovery_required"
             };
-            if let Err(journal_error) = self.append_rename_manifest(
-                &journal_record,
-                state,
-                Some(&error.to_string()),
-            ) {
+            if let Err(journal_error) =
+                self.append_rename_manifest(&journal_record, state, Some(&error.to_string()))
+            {
                 recovery_errors.push(format!("{state} journal append: {journal_error}"));
             }
             if !recovery_errors.is_empty() {
@@ -324,9 +322,10 @@ impl VaultStore {
             .iter()
             .rposition(|byte| *byte == b'\n')
             .map_or(0, |index| index + 1);
-        let complete_text = std::str::from_utf8(&journal_bytes[..complete_length]).map_err(|error| {
-            VaultError::Journal(io::Error::new(io::ErrorKind::InvalidData, error))
-        })?;
+        let complete_text =
+            std::str::from_utf8(&journal_bytes[..complete_length]).map_err(|error| {
+                VaultError::Journal(io::Error::new(io::ErrorKind::InvalidData, error))
+            })?;
 
         let mut order = Vec::new();
         let mut latest_by_id = HashMap::new();
@@ -359,15 +358,12 @@ impl VaultStore {
             let Some(value) = latest_by_id.get(&operation_id) else {
                 continue;
             };
-            let state = value
-                .get("state")
-                .and_then(Value::as_str)
-                .ok_or_else(|| {
-                    VaultError::Journal(io::Error::new(
-                        io::ErrorKind::InvalidData,
-                        "rename journal entry is missing its state",
-                    ))
-                })?;
+            let state = value.get("state").and_then(Value::as_str).ok_or_else(|| {
+                VaultError::Journal(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "rename journal entry is missing its state",
+                ))
+            })?;
             if !matches!(state, "prepared" | "recovery_required") {
                 continue;
             }
@@ -381,9 +377,10 @@ impl VaultStore {
                     continue;
                 }
                 Err(reason) => {
-                    report
-                        .needs_attention
-                        .push(VaultRenameRecoveryIssue { operation_id, reason });
+                    report.needs_attention.push(VaultRenameRecoveryIssue {
+                        operation_id,
+                        reason,
+                    });
                     continue;
                 }
             };
@@ -408,18 +405,16 @@ impl VaultStore {
                 }
             } else {
                 let reason = errors.join("; ");
-                let journal_result = self.append_rename_manifest(
-                    &record,
-                    "recovery_required",
-                    Some(&reason),
-                );
+                let journal_result =
+                    self.append_rename_manifest(&record, "recovery_required", Some(&reason));
                 let reason = match journal_result {
                     Ok(()) => reason,
                     Err(error) => format!("{reason}; recovery journal append failed: {error}"),
                 };
-                report
-                    .needs_attention
-                    .push(VaultRenameRecoveryIssue { operation_id, reason });
+                report.needs_attention.push(VaultRenameRecoveryIssue {
+                    operation_id,
+                    reason,
+                });
             }
         }
         Ok(report)
@@ -555,10 +550,8 @@ impl VaultStore {
             .map(path_to_slashes)
             .transpose()?;
         let error = error.map_or_else(|| "null".to_owned(), json_string);
-        let temporary_path = temporary_path.map_or_else(
-            || "null".to_owned(),
-            |path| json_string(&path),
-        );
+        let temporary_path =
+            temporary_path.map_or_else(|| "null".to_owned(), |path| json_string(&path));
         let line = format!(
             "{{\"schema_version\":2,\"id\":{},\"operation\":\"rename\",\"state\":{},\"paths\":[{}],\"old_path\":{},\"new_path\":{},\"plan_id\":{},\"case_only\":{},\"temporary_path\":{},\"files\":[{}],\"recorded_at\":{},\"error\":{}}}\n",
             json_string(&record.operation_id),
@@ -586,8 +579,9 @@ impl VaultStore {
         if metadata.file_type().is_symlink() || !metadata.is_dir() {
             return Err("recovery history path is not a regular directory".to_owned());
         }
-        let directory = fs::canonicalize(&directory)
-            .map_err(|error| format!("recovery history directory could not be resolved: {error}"))?;
+        let directory = fs::canonicalize(&directory).map_err(|error| {
+            format!("recovery history directory could not be resolved: {error}")
+        })?;
         if !directory.starts_with(&self.app_data_root) {
             return Err("recovery history directory escapes application data".to_owned());
         }
@@ -599,15 +593,29 @@ impl VaultStore {
                 return Err(format!("recovery image name is invalid for entry {index}"));
             }
             let path = directory.join(&file.before_file);
-            let metadata = fs::symlink_metadata(&path)
-                .map_err(|error| format!("recovery image {} is unavailable: {error}", file.before_file))?;
+            let metadata = fs::symlink_metadata(&path).map_err(|error| {
+                format!(
+                    "recovery image {} is unavailable: {error}",
+                    file.before_file
+                )
+            })?;
             if metadata.file_type().is_symlink() || !metadata.is_file() {
-                return Err(format!("recovery image {} is not a regular file", file.before_file));
+                return Err(format!(
+                    "recovery image {} is not a regular file",
+                    file.before_file
+                ));
             }
-            let bytes = fs::read(&path)
-                .map_err(|error| format!("recovery image {} could not be read: {error}", file.before_file))?;
+            let bytes = fs::read(&path).map_err(|error| {
+                format!(
+                    "recovery image {} could not be read: {error}",
+                    file.before_file
+                )
+            })?;
             if sha256_hex(&bytes) != file.before_revision {
-                return Err(format!("recovery image {} failed its revision check", file.before_file));
+                return Err(format!(
+                    "recovery image {} failed its revision check",
+                    file.before_file
+                ));
             }
             images.push(bytes);
         }
@@ -619,11 +627,9 @@ impl VaultStore {
         record: &RenameJournalRecord,
         before_images: &[Vec<u8>],
     ) -> Vec<String> {
-        let Some(source_index) = record
-            .files
-            .iter()
-            .position(|file| file.source_path == record.old_path && file.target_path == record.new_path)
-        else {
+        let Some(source_index) = record.files.iter().position(|file| {
+            file.source_path == record.old_path && file.target_path == record.new_path
+        }) else {
             return vec!["rename journal has no source before-image".to_owned()];
         };
         let mut errors = Vec::new();
@@ -631,7 +637,9 @@ impl VaultStore {
             if index == source_index {
                 continue;
             }
-            if let Err(error) = self.restore_interrupted_target(file, &before_images[index], record, index) {
+            if let Err(error) =
+                self.restore_interrupted_target(file, &before_images[index], record, index)
+            {
                 errors.push(error);
             }
         }
@@ -655,12 +663,25 @@ impl VaultStore {
         let target_path = self
             .root
             .resolve_vault_path(&file.target_path, true)
-            .map_err(|error| format!("{} could not be resolved during recovery: {error}", file.target_path.display()))?;
+            .map_err(|error| {
+                format!(
+                    "{} could not be resolved during recovery: {error}",
+                    file.target_path.display()
+                )
+            })?;
         let current = self
             .read_if_present(&file.target_path, &target_path)
-            .map_err(|error| format!("{} could not be read during recovery: {error}", file.target_path.display()))?;
+            .map_err(|error| {
+                format!(
+                    "{} could not be read during recovery: {error}",
+                    file.target_path.display()
+                )
+            })?;
         let Some(current) = current else {
-            return Err(format!("{} disappeared during the interrupted rename", file.target_path.display()));
+            return Err(format!(
+                "{} disappeared during the interrupted rename",
+                file.target_path.display()
+            ));
         };
         if current.revision_sha256 == file.before_revision {
             return Ok(());
@@ -671,7 +692,12 @@ impl VaultStore {
                 expected_revision_sha256: Some(file.after_revision.clone()),
                 bytes: before_bytes.to_vec(),
             })
-            .map_err(|error| format!("{} could not be restored: {error}", file.target_path.display()))?;
+            .map_err(|error| {
+                format!(
+                    "{} could not be restored: {error}",
+                    file.target_path.display()
+                )
+            })?;
             return Ok(());
         }
         let path_text = path_to_slashes(&file.target_path)
@@ -738,12 +764,20 @@ impl VaultStore {
                 return Err("rename temporary and a source/destination entry both exist; recovery left them untouched".to_owned());
             }
             self.restore_source_bytes_at(&temporary_entry, record, file, before_bytes)?;
-            let old_path = self
-                .root
-                .resolve_vault_path(&record.old_path, true)
-                .map_err(|error| format!("original source path could not be resolved: {error}"))?;
+            let old_path = if record.case_only {
+                self.root.canonical_root.join(&record.old_path)
+            } else {
+                self.root
+                    .resolve_vault_path(&record.old_path, true)
+                    .map_err(|error| format!("original source path could not be resolved: {error}"))?
+            };
             fs::rename(&temporary_entry, &old_path)
-                .map_err(|error| format!("rename temporary could not be restored to {}: {error}", record.old_path.display()))?;
+                .map_err(|error| {
+                    format!(
+                        "rename temporary could not be restored to {}: {error}",
+                        record.old_path.display()
+                    )
+                })?;
             return Ok(());
         }
 
@@ -753,10 +787,15 @@ impl VaultStore {
             }
             (None, Some(new_entry)) => {
                 self.restore_source_bytes_at(&new_entry, record, file, before_bytes)?;
-                let old_path = self
-                    .root
-                    .resolve_vault_path(&record.old_path, true)
-                    .map_err(|error| format!("original source path could not be resolved: {error}"))?;
+                let old_path = if record.case_only {
+                    self.root.canonical_root.join(&record.old_path)
+                } else {
+                    self.root
+                        .resolve_vault_path(&record.old_path, true)
+                        .map_err(|error| {
+                            format!("original source path could not be resolved: {error}")
+                        })?
+                };
                 let case_only = record.case_only;
                 let mut move_state = RenameMoveState::default();
                 move_vault_file(
@@ -766,10 +805,19 @@ impl VaultStore {
                     case_only,
                     &mut move_state,
                 )
-                .map_err(|error| format!("renamed source could not be restored to its original path: {error}"))
+                .map_err(|error| {
+                    format!(
+                        "renamed source could not be restored to its original path: {error}"
+                    )
+                })
             }
-            (Some(_), Some(_)) => Err("original and renamed source entries both exist; recovery left them untouched".to_owned()),
-            (None, None) => Err("original, renamed and temporary source entries are all missing".to_owned()),
+            (Some(_), Some(_)) => Err(
+                "original and renamed source entries both exist; recovery left them untouched"
+                    .to_owned(),
+            ),
+            (None, None) => {
+                Err("original, renamed and temporary source entries are all missing".to_owned())
+            }
         }
     }
 
@@ -783,10 +831,12 @@ impl VaultStore {
         let relative_path = path
             .strip_prefix(&self.root.canonical_root)
             .map_err(|_| "source recovery path escaped the vault".to_owned())?;
-        let current = self
-            .root
-            .read(relative_path)
-            .map_err(|error| format!("source {} could not be read during recovery: {error}", path.display()))?;
+        let current = self.root.read(relative_path).map_err(|error| {
+            format!(
+                "source {} could not be read during recovery: {error}",
+                path.display()
+            )
+        })?;
         if current.revision_sha256 == file.before_revision {
             return Ok(());
         }
@@ -1107,7 +1157,11 @@ fn parse_rename_journal_record(value: &Value) -> Result<Option<RenameJournalReco
                 .map_err(|error| format!("rename temporary path is invalid: {error}"))?,
         ),
         Some(Value::Null) if !case_only => None,
-        _ => return Err("rename journal temporary path does not match its case-only flag".to_owned()),
+        _ => {
+            return Err(
+                "rename journal temporary path does not match its case-only flag".to_owned(),
+            );
+        }
     };
     let paths = value
         .get("paths")
@@ -1146,12 +1200,16 @@ fn parse_rename_journal_record(value: &Value) -> Result<Option<RenameJournalReco
         let before_revision = string("before_revision")?;
         let after_revision = string("after_revision")?;
         if !is_sha256(&before_revision) || !is_sha256(&after_revision) {
-            return Err(format!("rename journal file entry {index} has an invalid revision"));
+            return Err(format!(
+                "rename journal file entry {index} has an invalid revision"
+            ));
         }
         let before_file = string("before_file")?;
         let expected_before_file = format!("{operation_id}-rename-before-{index}.bin");
         if before_file != expected_before_file {
-            return Err(format!("rename journal file entry {index} has an invalid before-image name"));
+            return Err(format!(
+                "rename journal file entry {index} has an invalid before-image name"
+            ));
         }
         files.push(RenameJournalFile {
             source_path,
@@ -1169,8 +1227,7 @@ fn parse_rename_journal_record(value: &Value) -> Result<Option<RenameJournalReco
         return Err("rename journal manifest must have one source file entry".to_owned());
     }
     if case_only {
-        let expected_temporary =
-            case_rename_temporary_path(&old_path, &operation_id, None)?;
+        let expected_temporary = case_rename_temporary_path(&old_path, &operation_id, None)?;
         if temporary_path.as_ref() != Some(&expected_temporary) {
             return Err("case-only rename journal has an invalid temporary path".to_owned());
         }
@@ -1187,7 +1244,10 @@ fn parse_rename_journal_record(value: &Value) -> Result<Option<RenameJournalReco
     }))
 }
 
-fn exact_vault_entry(root: &super::VaultRoot, relative_path: &Path) -> Result<Option<PathBuf>, VaultError> {
+fn exact_vault_entry(
+    root: &super::VaultRoot,
+    relative_path: &Path,
+) -> Result<Option<PathBuf>, VaultError> {
     let relative_path = normalize_relative_path(relative_path)?;
     let file_name = relative_path.file_name().ok_or(VaultError::InvalidPath)?;
     let parent = relative_path
@@ -1296,9 +1356,8 @@ mod tests {
         let operation_id = next_operation_id();
         let old_text = path_to_slashes(&old_path).unwrap();
         let new_text = path_to_slashes(&new_path).unwrap();
-        let case_only = cfg!(windows)
-            && old_text != new_text
-            && old_text.eq_ignore_ascii_case(&new_text);
+        let case_only =
+            cfg!(windows) && old_text != new_text && old_text.eq_ignore_ascii_case(&new_text);
         let mut paths = journal_paths(&updates, &old_path, &new_path).unwrap();
         let mut files = Vec::new();
         for (index, update) in updates.iter().enumerate() {
@@ -1351,10 +1410,7 @@ mod tests {
             .append_rename_manifest(&record, "prepared", None)
             .unwrap();
 
-        let source_path = store
-            .root
-            .resolve_vault_path(&old_path, false)
-            .unwrap();
+        let source_path = store.root.resolve_vault_path(&old_path, false).unwrap();
         let destination_path = store.root.canonical_root.join(&new_path);
         let mut move_state = RenameMoveState::default();
         move_vault_file(
@@ -1399,7 +1455,10 @@ mod tests {
         assert_eq!(report.recovered_operations, vec![operation_id]);
         assert!(report.needs_attention.is_empty());
         assert_eq!(fs::read(vault_path.join("Old.md")).unwrap(), b"# Old\r\n");
-        assert_eq!(fs::read(vault_path.join("Index.md")).unwrap(), original_index);
+        assert_eq!(
+            fs::read(vault_path.join("Index.md")).unwrap(),
+            original_index
+        );
         assert!(!vault_path.join("New.md").exists());
 
         let repeated = store.recover_pending_rename_transactions().unwrap();
@@ -1425,11 +1484,16 @@ mod tests {
         assert_eq!(fs::read(vault_path.join("Old.md")).unwrap(), b"# Old\r\n");
         assert!(!vault_path.join("New.md").exists());
         let conflict_dir = app_data_path.join("conflicts");
-        assert!(fs::read_dir(conflict_dir)
-            .unwrap()
-            .filter_map(Result::ok)
-            .any(|entry| entry.path().extension().is_some_and(|extension| extension == "incoming")
-                && fs::read(entry.path()).is_ok_and(|bytes| bytes.as_slice() == external)));
+        assert!(
+            fs::read_dir(conflict_dir)
+                .unwrap()
+                .filter_map(Result::ok)
+                .any(|entry| entry
+                    .path()
+                    .extension()
+                    .is_some_and(|extension| extension == "incoming")
+                    && fs::read(entry.path()).is_ok_and(|bytes| bytes.as_slice() == external))
+        );
     }
 
     #[test]
@@ -1462,12 +1526,16 @@ mod tests {
             .filter_map(Result::ok)
             .map(|entry| entry.file_name())
             .collect::<Vec<_>>();
-        assert!(names
-            .iter()
-            .any(|name| name.as_encoded_bytes() == b"Old.md"));
-        assert!(!names
-            .iter()
-            .any(|name| name.as_encoded_bytes() == b"old.md"));
+        assert!(
+            names
+                .iter()
+                .any(|name| name.as_encoded_bytes() == b"Old.md")
+        );
+        assert!(
+            !names
+                .iter()
+                .any(|name| name.as_encoded_bytes() == b"old.md")
+        );
     }
 }
 
