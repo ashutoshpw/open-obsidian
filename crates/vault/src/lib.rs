@@ -2,16 +2,19 @@
 
 pub use openobsidian_doc::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+    LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument, RenamePlanFile,
-    build_link_rename_plan, resolve_link_with_sources,
+    MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, build_link_rename_plan, guard_note_transclusion,
+    resolve_link, resolve_link_with_sources, resolve_link_with_subpath_statuses,
+    slice_markdown_subpath,
 };
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::fs::{self, OpenOptions};
-use std::io::{self, Write as IoWrite};
+use std::io::{self, Read as IoRead, Write as IoWrite};
 use std::path::{Component, Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -35,6 +38,10 @@ pub enum VaultError {
     SnapshotChanged,
     #[error("vault changed while link resolutions were being prepared")]
     LinkResolutionSnapshotChanged,
+    #[error("note transclusion source exceeds the 512 KiB limit: {0}")]
+    TransclusionSourceTooLarge(PathBuf),
+    #[error("link reference is not an embed")]
+    NotEmbedReference,
     #[error("vault path is not a Markdown note: {0}")]
     NotMarkdownNote(PathBuf),
     #[error("Markdown note is not valid UTF-8: {0}")]
@@ -123,6 +130,22 @@ pub struct VaultRenamePreview {
 pub struct VaultLinkResolution {
     pub reference: LinkReference,
     pub resolution: LinkResolution,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum VaultNoteEmbedDisposition {
+    NotRendered,
+    Blocked(TransclusionBlockReason),
+    Included(TransclusionGuard),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultNoteEmbedResolution {
+    pub reference: LinkReference,
+    pub resolution: LinkResolution,
+    pub slice: Option<LinkSubpathSlice>,
+    pub disposition: VaultNoteEmbedDisposition,
+    pub snapshot_sha256: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -270,6 +293,285 @@ impl VaultRoot {
                 }
             })
             .collect())
+    }
+
+    /// Resolve one Markdown note embed against a stable snapshot, reading only
+    /// bounded Markdown sources that can become the rendered target.
+    pub fn resolve_note_embed(
+        &self,
+        current_path: impl AsRef<Path>,
+        reference: &LinkReference,
+        depth: usize,
+        chain: &[String],
+    ) -> Result<VaultNoteEmbedResolution, VaultError> {
+        if reference.kind != LinkKind::Embed {
+            return Err(VaultError::NotEmbedReference);
+        }
+
+        let current_path = normalize_relative_path(current_path.as_ref())?;
+        if !current_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return Err(VaultError::NotMarkdownNote(current_path));
+        }
+
+        let before = self.snapshot()?;
+        if !before.entries.iter().any(|entry| {
+            entry.relative_path == current_path && entry.kind == VaultSnapshotEntryKind::File
+        }) {
+            return Err(VaultError::NotAFile(current_path));
+        }
+
+        let current_path_text = path_to_slashes(&current_path)?;
+        let markdown_entries = before
+            .entries
+            .iter()
+            .filter(|entry| {
+                entry.kind == VaultSnapshotEntryKind::File
+                    && entry
+                        .relative_path
+                        .extension()
+                        .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+            })
+            .collect::<Vec<_>>();
+        let files = markdown_entries
+            .iter()
+            .map(|entry| path_to_slashes(&entry.relative_path))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        // A present but empty fragment has the same whole-note behavior as no
+        // fragment in the renderer's embed path.
+        let mut effective_reference = reference.clone();
+        if effective_reference
+            .subpath
+            .as_deref()
+            .is_some_and(|subpath| subpath.trim().is_empty())
+        {
+            effective_reference.subpath = None;
+        }
+
+        let path_resolution = resolve_link(&effective_reference, &files, &current_path_text);
+        let (resolution, slice, disposition) = match path_resolution.status {
+            LinkResolutionStatus::External | LinkResolutionStatus::Unresolved => (
+                path_resolution,
+                None,
+                VaultNoteEmbedDisposition::NotRendered,
+            ),
+            LinkResolutionStatus::Ambiguous if effective_reference.subpath.is_none() => (
+                path_resolution,
+                None,
+                VaultNoteEmbedDisposition::NotRendered,
+            ),
+            LinkResolutionStatus::Ambiguous => {
+                // Depth is independent of the eventual duplicate-basename
+                // choice, so reject before inspecting any candidate source.
+                if let Some(candidate) = path_resolution.candidates.first()
+                    && let Err(TransclusionBlockReason::Depth) =
+                        guard_note_transclusion(depth, chain, candidate)
+                {
+                    return self.finish_note_embed(
+                        &before,
+                        reference,
+                        path_resolution.clone(),
+                        None,
+                        VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Depth),
+                    );
+                }
+
+                let mut statuses = HashMap::new();
+                let mut selected_slice = None;
+                let mut selected_path = None;
+                for candidate in &path_resolution.candidates {
+                    match guard_note_transclusion(depth, chain, candidate) {
+                        Err(TransclusionBlockReason::Depth) => {
+                            return self.finish_note_embed(
+                                &before,
+                                reference,
+                                path_resolution.clone(),
+                                None,
+                                VaultNoteEmbedDisposition::Blocked(
+                                    TransclusionBlockReason::Depth,
+                                ),
+                            );
+                        }
+                        Err(TransclusionBlockReason::Cycle) => {
+                            statuses.insert(candidate.clone(), LinkSubpathStatus::Unresolved);
+                            continue;
+                        }
+                        Ok(_) => {}
+                    }
+
+                    let Some(entry) = markdown_entries
+                        .iter()
+                        .find(|entry| {
+                            path_to_slashes(&entry.relative_path).ok().as_deref()
+                                == Some(candidate.as_str())
+                        })
+                    else {
+                        statuses.insert(candidate.clone(), LinkSubpathStatus::Unresolved);
+                        continue;
+                    };
+                    let bytes = self.read_transclusion_source(entry)?;
+                    let Ok(source) = MarkdownSource::parse(bytes) else {
+                        statuses.insert(candidate.clone(), LinkSubpathStatus::Unresolved);
+                        continue;
+                    };
+                    let candidate_slice = slice_markdown_subpath(
+                        &source,
+                        effective_reference.subpath.as_deref().unwrap_or_default(),
+                    );
+                    statuses.insert(candidate.clone(), candidate_slice.status);
+                    if candidate_slice.status == LinkSubpathStatus::Resolved
+                        && selected_slice.is_none()
+                    {
+                        selected_path = Some(candidate.clone());
+                        selected_slice = Some(candidate_slice);
+                    }
+                }
+
+                let resolution = resolve_link_with_subpath_statuses(
+                    &effective_reference,
+                    &files,
+                    &current_path_text,
+                    &statuses,
+                );
+                if resolution.status != LinkResolutionStatus::Resolved {
+                    (
+                        resolution,
+                        None,
+                        VaultNoteEmbedDisposition::NotRendered,
+                    )
+                } else if resolution.target.as_deref() != selected_path.as_deref() {
+                    (
+                        resolution,
+                        None,
+                        VaultNoteEmbedDisposition::NotRendered,
+                    )
+                } else {
+                    let target = resolution.target.as_deref().expect("resolved link has target");
+                    match guard_note_transclusion(depth, chain, target) {
+                        Ok(guard) => (
+                            resolution,
+                            selected_slice,
+                            VaultNoteEmbedDisposition::Included(guard),
+                        ),
+                        Err(reason) => (
+                            resolution,
+                            None,
+                            VaultNoteEmbedDisposition::Blocked(reason),
+                        ),
+                    }
+                }
+            }
+            LinkResolutionStatus::Resolved => {
+                let target = path_resolution
+                    .target
+                    .as_deref()
+                    .expect("resolved link has target");
+                match guard_note_transclusion(depth, chain, target) {
+                    Err(reason) => (
+                        path_resolution,
+                        None,
+                        VaultNoteEmbedDisposition::Blocked(reason),
+                    ),
+                    Ok(guard) => {
+                        let entry = markdown_entries
+                            .iter()
+                            .find(|entry| {
+                                path_to_slashes(&entry.relative_path).ok().as_deref()
+                                    == Some(target)
+                            })
+                            .ok_or(VaultError::SnapshotChanged)?;
+                        let bytes = self.read_transclusion_source(entry)?;
+                        let source = MarkdownSource::parse(bytes).map_err(|_| {
+                            VaultError::InvalidMarkdownNote(entry.relative_path.clone())
+                        })?;
+                        let selected = slice_markdown_subpath(
+                            &source,
+                            effective_reference.subpath.as_deref().unwrap_or_default(),
+                        );
+                        let resolution = if effective_reference.subpath.is_some() {
+                            resolve_link_with_subpath_statuses(
+                                &effective_reference,
+                                &files,
+                                &current_path_text,
+                                &HashMap::from([(target.to_owned(), selected.status)]),
+                            )
+                        } else {
+                            path_resolution
+                        };
+                        if resolution.status == LinkResolutionStatus::Resolved
+                            && selected.status == LinkSubpathStatus::Resolved
+                        {
+                            (
+                                resolution,
+                                Some(selected),
+                                VaultNoteEmbedDisposition::Included(guard),
+                            )
+                        } else {
+                            (
+                                resolution,
+                                Some(selected),
+                                VaultNoteEmbedDisposition::NotRendered,
+                            )
+                        }
+                    }
+                }
+            }
+        };
+
+        self.finish_note_embed(&before, reference, resolution, slice, disposition)
+    }
+
+    fn finish_note_embed(
+        &self,
+        before: &VaultSnapshot,
+        reference: &LinkReference,
+        resolution: LinkResolution,
+        slice: Option<LinkSubpathSlice>,
+        disposition: VaultNoteEmbedDisposition,
+    ) -> Result<VaultNoteEmbedResolution, VaultError> {
+        let after = self.snapshot()?;
+        if before.revision_sha256 != after.revision_sha256 {
+            return Err(VaultError::LinkResolutionSnapshotChanged);
+        }
+        Ok(VaultNoteEmbedResolution {
+            reference: reference.clone(),
+            resolution,
+            slice,
+            disposition,
+            snapshot_sha256: before.revision_sha256.clone(),
+        })
+    }
+
+    fn read_transclusion_source(
+        &self,
+        entry: &VaultSnapshotEntry,
+    ) -> Result<Vec<u8>, VaultError> {
+        if entry.size_bytes > MAX_NOTE_TRANSCLUSION_SOURCE_BYTES as u64 {
+            return Err(VaultError::TransclusionSourceTooLarge(
+                entry.relative_path.clone(),
+            ));
+        }
+        let canonical = self.resolve_vault_path(&entry.relative_path, false)?;
+        let mut file = fs::File::open(canonical)?;
+        if file.metadata()?.len() != entry.size_bytes {
+            return Err(VaultError::SnapshotChanged);
+        }
+        let mut bytes = Vec::with_capacity(entry.size_bytes as usize);
+        file.by_ref()
+            .take(MAX_NOTE_TRANSCLUSION_SOURCE_BYTES as u64 + 1)
+            .read_to_end(&mut bytes)?;
+        if bytes.len() > MAX_NOTE_TRANSCLUSION_SOURCE_BYTES {
+            return Err(VaultError::TransclusionSourceTooLarge(
+                entry.relative_path.clone(),
+            ));
+        }
+        if bytes.len() as u64 != entry.size_bytes || sha256_hex(&bytes) != entry.revision_sha256 {
+            return Err(VaultError::SnapshotChanged);
+        }
+        Ok(bytes)
     }
 
     /// Build a read-only rename plan bound to the exact vault snapshot used to
@@ -952,12 +1254,12 @@ fn snapshot_directory(
         } else if file_type.is_dir() {
             snapshot_directory(root, &path, output)?;
         } else if file_type.is_file() {
-            let bytes = fs::read(&path)?;
+            let (size_bytes, revision_sha256) = hash_file_streaming(&path)?;
             output.push(VaultSnapshotEntry {
                 relative_path,
                 kind: VaultSnapshotEntryKind::File,
-                size_bytes: bytes.len() as u64,
-                revision_sha256: sha256_hex(&bytes),
+                size_bytes,
+                revision_sha256,
                 symlink_target: None,
             });
         } else {
@@ -965,6 +1267,28 @@ fn snapshot_directory(
         }
     }
     Ok(())
+}
+
+fn hash_file_streaming(path: &Path) -> Result<(u64, String), VaultError> {
+    let mut file = fs::File::open(path)?;
+    let initial_size = file.metadata()?.len();
+    let mut digest = Sha256::new();
+    let mut size_bytes = 0u64;
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let count = file.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        size_bytes = size_bytes
+            .checked_add(count as u64)
+            .ok_or(VaultError::SnapshotChanged)?;
+        digest.update(&buffer[..count]);
+    }
+    if size_bytes != initial_size || file.metadata()?.len() != initial_size {
+        return Err(VaultError::SnapshotChanged);
+    }
+    Ok((size_bytes, sha256_digest_hex(digest)))
 }
 
 fn snapshot_revision(entries: &[VaultSnapshotEntry]) -> String {
@@ -1062,7 +1386,11 @@ fn sha256_hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{VaultError, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex};
+    use super::{
+        LinkKind, LinkReference, MarkdownSource, TransclusionBlockReason, VaultError,
+        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest,
+        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, sha256_hex,
+    };
     use serde_json::Value;
     use std::fs;
     use std::path::PathBuf;
@@ -1094,6 +1422,123 @@ mod tests {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
         }
+    }
+
+    fn embed_reference(source: &str, target: &str) -> LinkReference {
+        MarkdownSource::parse(source.as_bytes().to_vec())
+            .unwrap()
+            .extract_links()
+            .into_iter()
+            .find(|reference| reference.kind == LinkKind::Embed && reference.target == target)
+            .unwrap_or_else(|| panic!("expected embed reference to {target}"))
+    }
+
+    #[test]
+    fn note_embed_resolution_slices_markdown_and_excludes_attachments() {
+        let temp = TempDir::new();
+        let index_bytes = b"![[Notes/Target#Details]]\n![[Images/photo.png]]\n";
+        let target_bytes = b"# Target\r\n\r\n## Details\r\nbody\r\n## End\r\nignored\r\n";
+        fs::create_dir_all(temp.0.join("Notes")).unwrap();
+        fs::create_dir_all(temp.0.join("Images")).unwrap();
+        fs::write(temp.0.join("Index.md"), index_bytes).unwrap();
+        fs::write(temp.0.join("Notes/Target.md"), target_bytes).unwrap();
+        fs::write(temp.0.join("Images/photo.png"), [1, 2, 3]).unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let index = std::str::from_utf8(index_bytes).unwrap();
+        let target_reference = embed_reference(index, "Notes/Target");
+        let target = vault
+            .resolve_note_embed("Index.md", &target_reference, 0, &["Index.md".to_owned()])
+            .unwrap();
+
+        assert_eq!(target.resolution.status, super::LinkResolutionStatus::Resolved);
+        assert_eq!(
+            target.disposition,
+            VaultNoteEmbedDisposition::Included(super::TransclusionGuard {
+                next_depth: 1,
+                chain: vec!["Index.md".to_owned(), "Notes/Target.md".to_owned()],
+            })
+        );
+        assert_eq!(target.slice.unwrap().text.as_deref(), Some("## Details\nbody"));
+
+        let attachment_reference = embed_reference(index, "Images/photo.png");
+        let attachment = vault
+            .resolve_note_embed(
+                "Index.md",
+                &attachment_reference,
+                0,
+                &["Index.md".to_owned()],
+            )
+            .unwrap();
+        assert_eq!(
+            attachment.resolution.status,
+            super::LinkResolutionStatus::Unresolved
+        );
+        assert_eq!(
+            attachment.disposition,
+            VaultNoteEmbedDisposition::NotRendered
+        );
+        assert_eq!(fs::read(temp.0.join("Index.md")).unwrap(), index_bytes);
+        assert_eq!(fs::read(temp.0.join("Notes/Target.md")).unwrap(), target_bytes);
+    }
+
+    #[test]
+    fn note_embed_guards_run_before_bounded_target_reads() {
+        let temp = TempDir::new();
+        let index_bytes = b"![[Huge]]\n";
+        let oversized = vec![b'x'; MAX_NOTE_TRANSCLUSION_SOURCE_BYTES + 1];
+        fs::write(temp.0.join("Index.md"), index_bytes).unwrap();
+        fs::write(temp.0.join("Huge.md"), &oversized).unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let reference = embed_reference(std::str::from_utf8(index_bytes).unwrap(), "Huge");
+        let cyclic = vault
+            .resolve_note_embed(
+                "Index.md",
+                &reference,
+                0,
+                &["Index.md".to_owned(), "Huge.md".to_owned()],
+            )
+            .unwrap();
+        assert_eq!(
+            cyclic.disposition,
+            VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Cycle)
+        );
+
+        let too_deep = vault
+            .resolve_note_embed("Index.md", &reference, 3, &["Index.md".to_owned()])
+            .unwrap();
+        assert_eq!(
+            too_deep.disposition,
+            VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Depth)
+        );
+
+        assert!(matches!(
+            vault.resolve_note_embed("Index.md", &reference, 0, &["Index.md".to_owned()]),
+            Err(VaultError::TransclusionSourceTooLarge(path)) if path == std::path::Path::new("Huge.md")
+        ));
+    }
+
+    #[test]
+    fn ambiguous_markdown_embeds_are_disambiguated_by_subpath() {
+        let temp = TempDir::new();
+        fs::create_dir_all(temp.0.join("Notes")).unwrap();
+        fs::create_dir_all(temp.0.join("Archive")).unwrap();
+        fs::write(temp.0.join("Index.md"), b"![[Target#Details]]\n").unwrap();
+        fs::write(temp.0.join("Notes/Target.md"), b"# Target\n## Details\nselected\n")
+            .unwrap();
+        fs::write(temp.0.join("Archive/Target.md"), b"# Target\n## Other\nnot selected\n")
+            .unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let reference = embed_reference("![[Target#Details]]", "Target");
+        let result = vault
+            .resolve_note_embed("Index.md", &reference, 0, &["Index.md".to_owned()])
+            .unwrap();
+
+        assert_eq!(result.resolution.status, super::LinkResolutionStatus::Resolved);
+        assert_eq!(result.resolution.target.as_deref(), Some("Notes/Target.md"));
+        assert_eq!(result.slice.unwrap().text.as_deref(), Some("## Details\nselected\n"));
     }
 
     #[test]

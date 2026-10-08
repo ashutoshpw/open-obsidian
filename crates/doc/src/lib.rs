@@ -1195,6 +1195,32 @@ pub fn resolve_link_with_sources(
     resolve_link_inner(reference, files, current_path, Some(sources))
 }
 
+/// Resolve a link using precomputed subpath outcomes keyed by vault-relative path.
+///
+/// This lets a caller inspect candidate Markdown files one at a time instead of
+/// retaining every source document in memory. Non-Markdown targets retain the
+/// existing file-level behavior.
+pub fn resolve_link_with_subpath_statuses(
+    reference: &LinkReference,
+    files: &[String],
+    current_path: &str,
+    subpath_statuses: &HashMap<String, LinkSubpathStatus>,
+) -> LinkResolution {
+    if reference.subpath.is_none() {
+        return resolve_link(reference, files, current_path);
+    }
+
+    let path_resolution = resolve_link(reference, files, current_path);
+    if matches!(
+        path_resolution.status,
+        LinkResolutionStatus::External | LinkResolutionStatus::Unresolved
+    ) {
+        return path_resolution;
+    }
+
+    resolve_subpath_statuses(path_resolution.candidates, subpath_statuses)
+}
+
 fn resolve_link_inner(
     reference: &LinkReference,
     files: &[String],
@@ -1250,9 +1276,31 @@ fn resolve_link_inner(
 }
 
 fn resolve_subpath(
-    mut matches: Vec<String>,
+    matches: Vec<String>,
     subpath: &str,
     sources: &HashMap<String, MarkdownSource>,
+) -> LinkResolution {
+    let subpath_statuses = matches
+        .iter()
+        .filter(|file| file.to_ascii_lowercase().ends_with(".md"))
+        .map(|file| {
+            let count = sources
+                .get(file)
+                .map_or(0, |source| subpath_match_count(source, subpath));
+            let status = match count {
+                0 => LinkSubpathStatus::Unresolved,
+                1 => LinkSubpathStatus::Resolved,
+                _ => LinkSubpathStatus::Ambiguous,
+            };
+            (file.clone(), status)
+        })
+        .collect::<HashMap<_, _>>();
+    resolve_subpath_statuses(matches, &subpath_statuses)
+}
+
+fn resolve_subpath_statuses(
+    mut matches: Vec<String>,
+    subpath_statuses: &HashMap<String, LinkSubpathStatus>,
 ) -> LinkResolution {
     matches.sort();
     let mut valid_matches = Vec::new();
@@ -1264,13 +1312,14 @@ fn resolve_subpath(
             continue;
         }
 
-        let count = sources
+        match subpath_statuses
             .get(file)
-            .map_or(0, |source| subpath_match_count(source, subpath));
-        if count > 1 {
-            duplicate_subpath = true;
-        } else if count == 1 {
-            valid_matches.push(file.clone());
+            .copied()
+            .unwrap_or(LinkSubpathStatus::Unresolved)
+        {
+            LinkSubpathStatus::Resolved => valid_matches.push(file.clone()),
+            LinkSubpathStatus::Ambiguous => duplicate_subpath = true,
+            LinkSubpathStatus::Unresolved => {}
         }
     }
 
@@ -1725,7 +1774,8 @@ mod tests {
         MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, RawDocument, RenamePlanFile,
         SourceSpan, TransclusionBlockReason, TransclusionGuard, build_link_rename_plan,
         guard_note_transclusion, note_transclusion_source_within_limit, render_link_rename_preview,
-        resolve_link, resolve_link_with_sources, slice_markdown_subpath,
+        resolve_link, resolve_link_with_sources, resolve_link_with_subpath_statuses,
+        slice_markdown_subpath,
     };
 
     #[test]
@@ -2252,6 +2302,23 @@ mod tests {
                 candidates: vec!["Notes/Target.md".to_owned()],
             }
         );
+        let subpath_statuses = HashMap::from([
+            ("Notes/Target.md".to_owned(), LinkSubpathStatus::Resolved),
+            ("Archive/Target.md".to_owned(), LinkSubpathStatus::Unresolved),
+        ]);
+        assert_eq!(
+            resolve_link_with_subpath_statuses(
+                &reference,
+                &files,
+                "Index.md",
+                &subpath_statuses
+            ),
+            LinkResolution {
+                status: LinkResolutionStatus::Resolved,
+                target: Some("Notes/Target.md".to_owned()),
+                candidates: vec!["Notes/Target.md".to_owned()],
+            }
+        );
 
         sources.insert(
             "Archive/Target.md".to_owned(),
@@ -2259,6 +2326,23 @@ mod tests {
         );
         assert_eq!(
             resolve_link_with_sources(&reference, &files, "Index.md", &sources),
+            LinkResolution {
+                status: LinkResolutionStatus::Ambiguous,
+                target: None,
+                candidates: vec!["Archive/Target.md".to_owned(), "Notes/Target.md".to_owned()],
+            }
+        );
+        let duplicate_statuses = HashMap::from([
+            ("Notes/Target.md".to_owned(), LinkSubpathStatus::Resolved),
+            ("Archive/Target.md".to_owned(), LinkSubpathStatus::Ambiguous),
+        ]);
+        assert_eq!(
+            resolve_link_with_subpath_statuses(
+                &reference,
+                &files,
+                "Index.md",
+                &duplicate_statuses
+            ),
             LinkResolution {
                 status: LinkResolutionStatus::Ambiguous,
                 target: None,

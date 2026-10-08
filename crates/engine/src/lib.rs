@@ -2,9 +2,11 @@
 
 pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+    LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultLinkResolution, VaultRenamePreview, VaultRenameRecoveryIssue,
+    VaultHistoryRecord, VaultLinkResolution, VaultNoteEmbedDisposition,
+    VaultNoteEmbedResolution, VaultRenamePreview, VaultRenameRecoveryIssue,
     VaultRenameRecoveryReport, VaultRenameResult, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
@@ -61,6 +63,19 @@ impl VaultSession {
         relative_path: impl AsRef<Path>,
     ) -> Result<Vec<VaultLinkResolution>, VaultError> {
         self.store.root().resolve_links_for_note(relative_path)
+    }
+
+    /// Resolves a bounded note embed through the vault's snapshot and path guards.
+    pub fn resolve_note_embed(
+        &self,
+        current_path: impl AsRef<Path>,
+        reference: &LinkReference,
+        depth: usize,
+        chain: &[String],
+    ) -> Result<VaultNoteEmbedResolution, VaultError> {
+        self.store
+            .root()
+            .resolve_note_embed(current_path, reference, depth, chain)
     }
 
     /// Builds a read-only rename preview bound to the current vault snapshot.
