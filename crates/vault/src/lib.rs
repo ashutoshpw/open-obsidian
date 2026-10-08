@@ -242,8 +242,7 @@ impl VaultRoot {
 
         let relative_path_text = path_to_slashes(&relative_path)?;
         let markdown_sources = self.read_markdown_sources(&before)?;
-        let sources: HashMap<String, MarkdownSource> =
-            markdown_sources.into_iter().collect();
+        let sources: HashMap<String, MarkdownSource> = markdown_sources.into_iter().collect();
         let current_source = sources
             .get(&relative_path_text)
             .ok_or_else(|| VaultError::InvalidMarkdownNote(relative_path.clone()))?;

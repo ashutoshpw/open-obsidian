@@ -576,7 +576,9 @@ mod link_resolution_fixture_tests {
                 .expect("fixture files must be an array")
             {
                 let relative_path = PathBuf::from(
-                    file["path"].as_str().expect("fixture file must have a path"),
+                    file["path"]
+                        .as_str()
+                        .expect("fixture file must have a path"),
                 );
                 let source = file["source"].as_str().unwrap_or("").as_bytes().to_vec();
                 let path = vault_path.join(&relative_path);
@@ -658,16 +660,16 @@ mod link_resolution_fixture_tests {
                     })
                     .collect::<Vec<_>>();
                 assert_eq!(
-                    actual.resolution.candidates,
-                    expected_candidates,
+                    actual.resolution.candidates, expected_candidates,
                     "{case_id}/{}: candidate paths",
                     actual.reference.raw
                 );
             }
 
             assert_eq!(
-                root.snapshot()
-                    .unwrap_or_else(|error| panic!("{case_id}: re-snapshot fixture vault: {error}")),
+                root.snapshot().unwrap_or_else(|error| panic!(
+                    "{case_id}: re-snapshot fixture vault: {error}"
+                )),
                 before,
                 "{case_id}: resolution must not change the vault snapshot"
             );
