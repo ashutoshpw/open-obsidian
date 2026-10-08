@@ -1,0 +1,156 @@
+{
+  "slice": "R2.6.23 native UI over-cap history warning and non-destructive display",
+  "phase": "R2",
+  "status": "accepted UI interaction slice; R2 remains in progress",
+  "recorded_at": "2026-10-08T11:48:12Z",
+  "source_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+  "implementation_commits": [
+    "9d81f2354c3246ee693dbabda16e23920454402d",
+    "b2360095025f8c6f3277a8b97119a09a54ee529d"
+  ],
+  "scope": "Render the retention cap warning in the production native egui history panel and prove the warning itself does not start cleanup or enter the confirmation state.",
+  "behavior": [
+    "The test derives an over-cap plan from a protected conflict record just above the UI's supported 0.1-GiB minimum and an aged recovery record eligible for cleanup; synthetic metadata avoids allocating a large fixture artifact.",
+    "The production UI renders the protected-history warning and the Review eligible cleanup control.",
+    "Without clicking the review control, the UI leaves cleanup_confirmation false, starts no history task, and retains both records in UI state.",
+    "The existing fixture-backed history interaction separately verifies that actual recovery artifacts remain unchanged through preview and review and that removal occurs only after explicit confirmation, while protected conflict and vault bytes remain identical."
+  ],
+  "ci_attempts": [
+    {
+      "source_sha": "9d81f2354c3246ee693dbabda16e23920454402d",
+      "rust_run_id": 37771547011,
+      "rust_conclusion": "failure",
+      "inventory_run_id": 37771546944,
+      "quality_run_id": 37771546870,
+      "desktop_build_run_id": 37771546971,
+      "plugin_renderer_run_id": 37771546911,
+      "loaded_plugin_run_id": 37771546977,
+      "companion_conclusion": "all five companion workflows passed",
+      "finding": "The new UI interaction passed on Ubuntu, macOS and Windows. Ubuntu rustfmt requested the chained get_by_label layout; macOS and Windows Clippy flagged an unnecessary mutable harness binding. Both exact CI findings were corrected in the follow-up commit."
+    },
+    {
+      "source_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "rust_run_id": 37771857953,
+      "inventory_run_id": 37771857931,
+      "quality_run_id": 37771857976,
+      "desktop_build_run_id": 37771857971,
+      "plugin_renderer_run_id": 37771857939,
+      "loaded_plugin_run_id": 37771857958,
+      "conclusion": "all six required workflows passed"
+    }
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37771857953,
+      "head_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37771857953",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113293120955, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113293121165, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113293121305, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, locked workspace tests, Clippy, crate dependency layers, native preview builds and Wry feasibility probes passed on Ubuntu, macOS and Windows.",
+        "egui_over_cap_history_warning_does_not_start_cleanup passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37771857931,
+      "head_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37771857931",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113293121031, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37771857976,
+      "head_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37771857976",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113293121794, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113293122063, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113293122296, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37771857971,
+      "head_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37771857971",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113293121972, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113293122252, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113293122283, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37771857939,
+      "head_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37771857939",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113293122231, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113293122509, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113293122588, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37771857958,
+      "head_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37771857958",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113293121485, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113293121758, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113293122398, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "12 passed, including egui_over_cap_history_warning_does_not_start_cleanup",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "12 passed, including egui_over_cap_history_warning_does_not_start_cleanup",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "12 passed, including egui_over_cap_history_warning_does_not_start_cleanup",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; all executable validation used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11548467273, "name": "openobsidian-rust-preview-b2360095025f8c6f3277a8b97119a09a54ee529d", "size_bytes": 8849836, "digest": "sha256:23cf342ec7e9f47eebd2077930b3026dc5195202e90db6360474ec8e87173e5d"},
+    {"id": 11548182854, "name": "rust-plugin-runtime-Linux-b2360095025f8c6f3277a8b97119a09a54ee529d", "size_bytes": 2695, "digest": "sha256:6a12f86d3255ce0f1b30066c3992d7dd00ae8d9d2794a315b620ed80a4cb0671"},
+    {"id": 11547483147, "name": "rust-plugin-runtime-macOS-b2360095025f8c6f3277a8b97119a09a54ee529d", "size_bytes": 2698, "digest": "sha256:25bf5f808f4c390fb24bee55365d240eceda6d6c99688211b6ad475601ce881e"},
+    {"id": 11548512416, "name": "rust-plugin-runtime-Windows-b2360095025f8c6f3277a8b97119a09a54ee529d", "size_bytes": 2715, "digest": "sha256:1b8441233907c747599f74784ab3eb8d104ce22fdd8257fcaa4c3d1d52c72037"}
+  ],
+  "limitations": [
+    "This is headless egui interaction evidence, not native-window visual or manual accessibility acceptance.",
+    "The warning UI test seeds planner-sized synthetic record metadata instead of allocating an artifact above 0.1 GiB; retention planner and fixture-backed cleanup behavior are covered by their existing tests.",
+    "The UI interaction proves no cleanup task starts unless the review action is clicked; host-level SYNC-007 uninstall integration and full C03/C03.2 cross-layer acceptance remain open.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions."
+}

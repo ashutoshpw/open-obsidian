@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T11:33:17Z",
+  "updated_at": "2026-10-08T11:49:52Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
-  "current_milestone": "R2.6.22",
-  "next_action": "Add native-UI interaction coverage for an over-cap history warning and confirm the warning never triggers cleanup by itself; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI.",
+  "last_reconciled_head": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+  "current_milestone": "R2.6.23",
+  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab"
+      "implementation_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d"
     },
     "R3": {
       "status": "pending",
@@ -154,7 +154,9 @@
     "R2.6.19 exercised the ambiguous/unresolved C03 fixture through the production egui rename preview, review and apply flow; the UI test passed on Ubuntu, macOS and Windows and all six workflows passed on exact source SHA 842615dc6be2c6ba7ed3408208098717ca623e2e. Evidence: evidence/r2.6.19-egui-rename-fixture-skips-842615d.json. No local executable validation was run. C03/C03.2 full cross-layer acceptance, D16, SYNC-007 uninstall preservation and history integration remain pending.",
     "R2.6.20 added a synthetic uninstall-preservation fixture covering nested vault, app-cache, recovery and unresolved-conflict files; a production UI/VaultSession interaction selected all cleanup choices and verified every fixture file remained byte-identical. The test passed on Ubuntu, macOS and Windows and all six workflows passed on exact source SHA fee60f234ce7225b5eb4bb6261fd8820aed5ec10. Evidence: evidence/r2.6.20-uninstall-fixture-preservation-fee60f2.json. No local executable validation was run. The headless choice test does not execute an OS uninstaller; SYNC-007 remains pending host-level integration, with D16, history integration and full C03/C03.2 acceptance still open.",
     "R2.6.21 added fixture:history-retention and a production UI/VaultSession interaction for age-based history preview, review and explicit cleanup. The test confirmed an expired recovery record is removed only after confirmation, while the unresolved conflict and vault note remain byte-identical. All six workflows passed on exact source SHA 3ed8e6dd9573a55ae8ff573ca5f6f2d2a206d4d0. Evidence: evidence/r2.6.21-history-retention-ui-3ed8e6d.json. No local executable validation was run. This headless interaction does not render-test the cap warning or complete D16, host-level SYNC-007 uninstall acceptance or full C03/C03.2 cross-layer acceptance.",
-    "R2.6.22 added a headless egui interaction that renders Enabled, Disabled and Unknown storage-protection reports, checks the OS-reported/encryption-not-verified wording, verifies ordinary redraws do not re-run the injected probe, and verifies Refresh storage status reruns it and updates the report. The interaction passed on Ubuntu, macOS and Windows; all six workflows passed on exact source SHA fc50e9bebe41a90c0e9b6b5a8a8579c9729babab. Evidence: evidence/r2.6.22-storage-status-refresh-fc50e9b.json. No local executable validation was run. D16 cap-warning UI rendering, host-level SYNC-007 uninstall integration and full C03/C03.2 cross-layer acceptance remain pending."
+    "R2.6.22 added a headless egui interaction that renders Enabled, Disabled and Unknown storage-protection reports, checks the OS-reported/encryption-not-verified wording, verifies ordinary redraws do not re-run the injected probe, and verifies Refresh storage status reruns it and updates the report. The interaction passed on Ubuntu, macOS and Windows; all six workflows passed on exact source SHA fc50e9bebe41a90c0e9b6b5a8a8579c9729babab. Evidence: evidence/r2.6.22-storage-status-refresh-fc50e9b.json. No local executable validation was run. D16 cap-warning UI rendering, host-level SYNC-007 uninstall integration and full C03/C03.2 cross-layer acceptance remain pending.",
+    "The R2.6.22 evidence commit 50a21ac4cff1dc4660c219e54e5f387f634cfec2 also passed all six workflows on that exact SHA: Rust CI 37770975628, inventory 37770975657, quality 37770975668, desktop 37770975636, plugin renderer 37770975699 and loaded-plugin workflows 37770975619.",
+    "R2.6.23 adds an over-cap history-warning egui interaction. The test renders the warning and Review eligible cleanup control, then confirms no cleanup task or confirmation state starts unless the user selects the review action. All six GitHub Actions workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; evidence: evidence/r2.6.23-history-warning-ui-b236009.json. The new interaction passed on Ubuntu, macOS and Windows. No local executable validation was run. Together with the fixture-backed retention/explicit-cleanup interaction, the platform storage-status probe and its UI refresh interaction, this closes the D16 cap-warning display gap. SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -5123,6 +5125,49 @@
         "SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain pending."
       ],
       "next_action": "Add headless UI acceptance that renders an over-cap history warning and proves no cleanup occurs without explicit confirmation; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI."
+    },
+    "R2.6.23": {
+      "status": "complete",
+      "implementation_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+      "implementation_commits": [
+        "9d81f2354c3246ee693dbabda16e23920454402d",
+        "b2360095025f8c6f3277a8b97119a09a54ee529d"
+      ],
+      "scope": "Exercise the over-cap history warning and require an explicit review action before cleanup can be confirmed.",
+      "ci_attempts": [
+        {
+          "source_sha": "9d81f2354c3246ee693dbabda16e23920454402d",
+          "rust_run_id": 37771547011,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37771546944,
+          "quality_run_id": 37771546870,
+          "desktop_build_run_id": 37771546971,
+          "plugin_renderer_run_id": 37771546911,
+          "loaded_plugin_run_id": 37771546977,
+          "companion_conclusion": "all five companion workflows passed",
+          "finding": "The new interaction passed on all three operating systems. Ubuntu rustfmt requested a chained get_by_label layout, and macOS/Windows Clippy flagged an unnecessary mutable harness binding; both were corrected from CI output."
+        },
+        {
+          "source_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d",
+          "rust_run_id": 37771857953,
+          "inventory_run_id": 37771857931,
+          "quality_run_id": 37771857976,
+          "desktop_build_run_id": 37771857971,
+          "plugin_renderer_run_id": 37771857939,
+          "loaded_plugin_run_id": 37771857958,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.23-history-warning-ui-b236009.json",
+      "accepted_slice": [
+        "The UI renders an over-cap protected-history warning and the eligible-cleanup review control while leaving cleanup confirmation false and starting no history task.",
+        "Together with R2.6.21 history retention/explicit-cleanup coverage and R2.6.22 OS protection status rendering/refresh, this closes D16's cap-warning display gap. The interaction and all six required workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; no local executable validation was run."
+      ],
+      "remaining": [
+        "The over-cap UI case uses synthetic planner metadata to avoid a large fixture artifact; the UI interaction is headless and does not establish native-window visual/manual accessibility acceptance.",
+        "SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain pending."
+      ],
+      "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
     }
   },
   "ci_preparation": {
