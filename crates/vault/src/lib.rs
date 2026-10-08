@@ -567,9 +567,7 @@ impl VaultStore {
             temporary.sync_all()?;
             drop(temporary);
             #[cfg(test)]
-            if self.fail_before_replace
-                || self.fail_replace_path.as_deref() == Some(relative_path)
-            {
+            if self.fail_before_replace || self.fail_replace_path.as_deref() == Some(relative_path) {
                 if let Some((external_path, external_bytes)) = &self.external_change_on_failure {
                     let external_path = self
                         .root
@@ -1242,8 +1240,7 @@ mod tests {
         fs::create_dir(vault_temp.0.join("Archive")).unwrap();
         let index_path = vault_temp.0.join("Index.md");
         let old_path = vault_temp.0.join("Old.md");
-        let index =
-            "\u{feff}🌱 [[Old|alias]] [Old](Old.md#Section) ![[Old#^block]]\r\n".as_bytes();
+        let index = "\u{feff}🌱 [[Old|alias]] [Old](Old.md#Section) ![[Old#^block]]\r\n".as_bytes();
         let original = b"# Section\n\nOpening paragraph ^block\n\n[[Old#Section]]\n";
         fs::write(&index_path, index).unwrap();
         fs::write(&old_path, original).unwrap();
@@ -1323,7 +1320,11 @@ mod tests {
 
         let error = store.apply_rename_preview(&preview).unwrap_err();
 
-        assert!(error.to_string().contains("injected atomic replace failure"));
+        assert!(
+            error
+                .to_string()
+                .contains("injected atomic replace failure")
+        );
         assert!(old_path.exists());
         assert!(!vault_temp.0.join("Archive/New.md").exists());
         assert_eq!(fs::read(vault_temp.0.join("A.md")).unwrap(), b"[[Old]]\n");
@@ -1352,7 +1353,11 @@ mod tests {
 
         let error = store.apply_rename_preview(&preview).unwrap_err();
 
-        assert!(error.to_string().contains("injected rename commit journal failure"));
+        assert!(
+            error
+                .to_string()
+                .contains("injected rename commit journal failure")
+        );
         assert_eq!(fs::read(&index_path).unwrap(), index);
         assert_eq!(fs::read(&old_path).unwrap(), source);
         assert!(!vault_temp.0.join("Archive/New.md").exists());
@@ -1399,9 +1404,7 @@ mod tests {
                     .extension()
                     .is_some_and(|extension| extension == std::ffi::OsStr::new("incoming"))
             })
-            .any(|entry| {
-                fs::read(entry.path()).is_ok_and(|bytes| bytes.as_slice() == external)
-            });
+            .any(|entry| fs::read(entry.path()).is_ok_and(|bytes| bytes.as_slice() == external));
         assert!(preserved_external_edit);
     }
 }

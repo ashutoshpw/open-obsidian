@@ -86,13 +86,7 @@ impl VaultStore {
             .ok_or(VaultError::StaleRenamePreview)?;
         let operation_id = next_operation_id();
         let journal_paths = journal_paths(&updates, &old_path, &new_path)?;
-        self.append_rename_journal(
-            &operation_id,
-            "prepared",
-            preview,
-            &journal_paths,
-            None,
-        )?;
+        self.append_rename_journal(&operation_id, "prepared", preview, &journal_paths, None)?;
 
         for (index, update) in updates.iter().enumerate() {
             let relative_path_text = path_to_slashes(&update.source_path)?;
@@ -177,13 +171,7 @@ impl VaultStore {
                 });
             }
 
-            self.append_rename_journal(
-                &operation_id,
-                "committed",
-                preview,
-                &journal_paths,
-                None,
-            )?;
+            self.append_rename_journal(&operation_id, "committed", preview, &journal_paths, None)?;
             Ok(())
         })();
 
@@ -302,9 +290,7 @@ impl VaultStore {
         operation_id: &str,
     ) -> Result<(), VaultError> {
         let current = self.read_if_present(old_path, source_absolute_path)?;
-        let current_revision = current
-            .as_ref()
-            .map(|read| read.revision_sha256.as_str());
+        let current_revision = current.as_ref().map(|read| read.revision_sha256.as_str());
         if current_revision == Some(source_update.before.revision_sha256.as_str()) {
             return Ok(());
         }
@@ -380,7 +366,9 @@ impl VaultStore {
             return VaultError::RenameTransactionRecoveryRequired {
                 old_path: PathBuf::from(&preview.plan.old_path),
                 new_path: PathBuf::from(&preview.plan.new_path),
-                reason: format!("no vault files changed; failure journal append failed: {journal_error}"),
+                reason: format!(
+                    "no vault files changed; failure journal append failed: {journal_error}"
+                ),
             };
         }
         error
@@ -460,11 +448,11 @@ impl VaultStore {
                 return errors;
             };
 
-            if let Some(temporary_path) = move_state.temporary_path.as_ref() {
-                match fs::symlink_metadata(temporary_path) {
+            if let Some(temporary_path) = move_state.temporary_path.clone() {
+                match fs::symlink_metadata(&temporary_path) {
                     Ok(_) => {
                         if let Err(error) = move_vault_file(
-                            temporary_path,
+                            &temporary_path,
                             source_absolute_path,
                             &format!("{operation_id}-rollback-temp"),
                             false,
@@ -530,7 +518,9 @@ impl VaultStore {
                         return errors;
                     }
                     Err(error) => {
-                        errors.push(format!("original source path could not be checked: {error}"));
+                        errors.push(format!(
+                            "original source path could not be checked: {error}"
+                        ));
                         return errors;
                     }
                     Ok(_) => {}
@@ -551,10 +541,7 @@ impl VaultStore {
     }
 }
 
-fn apply_target_edits(
-    bytes: &[u8],
-    edits: &[(SourceSpan, String)],
-) -> Result<Vec<u8>, VaultError> {
+fn apply_target_edits(bytes: &[u8], edits: &[(SourceSpan, String)]) -> Result<Vec<u8>, VaultError> {
     let source = std::str::from_utf8(bytes).map_err(|_| VaultError::StaleRenamePreview)?;
     let mut ordered = edits.to_vec();
     ordered.sort_by_key(|(span, _)| span.start);
