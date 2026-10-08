@@ -334,9 +334,7 @@ fn parse_history_timestamp(value: &str) -> Option<SystemTime> {
         (date_time, 0_i64)
     } else {
         let time_start = value.find('T')? + 1;
-        let offset_start = value[time_start..]
-            .rfind(['+', '-'])?
-            + time_start;
+        let offset_start = value[time_start..].rfind(['+', '-'])? + time_start;
         let (date_time, offset) = value.split_at(offset_start);
         let sign = if offset.starts_with('+') {
             1_i64
