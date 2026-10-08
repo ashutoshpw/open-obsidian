@@ -120,7 +120,9 @@ fn print_cleanup_outcome(label: &str, outcome: UserDataCleanupOutcome) {
         UserDataCleanupOutcome::Failed {
             removed_directories,
             reason,
-        } => eprintln!("{label}: failed ({removed_directories} directories removed before {reason:?})"),
+        } => eprintln!(
+            "{label}: failed ({removed_directories} directories removed before {reason:?})"
+        ),
     }
 }
 

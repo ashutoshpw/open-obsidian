@@ -48,10 +48,13 @@ pub struct UserDataCleanupSelection {
 }
 
 /// Outcome for one selected uninstall cleanup category.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum UserDataCleanupOutcome {
+    #[default]
     NotSelected,
-    Completed { removed_directories: usize },
+    Completed {
+        removed_directories: usize,
+    },
     Failed {
         removed_directories: usize,
         reason: UserDataCleanupFailure,
@@ -79,22 +82,9 @@ pub struct UserDataCleanupReport {
 impl UserDataCleanupReport {
     /// Whether every requested category completed successfully.
     pub fn is_complete(self) -> bool {
-        !matches!(
-            self.app_cache,
-            UserDataCleanupOutcome::Failed { .. }
-        ) && !matches!(
-            self.credentials,
-            UserDataCleanupOutcome::Failed { .. }
-        ) && !matches!(
-            self.recovery_history,
-            UserDataCleanupOutcome::Failed { .. }
-        )
-    }
-}
-
-impl Default for UserDataCleanupOutcome {
-    fn default() -> Self {
-        Self::NotSelected
+        !matches!(self.app_cache, UserDataCleanupOutcome::Failed { .. })
+            && !matches!(self.credentials, UserDataCleanupOutcome::Failed { .. })
+            && !matches!(self.recovery_history, UserDataCleanupOutcome::Failed { .. })
     }
 }
 
@@ -212,11 +202,7 @@ pub fn cleanup_user_data(
     if !selection.app_cache && !selection.credentials && !selection.recovery_history {
         return Ok(UserDataCleanupReport::default());
     }
-    cleanup_user_data_under(
-        &app_user_data_directory()?,
-        selection,
-        credential_store,
-    )
+    cleanup_user_data_under(&app_user_data_directory()?, selection, credential_store)
 }
 
 #[derive(Default)]
@@ -331,10 +317,7 @@ fn collect_user_data_cleanup_plan(
             continue;
         }
         if selection.app_cache {
-            collect_cleanup_directory(
-                &vault_data_directory.join("cache"),
-                &mut plan.app_cache,
-            )?;
+            collect_cleanup_directory(&vault_data_directory.join("cache"), &mut plan.app_cache)?;
         }
         if selection.recovery_history {
             let recovery_directory = vault_data_directory.join("recovery");
@@ -407,7 +390,10 @@ fn journal_needs_recovery(vault_data_directory: &Path) -> bool {
         Ok(bytes) => bytes,
         Err(_) => return true,
     };
-    let Some(complete_length) = bytes.iter().rposition(|byte| *byte == b'\n').map(|index| index + 1)
+    let Some(complete_length) = bytes
+        .iter()
+        .rposition(|byte| *byte == b'\n')
+        .map(|index| index + 1)
     else {
         return !bytes.is_empty();
     };
@@ -437,9 +423,7 @@ fn journal_needs_recovery(vault_data_directory: &Path) -> bool {
         let pending = match (operation, state) {
             ("write", "prepared" | "failed")
             | ("rename", "prepared" | "recovery_required" | "failed") => true,
-            ("write", "committed" | "conflict") | ("rename", "committed" | "rolled_back") => {
-                false
-            }
+            ("write", "committed" | "conflict") | ("rename", "committed" | "rolled_back") => false,
             _ => return true,
         };
         if pending {
@@ -882,11 +866,18 @@ mod tests {
         struct FixtureCredentialStore(Cell<bool>);
 
         impl super::super::CredentialStore for FixtureCredentialStore {
-            fn get(&self, _key: &str) -> Result<Option<Vec<u8>>, super::super::CredentialStoreError> {
+            fn get(
+                &self,
+                _key: &str,
+            ) -> Result<Option<Vec<u8>>, super::super::CredentialStoreError> {
                 Ok(None)
             }
 
-            fn set(&self, _key: &str, _value: &[u8]) -> Result<(), super::super::CredentialStoreError> {
+            fn set(
+                &self,
+                _key: &str,
+                _value: &[u8],
+            ) -> Result<(), super::super::CredentialStoreError> {
                 Ok(())
             }
 
@@ -894,16 +885,13 @@ mod tests {
                 Ok(())
             }
 
-            fn delete_all_for_application(
-                &self,
-            ) -> Result<(), super::super::CredentialStoreError> {
+            fn delete_all_for_application(&self) -> Result<(), super::super::CredentialStoreError> {
                 self.0.set(true);
                 Ok(())
             }
         }
 
-        let fixture: serde_json::Value =
-            serde_json::from_str(SYNC_UNINSTALL_FIXTURE).unwrap();
+        let fixture: serde_json::Value = serde_json::from_str(SYNC_UNINSTALL_FIXTURE).unwrap();
         let scenario = &fixture["scenarios"][0];
         let temporary = unique_test_directory();
         let workspace = temporary.join("workspace");
@@ -948,23 +936,26 @@ mod tests {
                 .any(|value| value == "recovery-history"),
         };
         let credentials = FixtureCredentialStore(Cell::new(false));
-        let report = cleanup_user_data_under(&user_data_root, selection, Some(&credentials)).unwrap();
+        let report =
+            cleanup_user_data_under(&user_data_root, selection, Some(&credentials)).unwrap();
 
         assert!(report.is_complete());
         assert_eq!(
             report.app_cache,
             UserDataCleanupOutcome::Completed {
-                removed_directories: scenario["expected"]["selected_cleanup"]["app_cache_directories_removed"]
-                    .as_u64()
-                    .unwrap() as usize,
+                removed_directories:
+                    scenario["expected"]["selected_cleanup"]["app_cache_directories_removed"]
+                        .as_u64()
+                        .unwrap() as usize,
             }
         );
         assert_eq!(
             report.recovery_history,
             UserDataCleanupOutcome::Completed {
-                removed_directories: scenario["expected"]["selected_cleanup"]["recovery_history_directories_removed"]
-                    .as_u64()
-                    .unwrap() as usize,
+                removed_directories:
+                    scenario["expected"]["selected_cleanup"]["recovery_history_directories_removed"]
+                        .as_u64()
+                        .unwrap() as usize,
             }
         );
         assert_eq!(
@@ -980,19 +971,29 @@ mod tests {
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/cache"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/failed"),
         ] {
-            assert!(!user_data_root.join(relative).exists(), "{}", relative.display());
+            assert!(
+                !user_data_root.join(relative).exists(),
+                "{}",
+                relative.display()
+            );
         }
         for relative in [
             Path::new(".openobsidian-user-data-root"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/.openobsidian-vault-data"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/recovery/record.bin"),
-            Path::new("vaults/f37dd519f426bfdfeb4dbc3e/recovery/fixture-rename-rename-before-0.bin"),
+            Path::new(
+                "vaults/f37dd519f426bfdfeb4dbc3e/recovery/fixture-rename-rename-before-0.bin",
+            ),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/conflicts/unresolved.bin"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/journal.jsonl"),
             Path::new("vaults/0123456789abcdef01234567/cache/vault-owned.json"),
             Path::new("user-notes.txt"),
         ] {
-            assert!(user_data_root.join(relative).exists(), "{}", relative.display());
+            assert!(
+                user_data_root.join(relative).exists(),
+                "{}",
+                relative.display()
+            );
         }
         for (relative, original) in original_vault_files {
             assert_eq!(fs::read(vault_root.join(relative)).unwrap(), original);
@@ -1001,7 +1002,9 @@ mod tests {
             Path::new(".openobsidian-user-data-root"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/.openobsidian-vault-data"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/recovery/record.bin"),
-            Path::new("vaults/f37dd519f426bfdfeb4dbc3e/recovery/fixture-rename-rename-before-0.bin"),
+            Path::new(
+                "vaults/f37dd519f426bfdfeb4dbc3e/recovery/fixture-rename-rename-before-0.bin",
+            ),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/conflicts/unresolved.bin"),
             Path::new("vaults/f37dd519f426bfdfeb4dbc3e/journal.jsonl"),
             Path::new("vaults/0123456789abcdef01234567/cache/vault-owned.json"),
@@ -1109,12 +1112,8 @@ mod tests {
         let vault_data = root.join("vaults/f37dd519f426bfdfeb4dbc3e");
         fs::create_dir_all(vault_data.join("recovery")).unwrap();
         ensure_app_data_root_marker(&root).unwrap();
-        ensure_owned_data_marker(
-            &vault_data,
-            VAULT_DATA_MARKER,
-            VAULT_DATA_MARKER_CONTENT,
-        )
-        .unwrap();
+        ensure_owned_data_marker(&vault_data, VAULT_DATA_MARKER, VAULT_DATA_MARKER_CONTENT)
+            .unwrap();
         fs::write(
             vault_data.join("journal.jsonl"),
             concat!(
@@ -1183,7 +1182,10 @@ mod tests {
             Err(UserDataError::UnsafeCleanupPath)
         ));
         assert!(root.join("cache/keep.bin").exists());
-        assert_eq!(fs::read(outside.join("external.bin")).unwrap(), b"external bytes");
+        assert_eq!(
+            fs::read(outside.join("external.bin")).unwrap(),
+            b"external bytes"
+        );
         let _ = fs::remove_dir_all(root);
         let _ = fs::remove_dir_all(outside);
     }

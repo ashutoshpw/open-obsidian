@@ -7096,15 +7096,26 @@
       "implementation_sha": null,
       "implementation_commits": [],
       "scope": "Add an ownership-checked cleanup executor and package adapter seam for app-owned user data while retaining unresolved conflicts, operation journals and recovery images.",
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "951b1677c251a5f05bef19350decc015428a365d",
+          "rust_ci_run_id": 37829742165,
+          "conclusion": "failure",
+          "findings": [
+            "Ubuntu rustfmt reported formatting changes in the cleanup CLI and platform implementation; macOS and Windows Clippy reported that UserDataCleanupOutcome can derive Default. Workspace tests passed on Ubuntu, macOS and Windows.",
+            "The five companion workflows passed on this SHA: inventory 37829742187, quality 37829742154, desktop build 37829742221, plugin renderer 37829742225 and loaded-plugin workflows 37829742268."
+          ],
+          "correction": "Applied the CI-reported formatting and derived Default; fresh exact-SHA validation is pending."
+        }
+      ],
       "evidence": null,
       "accepted_slice": [],
       "remaining": [
-        "Exact-SHA GitHub Actions validation is pending.",
+        "Exact-SHA GitHub Actions validation after the CI-reported formatting and Clippy fixes is pending.",
         "A native OS package does not yet invoke the adapter; this remains an R6 handoff.",
         "Credential cleanup remains unavailable until an OS credential backend implements application-scoped deletion."
       ],
-      "next_action": "Commit and push the cleanup executor slice, then review exact-SHA GitHub Actions results; do not run executable validation locally."
+      "next_action": "Commit and push the GitHub-reported formatting and Clippy correction, then review all six exact-SHA workflows; do not run executable validation locally."
     }
   },
   "ci_preparation": {
