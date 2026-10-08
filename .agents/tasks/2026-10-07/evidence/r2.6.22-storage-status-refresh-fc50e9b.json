@@ -1,0 +1,161 @@
+{
+  "slice": "R2.6.22 native UI storage-protection statuses and refresh",
+  "phase": "R2",
+  "status": "accepted UI interaction slice; R2 remains in progress",
+  "source_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+  "implementation_commits": [
+    "741c8c77fc5f0429cb6d96c1f0b6753fdefc350d",
+    "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab"
+  ],
+  "scope": "Exercise OS storage-protection status rendering and refresh through the production native egui shell.",
+  "behavior": [
+    "The injected probe returns Enabled, Disabled and Unknown reports over successive calls, with distinct method/detail values.",
+    "The egui interaction confirms Enabled and Disabled retain the OS-reported wording, Unknown retains the encryption-not-verified wording, and each report's detail is rendered.",
+    "A normal redraw leaves the probe call count unchanged. Clicking Refresh storage status reruns the probe and updates the UI report to Disabled, then Unknown.",
+    "The existing pure status-label test continues to cover all three labels independently."
+  ],
+  "ci_attempts": [
+    {
+      "source_sha": "741c8c77fc5f0429cb6d96c1f0b6753fdefc350d",
+      "rust_run_id": 37769743438,
+      "rust_conclusion": "Ubuntu formatting failed; macOS and Windows passed",
+      "rust_jobs": {
+        "ubuntu-latest": {"job_id": 113286088001, "conclusion": "failure"},
+        "macos-latest": {"job_id": 113286088083, "conclusion": "success"},
+        "windows-latest": {"job_id": 113286087840, "conclusion": "success"}
+      },
+      "inventory_run_id": 37769743466,
+      "quality_run_id": 37769743470,
+      "desktop_build_run_id": 37769743400,
+      "plugin_renderer_run_id": 37769743436,
+      "loaded_plugin_run_id": 37769743574,
+      "companion_conclusion": "all five companion workflows passed",
+      "finding": "The new egui interaction passed on Ubuntu; rustfmt requested two line-wrapping changes to status assertions. Applied those exact formatting changes in the follow-up commit."
+    },
+    {
+      "source_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "rust_run_id": 37770217922,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217922",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113287691541, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113287691545, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113287691960, "conclusion": "success"}
+      ]
+    }
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37770217922,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217922",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113287691541, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113287691545, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113287691960, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, locked workspace tests, Clippy, crate dependency layers, native preview builds and Wry compatibility probes passed on Ubuntu, macOS and Windows.",
+        "egui_storage_status_refresh_reports_enabled_disabled_and_unknown passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37770218096,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218096",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113287691776, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37770218092,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218092",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113287691955, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113287692290, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113287692426, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37770217899,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217899",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113287691347, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113287691594, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113287691847, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37770217932,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217932",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113287691388, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113287691546, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113287691552, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37770218095,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113287692687, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113287693017, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113287693090, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "11 passed, including egui_storage_status_refresh_reports_enabled_disabled_and_unknown",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "11 passed, including egui_storage_status_refresh_reports_enabled_disabled_and_unknown",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "11 passed, including egui_storage_status_refresh_reports_enabled_disabled_and_unknown",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; all executable validation used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11547164430, "name": "openobsidian-rust-preview-fc50e9bebe41a90c0e9b6b5a8a8579c9729babab", "size_bytes": 8849836, "digest": "sha256:2ec22dbcdf462d649f46dc45f733e89e6d7034da8b7be10b9e4c162e7ccb7c55"},
+    {"id": 11546864688, "name": "rust-plugin-runtime-Linux-fc50e9bebe41a90c0e9b6b5a8a8579c9729babab", "size_bytes": 2695, "digest": "sha256:3306134a119d2c6a87ad42dcc6ec94b78953faa01de85cfca92d8d16c0d29818"},
+    {"id": 11546839610, "name": "rust-plugin-runtime-macOS-fc50e9bebe41a90c0e9b6b5a8a8579c9729babab", "size_bytes": 2698, "digest": "sha256:d917865afbfea5817b55e26cb6bac0753f46e92fb78b7e7ca716092ab3544c00"},
+    {"id": 11547655738, "name": "rust-plugin-runtime-Windows-fc50e9bebe41a90c0e9b6b5a8a8579c9729babab", "size_bytes": 2715, "digest": "sha256:dee318d556835c23bf981224e5a3a9cf44a4ad6f1fb518d10a39e4fa6cf71b7e"}
+  ],
+  "limitations": [
+    "This is headless egui interaction evidence, not native-window visual or manual accessibility acceptance.",
+    "Platform probe parsing remains separately covered by openobsidian-platform tests; this interaction verifies rendering and refresh of the display-safe report, not the underlying OS encryption state of the CI host.",
+    "D16 cap-warning UI rendering, SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Add headless UI acceptance that renders an over-cap history warning and proves no cleanup occurs without explicit confirmation; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI."
+}

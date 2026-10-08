@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T11:14:13Z",
+  "updated_at": "2026-10-08T11:33:17Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3ed8e6dd9573a55ae8ff573ca5f6f2d2a206d4d0",
-  "current_milestone": "R2.6.21",
-  "next_action": "Add headless native-UI interaction coverage for Enabled, Disabled and Unknown OS storage-protection status and its refresh action; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI.",
+  "last_reconciled_head": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+  "current_milestone": "R2.6.22",
+  "next_action": "Add native-UI interaction coverage for an over-cap history warning and confirm the warning never triggers cleanup by itself; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "3ed8e6dd9573a55ae8ff573ca5f6f2d2a206d4d0"
+      "implementation_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab"
     },
     "R3": {
       "status": "pending",
@@ -153,7 +153,8 @@
     "R2.6.18 ported the three opt-in uninstall cleanup choices into the native UI with all options off by default and an explicit vault-preservation summary; its egui interaction test passed on Ubuntu, macOS and Windows without changing vault bytes. All six required workflows passed on exact source SHA bf4e3b32d3b163d6acd249f52f31a3e048ed305c. Evidence: evidence/r2.6.18-uninstall-cleanup-choices-bf4e3b3.json. No local executable validation was run. This slice does not execute uninstall cleanup or connect to a platform uninstaller; SYNC-007, D16 and remaining R2 acceptance gates remain open.",
     "R2.6.19 exercised the ambiguous/unresolved C03 fixture through the production egui rename preview, review and apply flow; the UI test passed on Ubuntu, macOS and Windows and all six workflows passed on exact source SHA 842615dc6be2c6ba7ed3408208098717ca623e2e. Evidence: evidence/r2.6.19-egui-rename-fixture-skips-842615d.json. No local executable validation was run. C03/C03.2 full cross-layer acceptance, D16, SYNC-007 uninstall preservation and history integration remain pending.",
     "R2.6.20 added a synthetic uninstall-preservation fixture covering nested vault, app-cache, recovery and unresolved-conflict files; a production UI/VaultSession interaction selected all cleanup choices and verified every fixture file remained byte-identical. The test passed on Ubuntu, macOS and Windows and all six workflows passed on exact source SHA fee60f234ce7225b5eb4bb6261fd8820aed5ec10. Evidence: evidence/r2.6.20-uninstall-fixture-preservation-fee60f2.json. No local executable validation was run. The headless choice test does not execute an OS uninstaller; SYNC-007 remains pending host-level integration, with D16, history integration and full C03/C03.2 acceptance still open.",
-    "R2.6.21 added fixture:history-retention and a production UI/VaultSession interaction for age-based history preview, review and explicit cleanup. The test confirmed an expired recovery record is removed only after confirmation, while the unresolved conflict and vault note remain byte-identical. All six workflows passed on exact source SHA 3ed8e6dd9573a55ae8ff573ca5f6f2d2a206d4d0. Evidence: evidence/r2.6.21-history-retention-ui-3ed8e6d.json. No local executable validation was run. This headless interaction does not render-test the cap warning or complete D16, host-level SYNC-007 uninstall acceptance or full C03/C03.2 cross-layer acceptance."
+    "R2.6.21 added fixture:history-retention and a production UI/VaultSession interaction for age-based history preview, review and explicit cleanup. The test confirmed an expired recovery record is removed only after confirmation, while the unresolved conflict and vault note remain byte-identical. All six workflows passed on exact source SHA 3ed8e6dd9573a55ae8ff573ca5f6f2d2a206d4d0. Evidence: evidence/r2.6.21-history-retention-ui-3ed8e6d.json. No local executable validation was run. This headless interaction does not render-test the cap warning or complete D16, host-level SYNC-007 uninstall acceptance or full C03/C03.2 cross-layer acceptance.",
+    "R2.6.22 added a headless egui interaction that renders Enabled, Disabled and Unknown storage-protection reports, checks the OS-reported/encryption-not-verified wording, verifies ordinary redraws do not re-run the injected probe, and verifies Refresh storage status reruns it and updates the report. The interaction passed on Ubuntu, macOS and Windows; all six workflows passed on exact source SHA fc50e9bebe41a90c0e9b6b5a8a8579c9729babab. Evidence: evidence/r2.6.22-storage-status-refresh-fc50e9b.json. No local executable validation was run. D16 cap-warning UI rendering, host-level SYNC-007 uninstall integration and full C03/C03.2 cross-layer acceptance remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -4129,6 +4130,80 @@
         {"name": "ubuntu-latest", "job_id": 113281001910, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37768223765/job/113281001910"},
         {"name": "windows-latest", "job_id": 113281001931, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37768223765/job/113281001931"}
       ]
+    },
+    {
+      "name": "rust-ci",
+      "run_id": 37770217922,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217922",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113287691541, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217922/job/113287691541"},
+        {"name": "rust (macos-latest)", "job_id": 113287691545, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217922/job/113287691545"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113287691960, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217922/job/113287691960"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37770218096,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218096",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113287691776, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218096/job/113287691776"}]
+    },
+    {
+      "name": "quality",
+      "run_id": 37770218092,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218092",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113287691955, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218092/job/113287691955"},
+        {"name": "windows-latest", "job_id": 113287692290, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218092/job/113287692290"},
+        {"name": "macos-latest", "job_id": 113287692426, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218092/job/113287692426"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37770217899,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217899",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113287691347, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217899/job/113287691347"},
+        {"name": "windows-latest", "job_id": 113287691594, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217899/job/113287691594"},
+        {"name": "macos-latest", "job_id": 113287691847, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217899/job/113287691847"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37770217932,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217932",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113287691388, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217932/job/113287691388"},
+        {"name": "macos-latest", "job_id": 113287691546, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217932/job/113287691546"},
+        {"name": "windows-latest", "job_id": 113287691552, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770217932/job/113287691552"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37770218095,
+      "head_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113287692687, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095/job/113287692687"},
+        {"name": "macos-latest", "job_id": 113287693017, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095/job/113287693017"},
+        {"name": "ubuntu-latest", "job_id": 113287693090, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095/job/113287693090"}
+      ]
     }
   ],
   "milestones": {
@@ -5000,6 +5075,54 @@
         "D16 storage-status interaction, SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain pending."
       ],
       "next_action": "Add native-UI interaction coverage for Enabled, Disabled and Unknown OS storage-protection status and its refresh action; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI."
+    },
+    "R2.6.22": {
+      "status": "complete",
+      "implementation_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+      "implementation_commits": [
+        "741c8c77fc5f0429cb6d96c1f0b6753fdefc350d",
+        "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab"
+      ],
+      "scope": "Exercise OS storage-protection status rendering and refresh through the production native egui shell.",
+      "ci_attempts": [
+        {
+          "source_sha": "741c8c77fc5f0429cb6d96c1f0b6753fdefc350d",
+          "rust_run_id": 37769743438,
+          "rust_conclusion": "ubuntu rustfmt failure; macOS and Windows passed",
+          "rust_jobs": {
+            "ubuntu-latest": {"job_id": 113286088001, "conclusion": "failure"},
+            "macos-latest": {"job_id": 113286088083, "conclusion": "success"},
+            "windows-latest": {"job_id": 113286087840, "conclusion": "success"}
+          },
+          "inventory_run_id": 37769743466,
+          "quality_run_id": 37769743470,
+          "desktop_build_run_id": 37769743400,
+          "plugin_renderer_run_id": 37769743436,
+          "loaded_plugin_run_id": 37769743574,
+          "companion_conclusion": "all five companion workflows passed",
+          "finding": "The new interaction passed; Ubuntu rustfmt requested two line-wrapping changes to report-status assertions. Applied the exact CI formatting in the follow-up commit."
+        },
+        {
+          "source_sha": "fc50e9bebe41a90c0e9b6b5a8a8579c9729babab",
+          "rust_run_id": 37770217922,
+          "inventory_run_id": 37770218096,
+          "quality_run_id": 37770218092,
+          "desktop_build_run_id": 37770217899,
+          "plugin_renderer_run_id": 37770218095,
+          "loaded_plugin_run_id": 37770217932,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.22-storage-status-refresh-fc50e9b.json",
+      "accepted_slice": [
+        "The injected storage probe reports Enabled, Disabled and Unknown in sequence. The egui interaction checks the OS-reported and encryption-not-verified wording, proves ordinary redraws do not re-run the probe, and proves Refresh storage status re-runs the probe and updates both the report and rendered detail.",
+        "The interaction and all six required workflows passed on exact source SHA fc50e9bebe41a90c0e9b6b5a8a8579c9729babab on Ubuntu, macOS and Windows; no local executable validation was run."
+      ],
+      "remaining": [
+        "This headless egui interaction is not native-window visual or manual accessibility acceptance. D16 still lacks an interaction-level over-cap warning display check.",
+        "SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain pending."
+      ],
+      "next_action": "Add headless UI acceptance that renders an over-cap history warning and proves no cleanup occurs without explicit confirmation; then continue C03/C03.2 cross-layer acceptance and keep SYNC-007 pending until host-level uninstall integration proves preservation in GitHub CI."
     }
   },
   "ci_preparation": {
