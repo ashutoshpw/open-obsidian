@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T02:08:27+00:00",
+  "updated_at": "2026-10-08T02:25:18+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+  "last_reconciled_head": "cf312828fab467bd679e5c2b9995ed337a4e11f1",
   "current_phase": "R2",
   "current_milestone": "R2.6",
-  "next_action": "Begin R2.6 by adding source-aware heading/block subpath checks and code-context filtering before reference results can drive edits; validate only with exact-SHA GitHub Actions.",
+  "next_action": "Begin R2.6.2 by adding source-aware heading/block subpath checks; keep link references read-only until subpath identity and safe edit planning are verified through exact-SHA GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6"
+      "implementation_sha": "cf312828fab467bd679e5c2b9995ed337a4e11f1"
     },
     "R3": {
       "status": "pending",
@@ -120,7 +120,9 @@
     "R2.4 source SHA b1b3b1398c374f5ec556f8e5f29bcb9a6ea552c7 compiled and all 11 openobsidian-doc tests passed on three OSes; Ubuntu rustfmt requested two exact layout changes, now applied. macOS and Windows gates and all five companion workflows passed; source acceptance awaits a fresh formatted SHA.",
     "R2.4 passed exact-SHA GitHub Actions on 75aeac4ba1fa5096c84db08028d3bfd54f626afe: all eleven openobsidian-doc tests and all six workflows passed. Evidence: evidence/r2.4-link-source-spans-75aeac4.json.",
     "Extended the weekly compatibility pin refresh workflow with native GitHub Actions parallel steps. Run 37715418139 recognized the group and completed its wait barrier; three checks passed and the plugin selection snapshot check reported upstream registry/statistics drift. Evidence: evidence/parallel-ci-compatibility-pins-8d4d44b.json.",
-    "R2.5 path-level resolution passed exact-SHA GitHub Actions on 3ea79b8eb948568c0f8c2866801b726b5e00a9e6. All thirteen openobsidian-doc tests, formatting, parallel group, Clippy, layering, native builds, plugin feasibility probes and all five companion workflows passed. Reports and Linux preview artifact hashes are in evidence/r2.5-link-resolution-3ea79b8.json. No local executable validation was run."
+    "R2.5 path-level resolution passed exact-SHA GitHub Actions on 3ea79b8eb948568c0f8c2866801b726b5e00a9e6. All thirteen openobsidian-doc tests, formatting, parallel group, Clippy, layering, native builds, plugin feasibility probes and all five companion workflows passed. Reports and Linux preview artifact hashes are in evidence/r2.5-link-resolution-3ea79b8.json. No local executable validation was run.",
+    "R2.6.1 first source SHA b20792beda96486e4ac2dd719975ba27d5964d13 passed all fifteen openobsidian-doc tests and five companion workflows but failed Rust CI formatting and strict Clippy. Applied only the reported formatting and lint corrections; the follow-up exact-SHA run passed.",
+    "R2.6.1 fenced and inline code-context filtering passed all six exact-SHA workflows on cf312828fab467bd679e5c2b9995ed337a4e11f1. All fifteen openobsidian-doc tests passed on Ubuntu, macOS and Windows; fmt, Clippy, layering, native builds, feasibility probes and all five companion workflows passed. Evidence: evidence/r2.6.1-code-context-cf312828.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -2080,6 +2082,18 @@
         "All five required companion workflows pass on the exact source SHA."
       ],
       "next_action": "R2.5 accepted; proceed to source-aware subpath validation and code-context filtering before safe reference edits."
+    },
+    "R2.6.1": {
+      "status": "complete",
+      "implementation_sha": "cf312828fab467bd679e5c2b9995ed337a4e11f1",
+      "evidence": "evidence/r2.6.1-code-context-cf312828.json",
+      "scope": "Exclude wiki, Markdown and embed references inside fenced code blocks and matched inline code spans while retaining byte-accurate references outside code contexts.",
+      "acceptance": [
+        "Focused code-context tests and all fifteen document tests pass on Ubuntu, macOS and Windows in GitHub Actions.",
+        "Rust fmt, Clippy, layering, native builds and unchanged-plugin feasibility probes pass on the three-OS matrix.",
+        "All five required companion workflows pass on the exact source SHA."
+      ],
+      "next_action": "R2.6.1 accepted; add source-aware heading and block subpath validation before safe reference edits."
     }
   },
   "ci_preparation": {
