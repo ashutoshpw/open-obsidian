@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T02:25:18+00:00",
+  "updated_at": "2026-10-08T02:49:29+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "cf312828fab467bd679e5c2b9995ed337a4e11f1",
+  "last_reconciled_head": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
   "current_phase": "R2",
-  "current_milestone": "R2.6",
-  "next_action": "Begin R2.6.2 by adding source-aware heading/block subpath checks; keep link references read-only until subpath identity and safe edit planning are verified through exact-SHA GitHub Actions.",
+  "current_milestone": "R2.6.2",
+  "next_action": "Begin R2.6.3 by reviewing legacy link update and rename behavior and fixtures; design an ambiguity-safe source-ranged edit plan, with writes disabled until C03 and C03.2 coverage passes GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "cf312828fab467bd679e5c2b9995ed337a4e11f1"
+      "implementation_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9"
     },
     "R3": {
       "status": "pending",
@@ -122,7 +122,8 @@
     "Extended the weekly compatibility pin refresh workflow with native GitHub Actions parallel steps. Run 37715418139 recognized the group and completed its wait barrier; three checks passed and the plugin selection snapshot check reported upstream registry/statistics drift. Evidence: evidence/parallel-ci-compatibility-pins-8d4d44b.json.",
     "R2.5 path-level resolution passed exact-SHA GitHub Actions on 3ea79b8eb948568c0f8c2866801b726b5e00a9e6. All thirteen openobsidian-doc tests, formatting, parallel group, Clippy, layering, native builds, plugin feasibility probes and all five companion workflows passed. Reports and Linux preview artifact hashes are in evidence/r2.5-link-resolution-3ea79b8.json. No local executable validation was run.",
     "R2.6.1 first source SHA b20792beda96486e4ac2dd719975ba27d5964d13 passed all fifteen openobsidian-doc tests and five companion workflows but failed Rust CI formatting and strict Clippy. Applied only the reported formatting and lint corrections; the follow-up exact-SHA run passed.",
-    "R2.6.1 fenced and inline code-context filtering passed all six exact-SHA workflows on cf312828fab467bd679e5c2b9995ed337a4e11f1. All fifteen openobsidian-doc tests passed on Ubuntu, macOS and Windows; fmt, Clippy, layering, native builds, feasibility probes and all five companion workflows passed. Evidence: evidence/r2.6.1-code-context-cf312828.json. No local executable validation was run."
+    "R2.6.1 fenced and inline code-context filtering passed all six exact-SHA workflows on cf312828fab467bd679e5c2b9995ed337a4e11f1. All fifteen openobsidian-doc tests passed on Ubuntu, macOS and Windows; fmt, Clippy, layering, native builds, feasibility probes and all five companion workflows passed. Evidence: evidence/r2.6.1-code-context-cf312828.json. No local executable validation was run.",
+    "R2.6.2 source-aware heading/block subpath resolution passed all six GitHub Actions workflows on exact SHA d35d5ea10f7f95dbfb5a5384a9855bd836326ef9. All 17 openobsidian-doc tests, Rust gates on Ubuntu/macOS/Windows and five companion workflows passed. CI rustfmt/Clippy corrections were applied in small commits; the transient macOS Electron audit failure passed on exact-SHA attempt 2. Evidence: evidence/r2.6.2-subpath-resolution-d35d5ea.json. C03 safe rename/move editing remains pending. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1986,6 +1987,96 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735622",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37718444822,
+      "head_sha": "5138574dc145e37671f6f78b8aca3bb17c0a508b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37718444822",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37718625738,
+      "head_sha": "75445c98a5dcc869c120c3c3fa20a0847e90548b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37718625738",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37718817589,
+      "head_sha": "0a110fd8059bcf61c049ccf08da947f98cdcf37d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37718817589",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "OpenObsidian quality attempt 1",
+      "run_id": 37718817577,
+      "attempt": 1,
+      "head_sha": "0a110fd8059bcf61c049ccf08da947f98cdcf37d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37718817577",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "OpenObsidian quality attempt 2",
+      "run_id": 37718817577,
+      "attempt": 2,
+      "head_sha": "0a110fd8059bcf61c049ccf08da947f98cdcf37d",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37718817577",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37719218911,
+      "head_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218911",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37719218927,
+      "head_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218927",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37719218904,
+      "head_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218904",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37719218933,
+      "head_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218933",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37719218898,
+      "head_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218898",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37719218914,
+      "head_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218914",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -2093,7 +2184,20 @@
         "Rust fmt, Clippy, layering, native builds and unchanged-plugin feasibility probes pass on the three-OS matrix.",
         "All five required companion workflows pass on the exact source SHA."
       ],
-      "next_action": "R2.6.1 accepted; add source-aware heading and block subpath validation before safe reference edits."
+      "next_action": "R2.6.1 accepted; finish source-aware heading and block subpath validation, then proceed to safe edit planning before reference edits."
+    },
+    "R2.6.2": {
+      "status": "complete",
+      "implementation_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+      "evidence": "evidence/r2.6.2-subpath-resolution-d35d5ea.json",
+      "scope": "Validate Markdown heading and block subpaths against read-only note sources while retaining byte-preserving path-only behavior.",
+      "acceptance": [
+        "ATX/setext headings and exact block IDs are validated, including missing, duplicate and fenced identities.",
+        "Source-aware resolution disambiguates same-basename candidate notes and preserves path-only API behavior.",
+        "All seventeen openobsidian-doc tests, formatting, parallel checks, Clippy, layering, native builds and unchanged-plugin feasibility probes pass on the three-OS matrix in GitHub Actions.",
+        "All five companion workflows pass on the exact implementation SHA."
+      ],
+      "next_action": "Begin R2.6.3 by reviewing legacy link update and rename behavior and fixtures; design an ambiguity-safe source-ranged edit plan, with writes disabled until C03 and C03.2 coverage passes GitHub CI."
     }
   },
   "ci_preparation": {

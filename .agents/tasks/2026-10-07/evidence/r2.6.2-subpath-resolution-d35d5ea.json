@@ -1,0 +1,138 @@
+{
+  "phase": "R2.6.2",
+  "source_sha": "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9",
+  "implementation_commits": [
+    "5138574dc145e37671f6f78b8aca3bb17c0a508b",
+    "75445c98a5dcc869c120c3c3fa20a0847e90548b",
+    "0a110fd8059bcf61c049ccf08da947f98cdcf37d",
+    "d35d5ea10f7f95dbfb5a5384a9855bd836326ef9"
+  ],
+  "scope": "Validate Markdown heading and block subpaths against read-only note sources, while preserving the path-only resolver API and source bytes.",
+  "behavior": [
+    "Recognizes ATX and setext heading identities, normalizes heading case/spacing, and decodes percent-encoded subpaths.",
+    "Recognizes exact block IDs, suppresses identities in fenced code, and reports absent or duplicate subpaths as unresolved or ambiguous.",
+    "Uses source subpath matches to disambiguate same-basename candidate files; retains current-note links and path-only resolution behavior.",
+    "Does not edit note source or produce rename/move edit plans."
+  ],
+  "focused_tests": [
+    "source_aware_link_resolution_validates_heading_block_and_fenced_subpaths",
+    "source_aware_link_resolution_uses_subpaths_to_disambiguate_files"
+  ],
+  "test_results": {
+    "ubuntu": "17 openobsidian-doc tests passed",
+    "macos": "17 openobsidian-doc tests passed",
+    "windows": "17 openobsidian-doc tests passed",
+    "local_executable_validation": "not run; all validation was through GitHub Actions"
+  },
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2+744846f84"
+  },
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113122745369,
+      "rust_tests": "passed; openobsidian-doc 17 passed",
+      "format": "passed",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "runtime_artifact_id": 11524689553,
+      "runtime_artifact_sha256": "476638b3820b8e74c8cf2287d0146a1645a31a87fbb2b5d4c046c5bed381403a",
+      "runtime_report_sha256": "6b49f7a56a0e721c9152c38f883dfeaaa27cc1701737a9aeeed29022f4fc003b"
+    },
+    "windows": {
+      "job_id": 113122745163,
+      "rust_tests": "passed; openobsidian-doc 17 passed",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "runtime_artifact_id": 11525430857,
+      "runtime_artifact_sha256": "0a1b1e601e458fbee0099e3368f20b723d161a40eab3b3c2d9d4b9683594698d",
+      "runtime_report_sha256": "998583ef846bbedc3c27076106be8cc3b1e486c8b1c318a5963160e3d2a5a5af"
+    },
+    "macos": {
+      "job_id": 113122745295,
+      "rust_tests": "passed; openobsidian-doc 17 passed",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "runtime_artifact_id": 11524843718,
+      "runtime_artifact_sha256": "ee77f42cca50947991dcc1bc90077955985d9a7b92d27e8438bfcc4460afbdd5",
+      "runtime_report_sha256": "a9eb908edd51de7ba6c459b53796c83142bb225c825461d7ba9564882b17d6ce"
+    }
+  },
+  "linux_preview_artifact": {
+    "artifact_id": 11524818953,
+    "artifact_sha256": "5e971446b45872593dc4a102f54ef3e5fd4cd601f87f677ada288b64f6fdf23f",
+    "size_bytes": 8257819,
+    "binary_sha256": "62711e410931df619b746dab41ff55cea5da4034cef56e4f358aafdf8585b91c",
+    "binary_size_bytes": 21289944
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37719218911,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218911",
+      "conclusion": "success"
+    },
+    "inventory": {
+      "run_id": 37719218927,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218927",
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 37719218904,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218904",
+      "conclusion": "success"
+    },
+    "desktop": {
+      "run_id": 37719218933,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218933",
+      "conclusion": "success"
+    },
+    "plugin_renderer": {
+      "run_id": 37719218898,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218898",
+      "conclusion": "success"
+    },
+    "loaded_plugins": {
+      "run_id": 37719218914,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37719218914",
+      "conclusion": "success"
+    }
+  },
+  "repair_history": [
+    {
+      "source_sha": "5138574dc145e37671f6f78b8aca3bb17c0a508b",
+      "rust_run_id": 37718444822,
+      "finding": "GitHub rustfmt requested source and test layout changes; workspace tests passed. The five companion workflows passed."
+    },
+    {
+      "source_sha": "75445c98a5dcc869c120c3c3fa20a0847e90548b",
+      "rust_run_id": 37718625738,
+      "finding": "Strict Clippy reported eight manual space/tab character comparisons; the five companion workflows passed."
+    },
+    {
+      "source_sha": "0a110fd8059bcf61c049ccf08da947f98cdcf37d",
+      "rust_run_id": 37718817589,
+      "finding": "GitHub rustfmt requested two line-wrap changes; macOS and Windows Rust jobs passed. The first quality attempt reported a transient macOS Electron retrieval-boundary failure; exact-SHA rerun attempt 2 passed (run 37718817577)."
+    }
+  ],
+  "limitations": [
+    "Indented-code-block filtering is not included in this slice.",
+    "Rename/move edit planning and reference writes remain unimplemented; C03 remains Pending.",
+    "Unchanged-plugin probes remain feasibility-only and do not establish broad legacy compatibility or isolation certification.",
+    "No local executable validation was run."
+  ],
+  "finding": "R2.6.2 passed all six exact-SHA GitHub Actions workflows on d35d5ea10f7f95dbfb5a5384a9855bd836326ef9."
+}
