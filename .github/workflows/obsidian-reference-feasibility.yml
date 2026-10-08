@@ -1,0 +1,96 @@
+name: Obsidian reference runner feasibility
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: obsidian-reference-feasibility-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  linux-runner:
+    name: Pinned Obsidian renderer on Ubuntu
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install desktop runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb libgtk-3-0 libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
+
+      - name: Read pinned official Obsidian release
+        id: pin
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          pin = json.loads(Path(".agents/tasks/2026-10-07/obsidian-reference-pin.json").read_text())
+          print(f"version={pin['version']}")
+          print(f"download_url={pin['download_url']}")
+          print(f"sha256={pin['sha256']}")
+          PY
+
+      - name: Download and verify the pinned AppImage
+        env:
+          OBSIDIAN_DOWNLOAD_URL: ${{ steps.pin.outputs.download_url }}
+          OBSIDIAN_RELEASE_SHA256: ${{ steps.pin.outputs.sha256 }}
+        run: |
+          curl --fail --location --retry 3 "$OBSIDIAN_DOWNLOAD_URL" --output "$RUNNER_TEMP/Obsidian.AppImage"
+          printf '%s  %s\n' "$OBSIDIAN_RELEASE_SHA256" "$RUNNER_TEMP/Obsidian.AppImage" | sha256sum --check
+          chmod u+x "$RUNNER_TEMP/Obsidian.AppImage"
+          mkdir -p "$RUNNER_TEMP/obsidian-appimage"
+          (
+            cd "$RUNNER_TEMP/obsidian-appimage"
+            "$RUNNER_TEMP/Obsidian.AppImage" --appimage-extract
+          )
+
+      - name: Launch Obsidian under Xvfb and capture renderer evidence
+        env:
+          OBSIDIAN_RELEASE_VERSION: ${{ steps.pin.outputs.version }}
+          OBSIDIAN_RELEASE_SHA256: ${{ steps.pin.outputs.sha256 }}
+          OBSIDIAN_REPORT_DIRECTORY: ${{ runner.temp }}/obsidian-reference-artifacts
+          OBSIDIAN_BINARY: ${{ runner.temp }}/obsidian-appimage/squashfs-root/obsidian
+          OBSIDIAN_PROFILE: ${{ runner.temp }}/obsidian-reference-profile
+          OBSIDIAN_LOG: ${{ runner.temp }}/obsidian-reference-artifacts/obsidian.log
+        run: |
+          mkdir -p "$OBSIDIAN_REPORT_DIRECTORY" "$OBSIDIAN_PROFILE"
+          export XDG_CONFIG_HOME="$OBSIDIAN_PROFILE/config"
+          export XDG_CACHE_HOME="$OBSIDIAN_PROFILE/cache"
+          export XDG_DATA_HOME="$OBSIDIAN_PROFILE/data"
+          xvfb-run --auto-servernum --server-args='-screen 0 1440x1000x24' \
+            bash -euo pipefail -c '
+              "$OBSIDIAN_BINARY" --no-sandbox --disable-gpu --disable-dev-shm-usage \
+                --remote-allow-origins=* --remote-debugging-address=127.0.0.1 \
+                --remote-debugging-port=9222 --user-data-dir="$OBSIDIAN_PROFILE/user-data" \
+                > "$OBSIDIAN_LOG" 2>&1 &
+              app_pid=$!
+              cleanup() {
+                kill "$app_pid" 2>/dev/null || true
+                wait "$app_pid" 2>/dev/null || true
+              }
+              trap cleanup EXIT
+              bun .agents/tasks/2026-10-07/audit-obsidian-reference-runtime.ts
+            '
+
+      - name: Upload reference runner evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: obsidian-reference-runner-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/obsidian-reference-artifacts/
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "Pin the official Obsidian desktop build used for GitHub Actions reference-runner feasibility and later C01.2 reopen acceptance.",
+  "source": "https://github.com/obsidianmd/obsidian-releases/releases/tag/v1.14.4",
+  "verified_at": "2026-10-09",
+  "version": "1.14.4",
+  "tag": "v1.14.4",
+  "platform": "Linux x86_64 AppImage",
+  "asset": "Obsidian-1.14.4.AppImage",
+  "download_url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.4/Obsidian-1.14.4.AppImage",
+  "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+  "current_probe_scope": "Verify that the pinned official Obsidian desktop renderer starts under Xvfb on GitHub Actions and preserve its DOM text, screenshot and process log as feasibility evidence.",
+  "acceptance_limitations": [
+    "The runner probe does not create or reopen a vault.",
+    "The runner probe does not satisfy C01.2-01 or C01.2-03.",
+    "A later workflow must use a privacy-safe fixture, launch OpenObsidian against the same vault, reopen that vault in Obsidian, and compare source bytes and allowed workspace-state changes."
+  ]
+}

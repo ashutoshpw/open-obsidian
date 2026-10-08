@@ -75,6 +75,8 @@ recorded = {item["path"] for item in inventory["files"]}
 # These Rust migration workflows are tooling added after the legacy inventory.
 actual.discard(".github/workflows/rust-migration-inventory.yml")
 actual.discard(".github/workflows/rust.yml")
+# This manually dispatched reference-app runner probe is migration evidence tooling.
+actual.discard(".github/workflows/obsidian-reference-feasibility.yml")
 if actual != recorded:
     errors.append(f"File inventory differs: added={actual-recorded}, missing={recorded-actual}")
 for item in inventory["files"]:
