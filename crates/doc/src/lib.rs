@@ -541,7 +541,9 @@ fn source_subpath_keys(source: &MarkdownSource) -> Vec<String> {
 
         let line_bytes = &bytes[line_start..line_end];
         let line_bytes = if line_start == 0 {
-            line_bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(line_bytes)
+            line_bytes
+                .strip_prefix(b"\xef\xbb\xbf")
+                .unwrap_or(line_bytes)
         } else {
             line_bytes
         };
@@ -679,9 +681,8 @@ fn block_id(line: &str) -> Option<&str> {
     let mut characters = marker.chars();
     let first = characters.next()?;
     if !first.is_ascii_alphanumeric()
-        || !characters.all(|character| {
-            character.is_ascii_alphanumeric() || matches!(character, '_' | '-')
-        })
+        || !characters
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
     {
         return None;
     }
@@ -708,9 +709,8 @@ fn strip_trailing_block_id(value: &str) -> &str {
     if !characters
         .next()
         .is_some_and(|character| character.is_ascii_alphanumeric())
-        || !characters.all(|character| {
-            character.is_ascii_alphanumeric() || matches!(character, '_' | '-')
-        })
+        || !characters
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
     {
         return value;
     }
@@ -1617,10 +1617,9 @@ mod tests {
 
     #[test]
     fn source_aware_link_resolution_uses_subpaths_to_disambiguate_files() {
-        let mut references =
-            MarkdownSource::parse(b"[[Target#Overview]]".to_vec())
-                .unwrap()
-                .extract_links();
+        let mut references = MarkdownSource::parse(b"[[Target#Overview]]".to_vec())
+            .unwrap()
+            .extract_links();
         let reference = references.remove(0);
         let files = vec!["Notes/Target.md".to_owned(), "Archive/Target.md".to_owned()];
         let mut sources = HashMap::new();
@@ -1663,8 +1662,13 @@ mod tests {
             .unwrap()
             .extract_links();
         assert_eq!(
-            resolve_link_with_sources(&hidden_reference[0], &["Target.md".to_owned()], "Index.md", &sources)
-                .status,
+            resolve_link_with_sources(
+                &hidden_reference[0],
+                &["Target.md".to_owned()],
+                "Index.md",
+                &sources
+            )
+            .status,
             LinkResolutionStatus::Unresolved
         );
     }
