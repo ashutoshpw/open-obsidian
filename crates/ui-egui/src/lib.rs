@@ -39,6 +39,7 @@ type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
 type HistoryReceiver = Receiver<HistoryTaskMessage>;
 type LinkReceiver = Receiver<LinkTaskMessage>;
 type NotePreviewReceiver = Receiver<Result<NoteSourcePreview, String>>;
+type VaultRefreshReceiver = Receiver<Result<VaultSession, String>>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
 
 struct LinkTaskMessage {
@@ -157,6 +158,9 @@ struct OpenObsidianApp {
     vault_open_receiver: Option<VaultOpenReceiver>,
     vault_opening: bool,
     vault_open_error: Option<String>,
+    vault_refresh_receiver: Option<VaultRefreshReceiver>,
+    vault_refresh_error: Option<String>,
+    vault_refresh_status: Option<String>,
     history_policy: VaultHistoryPolicy,
     history_records: Vec<VaultHistoryRecord>,
     history_plan: Option<VaultHistoryPlan>,
@@ -201,6 +205,7 @@ impl OpenObsidianApp {
         let vault_operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
             || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
         let open_vault_requested = self.open_vault_action.as_ref().is_some_and(|_| {
             ui.add_enabled(
@@ -228,6 +233,9 @@ impl OpenObsidianApp {
                 self.vault_open_receiver = None;
                 self.vault_opening = false;
                 self.vault_open_error = None;
+                self.vault_refresh_receiver = None;
+                self.vault_refresh_error = None;
+                self.vault_refresh_status = None;
                 self.history_records.clear();
                 self.history_plan = None;
                 self.history_receiver = None;
@@ -271,6 +279,7 @@ impl OpenObsidianApp {
         self.poll_history_task(ui);
         self.poll_link_task(ui);
         self.poll_note_preview_task(ui);
+        self.poll_vault_refresh_task(ui);
         self.poll_rename_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
@@ -278,6 +287,7 @@ impl OpenObsidianApp {
         if let Some(error) = &self.vault_open_error {
             ui.colored_label(eframe::egui::Color32::RED, error);
         }
+        let mut refresh_note_list_requested = false;
         match &self.session {
             Some(session) => {
                 let vault_name = session
@@ -285,7 +295,15 @@ impl OpenObsidianApp {
                     .file_name()
                     .and_then(|name| name.to_str())
                     .unwrap_or("Selected vault");
-                ui.label(format!("Vault: {vault_name}"));
+                ui.horizontal(|ui| {
+                    ui.label(format!("Vault: {vault_name}"));
+                    ui.add_enabled_ui(!vault_operation_busy, |ui| {
+                        refresh_note_list_requested = ui
+                            .button("Refresh note list")
+                            .on_hover_text("Rescan Markdown paths without changing vault files.")
+                            .clicked();
+                    });
+                });
                 ui.label(format!("{} Markdown files found.", session.entries().len()));
                 if let Some(summary) = rename_recovery_summary(session.rename_recovery_report()) {
                     if session.rename_recovery_report().needs_attention.is_empty() {
@@ -301,6 +319,18 @@ impl OpenObsidianApp {
             None => {
                 ui.label("No vault is open. Choose an existing vault folder to continue.");
             }
+        }
+        if self.vault_refresh_receiver.is_some() {
+            ui.small("Refreshing the note list without changing vault files…");
+        }
+        if let Some(error) = &self.vault_refresh_error {
+            ui.colored_label(eframe::egui::Color32::YELLOW, error);
+        }
+        if let Some(status) = &self.vault_refresh_status {
+            ui.small(status);
+        }
+        if refresh_note_list_requested {
+            self.start_vault_refresh();
         }
         if self.session.is_some() {
             self.show_links(ui);
@@ -385,6 +415,7 @@ impl OpenObsidianApp {
         let operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
             || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
         let selected_label = self.link_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
@@ -638,6 +669,7 @@ impl OpenObsidianApp {
         let operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
             || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
         let selected_label = self.rename_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
@@ -820,6 +852,7 @@ impl OpenObsidianApp {
         let history_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
             || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
         if ui
             .add_enabled(
@@ -899,6 +932,7 @@ impl OpenObsidianApp {
 
         let history_busy = self.history_receiver.is_some()
             || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
         if self.history_records.is_empty() && self.history_plan.is_some() {
             ui.label("No recovery, failed-write, or conflict history records were found.");
@@ -1213,6 +1247,26 @@ impl OpenObsidianApp {
         self.note_preview_receiver = Some(receiver);
     }
 
+    fn start_vault_refresh(&mut self) {
+        let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
+            return;
+        };
+        self.vault_refresh_error = None;
+        self.vault_refresh_status = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = match session.refresh_entries() {
+                Ok(()) => Ok(session),
+                Err(_) => Err(
+                    "The note list could not be refreshed safely. The existing listing remains available."
+                        .to_owned(),
+                ),
+            };
+            let _ = sender.send(result);
+        });
+        self.vault_refresh_receiver = Some(receiver);
+    }
+
     fn start_rename_apply(&mut self) {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
@@ -1390,6 +1444,70 @@ impl OpenObsidianApp {
                 self.note_source_preview = None;
                 self.note_preview_error =
                     Some("The note source preview stopped unexpectedly.".to_owned());
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
+    }
+
+    fn poll_vault_refresh_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self
+            .vault_refresh_receiver
+            .as_ref()
+            .map(Receiver::try_recv);
+        match result {
+            Some(Ok(Ok(session))) => {
+                self.vault_refresh_receiver = None;
+                let note_paths: Vec<_> = session
+                    .entries()
+                    .iter()
+                    .map(|entry| entry.relative_path.clone())
+                    .collect();
+                if self
+                    .link_source_path
+                    .as_ref()
+                    .is_none_or(|selected| !note_paths.contains(selected))
+                {
+                    self.link_source_path = note_paths.first().cloned();
+                }
+                if self
+                    .rename_source_path
+                    .as_ref()
+                    .is_none_or(|selected| !note_paths.contains(selected))
+                {
+                    self.rename_source_path = note_paths.first().cloned();
+                }
+                self.session = Some(Arc::new(session));
+                self.link_resolutions.clear();
+                self.link_error = None;
+                self.link_status = None;
+                self.note_source_preview = None;
+                self.note_preview_error = None;
+                self.note_embed_report = None;
+                self.note_embed_error = None;
+                self.inline_image_textures.clear();
+                self.rename_preview = None;
+                self.rename_error = None;
+                self.rename_status = None;
+                self.rename_confirmation = false;
+                self.vault_refresh_error = None;
+                self.vault_refresh_status = Some(format!(
+                    "Note list refreshed: {} Markdown files found.",
+                    note_paths.len()
+                ));
+            }
+            Some(Ok(Err(error))) => {
+                self.vault_refresh_receiver = None;
+                self.vault_refresh_status = None;
+                self.vault_refresh_error = Some(error);
+            }
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.vault_refresh_receiver = None;
+                self.vault_refresh_status = None;
+                self.vault_refresh_error =
+                    Some("The note-list refresh stopped unexpectedly.".to_owned());
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -2060,6 +2178,21 @@ mod tests {
         }
     }
 
+    fn wait_for_vault_refresh(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().vault_refresh_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "vault refresh worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
     fn wait_for_history(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -2264,6 +2397,64 @@ mod tests {
             existing_vault_tree_snapshot(&app_data_path),
             before_app_data
         );
+    }
+
+    #[test]
+    fn egui_refreshes_the_existing_vault_note_list_without_changing_its_tree() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open selected existing vault without conversion");
+        assert_eq!(session.entries().len(), 2);
+        std::fs::write(vault_path.join("Notes/External.md"), "# External note\r\n")
+            .expect("simulate an external Obsidian note before refresh");
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(PathBuf::from("Notes/Welcome.md")),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert_eq!(
+            harness
+                .state()
+                .session
+                .as_ref()
+                .expect("the refreshed vault session should remain open")
+                .entries()
+                .len(),
+            3
+        );
+        assert!(harness
+            .state()
+            .session
+            .as_ref()
+            .unwrap()
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == PathBuf::from("Notes/External.md")));
+        harness.get_by_label("3 Markdown files found.");
+        harness.get_by_label("Note list refreshed: 3 Markdown files found.");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
     }
 
     #[test]
