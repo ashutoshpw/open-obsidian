@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T20:27:50Z",
+  "updated_at": "2026-10-08T20:30:30Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "ebece9002b2c574433012bc914e3d1b00466ca07",
   "current_milestone": "R2.6.40",
-  "next_action": "Run all six required GitHub Actions workflows for R2.6.40 on the exact source SHA. Keep C01 and C01.2 open pending broader product read-only and reference-application evidence; use GitHub Actions only.",
+  "next_action": "Clone the rename destination string in the UI test as requested by Rust CI, then obtain all six required GitHub Actions results on the corrected exact SHA. Keep C01 and C01.2 open; use GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -7802,16 +7802,35 @@
     "R2.6.40": {
       "status": "in_progress",
       "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_commits": [
+        "8f46c156d354071651c805dd2eed97cff829a89c"
+      ],
       "scope": "Exercise existing-vault link, transclusion and rename-preview UI flows against the arbitrary-content fixture and verify the complete path/type/byte tree remains unchanged after each operation and UI close.",
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "8f46c156d354071651c805dd2eed97cff829a89c",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37839683163,
+            "inventory": 37839683167,
+            "quality": 37839683149,
+            "desktop_build": 37839683174,
+            "plugin_renderer": 37839683182,
+            "loaded_plugin_workflows": 37839683044
+          },
+          "findings": [
+            "Rust CI failed to compile the new UI test on Ubuntu, macOS and Windows: rename_destination_path moved the new_path string before the later filesystem snapshot assertion. The Rust formatting check and the other five required workflows passed."
+          ],
+          "correction": "Clone new_path when assigning rename_destination_path, as requested by the Rust compiler, and rerun all six required workflows on the corrected exact SHA."
+        }
+      ],
       "evidence": null,
       "accepted_slice": [],
       "remaining": [
         "Exact-SHA GitHub Actions validation is pending.",
         "Parent C01 and C01.2 product-level read-only and reference-application coverage remain open."
       ],
-      "next_action": "Commit the UI no-op fixture interaction and validate it only through all six required exact-SHA GitHub Actions workflows."
+      "next_action": "Clone the rename destination string in the UI test as requested by Rust CI, then obtain all six required GitHub Actions results on the corrected exact SHA."
     }
   },
   "ci_preparation": {

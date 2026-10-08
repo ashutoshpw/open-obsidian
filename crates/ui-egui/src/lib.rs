@@ -2070,7 +2070,7 @@ mod tests {
             session: Some(Arc::new(session)),
             link_source_path: Some(PathBuf::from(link_source)),
             rename_source_path: Some(old_path.clone()),
-            rename_destination_path: new_path,
+            rename_destination_path: new_path.clone(),
             ..OpenObsidianApp::default()
         };
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);

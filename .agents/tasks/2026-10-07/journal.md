@@ -764,3 +764,5 @@ C01.1 now passes for this arbitrary-content no-op corpus slice. Parent C01 and C
 ## R2.6.40 existing-vault UI preview preservation — awaiting GitHub CI
 
 Added a native egui interaction using the shared existing-vault fixture. It resolves the fixture's wiki link and note embed, builds the rename preview without applying it, and compares the complete filesystem path/type/byte tree after each UI operation and after closing the UI. The app-data directory is also checked to remain empty. Exact-SHA validation is pending; no local executable checks were run.
+
+The first exact-SHA attempt on source SHA 8f46c156d354071651c805dd2eed97cff829a89c failed to compile the new test on Ubuntu, macOS and Windows because the destination String was moved into UI state before the filesystem assertion. The Rust formatting check, inventory, quality, desktop build, plugin renderer and loaded-plugin workflows passed. Applied the compiler-requested clone; fresh exact-SHA results are pending. No local executable validation was run.
