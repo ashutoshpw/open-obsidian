@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:34:31+00:00",
+  "updated_at": "2026-10-08T00:37:06+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+  "last_reconciled_head": "7ef175e955b42a1796a93ae66364f416094f0740",
   "current_phase": "R2",
   "current_milestone": "R2.1",
-  "next_action": "Read the inherited goal plan, R2 requirements, document and vault contracts, and current source modules; define the first small source-preserving document-model slice and its exact-SHA GitHub Actions gates before implementation.",
+  "next_action": "Commit and push the R2.1 Markdown source metadata slice to origin/main, then inspect exact-SHA GitHub Actions only; do not run local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -36,7 +36,7 @@
       "implementation_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa"
     },
     "R2": {
-      "status": "pending",
+      "status": "in_progress",
       "required_ci": [],
       "implementation_sha": null
     },
@@ -105,7 +105,8 @@
     "Rust CI run 37704569741 on b16801ce36fb7da83f1cd284a9c69bf785606dea passed the Rust parallel group, workspace tests, Clippy, layering and native preview builds on Ubuntu, macOS and Windows; Ubuntu formatting passed. PC05 passed on all three platforms. Bounded PC08 row snapshots showed the Appearance setting heading marked is-collapsed, explaining why its compact/accent child IDs were not mounted. No JS errors were captured. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-b16801c.json. The follow-up expands collapsed headings before checking controls; compatibility remains Pending and no local executable validation was run.",
     "Rust CI run 37705662792 on 4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. Expanding the collapsed PC08 Appearance heading rendered the compact toggle. The pinned plugin rejected its Accent variable-color row because the theme fixture omitted required default-light/default-dark values. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-4de1ae5.json. The next slice adds valid defaults to both theme fixture copies and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
     "Rust CI run 37706599128 on c08207f6783e5432031a553e8831e97c7f39ee94 passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. PC08 rendered Compact after expanding Appearance, but the pinned Style Settings bundle rejected Accent because the variable-color fixture used `default-light`/`default-dark` instead of `default`. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-c08207f.json. The follow-up corrects the field and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
-    "R1.2 and R1 passed exact-SHA GitHub Actions on 5ea3ea6c9e0d02a562daa696eac19b826dad0efa: Rust format, parallel group, tests, Clippy, layering and native builds passed; unchanged PC05/PC08 feasibility probes and all five companion workflows passed on Linux, macOS and Windows. Evidence: evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json. Legacy compatibility remains Pending and the result is feasibility-only."
+    "R1.2 and R1 passed exact-SHA GitHub Actions on 5ea3ea6c9e0d02a562daa696eac19b826dad0efa: Rust format, parallel group, tests, Clippy, layering and native builds passed; unchanged PC05/PC08 feasibility probes and all five companion workflows passed on Linux, macOS and Windows. Evidence: evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json. Legacy compatibility remains Pending and the result is feasibility-only.",
+    "Started R2.1 after reviewing the inherited implementation plan, vault compatibility contract, C02 requirements, Rust doc/vault boundaries and source-preservation fixtures. The first slice adds a strict UTF-8 Markdown view backed by original bytes, BOM and line-ending metadata, and fail-closed invalid UTF-8 behavior; its Rust unit tests are pending GitHub Actions."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1074,6 +1075,19 @@
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
       "next_action": "R1 complete. Begin R2.1 by reviewing document/vault contracts and defining a narrow source-preserving model slice."
+    },
+    "R2.1": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "scope": "Add a strict UTF-8 MarkdownSource view backed by RawDocument; report BOM and LF/CRLF/CR/mixed/no line endings while preserving original bytes; reject invalid UTF-8 without changing RawDocument binary behavior.",
+      "acceptance": [
+        "Ubuntu cargo fmt --all -- --check passes in GitHub Actions.",
+        "Workspace tests, Clippy, dependency-layer checks and native builds pass on Ubuntu, macOS and Windows in GitHub Actions.",
+        "MarkdownSource tests cover BOM, each line-ending style, mixed/no endings, exact byte round-trip and invalid UTF-8 rejection.",
+        "All required companion workflows pass on the exact implementation SHA."
+      ],
+      "evidence": null,
+      "next_action": "Push the small R2.1 work commit and reconcile exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {
