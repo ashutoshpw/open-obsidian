@@ -140,8 +140,9 @@ pub struct VaultStore {
 mod history;
 mod rename_transaction;
 pub use history::{
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, plan_history_retention,
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
+    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
+    plan_history_retention,
 };
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,

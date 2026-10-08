@@ -84,6 +84,27 @@ pub struct VaultHistoryCleanup {
     pub warning: bool,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VaultConflictAction {
+    KeepCurrent,
+    KeepIncoming,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultConflictRead {
+    pub record: VaultHistoryRecord,
+    pub bytes: Vec<u8>,
+    pub revision_sha256: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultConflictResolution {
+    pub id: String,
+    pub relative_path: PathBuf,
+    pub action: VaultConflictAction,
+    pub read: Option<super::VaultRead>,
+}
+
 /// Plan age- and size-based retention without modifying history files.
 /// Protected records are retained even when that exceeds the configured cap.
 pub fn plan_history_retention(
@@ -192,12 +213,128 @@ impl VaultStore {
         })
     }
 
+    /// Read the incoming bytes of one validated conflict without changing the vault.
+    pub fn read_conflict(
+        &self,
+        id: &str,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<VaultConflictRead, VaultError> {
+        let record = self.conflict_record(id, relative_path.as_ref())?;
+        let directory = managed_history_directory(&self.app_data_root, VaultHistoryKind::Conflict)?
+            .ok_or_else(|| VaultError::InvalidHistoryRecord(PathBuf::from(id)))?;
+        let metadata_path = directory.join(format!("{}.json", record.id));
+        let current = read_history_record(&directory, &metadata_path, VaultHistoryKind::Conflict)?;
+        if current != record {
+            return Err(VaultError::InvalidHistoryRecord(metadata_path));
+        }
+        let artifact_path = directory.join(format!("{}.incoming", record.id));
+        let artifact_metadata = fs::symlink_metadata(&artifact_path)?;
+        if artifact_metadata.file_type().is_symlink()
+            || !artifact_metadata.is_file()
+            || artifact_metadata.len() != record.bytes
+        {
+            return Err(VaultError::InvalidHistoryRecord(artifact_path));
+        }
+        let bytes = fs::read(&artifact_path)?;
+        if bytes.len() as u64 != record.bytes {
+            return Err(VaultError::InvalidHistoryRecord(artifact_path));
+        }
+        let revision_sha256 = super::sha256_hex(&bytes);
+        Ok(VaultConflictRead {
+            record,
+            bytes,
+            revision_sha256,
+        })
+    }
+
+    /// Resolve a conflict only after the caller explicitly chooses which version to keep.
+    /// Keeping incoming bytes still uses the recorded current revision as a write precondition.
+    pub fn resolve_conflict(
+        &self,
+        id: &str,
+        relative_path: impl AsRef<Path>,
+        action: VaultConflictAction,
+    ) -> Result<VaultConflictResolution, VaultError> {
+        let conflict = self.read_conflict(id, relative_path)?;
+        let read = match action {
+            VaultConflictAction::KeepCurrent => None,
+            VaultConflictAction::KeepIncoming => {
+                let current = match self.root.read(&conflict.record.relative_path) {
+                    Ok(read) => Some(read),
+                    Err(VaultError::Root(error))
+                        if error.kind() == std::io::ErrorKind::NotFound =>
+                    {
+                        None
+                    }
+                    Err(error) => return Err(error),
+                };
+                if current
+                    .as_ref()
+                    .is_some_and(|read| read.revision_sha256 == conflict.revision_sha256)
+                {
+                    current
+                } else {
+                    Some(
+                        self.write(super::VaultWriteRequest {
+                            relative_path: conflict.record.relative_path.clone(),
+                            expected_revision_sha256: conflict
+                                .record
+                                .current_revision_sha256
+                                .clone(),
+                            bytes: conflict.bytes,
+                        })?
+                        .read,
+                    )
+                }
+            }
+        };
+        self.remove_resolved_conflict(&conflict.record)?;
+        Ok(VaultConflictResolution {
+            id: conflict.record.id,
+            relative_path: conflict.record.relative_path,
+            action,
+            read,
+        })
+    }
+
+    fn conflict_record(
+        &self,
+        id: &str,
+        relative_path: &Path,
+    ) -> Result<VaultHistoryRecord, VaultError> {
+        let relative_path = normalize_relative_path(relative_path)?;
+        self.history_records()?
+            .into_iter()
+            .find(|record| {
+                record.kind == VaultHistoryKind::Conflict
+                    && record.id == id
+                    && record.relative_path == relative_path
+            })
+            .ok_or_else(|| VaultError::InvalidHistoryRecord(PathBuf::from(id)))
+    }
+
     fn remove_history_record(&self, record: &VaultHistoryRecord) -> Result<(), VaultError> {
         if record.protected {
             return Err(VaultError::InvalidHistoryRecord(PathBuf::from(
                 record.id.as_str(),
             )));
         }
+        self.remove_validated_history_record(record)
+    }
+
+    fn remove_resolved_conflict(&self, record: &VaultHistoryRecord) -> Result<(), VaultError> {
+        if record.kind != VaultHistoryKind::Conflict || !record.protected {
+            return Err(VaultError::InvalidHistoryRecord(PathBuf::from(
+                record.id.as_str(),
+            )));
+        }
+        self.remove_validated_history_record(record)
+    }
+
+    fn remove_validated_history_record(
+        &self,
+        record: &VaultHistoryRecord,
+    ) -> Result<(), VaultError> {
         let directory = managed_history_directory(&self.app_data_root, record.kind)?
             .ok_or_else(|| VaultError::InvalidHistoryRecord(PathBuf::from(record.id.as_str())))?;
         let artifact_path =
@@ -459,6 +596,23 @@ mod tests {
         (temp, store, app_data_path)
     }
 
+    fn create_conflict_record(store: &VaultStore, bytes: &[u8]) -> VaultHistoryRecord {
+        let error = store
+            .write(super::super::VaultWriteRequest {
+                relative_path: PathBuf::from("note.md"),
+                expected_revision_sha256: Some("0".repeat(64)),
+                bytes: bytes.to_vec(),
+            })
+            .unwrap_err();
+        assert!(matches!(error, VaultError::RevisionConflict { .. }));
+        store
+            .history_records()
+            .unwrap()
+            .into_iter()
+            .find(|record| record.kind == VaultHistoryKind::Conflict)
+            .unwrap()
+    }
+
     fn record(
         id: &str,
         captured_at: SystemTime,
@@ -581,6 +735,120 @@ mod tests {
             records
                 .iter()
                 .any(|record| { record.kind == VaultHistoryKind::Conflict && record.protected })
+        );
+    }
+
+    #[test]
+    fn reads_and_explicitly_keeps_current_conflict_bytes() {
+        let (_temp, store, app_data_path) = fixture();
+        let incoming = b"incoming bytes\n";
+        let record = create_conflict_record(&store, incoming);
+
+        let conflict = store
+            .read_conflict(&record.id, &record.relative_path)
+            .unwrap();
+        assert_eq!(conflict.bytes, incoming);
+        assert_eq!(
+            conflict.revision_sha256,
+            super::super::sha256_hex(incoming)
+        );
+        assert!(conflict.record.protected);
+
+        let resolution = store
+            .resolve_conflict(
+                &record.id,
+                &record.relative_path,
+                VaultConflictAction::KeepCurrent,
+            )
+            .unwrap();
+        assert_eq!(resolution.action, VaultConflictAction::KeepCurrent);
+        assert!(resolution.read.is_none());
+        assert_eq!(
+            store.root.read("note.md").unwrap().document.as_bytes(),
+            b"before\n"
+        );
+        assert!(store.history_records().unwrap().is_empty());
+        assert_eq!(fs::read_dir(app_data_path.join("conflicts")).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn keeps_incoming_conflict_only_when_the_recorded_current_revision_matches() {
+        let (_temp, store, _app_data_path) = fixture();
+        let incoming = b"incoming bytes\n";
+        let record = create_conflict_record(&store, incoming);
+
+        let resolution = store
+            .resolve_conflict(
+                &record.id,
+                &record.relative_path,
+                VaultConflictAction::KeepIncoming,
+            )
+            .unwrap();
+        assert_eq!(resolution.action, VaultConflictAction::KeepIncoming);
+        assert_eq!(
+            resolution
+                .read
+                .as_ref()
+                .unwrap()
+                .document
+                .as_bytes(),
+            incoming
+        );
+        assert_eq!(
+            store.root.read("note.md").unwrap().document.as_bytes(),
+            incoming
+        );
+        let records = store.history_records().unwrap();
+        assert!(records.iter().any(|entry| entry.kind == VaultHistoryKind::Recovery));
+        assert!(!records.iter().any(|entry| entry.kind == VaultHistoryKind::Conflict));
+    }
+
+    #[test]
+    fn preserves_conflict_when_the_vault_changes_before_resolution() {
+        let (temp, store, _app_data_path) = fixture();
+        let record = create_conflict_record(&store, b"incoming bytes\n");
+        fs::write(temp.0.join("vault").join("note.md"), b"external edit\n").unwrap();
+
+        let error = store
+            .resolve_conflict(
+                &record.id,
+                &record.relative_path,
+                VaultConflictAction::KeepIncoming,
+            )
+            .unwrap_err();
+        assert!(matches!(error, VaultError::RevisionConflict { .. }));
+        assert_eq!(
+            store.root.read("note.md").unwrap().document.as_bytes(),
+            b"external edit\n"
+        );
+        assert_eq!(
+            store
+                .history_records()
+                .unwrap()
+                .iter()
+                .filter(|entry| entry.kind == VaultHistoryKind::Conflict)
+                .count(),
+            2
+        );
+        assert_eq!(store.read_conflict(&record.id, &record.relative_path).unwrap().bytes, b"incoming bytes\n");
+    }
+
+    #[test]
+    fn refuses_to_inspect_or_resolve_a_conflict_for_another_path() {
+        let (_temp, store, _app_data_path) = fixture();
+        let record = create_conflict_record(&store, b"incoming bytes\n");
+        let wrong_path = PathBuf::from("other.md");
+
+        assert!(store.read_conflict(&record.id, &wrong_path).is_err());
+        assert!(
+            store
+                .resolve_conflict(&record.id, &wrong_path, VaultConflictAction::KeepCurrent)
+                .is_err()
+        );
+        assert_eq!(store.history_records().unwrap().len(), 1);
+        assert_eq!(
+            store.root.read("note.md").unwrap().document.as_bytes(),
+            b"before\n"
         );
     }
 
