@@ -203,10 +203,11 @@ impl MarkdownSource {
         frontmatter_properties(self.raw.as_bytes(), bounds.content)
     }
 
-    /// Extract supported wiki, Markdown and embed references without changing source bytes.
+    /// Extract supported wiki, Markdown and embed references outside Markdown code spans.
     ///
-    /// Returned ranges are UTF-8 byte offsets. This structural pass does not resolve
-    /// targets or edit references.
+    /// Returned ranges are UTF-8 byte offsets. Fenced code blocks and matched inline
+    /// code spans are ignored. This structural pass does not resolve targets or edit
+    /// references.
     pub fn extract_links(&self) -> Vec<LinkReference> {
         extract_links(self.raw.as_bytes())
     }
@@ -284,30 +285,235 @@ fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySou
 }
 
 fn extract_links(bytes: &[u8]) -> Vec<LinkReference> {
+    let code_ranges = code_context_ranges(bytes);
     let mut references = Vec::new();
+    let mut cursor = 0;
+    let mut code_range_index = 0;
+
+    while cursor < bytes.len() {
+        while code_ranges
+            .get(code_range_index)
+            .is_some_and(|range| range.end <= cursor)
+        {
+            code_range_index += 1;
+        }
+
+        if let Some(range) = code_ranges.get(code_range_index) {
+            if range.start <= cursor {
+                cursor = range.end;
+                continue;
+            }
+        }
+
+        let reference = wiki_link_at(bytes, cursor).or_else(|| markdown_link_at(bytes, cursor));
+        if let Some(reference) = reference {
+            let intersects_code = code_ranges
+                .get(code_range_index)
+                .is_some_and(|range| {
+                    reference.source_span.start < range.end
+                        && range.start < reference.source_span.end
+                });
+            if intersects_code {
+                cursor += 1;
+            } else {
+                cursor = reference.source_span.end;
+                references.push(reference);
+            }
+        } else {
+            cursor += 1;
+        }
+    }
+
+    references
+}
+
+fn code_context_ranges(bytes: &[u8]) -> Vec<SourceSpan> {
+    let fenced_ranges = fenced_code_ranges(bytes);
+    let mut ranges = fenced_ranges.clone();
+    ranges.extend(inline_code_ranges(bytes, &fenced_ranges));
+    ranges.sort_by_key(|range| range.start);
+
+    let mut merged: Vec<SourceSpan> = Vec::with_capacity(ranges.len());
+    for range in ranges {
+        if let Some(previous) = merged.last_mut() {
+            if range.start <= previous.end {
+                previous.end = previous.end.max(range.end);
+                continue;
+            }
+        }
+        merged.push(range);
+    }
+    merged
+}
+
+fn fenced_code_ranges(bytes: &[u8]) -> Vec<SourceSpan> {
+    let mut ranges = Vec::new();
+    let mut open_fence: Option<(u8, usize, usize)> = None;
+    let mut line_start = 0;
+
+    while line_start < bytes.len() {
+        let (line_end, break_width) = line_bounds(bytes, line_start);
+        let line = &bytes[line_start..line_end];
+        let range_end = line_end + break_width;
+
+        if let Some((marker, minimum_length, range_start)) = open_fence {
+            if is_closing_fence(line, marker, minimum_length) {
+                ranges.push(SourceSpan {
+                    start: range_start,
+                    end: range_end,
+                });
+                open_fence = None;
+            }
+        } else if let Some((marker, run_length)) = opening_fence(line) {
+            open_fence = Some((marker, run_length, line_start));
+        }
+
+        if break_width == 0 {
+            break;
+        }
+        line_start = range_end;
+    }
+
+    if let Some((_, _, range_start)) = open_fence {
+        ranges.push(SourceSpan {
+            start: range_start,
+            end: bytes.len(),
+        });
+    }
+
+    ranges
+}
+
+fn opening_fence(line: &[u8]) -> Option<(u8, usize)> {
+    let indentation = line.iter().take_while(|byte| **byte == b' ').count();
+    if indentation > 3 {
+        return None;
+    }
+
+    let marker = *line.get(indentation)?;
+    if !matches!(marker, b'`' | b'~') {
+        return None;
+    }
+
+    let run_length = line[indentation..]
+        .iter()
+        .take_while(|byte| **byte == marker)
+        .count();
+    if run_length < 3 {
+        return None;
+    }
+
+    if marker == b'`' && line[indentation + run_length..].contains(&b'`') {
+        return None;
+    }
+
+    Some((marker, run_length))
+}
+
+fn is_closing_fence(line: &[u8], marker: u8, minimum_length: usize) -> bool {
+    let indentation = line.iter().take_while(|byte| **byte == b' ').count();
+    if indentation > 3 || line.get(indentation) != Some(&marker) {
+        return false;
+    }
+
+    let run_length = line[indentation..]
+        .iter()
+        .take_while(|byte| **byte == marker)
+        .count();
+    run_length >= minimum_length
+        && line[indentation + run_length..]
+            .iter()
+            .all(|byte| matches!(*byte, b' ' | b'\t'))
+}
+
+fn inline_code_ranges(bytes: &[u8], fenced_ranges: &[SourceSpan]) -> Vec<SourceSpan> {
+    let mut ranges = Vec::new();
+    let mut fence_index = 0;
     let mut cursor = 0;
 
     while cursor < bytes.len() {
-        if let Some(reference) = wiki_link_at(bytes, cursor) {
-            cursor = reference.source_span.end;
-            references.push(reference);
-        } else {
+        while fenced_ranges
+            .get(fence_index)
+            .is_some_and(|range| range.end <= cursor)
+        {
+            fence_index += 1;
+        }
+
+        if let Some(range) = fenced_ranges.get(fence_index) {
+            if range.start <= cursor {
+                cursor = range.end;
+                continue;
+            }
+        }
+
+        if bytes[cursor] != b'`' || is_escaped_backtick(bytes, cursor) {
             cursor += 1;
+            continue;
+        }
+
+        let run_end = backtick_run_end(bytes, cursor);
+        let run_length = run_end - cursor;
+        if let Some(span_end) = matching_backtick_end(bytes, run_end, run_length, fenced_ranges) {
+            ranges.push(SourceSpan {
+                start: cursor,
+                end: span_end,
+            });
+            cursor = span_end;
+        } else {
+            // An unmatched delimiter is literal text and cannot hide later links.
+            cursor = run_end;
         }
     }
 
-    cursor = 0;
+    ranges
+}
+
+fn matching_backtick_end(
+    bytes: &[u8],
+    start: usize,
+    delimiter_length: usize,
+    fenced_ranges: &[SourceSpan],
+) -> Option<usize> {
+    let mut fence_index = fenced_ranges.partition_point(|range| range.end <= start);
+    let mut cursor = start;
+
     while cursor < bytes.len() {
-        if let Some(reference) = markdown_link_at(bytes, cursor) {
-            cursor = reference.source_span.end;
-            references.push(reference);
+        if let Some(range) = fenced_ranges.get(fence_index) {
+            if range.start <= cursor {
+                return None;
+            }
+        }
+
+        if bytes[cursor] == b'`' {
+            let run_end = backtick_run_end(bytes, cursor);
+            if run_end - cursor == delimiter_length {
+                return Some(run_end);
+            }
+            cursor = run_end;
         } else {
             cursor += 1;
         }
     }
 
-    references.sort_by_key(|reference| reference.source_span.start);
-    references
+    None
+}
+
+fn backtick_run_end(bytes: &[u8], start: usize) -> usize {
+    start
+        + bytes[start..]
+            .iter()
+            .take_while(|byte| **byte == b'`')
+            .count()
+}
+
+fn is_escaped_backtick(bytes: &[u8], start: usize) -> bool {
+    let mut preceding_backslashes = 0;
+    let mut cursor = start;
+    while cursor > 0 && bytes[cursor - 1] == b'\\' {
+        preceding_backslashes += 1;
+        cursor -= 1;
+    }
+    preceding_backslashes % 2 == 1
 }
 
 fn wiki_link_at(bytes: &[u8], start: usize) -> Option<LinkReference> {
@@ -892,6 +1098,49 @@ mod tests {
             );
         }
         assert_eq!(source.as_bytes(), bytes);
+    }
+
+    #[test]
+    fn link_extraction_ignores_backtick_and_tilde_fenced_code_blocks() {
+        let text = "\u{feff}🐈 [[Before]]\r\n```md [[FenceInfo]]\r\n[[FenceBody]] [label](fenced.md) ![[image.png]]\r\n~~~\r\n[[StillFenced]]\r\n````  \r\n~~~\r\n[[TildeBody]]\r\n~~~\t\r\n[[After]]";
+        let bytes = text.as_bytes().to_vec();
+        let source = MarkdownSource::parse(bytes.clone()).unwrap();
+        let links = source.extract_links();
+
+        assert_eq!(
+            links
+                .iter()
+                .map(|link| link.target.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Before", "After"]
+        );
+        for link in &links {
+            assert_eq!(
+                &bytes[link.source_span.start..link.source_span.end],
+                link.raw.as_bytes()
+            );
+        }
+        assert_eq!(source.as_bytes(), bytes);
+    }
+
+    #[test]
+    fn link_extraction_ignores_matched_inline_code_and_leaves_unmatched_ticks_literal() {
+        let text = r"[[before]] `[[single]]` ``[[double]] `literal` `` `unmatched [[still-visible]] [[after]]";
+        let source = MarkdownSource::parse(text.as_bytes().to_vec()).unwrap();
+        let links = source.extract_links();
+
+        assert_eq!(
+            links
+                .iter()
+                .map(|link| link.target.as_str())
+                .collect::<Vec<_>>(),
+            vec!["before", "still-visible", "after"]
+        );
+
+        let escaped = MarkdownSource::parse(r"\`[[escaped]]\`".as_bytes().to_vec()).unwrap();
+        let escaped_links = escaped.extract_links();
+        assert_eq!(escaped_links.len(), 1);
+        assert_eq!(escaped_links[0].target, "escaped");
     }
 
     #[test]
