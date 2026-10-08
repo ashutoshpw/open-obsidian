@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T19:43:19Z",
+  "updated_at": "2026-10-08T20:01:26Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "120df20b4f6d78b79391b56bb187f2a0533b7586",
+  "last_reconciled_head": "10a69a8ace2cd765295cf239e11532e13d894f74",
   "current_milestone": "R2.6.38",
-  "next_action": "Add a shared existing-vault fixture and egui folder-open interaction proving in-place scan, SHA-256 revisions, app-data separation, and byte/tree preservation; validate only through exact-SHA GitHub Actions.",
+  "next_action": "Continue R2 with the next smallest existing-vault no-op fixture slice. Keep parent C01, broad C01.1 coverage and C01.2 reference-application round trips pending until their complete acceptance evidence passes; use GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b"
+      "implementation_sha": "10a69a8ace2cd765295cf239e11532e13d894f74"
     },
     "R3": {
       "status": "pending",
@@ -170,7 +170,8 @@
     "R2.6.34 added bounded, revision-verified previews for supported raster attachments and fixture-backed native accessibility checks. All six required workflows passed on exact implementation SHA a0a81e5b7464767204fa55c27c1dc7afb245c309 across Ubuntu, macOS and Windows; evidence and artifact hashes are recorded in evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json. No local executable validation was run.",
     "R2.6.35 strengthened native image-preview acceptance to resolve and decode a real vault attachment through VaultSession before rendering it in egui, then verify the accessible alias and unchanged attachment bytes. All six required workflows passed on exact source SHA 443b7161eacbfd4c770927dc368836f938878a04; evidence and artifacts are recorded in evidence/r2.6.35-vault-to-egui-image-preview-443b716.json. No local executable validation was run.",
     "R2.6.36 closes parent C03 after fixture and cross-layer link, rename, transclusion and supported image workflows all passed on exact source SHA 443b7161eacbfd4c770927dc368836f938878a04. Requirement evidence and workflow/job IDs are recorded in evidence/r2.6.36-c03-cross-layer-acceptance-443b716.json. Unsupported attachment rendering and SYNC-007 remain explicitly outside this acceptance.",
-    "R2.6.37 is accepted on exact source SHA 62c2dfd07615af2110beaa49bf1627162be469fd after all six GitHub Actions workflows passed; evidence and artifact digests are recorded in evidence/r2.6.37-uninstall-cleanup-62c2dfd.json."
+    "R2.6.37 is accepted on exact source SHA 62c2dfd07615af2110beaa49bf1627162be469fd after all six GitHub Actions workflows passed; evidence and artifact digests are recorded in evidence/r2.6.37-uninstall-cleanup-62c2dfd.json.",
+    "R2.6.38 accepted existing-vault in-place opening on exact source SHA 10a69a8ace2cd765295cf239e11532e13d894f74 after all six required GitHub Actions workflows passed; the UI interaction passed on Ubuntu, macOS and Windows. Evidence and artifact digests: evidence/r2.6.38-existing-vault-in-place-10a69a8.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -5524,6 +5525,184 @@
         {"name":"windows-latest","job_id":113440658597,"status":"completed","conclusion":"success","url":"https://github.com/ashutoshpw/open-obsidian/actions/runs/37814827805/job/113440658597"},
         {"name":"macos-latest","job_id":113440658778,"status":"completed","conclusion":"success","url":"https://github.com/ashutoshpw/open-obsidian/actions/runs/37814827805/job/113440658778"}
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37834098153,
+      "head_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098153",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 113506611774,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098153/job/113506611774"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37834098114,
+      "head_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098114",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 2,
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113511696112,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098114/job/113511696112"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113511698114,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098114/job/113511698114"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113511698249,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098114/job/113511698249"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37834098150,
+      "head_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098150",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113506612430,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098150/job/113506612430"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113506612634,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098150/job/113506612634"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113506612971,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098150/job/113506612971"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37834098205,
+      "head_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098205",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113506612014,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098205/job/113506612014"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113506612312,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098205/job/113506612312"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113506612414,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098205/job/113506612414"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37834098108,
+      "head_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098108",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113506612049,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098108/job/113506612049"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113506612199,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098108/job/113506612199"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113506612234,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098108/job/113506612234"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37834098162,
+      "head_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098162",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113506612500,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098162/job/113506612500"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113506612820,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098162/job/113506612820"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113506612994,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37834098162/job/113506612994"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -7140,11 +7319,12 @@
       "next_action": "Continue the next Rust migration slice. Complete actual native uninstall integration during R6 after selecting the package format; do not run executable validation locally."
     },
     "R2.6.38": {
-      "status": "in_progress",
-      "implementation_sha": null,
+      "status": "complete",
+      "implementation_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
       "implementation_commits": [
         "513cb2de8fc041705ede595027cbe0bfffb6ca93",
-        "120df20b4f6d78b79391b56bb187f2a0533b7586"
+        "120df20b4f6d78b79391b56bb187f2a0533b7586",
+        "10a69a8ace2cd765295cf239e11532e13d894f74"
       ],
       "scope": "Prove that selecting and opening an existing vault uses the selected directory in place, preserves every path and byte through the initial read-only UI session, keeps app data outside the vault, and retains SHA-256 note revisions.",
       "ci_attempts": [
@@ -7181,15 +7361,42 @@
             "Ubuntu rustfmt requested one line-wrap change in the app-state invariant assertion; the other five workflows passed."
           ],
           "correction": "Apply the remaining Ubuntu rustfmt line-wrap change."
+        },
+        {
+          "source_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+          "rust_ci_run_id": 37834098114,
+          "rust_ci_attempt": 1,
+          "conclusion": "cancelled",
+          "findings": [
+            "Ubuntu remained in Linux system dependency installation for over ten minutes, compared with 26-44 seconds on prior runs. The run was cancelled as a run-specific infrastructure stall; macOS and Windows had passed and no source failure was reported."
+          ],
+          "correction": "Rerun only the failed portion on the same source SHA."
+        },
+        {
+          "source_sha": "10a69a8ace2cd765295cf239e11532e13d894f74",
+          "rust_ci_run_id": 37834098114,
+          "rust_ci_attempt": 2,
+          "inventory_run_id": 37834098153,
+          "quality_run_id": 37834098150,
+          "desktop_build_run_id": 37834098205,
+          "plugin_renderer_run_id": 37834098108,
+          "loaded_plugin_run_id": 37834098162,
+          "conclusion": "success",
+          "evidence": "evidence/r2.6.38-existing-vault-in-place-10a69a8.json"
         }
       ],
-      "evidence": null,
-      "accepted_slice": [],
-      "remaining": [
-        "Exact-SHA GitHub Actions validation is pending.",
-        "Broad C01 no-op coverage for every read-only operation and reference-application round trips remains open."
+      "evidence": "evidence/r2.6.38-existing-vault-in-place-10a69a8.json",
+      "accepted_slice": [
+        "D02: the native UI opens the chosen existing directory in place with no import or conversion step.",
+        "MIG-012: the existing-vault fixture retains BOM/CRLF, .obsidian settings, unknown paths and binary bytes; SHA-256 revisions and external app-data placement are checked.",
+        "The named egui existing-vault interaction passed on Ubuntu, macOS and Windows, and all six required workflows passed on the exact source SHA."
       ],
-      "next_action": "Commit and push the final Ubuntu rustfmt correction, then obtain fresh results from all six required GitHub Actions workflows on the exact SHA."
+      "remaining": [
+        "Parent C01 and broader C01.1 no-op coverage across all read-only operations remain pending.",
+        "C01.2 reference-application vault round trips remain pending.",
+        "This fixture slice does not certify every supported or unknown vault content combination."
+      ],
+      "next_action": "Continue R2 with the next smallest existing-vault no-op fixture slice. Keep parent C01, broad C01.1 coverage and C01.2 reference-application round trips pending until their complete acceptance evidence passes; use GitHub Actions only."
     }
   },
   "ci_preparation": {
