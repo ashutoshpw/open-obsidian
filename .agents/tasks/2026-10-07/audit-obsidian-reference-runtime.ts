@@ -134,6 +134,20 @@ async function waitForPageTarget(): Promise<CdpTarget> {
   throw new Error(`Obsidian did not expose a page target within 120 seconds: ${lastError}`);
 }
 
+async function waitForDevToolsVersion(): Promise<{Browser?: string; "Protocol-Version"?: string}> {
+  const deadline = Date.now() + 120_000;
+  let lastError = "Obsidian DevTools has not started listening";
+  while (Date.now() < deadline) {
+    try {
+      return await json<{Browser?: string; "Protocol-Version"?: string}>(`${debugUrl}/json/version`);
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    await new Promise((resolveSleep) => setTimeout(resolveSleep, 1_000));
+  }
+  throw new Error(`Obsidian DevTools did not start within 120 seconds: ${lastError}`);
+}
+
 async function waitForRenderedPage(connection: DevToolsConnection): Promise<RuntimeSnapshot> {
   const deadline = Date.now() + 90_000;
   let lastSnapshot: RuntimeSnapshot = {title: "", url: "", bodyText: ""};
@@ -158,7 +172,7 @@ async function run(): Promise<void> {
     throw new Error("The pinned Obsidian version and AppImage checksum must be supplied by CI");
   }
   await mkdir(reportDirectory, {recursive: true});
-  const version = await json<{Browser?: string; "Protocol-Version"?: string}>(`${debugUrl}/json/version`);
+  const version = await waitForDevToolsVersion();
   report.devtools_browser = version.Browser ?? "unknown";
   report.devtools_protocol_version = version["Protocol-Version"] ?? "unknown";
 
