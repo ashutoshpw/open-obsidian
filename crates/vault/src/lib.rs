@@ -360,8 +360,8 @@ impl VaultStore {
             None,
         )?;
 
-        if let Some(previous) = &before {
-            if let Err(error) = self.preserve_bytes(
+        if let Some(previous) = &before
+            && let Err(error) = self.preserve_bytes(
                 "recovery",
                 &format!("{operation_id}-previous"),
                 ".bin",
@@ -371,16 +371,15 @@ impl VaultStore {
                 request.expected_revision_sha256.as_deref(),
                 current_revision.as_deref(),
             ) {
-                let _ = self.append_journal(
-                    &operation_id,
-                    "failed",
-                    &relative_path_text,
-                    request.expected_revision_sha256.as_deref(),
-                    &next_revision,
-                    Some(&error.to_string()),
-                );
-                return Err(error);
-            }
+            let _ = self.append_journal(
+                &operation_id,
+                "failed",
+                &relative_path_text,
+                request.expected_revision_sha256.as_deref(),
+                &next_revision,
+                Some(&error.to_string()),
+            );
+            return Err(error);
         }
 
         let latest_revision = match self.read_if_present(&relative_path, &target_path) {
