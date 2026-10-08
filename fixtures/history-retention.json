@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "fixture:history-retention",
+  "scenario": {
+    "vault": {
+      "files": [
+        {
+          "relative_path": "notes/current.md",
+          "source": "Current vault bytes.\r\n"
+        }
+      ]
+    },
+    "history_records": [
+      {
+        "kind": "recovery",
+        "id": "old-recovery",
+        "relative_path": "notes/current.md",
+        "captured_at": "1",
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact_source": "Previous note bytes.\r\n",
+        "expected_revision": null,
+        "current_revision": null
+      },
+      {
+        "kind": "conflict",
+        "id": "open-conflict",
+        "relative_path": "notes/current.md",
+        "captured_at": "1",
+        "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "artifact_source": "Incoming conflicted bytes.\r\n",
+        "expected_revision": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "current_revision": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      }
+    ],
+    "policy": {
+      "max_age_days": 30,
+      "max_bytes": 0
+    },
+    "expected": {
+      "initial_record_count": 2,
+      "eligible_ids": ["old-recovery"],
+      "protected_ids": ["open-conflict"],
+      "warning": true,
+      "remaining_record_ids": ["open-conflict"],
+      "cleanup_status": "Removed 1 eligible history items; 1 protected items remain.",
+      "vault_bytes_remain_identical": true,
+      "protected_conflict_bytes_remain_identical": true
+    }
+  }
+}

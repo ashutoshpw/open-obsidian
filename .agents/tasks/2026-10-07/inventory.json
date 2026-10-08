@@ -1581,6 +1581,16 @@
       "fixture_reader": "crates/ui-egui"
     },
     {
+      "path": "fixtures/history-retention.json",
+      "sha256": "c73387cb9ea0dbb0cb8e1c8ecd7fdc9655e295f74d657fda91e1f8190ff15d8d",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Synthetic age/size retention scenario verifies explicit native cleanup preserves an unresolved conflict and in-place vault bytes.",
+      "fixture_reader": "crates/ui-egui"
+    },
+    {
       "path": "fixtures/retrieval-model.json",
       "sha256": "65c5fcda09d384d03e2f58da3f0a065b453762bda0f24b3986f44eaeb353681e",
       "rust_owner": "crates/engine",

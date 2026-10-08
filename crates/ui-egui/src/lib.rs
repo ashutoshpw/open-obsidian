@@ -18,6 +18,8 @@ const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 #[cfg(test)]
+const HISTORY_RETENTION_FIXTURE: &str = include_str!("../../../fixtures/history-retention.json");
+#[cfg(test)]
 const SYNC_UNINSTALL_FIXTURE: &str = include_str!("../../../fixtures/uninstall-preservation.json");
 
 /// Receives the result of opening a user-selected vault on a background worker.
@@ -1223,6 +1225,21 @@ mod tests {
         }
     }
 
+    fn wait_for_history(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().history_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "history worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
     #[test]
     fn history_labels_distinguish_protected_conflicts() {
         assert_eq!(history_kind_label(VaultHistoryKind::Recovery), "Recovery");
@@ -1232,6 +1249,198 @@ mod tests {
             "Unresolved conflict"
         );
         assert_eq!(format_bytes(1024), "1.0 KiB");
+    }
+
+    #[test]
+    fn egui_history_review_requires_confirmation_and_preserves_protected_conflicts() {
+        let fixture: serde_json::Value = serde_json::from_str(HISTORY_RETENTION_FIXTURE)
+            .expect("history retention fixture must be valid");
+        assert_eq!(fixture["id"], "fixture:history-retention");
+        let scenario = &fixture["scenario"];
+        let expected = &scenario["expected"];
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir_all(&vault_path).unwrap();
+        std::fs::create_dir_all(&app_data_path).unwrap();
+
+        let mut original_vault_files = Vec::new();
+        for file in scenario["vault"]["files"]
+            .as_array()
+            .expect("fixture vault files must be an array")
+        {
+            let relative_path = std::path::PathBuf::from(
+                file["relative_path"]
+                    .as_str()
+                    .expect("fixture vault file must state a path"),
+            );
+            let source = file["source"]
+                .as_str()
+                .expect("fixture vault file must state its source")
+                .as_bytes()
+                .to_vec();
+            let path = vault_path.join(&relative_path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, &source).unwrap();
+            original_vault_files.push((relative_path, source));
+        }
+
+        let mut original_history_files = Vec::new();
+        for record in scenario["history_records"]
+            .as_array()
+            .expect("fixture history records must be an array")
+        {
+            let kind = record["kind"]
+                .as_str()
+                .expect("fixture history record must state a kind");
+            let id = record["id"]
+                .as_str()
+                .expect("fixture history record must state an id");
+            let relative_path = record["relative_path"]
+                .as_str()
+                .expect("fixture history record must state a vault path");
+            let captured_at = record["captured_at"]
+                .as_str()
+                .expect("fixture history record must state a capture time");
+            let revision = record["revision"]
+                .as_str()
+                .expect("fixture history record must state a revision");
+            let source = record["artifact_source"]
+                .as_str()
+                .expect("fixture history record must state artifact bytes")
+                .as_bytes()
+                .to_vec();
+            let (directory, extension) = match kind {
+                "recovery" => ("recovery", ".bin"),
+                "conflict" => ("conflicts", ".incoming"),
+                other => panic!("unknown history kind in fixture: {other}"),
+            };
+            let history_directory = app_data_path.join(directory);
+            std::fs::create_dir_all(&history_directory).unwrap();
+            let artifact_path = history_directory.join(format!("{id}{extension}"));
+            let metadata_path = history_directory.join(format!("{id}.json"));
+            std::fs::write(&artifact_path, &source).unwrap();
+            let metadata = serde_json::json!({
+                "id": id,
+                "relative_path": relative_path,
+                "revision": revision,
+                "bytes": source.len(),
+                "path": artifact_path.to_string_lossy(),
+                "captured_at": captured_at,
+                "expected_revision": record["expected_revision"],
+                "current_revision": record["current_revision"],
+            });
+            std::fs::write(&metadata_path, serde_json::to_vec(&metadata).unwrap()).unwrap();
+            original_history_files.push((artifact_path, source));
+            original_history_files.push((metadata_path.clone(), std::fs::read(metadata_path).unwrap()));
+        }
+
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            history_policy: VaultHistoryPolicy {
+                max_age_days: scenario["policy"]["max_age_days"]
+                    .as_u64()
+                    .expect("fixture must state a retention age"),
+                max_bytes: scenario["policy"]["max_bytes"]
+                    .as_u64()
+                    .expect("fixture must state a retention cap"),
+            },
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness
+            .get_by_label("Refresh history and retention preview")
+            .click();
+        harness.step();
+        wait_for_history(&mut harness);
+
+        let preview = harness
+            .state()
+            .history_plan
+            .as_ref()
+            .expect("the refresh interaction should produce a retention plan");
+        assert_eq!(
+            harness.state().history_records.len(),
+            usize::try_from(expected["initial_record_count"].as_u64().unwrap()).unwrap()
+        );
+        assert_eq!(
+            preview
+                .pruneable
+                .iter()
+                .map(|record| record.id.as_str())
+                .collect::<Vec<_>>(),
+            expected["eligible_ids"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|id| id.as_str().unwrap())
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            preview
+                .protected
+                .iter()
+                .map(|record| record.id.as_str())
+                .collect::<Vec<_>>(),
+            expected["protected_ids"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|id| id.as_str().unwrap())
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(preview.warning, expected["warning"].as_bool().unwrap());
+        for (path, source) in &original_history_files {
+            assert_eq!(std::fs::read(path).unwrap(), *source);
+        }
+
+        harness.get_by_label("Review eligible cleanup").click();
+        harness.step();
+        assert!(harness.state().cleanup_confirmation);
+        harness.step();
+        assert!(std::fs::exists(app_data_path.join("recovery/old-recovery.bin")).unwrap());
+        assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.incoming")).unwrap());
+
+        harness.get_by_label("Confirm cleanup").click();
+        harness.step();
+        wait_for_history(&mut harness);
+
+        let app = harness.state();
+        assert_eq!(app.history_status.as_deref(), expected["cleanup_status"].as_str());
+        assert_eq!(
+            app.history_records
+                .iter()
+                .map(|record| record.id.as_str())
+                .collect::<Vec<_>>(),
+            expected["remaining_record_ids"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|id| id.as_str().unwrap())
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            app.history_plan.as_ref().unwrap().protected.len(),
+            expected["protected_ids"].as_array().unwrap().len()
+        );
+        assert!(app.history_plan.as_ref().unwrap().pruneable.is_empty());
+        assert!(!std::fs::exists(app_data_path.join("recovery/old-recovery.bin")).unwrap());
+        assert!(!std::fs::exists(app_data_path.join("recovery/old-recovery.json")).unwrap());
+        assert!(expected["vault_bytes_remain_identical"].as_bool() == Some(true));
+        assert!(expected["protected_conflict_bytes_remain_identical"].as_bool() == Some(true));
+        assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.incoming")).unwrap());
+        assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.json")).unwrap());
+        for (relative_path, source) in &original_vault_files {
+            assert_eq!(std::fs::read(vault_path.join(relative_path)).unwrap(), *source);
+        }
+        for (path, source) in original_history_files
+            .iter()
+            .filter(|(path, _)| path.starts_with(app_data_path.join("conflicts")))
+        {
+            assert_eq!(std::fs::read(path).unwrap(), *source);
+        }
     }
 
     #[test]
