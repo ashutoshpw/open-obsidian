@@ -1608,8 +1608,12 @@ mod tests {
         let store = VaultStore::open(&vault_path, &app_data_path).unwrap();
         let report = store.recover_pending_rename_transactions().unwrap();
 
+        assert!(
+            report.needs_attention.is_empty(),
+            "fixture recovery reported issues: {:?}",
+            report.needs_attention
+        );
         assert_eq!(report.recovered_operations, vec![operation_id]);
-        assert!(report.needs_attention.is_empty());
         for (relative_path, original) in &originals {
             assert_eq!(fs::read(vault_path.join(relative_path)).unwrap(), *original);
         }
