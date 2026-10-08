@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T23:25:00Z",
+  "updated_at": "2026-10-08T23:32:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "da8eff872aa1a9c41c4cec9c842973a559458a4b",
+  "last_reconciled_head": "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
   "current_milestone": "R2.6.48",
-  "next_action": "Commit and push the Linux Obsidian-authored vault round-trip runner; review its exact-SHA GitHub Actions run and all six required project workflows, correct CI findings in a small follow-up, then expand reference acceptance to macOS and Windows. Keep C01 and C01.2 open.",
+  "next_action": "Push the CI-informed correction for the native file-picker DevTools timeout; obtain a fresh exact-SHA round-trip run and all six required project workflow results, then continue from the recorded evidence. Keep C01 and C01.2 open.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8884,15 +8884,34 @@
     "R2.6.48": {
       "status": "in_progress",
       "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_commits": [
+        "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93"
+      ],
       "scope": "Add a Linux-only GitHub Actions workflow that creates a synthetic vault, has pinned Obsidian author a note, launches the native app with --open-vault, compares full vault and app-data snapshots, and reopens the exact vault in Obsidian.",
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
+          "conclusion": "round-trip workflow failed; all six required project workflows passed",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37859424660,
+            "rust_ci": 37859424685,
+            "inventory": 37859424625,
+            "quality": 37859424646,
+            "desktop_build": 37859424607,
+            "plugin_renderer": 37859424742,
+            "loaded_plugin_workflows": 37859424705
+          },
+          "finding": "The native release build and pinned AppImage checksum passed. Clicking Open opened a blocking native folder picker; the script awaited DevTools Runtime.evaluate before interacting with the picker and timed out.",
+          "correction": "Dispatch the renderer click without awaiting its result and use X11 focus/window identity to wait for the picker to close before resuming DevTools calls.",
+          "evidence": "evidence/r2.6.48-roundtrip-ci-e5b6d21.json"
+        }
+      ],
       "accepted_slice": [],
       "remaining": [
-        "Exact-SHA CI for the new reference-app round-trip workflow and the six required project workflows is pending.",
+        "A fresh exact-SHA run must pass the reference-app round-trip workflow; the first attempt failed before any vault round-trip actions.",
         "C01.2 acceptance on macOS and Windows, broader C01 product flows, and edit/save acceptance remain pending."
       ],
-      "next_action": "Push this implementation slice to origin/main, inspect the new workflow and required exact-SHA CI, and fix any runner or application findings before recording acceptance."
+      "next_action": "Push the native file-picker automation correction, inspect the new workflow and all six required project workflows on the exact SHA, then correct any remaining UI or vault-snapshot findings before recording acceptance."
     }
   },
   "ci_preparation": {

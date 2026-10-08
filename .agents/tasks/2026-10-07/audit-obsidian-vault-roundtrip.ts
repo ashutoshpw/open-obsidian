@@ -144,6 +144,11 @@ class DevToolsConnection {
     });
   }
 
+  send(method: string, params: Record<string, unknown> = {}): void {
+    const id = ++this.nextId;
+    this.socket.send(JSON.stringify({id, method, params}));
+  }
+
   async evaluateJson<T>(expression: string): Promise<T> {
     const response = await this.request("Runtime.evaluate", {
       expression: `JSON.stringify(${expression})`,
@@ -298,6 +303,14 @@ function activeWindowTitle(): string {
   }
 }
 
+function activeWindowId(): string {
+  try {
+    return execFileSync("xdotool", ["getwindowfocus"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  } catch {
+    return "";
+  }
+}
+
 async function waitForRenderer(connection: DevToolsConnection, expression: string, predicate: (value: string) => boolean, label: string, timeoutMs = 120_000): Promise<string> {
   return await waitFor(label, async () => await connection.evaluateJson<string>(expression), predicate, timeoutMs);
 }
@@ -310,38 +323,55 @@ async function captureObsidianScreenshot(connection: DevToolsConnection, filenam
 }
 
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
-  const clicked = await connection.evaluateJson<{clicked: boolean; buttons: string[]}>(`(() => {
+  const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
     const summary = buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean);
     const target = buttons.find((button) => (button.innerText || button.textContent || '').trim() === 'Open');
-    if (!target) return {clicked:false,buttons:summary};
-    target.click();
-    return {clicked:true,buttons:summary};
+    return {matched:Boolean(target),buttons:summary};
   })()`);
-  (report.obsidian_authoring as Record<string, unknown>).first_run_buttons = clicked.buttons;
-  if (!clicked.clicked) throw new Error(`Could not find Obsidian's exact Open button; visible button labels=${clicked.buttons.join(" | ")}`);
+  (report.obsidian_authoring as Record<string, unknown>).first_run_buttons = visible.buttons;
+  if (!visible.matched) throw new Error(`Could not find Obsidian's exact Open button; visible button labels=${visible.buttons.join(" | ")}`);
+  // Electron's native folder picker blocks the renderer thread while it is open, so
+  // dispatch the click without waiting for Runtime.evaluate's response.
+  connection.send("Runtime.evaluate", {
+    expression: `(() => [...document.querySelectorAll('button,[role="button"]')]
+      .find((button) => (button.innerText || button.textContent || '').trim() === 'Open')?.click())()`,
+    returnByValue: true,
+  });
 }
 
 async function chooseVaultDirectory(connection: DevToolsConnection): Promise<void> {
+  const initialWindowId = activeWindowId();
   const initialTitle = activeWindowTitle();
   await clickFirstRunOpenButton(connection);
-  await waitFor("Obsidian folder picker", async () => {
+  const pickerWindow = await waitFor("Obsidian folder picker", async () => {
     await delay(250);
-    const title = activeWindowTitle();
-    return {title, changed: title.length > 0 && title !== initialTitle};
-  }, (value) => value.changed, 20_000).catch(() => undefined);
+    return {windowId: activeWindowId(), title: activeWindowTitle()};
+  }, (value) => value.windowId.length > 0 && value.windowId !== initialWindowId, 20_000).catch(() => ({windowId: activeWindowId(), title: activeWindowTitle()}));
+  (report.obsidian_authoring as Record<string, unknown>).folder_picker = {
+    initial_window_id: initialWindowId,
+    initial_window_title: initialTitle,
+    picker_window_id: pickerWindow.windowId,
+    picker_window_title: pickerWindow.title,
+  };
 
   xdotool("key", "ctrl+l");
   xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
   xdotool("key", "Return");
 
-  const isVaultLoaded = (body: string) => !body.includes("Open folder as vault") && !body.includes("Create new vault");
+  const waitForPickerClose = () => waitFor("Obsidian folder picker to close", async () => activeWindowId(), (windowId) => windowId === initialWindowId, 12_000);
   try {
-    await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 12_000);
+    await waitForPickerClose();
   } catch {
     xdotool("key", "Return");
-    await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
+    await waitForPickerClose();
   }
+  (report.obsidian_authoring as Record<string, unknown>).folder_picker_closed = true;
+  await delay(1_000);
+
+  const isVaultLoaded = (body: string) => body.trim().length > 0 && !body.includes("Open folder as vault") && !body.includes("Create new vault");
+  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
+  (report.obsidian_authoring as Record<string, unknown>).selected_vault_text = body.slice(0, 2_000);
   (report.obsidian_authoring as Record<string, unknown>).selected_vault_in_ui = true;
 }
 

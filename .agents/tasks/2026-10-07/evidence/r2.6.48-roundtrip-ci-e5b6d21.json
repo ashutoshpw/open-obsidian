@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.48",
+  "source_sha": "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
+  "workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37859424660,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424660",
+    "job_id": 113591347155,
+    "job_conclusion": "failure",
+    "artifact_id": 11585512213,
+    "artifact_name": "obsidian-vault-roundtrip-e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
+    "artifact_sha256": "6c128058c18c2366f8b070fa4e18371562fc55664d35dc5251c96b404baff423",
+    "artifact_files": {
+      "obsidian-vault-roundtrip-report.json": "a4b1e750ea5bf139fd98890c89361312d46cf0f98af8d994b1b993cb6207ebb3",
+      "obsidian-first-run.png": "2785aecf7ac1dce69ee3d6b8b5712ec03808e21a2018c1115eb81054b2e3d28c",
+      "obsidian-author.log": "f48f937f3c01e1cd9fba30a272c6f0285fef4ecaf14bbade23710d0785268325"
+    }
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner": "ubuntu-24.04"
+  },
+  "build": {
+    "native_openobsidian_release_build": "passed",
+    "runner_dependencies": "passed",
+    "pinned_appimage_checksum": "passed"
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37859424685,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424685",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113591347036, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113591347117, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113591346808, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37859424625,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424625",
+      "conclusion": "success",
+      "job_id": 113591346692
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37859424646,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424646",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113591347267, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113591347421, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113591347487, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37859424607,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424607",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113591347340, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113591347393, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113591347107, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37859424742,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424742",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113591347522, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113591347792, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113591347942, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37859424705,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37859424705",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113591347513, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113591347706, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113591347796, "conclusion": "success"}
+      ]
+    }
+  ],
+  "finding": {
+    "stage": "The native OpenObsidian preview compiled. The round-trip script reached the first-run Obsidian screen and then timed out waiting for DevTools Runtime.evaluate after clicking Open triggered Electron's blocking native folder picker.",
+    "exact_error": "Timed out waiting for DevTools method Runtime.evaluate",
+    "completed_acceptance": [],
+    "not_completed": [
+      "The vault folder was not selected in Obsidian.",
+      "No note was authored by Obsidian.",
+      "OpenObsidian was not launched against the fixture.",
+      "No Obsidian reopen or vault snapshot comparison occurred."
+    ]
+  },
+  "correction": "Send the Open-button click without awaiting the renderer response, then use X11 window focus to wait for the native folder picker to close before issuing more DevTools calls.",
+  "acceptance": "R2.6.48 and C01.2-01/C01.2-03 remain pending."
+}
