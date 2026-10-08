@@ -49,6 +49,18 @@ pub struct FrontmatterBounds {
     pub closing_delimiter: SourceSpan,
 }
 
+/// Source locations for a simple top-level frontmatter mapping entry.
+///
+/// The value span excludes whitespace around the value and any trailing YAML
+/// comment. The original source remains authoritative; this type does not
+/// interpret the value or modify the document.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MarkdownPropertySource {
+    pub key: String,
+    pub key_span: SourceSpan,
+    pub value_span: SourceSpan,
+}
+
 /// A validated UTF-8 Markdown view backed by the original bytes.
 ///
 /// The text accessor includes a UTF-8 BOM when the source has one. This type does
@@ -141,6 +153,127 @@ impl MarkdownSource {
         }
         None
     }
+
+    /// Return source spans for simple, unindented frontmatter mapping entries.
+    ///
+    /// This is a structural view only: it does not parse YAML values, nested
+    /// mappings or sequences. Unsupported keys and indented child entries are
+    /// omitted, while every source byte remains unchanged.
+    pub fn frontmatter_properties(&self) -> Vec<MarkdownPropertySource> {
+        let Some(bounds) = self.frontmatter_bounds() else {
+            return Vec::new();
+        };
+        frontmatter_properties(self.raw.as_bytes(), bounds.content)
+    }
+}
+
+fn frontmatter_properties(bytes: &[u8], content: SourceSpan) -> Vec<MarkdownPropertySource> {
+    let mut properties = Vec::new();
+    let mut line_start = content.start;
+
+    while line_start < content.end {
+        let (line_end, break_width) = line_bounds(bytes, line_start);
+        let line_end = line_end.min(content.end);
+        if let Some(property) = source_property(&bytes[line_start..line_end], line_start) {
+            properties.push(property);
+        }
+        if break_width == 0 {
+            break;
+        }
+        line_start = line_end + break_width;
+    }
+
+    properties
+}
+
+fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySource> {
+    let mut key_end = 0;
+    while line.get(key_end).is_some_and(|byte| {
+        byte.is_ascii_alphanumeric() || matches!(*byte, b'_' | b'-')
+    }) {
+        key_end += 1;
+    }
+    if key_end == 0 {
+        return None;
+    }
+
+    let mut colon = key_end;
+    while line
+        .get(colon)
+        .is_some_and(|byte| matches!(*byte, b' ' | b'\t'))
+    {
+        colon += 1;
+    }
+    if line.get(colon) != Some(&b':') {
+        return None;
+    }
+
+    let key = std::str::from_utf8(&line[..key_end]).ok()?.to_owned();
+    let mut value_start = colon + 1;
+    while line
+        .get(value_start)
+        .is_some_and(|byte| matches!(*byte, b' ' | b'\t'))
+    {
+        value_start += 1;
+    }
+
+    let value = &line[value_start..];
+    let value_end = yaml_inline_comment_start(value).unwrap_or(value.len());
+    let mut value_end = value_start + value_end;
+    while value_end > value_start && matches!(line[value_end - 1], b' ' | b'\t') {
+        value_end -= 1;
+    }
+
+    Some(MarkdownPropertySource {
+        key,
+        key_span: SourceSpan {
+            start: line_start,
+            end: line_start + key_end,
+        },
+        value_span: SourceSpan {
+            start: line_start + value_start,
+            end: line_start + value_end,
+        },
+    })
+}
+
+fn yaml_inline_comment_start(value: &[u8]) -> Option<usize> {
+    let mut quote = None;
+    let mut depth = 0usize;
+    let mut index = 0;
+
+    while index < value.len() {
+        let byte = value[index];
+        if let Some(active_quote) = quote {
+            if active_quote == b'\'' && byte == active_quote && value.get(index + 1) == Some(&byte)
+            {
+                index += 2;
+                continue;
+            }
+            if active_quote == b'"' && byte == b'\\' {
+                index = (index + 2).min(value.len());
+                continue;
+            }
+            if byte == active_quote {
+                quote = None;
+            }
+        } else {
+            match byte {
+                b'\'' | b'"' => quote = Some(byte),
+                b'[' | b'{' | b'(' => depth += 1,
+                b']' | b'}' | b')' => depth = depth.saturating_sub(1),
+                b'#' if depth == 0
+                    && (index == 0 || matches!(value[index - 1], b' ' | b'\t')) =>
+                {
+                    return Some(index);
+                }
+                _ => {}
+            }
+        }
+        index += 1;
+    }
+
+    None
 }
 
 fn line_bounds(bytes: &[u8], start: usize) -> (usize, usize) {
@@ -313,6 +446,52 @@ mod tests {
         ] {
             let source = MarkdownSource::parse(bytes.to_vec()).unwrap();
             assert_eq!(source.frontmatter_bounds(), None);
+        }
+    }
+
+    #[test]
+    fn frontmatter_property_sources_preserve_byte_spans_and_ignore_nested_lines() {
+        let bytes = "\u{feff}---\r\nstatus:\topen # keep\r\ntitle: \"🐈 # hash\" # note\r\nmetadata:\r\n  owner: hidden\r\nflow: [one#literal, {nested: \"two # hash\"}] # note\r\n# ignored\r\n---\r\nbody"
+            .as_bytes()
+            .to_vec();
+        let source = MarkdownSource::parse(bytes.clone()).unwrap();
+        let properties = source.frontmatter_properties();
+
+        assert_eq!(
+            properties
+                .iter()
+                .map(|property| property.key.as_str())
+                .collect::<Vec<_>>(),
+            vec!["status", "title", "metadata", "flow"]
+        );
+        assert_eq!(
+            &bytes[properties[0].value_span.start..properties[0].value_span.end],
+            b"open"
+        );
+        assert_eq!(
+            &bytes[properties[1].value_span.start..properties[1].value_span.end],
+            "\"🐈 # hash\"".as_bytes()
+        );
+        assert_eq!(
+            properties[2].value_span.start,
+            properties[2].value_span.end
+        );
+        assert_eq!(
+            &bytes[properties[3].value_span.start..properties[3].value_span.end],
+            b"[one#literal, {nested: \"two # hash\"}]"
+        );
+        assert_eq!(
+            &bytes[properties[0].key_span.start..properties[0].key_span.end],
+            b"status"
+        );
+        assert_eq!(source.as_bytes(), bytes);
+    }
+
+    #[test]
+    fn frontmatter_property_sources_require_a_complete_frontmatter_block() {
+        for bytes in [b"body\nkey: value\n---".as_slice(), b"---\nkey: value"] {
+            let source = MarkdownSource::parse(bytes.to_vec()).unwrap();
+            assert!(source.frontmatter_properties().is_empty());
         }
     }
 }
