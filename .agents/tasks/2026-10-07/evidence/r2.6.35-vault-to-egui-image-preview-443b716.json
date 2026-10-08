@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.35",
+  "source_sha": "443b7161eacbfd4c770927dc368836f938878a04",
+  "implementation_commits": [
+    "443b7161eacbfd4c770927dc368836f938878a04"
+  ],
+  "related_implementation_sha": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+  "scope": {
+    "change": "Strengthen R2.6.34 acceptance by exercising one attachment end to end from a real vault file through snapshot-bound decode into the native egui image widget.",
+    "fixture": "The existing 1x1 PNG interaction fixture is replaced by the checked-in OpenObsidian icon PNG. VaultSession::resolve_note_embeds_for_note supplies the decoded image; the test checks non-empty RGBA dimensions, the rendered accessible alias, one cached texture and byte-identical attachment contents after rendering.",
+    "test": "crates/ui-egui::tests::egui_renders_bounded_vault_image_with_accessible_alt_text"
+  },
+  "accepted_validation": {
+    "source_sha": "443b7161eacbfd4c770927dc368836f938878a04",
+    "conclusion": "All six required workflows passed on Ubuntu, macOS and Windows.",
+    "workflows": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37825268614,
+        "job_ids": [
+          113476382643
+        ]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37825268425,
+        "job_ids": [
+          113476381849,
+          113476382334,
+          113476382404
+        ]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37825268654,
+        "job_ids": [
+          113476383218,
+          113476383811,
+          113476383814
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37825268485,
+        "job_ids": [
+          113476383148,
+          113476383395,
+          113476383497
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37825268489,
+        "job_ids": [
+          113476382854,
+          113476383026,
+          113476383077
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37825268491,
+        "job_ids": [
+          113476382669,
+          113476382952,
+          113476383134
+        ]
+      }
+    ],
+    "passed_checks": [
+      "Rust formatting",
+      "workspace tests including end-to-end vault image decode and egui preview interaction",
+      "Clippy",
+      "crate dependency layering",
+      "native preview builds",
+      "unchanged-plugin feasibility",
+      "parallel workflow group"
+    ],
+    "local_executable_validation": "None; executable validation ran only in GitHub Actions."
+  },
+  "artifacts": [
+    {
+      "name": "Rust preview Linux",
+      "id": 11570883777,
+      "size": 9544229,
+      "digest": "sha256:c95dbdf63861b12911d0abafcbfdb045ea517c9a09a4ae71815fc3a9d5e6cf06"
+    },
+    {
+      "name": "Rust runtime Windows",
+      "id": 11571535913,
+      "size": 2715,
+      "digest": "sha256:a978a80ca9feeee5c198a65765dbb5ab5f1314d93dea2557edb1cb4a364579ee"
+    },
+    {
+      "name": "Rust runtime macOS",
+      "id": 11571167240,
+      "size": 2698,
+      "digest": "sha256:8b9d4149a1488d3f05cb45441c985bedf1c4a23ca592fd96618be49fe4f642fa"
+    },
+    {
+      "name": "Rust runtime Linux",
+      "id": 11570893778,
+      "size": 2695,
+      "digest": "sha256:0c04c21171c6bb8b12eba61991cee5ab0da11c2144c3f517e3625f0c3cd2328e"
+    },
+    {
+      "name": "Desktop Linux",
+      "id": 11570972929,
+      "size": 125946548,
+      "digest": "sha256:fe88b4363f711d1948c1004003cc8734398cf65481826925a67cf2a522c6e5b8"
+    },
+    {
+      "name": "Desktop macOS",
+      "id": 11570588900,
+      "size": 397395487,
+      "digest": "sha256:b5c453738f9c78a64f91d54c66003bab5ee082689ce1aa4eb3f3dfd8176c9602"
+    },
+    {
+      "name": "Desktop Windows",
+      "id": 11570289328,
+      "size": 163005824,
+      "digest": "sha256:14544691667f6813f09fc17e902535206a927bd2d77304b0523887b4e79a92c7"
+    },
+    {
+      "name": "Renderer Windows",
+      "id": 11570683640,
+      "size": 3242,
+      "digest": "sha256:2a97ce55300435697bb32ec0d3e000c6ecbbc3a439e778b0ffa1eeb8fd615bbf"
+    },
+    {
+      "name": "Renderer macOS",
+      "id": 11570394932,
+      "size": 3238,
+      "digest": "sha256:da1306db291570a32c43afa117e5e0e87c1e077becb3b479c8343ec1b1cb0956"
+    },
+    {
+      "name": "Renderer Linux",
+      "id": 11570394879,
+      "size": 3221,
+      "digest": "sha256:0c68fc86e0027e9959661343eb3bb45a34d3c1873553d696130776fa275ef509"
+    },
+    {
+      "name": "Loaded plugin macOS",
+      "id": 11571380955,
+      "size": 171493,
+      "digest": "sha256:44cc72cdeeb0cdb2b5e2057330999092aed07ab10d5bbcf6cd0e83c3c81507f7"
+    },
+    {
+      "name": "Loaded plugin Windows",
+      "id": 11571276353,
+      "size": 171529,
+      "digest": "sha256:03ca700d5aef49f2cd4377540af18603cb706c470f889f9e4234c443b5056c02"
+    },
+    {
+      "name": "Loaded plugin Linux",
+      "id": 11570878309,
+      "size": 171467,
+      "digest": "sha256:ba9b80d2c3b5020f13a1d73db486cb286696eb8200bf4d45c1f799a0906c18e4"
+    }
+  ],
+  "remaining": [
+    "Parent C03 remains open for the remaining full fixture, transclusion, attachment and reference-update acceptance audit.",
+    "SYNC-007 host-level uninstall execution remains open; R6 still needs a native packaging/uninstaller choice before testing through the actual operating-system uninstall path.",
+    "Native-window human accessibility checks remain external."
+  ]
+}

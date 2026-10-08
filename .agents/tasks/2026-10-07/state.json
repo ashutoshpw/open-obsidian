@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T18:26:29Z",
+  "updated_at": "2026-10-08T18:39:26Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
-  "current_milestone": "R2.6.34",
-  "next_action": "Complete remaining C03 attachment/link behavior and implement SYNC-007 host-level uninstall preservation through GitHub Actions.",
+  "last_reconciled_head": "443b7161eacbfd4c770927dc368836f938878a04",
+  "current_milestone": "R2.6.35",
+  "next_action": "Audit remaining C03 fixture, transclusion and reference-update acceptance, then continue SYNC-007 host cleanup implementation with actual uninstaller testing gated by the R6 packaging choice.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -167,7 +167,8 @@
     "R2.6.32 passed fixture-backed native egui visibility checks for unresolved links and ambiguous/unresolved rename decisions on exact source SHA a30a98c90e4a8b97d3743c0960b0a02133b14327; all six required GitHub Actions workflows passed across Ubuntu, macOS and Windows. Evidence: evidence/r2.6.32-link-rename-visibility-a30a98c.json. C03.1 and C03.2 now pass; parent C03 and SYNC-007 remain open.",
     "R2.6.33 added bounded, read-only CommonMark rendering for note transclusions with egui_commonmark 0.25.0; image loading and network fetching remain disabled. All six required GitHub Actions workflows passed on exact implementation SHA 158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b; evidence and artifacts are recorded in evidence/r2.6.33-formatted-markdown-transclusions-158ee2f.json. No local executable validation was run.",
     "Extended native GitHub Actions parallel-step use to the independent desktop release preflight checks. The first workflow commit needed an inventory hash refresh; all six required workflows, including the desktop parallel barrier on three operating systems, passed on exact SHA 2d207d1823d486c64acb2192ae14ebe82c19a87e. Evidence: evidence/parallel-ci-desktop-preflight-2d207d1.json.",
-    "R2.6.34 added bounded, revision-verified previews for supported raster attachments and fixture-backed native accessibility checks. All six required workflows passed on exact implementation SHA a0a81e5b7464767204fa55c27c1dc7afb245c309 across Ubuntu, macOS and Windows; evidence and artifact hashes are recorded in evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json. No local executable validation was run."
+    "R2.6.34 added bounded, revision-verified previews for supported raster attachments and fixture-backed native accessibility checks. All six required workflows passed on exact implementation SHA a0a81e5b7464767204fa55c27c1dc7afb245c309 across Ubuntu, macOS and Windows; evidence and artifact hashes are recorded in evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json. No local executable validation was run.",
+    "R2.6.35 strengthened native image-preview acceptance to resolve and decode a real vault attachment through VaultSession before rendering it in egui, then verify the accessible alias and unchanged attachment bytes. All six required workflows passed on exact source SHA 443b7161eacbfd4c770927dc368836f938878a04; evidence and artifacts are recorded in evidence/r2.6.35-vault-to-egui-image-preview-443b716.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -7020,6 +7021,35 @@
         "SYNC-007 host-level uninstall preservation remains open; native-window human accessibility checks also remain external."
       ],
       "next_action": "Complete remaining C03 attachment/link behavior and implement SYNC-007 host-level uninstall preservation through GitHub Actions."
+    },
+    "R2.6.35": {
+      "status": "complete",
+      "implementation_sha": "443b7161eacbfd4c770927dc368836f938878a04",
+      "implementation_commits": ["443b7161eacbfd4c770927dc368836f938878a04"],
+      "scope": "Exercise supported raster attachment resolution, snapshot-bound decoding, native egui rendering and source-byte preservation in one fixture-backed UI interaction.",
+      "ci_attempts": [
+        {
+          "source_sha": "443b7161eacbfd4c770927dc368836f938878a04",
+          "rust_run_id": 37825268425,
+          "inventory_run_id": 37825268614,
+          "quality_run_id": 37825268654,
+          "desktop_build_run_id": 37825268485,
+          "plugin_renderer_run_id": 37825268489,
+          "loaded_plugin_run_id": 37825268491,
+          "conclusion": "All six required workflows passed on Ubuntu, macOS and Windows."
+        }
+      ],
+      "evidence": "evidence/r2.6.35-vault-to-egui-image-preview-443b716.json",
+      "accepted_slice": [
+        "The native UI acceptance interaction now obtains a real PNG attachment from a temporary vault through the VaultSession resolver and bounded decoder; it verifies accessible alias text, texture caching and unchanged attachment bytes.",
+        "All six required workflows passed on the exact source SHA across Ubuntu, macOS and Windows. Job IDs, uploaded artifacts and digests are in the linked evidence file. No local executable validation was run."
+      ],
+      "remaining": [
+        "Parent C03 remains open for full link, attachment, transclusion and reference-update acceptance.",
+        "SYNC-007 host-level uninstall execution remains open until native packaging/uninstaller integration is implemented; actual OS-path acceptance is scheduled with the R6 packaging choice.",
+        "Native-window human accessibility checks remain external."
+      ],
+      "next_action": "Audit remaining C03 fixture coverage and continue SYNC-007 host cleanup implementation with actual uninstaller testing gated by the R6 packaging choice."
     }
   },
   "ci_preparation": {
