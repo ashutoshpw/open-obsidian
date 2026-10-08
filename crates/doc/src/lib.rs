@@ -298,21 +298,18 @@ fn extract_links(bytes: &[u8]) -> Vec<LinkReference> {
             code_range_index += 1;
         }
 
-        if let Some(range) = code_ranges.get(code_range_index) {
-            if range.start <= cursor {
-                cursor = range.end;
-                continue;
-            }
+        if let Some(range) = code_ranges.get(code_range_index)
+            && range.start <= cursor
+        {
+            cursor = range.end;
+            continue;
         }
 
         let reference = wiki_link_at(bytes, cursor).or_else(|| markdown_link_at(bytes, cursor));
         if let Some(reference) = reference {
-            let intersects_code = code_ranges
-                .get(code_range_index)
-                .is_some_and(|range| {
-                    reference.source_span.start < range.end
-                        && range.start < reference.source_span.end
-                });
+            let intersects_code = code_ranges.get(code_range_index).is_some_and(|range| {
+                reference.source_span.start < range.end && range.start < reference.source_span.end
+            });
             if intersects_code {
                 cursor += 1;
             } else {
@@ -335,11 +332,11 @@ fn code_context_ranges(bytes: &[u8]) -> Vec<SourceSpan> {
 
     let mut merged: Vec<SourceSpan> = Vec::with_capacity(ranges.len());
     for range in ranges {
-        if let Some(previous) = merged.last_mut() {
-            if range.start <= previous.end {
-                previous.end = previous.end.max(range.end);
-                continue;
-            }
+        if let Some(previous) = merged.last_mut()
+            && range.start <= previous.end
+        {
+            previous.end = previous.end.max(range.end);
+            continue;
         }
         merged.push(range);
     }
@@ -439,11 +436,11 @@ fn inline_code_ranges(bytes: &[u8], fenced_ranges: &[SourceSpan]) -> Vec<SourceS
             fence_index += 1;
         }
 
-        if let Some(range) = fenced_ranges.get(fence_index) {
-            if range.start <= cursor {
-                cursor = range.end;
-                continue;
-            }
+        if let Some(range) = fenced_ranges.get(fence_index)
+            && range.start <= cursor
+        {
+            cursor = range.end;
+            continue;
         }
 
         if bytes[cursor] != b'`' || is_escaped_backtick(bytes, cursor) {
@@ -474,14 +471,14 @@ fn matching_backtick_end(
     delimiter_length: usize,
     fenced_ranges: &[SourceSpan],
 ) -> Option<usize> {
-    let mut fence_index = fenced_ranges.partition_point(|range| range.end <= start);
+    let fence_index = fenced_ranges.partition_point(|range| range.end <= start);
     let mut cursor = start;
 
     while cursor < bytes.len() {
-        if let Some(range) = fenced_ranges.get(fence_index) {
-            if range.start <= cursor {
-                return None;
-            }
+        if let Some(range) = fenced_ranges.get(fence_index)
+            && range.start <= cursor
+        {
+            return None;
         }
 
         if bytes[cursor] == b'`' {
