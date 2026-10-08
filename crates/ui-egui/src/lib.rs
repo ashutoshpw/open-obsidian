@@ -285,41 +285,39 @@ impl OpenObsidianApp {
             );
         }
 
-        if let Some(plan) = &plan {
-            if !plan.pruneable.is_empty() {
-                if self.cleanup_confirmation {
-                    ui.group(|ui| {
-                        ui.label(format!(
-                            "Confirm permanent removal of {} eligible items ({}). Unresolved conflicts are protected.",
-                            plan.pruneable.len(),
-                            format_bytes(plan.pruneable_bytes),
-                        ));
-                    });
-                    let mut confirm_cleanup = false;
-                    let mut cancel_cleanup = false;
-                    ui.horizontal(|ui| {
-                        confirm_cleanup = ui
-                            .add_enabled(
-                                !history_busy,
-                                eframe::egui::Button::new("Confirm cleanup"),
-                            )
-                            .clicked();
-                        cancel_cleanup = ui.button("Cancel").clicked();
-                    });
-                    if confirm_cleanup {
-                        self.start_history_cleanup();
-                    } else if cancel_cleanup {
-                        self.cleanup_confirmation = false;
-                    }
-                } else if ui
-                    .add_enabled(
-                        !history_busy,
-                        eframe::egui::Button::new("Review eligible cleanup"),
-                    )
-                    .clicked()
-                {
-                    self.cleanup_confirmation = true;
+        if let Some(plan) = &plan && !plan.pruneable.is_empty() {
+            if self.cleanup_confirmation {
+                ui.group(|ui| {
+                    ui.label(format!(
+                        "Confirm permanent removal of {} eligible items ({}). Unresolved conflicts are protected.",
+                        plan.pruneable.len(),
+                        format_bytes(plan.pruneable_bytes),
+                    ));
+                });
+                let mut confirm_cleanup = false;
+                let mut cancel_cleanup = false;
+                ui.horizontal(|ui| {
+                    confirm_cleanup = ui
+                        .add_enabled(
+                            !history_busy,
+                            eframe::egui::Button::new("Confirm cleanup"),
+                        )
+                        .clicked();
+                    cancel_cleanup = ui.button("Cancel").clicked();
+                });
+                if confirm_cleanup {
+                    self.start_history_cleanup();
+                } else if cancel_cleanup {
+                    self.cleanup_confirmation = false;
                 }
+            } else if ui
+                .add_enabled(
+                    !history_busy,
+                    eframe::egui::Button::new("Review eligible cleanup"),
+                )
+                .clicked()
+            {
+                self.cleanup_confirmation = true;
             }
         }
 
@@ -406,10 +404,7 @@ impl OpenObsidianApp {
                 }
 
                 columns[1].label("Incoming version");
-                columns[1].small(format!(
-                    "SHA-256 {}",
-                    inspection.incoming.revision_sha256
-                ));
+                columns[1].small(format!("SHA-256 {}", inspection.incoming.revision_sha256));
                 columns[1].add(
                     eframe::egui::TextEdit::multiline(&mut inspection.incoming.text)
                         .desired_rows(8)
@@ -541,17 +536,13 @@ impl OpenObsidianApp {
                 .resolve_conflict(&id, &relative_path, action)
                 .map_err(|_| ())
                 .and_then(|resolution| {
-                    load_history_preview(&session, policy)
-                        .map(|preview| (resolution, preview))
+                    load_history_preview(&session, policy).map(|preview| (resolution, preview))
                 });
             HistoryTaskMessage::ConflictResolution(result)
         });
     }
 
-    fn start_history_task(
-        &mut self,
-        task: impl FnOnce() -> HistoryTaskMessage + Send + 'static,
-    ) {
+    fn start_history_task(&mut self, task: impl FnOnce() -> HistoryTaskMessage + Send + 'static) {
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let _ = sender.send(task());
