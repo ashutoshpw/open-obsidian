@@ -769,15 +769,16 @@ impl VaultStore {
             } else {
                 self.root
                     .resolve_vault_path(&record.old_path, true)
-                    .map_err(|error| format!("original source path could not be resolved: {error}"))?
+                    .map_err(|error| {
+                        format!("original source path could not be resolved: {error}")
+                    })?
             };
-            fs::rename(&temporary_entry, &old_path)
-                .map_err(|error| {
-                    format!(
-                        "rename temporary could not be restored to {}: {error}",
-                        record.old_path.display()
-                    )
-                })?;
+            fs::rename(&temporary_entry, &old_path).map_err(|error| {
+                format!(
+                    "rename temporary could not be restored to {}: {error}",
+                    record.old_path.display()
+                )
+            })?;
             return Ok(());
         }
 
@@ -806,9 +807,7 @@ impl VaultStore {
                     &mut move_state,
                 )
                 .map_err(|error| {
-                    format!(
-                        "renamed source could not be restored to its original path: {error}"
-                    )
+                    format!("renamed source could not be restored to its original path: {error}")
                 })
             }
             (Some(_), Some(_)) => Err(
@@ -1297,6 +1296,84 @@ fn is_sha256(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
+fn apply_target_edits(bytes: &[u8], edits: &[(SourceSpan, String)]) -> Result<Vec<u8>, VaultError> {
+    let source = std::str::from_utf8(bytes).map_err(|_| VaultError::StaleRenamePreview)?;
+    let mut ordered = edits.to_vec();
+    ordered.sort_by_key(|(span, _)| span.start);
+    let mut previous_end = 0;
+    for (span, _) in &ordered {
+        if span.start > span.end
+            || span.end > source.len()
+            || !source.is_char_boundary(span.start)
+            || !source.is_char_boundary(span.end)
+            || span.start < previous_end
+        {
+            return Err(VaultError::StaleRenamePreview);
+        }
+        previous_end = span.end;
+    }
+    let mut transformed = source.to_owned();
+    for (span, replacement) in ordered.iter().rev() {
+        transformed.replace_range(span.start..span.end, replacement);
+    }
+    Ok(transformed.into_bytes())
+}
+
+fn journal_paths(
+    updates: &[RenameUpdate],
+    old_path: &Path,
+    new_path: &Path,
+) -> Result<Vec<String>, VaultError> {
+    let mut paths = BTreeSet::new();
+    paths.insert(path_to_slashes(old_path)?);
+    paths.insert(path_to_slashes(new_path)?);
+    for update in updates {
+        paths.insert(path_to_slashes(&update.source_path)?);
+        paths.insert(path_to_slashes(&update.target_path)?);
+    }
+    Ok(paths.into_iter().collect())
+}
+
+fn move_vault_file(
+    source_path: &Path,
+    destination_path: &Path,
+    operation_id: &str,
+    case_only: bool,
+    state: &mut RenameMoveState,
+) -> io::Result<()> {
+    #[cfg(windows)]
+    if case_only {
+        let file_name = source_path
+            .file_name()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing source name"))?
+            .to_string_lossy();
+        let temporary_path = source_path
+            .parent()
+            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing source parent"))?
+            .join(format!(".{file_name}.{operation_id}.rename.tmp"));
+        fs::rename(source_path, &temporary_path)?;
+        state.moved = true;
+        state.temporary_path = Some(temporary_path.clone());
+        if let Err(error) = fs::rename(&temporary_path, destination_path) {
+            if let Err(restore_error) = fs::rename(&temporary_path, source_path) {
+                return Err(io::Error::other(format!(
+                    "case-only rename failed: {error}; restoring temporary failed: {restore_error}"
+                )));
+            }
+            state.moved = false;
+            state.temporary_path = None;
+            return Err(error);
+        }
+        state.temporary_path = None;
+        return Ok(());
+    }
+    #[cfg(not(windows))]
+    let _ = (operation_id, case_only);
+    fs::rename(source_path, destination_path)?;
+    state.moved = true;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1537,82 +1614,4 @@ mod tests {
                 .any(|name| name.as_encoded_bytes() == b"old.md")
         );
     }
-}
-
-fn apply_target_edits(bytes: &[u8], edits: &[(SourceSpan, String)]) -> Result<Vec<u8>, VaultError> {
-    let source = std::str::from_utf8(bytes).map_err(|_| VaultError::StaleRenamePreview)?;
-    let mut ordered = edits.to_vec();
-    ordered.sort_by_key(|(span, _)| span.start);
-    let mut previous_end = 0;
-    for (span, _) in &ordered {
-        if span.start > span.end
-            || span.end > source.len()
-            || !source.is_char_boundary(span.start)
-            || !source.is_char_boundary(span.end)
-            || span.start < previous_end
-        {
-            return Err(VaultError::StaleRenamePreview);
-        }
-        previous_end = span.end;
-    }
-    let mut transformed = source.to_owned();
-    for (span, replacement) in ordered.iter().rev() {
-        transformed.replace_range(span.start..span.end, replacement);
-    }
-    Ok(transformed.into_bytes())
-}
-
-fn journal_paths(
-    updates: &[RenameUpdate],
-    old_path: &Path,
-    new_path: &Path,
-) -> Result<Vec<String>, VaultError> {
-    let mut paths = BTreeSet::new();
-    paths.insert(path_to_slashes(old_path)?);
-    paths.insert(path_to_slashes(new_path)?);
-    for update in updates {
-        paths.insert(path_to_slashes(&update.source_path)?);
-        paths.insert(path_to_slashes(&update.target_path)?);
-    }
-    Ok(paths.into_iter().collect())
-}
-
-fn move_vault_file(
-    source_path: &Path,
-    destination_path: &Path,
-    operation_id: &str,
-    case_only: bool,
-    state: &mut RenameMoveState,
-) -> io::Result<()> {
-    #[cfg(windows)]
-    if case_only {
-        let file_name = source_path
-            .file_name()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing source name"))?
-            .to_string_lossy();
-        let temporary_path = source_path
-            .parent()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing source parent"))?
-            .join(format!(".{file_name}.{operation_id}.rename.tmp"));
-        fs::rename(source_path, &temporary_path)?;
-        state.moved = true;
-        state.temporary_path = Some(temporary_path.clone());
-        if let Err(error) = fs::rename(&temporary_path, destination_path) {
-            if let Err(restore_error) = fs::rename(&temporary_path, source_path) {
-                return Err(io::Error::other(format!(
-                    "case-only rename failed: {error}; restoring temporary failed: {restore_error}"
-                )));
-            }
-            state.moved = false;
-            state.temporary_path = None;
-            return Err(error);
-        }
-        state.temporary_path = None;
-        return Ok(());
-    }
-    #[cfg(not(windows))]
-    let _ = (operation_id, case_only);
-    fs::rename(source_path, destination_path)?;
-    state.moved = true;
-    Ok(())
 }
