@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T12:53:42Z",
+  "updated_at": "2026-10-08T13:11:57Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
-  "current_milestone": "R2.6.25",
+  "last_reconciled_head": "7b3c3d1a115d79badb4816182f74ab709b145bed",
+  "current_milestone": "R2.6.26",
   "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89"
+      "implementation_sha": "7b3c3d1a115d79badb4816182f74ab709b145bed"
     },
     "R3": {
       "status": "pending",
@@ -158,7 +158,8 @@
     "The R2.6.22 evidence commit 50a21ac4cff1dc4660c219e54e5f387f634cfec2 also passed all six workflows on that exact SHA: Rust CI 37770975628, inventory 37770975657, quality 37770975668, desktop 37770975636, plugin renderer 37770975699 and loaded-plugin workflows 37770975619.",
     "R2.6.23 adds an over-cap history-warning egui interaction. The test renders the warning and Review eligible cleanup control, then confirms no cleanup task or confirmation state starts unless the user selects the review action. All six GitHub Actions workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; evidence: evidence/r2.6.23-history-warning-ui-b236009.json. The new interaction passed on Ubuntu, macOS and Windows. No local executable validation was run. Together with the fixture-backed retention/explicit-cleanup interaction, the platform storage-status probe and its UI refresh interaction, this closes the D16 cap-warning display gap. SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain open.",
     "R2.6.24 drove the same-basename-disambiguated C03 rename fixture through the production egui preview, review, explicit apply and session refresh. Preview preserved bytes; confirmed apply updated the intended reference and moved note while preserving the unrelated same-basename note. All six GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949, including the Rust parallel group and the interaction on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.24-subpath-rename-ui-a01c8a2.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
-    "R2.6.25 added fixtures/link-resolution.json and a shared testkit case for source-aware wiki/Markdown link and embed resolution, aliases, subpaths, duplicate headings/basenames, unresolved paths and source immutability. All six GitHub Actions workflows passed on exact source SHA b5f3249f2e6eb5b98ea6515722f397cea0f3db89, and the fixture test passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.25-link-resolution-fixture-b5f3249.json. No local executable validation was run; C03/C03.2 full cross-layer acceptance and SYNC-007 host-level uninstall integration remain open."
+    "R2.6.25 added fixtures/link-resolution.json and a shared testkit case for source-aware wiki/Markdown link and embed resolution, aliases, subpaths, duplicate headings/basenames, unresolved paths and source immutability. All six GitHub Actions workflows passed on exact source SHA b5f3249f2e6eb5b98ea6515722f397cea0f3db89, and the fixture test passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.25-link-resolution-fixture-b5f3249.json. No local executable validation was run; C03/C03.2 full cross-layer acceptance and SYNC-007 host-level uninstall integration remain open.",
+    "R2.6.26 replaced the hardcoded egui rename fixture interaction with the shared resolved wiki/Markdown/embed case. Production UI preview/review/apply/session refresh preserved pre-confirmation bytes and matched all expected post-apply bytes, including BOM/CRLF source. All six workflows passed on exact source SHA 7b3c3d1a115d79badb4816182f74ab709b145bed, and the interaction passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -5254,6 +5255,47 @@
         "SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+    },
+    "R2.6.26": {
+      "status": "complete",
+      "implementation_sha": "7b3c3d1a115d79badb4816182f74ab709b145bed",
+      "implementation_commits": [
+        "2f35990028fa86757fae75f3ef0bb96105e46e18",
+        "7b3c3d1a115d79badb4816182f74ab709b145bed"
+      ],
+      "scope": "Exercise resolved wiki, Markdown and embed rename references through the production egui preview/review/apply/session-refresh interaction using the shared C03 fixture.",
+      "ci_attempts": [
+        {
+          "source_sha": "2f35990028fa86757fae75f3ef0bb96105e46e18",
+          "rust_run_id": 37781357107,
+          "inventory_run_id": 37781357224,
+          "quality_run_id": 37781357123,
+          "desktop_build_run_id": 37781357204,
+          "plugin_renderer_run_id": 37781357200,
+          "loaded_plugin_run_id": 37781357201,
+          "finding": "The fixture interaction and workspace tests passed on Ubuntu, macOS and Windows. Ubuntu rustfmt reported two layout changes in the new UI test; the five companion workflows passed. Applied the exact formatting corrections in the follow-up commit."
+        },
+        {
+          "source_sha": "7b3c3d1a115d79badb4816182f74ab709b145bed",
+          "rust_run_id": 37781838520,
+          "inventory_run_id": 37781838505,
+          "quality_run_id": 37781838559,
+          "desktop_build_run_id": 37781838501,
+          "plugin_renderer_run_id": 37781838527,
+          "loaded_plugin_run_id": 37781838497,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json",
+      "accepted_slice": [
+        "The egui interaction loads the shared resolved C03 rename case, previews four updates with no skips and no pre-confirmation mutation, then requires separate review and explicit confirmation before applying the rename.",
+        "After apply, every fixture source matches expected bytes at its resulting path, the renamed destination is present in the refreshed session, and all six required workflows pass on exact source SHA 7b3c3d1a115d79badb4816182f74ab709b145bed on all three operating systems. No local executable validation was run."
+      ],
+      "remaining": [
+        "This remains headless UI interaction evidence and does not establish native-window visual/manual accessibility acceptance or complete all C03/C03.2 cross-layer cases.",
+        "SYNC-007 host-level uninstall integration remains pending."
+      ],
+      "next_action": "Continue full C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
     }
   },
   "ci_preparation": {
