@@ -9,11 +9,13 @@ use openobsidian_doc::{
     RawDocument, RenamePlanFile, build_link_rename_plan, guard_note_transclusion, resolve_link,
     resolve_link_with_sources, resolve_link_with_subpath_statuses, slice_markdown_subpath,
 };
+use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::fs::{self, OpenOptions};
-use std::io::{self, Read as IoRead, Write as IoWrite};
+use std::io::{self, Cursor, Read as IoRead, Write as IoWrite};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Component, Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -131,11 +133,21 @@ pub struct VaultLinkResolution {
     pub resolution: LinkResolution,
 }
 
+/// A raster attachment decoded through bounded reads from a stable vault snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultInlineImage {
+    pub revision_sha256: String,
+    pub width: u32,
+    pub height: u32,
+    pub rgba_bytes: Vec<u8>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum VaultNoteEmbedDisposition {
     NotRendered,
     Blocked(TransclusionBlockReason),
     Included(TransclusionGuard),
+    Attachment(VaultInlineImage),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -164,6 +176,51 @@ pub struct VaultNoteEmbedReport {
 }
 
 const MAX_NOTE_TRANSCLUSION_TREE_NODES: usize = 32;
+const MAX_INLINE_IMAGE_SOURCE_BYTES: u64 = 8 * 1024 * 1024;
+const MAX_INLINE_IMAGE_DIMENSION: u32 = 4096;
+const MAX_INLINE_IMAGE_PIXELS: u64 = 4_194_304;
+const MAX_INLINE_IMAGE_DECODER_ALLOCATION: u64 = 64 * 1024 * 1024;
+const MAX_REPORT_INLINE_IMAGES: usize = 8;
+const MAX_REPORT_INLINE_IMAGE_SOURCE_BYTES: u64 = 16 * 1024 * 1024;
+const MAX_REPORT_INLINE_IMAGE_PIXELS: u64 = 8_388_608;
+
+#[derive(Clone, Copy, Debug)]
+struct InlineImageBudget {
+    remaining_images: usize,
+    remaining_source_bytes: u64,
+    remaining_pixels: u64,
+}
+
+impl InlineImageBudget {
+    fn single() -> Self {
+        Self {
+            remaining_images: 1,
+            remaining_source_bytes: MAX_INLINE_IMAGE_SOURCE_BYTES,
+            remaining_pixels: MAX_INLINE_IMAGE_PIXELS,
+        }
+    }
+
+    fn for_report() -> Self {
+        Self {
+            remaining_images: MAX_REPORT_INLINE_IMAGES,
+            remaining_source_bytes: MAX_REPORT_INLINE_IMAGE_SOURCE_BYTES,
+            remaining_pixels: MAX_REPORT_INLINE_IMAGE_PIXELS,
+        }
+    }
+}
+
+fn inline_image_format(path: &Path) -> Option<ImageFormat> {
+    let extension = path.extension()?.to_str()?.to_ascii_lowercase();
+    match extension.as_str() {
+        "bmp" => Some(ImageFormat::Bmp),
+        "gif" => Some(ImageFormat::Gif),
+        "ico" => Some(ImageFormat::Ico),
+        "jpg" | "jpeg" => Some(ImageFormat::Jpeg),
+        "png" => Some(ImageFormat::Png),
+        "webp" => Some(ImageFormat::WebP),
+        _ => None,
+    }
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultWriteRequest {
@@ -321,11 +378,28 @@ impl VaultRoot {
         depth: usize,
         chain: &[String],
     ) -> Result<VaultNoteEmbedResolution, VaultError> {
+        self.resolve_note_embed_with_budget(
+            current_path.as_ref(),
+            reference,
+            depth,
+            chain,
+            &mut InlineImageBudget::single(),
+        )
+    }
+
+    fn resolve_note_embed_with_budget(
+        &self,
+        current_path: &Path,
+        reference: &LinkReference,
+        depth: usize,
+        chain: &[String],
+        image_budget: &mut InlineImageBudget,
+    ) -> Result<VaultNoteEmbedResolution, VaultError> {
         if reference.kind != LinkKind::Embed {
             return Err(VaultError::NotEmbedReference);
         }
 
-        let current_path = normalize_relative_path(current_path.as_ref())?;
+        let current_path = normalize_relative_path(current_path)?;
         if !current_path
             .extension()
             .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
@@ -369,6 +443,56 @@ impl VaultRoot {
         }
 
         let path_resolution = resolve_link(&effective_reference, &files, &current_path_text);
+        if path_resolution.status == LinkResolutionStatus::Unresolved {
+            let all_file_paths = before
+                .entries
+                .iter()
+                .filter(|entry| entry.kind == VaultSnapshotEntryKind::File)
+                .filter_map(|entry| {
+                    path_to_slashes(&entry.relative_path)
+                        .ok()
+                        .map(|path| (entry, path))
+                })
+                .collect::<Vec<_>>();
+            let all_files = all_file_paths
+                .iter()
+                .map(|(_, path)| path.clone())
+                .collect::<Vec<_>>();
+            let attachment_resolution =
+                resolve_link(&effective_reference, &all_files, &current_path_text);
+            if attachment_resolution.status != LinkResolutionStatus::Unresolved {
+                let image = if attachment_resolution.status == LinkResolutionStatus::Resolved
+                    && effective_reference.subpath.is_none()
+                {
+                    let target = attachment_resolution
+                        .target
+                        .as_deref()
+                        .expect("resolved link has target");
+                    let entry = all_file_paths
+                        .iter()
+                        .find(|(_, path)| path.as_str() == target)
+                        .map(|(entry, _)| *entry)
+                        .ok_or(VaultError::SnapshotChanged)?;
+                    if let Some(format) = inline_image_format(&entry.relative_path) {
+                        self.decode_inline_image(entry, format, image_budget)?
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+                let disposition = image
+                    .map(VaultNoteEmbedDisposition::Attachment)
+                    .unwrap_or(VaultNoteEmbedDisposition::NotRendered);
+                return self.finish_note_embed(
+                    &before,
+                    reference,
+                    attachment_resolution,
+                    None,
+                    disposition,
+                );
+            }
+        }
         let (resolution, slice, disposition) = match path_resolution.status {
             LinkResolutionStatus::External | LinkResolutionStatus::Unresolved => (
                 path_resolution,
@@ -564,6 +688,7 @@ impl VaultRoot {
             .collect::<Vec<_>>();
 
         let mut remaining_nodes = MAX_NOTE_TRANSCLUSION_TREE_NODES;
+        let mut image_budget = InlineImageBudget::for_report();
         let mut embeds = Vec::new();
         let mut truncated = false;
         for reference in references {
@@ -578,6 +703,7 @@ impl VaultRoot {
                 &chain,
                 &before.revision_sha256,
                 &mut remaining_nodes,
+                &mut image_budget,
             )?);
         }
 
@@ -600,10 +726,17 @@ impl VaultRoot {
         chain: &[String],
         expected_snapshot: &str,
         remaining_nodes: &mut usize,
+        image_budget: &mut InlineImageBudget,
     ) -> Result<VaultNoteEmbedNode, VaultError> {
         debug_assert!(*remaining_nodes > 0);
         *remaining_nodes -= 1;
-        let resolution = self.resolve_note_embed(current_path, reference, depth, chain)?;
+        let resolution = self.resolve_note_embed_with_budget(
+            current_path,
+            reference,
+            depth,
+            chain,
+            image_budget,
+        )?;
         if resolution.snapshot_sha256 != expected_snapshot {
             return Err(VaultError::LinkResolutionSnapshotChanged);
         }
@@ -634,6 +767,7 @@ impl VaultRoot {
                     &guard.chain,
                     expected_snapshot,
                     remaining_nodes,
+                    image_budget,
                 )?);
             }
         }
@@ -687,6 +821,101 @@ impl VaultRoot {
             ));
         }
         if bytes.len() as u64 != entry.size_bytes || sha256_hex(&bytes) != entry.revision_sha256 {
+            return Err(VaultError::SnapshotChanged);
+        }
+        Ok(bytes)
+    }
+
+    fn decode_inline_image(
+        &self,
+        entry: &VaultSnapshotEntry,
+        format: ImageFormat,
+        budget: &mut InlineImageBudget,
+    ) -> Result<Option<VaultInlineImage>, VaultError> {
+        if entry.size_bytes > MAX_INLINE_IMAGE_SOURCE_BYTES
+            || entry.size_bytes > budget.remaining_source_bytes
+            || budget.remaining_images == 0
+        {
+            return Ok(None);
+        }
+        budget.remaining_images -= 1;
+        budget.remaining_source_bytes -= entry.size_bytes;
+
+        let bytes = self.read_inline_image_source(entry)?;
+        let dimensions = catch_unwind(AssertUnwindSafe(|| {
+            ImageReader::with_format(Cursor::new(bytes.as_slice()), format).into_dimensions()
+        }))
+        .ok()
+        .and_then(Result::ok);
+        let Some((width, height)) = dimensions else {
+            return Ok(None);
+        };
+        if width == 0
+            || height == 0
+            || width > MAX_INLINE_IMAGE_DIMENSION
+            || height > MAX_INLINE_IMAGE_DIMENSION
+        {
+            return Ok(None);
+        }
+        let pixel_count = u64::from(width) * u64::from(height);
+        if pixel_count > MAX_INLINE_IMAGE_PIXELS || pixel_count > budget.remaining_pixels {
+            return Ok(None);
+        }
+        budget.remaining_pixels -= pixel_count;
+
+        let mut limits = ImageLimits::default();
+        limits.max_image_width = Some(MAX_INLINE_IMAGE_DIMENSION);
+        limits.max_image_height = Some(MAX_INLINE_IMAGE_DIMENSION);
+        limits.max_alloc = Some(MAX_INLINE_IMAGE_DECODER_ALLOCATION);
+        let decoded = catch_unwind(AssertUnwindSafe(|| {
+            let mut reader = ImageReader::with_format(Cursor::new(bytes.as_slice()), format);
+            reader.limits(limits);
+            reader.decode()
+        }))
+        .ok()
+        .and_then(Result::ok);
+        let Some(decoded) = decoded else {
+            return Ok(None);
+        };
+        let rgba_bytes = catch_unwind(AssertUnwindSafe(|| decoded.into_rgba8().into_raw())).ok();
+        let Some(rgba_bytes) = rgba_bytes else {
+            return Ok(None);
+        };
+        let Some(expected_bytes) = pixel_count
+            .checked_mul(4)
+            .and_then(|length| usize::try_from(length).ok())
+        else {
+            return Ok(None);
+        };
+        if rgba_bytes.len() != expected_bytes {
+            return Ok(None);
+        }
+
+        Ok(Some(VaultInlineImage {
+            revision_sha256: entry.revision_sha256.clone(),
+            width,
+            height,
+            rgba_bytes,
+        }))
+    }
+
+    fn read_inline_image_source(
+        &self,
+        entry: &VaultSnapshotEntry,
+    ) -> Result<Vec<u8>, VaultError> {
+        let canonical = self.resolve_vault_path(&entry.relative_path, false)?;
+        let mut file = fs::File::open(canonical)?;
+        if file.metadata()?.len() != entry.size_bytes {
+            return Err(VaultError::SnapshotChanged);
+        }
+        let mut bytes = Vec::with_capacity(entry.size_bytes as usize);
+        IoRead::by_ref(&mut file)
+            .take(MAX_INLINE_IMAGE_SOURCE_BYTES + 1)
+            .read_to_end(&mut bytes)?;
+        if bytes.len() as u64 != entry.size_bytes
+            || bytes.len() as u64 > MAX_INLINE_IMAGE_SOURCE_BYTES
+            || sha256_hex(&bytes) != entry.revision_sha256
+        {
             return Err(VaultError::SnapshotChanged);
         }
         Ok(bytes)
@@ -1551,8 +1780,18 @@ mod tests {
             .unwrap_or_else(|| panic!("expected embed reference to {target}"))
     }
 
+    fn rgba_png(rgba: [u8; 4]) -> Vec<u8> {
+        use image::ImageEncoder as _;
+
+        let mut bytes = Vec::new();
+        image::codecs::png::PngEncoder::new(&mut bytes)
+            .write_image(&rgba, 1, 1, image::ExtendedColorType::Rgba8)
+            .unwrap();
+        bytes
+    }
+
     #[test]
-    fn note_embed_resolution_slices_markdown_and_excludes_attachments() {
+    fn note_embed_resolution_slices_markdown_and_decodes_bounded_raster_attachments() {
         let temp = TempDir::new();
         let index_bytes = b"![[Notes/Target#Details]]\n![[Images/photo.png]]\n";
         let target_bytes = b"# Target\r\n\r\n## Details\r\nbody\r\n## End\r\nignored\r\n";
@@ -1560,7 +1799,8 @@ mod tests {
         fs::create_dir_all(temp.0.join("Images")).unwrap();
         fs::write(temp.0.join("Index.md"), index_bytes).unwrap();
         fs::write(temp.0.join("Notes/Target.md"), target_bytes).unwrap();
-        fs::write(temp.0.join("Images/photo.png"), [1, 2, 3]).unwrap();
+        let image_bytes = rgba_png([255, 0, 0, 255]);
+        fs::write(temp.0.join("Images/photo.png"), &image_bytes).unwrap();
 
         let vault = VaultRoot::open(&temp.0).unwrap();
         let index = std::str::from_utf8(index_bytes).unwrap();
@@ -1596,17 +1836,69 @@ mod tests {
             .unwrap();
         assert_eq!(
             attachment.resolution.status,
-            super::LinkResolutionStatus::Unresolved
+            super::LinkResolutionStatus::Resolved
         );
-        assert_eq!(
-            attachment.disposition,
-            VaultNoteEmbedDisposition::NotRendered
-        );
+        assert_eq!(attachment.resolution.target.as_deref(), Some("Images/photo.png"));
+        let VaultNoteEmbedDisposition::Attachment(image) = attachment.disposition else {
+            panic!("a valid in-budget PNG should produce a decoded attachment preview");
+        };
+        assert_eq!(image.revision_sha256, sha256_hex(&image_bytes));
+        assert_eq!((image.width, image.height), (1, 1));
+        assert_eq!(image.rgba_bytes, vec![255, 0, 0, 255]);
         assert_eq!(fs::read(temp.0.join("Index.md")).unwrap(), index_bytes);
         assert_eq!(
             fs::read(temp.0.join("Notes/Target.md")).unwrap(),
             target_bytes
         );
+    }
+
+    #[test]
+    fn note_embed_report_limits_raster_attachment_count() {
+        let temp = TempDir::new();
+        let mut index_bytes = String::new();
+        for _ in 0..=super::MAX_REPORT_INLINE_IMAGES {
+            index_bytes.push_str("![[Images/photo.png]]\n");
+        }
+        fs::create_dir_all(temp.0.join("Images")).unwrap();
+        fs::write(temp.0.join("Index.md"), index_bytes).unwrap();
+        fs::write(
+            temp.0.join("Images/photo.png"),
+            rgba_png([0, 255, 0, 255]),
+        )
+        .unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let report = vault.resolve_note_embeds_for_note("Index.md").unwrap();
+
+        assert_eq!(report.embeds.len(), super::MAX_REPORT_INLINE_IMAGES + 1);
+        assert!(report.embeds[..super::MAX_REPORT_INLINE_IMAGES]
+            .iter()
+            .all(|node| matches!(node.resolution.disposition, VaultNoteEmbedDisposition::Attachment(_))));
+        let last = report.embeds.last().unwrap();
+        assert_eq!(last.resolution.resolution.status, super::LinkResolutionStatus::Resolved);
+        assert_eq!(last.resolution.disposition, VaultNoteEmbedDisposition::NotRendered);
+    }
+
+    #[test]
+    fn oversized_raster_attachment_remains_resolved_but_is_not_decoded() {
+        let temp = TempDir::new();
+        fs::create_dir(temp.0.join("Images")).unwrap();
+        fs::write(temp.0.join("Index.md"), b"![[Images/large.png]]\n").unwrap();
+        fs::write(
+            temp.0.join("Images/large.png"),
+            vec![0; super::MAX_INLINE_IMAGE_SOURCE_BYTES as usize + 1],
+        )
+        .unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let reference = embed_reference("![[Images/large.png]]", "Images/large.png");
+        let result = vault
+            .resolve_note_embed("Index.md", &reference, 0, &["Index.md".to_owned()])
+            .unwrap();
+
+        assert_eq!(result.resolution.status, super::LinkResolutionStatus::Resolved);
+        assert_eq!(result.resolution.target.as_deref(), Some("Images/large.png"));
+        assert_eq!(result.disposition, VaultNoteEmbedDisposition::NotRendered);
     }
 
     #[test]

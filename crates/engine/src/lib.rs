@@ -5,7 +5,7 @@ pub use openobsidian_vault::{
     LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode,
+    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode,
     VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultRenamePreview, VaultRenameRecoveryIssue,
     VaultRenameRecoveryReport, VaultRenameResult, plan_history_retention,
 };

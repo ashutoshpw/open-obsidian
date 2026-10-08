@@ -5,9 +5,12 @@ use openobsidian_engine::{
     LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason, VaultConflictAction,
     VaultConflictRead, VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind,
     VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultLinkResolution,
-    VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
-    VaultRenameRecoveryReport, VaultRenameResult, VaultSession, plan_history_retention,
+    VaultInlineImage, VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport,
+    VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult, VaultSession,
+    plan_history_retention,
 };
+use std::collections::HashMap;
+use std::path::Path;
 use std::sync::{
     Arc,
     mpsc::{self, Receiver, TryRecvError},
@@ -161,6 +164,7 @@ struct OpenObsidianApp {
     note_embed_report: Option<VaultNoteEmbedReport>,
     note_embed_error: Option<String>,
     markdown_cache: CommonMarkCache,
+    inline_image_textures: HashMap<String, eframe::egui::TextureHandle>,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -224,6 +228,7 @@ impl OpenObsidianApp {
                 self.link_status = None;
                 self.note_embed_report = None;
                 self.note_embed_error = None;
+                self.inline_image_textures.clear();
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
                 self.rename_receiver = None;
@@ -356,6 +361,7 @@ impl OpenObsidianApp {
             self.link_resolutions.clear();
             self.note_embed_report = None;
             self.note_embed_error = None;
+            self.inline_image_textures.clear();
         }
 
         let operation_busy = self.history_receiver.is_some()
@@ -402,6 +408,7 @@ impl OpenObsidianApp {
             self.link_status = None;
             self.note_embed_report = None;
             self.note_embed_error = None;
+            self.inline_image_textures.clear();
         }
 
         if note_paths.is_empty() {
@@ -504,7 +511,12 @@ impl OpenObsidianApp {
                         .max_height(320.0)
                         .show(ui, |ui| {
                             for embed in &report.embeds {
-                                show_note_embed_node(ui, embed, &mut self.markdown_cache);
+                                show_note_embed_node(
+                                    ui,
+                                    embed,
+                                    &mut self.markdown_cache,
+                                    &mut self.inline_image_textures,
+                                );
                             }
                             if report.truncated {
                                 ui.small("Additional note embeds were omitted to keep this preview bounded.");
@@ -1056,6 +1068,7 @@ impl OpenObsidianApp {
         self.link_status = None;
         self.note_embed_report = None;
         self.note_embed_error = None;
+        self.inline_image_textures.clear();
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let resolutions = session
@@ -1140,6 +1153,7 @@ impl OpenObsidianApp {
                 self.link_status = None;
                 self.note_embed_report = None;
                 self.note_embed_error = None;
+                self.inline_image_textures.clear();
                 self.session = Some(Arc::new(outcome.session));
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
@@ -1438,6 +1452,7 @@ fn show_note_embed_node(
     ui: &mut eframe::egui::Ui,
     node: &VaultNoteEmbedNode,
     markdown_cache: &mut CommonMarkCache,
+    inline_image_textures: &mut HashMap<String, eframe::egui::TextureHandle>,
 ) {
     let reference = &node.resolution.reference;
     ui.group(|ui| {
@@ -1470,19 +1485,48 @@ fn show_note_embed_node(
                     }
                 }
             }
+            VaultNoteEmbedDisposition::Attachment(image) => {
+                let target = node
+                    .resolution
+                    .resolution
+                    .target
+                    .as_deref()
+                    .unwrap_or("vault image attachment");
+                ui.small(format!("Vault image: {target}"));
+                show_inline_image(
+                    ui,
+                    image,
+                    inline_image_alt_text(reference.alias.as_deref()),
+                    inline_image_textures,
+                );
+            }
             VaultNoteEmbedDisposition::NotRendered => {
-                let message = match node.resolution.resolution.status {
-                    LinkResolutionStatus::Resolved => {
-                        "Not rendered: the selected heading or block could not be resolved."
-                    }
-                    LinkResolutionStatus::Unresolved => {
-                        "Not rendered: no matching Markdown note was found."
-                    }
-                    LinkResolutionStatus::Ambiguous => {
-                        "Not rendered: multiple Markdown notes match this embed."
-                    }
-                    LinkResolutionStatus::External => {
-                        "Not rendered: external targets are not opened in this preview."
+                let is_attachment = node
+                    .resolution
+                    .resolution
+                    .target
+                    .as_deref()
+                    .is_some_and(|target| {
+                        !Path::new(target)
+                            .extension()
+                            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+                    });
+                let message = if is_attachment {
+                    "Not rendered: this attachment type or size is outside the safe image preview limits."
+                } else {
+                    match node.resolution.resolution.status {
+                        LinkResolutionStatus::Resolved => {
+                            "Not rendered: the selected heading or block could not be resolved."
+                        }
+                        LinkResolutionStatus::Unresolved => {
+                            "Not rendered: no matching Markdown note or vault attachment was found."
+                        }
+                        LinkResolutionStatus::Ambiguous => {
+                            "Not rendered: multiple vault files match this embed."
+                        }
+                        LinkResolutionStatus::External => {
+                            "Not rendered: external targets are not opened in this preview."
+                        }
                     }
                 };
                 ui.colored_label(
@@ -1513,9 +1557,67 @@ fn show_note_embed_node(
             ui.small("Nested embeds were omitted to keep this preview bounded.");
         }
         for child in &node.children {
-            show_note_embed_node(ui, child, markdown_cache);
+            show_note_embed_node(ui, child, markdown_cache, inline_image_textures);
         }
     });
+}
+
+fn show_inline_image(
+    ui: &mut eframe::egui::Ui,
+    image: &VaultInlineImage,
+    alt_text: String,
+    textures: &mut HashMap<String, eframe::egui::TextureHandle>,
+) {
+    let Some(expected_bytes) = u64::from(image.width)
+        .checked_mul(u64::from(image.height))
+        .and_then(|pixels| pixels.checked_mul(4))
+        .and_then(|bytes| usize::try_from(bytes).ok())
+    else {
+        ui.small("Not rendered: this vault image has invalid pixel dimensions.");
+        return;
+    };
+    if image.width == 0 || image.height == 0 || image.rgba_bytes.len() != expected_bytes {
+        ui.small("Not rendered: this vault image has invalid pixel data.");
+        return;
+    }
+    let texture = textures
+        .entry(image.revision_sha256.clone())
+        .or_insert_with(|| {
+            ui.ctx().load_texture(
+                format!("vault-image-{}", image.revision_sha256),
+                eframe::egui::ColorImage::from_rgba_unmultiplied(
+                    [image.width as usize, image.height as usize],
+                    &image.rgba_bytes,
+                ),
+                eframe::egui::TextureOptions::LINEAR,
+            )
+        })
+        .clone();
+    let scale = (640.0 / image.width as f32)
+        .min(480.0 / image.height as f32)
+        .min(1.0);
+    let size = eframe::egui::vec2(image.width as f32 * scale, image.height as f32 * scale);
+    ui.add(
+        eframe::egui::Image::new(&texture)
+            .fit_to_exact_size(size)
+            .alt_text(alt_text),
+    );
+}
+
+fn inline_image_alt_text(alias: Option<&str>) -> String {
+    alias
+        .map(str::trim)
+        .filter(|alias| {
+            !alias.is_empty()
+                && !alias.split_once('x').is_some_and(|(width, height)| {
+                    !width.is_empty()
+                        && !height.is_empty()
+                        && width.chars().all(|character| character.is_ascii_digit())
+                        && height.chars().all(|character| character.is_ascii_digit())
+                })
+        })
+        .unwrap_or("Vault image attachment")
+        .to_owned()
 }
 
 fn link_resolution_status_label(status: LinkResolutionStatus) -> &'static str {
@@ -1860,13 +1962,14 @@ mod tests {
         assert!(report.embeds.iter().any(|embed| {
             embed.resolution.reference.raw == "![[Assets/plot.svg]]"
                 && embed.resolution.disposition == VaultNoteEmbedDisposition::NotRendered
+                && embed.resolution.resolution.target.as_deref() == Some("Assets/plot.svg")
         }));
         harness.get_by_label("Note transclusions");
         harness.get_by_label("Rendered transcluded heading");
         harness.get_by_label("formatted paragraph");
         harness.get_by_label("Not rendered: this embed would create a cycle. ![[Unique]]");
         harness.get_by_label(
-            "Not rendered: no matching Markdown note was found. ![[Assets/plot.svg]]",
+            "Not rendered: this attachment type or size is outside the safe image preview limits. ![[Assets/plot.svg]]",
         );
         for (relative_path, original) in &original_files {
             assert_eq!(
@@ -1876,6 +1979,38 @@ mod tests {
                 relative_path.display()
             );
         }
+    }
+
+    #[test]
+    fn egui_renders_bounded_vault_image_with_accessible_alt_text() {
+        let vault_path = UiTempDir::new();
+        let app_data_path = UiTempDir::new();
+        std::fs::create_dir_all(vault_path.0.join("Images")).unwrap();
+        std::fs::write(
+            vault_path.0.join("Index.md"),
+            b"![[Images/photo.png|Accessible red dot]]\n",
+        )
+        .unwrap();
+        std::fs::write(vault_path.0.join("Images/photo.png"), [1, 2, 3]).unwrap();
+        let session = VaultSession::open(&vault_path.0, &app_data_path.0).unwrap();
+        let mut report = session.resolve_note_embeds_for_note("Index.md").unwrap();
+        report.embeds[0].resolution.disposition = VaultNoteEmbedDisposition::Attachment(
+            VaultInlineImage {
+                revision_sha256: "fixture-image-sha256".to_owned(),
+                width: 1,
+                height: 1,
+                rgba_bytes: vec![255, 0, 0, 255],
+            },
+        );
+        let app = OpenObsidianApp {
+            link_status: Some("fixture links resolved".to_owned()),
+            note_embed_report: Some(report),
+            ..OpenObsidianApp::default()
+        };
+        let harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Accessible red dot");
+        assert_eq!(harness.state().inline_image_textures.len(), 1);
     }
 
     #[test]
