@@ -239,3 +239,7 @@ R2.3 is complete. The API returns raw byte spans for simple top-level property-s
 ## R2.4 work — source-ranged Markdown link references
 
 The Rust `crates/doc` contract now extracts the existing wiki-link, Markdown-link and embed forms into raw references with target, alias, subpath and source/target byte spans. The test cases cover Unicode/BOM offsets, aliases, heading fragments and embeds; target offsets point to the destination even when visible text equals the target. This slice reads source only and performs no resolution or edits. No local executable validation was run. Next: push the R2.4 implementation and inspect exact-SHA GitHub Actions.
+
+## R2.4 formatting feedback — source SHA b1b3b13
+
+Rust CI run [37713280397](https://github.com/ashutoshpw/open-obsidian/actions/runs/37713280397) compiled the source and passed all 11 `openobsidian-doc` tests on Ubuntu, macOS and Windows. Ubuntu rustfmt requested two layout changes; applied the exact output. macOS and Windows also passed Clippy, layering, native preview builds and unchanged-plugin probes. All five companion workflows passed on the exact SHA. This source is not accepted until the formatting correction passes a fresh exact-SHA Rust matrix.

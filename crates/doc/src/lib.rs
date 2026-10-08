@@ -421,10 +421,7 @@ fn link_reference(
 
 fn split_link_target(value: &str) -> (String, Option<String>, Option<String>) {
     let (without_alias, alias) = if let Some(separator) = value.find('|') {
-        (
-            &value[..separator],
-            Some(value[separator + 1..].to_owned()),
-        )
+        (&value[..separator], Some(value[separator + 1..].to_owned()))
     } else {
         (value, None)
     };
@@ -533,9 +530,7 @@ fn detect_line_ending(text: &str) -> LineEnding {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        FrontmatterBounds, LineEnding, LinkKind, MarkdownSource, RawDocument, SourceSpan,
-    };
+    use super::{FrontmatterBounds, LineEnding, LinkKind, MarkdownSource, RawDocument, SourceSpan};
 
     #[test]
     fn untouched_document_bytes_round_trip_exactly() {
