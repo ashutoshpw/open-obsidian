@@ -1,8 +1,8 @@
 //! Source-preserving vault reads and revision-bound rename previews.
 
 use openobsidian_doc::{
-    LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument, RenamePlanFile,
-    build_link_rename_plan,
+    LinkRenameAction, LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument,
+    RenamePlanFile, build_link_rename_plan,
 };
 use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
@@ -52,6 +52,14 @@ pub enum VaultError {
         relative_path: PathBuf,
         #[source]
         source: io::Error,
+    },
+    #[error("rename destination already exists: {0}")]
+    RenameDestinationExists(PathBuf),
+    #[error("rename transaction for {old_path} to {new_path} needs recovery: {reason}")]
+    RenameTransactionRecoveryRequired {
+        old_path: PathBuf,
+        new_path: PathBuf,
+        reason: String,
     },
     #[error("could not append transaction journal: {0}")]
     Journal(#[source] io::Error),
@@ -119,7 +127,16 @@ pub struct VaultStore {
     fail_before_replace: bool,
     #[cfg(test)]
     fail_committed_journal: bool,
+    #[cfg(test)]
+    fail_rename_committed_journal: bool,
+    #[cfg(test)]
+    fail_replace_path: Option<PathBuf>,
+    #[cfg(test)]
+    external_change_on_failure: Option<(PathBuf, Vec<u8>)>,
 }
+
+mod rename_transaction;
+pub use rename_transaction::VaultRenameResult;
 
 #[derive(Clone, Debug)]
 pub struct VaultRoot {
@@ -306,6 +323,12 @@ impl VaultStore {
             fail_before_replace: false,
             #[cfg(test)]
             fail_committed_journal: false,
+            #[cfg(test)]
+            fail_rename_committed_journal: false,
+            #[cfg(test)]
+            fail_replace_path: None,
+            #[cfg(test)]
+            external_change_on_failure: None,
         })
     }
 
@@ -544,7 +567,16 @@ impl VaultStore {
             temporary.sync_all()?;
             drop(temporary);
             #[cfg(test)]
-            if self.fail_before_replace {
+            if self.fail_before_replace
+                || self.fail_replace_path.as_deref() == Some(relative_path)
+            {
+                if let Some((external_path, external_bytes)) = &self.external_change_on_failure {
+                    let external_path = self
+                        .root
+                        .resolve_vault_path(external_path, false)
+                        .map_err(|error| io::Error::other(error.to_string()))?;
+                    fs::write(external_path, external_bytes)?;
+                }
                 return Err(io::Error::other("injected atomic replace failure"));
             }
             replace_temporary(&temporary_path, target_path, operation_id)
@@ -606,15 +638,6 @@ impl VaultStore {
                 "injected committed journal failure",
             )));
         }
-        let journal_path = self.app_data_root.join("journal.jsonl");
-        match fs::symlink_metadata(&journal_path) {
-            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_file() => {
-                return Err(VaultError::InvalidDataDirectory(journal_path));
-            }
-            Ok(_) => {}
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error.into()),
-        }
         let error_json = error.map_or_else(|| "null".to_owned(), json_string);
         let line = format!(
             "{{\"id\":{},\"operation\":\"write\",\"state\":{},\"relative_path\":{},\"expected_revision\":{},\"next_revision\":{},\"recorded_at\":{},\"error\":{}}}\n",
@@ -626,6 +649,19 @@ impl VaultStore {
             json_string(&timestamp()),
             error_json,
         );
+        self.append_journal_line(&line)
+    }
+
+    fn append_journal_line(&self, line: &str) -> Result<(), VaultError> {
+        let journal_path = self.app_data_root.join("journal.jsonl");
+        match fs::symlink_metadata(&journal_path) {
+            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_file() => {
+                return Err(VaultError::InvalidDataDirectory(journal_path));
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
         let mut journal = OpenOptions::new()
             .create(true)
             .append(true)
@@ -1197,5 +1233,175 @@ mod tests {
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         assert!(journal.contains("\"state\":\"prepared\""));
         assert!(journal.contains("\"state\":\"failed\""));
+    }
+
+    #[test]
+    fn rename_transaction_moves_source_and_updates_only_planned_targets() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir(vault_temp.0.join("Archive")).unwrap();
+        let index_path = vault_temp.0.join("Index.md");
+        let old_path = vault_temp.0.join("Old.md");
+        let index =
+            "\u{feff}🌱 [[Old|alias]] [Old](Old.md#Section) ![[Old#^block]]\r\n".as_bytes();
+        let original = b"# Section\n\nOpening paragraph ^block\n\n[[Old#Section]]\n";
+        fs::write(&index_path, index).unwrap();
+        fs::write(&old_path, original).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let preview = store
+            .root()
+            .build_rename_preview("Old.md", "Archive/New.md")
+            .unwrap();
+
+        let result = store.apply_rename_preview(&preview).unwrap();
+
+        let new_path = vault_temp.0.join("Archive").join("New.md");
+        assert!(!old_path.exists());
+        assert_eq!(
+            fs::read(&index_path).unwrap(),
+            "\u{feff}🌱 [[Archive/New|alias]] [Old](Archive/New.md#Section) ![[Archive/New#^block]]\r\n"
+                .as_bytes()
+        );
+        assert_eq!(
+            fs::read(&new_path).unwrap(),
+            b"# Section\n\nOpening paragraph ^block\n\n[[Archive/New#Section]]\n"
+        );
+        assert_eq!(result.old_path, PathBuf::from("Old.md"));
+        assert_eq!(result.new_path, PathBuf::from("Archive/New.md"));
+        assert_eq!(result.updated_references, 4);
+        assert_eq!(
+            result.read.document.as_bytes(),
+            fs::read(new_path).unwrap().as_slice()
+        );
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"prepared\""));
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"committed\""));
+    }
+
+    #[test]
+    fn rename_refuses_an_existing_destination_without_changing_either_file() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir(vault_temp.0.join("Archive")).unwrap();
+        let original = b"# Old\n";
+        let destination = b"destination stays\n";
+        fs::write(vault_temp.0.join("Old.md"), original).unwrap();
+        fs::write(vault_temp.0.join("Archive/New.md"), destination).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let preview = store
+            .root()
+            .build_rename_preview("Old.md", "Archive/New.md")
+            .unwrap();
+
+        let error = store.apply_rename_preview(&preview).unwrap_err();
+
+        assert!(matches!(error, VaultError::RenameDestinationExists(_)));
+        assert_eq!(fs::read(vault_temp.0.join("Old.md")).unwrap(), original);
+        assert_eq!(
+            fs::read(vault_temp.0.join("Archive/New.md")).unwrap(),
+            destination
+        );
+        assert!(!app_data_temp.0.join("journal.jsonl").exists());
+    }
+
+    #[test]
+    fn failed_rename_restores_prior_writes_and_moves_source_back() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir(vault_temp.0.join("Archive")).unwrap();
+        for name in ["A.md", "B.md"] {
+            fs::write(vault_temp.0.join(name), b"[[Old]]\n").unwrap();
+        }
+        let old_path = vault_temp.0.join("Old.md");
+        fs::write(&old_path, b"# Old\n").unwrap();
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_replace_path = Some(PathBuf::from("B.md"));
+        let preview = store
+            .root()
+            .build_rename_preview("Old.md", "Archive/New.md")
+            .unwrap();
+
+        let error = store.apply_rename_preview(&preview).unwrap_err();
+
+        assert!(error.to_string().contains("injected atomic replace failure"));
+        assert!(old_path.exists());
+        assert!(!vault_temp.0.join("Archive/New.md").exists());
+        assert_eq!(fs::read(vault_temp.0.join("A.md")).unwrap(), b"[[Old]]\n");
+        assert_eq!(fs::read(vault_temp.0.join("B.md")).unwrap(), b"[[Old]]\n");
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"failed\""));
+    }
+
+    #[test]
+    fn failed_rename_commit_journal_rolls_back_reference_writes_and_source_move() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir(vault_temp.0.join("Archive")).unwrap();
+        let index_path = vault_temp.0.join("Index.md");
+        let old_path = vault_temp.0.join("Old.md");
+        let index = b"[[Old]]\n";
+        let source = b"# Old\n";
+        fs::write(&index_path, index).unwrap();
+        fs::write(&old_path, source).unwrap();
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_rename_committed_journal = true;
+        let preview = store
+            .root()
+            .build_rename_preview("Old.md", "Archive/New.md")
+            .unwrap();
+
+        let error = store.apply_rename_preview(&preview).unwrap_err();
+
+        assert!(error.to_string().contains("injected rename commit journal failure"));
+        assert_eq!(fs::read(&index_path).unwrap(), index);
+        assert_eq!(fs::read(&old_path).unwrap(), source);
+        assert!(!vault_temp.0.join("Archive/New.md").exists());
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"prepared\""));
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"failed\""));
+        assert!(!journal.contains("\"operation\":\"rename\",\"state\":\"committed\""));
+    }
+
+    #[test]
+    fn rename_rollback_preserves_an_external_reference_edit() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir(vault_temp.0.join("Archive")).unwrap();
+        fs::write(vault_temp.0.join("A.md"), b"[[Old]]\n").unwrap();
+        fs::write(vault_temp.0.join("B.md"), b"[[Old]]\n").unwrap();
+        let old_path = vault_temp.0.join("Old.md");
+        fs::write(&old_path, b"# Old\n").unwrap();
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let external = b"external edit\n";
+        store.fail_replace_path = Some(PathBuf::from("B.md"));
+        store.external_change_on_failure = Some((PathBuf::from("A.md"), external.to_vec()));
+        let preview = store
+            .root()
+            .build_rename_preview("Old.md", "Archive/New.md")
+            .unwrap();
+
+        let error = store.apply_rename_preview(&preview).unwrap_err();
+
+        assert!(matches!(
+            error,
+            VaultError::RenameTransactionRecoveryRequired { .. }
+        ));
+        assert!(old_path.exists());
+        assert!(!vault_temp.0.join("Archive/New.md").exists());
+        assert_eq!(fs::read(vault_temp.0.join("A.md")).unwrap(), external);
+        assert_eq!(fs::read(vault_temp.0.join("B.md")).unwrap(), b"[[Old]]\n");
+        let preserved_external_edit = fs::read_dir(app_data_temp.0.join("conflicts"))
+            .unwrap()
+            .map(Result::unwrap)
+            .filter(|entry| {
+                entry
+                    .path()
+                    .extension()
+                    .is_some_and(|extension| extension == std::ffi::OsStr::new("incoming"))
+            })
+            .any(|entry| {
+                fs::read(entry.path()).is_ok_and(|bytes| bytes.as_slice() == external)
+            });
+        assert!(preserved_external_edit);
     }
 }
