@@ -188,9 +188,10 @@ fn frontmatter_properties(bytes: &[u8], content: SourceSpan) -> Vec<MarkdownProp
 
 fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySource> {
     let mut key_end = 0;
-    while line.get(key_end).is_some_and(|byte| {
-        byte.is_ascii_alphanumeric() || matches!(*byte, b'_' | b'-')
-    }) {
+    while line
+        .get(key_end)
+        .is_some_and(|byte| byte.is_ascii_alphanumeric() || matches!(*byte, b'_' | b'-'))
+    {
         key_end += 1;
     }
     if key_end == 0 {
@@ -262,9 +263,7 @@ fn yaml_inline_comment_start(value: &[u8]) -> Option<usize> {
                 b'\'' | b'"' => quote = Some(byte),
                 b'[' | b'{' | b'(' => depth += 1,
                 b']' | b'}' | b')' => depth = depth.saturating_sub(1),
-                b'#' if depth == 0
-                    && (index == 0 || matches!(value[index - 1], b' ' | b'\t')) =>
-                {
+                b'#' if depth == 0 && (index == 0 || matches!(value[index - 1], b' ' | b'\t')) => {
                     return Some(index);
                 }
                 _ => {}
@@ -472,10 +471,7 @@ mod tests {
             &bytes[properties[1].value_span.start..properties[1].value_span.end],
             "\"🐈 # hash\"".as_bytes()
         );
-        assert_eq!(
-            properties[2].value_span.start,
-            properties[2].value_span.end
-        );
+        assert_eq!(properties[2].value_span.start, properties[2].value_span.end);
         assert_eq!(
             &bytes[properties[3].value_span.start..properties[3].value_span.end],
             b"[one#literal, {nested: \"two # hash\"}]"

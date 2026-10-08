@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T01:11:11+00:00",
+  "updated_at": "2026-10-08T01:16:06+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "65479f95df4ae1c68145356e90de97c33e3757cd",
+  "last_reconciled_head": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
   "current_phase": "R2",
   "current_milestone": "R2.3",
-  "next_action": "Push the R2.3 read-only top-level frontmatter property-span slice, then inspect exact-SHA GitHub Actions.",
+  "next_action": "Push the GitHub-requested R2.3 rustfmt layout correction, then inspect a fresh exact-SHA Rust matrix and companion workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -1578,6 +1578,74 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711209656/job/113097302929"
         }
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37711725583,
+      "head_sha": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725583",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37711725600,
+      "head_sha": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725600",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37711725598,
+      "head_sha": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725598",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37711725560,
+      "head_sha": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725560",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37711725568,
+      "head_sha": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725568",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37711725622,
+      "head_sha": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725622",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725622/job/113098930621"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725622/job/113098930443"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725622/job/113098930602"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -1654,7 +1722,7 @@
         "Focused Rust unit tests and all required Rust/companion CI gates pass on the exact pushed SHA."
       ],
       "evidence": null,
-      "next_action": "Push the focused source implementation and tests, then inspect exact-SHA GitHub Actions."
+      "next_action": "Apply the three rustfmt diffs reported by Ubuntu CI, push a focused correction and rerun required GitHub Actions."
     }
   },
   "ci_preparation": {

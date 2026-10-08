@@ -225,3 +225,7 @@ After the R2.2 acceptance record was pushed, all six GitHub Actions workflows pa
 ## R2.3 work — top-level frontmatter property spans
 
 The next read-only document slice returns simple top-level frontmatter keys and raw value spans as byte offsets into the original UTF-8 source. It omits indented child entries, honors comments outside quoted/flow values, and performs no YAML interpretation or source edits. Focused Rust tests cover BOM/CRLF input, Unicode byte values, comments, blank values and incomplete frontmatter. No local executable validation was run. Next: push the source slice and inspect exact-SHA GitHub Actions.
+
+## R2.3 formatting feedback — source SHA 9839a30
+
+Rust CI run [37711725622](https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725622) compiled the R2.3 source and passed workspace tests on Ubuntu, macOS and Windows. Ubuntu rustfmt reported three layout changes; applied the exact GitHub diff. macOS and Windows passed tests, Clippy, layering, native builds and unchanged-plugin probes. All five companion workflows passed on the exact SHA. This source SHA is not accepted; the next pushed SHA must pass formatting and the full Rust matrix.
