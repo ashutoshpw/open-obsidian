@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.34",
+  "source_sha": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+  "implementation_commits": [
+    "0bb109375b4045ec3ca77e4c84f7de11552b7b19",
+    "b8d972b50fe53e1a0e51bcebd7bf2fc0c47223d6",
+    "a0a81e5b7464767204fa55c27c1dc7afb245c309"
+  ],
+  "dependency_preparation": {
+    "commit": "5d0ebffad84d576f42fcd8304e7b2d7211202fea",
+    "crate": "image 0.25.10, default features disabled; bmp, gif, ico, jpeg, png and webp enabled",
+    "cargo_lock_sha256": "6a2dde88916e61c5df9490874b43371541024506f2444fc1f860f2d2b14f378e"
+  },
+  "scope": {
+    "formats": [
+      "BMP",
+      "GIF",
+      "ICO",
+      "JPEG",
+      "PNG",
+      "WebP"
+    ],
+    "bounds": {
+      "source_bytes_per_image": 8388608,
+      "decoded_width_or_height": 4096,
+      "decoded_pixels_per_image": 4194304,
+      "decoder_allocation_bytes": 67108864,
+      "images_per_report": 8,
+      "source_bytes_per_report": 16777216,
+      "decoded_pixels_per_report": 8388608,
+      "note_embed_nodes_share_the_report_budget": true
+    },
+    "safety": [
+      "Image bytes are read through snapshot-bound vault paths, with source size and SHA-256 verified before decode.",
+      "Decoder dimension/allocation limits, a decoded-pixel bound, and panic containment guard image decoding.",
+      "UI previews use locally decoded RGBA data, cache native textures by content SHA-256, and make no network or arbitrary-path requests.",
+      "Unsupported attachments remain inert; image previews are static and do not animate GIF/WebP content."
+    ],
+    "ui": "Native egui previews are capped at 640x480 and use the attachment alias as accessible text when available.",
+    "fixture_coverage": "Vault tests cover a 1-pixel PNG, the report image-count limit, and oversized-source rejection. The UI interaction injects an image and asserts its accessible label."
+  },
+  "ci_attempts": [
+    {
+      "source_sha": "0bb109375b4045ec3ca77e4c84f7de11552b7b19",
+      "runs": {
+        "rust": 37820697173,
+        "inventory": 37820697177,
+        "quality": 37820697230,
+        "desktop": 37820697172,
+        "plugin_renderer": 37820697141,
+        "loaded_plugins": 37820697154
+      },
+      "finding": "Inventory, quality, desktop, plugin-renderer and loaded-plugin workflows passed. Rust CI requested rustfmt ordering and the new UI interaction failed because its test app lacked the session required to render the transclusion panel."
+    },
+    {
+      "source_sha": "b8d972b50fe53e1a0e51bcebd7bf2fc0c47223d6",
+      "runs": {
+        "rust": 37821609886,
+        "inventory": 37821608838,
+        "quality": 37821608657,
+        "desktop": 37821609795,
+        "plugin_renderer": 37821609156,
+        "loaded_plugins": 37821609154
+      },
+      "finding": "The rustfmt and UI fixture issues were corrected. All five companion workflows passed; Rust CI then reported Clippy too_many_arguments in the recursive embed resolver."
+    },
+    {
+      "source_sha": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+      "runs": {
+        "inventory": 37822489753,
+        "rust": 37822490487,
+        "quality": 37822489549,
+        "desktop": 37822490562,
+        "plugin_renderer": 37822489829,
+        "loaded_plugins": 37822489819
+      },
+      "conclusion": "All six required workflows passed on Ubuntu, macOS and Windows after consolidating transclusion node/image limits into a shared budget."
+    }
+  ],
+  "accepted_validation": {
+    "source_sha": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+    "conclusion": "All six required workflows passed.",
+    "workflows": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37822489753,
+        "job_ids": [
+          113466805691
+        ]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37822490487,
+        "job_ids": [
+          113466807953,
+          113466808596,
+          113466808637
+        ]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37822489549,
+        "job_ids": [
+          113466803831,
+          113466804228,
+          113466804521
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37822490562,
+        "job_ids": [
+          113466808453,
+          113466808651,
+          113466808857
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37822489829,
+        "job_ids": [
+          113466805092,
+          113466805289,
+          113466805413
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37822489819,
+        "job_ids": [
+          113466805680,
+          113466806203,
+          113466806221
+        ]
+      }
+    ],
+    "test_counts": {
+      "ubuntu-latest": {
+        "openobsidian-doc": 24,
+        "openobsidian-engine": 2,
+        "openobsidian-platform": 13,
+        "openobsidian-plugins": 0,
+        "openobsidian-testkit": 4,
+        "openobsidian-ui-egui": 15,
+        "openobsidian-vault": 36
+      },
+      "macos-latest": {
+        "openobsidian-doc": 24,
+        "openobsidian-engine": 2,
+        "openobsidian-platform": 12,
+        "openobsidian-plugins": 0,
+        "openobsidian-testkit": 4,
+        "openobsidian-ui-egui": 15,
+        "openobsidian-vault": 36
+      },
+      "windows-latest": {
+        "openobsidian-doc": 24,
+        "openobsidian-engine": 2,
+        "openobsidian-platform": 13,
+        "openobsidian-plugins": 0,
+        "openobsidian-testkit": 4,
+        "openobsidian-ui-egui": 15,
+        "openobsidian-vault": 35
+      }
+    },
+    "passed_checks": [
+      "Rust formatting",
+      "workspace tests",
+      "Clippy",
+      "crate dependency layering",
+      "native preview builds",
+      "unchanged-plugin feasibility",
+      "bounded vault image decode and report budget fixtures",
+      "accessible native image preview interaction"
+    ],
+    "local_executable_validation": "None; executable validation ran only in GitHub Actions."
+  },
+  "lockfile_resolver_artifact": {
+    "run_id": 37818676025,
+    "artifact_id": 11567179971,
+    "name": "openobsidian-cargo-lock-5d0ebffad84d576f42fcd8304e7b2d7211202fea",
+    "size": 34097,
+    "digest": "sha256:7ba426b1003e8d22fa46ef18ee00c82b113b46636aa83c1fa6e8ce3d3de7be99"
+  },
+  "artifacts": [
+    {
+      "name": "Rust preview Linux",
+      "id": 11570910216,
+      "size": 9544229,
+      "digest": "sha256:d787cfeb6ecf79a6fab11b7985c8d174ab2228cc89724a5d0eed4410145b1f2d"
+    },
+    {
+      "name": "Rust runtime macOS",
+      "id": 11570870818,
+      "size": 2698,
+      "digest": "sha256:8b8a89aedf489bb80859375bbfc7efb38d54c3a43acff3be1b2c8c5614709b23"
+    },
+    {
+      "name": "Rust runtime Linux",
+      "id": 11570790370,
+      "size": 2695,
+      "digest": "sha256:4edf0c759d0e08eed38ce72d9c2b1a425803e9c6e47a8f0801507019681d1905"
+    },
+    {
+      "name": "Rust runtime Windows",
+      "id": 11570277536,
+      "size": 2715,
+      "digest": "sha256:2b9902dc6699c1d7f1c0d5dc14abe26cc250478a4429e7c6c779e104bd4d8dfe"
+    },
+    {
+      "name": "Desktop macOS",
+      "id": 11570415898,
+      "size": 397395487,
+      "digest": "sha256:a0458befd08431ab271bbf685b9cbaf9afd90272a4f4dc3286b85916e908a285"
+    },
+    {
+      "name": "Desktop Windows",
+      "id": 11569538258,
+      "size": 163005824,
+      "digest": "sha256:69b969ffad18cd79af84d437efdd9cc6597d87cd7495ff7c679140f2af17e09c"
+    },
+    {
+      "name": "Desktop Linux",
+      "id": 11568819799,
+      "size": 125946548,
+      "digest": "sha256:d66b6611e623e4fc3037b880831b797be4c12bed09a50f4f638f0c024b4cf926"
+    },
+    {
+      "name": "Renderer Windows",
+      "id": 11570525388,
+      "size": 3242,
+      "digest": "sha256:e86c021a9a4873a84ca5d4176b578e027559d421562077ab5724353f7adad38b"
+    },
+    {
+      "name": "Renderer Linux",
+      "id": 11570101482,
+      "size": 3221,
+      "digest": "sha256:483334b5c277b04ba97f986ee7462d5cb920921a6bafd730c9f2e3f79a1d173c"
+    },
+    {
+      "name": "Renderer macOS",
+      "id": 11569114951,
+      "size": 3238,
+      "digest": "sha256:15a5ad1ebb35dd604b95c4f989e184161274a187045452eb6942cf3b85be4d1e"
+    },
+    {
+      "name": "Loaded plugin macOS",
+      "id": 11570685048,
+      "size": 171479,
+      "digest": "sha256:625549d68bc830bb121928abe3ef039a6abc65706a2b2da850debed7ee00f511"
+    },
+    {
+      "name": "Loaded plugin Windows",
+      "id": 11569737108,
+      "size": 171503,
+      "digest": "sha256:ff8f96ec95a2c7d4c5b53d06c3ef061b26425ca7f8c0a52205590647b2a4dfd3"
+    },
+    {
+      "name": "Loaded plugin Linux",
+      "id": 11569214384,
+      "size": 171468,
+      "digest": "sha256:e9916d53161e53b6572cbd2b9857aae2157c2b1a352fb2f8879a1b628ffd3c58"
+    }
+  ],
+  "remaining": [
+    "This accepts bounded static previews of supported raster attachments only; SVG, AVIF, other unsupported attachments and animation playback are not implemented.",
+    "Parent C03 remains open for its full attachment/link behavior and end-to-end acceptance.",
+    "SYNC-007 host-level uninstall preservation remains open; native-window human accessibility checks also remain external."
+  ]
+}

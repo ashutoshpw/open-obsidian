@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T17:21:52Z",
+  "updated_at": "2026-10-08T18:26:29Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "2d207d1823d486c64acb2192ae14ebe82c19a87e",
-  "current_milestone": "R2.6.33",
-  "next_action": "Continue parent C03 by rendering supported attachment images through bounded vault-mediated reads, then complete SYNC-007 host-level uninstall preservation through GitHub Actions.",
+  "last_reconciled_head": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+  "current_milestone": "R2.6.34",
+  "next_action": "Complete remaining C03 attachment/link behavior and implement SYNC-007 host-level uninstall preservation through GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -166,7 +166,8 @@
     "The R2.6.31 evidence/state commit ec7466d0a0cf14456052240a3c2afb2edf2d7b10 passed all six required GitHub Actions workflows on its exact SHA; job IDs are recorded in ci_results.",
     "R2.6.32 passed fixture-backed native egui visibility checks for unresolved links and ambiguous/unresolved rename decisions on exact source SHA a30a98c90e4a8b97d3743c0960b0a02133b14327; all six required GitHub Actions workflows passed across Ubuntu, macOS and Windows. Evidence: evidence/r2.6.32-link-rename-visibility-a30a98c.json. C03.1 and C03.2 now pass; parent C03 and SYNC-007 remain open.",
     "R2.6.33 added bounded, read-only CommonMark rendering for note transclusions with egui_commonmark 0.25.0; image loading and network fetching remain disabled. All six required GitHub Actions workflows passed on exact implementation SHA 158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b; evidence and artifacts are recorded in evidence/r2.6.33-formatted-markdown-transclusions-158ee2f.json. No local executable validation was run.",
-    "Extended native GitHub Actions parallel-step use to the independent desktop release preflight checks. The first workflow commit needed an inventory hash refresh; all six required workflows, including the desktop parallel barrier on three operating systems, passed on exact SHA 2d207d1823d486c64acb2192ae14ebe82c19a87e. Evidence: evidence/parallel-ci-desktop-preflight-2d207d1.json."
+    "Extended native GitHub Actions parallel-step use to the independent desktop release preflight checks. The first workflow commit needed an inventory hash refresh; all six required workflows, including the desktop parallel barrier on three operating systems, passed on exact SHA 2d207d1823d486c64acb2192ae14ebe82c19a87e. Evidence: evidence/parallel-ci-desktop-preflight-2d207d1.json.",
+    "R2.6.34 added bounded, revision-verified previews for supported raster attachments and fixture-backed native accessibility checks. All six required workflows passed on exact implementation SHA a0a81e5b7464767204fa55c27c1dc7afb245c309 across Ubuntu, macOS and Windows; evidence and artifact hashes are recorded in evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -6965,6 +6966,60 @@
         "SYNC-007 host-level uninstall preservation remains pending."
       ],
       "next_action": "Continue parent C03 by rendering supported attachment images through bounded vault-mediated reads, then complete SYNC-007 host-level uninstall preservation through GitHub Actions."
+    },
+    "R2.6.34": {
+      "status": "complete",
+      "implementation_sha": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+      "implementation_commits": [
+        "0bb109375b4045ec3ca77e4c84f7de11552b7b19",
+        "b8d972b50fe53e1a0e51bcebd7bf2fc0c47223d6",
+        "a0a81e5b7464767204fa55c27c1dc7afb245c309"
+      ],
+      "scope": "Decode and render supported raster attachments as bounded static previews through snapshot-bound vault reads, with a report-wide image budget and accessible native egui labels.",
+      "ci_attempts": [
+        {
+          "source_sha": "0bb109375b4045ec3ca77e4c84f7de11552b7b19",
+          "rust_run_id": 37820697173,
+          "inventory_run_id": 37820697177,
+          "quality_run_id": 37820697230,
+          "desktop_build_run_id": 37820697172,
+          "plugin_renderer_run_id": 37820697141,
+          "loaded_plugin_run_id": 37820697154,
+          "finding": "Companion workflows passed; Rust CI reported rustfmt changes and the UI fixture lacked the session needed to render the transclusion panel."
+        },
+        {
+          "source_sha": "b8d972b50fe53e1a0e51bcebd7bf2fc0c47223d6",
+          "rust_run_id": 37821609886,
+          "inventory_run_id": 37821608838,
+          "quality_run_id": 37821608657,
+          "desktop_build_run_id": 37821609795,
+          "plugin_renderer_run_id": 37821609156,
+          "loaded_plugin_run_id": 37821609154,
+          "finding": "The rustfmt and UI fixture issues were corrected; Clippy then reported too_many_arguments in the recursive embed resolver. All companion workflows passed."
+        },
+        {
+          "source_sha": "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+          "rust_run_id": 37822490487,
+          "inventory_run_id": 37822489753,
+          "quality_run_id": 37822489549,
+          "desktop_build_run_id": 37822490562,
+          "plugin_renderer_run_id": 37822489829,
+          "loaded_plugin_run_id": 37822489819,
+          "conclusion": "All six required workflows passed across Ubuntu, macOS and Windows after consolidating recursive transclusion/image limits into a shared budget."
+        }
+      ],
+      "evidence": "evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json",
+      "accepted_slice": [
+        "Vault-mediated raster reads are revision-bound and verify size and SHA-256; BMP, GIF, ICO, JPEG, PNG and WebP are supported with per-image and report-wide source, dimension, allocation and pixel bounds.",
+        "Fixture coverage exercises PNG decode, oversized-source rejection and shared report image limits; the egui interaction verifies accessible image text and native previews cache textures by content SHA-256.",
+        "All six required GitHub Actions workflows passed on the exact implementation SHA across Ubuntu, macOS and Windows; test counts, job IDs, artifacts and digests are in the linked evidence file. No local executable validation was run."
+      ],
+      "remaining": [
+        "This accepts bounded static previews of supported raster attachments only; SVG, AVIF, other unsupported attachments and animation playback are not implemented.",
+        "Parent C03 remains open for its full attachment/link behavior and end-to-end acceptance.",
+        "SYNC-007 host-level uninstall preservation remains open; native-window human accessibility checks also remain external."
+      ],
+      "next_action": "Complete remaining C03 attachment/link behavior and implement SYNC-007 host-level uninstall preservation through GitHub Actions."
     }
   },
   "ci_preparation": {
