@@ -243,3 +243,9 @@ The Rust `crates/doc` contract now extracts the existing wiki-link, Markdown-lin
 ## R2.4 formatting feedback — source SHA b1b3b13
 
 Rust CI run [37713280397](https://github.com/ashutoshpw/open-obsidian/actions/runs/37713280397) compiled the source and passed all 11 `openobsidian-doc` tests on Ubuntu, macOS and Windows. Ubuntu rustfmt requested two layout changes; applied the exact output. macOS and Windows also passed Clippy, layering, native preview builds and unchanged-plugin probes. All five companion workflows passed on the exact SHA. This source is not accepted until the formatting correction passes a fresh exact-SHA Rust matrix.
+
+## R2.4 acceptance — source SHA 75aeac4
+
+Rust CI run [37713605939](https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605939) passed on exact SHA `75aeac4ba1fa5096c84db08028d3bfd54f626afe`. All eleven `openobsidian-doc` tests passed on Ubuntu, macOS and Windows; Ubuntu formatting, the parallel group, Clippy, crate layering, native preview builds and unchanged-plugin probes passed. All five companion workflows passed on the same SHA. Runtime report and preview artifact IDs, hashes, browser versions and scope limits are recorded in `evidence/r2.4-link-source-spans-75aeac4.json`.
+
+R2.4 is complete. The Rust document model now exposes byte-accurate raw and target spans for supported wiki links, Markdown links and embeds. Link resolution and source updates remain future R2 work; code-span/fence exclusion must be in place before these references drive edits. The Wry compatibility reports remain feasibility-only. No local executable validation was run. Next: port path-level resolved, unresolved, ambiguous and external link outcomes while preserving the full C03 scope.

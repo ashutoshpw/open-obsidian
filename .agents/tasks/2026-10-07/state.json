@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T01:34:14+00:00",
+  "updated_at": "2026-10-08T01:39:36+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+  "last_reconciled_head": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
   "current_phase": "R2",
-  "current_milestone": "R2.4",
-  "next_action": "Push the exact GitHub-requested R2.4 rustfmt correction, then inspect fresh exact-SHA Rust and companion workflow results.",
+  "current_milestone": "R2.5",
+  "next_action": "Port path-level resolved, unresolved, ambiguous and external link outcomes into crates/doc, based on the C03.1 contract; preserve code-context and rename safety as explicit follow-on requirements.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add"
+      "implementation_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe"
     },
     "R3": {
       "status": "pending",
@@ -117,7 +117,8 @@
     "The R2.2 acceptance record passed all six GitHub Actions workflows on 65479f95df4ae1c68145356e90de97c33e3757cd, including Rust CI and migration-inventory validation.",
     "R2.3 passed exact-SHA GitHub Actions on 851e1583bd8b30f4d1b9be9d504b2271ddb73add; all six workflows passed, with quality attempt 2 resolving the initial Ubuntu Electron retrieval-boundary failure. Evidence: evidence/r2.3-frontmatter-properties-851e158.json.",
     "R2.3 passed exact-SHA GitHub Actions on 851e1583bd8b30f4d1b9be9d504b2271ddb73add; all six workflows passed, with quality attempt 2 resolving the initial Ubuntu Electron retrieval-boundary failure. Evidence: evidence/r2.3-frontmatter-properties-851e158.json.",
-    "R2.4 source SHA b1b3b1398c374f5ec556f8e5f29bcb9a6ea552c7 compiled and all 11 openobsidian-doc tests passed on three OSes; Ubuntu rustfmt requested two exact layout changes, now applied. macOS and Windows gates and all five companion workflows passed; source acceptance awaits a fresh formatted SHA."
+    "R2.4 source SHA b1b3b1398c374f5ec556f8e5f29bcb9a6ea552c7 compiled and all 11 openobsidian-doc tests passed on three OSes; Ubuntu rustfmt requested two exact layout changes, now applied. macOS and Windows gates and all five companion workflows passed; source acceptance awaits a fresh formatted SHA.",
+    "R2.4 passed exact-SHA GitHub Actions on 75aeac4ba1fa5096c84db08028d3bfd54f626afe: all eleven openobsidian-doc tests and all six workflows passed. Evidence: evidence/r2.4-link-source-spans-75aeac4.json."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1828,6 +1829,77 @@
       "run_id": 37713280175,
       "head_sha": "b1b3b1398c374f5ec556f8e5f29bcb9a6ea552c7",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713280175",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37713605939,
+      "head_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605939",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113104928495,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605939/job/113104928495"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113104928633,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605939/job/113104928633"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113104928099,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605939/job/113104928099"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37713605976,
+      "head_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605976",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37713605934,
+      "head_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605934",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37713605860,
+      "head_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605860",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37713605913,
+      "head_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605913",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37713605945,
+      "head_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605945",
       "status": "completed",
       "conclusion": "success"
     }
