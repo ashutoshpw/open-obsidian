@@ -1571,6 +1571,16 @@
       "fixture_reader": "crates/testkit"
     },
     {
+      "path": "fixtures/uninstall-preservation.json",
+      "sha256": "c07a7af32907764addf89c7568f53b9480b1e47bbacf9a0bb32aadbba69498fa",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Synthetic vault and managed-data preservation case for the native uninstall-choice interaction; host-level uninstall acceptance remains pending.",
+      "fixture_reader": "crates/ui-egui"
+    },
+    {
       "path": "fixtures/retrieval-model.json",
       "sha256": "65c5fcda09d384d03e2f58da3f0a065b453762bda0f24b3986f44eaeb353681e",
       "rust_owner": "crates/engine",

@@ -17,6 +17,8 @@ const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
+#[cfg(test)]
+const SYNC_UNINSTALL_FIXTURE: &str = include_str!("../../../fixtures/uninstall-preservation.json");
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
@@ -1375,14 +1377,57 @@ mod tests {
     }
 
     #[test]
-    fn egui_uninstall_cleanup_choices_are_opt_in_and_preserve_the_open_vault() {
+    fn egui_uninstall_fixture_preserves_vault_and_conflict_bytes() {
+        let fixture: serde_json::Value = serde_json::from_str(SYNC_UNINSTALL_FIXTURE)
+            .expect("SYNC-007 uninstall fixture must be valid");
+        assert_eq!(fixture["id"], "fixture:sync-uninstall");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .and_then(|scenarios| scenarios.first())
+            .expect("SYNC-007 fixture must contain a scenario");
+        let expected = &scenario["expected"];
         let temporary = UiTempDir::new();
-        let vault_path = temporary.0.join("vault");
-        let app_data_path = temporary.0.join("app-data");
-        std::fs::create_dir(&vault_path).unwrap();
-        std::fs::create_dir(&app_data_path).unwrap();
-        std::fs::write(vault_path.join("Keep.md"), b"# Keep\r\n").unwrap();
-        let original_note = std::fs::read(vault_path.join("Keep.md")).unwrap();
+        let fixture_root = temporary.0.join("fixture");
+        let vault_path = fixture_root.join(
+            scenario["vault"]["path"]
+                .as_str()
+                .expect("fixture must name the vault path"),
+        );
+        let app_data_path = fixture_root.join(
+            scenario["app_data"]["path"]
+                .as_str()
+                .expect("fixture must name the app-data path"),
+        );
+        std::fs::create_dir_all(&vault_path).unwrap();
+        std::fs::create_dir_all(&app_data_path).unwrap();
+
+        let materialize_files = |root: &std::path::Path, files: &serde_json::Value| {
+            files
+                .as_array()
+                .expect("fixture files must be an array")
+                .iter()
+                .map(|file| {
+                    let relative_path = std::path::PathBuf::from(
+                        file["relative_path"]
+                            .as_str()
+                            .expect("fixture file must state its relative path"),
+                    );
+                    let source = file["source"]
+                        .as_str()
+                        .expect("fixture file must state its source")
+                        .as_bytes()
+                        .to_vec();
+                    let path = root.join(&relative_path);
+                    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+                    std::fs::write(path, &source).unwrap();
+                    (relative_path, source)
+                })
+                .collect::<Vec<_>>()
+        };
+        let original_vault_files =
+            materialize_files(&vault_path, &scenario["vault"]["files"]);
+        let original_app_data_files =
+            materialize_files(&app_data_path, &scenario["app_data"]["files"]);
         let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
@@ -1392,14 +1437,23 @@ mod tests {
 
         assert_eq!(
             uninstall_cleanup_summary(harness.state().uninstall_cleanup),
-            "No local cleanup selected; the vault remains preserved."
+            expected["initial_summary"]
+                .as_str()
+                .expect("fixture must state the initial summary")
         );
-        harness.get_by_label("App cache").click();
-        harness.step();
-        harness.get_by_label("Stored credentials").click();
-        harness.step();
-        harness.get_by_label("Clean up recovery history").click();
-        harness.step();
+        for option in scenario["selected_options"]
+            .as_array()
+            .expect("fixture must list selected cleanup choices")
+        {
+            let label = match option.as_str().expect("cleanup choice must be a string") {
+                "app-cache" => "App cache",
+                "credentials" => "Stored credentials",
+                "recovery-history" => "Clean up recovery history",
+                other => panic!("unknown cleanup choice in fixture: {other}"),
+            };
+            harness.get_by_label(label).click();
+            harness.step();
+        }
 
         let selection = harness.state().uninstall_cleanup;
         assert!(selection.app_cache);
@@ -1407,13 +1461,26 @@ mod tests {
         assert!(selection.recovery_history);
         assert_eq!(
             uninstall_cleanup_summary(selection),
-            "Selected local cleanup: App cache, Stored credentials, Recovery history. The vault remains preserved."
+            expected["selected_summary"]
+                .as_str()
+                .expect("fixture must state the selected summary")
         );
-        assert!(vault_path.join("Keep.md").exists());
-        assert_eq!(
-            std::fs::read(vault_path.join("Keep.md")).unwrap(),
-            original_note
-        );
+        assert!(expected["selection_does_not_delete_files"].as_bool() == Some(true));
+        assert!(expected["vault_bytes_remain_identical"].as_bool() == Some(true));
+        assert!(expected["unresolved_conflict_bytes_remain_identical"].as_bool() == Some(true));
+        for (root, files) in [
+            (&vault_path, &original_vault_files),
+            (&app_data_path, &original_app_data_files),
+        ] {
+            for (relative_path, original) in files {
+                assert_eq!(
+                    std::fs::read(root.join(relative_path)).unwrap(),
+                    *original,
+                    "cleanup-choice selection must preserve {}",
+                    relative_path.display()
+                );
+            }
+        }
     }
 
     #[test]

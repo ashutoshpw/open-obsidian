@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "fixture:sync-uninstall",
+  "scenarios": [
+    {
+      "id": "all-optional-cleanup-choices-selected",
+      "selected_options": ["app-cache", "credentials", "recovery-history"],
+      "vault": {
+        "path": "workspace/vault",
+        "files": [
+          {"relative_path": "Keep.md", "source": "# Keep\r\n"},
+          {"relative_path": "Notes/Nested.md", "source": "[[Keep]]\n"},
+          {"relative_path": ".obsidian/app.json", "source": "{\"folders\":[]}\n"},
+          {"relative_path": "Attachments/payload.bin", "source": "attachment bytes\u0000with a terminator"}
+        ]
+      },
+      "app_data": {
+        "path": "workspace/app-data",
+        "files": [
+          {"relative_path": "cache/index.json", "source": "{\"derived\":true}\n"},
+          {"relative_path": "vaults/current/recovery/record.bin", "source": "previous note bytes\n"},
+          {"relative_path": "vaults/current/conflicts/unresolved.bin", "source": "incoming conflict bytes\n"}
+        ]
+      },
+      "expected": {
+        "initial_summary": "No local cleanup selected; the vault remains preserved.",
+        "selected_summary": "Selected local cleanup: App cache, Stored credentials, Recovery history. The vault remains preserved.",
+        "selection_does_not_delete_files": true,
+        "vault_bytes_remain_identical": true,
+        "unresolved_conflict_bytes_remain_identical": true
+      }
+    }
+  ]
+}
