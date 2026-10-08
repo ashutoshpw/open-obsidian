@@ -2304,7 +2304,10 @@ mod tests {
         );
         let subpath_statuses = HashMap::from([
             ("Notes/Target.md".to_owned(), LinkSubpathStatus::Resolved),
-            ("Archive/Target.md".to_owned(), LinkSubpathStatus::Unresolved),
+            (
+                "Archive/Target.md".to_owned(),
+                LinkSubpathStatus::Unresolved,
+            ),
         ]);
         assert_eq!(
             resolve_link_with_subpath_statuses(
@@ -2337,12 +2340,7 @@ mod tests {
             ("Archive/Target.md".to_owned(), LinkSubpathStatus::Ambiguous),
         ]);
         assert_eq!(
-            resolve_link_with_subpath_statuses(
-                &reference,
-                &files,
-                "Index.md",
-                &duplicate_statuses
-            ),
+            resolve_link_with_subpath_statuses(&reference, &files, "Index.md", &duplicate_statuses),
             LinkResolution {
                 status: LinkResolutionStatus::Ambiguous,
                 target: None,

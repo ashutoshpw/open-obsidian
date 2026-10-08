@@ -5,10 +5,9 @@ pub use openobsidian_doc::{
     LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
 };
 use openobsidian_doc::{
-    LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument, RenamePlanFile,
-    MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, build_link_rename_plan, guard_note_transclusion,
-    resolve_link, resolve_link_with_sources, resolve_link_with_subpath_statuses,
-    slice_markdown_subpath,
+    LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
+    RawDocument, RenamePlanFile, build_link_rename_plan, guard_note_transclusion, resolve_link,
+    resolve_link_with_sources, resolve_link_with_subpath_statuses, slice_markdown_subpath,
 };
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -390,9 +389,7 @@ impl VaultRoot {
                                 reference,
                                 path_resolution.clone(),
                                 None,
-                                VaultNoteEmbedDisposition::Blocked(
-                                    TransclusionBlockReason::Depth,
-                                ),
+                                VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Depth),
                             );
                         }
                         Err(TransclusionBlockReason::Cycle) => {
@@ -402,13 +399,10 @@ impl VaultRoot {
                         Ok(_) => {}
                     }
 
-                    let Some(entry) = markdown_entries
-                        .iter()
-                        .find(|entry| {
-                            path_to_slashes(&entry.relative_path).ok().as_deref()
-                                == Some(candidate.as_str())
-                        })
-                    else {
+                    let Some(entry) = markdown_entries.iter().find(|entry| {
+                        path_to_slashes(&entry.relative_path).ok().as_deref()
+                            == Some(candidate.as_str())
+                    }) else {
                         statuses.insert(candidate.clone(), LinkSubpathStatus::Unresolved);
                         continue;
                     };
@@ -437,17 +431,9 @@ impl VaultRoot {
                     &statuses,
                 );
                 if resolution.status != LinkResolutionStatus::Resolved {
-                    (
-                        resolution,
-                        None,
-                        VaultNoteEmbedDisposition::NotRendered,
-                    )
+                    (resolution, None, VaultNoteEmbedDisposition::NotRendered)
                 } else if resolution.target.as_deref() != selected_path.as_deref() {
-                    (
-                        resolution,
-                        None,
-                        VaultNoteEmbedDisposition::NotRendered,
-                    )
+                    (resolution, None, VaultNoteEmbedDisposition::NotRendered)
                 } else {
                     let target = resolution.target.as_deref().expect("resolved link has target");
                     match guard_note_transclusion(depth, chain, target) {
@@ -456,11 +442,9 @@ impl VaultRoot {
                             selected_slice,
                             VaultNoteEmbedDisposition::Included(guard),
                         ),
-                        Err(reason) => (
-                            resolution,
-                            None,
-                            VaultNoteEmbedDisposition::Blocked(reason),
-                        ),
+                        Err(reason) => {
+                            (resolution, None, VaultNoteEmbedDisposition::Blocked(reason))
+                        }
                     }
                 }
             }
@@ -545,10 +529,7 @@ impl VaultRoot {
         })
     }
 
-    fn read_transclusion_source(
-        &self,
-        entry: &VaultSnapshotEntry,
-    ) -> Result<Vec<u8>, VaultError> {
+    fn read_transclusion_source(&self, entry: &VaultSnapshotEntry) -> Result<Vec<u8>, VaultError> {
         if entry.size_bytes > MAX_NOTE_TRANSCLUSION_SOURCE_BYTES as u64 {
             return Err(VaultError::TransclusionSourceTooLarge(
                 entry.relative_path.clone(),
@@ -560,7 +541,7 @@ impl VaultRoot {
             return Err(VaultError::SnapshotChanged);
         }
         let mut bytes = Vec::with_capacity(entry.size_bytes as usize);
-        file.by_ref()
+        IoRead::by_ref(&mut file)
             .take(MAX_NOTE_TRANSCLUSION_SOURCE_BYTES as u64 + 1)
             .read_to_end(&mut bytes)?;
         if bytes.len() > MAX_NOTE_TRANSCLUSION_SOURCE_BYTES {
@@ -1387,9 +1368,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        LinkKind, LinkReference, MarkdownSource, TransclusionBlockReason, VaultError,
-        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest,
-        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, sha256_hex,
+        LinkKind, LinkReference, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
+        TransclusionBlockReason, VaultError, VaultNoteEmbedDisposition, VaultRoot, VaultStore,
+        VaultWriteRequest, sha256_hex,
     };
     use serde_json::Value;
     use std::fs;
@@ -1451,7 +1432,10 @@ mod tests {
             .resolve_note_embed("Index.md", &target_reference, 0, &["Index.md".to_owned()])
             .unwrap();
 
-        assert_eq!(target.resolution.status, super::LinkResolutionStatus::Resolved);
+        assert_eq!(
+            target.resolution.status,
+            super::LinkResolutionStatus::Resolved
+        );
         assert_eq!(
             target.disposition,
             VaultNoteEmbedDisposition::Included(super::TransclusionGuard {
@@ -1459,7 +1443,10 @@ mod tests {
                 chain: vec!["Index.md".to_owned(), "Notes/Target.md".to_owned()],
             })
         );
-        assert_eq!(target.slice.unwrap().text.as_deref(), Some("## Details\nbody"));
+        assert_eq!(
+            target.slice.unwrap().text.as_deref(),
+            Some("## Details\nbody")
+        );
 
         let attachment_reference = embed_reference(index, "Images/photo.png");
         let attachment = vault
@@ -1479,7 +1466,10 @@ mod tests {
             VaultNoteEmbedDisposition::NotRendered
         );
         assert_eq!(fs::read(temp.0.join("Index.md")).unwrap(), index_bytes);
-        assert_eq!(fs::read(temp.0.join("Notes/Target.md")).unwrap(), target_bytes);
+        assert_eq!(
+            fs::read(temp.0.join("Notes/Target.md")).unwrap(),
+            target_bytes
+        );
     }
 
     #[test]
@@ -1525,10 +1515,16 @@ mod tests {
         fs::create_dir_all(temp.0.join("Notes")).unwrap();
         fs::create_dir_all(temp.0.join("Archive")).unwrap();
         fs::write(temp.0.join("Index.md"), b"![[Target#Details]]\n").unwrap();
-        fs::write(temp.0.join("Notes/Target.md"), b"# Target\n## Details\nselected\n")
-            .unwrap();
-        fs::write(temp.0.join("Archive/Target.md"), b"# Target\n## Other\nnot selected\n")
-            .unwrap();
+        fs::write(
+            temp.0.join("Notes/Target.md"),
+            b"# Target\n## Details\nselected\n",
+        )
+        .unwrap();
+        fs::write(
+            temp.0.join("Archive/Target.md"),
+            b"# Target\n## Other\nnot selected\n",
+        )
+        .unwrap();
 
         let vault = VaultRoot::open(&temp.0).unwrap();
         let reference = embed_reference("![[Target#Details]]", "Target");
@@ -1536,9 +1532,15 @@ mod tests {
             .resolve_note_embed("Index.md", &reference, 0, &["Index.md".to_owned()])
             .unwrap();
 
-        assert_eq!(result.resolution.status, super::LinkResolutionStatus::Resolved);
+        assert_eq!(
+            result.resolution.status,
+            super::LinkResolutionStatus::Resolved
+        );
         assert_eq!(result.resolution.target.as_deref(), Some("Notes/Target.md"));
-        assert_eq!(result.slice.unwrap().text.as_deref(), Some("## Details\nselected\n"));
+        assert_eq!(
+            result.slice.unwrap().text.as_deref(),
+            Some("## Details\nselected\n")
+        );
     }
 
     #[test]
