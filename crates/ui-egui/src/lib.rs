@@ -1516,11 +1516,10 @@ mod tests {
             history_plan: Some(plan),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
-        harness.get_by_label(
-            "Protected history exceeds the configured size limit and will be kept.",
-        );
+        harness
+            .get_by_label("Protected history exceeds the configured size limit and will be kept.");
         harness.get_by_label("Review eligible cleanup");
         let app = harness.state();
         assert!(app.history_plan.as_ref().unwrap().warning);
