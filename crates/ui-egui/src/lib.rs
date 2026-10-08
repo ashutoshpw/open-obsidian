@@ -1,6 +1,7 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
     VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultSession,
     plan_history_retention,
 };
@@ -16,11 +17,29 @@ const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
-type HistoryPreviewReceiver = Receiver<Result<HistoryPreview, ()>>;
+type HistoryReceiver = Receiver<HistoryTaskMessage>;
 
 struct HistoryPreview {
     records: Vec<VaultHistoryRecord>,
     plan: VaultHistoryPlan,
+}
+
+struct ConflictVersionPreview {
+    revision_sha256: String,
+    text: String,
+}
+
+struct ConflictInspection {
+    record: VaultHistoryRecord,
+    current: Option<ConflictVersionPreview>,
+    incoming: ConflictVersionPreview,
+}
+
+enum HistoryTaskMessage {
+    Preview(Result<HistoryPreview, ()>),
+    Cleanup(Result<(VaultHistoryCleanup, HistoryPreview), ()>),
+    ConflictInspection(Result<ConflictInspection, ()>),
+    ConflictResolution(Result<(VaultConflictResolution, HistoryPreview), ()>),
 }
 
 /// Display-safe storage state passed from the desktop composition boundary.
@@ -89,8 +108,12 @@ struct OpenObsidianApp {
     history_policy: VaultHistoryPolicy,
     history_records: Vec<VaultHistoryRecord>,
     history_plan: Option<VaultHistoryPlan>,
-    history_preview_receiver: Option<HistoryPreviewReceiver>,
+    history_receiver: Option<HistoryReceiver>,
     history_error: Option<String>,
+    history_status: Option<String>,
+    cleanup_confirmation: bool,
+    conflict_inspection: Option<ConflictInspection>,
+    pending_conflict_action: Option<VaultConflictAction>,
 }
 
 impl eframe::App for OpenObsidianApp {
@@ -117,8 +140,12 @@ impl eframe::App for OpenObsidianApp {
                 self.vault_open_error = None;
                 self.history_records.clear();
                 self.history_plan = None;
-                self.history_preview_receiver = None;
+                self.history_receiver = None;
                 self.history_error = None;
+                self.history_status = None;
+                self.cleanup_confirmation = false;
+                self.conflict_inspection = None;
+                self.pending_conflict_action = None;
             }
             Some(Ok(Err(error))) => {
                 self.vault_open_receiver = None;
@@ -135,7 +162,7 @@ impl eframe::App for OpenObsidianApp {
             }
             None => {}
         }
-        self.poll_history_preview(ui);
+        self.poll_history_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
         }
@@ -213,26 +240,31 @@ impl OpenObsidianApp {
         });
         if policy_changed {
             self.history_plan = None;
+            self.cleanup_confirmation = false;
         }
 
-        let preview_busy = self.history_preview_receiver.is_some();
+        let history_busy = self.history_receiver.is_some();
         if ui
             .add_enabled(
-                !preview_busy,
+                !history_busy,
                 eframe::egui::Button::new("Refresh history and retention preview"),
             )
             .clicked()
         {
             self.start_history_preview();
         }
-        if preview_busy {
-            ui.label("Reading history safely…");
+        if history_busy {
+            ui.label("Working with history safely…");
         }
         if let Some(error) = &self.history_error {
             ui.colored_label(eframe::egui::Color32::RED, error);
         }
+        if let Some(status) = &self.history_status {
+            ui.label(status);
+        }
 
-        if let Some(plan) = &self.history_plan {
+        let plan = self.history_plan.clone();
+        if let Some(plan) = &plan {
             ui.label(format!(
                 "Retained: {} items ({}); eligible for cleanup: {} items ({}); protected: {} items.",
                 plan.retained.len(),
@@ -253,10 +285,50 @@ impl OpenObsidianApp {
             );
         }
 
+        if let Some(plan) = &plan {
+            if !plan.pruneable.is_empty() {
+                if self.cleanup_confirmation {
+                    ui.group(|ui| {
+                        ui.label(format!(
+                            "Confirm permanent removal of {} eligible items ({}). Unresolved conflicts are protected.",
+                            plan.pruneable.len(),
+                            format_bytes(plan.pruneable_bytes),
+                        ));
+                    });
+                    let mut confirm_cleanup = false;
+                    let mut cancel_cleanup = false;
+                    ui.horizontal(|ui| {
+                        confirm_cleanup = ui
+                            .add_enabled(
+                                !history_busy,
+                                eframe::egui::Button::new("Confirm cleanup"),
+                            )
+                            .clicked();
+                        cancel_cleanup = ui.button("Cancel").clicked();
+                    });
+                    if confirm_cleanup {
+                        self.start_history_cleanup();
+                    } else if cancel_cleanup {
+                        self.cleanup_confirmation = false;
+                    }
+                } else if ui
+                    .add_enabled(
+                        !history_busy,
+                        eframe::egui::Button::new("Review eligible cleanup"),
+                    )
+                    .clicked()
+                {
+                    self.cleanup_confirmation = true;
+                }
+            }
+        }
+
+        let history_busy = self.history_receiver.is_some();
         if self.history_records.is_empty() && self.history_plan.is_some() {
             ui.label("No recovery, failed-write, or conflict history records were found.");
         } else if !self.history_records.is_empty() {
             let records = self.history_records.clone();
+            let mut inspect_conflict = None;
             eframe::egui::ScrollArea::vertical()
                 .max_height(220.0)
                 .show(ui, |ui| {
@@ -276,9 +348,137 @@ impl OpenObsidianApp {
                                 record.id,
                                 protection,
                             ));
+                            if record.kind == VaultHistoryKind::Conflict
+                                && ui
+                                    .add_enabled(
+                                        !history_busy,
+                                        eframe::egui::Button::new("Inspect conflict"),
+                                    )
+                                    .clicked()
+                            {
+                                inspect_conflict =
+                                    Some((record.id.clone(), record.relative_path.clone()));
+                            }
                         });
                     }
                 });
+            if let Some((id, relative_path)) = inspect_conflict {
+                self.start_conflict_inspection(id, relative_path);
+            }
+        }
+
+        let mut requested_action = None;
+        let mut close_inspection = false;
+        if let Some(inspection) = self.conflict_inspection.as_mut() {
+            ui.separator();
+            ui.heading(format!(
+                "Conflict inspection: {}",
+                inspection.record.relative_path.display()
+            ));
+            ui.small("Text preview is limited to 16 KiB; binary content is not shown.");
+            ui.label(format!(
+                "Expected current revision: {}",
+                inspection
+                    .record
+                    .expected_revision_sha256
+                    .as_deref()
+                    .unwrap_or("none")
+            ));
+            ui.label(format!(
+                "Recorded current revision: {}",
+                inspection
+                    .record
+                    .current_revision_sha256
+                    .as_deref()
+                    .unwrap_or("none")
+            ));
+            ui.columns(2, |columns| {
+                columns[0].label("Current version");
+                if let Some(current) = inspection.current.as_mut() {
+                    columns[0].small(format!("SHA-256 {}", current.revision_sha256));
+                    columns[0].add(
+                        eframe::egui::TextEdit::multiline(&mut current.text)
+                            .desired_rows(8)
+                            .interactive(false),
+                    );
+                } else {
+                    columns[0].label("Current file could not be read.");
+                }
+
+                columns[1].label("Incoming version");
+                columns[1].small(format!(
+                    "SHA-256 {}",
+                    inspection.incoming.revision_sha256
+                ));
+                columns[1].add(
+                    eframe::egui::TextEdit::multiline(&mut inspection.incoming.text)
+                        .desired_rows(8)
+                        .interactive(false),
+                );
+            });
+            ui.horizontal(|ui| {
+                if ui
+                    .add_enabled(
+                        !history_busy,
+                        eframe::egui::Button::new("Choose Keep Current…"),
+                    )
+                    .clicked()
+                {
+                    requested_action = Some(VaultConflictAction::KeepCurrent);
+                }
+                if ui
+                    .add_enabled(
+                        !history_busy,
+                        eframe::egui::Button::new("Choose Keep Incoming…"),
+                    )
+                    .clicked()
+                {
+                    requested_action = Some(VaultConflictAction::KeepIncoming);
+                }
+                close_inspection = ui.button("Close inspection").clicked();
+            });
+        }
+        if let Some(action) = requested_action {
+            self.pending_conflict_action = Some(action);
+        }
+        if close_inspection {
+            self.conflict_inspection = None;
+            self.pending_conflict_action = None;
+        }
+
+        let resolution_request = self.pending_conflict_action.and_then(|action| {
+            self.conflict_inspection.as_ref().map(|inspection| {
+                (
+                    action,
+                    inspection.record.id.clone(),
+                    inspection.record.relative_path.clone(),
+                )
+            })
+        });
+        if let Some((action, record_id, relative_path)) = resolution_request {
+            let action_label = conflict_action_label(action);
+            ui.group(|ui| {
+                ui.label(format!(
+                    "Confirm {action_label} for {}? Keep Incoming writes only if the recorded current revision still matches.",
+                    relative_path.display(),
+                ));
+            });
+            let mut confirm_resolution = false;
+            let mut cancel_resolution = false;
+            ui.horizontal(|ui| {
+                confirm_resolution = ui
+                    .add_enabled(
+                        !history_busy,
+                        eframe::egui::Button::new(format!("Confirm {action_label}")),
+                    )
+                    .clicked();
+                cancel_resolution = ui.button("Cancel").clicked();
+            });
+            if confirm_resolution {
+                self.start_conflict_resolution(record_id, relative_path, action);
+            } else if cancel_resolution {
+                self.pending_conflict_action = None;
+            }
         }
     }
 
@@ -287,39 +487,206 @@ impl OpenObsidianApp {
             return;
         };
         let policy = self.history_policy;
-        let (sender, receiver) = mpsc::channel();
-        rayon::spawn(move || {
-            let result = session.history_records().map_err(|_| ()).map(|records| {
-                let plan = plan_history_retention(&records, policy, SystemTime::now());
-                HistoryPreview { records, plan }
-            });
-            let _ = sender.send(result);
+        self.cleanup_confirmation = false;
+        self.start_history_task(move || {
+            HistoryTaskMessage::Preview(load_history_preview(&session, policy))
         });
-        self.history_preview_receiver = Some(receiver);
-        self.history_error = None;
     }
 
-    fn poll_history_preview(&mut self, ui: &mut eframe::egui::Ui) {
-        let result = self
-            .history_preview_receiver
-            .as_ref()
-            .map(Receiver::try_recv);
+    fn start_history_cleanup(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let policy = self.history_policy;
+        self.cleanup_confirmation = false;
+        self.start_history_task(move || {
+            let result = session
+                .cleanup_history(policy)
+                .map_err(|_| ())
+                .and_then(|cleanup| {
+                    load_history_preview(&session, policy).map(|preview| (cleanup, preview))
+                });
+            HistoryTaskMessage::Cleanup(result)
+        });
+    }
+
+    fn start_conflict_inspection(&mut self, id: String, relative_path: std::path::PathBuf) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        self.conflict_inspection = None;
+        self.pending_conflict_action = None;
+        self.start_history_task(move || {
+            let result = session
+                .read_conflict(&id, &relative_path)
+                .map_err(|_| ())
+                .map(|incoming| build_conflict_inspection(&session, incoming));
+            HistoryTaskMessage::ConflictInspection(result)
+        });
+    }
+
+    fn start_conflict_resolution(
+        &mut self,
+        id: String,
+        relative_path: std::path::PathBuf,
+        action: VaultConflictAction,
+    ) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let policy = self.history_policy;
+        self.pending_conflict_action = None;
+        self.start_history_task(move || {
+            let result = session
+                .resolve_conflict(&id, &relative_path, action)
+                .map_err(|_| ())
+                .and_then(|resolution| {
+                    load_history_preview(&session, policy)
+                        .map(|preview| (resolution, preview))
+                });
+            HistoryTaskMessage::ConflictResolution(result)
+        });
+    }
+
+    fn start_history_task(
+        &mut self,
+        task: impl FnOnce() -> HistoryTaskMessage + Send + 'static,
+    ) {
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let _ = sender.send(task());
+        });
+        self.history_receiver = Some(receiver);
+        self.history_error = None;
+        self.history_status = None;
+    }
+
+    fn poll_history_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self.history_receiver.as_ref().map(Receiver::try_recv);
         match result {
-            Some(Ok(Ok(preview))) => {
-                self.history_records = preview.records;
-                self.history_plan = Some(preview.plan);
-                self.history_preview_receiver = None;
-                self.history_error = None;
+            Some(Ok(message)) => {
+                self.history_receiver = None;
+                match message {
+                    HistoryTaskMessage::Preview(Ok(preview)) => {
+                        self.apply_history_preview(preview);
+                    }
+                    HistoryTaskMessage::Preview(Err(())) => {
+                        self.history_error = Some("History could not be read safely.".to_owned());
+                    }
+                    HistoryTaskMessage::Cleanup(Ok((cleanup, preview))) => {
+                        let removed = cleanup.removed.len();
+                        let protected = cleanup.protected.len();
+                        self.apply_history_preview(preview);
+                        self.cleanup_confirmation = false;
+                        self.history_status = Some(format!(
+                            "Removed {removed} eligible history items; {protected} protected items remain.",
+                        ));
+                    }
+                    HistoryTaskMessage::Cleanup(Err(())) => {
+                        self.history_plan = None;
+                        self.history_error = Some(
+                            "Cleanup stopped early; refresh history to inspect the remaining records."
+                                .to_owned(),
+                        );
+                    }
+                    HistoryTaskMessage::ConflictInspection(Ok(inspection)) => {
+                        self.conflict_inspection = Some(inspection);
+                        self.pending_conflict_action = None;
+                    }
+                    HistoryTaskMessage::ConflictInspection(Err(())) => {
+                        self.history_error = Some(
+                            "Conflict could not be read safely; its stored record was left unchanged."
+                                .to_owned(),
+                        );
+                    }
+                    HistoryTaskMessage::ConflictResolution(Ok((resolution, preview))) => {
+                        self.apply_history_preview(preview);
+                        self.conflict_inspection = None;
+                        self.pending_conflict_action = None;
+                        self.history_status = Some(format!(
+                            "Conflict resolved: {}.",
+                            conflict_action_label(resolution.action)
+                        ));
+                    }
+                    HistoryTaskMessage::ConflictResolution(Err(())) => {
+                        self.history_plan = None;
+                        self.conflict_inspection = None;
+                        self.pending_conflict_action = None;
+                        self.history_error = Some(
+                            "Conflict resolution failed; refresh history before trying again."
+                                .to_owned(),
+                        );
+                    }
+                }
             }
-            Some(Ok(Err(()))) | Some(Err(TryRecvError::Disconnected)) => {
-                self.history_preview_receiver = None;
-                self.history_error = Some("History could not be read safely.".to_owned());
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.history_receiver = None;
+                self.history_error = Some("History operation stopped unexpectedly.".to_owned());
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
             }
             None => {}
         }
+    }
+
+    fn apply_history_preview(&mut self, preview: HistoryPreview) {
+        self.history_records = preview.records;
+        self.history_plan = Some(preview.plan);
+        self.history_error = None;
+    }
+}
+
+fn load_history_preview(
+    session: &VaultSession,
+    policy: VaultHistoryPolicy,
+) -> Result<HistoryPreview, ()> {
+    let records = session.history_records().map_err(|_| ())?;
+    let plan = plan_history_retention(&records, policy, SystemTime::now());
+    Ok(HistoryPreview { records, plan })
+}
+
+fn build_conflict_inspection(
+    session: &VaultSession,
+    incoming: VaultConflictRead,
+) -> ConflictInspection {
+    let current = session
+        .read(&incoming.record.relative_path)
+        .ok()
+        .map(|current| ConflictVersionPreview {
+            revision_sha256: current.revision_sha256,
+            text: bounded_text_preview(current.document.as_bytes()),
+        });
+    ConflictInspection {
+        record: incoming.record,
+        current,
+        incoming: ConflictVersionPreview {
+            revision_sha256: incoming.revision_sha256,
+            text: bounded_text_preview(&incoming.bytes),
+        },
+    }
+}
+
+fn bounded_text_preview(bytes: &[u8]) -> String {
+    const MAX_PREVIEW_BYTES: usize = 16 * 1024;
+    let Ok(text) = std::str::from_utf8(bytes) else {
+        return format!("<Binary content; {} bytes; preview omitted>", bytes.len());
+    };
+    let mut end = text.len().min(MAX_PREVIEW_BYTES);
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    let mut preview = text[..end].to_owned();
+    if end < text.len() {
+        preview.push_str("\n… preview truncated …");
+    }
+    preview
+}
+
+fn conflict_action_label(action: VaultConflictAction) -> &'static str {
+    match action {
+        VaultConflictAction::KeepCurrent => "Keep Current",
+        VaultConflictAction::KeepIncoming => "Keep Incoming",
     }
 }
 
@@ -379,6 +746,30 @@ mod tests {
             "Unresolved conflict"
         );
         assert_eq!(format_bytes(1024), "1.0 KiB");
+    }
+
+    #[test]
+    fn conflict_preview_is_bounded_and_omits_binary_bytes() {
+        let long_text = "é".repeat(10_000);
+        let preview = bounded_text_preview(long_text.as_bytes());
+        assert!(preview.starts_with("é"));
+        assert!(preview.ends_with("… preview truncated …"));
+        assert_eq!(
+            bounded_text_preview(&[0xff, 0x00]),
+            "<Binary content; 2 bytes; preview omitted>"
+        );
+    }
+
+    #[test]
+    fn conflict_action_labels_are_explicit() {
+        assert_eq!(
+            conflict_action_label(VaultConflictAction::KeepCurrent),
+            "Keep Current"
+        );
+        assert_eq!(
+            conflict_action_label(VaultConflictAction::KeepIncoming),
+            "Keep Incoming"
+        );
     }
 
     #[test]
