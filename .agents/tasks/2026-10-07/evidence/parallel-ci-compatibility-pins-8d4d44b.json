@@ -1,0 +1,21 @@
+{
+  "purpose": "User-requested adoption of native GitHub Actions parallel steps in the compatibility pin refresh workflow.",
+  "workflow_path": ".github/workflows/compatibility-pins.yml",
+  "workflow_sha256": "4c15c09f7298829cc9c12b1e8e5ece52a02a496dc7f55be26246025324ab7d7c",
+  "source_sha": "8d4d44b889dab494197e9e04e4b535f477e027e7",
+  "run_id": 37715418139,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715418139",
+  "job_id": 113110653840,
+  "parallel_group": {
+    "recognized_by_github": true,
+    "wait_barrier_completed": true,
+    "checks": [
+      {"name": "Verify version baseline policy", "conclusion": "success"},
+      {"name": "Verify plugin selection snapshot", "conclusion": "failure"},
+      {"name": "Verify release asset compatibility pins", "conclusion": "success"},
+      {"name": "Verify recorded primary references", "conclusion": "success"}
+    ]
+  },
+  "failure_detail": "The plugin selection check found that current upstream registry/statistics hashes and download counts differ from the frozen snapshot. Its script and fixture were not changed by the parallel-step update; the failure is retained for review rather than silently refreshing the recorded selection.",
+  "conclusion": "The workflow ran all four checks concurrently and waited for all results. Three checks passed; the job failed only on the stale upstream selection snapshot."
+}

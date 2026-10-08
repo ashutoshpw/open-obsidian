@@ -1,0 +1,95 @@
+{
+  "phase": "R2.5",
+  "source_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37715735622,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735622",
+  "rust_toolchain": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+  "bun_version": "1.4.2+744846f84",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113111645382,
+      "runtime_artifact_id": 11523497955,
+      "runtime_artifact_sha256": "631e8b9c18efaf197d8d583fe98426f79f3f10201995e8683e0b4fd167cdb40e",
+      "report_sha256": "6b49f7a56a0e721c9152c38f883dfeaaa27cc1701737a9aeeed29022f4fc003b",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "parallel_group": "passed",
+      "workspace_tests": "passed; openobsidian-doc 13 passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; LegacyCompatibility remains Pending"
+    },
+    "windows": {
+      "job_id": 113111645693,
+      "runtime_artifact_id": 11524250168,
+      "runtime_artifact_sha256": "cb6c0deab79066cb6c1b50e546281e0b34ae33dafabfb6036547088578e17c94",
+      "report_sha256": "998583ef846bbedc3c27076106be8cc3b1e486c8b1c318a5963160e3d2a5a5af",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "workspace_tests": "passed; openobsidian-doc 13 passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; LegacyCompatibility remains Pending"
+    },
+    "macos": {
+      "job_id": 113111645714,
+      "runtime_artifact_id": 11523856384,
+      "runtime_artifact_sha256": "4d121031360ae4a6c95a139165c2143b854f1ae9d6673a57eb6218ecd4200b21",
+      "report_sha256": "a9eb908edd51de7ba6c459b53796c83142bb225c825461d7ba9564882b17d6ce",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "workspace_tests": "passed; openobsidian-doc 13 passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; LegacyCompatibility remains Pending"
+    }
+  },
+  "link_resolution_contract": {
+    "tests": [
+      "link_resolution_reports_resolved_ambiguous_and_unresolved_paths",
+      "link_resolution_handles_current_note_relative_encoded_and_external_targets"
+    ],
+    "result": "Both new tests passed; all thirteen openobsidian-doc tests passed on Ubuntu, macOS and Windows.",
+    "behavior": [
+      "Returns explicit resolved, unresolved, ambiguous or external status without changing source.",
+      "Resolves same-directory and current-note targets, optional Markdown extensions, and unambiguous basename references.",
+      "Normalizes percent-encoded targets, backslash separators and a leading ./ for matching while preserving original reference text.",
+      "Sorts ambiguous candidates and retains candidates for unresolved paths.",
+      "Retains heading/block subpaths on references but does not validate their targets."
+    ]
+  },
+  "linux_preview_artifact": {
+    "artifact_id": 11523981350,
+    "artifact_sha256": "f1aa2802fb1b8b7b2cfac1e3535b178ada251749593b41075d22c49935d80ec2",
+    "size_bytes": 8257819,
+    "binary_sha256": "62711e410931df619b746dab41ff55cea5da4034cef56e4f358aafdf8585b91c",
+    "binary_size_bytes": 21289944
+  },
+  "ci_gates": {
+    "inventory_run": 37715735487,
+    "inventory": "passed",
+    "quality_run": 37715735540,
+    "quality": "passed",
+    "desktop_run": 37715735616,
+    "desktop": "passed",
+    "plugin_renderer_run": 37715735514,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37715735543,
+    "loaded_plugins": "passed"
+  },
+  "limitations": [
+    "Heading and block subpath identities are not source-validated yet.",
+    "Fenced-code and inline-code contexts are not filtered yet; references must not drive edits until this handling and safe update planning land.",
+    "This slice only resolves paths; it does not create rename/move plans or write vault files.",
+    "The unchanged-plugin reports are feasibility-only; broad legacy compatibility remains Pending.",
+    "No local executable validation was run."
+  ],
+  "finding": "R2.5 passed exact-SHA GitHub Actions on Ubuntu, macOS and Windows. Rust formatting, the parallel test group, thirteen document tests per OS, Clippy, layering, native builds, unchanged-plugin feasibility probes and all five companion workflows passed.",
+  "scope": "This milestone adds path-level link resolution outcomes. C03 remains pending until source-aware heading/block validation, code-context filtering and safe reference updates are implemented and verified."
+}

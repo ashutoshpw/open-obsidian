@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T01:45:05+00:00",
+  "updated_at": "2026-10-08T02:08:27+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+  "last_reconciled_head": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
   "current_phase": "R2",
-  "current_milestone": "R2.5",
-  "next_action": "Commit and push R2.5 path-level link resolution, then inspect exact-SHA Rust and companion workflow results on GitHub Actions.",
+  "current_milestone": "R2.6",
+  "next_action": "Begin R2.6 by adding source-aware heading/block subpath checks and code-context filtering before reference results can drive edits; validate only with exact-SHA GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe"
+      "implementation_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6"
     },
     "R3": {
       "status": "pending",
@@ -118,7 +118,9 @@
     "R2.3 passed exact-SHA GitHub Actions on 851e1583bd8b30f4d1b9be9d504b2271ddb73add; all six workflows passed, with quality attempt 2 resolving the initial Ubuntu Electron retrieval-boundary failure. Evidence: evidence/r2.3-frontmatter-properties-851e158.json.",
     "R2.3 passed exact-SHA GitHub Actions on 851e1583bd8b30f4d1b9be9d504b2271ddb73add; all six workflows passed, with quality attempt 2 resolving the initial Ubuntu Electron retrieval-boundary failure. Evidence: evidence/r2.3-frontmatter-properties-851e158.json.",
     "R2.4 source SHA b1b3b1398c374f5ec556f8e5f29bcb9a6ea552c7 compiled and all 11 openobsidian-doc tests passed on three OSes; Ubuntu rustfmt requested two exact layout changes, now applied. macOS and Windows gates and all five companion workflows passed; source acceptance awaits a fresh formatted SHA.",
-    "R2.4 passed exact-SHA GitHub Actions on 75aeac4ba1fa5096c84db08028d3bfd54f626afe: all eleven openobsidian-doc tests and all six workflows passed. Evidence: evidence/r2.4-link-source-spans-75aeac4.json."
+    "R2.4 passed exact-SHA GitHub Actions on 75aeac4ba1fa5096c84db08028d3bfd54f626afe: all eleven openobsidian-doc tests and all six workflows passed. Evidence: evidence/r2.4-link-source-spans-75aeac4.json.",
+    "Extended the weekly compatibility pin refresh workflow with native GitHub Actions parallel steps. Run 37715418139 recognized the group and completed its wait barrier; three checks passed and the plugin selection snapshot check reported upstream registry/statistics drift. Evidence: evidence/parallel-ci-compatibility-pins-8d4d44b.json.",
+    "R2.5 path-level resolution passed exact-SHA GitHub Actions on 3ea79b8eb948568c0f8c2866801b726b5e00a9e6. All thirteen openobsidian-doc tests, formatting, parallel group, Clippy, layering, native builds, plugin feasibility probes and all five companion workflows passed. Reports and Linux preview artifact hashes are in evidence/r2.5-link-resolution-3ea79b8.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1902,6 +1904,86 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37713605945",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37714519508,
+      "head_sha": "133b3f2369ce8ad3d1bbcf347952355a17f1edd2",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37714519508",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37715409555,
+      "head_sha": "8d4d44b889dab494197e9e04e4b535f477e027e7",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715409555",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37715409674,
+      "head_sha": "8d4d44b889dab494197e9e04e4b535f477e027e7",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715409674",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Compatibility pin refresh check",
+      "run_id": 37715418139,
+      "head_sha": "8d4d44b889dab494197e9e04e4b535f477e027e7",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715418139",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37715735487,
+      "head_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735487",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37715735540,
+      "head_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735540",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37715735616,
+      "head_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735616",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37715735514,
+      "head_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735514",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37715735543,
+      "head_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735543",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37715735622,
+      "head_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37715735622",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -1967,8 +2049,8 @@
       "next_action": "R2.2 accepted; continue with R2.3 source spans for top-level frontmatter properties."
     },
     "R2.3": {
-      "status": "in_progress",
-      "implementation_sha": null,
+      "status": "complete",
+      "implementation_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
       "scope": "Expose read-only byte spans for simple top-level frontmatter property keys and raw values, without YAML interpretation or source modification.",
       "acceptance": [
         "Top-level simple keys and raw values are identified by byte offsets into the original UTF-8 document.",
@@ -1977,14 +2059,40 @@
         "Malformed or absent frontmatter yields no property spans.",
         "Focused Rust unit tests and all required Rust/companion CI gates pass on the exact pushed SHA."
       ],
-      "evidence": null,
-      "next_action": "Apply the three rustfmt diffs reported by Ubuntu CI, push a focused correction and rerun required GitHub Actions."
+      "evidence": "evidence/r2.3-frontmatter-properties-851e158.json",
+      "next_action": "R2.3 accepted; continue with R2.4 source-ranged Markdown references."
+    },
+    "R2.4": {
+      "status": "complete",
+      "implementation_sha": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
+      "evidence": "evidence/r2.4-link-source-spans-75aeac4.json",
+      "next_action": "R2.4 accepted; continue with R2.5 path-level link outcomes."
+    },
+    "R2.5": {
+      "status": "complete",
+      "implementation_sha": "3ea79b8eb948568c0f8c2866801b726b5e00a9e6",
+      "evidence": "evidence/r2.5-link-resolution-3ea79b8.json",
+      "scope": "Resolve supported Markdown and wiki references against vault-relative paths with explicit resolved, unresolved, ambiguous and external outcomes; do not edit source.",
+      "acceptance": [
+        "Same-directory, current-note, extension, basename ambiguity, encoded-path and external targets have explicit outcomes.",
+        "Focused resolver tests pass on Ubuntu, macOS and Windows in GitHub Actions.",
+        "Rust fmt, Clippy, layering, native builds and unchanged-plugin feasibility probes pass on the three-OS matrix.",
+        "All five required companion workflows pass on the exact source SHA."
+      ],
+      "next_action": "R2.5 accepted; proceed to source-aware subpath validation and code-context filtering before safe reference edits."
     }
   },
   "ci_preparation": {
     "status": "complete",
     "implementation_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
-    "evidence": "evidence/parallel-ci.json"
+    "evidence": "evidence/parallel-ci.json",
+    "supplemental_parallel_workflow": {
+      "implementation_sha": "8d4d44b889dab494197e9e04e4b535f477e027e7",
+      "workflow": ".github/workflows/compatibility-pins.yml",
+      "evidence": "evidence/parallel-ci-compatibility-pins-8d4d44b.json",
+      "run_id": 37715418139,
+      "run_conclusion": "failure due to upstream selection snapshot drift; parallel group behavior passed"
+    }
   },
   "current_requirement_count": 212
 }
