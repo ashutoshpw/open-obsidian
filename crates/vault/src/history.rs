@@ -748,10 +748,7 @@ mod tests {
             .read_conflict(&record.id, &record.relative_path)
             .unwrap();
         assert_eq!(conflict.bytes, incoming);
-        assert_eq!(
-            conflict.revision_sha256,
-            super::super::sha256_hex(incoming)
-        );
+        assert_eq!(conflict.revision_sha256, super::super::sha256_hex(incoming));
         assert!(conflict.record.protected);
 
         let resolution = store
@@ -768,7 +765,12 @@ mod tests {
             b"before\n"
         );
         assert!(store.history_records().unwrap().is_empty());
-        assert_eq!(fs::read_dir(app_data_path.join("conflicts")).unwrap().count(), 0);
+        assert_eq!(
+            fs::read_dir(app_data_path.join("conflicts"))
+                .unwrap()
+                .count(),
+            0
+        );
     }
 
     #[test]
@@ -786,12 +788,7 @@ mod tests {
             .unwrap();
         assert_eq!(resolution.action, VaultConflictAction::KeepIncoming);
         assert_eq!(
-            resolution
-                .read
-                .as_ref()
-                .unwrap()
-                .document
-                .as_bytes(),
+            resolution.read.as_ref().unwrap().document.as_bytes(),
             incoming
         );
         assert_eq!(
@@ -799,8 +796,16 @@ mod tests {
             incoming
         );
         let records = store.history_records().unwrap();
-        assert!(records.iter().any(|entry| entry.kind == VaultHistoryKind::Recovery));
-        assert!(!records.iter().any(|entry| entry.kind == VaultHistoryKind::Conflict));
+        assert!(
+            records
+                .iter()
+                .any(|entry| entry.kind == VaultHistoryKind::Recovery)
+        );
+        assert!(
+            !records
+                .iter()
+                .any(|entry| entry.kind == VaultHistoryKind::Conflict)
+        );
     }
 
     #[test]
@@ -830,7 +835,13 @@ mod tests {
                 .count(),
             2
         );
-        assert_eq!(store.read_conflict(&record.id, &record.relative_path).unwrap().bytes, b"incoming bytes\n");
+        assert_eq!(
+            store
+                .read_conflict(&record.id, &record.relative_path)
+                .unwrap()
+                .bytes,
+            b"incoming bytes\n"
+        );
     }
 
     #[test]
