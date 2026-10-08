@@ -18,9 +18,13 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - name: Verify version baseline policy
-        run: bun run verify:version-baseline
-      - name: Verify recorded release hashes
-        run: bun run verify:plugin-selection && bun run verify:compatibility-pins
-      - name: Verify recorded primary references
-        run: bun run verify:primary-references
+      # These verification commands read independent snapshots and do not modify the checkout.
+      - parallel:
+          - name: Verify version baseline policy
+            run: bun run verify:version-baseline
+          - name: Verify plugin selection snapshot
+            run: bun run verify:plugin-selection
+          - name: Verify release asset compatibility pins
+            run: bun run verify:compatibility-pins
+          - name: Verify recorded primary references
+            run: bun run verify:primary-references
