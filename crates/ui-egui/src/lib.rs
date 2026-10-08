@@ -1,8 +1,8 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
-    plan_history_retention, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultSession,
+    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultSession,
+    plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -248,7 +248,9 @@ impl OpenObsidianApp {
                 );
             }
         } else {
-            ui.small("Refresh the preview to apply the selected retention settings to the listing.");
+            ui.small(
+                "Refresh the preview to apply the selected retention settings to the listing.",
+            );
         }
 
         if self.history_records.is_empty() && self.history_plan.is_some() {
