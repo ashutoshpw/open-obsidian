@@ -183,24 +183,25 @@ impl VaultStore {
         }
         Ok(VaultHistoryCleanup {
             removed,
-            protected: plan.protected.iter().map(|record| record.id.clone()).collect(),
+            protected: plan
+                .protected
+                .iter()
+                .map(|record| record.id.clone())
+                .collect(),
             warning: plan.warning,
         })
     }
 
     fn remove_history_record(&self, record: &VaultHistoryRecord) -> Result<(), VaultError> {
         if record.protected {
-            return Err(VaultError::InvalidHistoryRecord(PathBuf::from(record.id.as_str())));
+            return Err(VaultError::InvalidHistoryRecord(PathBuf::from(
+                record.id.as_str(),
+            )));
         }
         let directory = managed_history_directory(&self.app_data_root, record.kind)?
-            .ok_or_else(|| {
-                VaultError::InvalidHistoryRecord(PathBuf::from(record.id.as_str()))
-            })?;
-        let artifact_path = directory.join(format!(
-            "{}{}",
-            record.id,
-            record.kind.artifact_extension()
-        ));
+            .ok_or_else(|| VaultError::InvalidHistoryRecord(PathBuf::from(record.id.as_str())))?;
+        let artifact_path =
+            directory.join(format!("{}{}", record.id, record.kind.artifact_extension()));
         let metadata_path = directory.join(format!("{}.json", record.id));
         for path in [&artifact_path, &metadata_path] {
             match fs::symlink_metadata(path) {
@@ -250,10 +251,11 @@ fn read_history_record(
     kind: VaultHistoryKind,
 ) -> Result<VaultHistoryRecord, VaultError> {
     let invalid = || VaultError::InvalidHistoryRecord(metadata_path.to_path_buf());
-    let value: Value =
-        serde_json::from_slice(&fs::read(metadata_path).map_err(|_| invalid())?)
-            .map_err(|_| invalid())?;
-    let id = string_field(&value, &["id"]).ok_or_else(invalid)?.to_owned();
+    let value: Value = serde_json::from_slice(&fs::read(metadata_path).map_err(|_| invalid())?)
+        .map_err(|_| invalid())?;
+    let id = string_field(&value, &["id"])
+        .ok_or_else(invalid)?
+        .to_owned();
     if id.is_empty()
         || !id
             .bytes()
@@ -265,21 +267,22 @@ fn read_history_record(
     let relative_path =
         string_field(&value, &["relative_path", "relativePath"]).ok_or_else(invalid)?;
     let relative_path = normalize_relative_path(Path::new(relative_path))?;
-    let revision_sha256 = string_field(&value, &["revision"]).ok_or_else(invalid)?.to_owned();
-    let bytes = value.get("bytes").and_then(Value::as_u64).ok_or_else(invalid)?;
+    let revision_sha256 = string_field(&value, &["revision"])
+        .ok_or_else(invalid)?
+        .to_owned();
+    let bytes = value
+        .get("bytes")
+        .and_then(Value::as_u64)
+        .ok_or_else(invalid)?;
     let captured_at_text =
         string_field(&value, &["captured_at", "capturedAt"]).ok_or_else(invalid)?;
     let captured_at = parse_history_timestamp(captured_at_text).ok_or_else(invalid)?;
-    let expected_revision_sha256 = optional_string_field(
-        &value,
-        &["expected_revision", "expectedRevision"],
-    )
-    .ok_or_else(invalid)?;
-    let current_revision_sha256 = optional_string_field(
-        &value,
-        &["current_revision", "currentRevision"],
-    )
-    .ok_or_else(invalid)?;
+    let expected_revision_sha256 =
+        optional_string_field(&value, &["expected_revision", "expectedRevision"])
+            .ok_or_else(invalid)?;
+    let current_revision_sha256 =
+        optional_string_field(&value, &["current_revision", "currentRevision"])
+            .ok_or_else(invalid)?;
     let artifact_path = directory.join(format!("{id}{}", kind.artifact_extension()));
     let artifact_metadata = fs::symlink_metadata(&artifact_path).map_err(|_| invalid())?;
     if artifact_metadata.file_type().is_symlink()
@@ -335,7 +338,11 @@ fn parse_history_timestamp(value: &str) -> Option<SystemTime> {
             .rfind(|character| character == '+' || character == '-')?
             + time_start;
         let (date_time, offset) = value.split_at(offset_start);
-        let sign = if offset.starts_with('+') { 1_i64 } else { -1_i64 };
+        let sign = if offset.starts_with('+') {
+            1_i64
+        } else {
+            -1_i64
+        };
         let mut parts = offset[1..].split(':');
         let hours = parts.next()?.parse::<i64>().ok()?;
         let minutes = parts.next()?.parse::<i64>().ok()?;
@@ -350,13 +357,10 @@ fn parse_history_timestamp(value: &str) -> Option<SystemTime> {
     let year = date_parts.next()?.parse::<i64>().ok()?;
     let month = date_parts.next()?.parse::<i64>().ok()?;
     let day = date_parts.next()?.parse::<i64>().ok()?;
-    if date_parts.next().is_some()
-        || !(0..=9999).contains(&year)
-        || !(1..=12).contains(&month)
-    {
+    if date_parts.next().is_some() || !(0..=9999).contains(&year) || !(1..=12).contains(&month) {
         return None;
     }
-    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
     let days_in_month = match month {
         2 if leap => 29,
         2 => 28,
@@ -369,9 +373,7 @@ fn parse_history_timestamp(value: &str) -> Option<SystemTime> {
 
     let (clock, fraction) = time
         .split_once('.')
-        .map_or((time, None), |(clock, fraction)| {
-            (clock, Some(fraction))
-        });
+        .map_or((time, None), |(clock, fraction)| (clock, Some(fraction)));
     let mut clock_parts = clock.split(':');
     let hour = clock_parts.next()?.parse::<i64>().ok()?;
     let minute = clock_parts.next()?.parse::<i64>().ok()?;
@@ -572,12 +574,16 @@ mod tests {
 
         let records = store.history_records().unwrap();
         assert_eq!(records.len(), 2);
-        assert!(records.iter().any(|record| {
-            record.kind == VaultHistoryKind::Recovery && !record.protected
-        }));
-        assert!(records.iter().any(|record| {
-            record.kind == VaultHistoryKind::Conflict && record.protected
-        }));
+        assert!(
+            records
+                .iter()
+                .any(|record| { record.kind == VaultHistoryKind::Recovery && !record.protected })
+        );
+        assert!(
+            records
+                .iter()
+                .any(|record| { record.kind == VaultHistoryKind::Conflict && record.protected })
+        );
     }
 
     #[test]
@@ -649,7 +655,11 @@ mod tests {
             serde_json::from_slice(&fs::read(recovery_record.path()).unwrap()).unwrap();
         metadata["captured_at"] = Value::String("1".to_owned());
         metadata["path"] = Value::String(outside_path.to_string_lossy().into_owned());
-        fs::write(recovery_record.path(), serde_json::to_vec(&metadata).unwrap()).unwrap();
+        fs::write(
+            recovery_record.path(),
+            serde_json::to_vec(&metadata).unwrap(),
+        )
+        .unwrap();
 
         let plan = store
             .history_retention_plan(
@@ -681,10 +691,15 @@ mod tests {
         assert!(cleanup.warning);
         assert!(!recovery_dir.join(format!("{recovery_id}.bin")).exists());
         assert!(!recovery_dir.join(format!("{recovery_id}.json")).exists());
-        assert_eq!(fs::read(&outside_path).unwrap(), b"keep outside managed history\n");
+        assert_eq!(
+            fs::read(&outside_path).unwrap(),
+            b"keep outside managed history\n"
+        );
         assert_eq!(store.history_records().unwrap().len(), 1);
         assert_eq!(
-            fs::read_dir(app_data_path.join("conflicts")).unwrap().count(),
+            fs::read_dir(app_data_path.join("conflicts"))
+                .unwrap()
+                .count(),
             2
         );
     }

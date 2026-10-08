@@ -137,8 +137,8 @@ pub struct VaultStore {
     external_change_on_failure: Option<(PathBuf, Vec<u8>)>,
 }
 
-mod rename_transaction;
 mod history;
+mod rename_transaction;
 pub use history::{
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, plan_history_retention,
