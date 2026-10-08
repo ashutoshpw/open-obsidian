@@ -88,10 +88,7 @@ impl eframe::App for OpenObsidianApp {
                 self.vault_opening = true;
             }
         }
-        let open_result = self
-            .vault_open_receiver
-            .as_ref()
-            .map(Receiver::try_recv);
+        let open_result = self.vault_open_receiver.as_ref().map(Receiver::try_recv);
         match open_result {
             Some(Ok(Ok(session))) => {
                 self.session = Some(session);
