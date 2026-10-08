@@ -1,0 +1,157 @@
+{
+  "slice": "R2.6.28 fixture-backed native link status UI",
+  "phase": "R2",
+  "status": "accepted native UI slice; R2 remains in progress",
+  "recorded_at": "2026-10-08T14:02:16Z",
+  "source_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+  "implementation_commits": [
+    "dfe760f6aa12aae0502fb8e08f15b2786967f4c3",
+    "7375807a1dc4e5efd5cf00087431aabc77d9fc15",
+    "63ad990443aeade86806709775ec3eb8a2ab5398"
+  ],
+  "scope": "Add fixture-backed native link-status presentation through the existing snapshot-bound VaultSession resolver, without writing vault content.",
+  "behavior": [
+    "The UI lets the user choose a Markdown note and resolve its wiki links, Markdown links and embeds through VaultSession on a Rayon worker.",
+    "The panel displays resolved, ambiguous, unresolved and external counts plus every reference's kind, raw text, target, candidates, alias and subpath.",
+    "Resolution runs are serialized with history and rename operations; cached statuses are invalidated after rename, and resolver errors are mapped to safe UI messages.",
+    "The shared link-resolution fixture drives the production egui interaction and verifies displayed statuses, targets, candidates, counts and unchanged vault bytes."
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "4 passed",
+      "openobsidian-ui-egui": "14 passed, including the fixture-backed status interaction",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "4 passed",
+      "openobsidian-ui-egui": "14 passed, including the fixture-backed status interaction",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "4 passed",
+      "openobsidian-ui-egui": "14 passed, including the fixture-backed status interaction",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; executable checks used GitHub Actions"
+  },
+  "ci_attempts": [
+    {
+      "source_sha": "dfe760f6aa12aae0502fb8e08f15b2786967f4c3",
+      "rust_run_id": 37787211924,
+      "inventory_run_id": 37787210365,
+      "quality_run_id": 37787210376,
+      "desktop_build_run_id": 37787210492,
+      "plugin_renderer_run_id": 37787210470,
+      "loaded_plugin_run_id": 37787210335,
+      "finding": "The five companion workflows passed. Rust CI exposed an ambiguous UI test query for repeated labels and requested Ubuntu rustfmt layout corrections; both were corrected from GitHub CI output."
+    },
+    {
+      "source_sha": "7375807a1dc4e5efd5cf00087431aabc77d9fc15",
+      "rust_run_id": 37787602680,
+      "inventory_run_id": 37787602401,
+      "quality_run_id": 37787602428,
+      "desktop_build_run_id": 37787602419,
+      "plugin_renderer_run_id": 37787602459,
+      "loaded_plugin_run_id": 37787602580,
+      "finding": "Workspace tests passed on all three OSes. Ubuntu rustfmt reported one remaining layout change; the macOS Electron retrieval audit failed once while Ubuntu and Windows passed. The formatter correction was applied, and the Electron audit passed on the next exact SHA."
+    }
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37788415419,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415419",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113349060688, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113349060064, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113349060408, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, crate-layer checks, native preview builds and unchanged-plugin Wry feasibility probes passed on Ubuntu, macOS and Windows.",
+        "The native Parallel group and its wait barrier passed on all three jobs."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37788415417,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415417",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113349059991, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37788415354,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415354",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113349063381, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113349063687, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113349063846, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37788415568,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415568",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113349063136, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113349063426, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113349063677, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37788415403,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415403",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113349061546, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113349061900, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113349061910, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37788415371,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415371",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113349060967, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113349061162, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113349061205, "conclusion": "success"}
+      ]
+    }
+  ],
+  "artifacts": [
+    {"id": 11555890685, "name": "openobsidian-rust-preview-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 8871720, "digest": "sha256:4477df1fabbeaac863e0aff94515d5c7f2f5f6775e971a0ddfb0a24e4220a686"},
+    {"id": 11556165378, "name": "rust-plugin-runtime-Linux-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 2695, "digest": "sha256:47c5ba3695255f5347227ea9456f655244cd4f24a5c246c490fe0cc384c6e6bd"},
+    {"id": 11554689918, "name": "rust-plugin-runtime-macOS-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 2698, "digest": "sha256:ffcca74f1c76c994cc7eafd84887057e43d27f3f4ca7850f28d683ce96940db4"},
+    {"id": 11554804214, "name": "rust-plugin-runtime-Windows-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 2715, "digest": "sha256:a0e589e15fa707af9ec9a1e213d1d539581da7cd0e5d91e83b6089f990084b07"},
+    {"id": 11555068014, "name": "openobsidian-Linux-preview-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 125946548, "digest": "sha256:2063f80722be05c150b26603152dd8dfb17719531b1cb8a8bd8c0eb5b89dfa9d"},
+    {"id": 11554664404, "name": "openobsidian-macOS-preview-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 397395487, "digest": "sha256:a432e06899ccab3d47fc6a34b7ab5d2f2bdd2dd000b99004ec8d04d93eed176d"},
+    {"id": 11556040133, "name": "openobsidian-Windows-preview-63ad990443aeade86806709775ec3eb8a2ab5398", "size_bytes": 163005824, "digest": "sha256:4e09887491b8c23aec5efa919b28e9068a11fdd2d67287e31475fda2f78d83e5"}
+  ],
+  "limitations": [
+    "This adds fixture-backed link-status presentation and interaction but does not complete all C03/C03.2 cross-layer or native-window visual/accessibility acceptance.",
+    "SYNC-007 host-level uninstall integration remains pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+}

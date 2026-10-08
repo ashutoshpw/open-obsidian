@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T13:32:17Z",
+  "updated_at": "2026-10-08T14:04:06Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
-  "current_milestone": "R2.6.27",
+  "last_reconciled_head": "63ad990443aeade86806709775ec3eb8a2ab5398",
+  "current_milestone": "R2.6.28",
   "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b"
+      "implementation_sha": "63ad990443aeade86806709775ec3eb8a2ab5398"
     },
     "R3": {
       "status": "pending",
@@ -160,7 +160,8 @@
     "R2.6.24 drove the same-basename-disambiguated C03 rename fixture through the production egui preview, review, explicit apply and session refresh. Preview preserved bytes; confirmed apply updated the intended reference and moved note while preserving the unrelated same-basename note. All six GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949, including the Rust parallel group and the interaction on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.24-subpath-rename-ui-a01c8a2.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
     "R2.6.25 added fixtures/link-resolution.json and a shared testkit case for source-aware wiki/Markdown link and embed resolution, aliases, subpaths, duplicate headings/basenames, unresolved paths and source immutability. All six GitHub Actions workflows passed on exact source SHA b5f3249f2e6eb5b98ea6515722f397cea0f3db89, and the fixture test passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.25-link-resolution-fixture-b5f3249.json. No local executable validation was run; C03/C03.2 full cross-layer acceptance and SYNC-007 host-level uninstall integration remain open.",
     "R2.6.26 replaced the hardcoded egui rename fixture interaction with the shared resolved wiki/Markdown/embed case. Production UI preview/review/apply/session refresh preserved pre-confirmation bytes and matched all expected post-apply bytes, including BOM/CRLF source. All six workflows passed on exact source SHA 7b3c3d1a115d79badb4816182f74ab709b145bed, and the interaction passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
-    "R2.6.27 added snapshot-bound, read-only link resolution through VaultRoot and VaultSession, with shared C03 fixture acceptance. All six GitHub Actions workflows passed on exact source SHA a6fb3309fcce87bd4d4644b1071763c56e12007b; package counts, job IDs and artifact digests are recorded in evidence/r2.6.27-vault-link-resolution-a6fb330.json. No local executable validation was run. Full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open."
+    "R2.6.27 added snapshot-bound, read-only link resolution through VaultRoot and VaultSession, with shared C03 fixture acceptance. All six GitHub Actions workflows passed on exact source SHA a6fb3309fcce87bd4d4644b1071763c56e12007b; package counts, job IDs and artifact digests are recorded in evidence/r2.6.27-vault-link-resolution-a6fb330.json. No local executable validation was run. Full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
+    "R2.6.28 added fixture-backed native link-status presentation in egui. The interaction and all six workflows passed on exact source SHA 63ad990443aeade86806709775ec3eb8a2ab5398; test counts, job IDs and artifact digests are recorded in evidence/r2.6.28-native-link-status-ui-63ad990.json. No local executable validation was run. C03/C03.2 cross-layer acceptance and SYNC-007 host-level uninstall integration remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -4284,6 +4285,80 @@
         {"name": "macos-latest", "job_id": 113335204798, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302/job/113335204798"},
         {"name": "ubuntu-latest", "job_id": 113335205038, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302/job/113335205038"}
       ]
+    },
+    {
+      "name": "rust-ci",
+      "run_id": 37788415419,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415419",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113349060688, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415419/job/113349060688"},
+        {"name": "rust (macos-latest)", "job_id": 113349060064, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415419/job/113349060064"},
+        {"name": "rust (windows-latest)", "job_id": 113349060408, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415419/job/113349060408"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37788415417,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415417",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113349059991, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415417/job/113349059991"}]
+    },
+    {
+      "name": "quality",
+      "run_id": 37788415354,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415354",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113349063381, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415354/job/113349063381"},
+        {"name": "windows-latest", "job_id": 113349063687, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415354/job/113349063687"},
+        {"name": "ubuntu-latest", "job_id": 113349063846, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415354/job/113349063846"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37788415568,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415568",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113349063136, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415568/job/113349063136"},
+        {"name": "macos-latest", "job_id": 113349063426, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415568/job/113349063426"},
+        {"name": "windows-latest", "job_id": 113349063677, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415568/job/113349063677"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37788415403,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415403",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113349061546, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415403/job/113349061546"},
+        {"name": "macos-latest", "job_id": 113349061900, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415403/job/113349061900"},
+        {"name": "windows-latest", "job_id": 113349061910, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415403/job/113349061910"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37788415371,
+      "head_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415371",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113349060967, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415371/job/113349060967"},
+        {"name": "ubuntu-latest", "job_id": 113349061162, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415371/job/113349061162"},
+        {"name": "macos-latest", "job_id": 113349061205, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37788415371/job/113349061205"}
+      ]
     }
   ],
   "milestones": {
@@ -5409,6 +5484,58 @@
       ],
       "remaining": [
         "The resolver API does not add user-facing native link-status presentation or complete all C03/C03.2 cross-layer cases.",
+        "SYNC-007 host-level uninstall integration remains pending."
+      ],
+      "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+    },
+    "R2.6.28": {
+      "status": "complete",
+      "implementation_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+      "implementation_commits": [
+        "dfe760f6aa12aae0502fb8e08f15b2786967f4c3",
+        "7375807a1dc4e5efd5cf00087431aabc77d9fc15",
+        "63ad990443aeade86806709775ec3eb8a2ab5398"
+      ],
+      "scope": "Add fixture-backed native link-status presentation through the snapshot-bound VaultSession resolver.",
+      "ci_attempts": [
+        {
+          "source_sha": "dfe760f6aa12aae0502fb8e08f15b2786967f4c3",
+          "rust_run_id": 37787211924,
+          "inventory_run_id": 37787210365,
+          "quality_run_id": 37787210376,
+          "desktop_build_run_id": 37787210492,
+          "plugin_renderer_run_id": 37787210470,
+          "loaded_plugin_run_id": 37787210335,
+          "finding": "The five companion workflows passed. Rust CI found a duplicate UI query and formatting differences; corrected from exact CI output."
+        },
+        {
+          "source_sha": "7375807a1dc4e5efd5cf00087431aabc77d9fc15",
+          "rust_run_id": 37787602680,
+          "inventory_run_id": 37787602401,
+          "quality_run_id": 37787602428,
+          "desktop_build_run_id": 37787602419,
+          "plugin_renderer_run_id": 37787602459,
+          "loaded_plugin_run_id": 37787602580,
+          "finding": "Workspace tests passed on all three OSes; Ubuntu rustfmt requested one remaining layout change. The macOS Electron retrieval audit failed once, while Ubuntu and Windows passed; the audit passed on the next exact SHA."
+        },
+        {
+          "source_sha": "63ad990443aeade86806709775ec3eb8a2ab5398",
+          "rust_run_id": 37788415419,
+          "inventory_run_id": 37788415417,
+          "quality_run_id": 37788415354,
+          "desktop_build_run_id": 37788415568,
+          "plugin_renderer_run_id": 37788415403,
+          "loaded_plugin_run_id": 37788415371,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.28-native-link-status-ui-63ad990.json",
+      "accepted_slice": [
+        "The fixture-backed egui interaction presents each link reference's status and details plus aggregate status counts; it verifies targets, candidates and unchanged vault bytes on Ubuntu, macOS and Windows.",
+        "Formatting, workspace tests, Clippy, crate layering, native builds, unchanged-plugin feasibility, quality, inventory, desktop, renderer and loaded-plugin workflows passed on the exact source SHA. No local executable validation was run."
+      ],
+      "remaining": [
+        "Broader C03/C03.2 cross-layer acceptance and native-window visual/accessibility acceptance remain open.",
         "SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
