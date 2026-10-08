@@ -1,0 +1,179 @@
+{
+  "phase": "R2.6.4",
+  "source_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+  "implementation_commits": [
+    "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+    "84b4f843c20d7b8699f84cc08001a027c9a4ca2a"
+  ],
+  "scope": "Add content-addressed vault snapshots, reject symlink traversal in reads, and bind a read-only rename preview to a stable whole-vault SHA-256 snapshot.",
+  "behavior": [
+    "Snapshots include sorted regular-file content revisions and symlink target revisions without following links.",
+    "Reads reject symlinks at every path component, including links that resolve inside the vault.",
+    "Rename previews resolve source-aware links from Markdown bytes captured between two matching snapshots; a changed snapshot fails closed.",
+    "Preview verification rebuilds the plan and rejects stale snapshot or reference decisions without writing any vault bytes."
+  ],
+  "focused_tests": [
+    "snapshots_hash_all_regular_files_and_notice_content_changes",
+    "rename_preview_is_snapshot_bound_and_does_not_change_vault_bytes",
+    "snapshots_symlinks_without_following_them_and_reads_reject_them"
+  ],
+  "test_results": {
+    "ubuntu": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "5 passed"
+    },
+    "macos": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "5 passed"
+    },
+    "windows": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "4 passed; Unix-only symlink test is not compiled on Windows"
+    },
+    "local_executable_validation": "not run; all executable validation was through GitHub Actions"
+  },
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2+744846f84",
+    "wry": "0.57.0"
+  },
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113132377509,
+      "conclusion": "success",
+      "format": "passed",
+      "workspace_tests": "passed; openobsidian-doc 21 and openobsidian-vault 5",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "runtime_artifact_id": 11526143966,
+      "runtime_archive_sha256": "a919f825f791b483be2c0b5ae7d92d1ebb229415dee62814b21649f2408726e2",
+      "runtime_report_sha256": "6b49f7a56a0e721c9152c38f883dfeaaa27cc1701737a9aeeed29022f4fc003b"
+    },
+    "macos": {
+      "job_id": 113132377304,
+      "conclusion": "success",
+      "format": "not scheduled",
+      "workspace_tests": "passed; openobsidian-doc 21 and openobsidian-vault 5",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "runtime_artifact_id": 11525869566,
+      "runtime_archive_sha256": "fde386851419142661b0adc47ae9c17f96ac0f3335d3838334c624d047974356",
+      "runtime_report_sha256": "a9eb908edd51de7ba6c459b53796c83142bb225c825461d7ba9564882b17d6ce"
+    },
+    "windows": {
+      "job_id": 113132377534,
+      "conclusion": "success",
+      "format": "not scheduled",
+      "workspace_tests": "passed; openobsidian-doc 21 and openobsidian-vault 4",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "runtime_artifact_id": 11525623796,
+      "runtime_archive_sha256": "7f32ae42af0563180509fd4682281ae0635c8dbc36c273c8bd6a43ee2ac0f318",
+      "runtime_report_sha256": "998583ef846bbedc3c27076106be8cc3b1e486c8b1c318a5963160e3d2a5a5af"
+    }
+  },
+  "linux_preview_artifact": {
+    "artifact_id": 11525864646,
+    "archive_sha256": "df9ab7c4bb507eeff93ec641cea03d7d085e8571f8ac4c210c773d097c8d04e2",
+    "archive_size_bytes": 8257819,
+    "binary_sha256": "62711e410931df619b746dab41ff55cea5da4034cef56e4f358aafdf8585b91c",
+    "binary_size_bytes": 21289944
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37722258314,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258314",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 113132377304, "conclusion": "success"},
+        "ubuntu": {"job_id": 113132377509, "conclusion": "success"},
+        "windows": {"job_id": 113132377534, "conclusion": "success"}
+      }
+    },
+    "inventory": {
+      "run_id": 37722258193,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258193",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 113132376799, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 37722258264,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258264",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113132377418, "conclusion": "success"},
+        "macos": {"job_id": 113132377480, "conclusion": "success"},
+        "windows": {"job_id": 113132377495, "conclusion": "success"}
+      }
+    },
+    "desktop": {
+      "run_id": 37722258198,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258198",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 113132376972, "conclusion": "success"},
+        "macos": {"job_id": 113132377261, "conclusion": "success"},
+        "ubuntu": {"job_id": 113132377277, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37722258215,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258215",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113132377013, "conclusion": "success"},
+        "windows": {"job_id": 113132377174, "conclusion": "success"},
+        "macos": {"job_id": 113132377229, "conclusion": "success"}
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37722258229,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258229",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113132377003, "conclusion": "success"},
+        "windows": {"job_id": 113132377138, "conclusion": "success"},
+        "macos": {"job_id": 113132377188, "conclusion": "success"}
+      }
+    }
+  },
+  "repair_history": [
+    {
+      "source_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "rust_run_id": 37721968241,
+      "rust_job_results": {
+        "ubuntu": {"job_id": 113131441211, "conclusion": "failure", "finding": "rustfmt layout changes; parallel group consequently failed"},
+        "macos": {"job_id": 113131440900, "conclusion": "failure", "finding": "Clippy cmp_owned on a PathBuf comparison in the new symlink snapshot test"},
+        "windows": {"job_id": 113131441165, "conclusion": "success"}
+      },
+      "companion_runs": {
+        "inventory": 37721968264,
+        "quality": 37721968253,
+        "desktop": 37721968268,
+        "plugin_renderer": 37721968230,
+        "loaded_plugins": 37721968229,
+        "all_passed": true
+      },
+      "finding": "Applied only GitHub's requested rustfmt layout changes and Clippy's borrowed Path comparison suggestion in commit 84b4f843c20d7b8699f84cc08001a027c9a4ca2a."
+    }
+  ],
+  "limitations": [
+    "This milestone remains read-only; transaction journaling, apply, rollback, crash recovery and recovery-history retention are not implemented.",
+    "Snapshot contents include regular files and symlink targets, but do not include empty directories, permission metadata or other filesystem metadata.",
+    "PC05/PC08 are feasibility-only probes and do not establish broad legacy compatibility or isolation certification.",
+    "No local executable validation was run."
+  ],
+  "finding": "R2.6.4 passed all six required exact-SHA GitHub Actions workflows on 84b4f843c20d7b8699f84cc08001a027c9a4ca2a."
+}

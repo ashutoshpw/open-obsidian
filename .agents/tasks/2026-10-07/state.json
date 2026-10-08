@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T03:10:37Z",
+  "updated_at": "2026-10-08T03:26:01Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "7b3b14bc5a8dac5762e0f957a3d922c09bab83fa",
+  "last_reconciled_head": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
   "current_phase": "R2",
-  "current_milestone": "R2.6.3",
-  "next_action": "Begin R2.6.4: review crates/vault snapshot/revision and transaction APIs and existing write/rollback recovery contracts; design revision-bound rename apply/rollback. Keep C03/C03.2 pending until exact-SHA GitHub CI acceptance.",
+  "current_milestone": "R2.6.4",
+  "next_action": "Begin R2.6.5 with a small journaled, revision-checked multi-file rename transaction slice. Port apply/rollback and recovery behavior from the existing vault broker, preserving external changes; keep C03/C03.2 pending until the exact implementation SHA passes required GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "7b3b14bc5a8dac5762e0f957a3d922c09bab83fa"
+      "implementation_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a"
     },
     "R3": {
       "status": "pending",
@@ -124,7 +124,8 @@
     "R2.6.1 first source SHA b20792beda96486e4ac2dd719975ba27d5964d13 passed all fifteen openobsidian-doc tests and five companion workflows but failed Rust CI formatting and strict Clippy. Applied only the reported formatting and lint corrections; the follow-up exact-SHA run passed.",
     "R2.6.1 fenced and inline code-context filtering passed all six exact-SHA workflows on cf312828fab467bd679e5c2b9995ed337a4e11f1. All fifteen openobsidian-doc tests passed on Ubuntu, macOS and Windows; fmt, Clippy, layering, native builds, feasibility probes and all five companion workflows passed. Evidence: evidence/r2.6.1-code-context-cf312828.json. No local executable validation was run.",
     "R2.6.2 source-aware heading/block subpath resolution passed all six GitHub Actions workflows on exact SHA d35d5ea10f7f95dbfb5a5384a9855bd836326ef9. All 17 openobsidian-doc tests, Rust gates on Ubuntu/macOS/Windows and five companion workflows passed. CI rustfmt/Clippy corrections were applied in small commits; the transient macOS Electron audit failure passed on exact-SHA attempt 2. Evidence: evidence/r2.6.2-subpath-resolution-d35d5ea.json. C03 safe rename/move editing remains pending. No local executable validation was run.",
-    "R2.6.3 pure source-ranged rename preview passed all six required GitHub Actions workflows on exact implementation SHA 7b3b14bc5a8dac5762e0f957a3d922c09bab83fa; evidence: evidence/r2.6.3-rename-preview-7b3b14b.json. Preview does not write vault files; C03/C03.2 remain Pending. No local executable validation was run."
+    "R2.6.3 pure source-ranged rename preview passed all six required GitHub Actions workflows on exact implementation SHA 7b3b14bc5a8dac5762e0f957a3d922c09bab83fa; evidence: evidence/r2.6.3-rename-preview-7b3b14b.json. Preview does not write vault files; C03/C03.2 remain Pending. No local executable validation was run.",
+    "R2.6.4 content-addressed vault snapshots, symlink-safe reads and snapshot-bound rename preview passed all six required GitHub Actions workflows on exact source SHA 84b4f843c20d7b8699f84cc08001a027c9a4ca2a; evidence: evidence/r2.6.4-vault-snapshot-preview-84b4f84.json. The first SHA required only GitHub-reported fmt/Clippy corrections. Rename apply/rollback remains pending; C03/C03.2 remain Pending. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -2184,6 +2185,150 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720822984",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI — R2.6.3 acceptance record",
+      "run_id": 37721508959,
+      "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508959",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory — R2.6.3 acceptance record",
+      "run_id": 37721508917,
+      "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508917",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality — R2.6.3 acceptance record",
+      "run_id": 37721508969,
+      "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508969",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build — R2.6.3 acceptance record",
+      "run_id": 37721508982,
+      "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508982",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix — R2.6.3 acceptance record",
+      "run_id": 37721508946,
+      "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508946",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows — R2.6.3 acceptance record",
+      "run_id": 37721508954,
+      "head_sha": "ba556c94ba1017ec6103417d104d8e5565f8523b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721508954",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI — R2.6.4 first source attempt",
+      "run_id": 37721968241,
+      "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968241",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Rust migration inventory — R2.6.4 first source attempt",
+      "run_id": 37721968264,
+      "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968264",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality — R2.6.4 first source attempt",
+      "run_id": 37721968253,
+      "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968253",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build — R2.6.4 first source attempt",
+      "run_id": 37721968268,
+      "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968268",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix — R2.6.4 first source attempt",
+      "run_id": 37721968230,
+      "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968230",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows — R2.6.4 first source attempt",
+      "run_id": 37721968229,
+      "head_sha": "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37721968229",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37722258314,
+      "head_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258314",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37722258193,
+      "head_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258193",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37722258264,
+      "head_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258264",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37722258198,
+      "head_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258198",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37722258215,
+      "head_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258215",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37722258229,
+      "head_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37722258229",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -2318,6 +2463,23 @@
         "All five companion workflows pass for the exact source SHA; CI retries and artifact/report hashes are recorded."
       ],
       "next_action": "Begin R2.6.4 by reviewing crates/vault snapshot and transaction APIs, then design revision-bound rename apply/rollback and recovery; keep C03/C03.2 pending until exact-SHA GitHub CI acceptance."
+    },
+    "R2.6.4": {
+      "status": "complete",
+      "implementation_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+      "implementation_commits": [
+        "c250d741201d99fdd152c3e2ee8c87b430e26e8b",
+        "84b4f843c20d7b8699f84cc08001a027c9a4ca2a"
+      ],
+      "evidence": "evidence/r2.6.4-vault-snapshot-preview-84b4f84.json",
+      "scope": "Add SHA-256 vault snapshots, reject symlink traversal in reads, and bind read-only source-aware rename previews to a stable snapshot.",
+      "acceptance": [
+        "Snapshots detect file content and symlink target changes without following symlinks.",
+        "Reads reject symlinks at all path components; previews are built between matching snapshots and rejected when stale.",
+        "21 openobsidian-doc tests pass on each OS; vault tests pass on Ubuntu/macOS/Windows with the Unix-only symlink test gated on Unix.",
+        "Rust formatting, parallel checks, Clippy, layering, native builds, plugin feasibility probes and all five companion workflows pass on exact implementation SHA."
+      ],
+      "next_action": "R2.6.5: implement journaled, revision-checked rename apply and rollback with failure injection and external-change preservation; keep C03/C03.2 pending until exact-SHA CI acceptance."
     }
   },
   "ci_preparation": {
