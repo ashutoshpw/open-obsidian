@@ -2338,6 +2338,9 @@ mod tests {
         let app_data_path = temporary.0.join("app-data");
         std::fs::create_dir_all(&vault_path).unwrap();
         std::fs::create_dir_all(&app_data_path).unwrap();
+        let existing_vault_fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        materialize_existing_vault_fixture(&vault_path, &existing_vault_fixture);
 
         let mut original_vault_files = Vec::new();
         for file in scenario["vault"]["files"]
@@ -2359,6 +2362,7 @@ mod tests {
             std::fs::write(&path, &source).unwrap();
             original_vault_files.push((relative_path, source));
         }
+        let original_vault_tree = existing_vault_tree_snapshot(&vault_path);
 
         let mut original_history_files = Vec::new();
         for record in scenario["history_records"]
@@ -2484,6 +2488,7 @@ mod tests {
                 .collect::<Vec<_>>()
         );
         assert_eq!(preview.warning, expected["warning"].as_bool().unwrap());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), original_vault_tree);
         for (path, source) in &original_history_files {
             assert_eq!(std::fs::read(path).unwrap(), *source);
         }
@@ -2494,6 +2499,7 @@ mod tests {
         harness.step();
         assert!(std::fs::exists(app_data_path.join("recovery/old-recovery.bin")).unwrap());
         assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.incoming")).unwrap());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), original_vault_tree);
 
         harness.get_by_label("Confirm cleanup").click();
         harness.step();
@@ -2527,6 +2533,7 @@ mod tests {
         assert!(expected["protected_conflict_bytes_remain_identical"].as_bool() == Some(true));
         assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.incoming")).unwrap());
         assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.json")).unwrap());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), original_vault_tree);
         for (relative_path, source) in &original_vault_files {
             assert_eq!(
                 std::fs::read(vault_path.join(relative_path)).unwrap(),
@@ -2539,6 +2546,8 @@ mod tests {
         {
             assert_eq!(std::fs::read(path).unwrap(), *source);
         }
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), original_vault_tree);
     }
 
     #[test]
