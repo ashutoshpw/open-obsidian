@@ -396,8 +396,7 @@ mod link_resolution_fixture_tests {
     use serde_json::Value;
     use std::collections::HashMap;
 
-    const LINK_RESOLUTION_FIXTURE: &str =
-        include_str!("../../../fixtures/link-resolution.json");
+    const LINK_RESOLUTION_FIXTURE: &str = include_str!("../../../fixtures/link-resolution.json");
 
     #[test]
     fn c03_link_forms_fixture_matches_source_aware_resolution() {
@@ -491,7 +490,9 @@ mod link_resolution_fixture_tests {
                     resolve_link_with_sources(reference, &files, current_path, &sources);
                 assert_eq!(
                     resolution_name(resolution.status),
-                    expected["status"].as_str().expect("expected resolution status"),
+                    expected["status"]
+                        .as_str()
+                        .expect("expected resolution status"),
                     "{case_id}/{}: status",
                     reference.raw
                 );
