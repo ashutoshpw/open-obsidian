@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T08:16:15Z",
+  "updated_at": "2026-10-08T08:36:58Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fec449b5f99b01c275fdfdbb510b6f9fb73e3799",
-  "current_milestone": "R2.6.12",
-  "next_action": "Audit remaining R2 acceptance gaps (D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation) and define the next bounded GitHub-CI slice before beginning R3.",
+  "last_reconciled_head": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+  "current_milestone": "R2.6.13",
+  "next_action": "Audit remaining R2 acceptance gaps (D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation); keep those rows pending until the required fixtures and interaction evidence pass in GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "fec449b5f99b01c275fdfdbb510b6f9fb73e3799"
+      "implementation_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c"
     },
     "R3": {
       "status": "pending",
@@ -4017,6 +4017,52 @@
         "D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation remain pending for full R2 acceptance."
       ],
       "next_action": "Audit remaining R2 safety gaps and define the next bounded GitHub-CI slice before beginning R3."
+    },
+    "R2.6.13": {
+      "status": "complete",
+      "implementation_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "implementation_commits": [
+        "e7e1d50ec51c78e20bdc4dc11811e88a6b41f9f3",
+        "4e9a5c6ae17f4641529a687d82735212bb5dc68c"
+      ],
+      "scope": "Expose the existing snapshot-bound, journaled note rename operation through the native egui UI with asynchronous preview/apply, visible reference decisions, explicit confirmation, and refreshed note listings.",
+      "ci_attempts": [
+        {
+          "source_sha": "e7e1d50ec51c78e20bdc4dc11811e88a6b41f9f3",
+          "rust_run_id": 37750008646,
+          "rust_conclusion": "failure",
+          "findings": [
+            "Workspace compilation required the owned session to be mutable before refreshing its note listing.",
+            "Ubuntu rustfmt reported import and layout changes. The exact fixes were applied from CI output."
+          ],
+          "companion_workflows": "The other five required workflows passed on this source SHA."
+        },
+        {
+          "source_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+          "rust_run_id": 37750280277,
+          "rust_conclusion": "success",
+          "companion_runs": {
+            "inventory": 37750280197,
+            "quality": 37750280183,
+            "desktop-build": 37750280208,
+            "plugin-renderer": 37750280266,
+            "loaded-plugins": 37750280191
+          }
+        }
+      ],
+      "evidence": "evidence/r2.6.13-native-rename-review-4e9a5c6.json",
+      "accepted_slice": [
+        "The native UI selects an existing Markdown note and builds a read-only preview asynchronously against the vault snapshot.",
+        "The preview lists planned reference edits and explicitly labels ambiguous or unresolved references as unchanged; output is capped at 100 rows with the remaining count shown.",
+        "Applying requires a review and confirmation step, runs asynchronously, uses the existing journaled transaction, and refreshes the session listing after commit.",
+        "All six required GitHub workflows passed on exact implementation SHA 4e9a5c6ae17f4641529a687d82735212bb5dc68c. Rust fmt, workspace tests, Clippy, layering, native builds and Wry probes passed on Ubuntu, macOS and Windows.",
+        "No local executable validation was run."
+      ],
+      "remaining": [
+        "CI compiled and tested the UI but did not launch a graphical session to inspect the interactive rename flow.",
+        "C03/C03.2 remain pending until their full fixture and reference-safety acceptance is recorded; D16, SYNC-007, R2.6.5 and uninstall preservation also remain pending for full R2 acceptance."
+      ],
+      "next_action": "Continue the R2 acceptance audit and select the next bounded GitHub-CI slice."
     }
   },
   "ci_preparation": {

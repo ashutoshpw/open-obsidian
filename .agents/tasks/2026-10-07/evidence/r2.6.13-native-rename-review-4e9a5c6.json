@@ -1,0 +1,183 @@
+{
+  "phase": "R2",
+  "slice": "R2.6.13 native rename review and apply workflow",
+  "status": "accepted slice; R2 remains in progress",
+  "source_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+  "implementation_commits": [
+    "e7e1d50ec51c78e20bdc4dc11811e88a6b41f9f3",
+    "4e9a5c6ae17f4641529a687d82735212bb5dc68c"
+  ],
+  "scope": "Expose the snapshot-bound, journaled note rename operation through the native egui UI with asynchronous preview/apply, visible reference decisions, explicit confirmation, and refreshed note listings.",
+  "behavior": [
+    "The UI selects a Markdown note from the current vault listing and builds a read-only rename preview on a Rayon worker.",
+    "The preview displays proposed reference updates and labels ambiguous or unresolved references as unchanged; at most 100 reference rows are rendered, with the remaining count reported.",
+    "Applying requires review and a separate confirmation, runs asynchronously, uses the existing snapshot-bound journaled transaction, and refreshes the session listing after commit.",
+    "A stale preview or existing destination is rejected with an actionable message. Failed applies invalidate the preview so the user must build and review a fresh one.",
+    "A focused UI test verifies the update, ambiguous-skip and unresolved-skip labels."
+  ],
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28) on Ubuntu, macOS and Windows",
+    "edition": "2024",
+    "cargo_lock_sha256": "e10a7e8ee874986f77b2b17e0c11c778abcc69aa9c90b5d889a17dd9dc16b64b"
+  },
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "28 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "28 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "27 passed; Unix-only symlink test is not compiled"
+    },
+    "local_executable_validation": "not run; executable validation used GitHub Actions only"
+  },
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37750280277,
+      "head_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750280277",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113221534750, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113221534436, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113221534711, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting on Ubuntu",
+        "Workspace tests on all three OSes",
+        "Formatting/test parallel group",
+        "Clippy on all three OSes",
+        "Crate dependency layering on all three OSes",
+        "Native preview builds on all three OSes",
+        "Unchanged-plugin Wry feasibility probes on all three OSes"
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37750280197,
+      "head_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750280197",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113221534028, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37750280183,
+      "head_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750280183",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113221534266, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113221534531, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113221534533, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37750280208,
+      "head_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750280208",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113221534504, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113221534739, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113221534824, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37750280266,
+      "head_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750280266",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113221534451, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113221534682, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113221534895, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37750280191,
+      "head_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750280191",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113221534375, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113221534929, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113221534982, "conclusion": "success"}
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "run_id": 37750280277,
+      "id": 11537921459,
+      "name": "openobsidian-rust-preview-4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "digest": "sha256:916c3982365faa39ac6cca85f47447f3a37613efa05dd71e6d33f8a47c8722c7",
+      "download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11537921459/zip"
+    },
+    {
+      "run_id": 37750280277,
+      "id": 11537304357,
+      "name": "rust-plugin-runtime-Linux-4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "digest": "sha256:5aa8e70237d5316b531440249caad3010dde05e7f1f6d410c0742202b8ef2196",
+      "download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11537304357/zip"
+    },
+    {
+      "run_id": 37750280277,
+      "id": 11537572757,
+      "name": "rust-plugin-runtime-macOS-4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "digest": "sha256:0e16670fe4c59734aa68a13c7c26896e9bf5743744edc846ea596595b73219c1",
+      "download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11537572757/zip"
+    },
+    {
+      "run_id": 37750280277,
+      "id": 11538325683,
+      "name": "rust-plugin-runtime-Windows-4e9a5c6ae17f4641529a687d82735212bb5dc68c",
+      "digest": "sha256:b3ff890d9b3d41a1d87918bff592cbb31dd6d53daa42938b4f49ee6a22a4d9a3",
+      "download_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11538325683/zip"
+    }
+  ],
+  "superseded_attempts": [
+    {
+      "source_sha": "e7e1d50ec51c78e20bdc4dc11811e88a6b41f9f3",
+      "rust_run_id": 37750008646,
+      "rust_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37750008646",
+      "rust_conclusion": "failure",
+      "findings": [
+        "Workspace tests could not compile because the cloned VaultSession binding was not mutable before refresh_entries.",
+        "Ubuntu rustfmt requested import and layout changes."
+      ],
+      "companion_run_ids": {
+        "inventory": 37750008469,
+        "quality": 37750008616,
+        "desktop-build": 37750008479,
+        "plugin-renderer": 37750008441,
+        "loaded-plugins": 37750008548
+      },
+      "companion_conclusion": "all five passed"
+    }
+  ],
+  "limitations": [
+    "GitHub CI compiled and tested the UI but did not launch a graphical session to inspect the interactive rename flow.",
+    "C03 and C03.2 remain pending until full legacy fixture, reference-safety and interaction acceptance is recorded; D16, SYNC-007, R2.6.5 and uninstall preservation also remain pending for R2.",
+    "No local executable validation was run."
+  ]
+}
