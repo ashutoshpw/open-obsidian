@@ -2316,10 +2316,11 @@
         "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
-        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
+        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
+        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
       ],
-      "tested_source_tree": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
-      "blocker": "Partial evidence covers existing-vault open/close, shared service operations, link/transclusion/rename previews, history review, uninstall cleanup-choice preview, and read-only conflict inspection with preservation of protected current/incoming versions. Remaining product-level read-only operations and the reference-application round-trip matrix are pending.",
+      "tested_source_tree": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+      "blocker": "Partial evidence also covers a bounded existing-note source preview and explicit preview close with complete vault/app-data preservation. Remaining product-level read-only operations and the C01.2 Obsidian-authored fixture/reopen cases are pending; see c01.2-reference-roundtrip-matrix.md.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2370,9 +2371,10 @@
         "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
-        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
+        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
+        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
       ],
-      "tested_source_tree": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "tested_source_tree": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D02",
@@ -2423,10 +2425,11 @@
         "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
-        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
+        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
+        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
       ],
-      "tested_source_tree": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
-      "blocker": "Evidence includes read-only conflict inspection and full-tree preservation on the existing-vault fixture, but this slice does not exercise reference applications. The C01.2 round-trip matrix and remaining read-only flows are pending.",
+      "tested_source_tree": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+      "blocker": "The C01.2 reference-application matrix is defined in c01.2-reference-roundtrip-matrix.md. Evidence still needs an Obsidian-authored fixture with recorded provenance and an Obsidian desktop reopen case executed through GitHub Actions, plus the remaining read-only product flows.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

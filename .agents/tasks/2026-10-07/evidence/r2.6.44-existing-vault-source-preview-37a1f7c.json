@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.44",
+  "source_sha": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+  "implementation_commits": [
+    "04d85d94a861d0a03931cac1c7ab54f4654358df",
+    "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53"
+  ],
+  "scope": {
+    "fixture": "fixtures/existing-vault.json",
+    "tests": [
+      "vault::tests::note_source_preview_is_bounded_and_preserves_the_original_prefix",
+      "ui_egui::tests::egui_previews_existing_note_source_without_changing_its_tree"
+    ],
+    "change": "Add a source-preserving, 16 KiB-bounded vault read and a collapsed-by-default native note source preview with an explicit close control.",
+    "checks": [
+      "The vault API returns only the original source prefix, total source size, and truncation state; it does not normalize or write the file.",
+      "The UI preview preserves the fixture note's UTF-8 BOM and CRLF bytes, reports invalid UTF-8 without rewriting it, and performs the read on a background worker.",
+      "The full vault and separate app-data path/type/byte snapshots are identical after preview and after explicitly closing the preview.",
+      "The oversized source test verifies the 16 KiB bound and confirms the vault snapshot remains unchanged."
+    ],
+    "c01_2_matrix": ".agents/tasks/2026-10-07/c01.2-reference-roundtrip-matrix.md"
+  },
+  "ci": {
+    "conclusion": "All six required GitHub Actions workflows passed on the exact corrected implementation SHA.",
+    "rust_toolchain": "stable; CI resolved Rust 1.99.0",
+    "workspace_test_passes": {
+      "ubuntu-latest": 108,
+      "macos-latest": 107,
+      "windows-latest": 106
+    },
+    "focused_preview_test": {
+      "ubuntu-latest": "passed",
+      "macos-latest": "passed",
+      "windows-latest": "passed"
+    },
+    "parallel_group": "Succeeded on Ubuntu, macOS, and Windows.",
+    "workflows": [
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37849931563,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931563",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 113560051841, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931563/job/113560051841"},
+          {"name": "rust (macos-latest)", "job_id": 113560052293, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931563/job/113560052293"},
+          {"name": "rust (windows-latest)", "job_id": 113560052021, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931563/job/113560052021"}
+        ]
+      },
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37849931628,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931628",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "inventory", "job_id": 113560052478, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931628/job/113560052478"}
+        ]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37849931595,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931595",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 113560053177, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931595/job/113560053177"},
+          {"name": "macos-latest", "job_id": 113560053520, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931595/job/113560053520"},
+          {"name": "ubuntu-latest", "job_id": 113560053578, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931595/job/113560053578"}
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37849931601,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931601",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 113560052229, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931601/job/113560052229"},
+          {"name": "windows-latest", "job_id": 113560052498, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931601/job/113560052498"},
+          {"name": "ubuntu-latest", "job_id": 113560052601, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931601/job/113560052601"}
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37849931624,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931624",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 113560053026, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931624/job/113560053026"},
+          {"name": "ubuntu-latest", "job_id": 113560053353, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931624/job/113560053353"},
+          {"name": "macos-latest", "job_id": 113560053412, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931624/job/113560053412"}
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37849931598,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931598",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113560052930, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931598/job/113560052930"},
+          {"name": "windows-latest", "job_id": 113560053257, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931598/job/113560053257"},
+          {"name": "macos-latest", "job_id": 113560053329, "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37849931598/job/113560053329"}
+        ]
+      }
+    ]
+  },
+  "ci_attempts": [
+    {
+      "source_sha": "04d85d94a861d0a03931cac1c7ab54f4654358df",
+      "conclusion": "failure",
+      "workflows": {
+        "rust_ci": 37849508888,
+        "inventory": 37849508870,
+        "quality": 37849508847,
+        "desktop_build": 37849508917,
+        "plugin_renderer": 37849508843,
+        "loaded_plugin_workflows": 37849508848
+      },
+      "findings": [
+        "Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed its format check and three existing egui interaction tests on all three operating systems because the always-expanded source preview pushed their controls outside the headless viewport. The new source-preview test passed."
+      ],
+      "correction": "Applied the formatting requested by Ubuntu CI and made the source-preview section collapsed by default; the focused UI test opens the section before using its controls."
+    },
+    {
+      "source_sha": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+      "conclusion": "success",
+      "workflows": {
+        "rust_ci": 37849931563,
+        "inventory": 37849931628,
+        "quality": 37849931595,
+        "desktop_build": 37849931601,
+        "plugin_renderer": 37849931624,
+        "loaded_plugin_workflows": 37849931598
+      },
+      "finding": "All six workflows passed on the corrected exact SHA. The bounded note preview and full-tree preservation test passed on Ubuntu, macOS, and Windows."
+    }
+  ],
+  "artifacts": [
+    {"workflow": "OpenObsidian Rust CI", "id": 11581227958, "name": "rust-plugin-runtime-Linux-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 2695, "digest": "sha256:edb2194d19346a796fffec533f887df54293c83b9a5dcf79157fbc17d6ebc525"},
+    {"workflow": "OpenObsidian Rust CI", "id": 11580798834, "name": "rust-plugin-runtime-macOS-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 2698, "digest": "sha256:e9068218ad9370a6ca59eeacfbc9afc8e578a4551615a3f917fcad2105a01b6e"},
+    {"workflow": "OpenObsidian Rust CI", "id": 11580764279, "name": "rust-plugin-runtime-Windows-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 2715, "digest": "sha256:a8db40223f3adea10ce990a18b7a7e86699e5999ae00515ce789a2a79c31687c"},
+    {"workflow": "OpenObsidian Rust CI", "id": 11580963392, "name": "openobsidian-rust-preview-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 9600627, "digest": "sha256:bc6d01e6a57e80489758a4856788e3fddadd40a240f7130dfd920026f176d1a2"},
+    {"workflow": "OpenObsidian desktop build", "id": 11581941163, "name": "openobsidian-Windows-preview-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 163005824, "digest": "sha256:b8621a30a9b62f599b2fab07ffda77cf1f7c03a3c0aa159bdeeb2d30f46b741b"},
+    {"workflow": "OpenObsidian desktop build", "id": 11581916787, "name": "openobsidian-macOS-preview-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 397395487, "digest": "sha256:c5aa643c60e0fcf47e9fb99c98b7689fe25cb0955d264bc659569b25677fc10c"},
+    {"workflow": "OpenObsidian desktop build", "id": 11581153396, "name": "openobsidian-Linux-preview-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 125946548, "digest": "sha256:455f2c3bae34bb54bf1a9baeeaf5e306681e82c9386e12421dd7158192d2d389"},
+    {"workflow": "OpenObsidian plugin renderer matrix", "id": 11581945998, "name": "plugin-renderer-lifecycle-macOS-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 3238, "digest": "sha256:98d8a2d7b55e1a6c68ee633f32592d37dd22d9789f4fe6f308e8ef0eaef70c96"},
+    {"workflow": "OpenObsidian plugin renderer matrix", "id": 11581512250, "name": "plugin-renderer-lifecycle-Windows-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 3242, "digest": "sha256:c029afd924ee9adaf98d3f478ba8d834a5846d2a901afcda6702323676d4da82"},
+    {"workflow": "OpenObsidian plugin renderer matrix", "id": 11580773383, "name": "plugin-renderer-lifecycle-Linux-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 3221, "digest": "sha256:f4b5c2abce789974ea70e51116b91f7bb722ca49583f299df12f245b181f8755"},
+    {"workflow": "OpenObsidian loaded plugin workflows", "id": 11581817165, "name": "loaded-plugin-workflows-macOS-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 171506, "digest": "sha256:90ac2752497bf7ae2a1f93f7dd1c726b8bbaa0eb8758d619b7ec270d675ba52e"},
+    {"workflow": "OpenObsidian loaded plugin workflows", "id": 11581801683, "name": "loaded-plugin-workflows-Linux-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 171495, "digest": "sha256:878aecd2cc9e6984f1d979fc85f55828760e613080610d97d9dbdb6692a82435"},
+    {"workflow": "OpenObsidian loaded plugin workflows", "id": 11580733586, "name": "loaded-plugin-workflows-Windows-37a1f7cd80003be356ed7ed1ad273f6fa97f4f53", "size_bytes": 171497, "digest": "sha256:d090c57226e3033d16febdd8f72aafb2e9bdfc58aad90b65abdff27324185576"}
+  ],
+  "limits": [
+    "The passing fixture is synthetic and does not establish Obsidian-generated fixture provenance or an Obsidian desktop reopen round trip; see the pending C01.2 matrix.",
+    "No local tests, builds, formatters, linters, or other executable validation were run."
+  ]
+}

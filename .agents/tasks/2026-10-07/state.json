@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T21:36:22Z",
+  "updated_at": "2026-10-08T22:00:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
-  "current_milestone": "R2.6.43",
-  "next_action": "Continue R2 by covering the next uncovered C01 read-only product flow and define the C01.2 reference-application round-trip matrix; keep C01 and C01.2 open. Use GitHub Actions only.",
+  "last_reconciled_head": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+  "current_milestone": "R2.6.44",
+  "next_action": "Continue R2 with the next uncovered C01 read-only product flow. Obtain a privacy-safe Obsidian-authored fixture and run the C01.2 provenance/reopen cases through GitHub Actions; keep C01 and C01.2 open. Use GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af"
+      "implementation_sha": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53"
     },
     "R3": {
       "status": "pending",
@@ -8630,6 +8630,61 @@
         "This slice previews a protected conflict; accepting or resolving either version is not covered."
       ],
       "next_action": "Continue R2 by covering the next uncovered C01 read-only product flow and define the C01.2 reference-application round-trip matrix; keep C01 and C01.2 open. Use GitHub Actions only."
+    },
+    "R2.6.44": {
+      "status": "complete",
+      "implementation_sha": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+      "implementation_commits": [
+        "04d85d94a861d0a03931cac1c7ab54f4654358df",
+        "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53"
+      ],
+      "scope": "Add a bounded, source-preserving existing-note preview; prove full vault and app-data preservation after preview and explicit close; define the C01.2 reference-app matrix.",
+      "ci_attempts": [
+        {
+          "source_sha": "04d85d94a861d0a03931cac1c7ab54f4654358df",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37849508888,
+            "inventory": 37849508870,
+            "quality": 37849508847,
+            "desktop_build": 37849508917,
+            "plugin_renderer": 37849508843,
+            "loaded_plugin_workflows": 37849508848
+          },
+          "findings": [
+            "Five companion workflows passed. Rust CI reported requested rustfmt changes and three existing egui interactions failed on all three OSes because the expanded preview panel pushed their controls outside the headless viewport; the new preview interaction passed."
+          ],
+          "correction": "Applied CI's formatting output and collapsed the preview section by default; the focused test explicitly opens it."
+        },
+        {
+          "source_sha": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+          "conclusion": "success",
+          "workflows": {
+            "rust_ci": 37849931563,
+            "inventory": 37849931628,
+            "quality": 37849931595,
+            "desktop_build": 37849931601,
+            "plugin_renderer": 37849931624,
+            "loaded_plugin_workflows": 37849931598
+          },
+          "findings": [
+            "All six workflows passed on the corrected exact SHA. The bounded source preview and full-tree preservation interaction passed on Ubuntu, macOS, and Windows."
+          ],
+          "evidence": "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
+      "accepted_slice": [
+        "Vault reads return at most 16 KiB of source without normalization, along with total size and truncation state; changed file metadata fails closed.",
+        "The native source preview preserves the existing BOM and CRLF source bytes in the displayed value and stays collapsed until requested.",
+        "The complete vault and separate app-data path/type/byte snapshots remain unchanged after preview and after Close source preview.",
+        "All six required GitHub Actions workflows passed on exact source SHA 37a1f7cd80003be356ed7ed1ad273f6fa97f4f53; the focused preview interaction passed on Ubuntu, macOS, and Windows."
+      ],
+      "remaining": [
+        "The C01.2 matrix is defined, but Obsidian-authored fixture provenance and the Obsidian desktop reopen CI case are pending.",
+        "Parent C01 and C01.2 remain open; this synthetic-fixture slice does not establish reference-application compatibility."
+      ],
+      "next_action": "Continue R2 with the next uncovered C01 read-only product flow. Obtain a privacy-safe Obsidian-authored fixture and run the C01.2 provenance/reopen cases through GitHub Actions; keep C01 and C01.2 open. Use GitHub Actions only."
     }
   },
   "ci_preparation": {
