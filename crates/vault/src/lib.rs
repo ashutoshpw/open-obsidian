@@ -430,9 +430,9 @@ impl VaultRoot {
                     &current_path_text,
                     &statuses,
                 );
-                if resolution.status != LinkResolutionStatus::Resolved {
-                    (resolution, None, VaultNoteEmbedDisposition::NotRendered)
-                } else if resolution.target.as_deref() != selected_path.as_deref() {
+                if resolution.status != LinkResolutionStatus::Resolved
+                    || resolution.target.as_deref() != selected_path.as_deref()
+                {
                     (resolution, None, VaultNoteEmbedDisposition::NotRendered)
                 } else {
                     let target = resolution.target.as_deref().expect("resolved link has target");
