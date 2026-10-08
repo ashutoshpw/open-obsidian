@@ -1,0 +1,178 @@
+{
+  "slice": "R2.6.15 fixture-backed VaultStore rename apply and rollback",
+  "phase": "R2",
+  "status": "accepted slice; R2 remains in progress",
+  "source_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+  "implementation_commits": [
+    "eacfd57f6053cf33315b069a60e266cc5e990c95",
+    "fc8b896054979af3e0dc212a7f33576a3672a524"
+  ],
+  "scope": "Exercise every C03 rename fixture case through the filesystem-backed VaultStore transaction and verify rollback after an earlier reference write has committed.",
+  "behavior": [
+    "The resolved fixture case contains references in two notes, allowing the transaction test to fail on the second note after the first reference update has been written.",
+    "The testkit materializes each fixture case in a temporary vault, applies VaultStore's rename preview, and checks exact resulting bytes, moved source paths, planned/skipped counts, warnings, returned note bytes, and prepared/committed journal entries.",
+    "The vault unit test injects a failure on Notes/Second.md, confirms Index.md was written and then restored, verifies all original bytes and the old source path are restored, and checks prepared/rolled_back journal entries.",
+    "No local executable validation was run; all executable validation used GitHub Actions."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37755371928,
+      "head_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755371928",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113238485136, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113238485359, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113238485410, "conclusion": "success"}
+      ],
+      "checks": [
+        "Ubuntu formatting, workspace tests, Clippy, dependency-layer checks, native preview build and Wry feasibility probe passed.",
+        "Workspace tests, Clippy, dependency-layer checks, native preview builds and Wry feasibility probes passed on macOS and Windows.",
+        "The planner and VaultStore apply fixture tests passed on Ubuntu, macOS and Windows; the injected VaultStore rollback fixture test passed on all three platforms."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37755372062,
+      "head_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755372062",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113238486145, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37755372207,
+      "head_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755372207",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113238486135, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113238486415, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113238486493, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37755371926,
+      "head_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755371926",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113238485011, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113238485456, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113238485485, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37755371966,
+      "head_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755371966",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113238485375, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113238485518, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113238485751, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37755371910,
+      "head_sha": "fc8b896054979af3e0dc212a7f33576a3672a524",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755371910",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113238485095, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113238485407, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113238485459, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed: planner/render and VaultStore apply fixture cases",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "29 passed, including the fixture-backed apply rollback test"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed: planner/render and VaultStore apply fixture cases",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "29 passed, including the fixture-backed apply rollback test"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed: planner/render and VaultStore apply fixture cases",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "28 passed, including the fixture-backed apply rollback test; Unix-only symlink test is not compiled"
+    },
+    "local_executable_validation": "not run; validation was performed through GitHub Actions only"
+  },
+  "artifacts": [
+    {
+      "id": 11539094744,
+      "name": "openobsidian-rust-preview-fc8b896054979af3e0dc212a7f33576a3672a524",
+      "size_bytes": 8839465,
+      "sha256": "2ace6e51ef17d6daa1f596656e42390af2d2b20e3adc2e7578f503325ed56f7c"
+    },
+    {
+      "id": 11540107965,
+      "name": "rust-plugin-runtime-Linux-fc8b896054979af3e0dc212a7f33576a3672a524",
+      "size_bytes": 2695,
+      "sha256": "fd0fcfb893ec7af0d1d4acf0409e80f9ab1127158a9773900b0a1e40d359da96"
+    },
+    {
+      "id": 11539489571,
+      "name": "rust-plugin-runtime-Windows-fc8b896054979af3e0dc212a7f33576a3672a524",
+      "size_bytes": 2715,
+      "sha256": "3dcae4802ea9f52b1d8bd7b85f74f523dcebf2c6adaf1a60ce4d24f1c654a138"
+    },
+    {
+      "id": 11539394047,
+      "name": "rust-plugin-runtime-macOS-fc8b896054979af3e0dc212a7f33576a3672a524",
+      "size_bytes": 2698,
+      "sha256": "1b32328395d18181607546c5f3537b21aa0ae86b9b7f2968e3a58eefabb80081"
+    }
+  ],
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28) on Ubuntu, macOS and Windows",
+    "edition": "2024",
+    "cargo_lock_sha256": "48a09d76ada2f4c72d8913035934a438efa30ac80230e22941e2903249acdb2e"
+  },
+  "limitations": [
+    "The fixture now exercises filesystem-backed rename apply and transactional rollback, but not interrupted-process rename recovery with these fixture cases or graphical interaction.",
+    "CI compiled and tested the UI but did not launch it for visual inspection. C03 and C03.2 remain pending full cross-layer and native interaction acceptance.",
+    "D16, SYNC-007, history integration details, remaining R2 workflow gaps and uninstall preservation remain pending for full Rust migration acceptance.",
+    "No local executable validation was run."
+  ],
+  "superseded_attempts": [
+    {
+      "source_sha": "eacfd57f6053cf33315b069a60e266cc5e990c95",
+      "inventory_run_id": 37754973117,
+      "inventory_conclusion": "failure",
+      "rust_run_id": 37754973258,
+      "rust_conclusion": "cancelled after all substantive jobs except Ubuntu formatting had completed; superseded by the corrected SHA",
+      "findings": [
+        "Workspace tests passed on Ubuntu, macOS and Windows, including both testkit fixture tests and the new VaultStore rollback test; Clippy passed on all three platforms.",
+        "Ubuntu rustfmt requested four layout-only changes; those exact changes were applied on fc8b896.",
+        "The inventory check found the fixture SHA had not yet been reconciled; the inventory hash was updated before fc8b896 was pushed."
+      ],
+      "other_workflows": {
+        "quality": {"run_id": 37754973033, "conclusion": "success"},
+        "desktop-build": {"run_id": 37754973037, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37754973209, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37754973341, "conclusion": "success"}
+      }
+    }
+  ]
+}
