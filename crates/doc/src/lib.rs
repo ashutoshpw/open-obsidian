@@ -100,6 +100,66 @@ pub struct LinkResolution {
     pub candidates: Vec<String>,
 }
 
+/// Action proposed for a link that points at a note being renamed.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LinkRenameAction {
+    Update,
+    SkipAmbiguous,
+    SkipUnresolved,
+}
+
+/// A UTF-8 Markdown note included in a read-only link rename plan.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RenamePlanFile {
+    pub relative_path: String,
+    pub source: MarkdownSource,
+}
+
+/// A source-ranged link decision in a rename preview.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LinkRenameEdit {
+    pub source_path: String,
+    pub kind: LinkKind,
+    pub raw: String,
+    pub target: String,
+    pub source_span: SourceSpan,
+    pub target_span: SourceSpan,
+    pub resolution: LinkResolutionStatus,
+    pub action: LinkRenameAction,
+    pub replacement: Option<String>,
+}
+
+/// A pure rename preview. It does not modify any note or vault path.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LinkRenamePlan {
+    pub old_path: String,
+    pub new_path: String,
+    pub edits: Vec<LinkRenameEdit>,
+    pub update_count: usize,
+    pub skipped_count: usize,
+    pub warnings: Vec<String>,
+}
+
+/// An invalid or stale input to a pure rename preview operation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LinkRenamePlanError {
+    EmptyPath,
+    SamePath,
+    StaleSource,
+}
+
+impl std::fmt::Display for LinkRenamePlanError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyPath => formatter.write_str("Rename plan paths must not be empty"),
+            Self::SamePath => formatter.write_str("Rename plan requires distinct source and destination paths"),
+            Self::StaleSource => formatter.write_str("Rename preview source does not match its recorded byte spans"),
+        }
+    }
+}
+
+impl std::error::Error for LinkRenamePlanError {}
+
 /// A validated UTF-8 Markdown view backed by the original bytes.
 ///
 /// The text accessor includes a UTF-8 BOM when the source has one. This type does
@@ -1022,6 +1082,241 @@ fn resolve_subpath(
     }
 }
 
+/// Build source-ranged link edits for a proposed note rename without writing files.
+///
+/// `files` must contain the Markdown source for every note participating in
+/// resolution. Ambiguous and unresolved references that may point at
+/// `old_path` are returned as skipped entries so callers can surface them.
+/// Paths must already be validated vault-relative paths.
+pub fn build_link_rename_plan(
+    files: &[RenamePlanFile],
+    old_path: &str,
+    new_path: &str,
+) -> Result<LinkRenamePlan, LinkRenamePlanError> {
+    if old_path.is_empty() || new_path.is_empty() {
+        return Err(LinkRenamePlanError::EmptyPath);
+    }
+    if old_path == new_path {
+        return Err(LinkRenamePlanError::SamePath);
+    }
+
+    let file_paths: Vec<String> = files
+        .iter()
+        .map(|file| file.relative_path.clone())
+        .collect();
+    let sources: HashMap<String, MarkdownSource> = files
+        .iter()
+        .map(|file| (file.relative_path.clone(), file.source.clone()))
+        .collect();
+    let mut edits = Vec::new();
+
+    for file in files {
+        for reference in file.source.extract_links() {
+            let resolution = resolve_link_with_sources(
+                &reference,
+                &file_paths,
+                &file.relative_path,
+                &sources,
+            );
+            let Some(action) = link_rename_action(&reference, &resolution, old_path) else {
+                continue;
+            };
+            let replacement = (action == LinkRenameAction::Update).then(|| {
+                link_rename_replacement(&reference, &file.relative_path, new_path)
+            });
+            edits.push(LinkRenameEdit {
+                source_path: file.relative_path.clone(),
+                kind: reference.kind,
+                raw: reference.raw,
+                target: reference.target,
+                source_span: reference.source_span,
+                target_span: reference.target_span,
+                resolution: resolution.status,
+                action,
+                replacement,
+            });
+        }
+    }
+
+    let update_count = edits
+        .iter()
+        .filter(|edit| edit.action == LinkRenameAction::Update)
+        .count();
+    let skipped_count = edits.len() - update_count;
+    let mut warnings = Vec::new();
+    if edits
+        .iter()
+        .any(|edit| edit.action == LinkRenameAction::SkipAmbiguous)
+    {
+        warnings.push("Ambiguous links are shown but not rewritten.".to_owned());
+    }
+    if edits
+        .iter()
+        .any(|edit| edit.action == LinkRenameAction::SkipUnresolved)
+    {
+        warnings.push(
+            "Unresolved links are shown but require explicit resolution before rewriting."
+                .to_owned(),
+        );
+    }
+
+    Ok(LinkRenamePlan {
+        old_path: old_path.to_owned(),
+        new_path: new_path.to_owned(),
+        edits,
+        update_count,
+        skipped_count,
+        warnings,
+    })
+}
+
+/// Render the proposed target replacements in memory, preserving every byte
+/// outside the planned target spans. This does not write to a vault or disk.
+pub fn render_link_rename_preview(
+    source: &MarkdownSource,
+    source_path: &str,
+    plan: &LinkRenamePlan,
+) -> Result<Vec<u8>, LinkRenamePlanError> {
+    let original = source.as_bytes();
+    let mut updates: Vec<&LinkRenameEdit> = plan
+        .edits
+        .iter()
+        .filter(|edit| {
+            edit.source_path == source_path && edit.action == LinkRenameAction::Update
+        })
+        .collect();
+    updates.sort_by(|left, right| right.target_span.start.cmp(&left.target_span.start));
+
+    let mut previous_start = None;
+    let mut rendered = original.to_vec();
+    for edit in updates {
+        let source_span = edit.source_span;
+        let target_span = edit.target_span;
+        if source_span.start > target_span.start
+            || target_span.start > target_span.end
+            || target_span.end > source_span.end
+            || source_span.end > original.len()
+            || original.get(source_span.start..source_span.end) != Some(edit.raw.as_bytes())
+            || original.get(target_span.start..target_span.end) != Some(edit.target.as_bytes())
+            || previous_start.is_some_and(|start| target_span.end > start || target_span.start == start)
+        {
+            return Err(LinkRenamePlanError::StaleSource);
+        }
+
+        let replacement = edit
+            .replacement
+            .as_deref()
+            .ok_or(LinkRenamePlanError::StaleSource)?;
+        rendered.splice(
+            target_span.start..target_span.end,
+            replacement.as_bytes().iter().copied(),
+        );
+        previous_start = Some(target_span.start);
+    }
+
+    Ok(rendered)
+}
+
+fn link_rename_action(
+    reference: &LinkReference,
+    resolution: &LinkResolution,
+    old_path: &str,
+) -> Option<LinkRenameAction> {
+    match resolution.status {
+        LinkResolutionStatus::Resolved
+            if resolution
+                .target
+                .as_deref()
+                .is_some_and(|target| rename_target_matches(target, old_path)) =>
+        {
+            Some(LinkRenameAction::Update)
+        }
+        LinkResolutionStatus::Ambiguous
+            if resolution
+                .candidates
+                .iter()
+                .any(|candidate| rename_target_matches(candidate, old_path)) =>
+        {
+            Some(LinkRenameAction::SkipAmbiguous)
+        }
+        LinkResolutionStatus::Unresolved
+            if rename_target_matches(&reference.target, old_path)
+                || resolution
+                    .candidates
+                    .iter()
+                    .any(|candidate| rename_target_matches(candidate, old_path)) =>
+        {
+            Some(LinkRenameAction::SkipUnresolved)
+        }
+        _ => None,
+    }
+}
+
+fn rename_target_matches(target: &str, path: &str) -> bool {
+    let normalized_target = normalize_target(target);
+    let normalized_path = normalize_target(path);
+    normalized_target == normalized_path
+        || normalized_target == without_markdown_extension(&normalized_path)
+}
+
+fn without_markdown_extension(path: &str) -> &str {
+    if path
+        .get(path.len().saturating_sub(3)..)
+        .is_some_and(|extension| extension.eq_ignore_ascii_case(".md"))
+    {
+        &path[..path.len() - 3]
+    } else {
+        path
+    }
+}
+
+fn link_rename_replacement(
+    reference: &LinkReference,
+    source_path: &str,
+    new_path: &str,
+) -> String {
+    if reference.kind == LinkKind::WikiLink
+        || reference.kind == LinkKind::Embed && reference.raw.starts_with("![[")
+    {
+        return without_markdown_extension(new_path).to_owned();
+    }
+
+    let target = normalize_target(&reference.target);
+    let candidate = if target.contains('/') {
+        new_path.to_owned()
+    } else {
+        relative_rename_target(source_path, new_path)
+    };
+    if target.to_ascii_lowercase().ends_with(".md")
+        || !new_path.to_ascii_lowercase().ends_with(".md")
+    {
+        candidate
+    } else {
+        without_markdown_extension(&candidate).to_owned()
+    }
+}
+
+fn relative_rename_target(source_path: &str, new_path: &str) -> String {
+    let mut source_segments: Vec<&str> = source_path.split('/').collect();
+    source_segments.pop();
+    let target_segments: Vec<&str> = new_path.split('/').collect();
+    let mut common = 0;
+    while common < source_segments.len()
+        && common < target_segments.len()
+        && source_segments[common] == target_segments[common]
+    {
+        common += 1;
+    }
+
+    let mut segments = vec![".."; source_segments.len() - common];
+    segments.extend_from_slice(&target_segments[common..]);
+    if segments.is_empty() {
+        target_segments.last().copied().unwrap_or(new_path).to_owned()
+    } else {
+        segments.join("/")
+    }
+}
+
 fn candidate_paths(target: &str, current_path: &str) -> Vec<String> {
     let normalized = normalize_target(target);
     if normalized.is_empty() {
@@ -1217,8 +1512,10 @@ mod tests {
     use std::collections::HashMap;
 
     use super::{
-        FrontmatterBounds, LineEnding, LinkKind, LinkResolution, LinkResolutionStatus,
-        MarkdownSource, RawDocument, SourceSpan, resolve_link, resolve_link_with_sources,
+        FrontmatterBounds, LineEnding, LinkKind, LinkRenameAction, LinkRenamePlanError,
+        LinkResolution, LinkResolutionStatus, MarkdownSource, RawDocument, RenamePlanFile,
+        SourceSpan, build_link_rename_plan, render_link_rename_preview, resolve_link,
+        resolve_link_with_sources,
     };
 
     #[test]
@@ -1666,6 +1963,166 @@ mod tests {
             )
             .status,
             LinkResolutionStatus::Unresolved
+        );
+    }
+
+    #[test]
+    fn link_rename_plan_preserves_aliases_subpaths_bom_crlf_and_byte_ranges() {
+        let index = MarkdownSource::parse(
+            "\u{feff}🌱 [[Old|alias]] [Old](Old.md#Section) ![[Old#^block]]\r\n"
+                .as_bytes()
+                .to_vec(),
+        )
+        .unwrap();
+        let old_note = MarkdownSource::parse(
+            b"# Section\n\nOpening paragraph ^block\n\n[[#Section]]\n".to_vec(),
+        )
+        .unwrap();
+        let files = vec![
+            RenamePlanFile {
+                relative_path: "Index.md".to_owned(),
+                source: index.clone(),
+            },
+            RenamePlanFile {
+                relative_path: "Old.md".to_owned(),
+                source: old_note.clone(),
+            },
+        ];
+
+        let plan = build_link_rename_plan(&files, "Old.md", "Archive/New.md").unwrap();
+        assert_eq!(plan.update_count, 4);
+        assert_eq!(plan.skipped_count, 0);
+        assert!(plan.edits.iter().all(|edit| {
+            let source = if edit.source_path == "Index.md" {
+                index.as_bytes()
+            } else {
+                old_note.as_bytes()
+            };
+            source.get(edit.source_span.start..edit.source_span.end)
+                == Some(edit.raw.as_bytes())
+        }));
+        assert_eq!(
+            render_link_rename_preview(&index, "Index.md", &plan)
+                .unwrap()
+                .as_slice(),
+            "\u{feff}🌱 [[Archive/New|alias]] [Old](Archive/New.md#Section) ![[Archive/New#^block]]\r\n"
+                .as_bytes()
+        );
+        assert_eq!(
+            render_link_rename_preview(&old_note, "Old.md", &plan)
+                .unwrap()
+                .as_slice(),
+            b"# Section\n\nOpening paragraph ^block\n\n[[Archive/New#Section]]\n"
+        );
+    }
+
+    #[test]
+    fn link_rename_plan_uses_subpaths_to_disambiguate_same_basename_notes() {
+        let index = MarkdownSource::parse(b"[[Target#Overview]]".to_vec()).unwrap();
+        let files = vec![
+            RenamePlanFile {
+                relative_path: "Index.md".to_owned(),
+                source: index.clone(),
+            },
+            RenamePlanFile {
+                relative_path: "Folder/Target.md".to_owned(),
+                source: MarkdownSource::parse(b"# Overview\n".to_vec()).unwrap(),
+            },
+            RenamePlanFile {
+                relative_path: "Archive/Target.md".to_owned(),
+                source: MarkdownSource::parse(b"# Other\n".to_vec()).unwrap(),
+            },
+        ];
+
+        let plan = build_link_rename_plan(&files, "Folder/Target.md", "Moved/Target.md").unwrap();
+        assert_eq!(plan.update_count, 1);
+        assert_eq!(plan.skipped_count, 0);
+        assert_eq!(plan.edits[0].action, LinkRenameAction::Update);
+        assert_eq!(
+            render_link_rename_preview(&index, "Index.md", &plan)
+                .unwrap()
+                .as_slice(),
+            b"[[Moved/Target#Overview]]"
+        );
+    }
+
+    #[test]
+    fn link_rename_plan_skips_ambiguous_and_missing_subpaths() {
+        let index = MarkdownSource::parse(
+            b"[[Target#Duplicate]] [[Target#Missing]] [[Other]]".to_vec(),
+        )
+        .unwrap();
+        let files = vec![
+            RenamePlanFile {
+                relative_path: "Index.md".to_owned(),
+                source: index.clone(),
+            },
+            RenamePlanFile {
+                relative_path: "Folder/Target.md".to_owned(),
+                source: MarkdownSource::parse(b"# Duplicate\n# DUPLICATE\n".to_vec()).unwrap(),
+            },
+            RenamePlanFile {
+                relative_path: "Archive/Target.md".to_owned(),
+                source: MarkdownSource::parse(b"# Duplicate\n# Other\n".to_vec()).unwrap(),
+            },
+            RenamePlanFile {
+                relative_path: "Other.md".to_owned(),
+                source: MarkdownSource::parse(b"# Other\n".to_vec()).unwrap(),
+            },
+        ];
+
+        let plan =
+            build_link_rename_plan(&files, "Folder/Target.md", "Moved/Target.md").unwrap();
+        assert_eq!(plan.update_count, 0);
+        assert_eq!(plan.skipped_count, 2);
+        assert_eq!(
+            plan.edits.iter().map(|edit| edit.action).collect::<Vec<_>>(),
+            vec![
+                LinkRenameAction::SkipAmbiguous,
+                LinkRenameAction::SkipUnresolved
+            ]
+        );
+        assert_eq!(plan.warnings.len(), 2);
+        assert_eq!(
+            render_link_rename_preview(&index, "Index.md", &plan)
+                .unwrap()
+                .as_slice(),
+            index.as_bytes()
+        );
+    }
+
+    #[test]
+    fn link_rename_plan_keeps_relative_markdown_targets_and_rejects_stale_preview_sources() {
+        let index = MarkdownSource::parse(b"[Old](Old.md#details)\n".to_vec()).unwrap();
+        let old_note = MarkdownSource::parse(b"## Details\n".to_vec()).unwrap();
+        let files = vec![
+            RenamePlanFile {
+                relative_path: "Notes/Index.md".to_owned(),
+                source: index.clone(),
+            },
+            RenamePlanFile {
+                relative_path: "Notes/Old.md".to_owned(),
+                source: old_note,
+            },
+        ];
+        let plan =
+            build_link_rename_plan(&files, "Notes/Old.md", "Archive/New.md").unwrap();
+        assert_eq!(plan.edits[0].replacement.as_deref(), Some("../Archive/New.md"));
+        assert_eq!(
+            render_link_rename_preview(&index, "Notes/Index.md", &plan)
+                .unwrap()
+                .as_slice(),
+            b"[Old](../Archive/New.md#details)\n"
+        );
+
+        let stale = MarkdownSource::parse(b"[New](New.md#details)\n".to_vec()).unwrap();
+        assert_eq!(
+            render_link_rename_preview(&stale, "Notes/Index.md", &plan),
+            Err(LinkRenamePlanError::StaleSource)
+        );
+        assert_eq!(
+            build_link_rename_plan(&files, "Notes/Old.md", "Notes/Old.md"),
+            Err(LinkRenamePlanError::SamePath)
         );
     }
 }
