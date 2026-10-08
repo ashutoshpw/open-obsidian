@@ -295,7 +295,7 @@ impl OpenObsidianApp {
                     .file_name()
                     .and_then(|name| name.to_str())
                     .unwrap_or("Selected vault");
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     ui.label(format!("Vault: {vault_name}"));
                     ui.add_enabled_ui(!vault_operation_busy, |ui| {
                         refresh_note_list_requested = ui
@@ -303,8 +303,8 @@ impl OpenObsidianApp {
                             .on_hover_text("Rescan Markdown paths without changing vault files.")
                             .clicked();
                     });
+                    ui.label(format!("{} Markdown files found.", session.entries().len()));
                 });
-                ui.label(format!("{} Markdown files found.", session.entries().len()));
                 if let Some(summary) = rename_recovery_summary(session.rename_recovery_report()) {
                     if session.rename_recovery_report().needs_attention.is_empty() {
                         ui.label(summary);
