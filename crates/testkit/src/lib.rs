@@ -43,11 +43,13 @@ mod rename_plan_fixture_tests {
             fixture["actions"],
             serde_json::json!(["update", "skip-ambiguous", "skip-unresolved"])
         );
-        assert!(fixture["invariants"]
-            .as_object()
-            .expect("fixture invariants must be an object")
-            .values()
-            .all(|value| value.as_bool() == Some(true)));
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
 
         let cases = fixture["cases"]
             .as_array()
@@ -55,9 +57,7 @@ mod rename_plan_fixture_tests {
         assert!(!cases.is_empty());
 
         for case in cases {
-            let case_id = case["id"]
-                .as_str()
-                .expect("fixture case must have an id");
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
             let old_path = case["old_path"]
                 .as_str()
                 .expect("fixture case must have an old path");
@@ -94,8 +94,8 @@ mod rename_plan_fixture_tests {
                 plan.update_count,
                 usize::try_from(
                     case["expected_update_count"]
-                    .as_u64()
-                    .expect("fixture must state expected update count"),
+                        .as_u64()
+                        .expect("fixture must state expected update count"),
                 )
                 .expect("fixture update count must fit usize"),
                 "{case_id}: update count"
@@ -104,8 +104,8 @@ mod rename_plan_fixture_tests {
                 plan.skipped_count,
                 usize::try_from(
                     case["expected_skipped_count"]
-                    .as_u64()
-                    .expect("fixture must state expected skipped count"),
+                        .as_u64()
+                        .expect("fixture must state expected skipped count"),
                 )
                 .expect("fixture skipped count must fit usize"),
                 "{case_id}: skipped count"
@@ -122,7 +122,9 @@ mod rename_plan_fixture_tests {
             for (edit, expected) in plan.edits.iter().zip(expected_edits) {
                 assert_eq!(
                     edit.source_path,
-                    expected["source_path"].as_str().expect("fixture source path"),
+                    expected["source_path"]
+                        .as_str()
+                        .expect("fixture source path"),
                     "{case_id}: source"
                 );
                 assert_eq!(
@@ -154,10 +156,7 @@ mod rename_plan_fixture_tests {
                 .map(|warning| warning.as_str().expect("fixture warning must be text"))
                 .collect();
             assert_eq!(
-                plan.warnings
-                    .iter()
-                    .map(String::as_str)
-                    .collect::<Vec<_>>(),
+                plan.warnings.iter().map(String::as_str).collect::<Vec<_>>(),
                 expected_warnings,
                 "{case_id}: warnings"
             );
