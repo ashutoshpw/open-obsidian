@@ -1829,6 +1829,8 @@ mod tests {
         harness.get_by_label("Ambiguous: 1");
         harness.get_by_label("External: 1");
         harness.get_by_label("[[#Overview]]");
+        harness.get_by_label("[[Missing]]");
+        harness.get_by_label("Source target: Missing");
         assert!(app.note_embed_error.is_none());
         let report = app
             .note_embed_report
@@ -2616,6 +2618,10 @@ mod tests {
                 .iter()
                 .any(|edit| edit.action == LinkRenameAction::SkipUnresolved)
         );
+        harness.get_by_label("Index.md · [[Target#Duplicate]]");
+        harness.get_by_label("Ambiguous; will stay unchanged");
+        harness.get_by_label("Index.md · [[Folder/Target#Missing]]");
+        harness.get_by_label("Unresolved; will stay unchanged");
         for (relative_path, original) in &original_files {
             assert_eq!(
                 std::fs::read(vault_path.join(relative_path)).unwrap(),
@@ -2627,6 +2633,9 @@ mod tests {
 
         harness.get_by_label("Review and confirm rename").click();
         harness.step();
+        harness.get_by_label(
+            "Confirm moving Folder/Target.md to Moved/Target.md and applying 0 reference update(s). Skipped ambiguous or unresolved references will remain unchanged.",
+        );
         harness.step();
         harness.get_by_label("Confirm and apply rename").click();
         harness.step();
