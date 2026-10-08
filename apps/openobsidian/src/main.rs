@@ -4,8 +4,7 @@ use openobsidian_platform::{
     inspect_storage_protection, prepare_vault_app_data,
 };
 use openobsidian_ui_egui::{
-    StorageProtectionDisplay, StorageProtectionDisplayStatus,
-    run_with_desktop_services_and_session,
+    StorageProtectionDisplay, StorageProtectionDisplayStatus, run_with_desktop_services_and_session,
 };
 use rfd::FileDialog;
 use std::ffi::OsString;

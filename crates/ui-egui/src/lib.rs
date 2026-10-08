@@ -2362,13 +2362,16 @@ mod tests {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        let harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
         harness.get_by_label("Vault: Existing Vault");
         harness.get_by_label("2 Markdown files found.");
 
         drop(harness);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
     }
 
     #[test]
