@@ -1,0 +1,96 @@
+{
+  "phase": "R2.3",
+  "source_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37712092256,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092256",
+  "rust_toolchain": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113100081070,
+      "runtime_artifact_id": 11522346077,
+      "artifact_sha256": "ff58c9345f8bb69b61d0d156753fd98cd1743e25abaee7ccf52dac8625b001d2",
+      "report_sha256": "6b49f7a56a0e721c9152c38f883dfeaaa27cc1701737a9aeeed29022f4fc003b",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "parallel_group": "passed",
+      "workspace_tests": "passed; openobsidian-doc 9 passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "passed"
+    },
+    "windows": {
+      "job_id": 113100081286,
+      "runtime_artifact_id": 11522148294,
+      "artifact_sha256": "34fe4347fd14df205be6aa9adf88d14e80016dc4dd15ec55ff1b236153ceaee1",
+      "report_sha256": "998583ef846bbedc3c27076106be8cc3b1e486c8b1c318a5963160e3d2a5a5af",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "workspace_tests": "passed; openobsidian-doc 9 passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "passed"
+    },
+    "macos": {
+      "job_id": 113100081332,
+      "runtime_artifact_id": 11521334538,
+      "artifact_sha256": "f347be349bf0502dcc29ea91b769d61cc29765fca40ed9414884d4711929799d",
+      "report_sha256": "a9eb908edd51de7ba6c459b53796c83142bb225c825461d7ba9564882b17d6ce",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "workspace_tests": "passed; openobsidian-doc 9 passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "passed"
+    }
+  },
+  "frontmatter_property_contract": {
+    "tests": [
+      "frontmatter_property_sources_preserve_byte_spans_and_ignore_nested_lines",
+      "frontmatter_property_sources_require_a_complete_frontmatter_block"
+    ],
+    "result": "Both new property-span tests passed as part of all nine openobsidian-doc tests on Ubuntu, macOS and Windows.",
+    "behavior": [
+      "Returns simple top-level property-shaped keys and raw value spans as byte ranges into the unchanged UTF-8 source.",
+      "Supports BOM/CRLF input and Unicode values without normalizing or rewriting source bytes.",
+      "Ignores indented child entries and recognizes comments outside quoted and flow values.",
+      "Retains blank values and returns no properties when frontmatter is absent or incomplete.",
+      "Does not parse YAML or edit/write vault files."
+    ]
+  },
+  "linux_preview_artifact": {
+    "artifact_id": 11522570514,
+    "artifact_sha256": "1d62365855bb99825950e2c9eecd42035e6a4db4bef1a71ec595ce050f7ef381",
+    "size_bytes": 8257819,
+    "binary_sha256": "62711e410931df619b746dab41ff55cea5da4034cef56e4f358aafdf8585b91c",
+    "binary_size_bytes": 21289944
+  },
+  "ci_gates": {
+    "inventory_run": 37712092236,
+    "inventory": "passed",
+    "quality_run": 37712092267,
+    "quality": "passed on attempt 2; the same-SHA rerun passed the previously failing Ubuntu job",
+    "quality_attempt_1_finding": "Ubuntu Electron vault audit did not reach the local retrieval boundary; macOS and Windows passed. No source change was made before the rerun.",
+    "desktop_run": 37712092294,
+    "desktop": "passed",
+    "plugin_renderer_run": 37712092324,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37712092257,
+    "loaded_plugins": "passed"
+  },
+  "parallel_actions": {
+    "implementation_commit": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+    "evidence": "evidence/parallel-ci.json",
+    "source_sha_exercised": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+    "rust_parallel_groups": "passed on Ubuntu, macOS and Windows",
+    "quality_parallel_group": "passed on all three OSes on the successful same-SHA attempt",
+    "desktop_build": "passed on all three OSes"
+  },
+  "finding": "R2.3 passed exact-SHA GitHub Actions on Linux, macOS and Windows. The new frontmatter property span tests, formatting, workspace tests, Clippy, dependency layering, native builds and unchanged-plugin feasibility probes passed; all five companion workflows passed after a same-SHA retry of the initial Ubuntu Electron audit failure.",
+  "scope": "This slice exposes raw spans for simple top-level frontmatter properties only. It does not parse YAML, edit documents, write vault files or certify broad legacy plugin compatibility. Plugin evidence remains feasibility-only and LegacyCompatibility remains Pending. No local executable validation was run."
+}

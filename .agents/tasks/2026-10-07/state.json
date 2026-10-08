@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T01:16:06+00:00",
+  "updated_at": "2026-10-08T01:23:00+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "9839a3075ce9634dfe336af3ab36cce88d8a7c66",
+  "last_reconciled_head": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
   "current_phase": "R2",
-  "current_milestone": "R2.3",
-  "next_action": "Push the GitHub-requested R2.3 rustfmt layout correction, then inspect a fresh exact-SHA Rust matrix and companion workflows.",
+  "current_milestone": "R2.4",
+  "next_action": "Review the remaining R2 requirements and source ownership, then define and implement one small byte-preserving vault/document slice; keep all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "a8ee53ddcd81414c0f6e583de063b008876af826"
+      "implementation_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add"
     },
     "R3": {
       "status": "pending",
@@ -114,7 +114,9 @@
     "R2.2 CI on cc2109def61ca16d62ca6ad9ea0ba09a4e299926 found compiler error E0689 on macOS and Windows: the BOM-dependent `opening_start` integer needed an explicit usize type before checked_add. Applied the direct type annotation from the compiler diagnostic. Linux was still installing system dependencies; its result is pending or will be superseded by the corrective exact-SHA run.",
     "R2.2 exact-SHA CI on 5f24fc2bc98df5e5a724445262e1304e25c5ccf5 passed all seven openobsidian-doc tests on Ubuntu. Ubuntu rustfmt reported five source layout changes; macOS passed tests, Clippy, layering, native build and plugin probe. Windows passed tests, Clippy and layering and was still building at the formatting correction. All five companion workflows passed. Applied the exact rustfmt diff; this SHA is not accepted until a fresh exact-SHA run passes.",
     "R2.2 frontmatter source-boundary slice passed exact-SHA GitHub Actions on a8ee53ddcd81414c0f6e583de063b008876af826; recorded report/artifact hashes in evidence/r2.2-frontmatter-bounds-a8ee53d.json.",
-    "The R2.2 acceptance record passed all six GitHub Actions workflows on 65479f95df4ae1c68145356e90de97c33e3757cd, including Rust CI and migration-inventory validation."
+    "The R2.2 acceptance record passed all six GitHub Actions workflows on 65479f95df4ae1c68145356e90de97c33e3757cd, including Rust CI and migration-inventory validation.",
+    "R2.3 passed exact-SHA GitHub Actions on 851e1583bd8b30f4d1b9be9d504b2271ddb73add; all six workflows passed, with quality attempt 2 resolving the initial Ubuntu Electron retrieval-boundary failure. Evidence: evidence/r2.3-frontmatter-properties-851e158.json.",
+    "R2.3 passed exact-SHA GitHub Actions on 851e1583bd8b30f4d1b9be9d504b2271ddb73add; all six workflows passed, with quality attempt 2 resolving the initial Ubuntu Electron retrieval-boundary failure. Evidence: evidence/r2.3-frontmatter-properties-851e158.json."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1644,6 +1646,98 @@
           "status": "completed",
           "conclusion": "success",
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37711725622/job/113098930602"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37712092256,
+      "head_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092256",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113100081070,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092256/job/113100081070"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113100081286,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092256/job/113100081286"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113100081332,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092256/job/113100081332"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37712092294,
+      "head_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092294",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37712092324,
+      "head_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092324",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37712092257,
+      "head_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092257",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37712092236,
+      "head_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092236",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37712092267,
+      "attempt": 2,
+      "head_sha": "851e1583bd8b30f4d1b9be9d504b2271ddb73add",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37712092267",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113100084488,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113100084522,
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113100084195,
+          "status": "completed",
+          "conclusion": "success"
         }
       ]
     }
