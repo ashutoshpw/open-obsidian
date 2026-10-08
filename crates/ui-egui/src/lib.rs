@@ -2601,6 +2601,18 @@ mod tests {
         {
             assert_eq!(std::fs::read(path).unwrap(), *source);
         }
+        harness.fit_contents();
+        harness.get_by_label("Close inspection").click();
+        harness.step();
+        assert!(harness.state().conflict_inspection.is_none());
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            original_vault_tree
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            post_cleanup_app_data_tree
+        );
         drop(harness);
         assert_eq!(
             existing_vault_tree_snapshot(&vault_path),
