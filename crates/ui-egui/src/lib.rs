@@ -1775,7 +1775,10 @@ mod tests {
                     .as_str()
                     .expect("fixture file must have a relative path"),
             );
-            assert!(relative_path.is_relative(), "fixture paths must be relative");
+            assert!(
+                relative_path.is_relative(),
+                "fixture paths must be relative"
+            );
             assert!(
                 relative_path
                     .components()
@@ -1806,11 +1809,7 @@ mod tests {
     }
 
     fn existing_vault_tree_snapshot(root: &Path) -> Vec<(PathBuf, u8, Vec<u8>)> {
-        fn collect(
-            root: &Path,
-            directory: &Path,
-            entries: &mut Vec<(PathBuf, u8, Vec<u8>)>,
-        ) {
+        fn collect(root: &Path, directory: &Path, entries: &mut Vec<(PathBuf, u8, Vec<u8>)>) {
             for entry in std::fs::read_dir(directory).expect("read fixture directory") {
                 let entry = entry.expect("read fixture directory entry");
                 let path = entry.path();
@@ -1901,13 +1900,24 @@ mod tests {
             .expect("existing-vault fixture must be valid JSON");
         assert_eq!(fixture["schema_version"], 1);
         assert_eq!(fixture["id"], "fixture:existing-vault");
-        assert!(
-            fixture["invariants"]
-                .as_object()
-                .expect("fixture invariants must be an object")
-                .values()
-                .all(|value| value.as_bool() == Some(true))
+        assert_eq!(
+            fixture["invariants"]["opens_existing_directory_in_place"],
+            true
         );
+        assert_eq!(
+            fixture["invariants"]["requires_import_or_conversion"],
+            false
+        );
+        assert_eq!(
+            fixture["invariants"]["preserves_unknown_paths_and_binary_bytes"],
+            true
+        );
+        assert_eq!(
+            fixture["invariants"]["read_only_open_preserves_vault_tree"],
+            true
+        );
+        assert_eq!(fixture["invariants"]["app_state_is_outside_the_vault"], true);
+        assert_eq!(fixture["invariants"]["note_revisions_use_sha256"], true);
 
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("Existing Vault");
