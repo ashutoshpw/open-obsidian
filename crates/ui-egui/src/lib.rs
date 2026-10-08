@@ -372,7 +372,10 @@ impl OpenObsidianApp {
             });
             let can_resolve = !operation_busy && self.link_source_path.is_some();
             if ui
-                .add_enabled(can_resolve, eframe::egui::Button::new("Resolve link status"))
+                .add_enabled(
+                    can_resolve,
+                    eframe::egui::Button::new("Resolve link status"),
+                )
                 .clicked()
             {
                 self.start_link_resolution();
@@ -415,10 +418,7 @@ impl OpenObsidianApp {
                             .iter()
                             .filter(|resolved| resolved.resolution.status == status)
                             .count();
-                        ui.label(format!(
-                            "{}: {count}",
-                            link_resolution_status_label(status)
-                        ));
+                        ui.label(format!("{}: {count}", link_resolution_status_label(status)));
                     }
                 });
                 ui.label(format!(
@@ -1600,9 +1600,11 @@ mod tests {
             app.link_resolutions.len(),
             case["expected_references"].as_array().unwrap().len()
         );
-        assert!(app.link_status.as_deref().is_some_and(|status| {
-            status.contains(current_path.to_str().unwrap())
-        }));
+        assert!(
+            app.link_status.as_deref().is_some_and(|status| {
+                status.contains(current_path.to_str().unwrap())
+            })
+        );
         for (actual, expected) in app
             .link_resolutions
             .iter()
@@ -1633,7 +1635,10 @@ mod tests {
                 actual.reference.subpath.as_deref(),
                 expected["subpath"].as_str()
             );
-            assert_eq!(actual.resolution.target.as_deref(), expected["resolved_path"].as_str());
+            assert_eq!(
+                actual.resolution.target.as_deref(),
+                expected["resolved_path"].as_str()
+            );
             let expected_candidates: Vec<String> = expected["candidates"]
                 .as_array()
                 .unwrap()
@@ -1655,7 +1660,7 @@ mod tests {
         harness.get_by_label("Unresolved: 2");
         harness.get_by_label("Ambiguous: 1");
         harness.get_by_label("External: 1");
-        harness.get_by_label("Resolved · Wiki link");
+        harness.get_by_label("[[#Overview]]");
         for (relative_path, original) in &original_files {
             assert_eq!(
                 std::fs::read(vault_path.join(relative_path)).unwrap(),
