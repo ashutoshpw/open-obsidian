@@ -549,14 +549,14 @@ fn source_subpath_keys(source: &MarkdownSource) -> Vec<String> {
         };
         let line = std::str::from_utf8(line_bytes)
             .expect("MarkdownSource stores validated UTF-8")
-            .trim_end_matches(|character| matches!(character, ' ' | '\t'));
+            .trim_end_matches([' ', '\t']);
 
         let next_line_start = line_end + break_width;
         let next_line = if break_width > 0 && next_line_start < bytes.len() {
             let (next_line_end, _) = line_bounds(bytes, next_line_start);
             std::str::from_utf8(&bytes[next_line_start..next_line_end])
                 .expect("MarkdownSource stores validated UTF-8")
-                .trim_end_matches(|character| matches!(character, ' ' | '\t'))
+                .trim_end_matches([' ', '\t'])
         } else {
             ""
         };
@@ -673,9 +673,9 @@ fn is_list_item_start(line: &str) -> bool {
 }
 
 fn block_id(line: &str) -> Option<&str> {
-    let line = line.trim_end_matches(|character| matches!(character, ' ' | '\t'));
+    let line = line.trim_end_matches([' ', '\t']);
     let id_start = line
-        .rfind(|character| matches!(character, ' ' | '\t'))
+        .rfind([' ', '\t'])
         .map_or(0, |separator| separator + 1);
     let marker = line.get(id_start..)?.strip_prefix('^')?;
     let mut characters = marker.chars();
@@ -691,14 +691,14 @@ fn block_id(line: &str) -> Option<&str> {
 
 fn heading_text(value: &str) -> &str {
     let value = strip_trailing_heading_hashes(
-        value.trim_end_matches(|character| matches!(character, ' ' | '\t')),
+        value.trim_end_matches([' ', '\t']),
     );
     strip_trailing_block_id(value).trim()
 }
 
 fn strip_trailing_block_id(value: &str) -> &str {
-    let value = value.trim_end_matches(|character| matches!(character, ' ' | '\t'));
-    let Some(separator) = value.rfind(|character| matches!(character, ' ' | '\t')) else {
+    let value = value.trim_end_matches([' ', '\t']);
+    let Some(separator) = value.rfind([' ', '\t']) else {
         return value;
     };
     let marker = &value[separator + 1..];
@@ -714,7 +714,7 @@ fn strip_trailing_block_id(value: &str) -> &str {
     {
         return value;
     }
-    value[..separator].trim_end_matches(|character| matches!(character, ' ' | '\t'))
+    value[..separator].trim_end_matches([' ', '\t'])
 }
 
 fn strip_trailing_heading_hashes(value: &str) -> &str {
