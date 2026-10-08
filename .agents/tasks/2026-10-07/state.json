@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:59:10+00:00",
+  "updated_at": "2026-10-08T01:05:36+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "5f24fc2bc98df5e5a724445262e1304e25c5ccf5",
+  "last_reconciled_head": "a8ee53ddcd81414c0f6e583de063b008876af826",
   "current_phase": "R2",
   "current_milestone": "R2.2",
-  "next_action": "Push the GitHub-requested formatting correction for R2.2, then inspect the full fresh exact-SHA matrix and companion workflows.",
+  "next_action": "Review remaining R2 requirements and define the next focused document/vault contract slice; push it for exact-SHA GitHub Actions when validation is needed.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a"
+      "implementation_sha": "a8ee53ddcd81414c0f6e583de063b008876af826"
     },
     "R3": {
       "status": "pending",
@@ -112,7 +112,8 @@
     "The R2.1 evidence/state commit a654a419bac1a12c097556f895e3486adf824a1f passed all six GitHub Actions workflows, including the full Rust three-OS matrix and inventory validation of the recorded evidence. R2.2 implementation began only after those runs completed.",
     "R2.2 adds read-only frontmatter delimiter/content spans as UTF-8 byte offsets, including BOM and LF/CRLF/CR handling, with absent/unclosed/near-match cases. Focused Rust unit tests are authored; all execution remains pending GitHub Actions.",
     "R2.2 CI on cc2109def61ca16d62ca6ad9ea0ba09a4e299926 found compiler error E0689 on macOS and Windows: the BOM-dependent `opening_start` integer needed an explicit usize type before checked_add. Applied the direct type annotation from the compiler diagnostic. Linux was still installing system dependencies; its result is pending or will be superseded by the corrective exact-SHA run.",
-    "R2.2 exact-SHA CI on 5f24fc2bc98df5e5a724445262e1304e25c5ccf5 passed all seven openobsidian-doc tests on Ubuntu. Ubuntu rustfmt reported five source layout changes; macOS passed tests, Clippy, layering, native build and plugin probe. Windows passed tests, Clippy and layering and was still building at the formatting correction. All five companion workflows passed. Applied the exact rustfmt diff; this SHA is not accepted until a fresh exact-SHA run passes."
+    "R2.2 exact-SHA CI on 5f24fc2bc98df5e5a724445262e1304e25c5ccf5 passed all seven openobsidian-doc tests on Ubuntu. Ubuntu rustfmt reported five source layout changes; macOS passed tests, Clippy, layering, native build and plugin probe. Windows passed tests, Clippy and layering and was still building at the formatting correction. All five companion workflows passed. Applied the exact rustfmt diff; this SHA is not accepted until a fresh exact-SHA run passes.",
+    "R2.2 frontmatter source-boundary slice passed exact-SHA GitHub Actions on a8ee53ddcd81414c0f6e583de063b008876af826; recorded report/artifact hashes in evidence/r2.2-frontmatter-bounds-a8ee53d.json."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1310,8 +1311,8 @@
       "run_id": 37709950709,
       "head_sha": "cc2109def61ca16d62ca6ad9ea0ba09a4e299926",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709950709",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "failure",
       "jobs": [
         {
           "name": "rust (macos-latest)",
@@ -1327,8 +1328,8 @@
         },
         {
           "name": "rust (ubuntu-latest)",
-          "status": "in_progress",
-          "conclusion": null,
+          "status": "completed",
+          "conclusion": "failure",
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709950709/job/113093277623"
         }
       ]
@@ -1338,8 +1339,8 @@
       "run_id": 37710356848,
       "head_sha": "5f24fc2bc98df5e5a724445262e1304e25c5ccf5",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710356848",
-      "status": "in_progress",
-      "conclusion": null,
+      "status": "completed",
+      "conclusion": "failure",
       "jobs": [
         {
           "name": "rust (ubuntu-latest)",
@@ -1350,12 +1351,14 @@
         {
           "name": "rust (macos-latest)",
           "status": "completed",
-          "conclusion": "success"
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710356848/job/113094600130"
         },
         {
           "name": "rust (windows-latest)",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710356848/job/113094600235"
         }
       ]
     },
@@ -1396,6 +1399,74 @@
       "run_id": 37710356832,
       "head_sha": "5f24fc2bc98df5e5a724445262e1304e25c5ccf5",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710356832",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37710647728,
+      "head_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647728",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647728/job/113095535941"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647728/job/113095535623"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647728/job/113095535797"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37710647757,
+      "head_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647757",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37710647725,
+      "head_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647725",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37710647961,
+      "head_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647961",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37710647873,
+      "head_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647873",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37710647827,
+      "head_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647827",
       "status": "completed",
       "conclusion": "success"
     }
@@ -1450,8 +1521,8 @@
       "next_action": "R2.1 accepted. Proceed to R2.2 frontmatter source bounds; property interpretation and editing remain pending."
     },
     "R2.2": {
-      "status": "in_progress",
-      "implementation_sha": null,
+      "status": "complete",
+      "implementation_sha": "a8ee53ddcd81414c0f6e583de063b008876af826",
       "scope": "Expose byte-accurate opening delimiter, content and closing delimiter spans for Markdown YAML frontmatter, without interpreting or rewriting its contents.",
       "acceptance": [
         "Frontmatter detection handles an optional UTF-8 BOM and LF, CRLF or CR source lines without normalization.",
@@ -1459,8 +1530,8 @@
         "Absent, unclosed or malformed frontmatter is represented without destructive fallback.",
         "Focused Rust unit tests and all required Rust/companion CI gates pass on the exact pushed SHA."
       ],
-      "evidence": null,
-      "next_action": "Apply all rustfmt diffs reported by Ubuntu CI, push a focused correction and rerun required GitHub Actions."
+      "evidence": "evidence/r2.2-frontmatter-bounds-a8ee53d.json",
+      "next_action": "R2.2 accepted. Review remaining R2 requirements and select the next focused document/vault contract slice."
     }
   },
   "ci_preparation": {

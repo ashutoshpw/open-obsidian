@@ -211,3 +211,9 @@ Rust CI run [37709950709](https://github.com/ashutoshpw/open-obsidian/actions/ru
 ## R2.2 rustfmt feedback — source SHA 5f24fc2
 
 Rust CI run [37710356848](https://github.com/ashutoshpw/open-obsidian/actions/runs/37710356848) compiled the corrected byte-offset implementation and passed all seven `openobsidian-doc` tests on Ubuntu. Ubuntu rustfmt reported five layout changes in the new helper and tests; applied the exact GitHub diff. macOS passed workspace tests, Clippy, layering, native build and plugin probes. Windows passed workspace tests, Clippy and layering and was still building when this correction was prepared. All five companion workflows passed on the same SHA. This source SHA is not accepted; the next pushed SHA must pass formatting and the full matrix.
+
+## R2.2 acceptance — source SHA a8ee53d
+
+Rust CI run [37710647728](https://github.com/ashutoshpw/open-obsidian/actions/runs/37710647728) passed on exact SHA `a8ee53ddcd81414c0f6e583de063b008876af826`. The seven `openobsidian-doc` tests, Ubuntu formatting, parallel group, Clippy, crate layering, native preview builds and unchanged-plugin probes passed on Ubuntu, macOS and Windows. All five companion workflows—inventory, quality, desktop build, plugin renderer and loaded plugins—passed on this SHA. GitHub used Rust stable 1.99.0 and Bun 1.4.2. The Linux preview and three platform compatibility reports, with artifact and report hashes, are recorded in `evidence/r2.2-frontmatter-bounds-a8ee53d.json`.
+
+R2.2 is complete. The slice only identifies frontmatter source spans; it does not interpret YAML properties or edit/write vault files. The plugin reports remain feasibility-only and broad legacy compatibility remains Pending. No local executable validation was run. Next: review remaining R2 requirements and define the next focused document/vault contract slice.
