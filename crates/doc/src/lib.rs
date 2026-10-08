@@ -946,10 +946,10 @@ pub fn slice_markdown_subpath(
         .iter()
         .map(|line| (*line).to_owned())
         .collect::<Vec<_>>();
-    if selected.kind == SourceSubpathKind::Block {
-        if let Some(line) = selected_lines.first_mut() {
-            *line = strip_trailing_block_identifier(line);
-        }
+    if selected.kind == SourceSubpathKind::Block
+        && let Some(line) = selected_lines.first_mut()
+    {
+        *line = strip_trailing_block_identifier(line);
     }
 
     LinkSubpathSlice {
@@ -2136,7 +2136,10 @@ mod tests {
         assert_eq!(entire_source.status, LinkSubpathStatus::Resolved);
         assert_eq!(entire_source.text.as_deref(), Some(source.text()));
         assert_eq!(entire_source.line_start, Some(0));
-        assert_eq!(entire_source.line_end, Some(source.text().split("\r\n").count()));
+        assert_eq!(
+            entire_source.line_end,
+            Some(source.text().split("\r\n").count())
+        );
 
         let details = slice_markdown_subpath(&source, "Details");
         assert_eq!(details.status, LinkSubpathStatus::Resolved);
