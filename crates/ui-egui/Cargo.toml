@@ -11,4 +11,3 @@ workspace = true
 [dependencies]
 eframe = { workspace = true }
 openobsidian-engine = { workspace = true }
-openobsidian-platform = { workspace = true }
