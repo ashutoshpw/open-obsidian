@@ -4,17 +4,37 @@ use openobsidian_platform::{
     inspect_storage_protection, prepare_vault_app_data,
 };
 use openobsidian_ui_egui::{
-    StorageProtectionDisplay, StorageProtectionDisplayStatus, run_with_desktop_services,
+    StorageProtectionDisplay, StorageProtectionDisplayStatus,
+    run_with_desktop_services_and_session,
 };
 use rfd::FileDialog;
+use std::ffi::OsString;
+use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::mpsc;
 
 fn main() -> ExitCode {
-    let arguments = std::env::args().skip(1).collect::<Vec<_>>();
+    let arguments = std::env::args_os().skip(1).collect::<Vec<_>>();
     if let Some(exit_code) = run_uninstall_cleanup_command(&arguments) {
         return exit_code;
     }
+    let initial_vault_path = match parse_open_vault_path(&arguments) {
+        Ok(path) => path,
+        Err(error) => {
+            eprintln!("OpenObsidian could not open the selected vault: {error}");
+            return ExitCode::FAILURE;
+        }
+    };
+    let initial_session = match initial_vault_path {
+        Some(path) => match open_selected_vault(path) {
+            Ok(session) => Some(session),
+            Err(error) => {
+                eprintln!("OpenObsidian could not open the selected vault safely: {error}");
+                return ExitCode::FAILURE;
+            }
+        },
+        None => None,
+    };
 
     let probe = || {
         let report = inspect_storage_protection();
@@ -45,14 +65,14 @@ fn main() -> ExitCode {
         });
         Some(receiver)
     };
-    if let Err(error) = run_with_desktop_services(probe, open_vault) {
+    if let Err(error) = run_with_desktop_services_and_session(probe, open_vault, initial_session) {
         eprintln!("OpenObsidian could not start: {error}");
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS
 }
 
-fn run_uninstall_cleanup_command(arguments: &[String]) -> Option<ExitCode> {
+fn run_uninstall_cleanup_command(arguments: &[OsString]) -> Option<ExitCode> {
     let selection = match parse_uninstall_cleanup_selection(arguments) {
         Ok(Some(selection)) => selection,
         Ok(None) => return None,
@@ -86,22 +106,41 @@ fn run_uninstall_cleanup_command(arguments: &[String]) -> Option<ExitCode> {
 }
 
 fn parse_uninstall_cleanup_selection(
-    arguments: &[String],
+    arguments: &[OsString],
 ) -> Result<Option<UserDataCleanupSelection>, &'static str> {
-    if arguments.first().map(String::as_str) != Some("--uninstall-cleanup") {
+    if arguments.first().and_then(|argument| argument.to_str()) != Some("--uninstall-cleanup") {
         return Ok(None);
     }
 
     let mut selection = UserDataCleanupSelection::default();
     for argument in &arguments[1..] {
-        match argument.as_str() {
-            "--remove-app-cache" => selection.app_cache = true,
-            "--remove-credentials" => selection.credentials = true,
-            "--remove-recovery-history" => selection.recovery_history = true,
+        match argument.to_str() {
+            Some("--remove-app-cache") => selection.app_cache = true,
+            Some("--remove-credentials") => selection.credentials = true,
+            Some("--remove-recovery-history") => selection.recovery_history = true,
             _ => return Err("unknown cleanup option"),
         }
     }
     Ok(Some(selection))
+}
+
+fn parse_open_vault_path(arguments: &[OsString]) -> Result<Option<PathBuf>, &'static str> {
+    if arguments.first().and_then(|argument| argument.to_str()) != Some("--open-vault") {
+        return Ok(None);
+    }
+    if arguments.len() != 2 || arguments[1].is_empty() {
+        return Err("--open-vault requires exactly one folder path");
+    }
+    Ok(Some(PathBuf::from(&arguments[1])))
+}
+
+fn open_selected_vault(root: PathBuf) -> Result<VaultSession, &'static str> {
+    if !root.is_dir() {
+        return Err("the selected path is not an existing folder");
+    }
+    let app_data_root =
+        prepare_vault_app_data(&root).map_err(|_| "private application storage is unavailable")?;
+    VaultSession::open(&root, app_data_root).map_err(|_| "the selected folder is not a safe vault")
 }
 
 fn print_cleanup_outcome(label: &str, outcome: UserDataCleanupOutcome) {
@@ -132,7 +171,7 @@ mod tests {
 
     #[test]
     fn uninstall_cleanup_command_requires_explicit_category_flags() {
-        let arguments = vec!["--uninstall-cleanup".to_owned()];
+        let arguments = vec![OsString::from("--uninstall-cleanup")];
         assert_eq!(
             parse_uninstall_cleanup_selection(&arguments),
             Ok(Some(UserDataCleanupSelection::default()))
@@ -142,10 +181,10 @@ mod tests {
     #[test]
     fn uninstall_cleanup_command_accepts_only_known_categories() {
         let arguments = vec![
-            "--uninstall-cleanup".to_owned(),
-            "--remove-app-cache".to_owned(),
-            "--remove-credentials".to_owned(),
-            "--remove-recovery-history".to_owned(),
+            OsString::from("--uninstall-cleanup"),
+            OsString::from("--remove-app-cache"),
+            OsString::from("--remove-credentials"),
+            OsString::from("--remove-recovery-history"),
         ];
         assert_eq!(
             parse_uninstall_cleanup_selection(&arguments),
@@ -157,10 +196,35 @@ mod tests {
         );
         assert_eq!(
             parse_uninstall_cleanup_selection(&[
-                "--uninstall-cleanup".to_owned(),
-                "--remove-everything".to_owned(),
+                OsString::from("--uninstall-cleanup"),
+                OsString::from("--remove-everything"),
             ]),
             Err("unknown cleanup option")
+        );
+    }
+
+    #[test]
+    fn open_vault_arguments_preserve_paths_and_reject_ambiguous_invocations() {
+        assert_eq!(parse_open_vault_path(&[]).unwrap(), None);
+        assert_eq!(
+            parse_open_vault_path(&[
+                OsString::from("--open-vault"),
+                OsString::from("/tmp/Existing Vault café"),
+            ])
+            .unwrap(),
+            Some(PathBuf::from("/tmp/Existing Vault café"))
+        );
+        assert_eq!(
+            parse_open_vault_path(&[OsString::from("--open-vault")]),
+            Err("--open-vault requires exactly one folder path")
+        );
+        assert_eq!(
+            parse_open_vault_path(&[
+                OsString::from("--open-vault"),
+                OsString::from("/tmp/Vault"),
+                OsString::from("/tmp/Other"),
+            ]),
+            Err("--open-vault requires exactly one folder path")
         );
     }
 }

@@ -135,12 +135,22 @@ pub fn run_with_desktop_services(
     probe: impl Fn() -> StorageProtectionDisplay + Send + Sync + 'static,
     open_vault: impl Fn() -> Option<VaultOpenReceiver> + Send + Sync + 'static,
 ) -> eframe::Result {
+    run_with_desktop_services_and_session(probe, open_vault, None)
+}
+
+/// Creates the desktop shell with an existing vault session selected at launch.
+pub fn run_with_desktop_services_and_session(
+    probe: impl Fn() -> StorageProtectionDisplay + Send + Sync + 'static,
+    open_vault: impl Fn() -> Option<VaultOpenReceiver> + Send + Sync + 'static,
+    initial_session: Option<VaultSession>,
+) -> eframe::Result {
     let options = eframe::NativeOptions::default();
     eframe::run_native(
         "OpenObsidian",
         options,
         Box::new(move |_creation_context| {
             Ok(Box::new(OpenObsidianApp {
+                session: initial_session.map(Arc::new),
                 storage_protection_probe: Some(Box::new(probe)),
                 open_vault_action: Some(Box::new(open_vault)),
                 ..OpenObsidianApp::default()
@@ -2330,6 +2340,35 @@ mod tests {
         drop(session);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before);
         assert!(existing_vault_tree_snapshot(&app_data_path).is_empty());
+    }
+
+    #[test]
+    fn egui_displays_an_existing_vault_session_selected_at_launch_without_changing_its_tree() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault before showing the desktop shell");
+        assert_eq!(session.entries().len(), 2);
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.get_by_label("Vault: Existing Vault");
+        harness.get_by_label("2 Markdown files found.");
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
     }
 
     #[test]
