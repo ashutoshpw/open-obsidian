@@ -1,0 +1,178 @@
+{
+  "phase": "R2.6.5",
+  "slice": "R2.6.5c",
+  "status": "accepted_slice; R2.6.5 remains in progress",
+  "source_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+  "implementation_commits": [
+    "5eca34dc17a6cd8fb735f1ead6121b5bbdd51046",
+    "c60d0e4d7711a1dda9442ec004ded69d91e9d896",
+    "076d2ec474940789e814ca8a44ec5a67652b7782"
+  ],
+  "scope": "Recover interrupted journaled multi-file rename transactions and preserve/report edits made outside the interrupted transaction.",
+  "behavior": [
+    "Reads only complete newline-terminated journal records and considers the latest state for each rename operation.",
+    "Recovers schema-v2 transactions left prepared or recovery_required; terminal operations remain untouched.",
+    "Restores before-images only when the current revision matches the transaction recorded after-revision; preserves external edits and reports cases that need attention.",
+    "Restores interrupted source moves, including Windows case-only renames, and records an idempotent rolled_back terminal state.",
+    "Ignores an incomplete unterminated journal tail."
+  ],
+  "focused_tests": [
+    "recovers_interrupted_rename_after_source_move_and_reference_write",
+    "preserves_external_reference_edit_during_crash_recovery",
+    "ignores_an_incomplete_unterminated_journal_tail",
+    "recovers_interrupted_case_only_rename_on_windows"
+  ],
+  "test_results": {
+    "ubuntu": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "17 passed"
+    },
+    "macos": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "17 passed"
+    },
+    "windows": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "17 passed"
+    },
+    "local_executable_validation": "not run; executable validation was through GitHub Actions"
+  },
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37728398286,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398286",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {
+          "job_id": 113151707854,
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113151707924,
+          "conclusion": "success"
+        },
+        "windows": {
+          "job_id": 113151707948,
+          "conclusion": "success"
+        }
+      },
+      "checks": [
+        "formatting",
+        "workspace tests",
+        "parallel group",
+        "Clippy",
+        "crate layers",
+        "native preview builds",
+        "Wry feasibility probes"
+      ]
+    },
+    "inventory": {
+      "run_id": 37728398251,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398251",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": {
+          "job_id": 113151707607,
+          "conclusion": "success"
+        }
+      }
+    },
+    "quality": {
+      "run_id": 37728398341,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398341",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {
+          "job_id": 113151708048,
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113151708216,
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113151708298,
+          "conclusion": "success"
+        }
+      }
+    },
+    "desktop": {
+      "run_id": 37728398334,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398334",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {
+          "job_id": 113151708074,
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113151708221,
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113151708323,
+          "conclusion": "success"
+        }
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37728398311,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398311",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {
+          "job_id": 113151708008,
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113151708348,
+          "conclusion": "success"
+        },
+        "windows": {
+          "job_id": 113151708430,
+          "conclusion": "success"
+        }
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37728398293,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398293",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {
+          "job_id": 113151707936,
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113151708119,
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113151708157,
+          "conclusion": "success"
+        }
+      }
+    }
+  },
+  "repair_history": [
+    {
+      "source_sha": "5eca34dc17a6cd8fb735f1ead6121b5bbdd51046",
+      "rust_run_id": 37727813396,
+      "finding": "GitHub Rust CI reported rustfmt differences, two rename tests expecting the obsolete failed state after successful rollback, and Windows case-only recovery failing to preserve original filename casing."
+    },
+    {
+      "source_sha": "c60d0e4d7711a1dda9442ec004ded69d91e9d896",
+      "rust_run_id": 37728202387,
+      "finding": "Focused workspace tests passed, including Windows case-only recovery; Clippy flagged helper functions after the test module and rustfmt requested two layouts in the new recovery path."
+    }
+  ],
+  "limitations": [
+    "Configurable history retention and cleanup are not implemented; R2.6.5 remains in progress.",
+    "Revision checks are optimistic and do not provide OS-level compare-and-swap against arbitrary external writers.",
+    "C03 and C03.2 remain Pending until full R2 acceptance and exact-SHA GitHub CI pass."
+  ],
+  "next_action": "Implement configurable retention and cleanup for recovery history and conflict artifacts; keep C03 and C03.2 pending until full R2 acceptance."
+}

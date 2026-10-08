@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T04:18:52Z",
+  "updated_at": "2026-10-08T04:44:07Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "cebbebed074e91d9ec3bde6ebeded79dd0327ad3",
+  "last_reconciled_head": "076d2ec474940789e814ca8a44ec5a67652b7782",
   "current_phase": "R2",
   "current_milestone": "R2.6.5",
-  "next_action": "Continue R2.6.5 with rename crash recovery and history retention/cleanup; keep C03 and C03.2 pending until full R2 acceptance and exact-SHA GitHub CI pass.",
+  "next_action": "Implement configurable retention and cleanup for recovery history and conflict artifacts; keep C03 and C03.2 pending until full R2 acceptance and exact-SHA GitHub CI pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "cebbebed074e91d9ec3bde6ebeded79dd0327ad3"
+      "implementation_sha": "076d2ec474940789e814ca8a44ec5a67652b7782"
     },
     "R3": {
       "status": "pending",
@@ -126,7 +126,8 @@
     "R2.6.2 source-aware heading/block subpath resolution passed all six GitHub Actions workflows on exact SHA d35d5ea10f7f95dbfb5a5384a9855bd836326ef9. All 17 openobsidian-doc tests, Rust gates on Ubuntu/macOS/Windows and five companion workflows passed. CI rustfmt/Clippy corrections were applied in small commits; the transient macOS Electron audit failure passed on exact-SHA attempt 2. Evidence: evidence/r2.6.2-subpath-resolution-d35d5ea.json. C03 safe rename/move editing remains pending. No local executable validation was run.",
     "R2.6.3 pure source-ranged rename preview passed all six required GitHub Actions workflows on exact implementation SHA 7b3b14bc5a8dac5762e0f957a3d922c09bab83fa; evidence: evidence/r2.6.3-rename-preview-7b3b14b.json. Preview does not write vault files; C03/C03.2 remain Pending. No local executable validation was run.",
     "R2.6.4 content-addressed vault snapshots, symlink-safe reads and snapshot-bound rename preview passed all six required GitHub Actions workflows on exact source SHA 84b4f843c20d7b8699f84cc08001a027c9a4ca2a; evidence: evidence/r2.6.4-vault-snapshot-preview-84b4f84.json. The first SHA required only GitHub-reported fmt/Clippy corrections. Rename apply/rollback remains pending; C03/C03.2 remain Pending. No local executable validation was run.",
-    "R2.6.5b journaled multi-file rename apply/rollback passed all six required GitHub Actions workflows on exact source SHA cebbebed074e91d9ec3bde6ebeded79dd0327ad3. Five focused transaction tests passed across Linux/macOS/Windows; evidence: evidence/r2.6.5-rename-transaction-cebbebe.json. Crash recovery and history cleanup remain; C03/C03.2 remain Pending. No local executable validation was run."
+    "R2.6.5b journaled multi-file rename apply/rollback passed all six required GitHub Actions workflows on exact source SHA cebbebed074e91d9ec3bde6ebeded79dd0327ad3. Five focused transaction tests passed across Linux/macOS/Windows; evidence: evidence/r2.6.5-rename-transaction-cebbebe.json. Crash recovery and history cleanup remain; C03/C03.2 remain Pending. No local executable validation was run.",
+    "R2.6.5c journaled rename crash recovery passed all six exact-SHA GitHub Actions workflows on 076d2ec474940789e814ca8a44ec5a67652b7782; all 17 vault tests passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.5-recovery-076d2ec.json. History retention/cleanup remains; C03/C03.2 remain Pending. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -2379,6 +2380,54 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726325883",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37728398286,
+      "head_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398286",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37728398251,
+      "head_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398251",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37728398341,
+      "head_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398341",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37728398334,
+      "head_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398334",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37728398311,
+      "head_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398311",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37728398293,
+      "head_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37728398293",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -2533,7 +2582,7 @@
     },
     "R2.6.5": {
       "status": "in_progress",
-      "implementation_sha": "cebbebed074e91d9ec3bde6ebeded79dd0327ad3",
+      "implementation_sha": "076d2ec474940789e814ca8a44ec5a67652b7782",
       "implementation_commits": [
         "d34e9c277f87620534766e916f3e29233acf8e11",
         "bbc3adedae0f1c70288a1999bd845b898932c04f",
@@ -2541,23 +2590,29 @@
         "8be9112ceee2a4df1b2512891828dfeefaf03f30",
         "0ea917636bc4c90a76e828550a4ad59bb73f0d44",
         "dd5095f918da06390c35509cc520b883a404f590",
-        "cebbebed074e91d9ec3bde6ebeded79dd0327ad3"
+        "cebbebed074e91d9ec3bde6ebeded79dd0327ad3",
+        "5eca34dc17a6cd8fb735f1ead6121b5bbdd51046",
+        "c60d0e4d7711a1dda9442ec004ded69d91e9d896",
+        "076d2ec474940789e814ca8a44ec5a67652b7782"
       ],
       "evidence": "evidence/r2.6.5-rename-transaction-cebbebe.json",
       "foundation_evidence": "evidence/r2.6.5-write-foundation-8be9112.json",
-      "scope": "Add the revision-checked single-file write foundation and journaled multi-file rename apply/rollback with failure injection and external-change preservation.",
+      "scope": "Add the revision-checked single-file write foundation, journaled multi-file rename apply/rollback, and crash recovery with external-edit preservation.",
       "accepted_slice": [
         "Four focused vault tests pass through GitHub Rust CI on Ubuntu, macOS and Windows (the existing Unix-only symlink test is not compiled on Windows).",
         "Rust formatting, workspace tests, parallel checks, Clippy, crate layers, native preview builds, Wry feasibility probes and all five companion workflows pass for the exact source SHA.",
         "Five focused rename transaction tests pass through GitHub Rust CI: 14 vault tests on Ubuntu/macOS and 13 on Windows, plus 21 document tests on each OS.",
         "All six required workflows pass for exact source SHA cebbebed074e91d9ec3bde6ebeded79dd0327ad3; quality attempt 2 passed after an unchanged macOS Electron audit boundary failure on attempt 1.",
-        "Local executable validation was not run."
+        "Local executable validation was not run.",
+        "Rename crash recovery passes its focused interruption, external-edit, incomplete-journal-tail and Windows case-only tests; all 17 vault tests pass on Ubuntu, macOS and Windows.",
+        "All six required workflows pass for exact source SHA 076d2ec474940789e814ca8a44ec5a67652b7782; formatting, workspace tests, Clippy, layering, preview builds and Wry probes pass."
       ],
       "remaining": [
-        "Implement rename crash recovery and configurable history retention/cleanup before considering R2.6.5 complete.",
+        "Implement configurable history retention and cleanup before considering R2.6.5 complete.",
         "Revision checks remain optimistic and do not provide OS-level compare-and-swap against arbitrary external writers; C03 and C03.2 remain Pending."
       ],
-      "next_action": "Implement crash recovery for interrupted rename transactions and configurable history retention/cleanup."
+      "next_action": "Implement configurable retention and cleanup for recovery history and conflict artifacts.",
+      "recovery_evidence": "evidence/r2.6.5-recovery-076d2ec.json"
     }
   },
   "ci_preparation": {
