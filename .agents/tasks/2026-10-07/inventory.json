@@ -2239,13 +2239,13 @@
     },
     {
       "path": "fixtures/existing-vault.json",
-      "sha256": "726d7799760bc40e4f6ded71638d4207f72e89a4573581eba770a8a7d7048185",
+      "sha256": "4eb95cd1ab42964e803a991eb51bfe5d7c527b29cc227e238dcdba1d63896a17",
       "rust_owner": "crates/ui-egui",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "Golden existing-vault fixture records arbitrary paths and bytes, source revision SHA-256, direct in-place opening and the app-data boundary.",
-      "fixture_reader": "crates/ui-egui"
+      "purpose": "Golden existing-vault fixture records arbitrary paths and bytes, source revision SHA-256, direct in-place opening, app-data boundary and read-only operation expectations.",
+      "fixture_reader": "crates/ui-egui and crates/testkit"
     }
   ],
   "spec_hashes": {

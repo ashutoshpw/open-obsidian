@@ -746,3 +746,6 @@ The GitHub Actions native `parallel` step feature requested by the user is alrea
 Extended `fixtures/existing-vault.json` with a resolved wiki link and heading embed while retaining its BOM/CRLF Markdown, `.obsidian` settings, unknown paths and binary files. Added a shared testkit interaction that scans and reads the vault, resolves links and note embeds, prepares and revalidates a rename preview, and compares the full path/type/byte tree after each read-only operation. The fixture also records the expected link resolutions and preview update count.
 
 The source slice is ready for exact-SHA GitHub Actions validation. No local tests, builds, formatters, linters or executable checks were run. C01.1, C01.2 and parent C01 remain pending until CI evidence is reviewed.
+
+
+The first R2.6.39 CI attempt used exact source SHA `8aa618b78ed47800c8a773ccc1c6863f33a9845a`. The new shared test passed on Ubuntu, macOS and Windows. Rust CI failed only on the six Ubuntu rustfmt layout requests; macOS and Windows Rust jobs passed. The quality, desktop build, plugin renderer and loaded-plugin workflows passed. Inventory CI reported the stale `fixtures/existing-vault.json` hash; I refreshed it and updated reader metadata to include the testkit consumer. Fresh exact-SHA CI is pending.

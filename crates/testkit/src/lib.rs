@@ -730,7 +730,10 @@ mod existing_vault_no_op_tests {
                     Ok(()) => return Self(path),
                     Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
                     Err(error) => {
-                        panic!("creating existing-vault test directory {}: {error}", path.display())
+                        panic!(
+                            "creating existing-vault test directory {}: {error}",
+                            path.display()
+                        )
                     }
                 }
             }
@@ -773,9 +776,11 @@ mod existing_vault_no_op_tests {
                     .expect("fixture file must have a relative path"),
             );
             assert!(relative_path.is_relative());
-            assert!(relative_path.components().all(|component| {
-                !matches!(component, std::path::Component::ParentDir)
-            }));
+            assert!(
+                relative_path
+                    .components()
+                    .all(|component| { !matches!(component, std::path::Component::ParentDir) })
+            );
             let path = root.join(relative_path);
             fs::create_dir_all(path.parent().expect("fixture file must have a parent"))
                 .expect("create existing-vault fixture parents");
@@ -829,7 +834,9 @@ mod existing_vault_no_op_tests {
         expected_tree: &[(String, u8, Vec<u8>)],
     ) {
         assert_eq!(
-            &vault.snapshot().expect("snapshot after a read-only operation"),
+            &vault
+                .snapshot()
+                .expect("snapshot after a read-only operation"),
             expected_snapshot
         );
         assert_eq!(tree_snapshot(root), expected_tree);
@@ -890,7 +897,11 @@ mod existing_vault_no_op_tests {
             .as_array()
             .expect("fixture must list Markdown paths")
             .iter()
-            .map(|path| path.as_str().expect("Markdown path must be text").to_owned())
+            .map(|path| {
+                path.as_str()
+                    .expect("Markdown path must be text")
+                    .to_owned()
+            })
             .collect::<Vec<_>>();
         assert_eq!(markdown_paths, expected_markdown_paths);
         assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
@@ -935,7 +946,9 @@ mod existing_vault_no_op_tests {
         for (actual, expected) in links.iter().zip(expected_links) {
             assert_eq!(
                 link_kind_name(actual.reference.kind),
-                expected["kind"].as_str().expect("fixture must state link kind")
+                expected["kind"]
+                    .as_str()
+                    .expect("fixture must state link kind")
             );
             assert_eq!(
                 actual.reference.target,
@@ -987,11 +1000,7 @@ mod existing_vault_no_op_tests {
                 .expect("fixture must state embed resolution status")
         );
         assert_eq!(
-            embeds.embeds[0]
-                .resolution
-                .resolution
-                .target
-                .as_deref(),
+            embeds.embeds[0].resolution.resolution.target.as_deref(),
             expected_links[1]["resolved_path"].as_str()
         );
         assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
