@@ -335,7 +335,7 @@ fn parse_history_timestamp(value: &str) -> Option<SystemTime> {
     } else {
         let time_start = value.find('T')? + 1;
         let offset_start = value[time_start..]
-            .rfind(|character| character == '+' || character == '-')?
+            .rfind(['+', '-'])?
             + time_start;
         let (date_time, offset) = value.split_at(offset_start);
         let sign = if offset.starts_with('+') {
@@ -499,7 +499,7 @@ mod tests {
             &[
                 record(
                     "new",
-                    now - Duration::from_secs(1 * 24 * 60 * 60),
+                    now - Duration::from_secs(24 * 60 * 60),
                     4,
                     VaultHistoryKind::Recovery,
                     false,
