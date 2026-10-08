@@ -2310,12 +2310,7 @@ mod tests {
             ),
         ]);
         assert_eq!(
-            resolve_link_with_subpath_statuses(
-                &reference,
-                &files,
-                "Index.md",
-                &subpath_statuses
-            ),
+            resolve_link_with_subpath_statuses(&reference, &files, "Index.md", &subpath_statuses),
             LinkResolution {
                 status: LinkResolutionStatus::Resolved,
                 target: Some("Notes/Target.md".to_owned()),

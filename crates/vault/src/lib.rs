@@ -435,7 +435,10 @@ impl VaultRoot {
                 {
                     (resolution, None, VaultNoteEmbedDisposition::NotRendered)
                 } else {
-                    let target = resolution.target.as_deref().expect("resolved link has target");
+                    let target = resolution
+                        .target
+                        .as_deref()
+                        .expect("resolved link has target");
                     match guard_note_transclusion(depth, chain, target) {
                         Ok(guard) => (
                             resolution,
