@@ -33,7 +33,9 @@ pub enum VaultError {
     StaleRenamePreview,
     #[error("application data directory is invalid or inside the vault: {0}")]
     InvalidDataDirectory(PathBuf),
-    #[error("revision conflict for {relative_path}; incoming bytes were preserved at {preserved_path}")]
+    #[error(
+        "revision conflict for {relative_path}; incoming bytes were preserved at {preserved_path}"
+    )]
     RevisionConflict {
         relative_path: PathBuf,
         expected_revision: Option<String>,
@@ -41,7 +43,10 @@ pub enum VaultError {
         preserved_path: PathBuf,
     },
     #[error("write for {relative_path} needs recovery: {reason}")]
-    RecoveryRequired { relative_path: PathBuf, reason: String },
+    RecoveryRequired {
+        relative_path: PathBuf,
+        reason: String,
+    },
     #[error("could not write vault entry {relative_path}: {source}")]
     WriteFailed {
         relative_path: PathBuf,
@@ -317,9 +322,7 @@ impl VaultStore {
         let target_path = self.root.resolve_vault_path(&relative_path, true)?;
         let operation_id = next_operation_id();
         let before = self.read_if_present(&relative_path, &target_path)?;
-        let current_revision = before
-            .as_ref()
-            .map(|read| read.revision_sha256.clone());
+        let current_revision = before.as_ref().map(|read| read.revision_sha256.clone());
         if current_revision.as_deref() != request.expected_revision_sha256.as_deref() {
             let preserved_path = self.preserve_bytes(
                 "conflicts",
@@ -432,12 +435,9 @@ impl VaultStore {
             });
         }
 
-        if let Err(error) = self.atomic_replace(
-            &target_path,
-            &relative_path,
-            &operation_id,
-            &request.bytes,
-        ) {
+        if let Err(error) =
+            self.atomic_replace(&target_path, &relative_path, &operation_id, &request.bytes)
+        {
             let preservation = self.preserve_bytes(
                 "failed",
                 &operation_id,
@@ -493,7 +493,9 @@ impl VaultStore {
             if let Err(rollback_error) = rollback {
                 return Err(VaultError::RecoveryRequired {
                     relative_path,
-                    reason: format!("journal commit failed: {journal_error}; rollback failed: {rollback_error}"),
+                    reason: format!(
+                        "journal commit failed: {journal_error}; rollback failed: {rollback_error}"
+                    ),
                 });
             }
             return Err(journal_error);
@@ -570,9 +572,7 @@ impl VaultStore {
             Err(VaultError::Root(error)) if error.kind() == io::ErrorKind::NotFound => None,
             Err(error) => return Err(error.to_string()),
         };
-        if current.as_ref().map(|read| read.revision_sha256.as_str())
-            != Some(next_revision)
-        {
+        if current.as_ref().map(|read| read.revision_sha256.as_str()) != Some(next_revision) {
             if current.is_none() && before.is_none() {
                 return Ok(());
             }
@@ -685,7 +685,11 @@ impl VaultStore {
     }
 }
 
-fn replace_temporary(temporary_path: &Path, target_path: &Path, operation_id: &str) -> io::Result<()> {
+fn replace_temporary(
+    temporary_path: &Path,
+    target_path: &Path,
+    operation_id: &str,
+) -> io::Result<()> {
     #[cfg(windows)]
     {
         if fs::symlink_metadata(target_path).is_ok() {
@@ -695,7 +699,9 @@ fn replace_temporary(temporary_path: &Path, target_path: &Path, operation_id: &s
                 .to_string_lossy();
             let backup_path = target_path
                 .parent()
-                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing target parent"))?
+                .ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::InvalidInput, "missing target parent")
+                })?
                 .join(format!(".{file_name}.{operation_id}.backup"));
             fs::rename(target_path, &backup_path)?;
             if let Err(error) = fs::rename(temporary_path, target_path) {
@@ -922,7 +928,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{VaultError, VaultRoot, VaultStore, VaultWriteRequest};
+    use super::{VaultError, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex};
     use std::fs;
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -1077,9 +1083,10 @@ mod tests {
             .unwrap()
             .map(Result::unwrap)
             .find(|entry| {
-                entry.path().extension().is_some_and(|extension| {
-                    extension == std::ffi::OsStr::new("bin")
-                })
+                entry
+                    .path()
+                    .extension()
+                    .is_some_and(|extension| extension == std::ffi::OsStr::new("bin"))
             })
             .map(|entry| fs::read(entry.path()).unwrap())
             .unwrap();
@@ -1136,24 +1143,31 @@ mod tests {
             })
             .unwrap_err();
 
-        assert!(error.to_string().contains("injected atomic replace failure"));
+        assert!(
+            error
+                .to_string()
+                .contains("injected atomic replace failure")
+        );
         assert_eq!(fs::read(&note_path).unwrap(), original);
         let failed_dir = app_data_temp.0.join("failed");
         let failed_bytes = fs::read_dir(failed_dir)
             .unwrap()
             .map(Result::unwrap)
             .find(|entry| {
-                entry.path().extension().is_some_and(|extension| {
-                    extension == std::ffi::OsStr::new("bin")
-                })
+                entry
+                    .path()
+                    .extension()
+                    .is_some_and(|extension| extension == std::ffi::OsStr::new("bin"))
             })
             .map(|entry| fs::read(entry.path()).unwrap())
             .unwrap();
         assert_eq!(failed_bytes, incoming);
-        assert!(!fs::read_dir(&vault_temp.0)
-            .unwrap()
-            .map(Result::unwrap)
-            .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp")));
+        assert!(
+            !fs::read_dir(&vault_temp.0)
+                .unwrap()
+                .map(Result::unwrap)
+                .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp"))
+        );
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         assert!(journal.contains("\"state\":\"failed\""));
     }
@@ -1174,7 +1188,11 @@ mod tests {
             })
             .unwrap_err();
 
-        assert!(error.to_string().contains("injected committed journal failure"));
+        assert!(
+            error
+                .to_string()
+                .contains("injected committed journal failure")
+        );
         assert!(!note_path.exists());
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         assert!(journal.contains("\"state\":\"prepared\""));
