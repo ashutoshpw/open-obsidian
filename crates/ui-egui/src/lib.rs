@@ -2444,7 +2444,7 @@ mod tests {
                 .unwrap()
                 .entries()
                 .iter()
-                .any(|entry| entry.relative_path == PathBuf::from("Notes/External.md"))
+                .any(|entry| entry.relative_path.as_path() == Path::new("Notes/External.md"))
         );
         harness.get_by_label("3 Markdown files found.");
         harness.get_by_label("Note list refreshed: 3 Markdown files found.");
