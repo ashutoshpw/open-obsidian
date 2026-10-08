@@ -1,0 +1,130 @@
+{
+  "phase": "R2.6.5",
+  "slice": "R2.6.5b",
+  "status": "accepted_slice; R2.6.5 remains in progress",
+  "source_sha": "cebbebed074e91d9ec3bde6ebeded79dd0327ad3",
+  "implementation_commits": [
+    "0ea917636bc4c90a76e828550a4ad59bb73f0d44",
+    "dd5095f918da06390c35509cc520b883a404f590",
+    "cebbebed074e91d9ec3bde6ebeded79dd0327ad3"
+  ],
+  "scope": "Apply revision-bound rename previews as journaled multi-file transactions, restore completed work on failure, and preserve/report external edits encountered during rollback.",
+  "behavior": [
+    "Revalidates the vault snapshot, source revision, destination availability and prepared reference edits before mutation.",
+    "Moves the source note, writes only planned link target spans, and records prepared, committed or failed transaction journal entries.",
+    "Before-images are preserved outside the vault; rollback restores only paths whose current revision still matches the transaction's written revision.",
+    "An external edit found during rollback is left in place, copied to conflict history and reported as requiring recovery."
+  ],
+  "focused_tests": [
+    "rename_transaction_moves_source_and_updates_only_planned_targets",
+    "rename_refuses_an_existing_destination_without_changing_either_file",
+    "failed_rename_restores_prior_writes_and_moves_source_back",
+    "failed_rename_commit_journal_rolls_back_reference_writes_and_source_move",
+    "rename_rollback_preserves_an_external_reference_edit"
+  ],
+  "test_results": {
+    "ubuntu": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "14 passed"
+    },
+    "macos": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "14 passed"
+    },
+    "windows": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "13 passed; Unix-only symlink test is not compiled on Windows"
+    },
+    "local_executable_validation": "not run; executable validation was through GitHub Actions"
+  },
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2+744846f84"
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37726325987,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726325987",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113145212982, "conclusion": "success"},
+        "macos": {"job_id": 113145212780, "conclusion": "success"},
+        "windows": {"job_id": 113145212972, "conclusion": "success"}
+      },
+      "checks": ["formatting", "workspace tests", "parallel group", "Clippy", "crate layers", "native preview builds", "Wry feasibility probes"]
+    },
+    "inventory": {
+      "run_id": 37726325899,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726325899",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 113145212257, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 37726325965,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726325965",
+      "conclusion": "success",
+      "attempt": 2,
+      "jobs": {
+        "macos": {"job_id": 113146027592, "conclusion": "success"},
+        "windows": {"job_id": 113146028521, "conclusion": "success"},
+        "ubuntu": {"job_id": 113146070669, "conclusion": "success"}
+      },
+      "retry_note": "Attempt 1 failed in the unchanged macOS Electron vault audit while waiting for the local retrieval boundary. Rerunning failed jobs on the same SHA passed all three OS jobs."
+    },
+    "desktop": {
+      "run_id": 37726325892,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726325892",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 113145212326, "conclusion": "success"},
+        "ubuntu": {"job_id": 113145212566, "conclusion": "success"},
+        "windows": {"job_id": 113145212586, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37726326110,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726326110",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113145213203, "conclusion": "success"},
+        "windows": {"job_id": 113145213331, "conclusion": "success"},
+        "macos": {"job_id": 113145213369, "conclusion": "success"}
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37726325883,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37726325883",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 113145212226, "conclusion": "success"},
+        "ubuntu": {"job_id": 113145212444, "conclusion": "success"},
+        "windows": {"job_id": 113145212478, "conclusion": "success"}
+      }
+    }
+  },
+  "artifacts": [
+    {"run_id": 37726325987, "id": 11528405240, "name": "rust-plugin-runtime-Linux-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 2695, "archive_digest": "sha256:fc363abe8db41a550d425ef039c287d9fb154a00a296e4714d3a6d4c8141bd64"},
+    {"run_id": 37726325987, "id": 11528131640, "name": "rust-plugin-runtime-Windows-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 2715, "archive_digest": "sha256:7fb9dbd42e39d44869669f72fffed854047447f4066e3630ade36772b0e54ec5"},
+    {"run_id": 37726325987, "id": 11527892492, "name": "rust-plugin-runtime-macOS-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 2698, "archive_digest": "sha256:7d5f4ab276043c5d3d01695b79d34374210f3ca9473f2312438eef0f3e16be56"},
+    {"run_id": 37726325987, "id": 11527838063, "name": "openobsidian-rust-preview-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 8257819, "archive_digest": "sha256:97ccf55c7e3072c9cc9ccb656b992ffe494d9ebdb4239c107b1ec884b9a35c4f"},
+    {"run_id": 37726325892, "id": 11528405035, "name": "openobsidian-Windows-preview-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 163005824, "archive_digest": "sha256:fdfe55232330e2b86a00e25f9d8279a541b207c756f9f97a6ec6eaa4b5649a1f"},
+    {"run_id": 37726325892, "id": 11527986805, "name": "openobsidian-Linux-preview-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 125946548, "archive_digest": "sha256:9429e09cabc86bf0e1fd14ae0137759513f5aa3bf72c8b229fba87cadc334e93"},
+    {"run_id": 37726325892, "id": 11527609624, "name": "openobsidian-macOS-preview-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 397395487, "archive_digest": "sha256:1679000283d6f9482dcd2414aa8eb062c827a1d41a3623a1ba4d1c3a0cc1a6b7"},
+    {"run_id": 37726326110, "id": 11527573043, "name": "plugin-renderer-lifecycle-Windows-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 3242, "archive_digest": "sha256:a636a52500f04513b92b4b605c6643d0079516714ea58470b6d0272c1348033a"},
+    {"run_id": 37726326110, "id": 11527563249, "name": "plugin-renderer-lifecycle-Linux-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 3221, "archive_digest": "sha256:272e58e3457d2f45d22c1462515414c4118cf290ba01a0499b03d037712ad4f7"},
+    {"run_id": 37726326110, "id": 11527049182, "name": "plugin-renderer-lifecycle-macOS-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 3238, "archive_digest": "sha256:3567061d84e290181933536405667ad1f006491c65cf62cb27f1f583ea517f4c"},
+    {"run_id": 37726325883, "id": 11528156246, "name": "loaded-plugin-workflows-Linux-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 171468, "archive_digest": "sha256:ab4284c57d2d4f0cde0284bef6edfcc4bb0b048b4522638b6250c93f14ab9efc"},
+    {"run_id": 37726325883, "id": 11528036676, "name": "loaded-plugin-workflows-Windows-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 171495, "archive_digest": "sha256:b1868a8eec4ea332b33cdda51398ecfbfb89a7879bc7d35042873a368c363a27"},
+    {"run_id": 37726325883, "id": 11527717779, "name": "loaded-plugin-workflows-macOS-cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "size_bytes": 171496, "archive_digest": "sha256:1e1ad803c3359b72b860449b13ce2f72e781da7684ed961ec909462ab9ab59e5"}
+  ],
+  "repair_history": [
+    {"source_sha": "0ea917636bc4c90a76e828550a4ad59bb73f0d44", "rust_run_id": 37725761506, "finding": "CI reported an E0502 borrow conflict around the rename move state and a Ubuntu rustfmt difference."},
+    {"source_sha": "dd5095f918da06390c35509cc520b883a404f590", "rust_run_id": 37725985298, "finding": "CI requested one Ubuntu rustfmt layout correction. The concurrent Windows Electron desktop package also encountered an upstream HTTP 500 downloading its icons bundle; the next exact-SHA desktop workflow passed."},
+    {"source_sha": "cebbebed074e91d9ec3bde6ebeded79dd0327ad3", "quality_run_id": 37726325965, "first_attempt": "MacOS Electron vault audit did not observe the local retrieval boundary; same-SHA attempt 2 passed the full quality matrix."}
+  ],
+  "limitations": [
+    "Revision checks are optimistic and do not provide an OS-level compare-and-swap against arbitrary external writers.",
+    "Crash recovery and configurable history cleanup/retention are not implemented in this slice; R2.6.5 and C03/C03.2 remain in progress/pending."
+  ],
+  "next_action": "Implement rename crash recovery and history retention/cleanup; keep C03 and C03.2 pending until the full R2 acceptance and exact-SHA GitHub CI pass."
+}
