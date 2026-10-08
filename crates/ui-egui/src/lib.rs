@@ -46,8 +46,7 @@ pub fn run_with_storage_protection_probe(
 struct OpenObsidianApp {
     session: Option<openobsidian_engine::VaultSession>,
     storage_protection_report: Option<StorageProtectionDisplay>,
-    storage_protection_probe:
-        Option<Box<dyn Fn() -> StorageProtectionDisplay + Send + Sync>>,
+    storage_protection_probe: Option<Box<dyn Fn() -> StorageProtectionDisplay + Send + Sync>>,
 }
 
 impl eframe::App for OpenObsidianApp {
@@ -66,10 +65,7 @@ impl eframe::App for OpenObsidianApp {
         ui.heading("OS storage protection");
         let refresh_requested = ui.button("Refresh storage status").clicked();
         if self.storage_protection_report.is_none() || refresh_requested {
-            let report = self
-                .storage_protection_probe
-                .as_ref()
-                .map(|probe| probe());
+            let report = self.storage_protection_probe.as_ref().map(|probe| probe());
             if let Some(report) = report {
                 self.storage_protection_report = Some(report);
             }
