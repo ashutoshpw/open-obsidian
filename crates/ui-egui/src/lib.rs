@@ -1180,7 +1180,7 @@ mod tests {
     use super::*;
     use egui_kittest::{Harness, kittest::Queryable as _};
     use std::path::PathBuf;
-    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
     static NEXT_UI_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -1517,6 +1517,70 @@ mod tests {
             storage_protection_label(StorageProtectionDisplayStatus::Unknown),
             "Unknown (encryption not verified)"
         );
+    }
+
+    #[test]
+    fn egui_storage_status_refresh_reports_enabled_disabled_and_unknown() {
+        let probe_calls = std::sync::Arc::new(AtomicUsize::new(0));
+        let calls_from_probe = std::sync::Arc::clone(&probe_calls);
+        let app = OpenObsidianApp {
+            storage_protection_probe: Some(Box::new(move || {
+                let call = calls_from_probe.fetch_add(1, Ordering::SeqCst);
+                let (status, detail) = match call {
+                    0 => (
+                        StorageProtectionDisplayStatus::Enabled,
+                        "The OS reported storage protection enabled.",
+                    ),
+                    1 => (
+                        StorageProtectionDisplayStatus::Disabled,
+                        "The OS reported storage protection disabled.",
+                    ),
+                    _ => (
+                        StorageProtectionDisplayStatus::Unknown,
+                        "Encryption could not be verified by the OS.",
+                    ),
+                };
+                StorageProtectionDisplay {
+                    status,
+                    method: "fixture OS probe".to_owned(),
+                    detail: detail.to_owned(),
+                }
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        assert_eq!(probe_calls.load(Ordering::SeqCst), 1);
+        harness.get_by_label("Status: Enabled (OS reported)");
+        harness.get_by_label("Check: fixture OS probe");
+        harness.get_by_label("The OS reported storage protection enabled.");
+
+        harness.step();
+        assert_eq!(
+            probe_calls.load(Ordering::SeqCst),
+            1,
+            "ordinary redraws must not re-run the storage probe"
+        );
+
+        harness.get_by_label("Refresh storage status").click();
+        harness.step();
+        assert_eq!(probe_calls.load(Ordering::SeqCst), 2);
+        assert_eq!(
+            harness.state().storage_protection_report.as_ref().unwrap().status,
+            StorageProtectionDisplayStatus::Disabled
+        );
+        harness.get_by_label("Status: Disabled (OS reported)");
+        harness.get_by_label("The OS reported storage protection disabled.");
+
+        harness.get_by_label("Refresh storage status").click();
+        harness.step();
+        assert_eq!(probe_calls.load(Ordering::SeqCst), 3);
+        assert_eq!(
+            harness.state().storage_protection_report.as_ref().unwrap().status,
+            StorageProtectionDisplayStatus::Unknown
+        );
+        harness.get_by_label("Status: Unknown (encryption not verified)");
+        harness.get_by_label("Encryption could not be verified by the OS.");
     }
 
     #[test]
