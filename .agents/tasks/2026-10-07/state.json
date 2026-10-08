@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:23:51+00:00",
+  "updated_at": "2026-10-08T00:34:31+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "c08207f6783e5432031a553e8831e97c7f39ee94",
-  "current_phase": "R1",
-  "current_milestone": "R1.2",
-  "next_action": "Run exact-SHA GitHub Actions after correcting PC08 variable-color metadata to use `default`; verify compact/accent IDs and keep compatibility Pending.",
+  "last_reconciled_head": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+  "current_phase": "R2",
+  "current_milestone": "R2.1",
+  "next_action": "Read the inherited goal plan, R2 requirements, document and vault contracts, and current source modules; define the first small source-preserving document-model slice and its exact-SHA GitHub Actions gates before implementation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -23,7 +23,7 @@
       "implementation_sha": "d79e500d18fe87c23c7617bdc5fcdd9c10ef7c74"
     },
     "R1": {
-      "status": "in_progress",
+      "status": "complete",
       "required_ci": [
         "rust-inventory",
         "fmt",
@@ -33,7 +33,7 @@
         "three-os-native-build",
         "unchanged-plugin-feasibility"
       ],
-      "implementation_sha": "43b1209703f20a7d2142b241d1bc29883dda1b8d"
+      "implementation_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa"
     },
     "R2": {
       "status": "pending",
@@ -104,7 +104,8 @@
     "Rust CI run 37702519338 on 7a83009025b7dbe8ced99b4f366a36882a82b4cc passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on all three platforms. All five companion workflows passed, and PC05 passed on every OS. PC08 advanced through createSpan, had no captured JS errors and rendered three controls, but only exposed the appearance group ID. Static inspection of the pinned bundle showed it uses helper callbacks and DocumentFragment creation methods. The next slice adds callback-aware createEl/createDiv/createSpan and createFragment support; compatibility remains Pending and no local executable validation was run. Evidence is in evidence/r1.2-plugin-runtime-desktop-7a83009.json.",
     "Rust CI run 37704569741 on b16801ce36fb7da83f1cd284a9c69bf785606dea passed the Rust parallel group, workspace tests, Clippy, layering and native preview builds on Ubuntu, macOS and Windows; Ubuntu formatting passed. PC05 passed on all three platforms. Bounded PC08 row snapshots showed the Appearance setting heading marked is-collapsed, explaining why its compact/accent child IDs were not mounted. No JS errors were captured. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-b16801c.json. The follow-up expands collapsed headings before checking controls; compatibility remains Pending and no local executable validation was run.",
     "Rust CI run 37705662792 on 4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. Expanding the collapsed PC08 Appearance heading rendered the compact toggle. The pinned plugin rejected its Accent variable-color row because the theme fixture omitted required default-light/default-dark values. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-4de1ae5.json. The next slice adds valid defaults to both theme fixture copies and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
-    "Rust CI run 37706599128 on c08207f6783e5432031a553e8831e97c7f39ee94 passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. PC08 rendered Compact after expanding Appearance, but the pinned Style Settings bundle rejected Accent because the variable-color fixture used `default-light`/`default-dark` instead of `default`. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-c08207f.json. The follow-up corrects the field and updates the inventory hash; compatibility remains Pending and no local executable validation was run."
+    "Rust CI run 37706599128 on c08207f6783e5432031a553e8831e97c7f39ee94 passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. PC08 rendered Compact after expanding Appearance, but the pinned Style Settings bundle rejected Accent because the variable-color fixture used `default-light`/`default-dark` instead of `default`. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-c08207f.json. The follow-up corrects the field and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
+    "R1.2 and R1 passed exact-SHA GitHub Actions on 5ea3ea6c9e0d02a562daa696eac19b826dad0efa: Rust format, parallel group, tests, Clippy, layering and native builds passed; unchanged PC05/PC08 feasibility probes and all five companion workflows passed on Linux, macOS and Windows. Evidence: evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json. Legacy compatibility remains Pending and the result is feasibility-only."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -968,6 +969,74 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37697107599",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37707607250,
+      "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607250",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607250/job/113085609118"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607250/job/113085608858"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607250/job/113085609200"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37707607204,
+      "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607204",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37707607227,
+      "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607227",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37707607202,
+      "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607202",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37707607160,
+      "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607160",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37707607302,
+      "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607302",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -991,9 +1060,9 @@
       "artifact": "openobsidian-rust-preview-f5a9c281f096928b2fad4f40ee9ca6a9dcfdc4eb"
     },
     "R1.2": {
-      "status": "in_progress",
-      "implementation_sha": "c08207f6783e5432031a553e8831e97c7f39ee94",
-      "evidence": "evidence/r1.2-plugin-runtime-desktop-c08207f.json",
+      "status": "complete",
+      "implementation_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
+      "evidence": "evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json",
       "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
       "candidate_plugins": [
         "PC05",
@@ -1004,7 +1073,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Run exact-SHA GitHub Actions after correcting PC08 variable-color metadata to use `default`; verify compact/accent IDs and keep compatibility Pending."
+      "next_action": "R1 complete. Begin R2.1 by reviewing document/vault contracts and defining a narrow source-preserving model slice."
     }
   },
   "ci_preparation": {
