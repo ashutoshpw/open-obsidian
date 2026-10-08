@@ -21,6 +21,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
+/// Maximum source bytes returned by a read-only note preview.
+pub const MAX_NOTE_SOURCE_PREVIEW_BYTES: usize = 16 * 1024;
+
 #[derive(Debug, Error)]
 pub enum VaultError {
     #[error("vault root is unavailable: {0}")]
@@ -96,6 +99,14 @@ pub struct VaultEntry {
 pub struct VaultRead {
     pub document: RawDocument,
     pub revision_sha256: String,
+}
+
+/// A bounded prefix of a note source for read-only inspection.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultReadPreview {
+    pub source: RawDocument,
+    pub total_size_bytes: u64,
+    pub truncated: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -303,6 +314,34 @@ impl VaultRoot {
         Ok(VaultRead {
             document: RawDocument::from_bytes(bytes),
             revision_sha256,
+        })
+    }
+
+    /// Reads a bounded source prefix without normalizing or writing the note.
+    pub fn read_preview(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<VaultReadPreview, VaultError> {
+        let canonical = self.resolve_vault_path(relative_path.as_ref(), false)?;
+        let mut file = fs::File::open(canonical)?;
+        let before = file.metadata()?;
+        let total_size_bytes = before.len();
+        let read_limit = total_size_bytes.min(MAX_NOTE_SOURCE_PREVIEW_BYTES as u64);
+        let mut bytes = Vec::with_capacity(read_limit as usize);
+        IoRead::by_ref(&mut file)
+            .take(read_limit)
+            .read_to_end(&mut bytes)?;
+        let after = file.metadata()?;
+        if bytes.len() as u64 != read_limit
+            || before.len() != after.len()
+            || before.modified().ok() != after.modified().ok()
+        {
+            return Err(VaultError::SnapshotChanged);
+        }
+        Ok(VaultReadPreview {
+            source: RawDocument::from_bytes(bytes),
+            total_size_bytes,
+            truncated: total_size_bytes > MAX_NOTE_SOURCE_PREVIEW_BYTES as u64,
         })
     }
 
@@ -1734,9 +1773,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        LinkKind, LinkReference, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
-        TransclusionBlockReason, VaultError, VaultNoteEmbedDisposition, VaultRoot, VaultStore,
-        VaultWriteRequest, sha256_hex,
+        LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason, VaultError,
+        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex,
     };
     use serde_json::Value;
     use std::fs;
@@ -1788,6 +1827,26 @@ mod tests {
             .write_image(&rgba, 1, 1, image::ExtendedColorType::Rgba8)
             .unwrap();
         bytes
+    }
+
+    #[test]
+    fn note_source_preview_is_bounded_and_preserves_the_original_prefix() {
+        let temp = TempDir::new();
+        let vault_path = temp.0.join("vault");
+        fs::create_dir(&vault_path).unwrap();
+        let original = (0..MAX_NOTE_SOURCE_PREVIEW_BYTES + 37)
+            .map(|index| (index % 251) as u8)
+            .collect::<Vec<_>>();
+        fs::write(vault_path.join("Large.md"), &original).unwrap();
+        let vault = VaultRoot::open(&vault_path).unwrap();
+        let before = vault.snapshot().unwrap();
+
+        let preview = vault.read_preview("Large.md").unwrap();
+
+        assert_eq!(preview.source.as_bytes(), &original[..MAX_NOTE_SOURCE_PREVIEW_BYTES]);
+        assert_eq!(preview.total_size_bytes, original.len() as u64);
+        assert!(preview.truncated);
+        assert_eq!(vault.snapshot().unwrap(), before);
     }
 
     #[test]

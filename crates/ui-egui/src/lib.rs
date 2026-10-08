@@ -7,7 +7,7 @@ use openobsidian_engine::{
     VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage,
     VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport,
     VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult, VaultSession,
-    plan_history_retention,
+    MAX_NOTE_SOURCE_PREVIEW_BYTES, plan_history_retention,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -21,7 +21,7 @@ const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 const MAX_LINK_STATUS_ROWS: usize = 100;
-const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = 16 * 1024;
+const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 #[cfg(test)]
@@ -38,11 +38,19 @@ pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
 type HistoryReceiver = Receiver<HistoryTaskMessage>;
 type LinkReceiver = Receiver<LinkTaskMessage>;
+type NotePreviewReceiver = Receiver<Result<NoteSourcePreview, String>>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
 
 struct LinkTaskMessage {
     resolutions: Result<Vec<VaultLinkResolution>, String>,
     note_embeds: Result<VaultNoteEmbedReport, String>,
+}
+
+struct NoteSourcePreview {
+    relative_path: std::path::PathBuf,
+    text: String,
+    total_size_bytes: u64,
+    truncated: bool,
 }
 
 struct HistoryPreview {
@@ -163,6 +171,9 @@ struct OpenObsidianApp {
     link_receiver: Option<LinkReceiver>,
     link_error: Option<String>,
     link_status: Option<String>,
+    note_source_preview: Option<NoteSourcePreview>,
+    note_preview_receiver: Option<NotePreviewReceiver>,
+    note_preview_error: Option<String>,
     note_embed_report: Option<VaultNoteEmbedReport>,
     note_embed_error: Option<String>,
     markdown_cache: CommonMarkCache,
@@ -189,6 +200,7 @@ impl OpenObsidianApp {
         ui.label("Native Rust migration is in progress.");
         let vault_operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
             || self.rename_receiver.is_some();
         let open_vault_requested = self.open_vault_action.as_ref().is_some_and(|_| {
             ui.add_enabled(
@@ -228,6 +240,9 @@ impl OpenObsidianApp {
                 self.link_receiver = None;
                 self.link_error = None;
                 self.link_status = None;
+                self.note_source_preview = None;
+                self.note_preview_receiver = None;
+                self.note_preview_error = None;
                 self.note_embed_report = None;
                 self.note_embed_error = None;
                 self.inline_image_textures.clear();
@@ -255,6 +270,7 @@ impl OpenObsidianApp {
         }
         self.poll_history_task(ui);
         self.poll_link_task(ui);
+        self.poll_note_preview_task(ui);
         self.poll_rename_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
@@ -368,6 +384,7 @@ impl OpenObsidianApp {
 
         let operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
             || self.rename_receiver.is_some();
         let selected_label = self.link_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
@@ -408,10 +425,14 @@ impl OpenObsidianApp {
             self.link_resolutions.clear();
             self.link_error = None;
             self.link_status = None;
+            self.note_source_preview = None;
+            self.note_preview_error = None;
             self.note_embed_report = None;
             self.note_embed_error = None;
             self.inline_image_textures.clear();
         }
+
+        self.show_note_source_preview(ui, operation_busy);
 
         if note_paths.is_empty() {
             ui.label("This vault has no Markdown notes to inspect.");
@@ -529,6 +550,62 @@ impl OpenObsidianApp {
         }
     }
 
+    fn show_note_source_preview(&mut self, ui: &mut eframe::egui::Ui, operation_busy: bool) {
+        ui.separator();
+        ui.heading("Note source preview");
+        ui.small(format!(
+            "Read up to {} KiB of the selected note's original UTF-8 source. This preview never edits the vault.",
+            MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
+        ));
+
+        let mut request_preview = false;
+        let can_preview = !operation_busy && self.link_source_path.is_some();
+        if ui
+            .add_enabled(
+                can_preview,
+                eframe::egui::Button::new("Read note source preview"),
+            )
+            .clicked()
+        {
+            request_preview = true;
+        }
+        if request_preview {
+            self.start_note_source_preview();
+        }
+
+        if self.note_preview_receiver.is_some() {
+            ui.label("Reading a bounded note source preview…");
+        }
+        if let Some(error) = &self.note_preview_error {
+            ui.colored_label(eframe::egui::Color32::YELLOW, error);
+        }
+
+        let mut close_preview = false;
+        if let Some(preview) = &mut self.note_source_preview {
+            ui.label(format!("Source: {}", preview.relative_path.display()));
+            ui.add(
+                eframe::egui::TextEdit::multiline(&mut preview.text)
+                    .font(eframe::egui::TextStyle::Monospace)
+                    .desired_rows(12)
+                    .desired_width(f32::INFINITY)
+                    .interactive(false),
+            );
+            if preview.truncated {
+                ui.small(format!(
+                    "Showing the first {} of {} source bytes.",
+                    MAX_NOTE_SOURCE_PREVIEW_BYTES, preview.total_size_bytes
+                ));
+            } else {
+                ui.small(format!("Showing all {} source bytes.", preview.total_size_bytes));
+            }
+            close_preview = ui.button("Close source preview").clicked();
+        }
+        if close_preview {
+            self.note_source_preview = None;
+            self.note_preview_error = None;
+        }
+    }
+
     fn show_rename(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
         ui.heading("Rename Markdown note");
@@ -557,6 +634,7 @@ impl OpenObsidianApp {
 
         let operation_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
             || self.rename_receiver.is_some();
         let selected_label = self.rename_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
@@ -738,6 +816,7 @@ impl OpenObsidianApp {
 
         let history_busy = self.history_receiver.is_some()
             || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
             || self.rename_receiver.is_some();
         if ui
             .add_enabled(
@@ -815,7 +894,9 @@ impl OpenObsidianApp {
             }
         }
 
-        let history_busy = self.history_receiver.is_some() || self.rename_receiver.is_some();
+        let history_busy = self.history_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.rename_receiver.is_some();
         if self.history_records.is_empty() && self.history_plan.is_some() {
             ui.label("No recovery, failed-write, or conflict history records were found.");
         } else if !self.history_records.is_empty() {
@@ -1087,6 +1168,48 @@ impl OpenObsidianApp {
         self.link_receiver = Some(receiver);
     }
 
+    fn start_note_source_preview(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let Some(relative_path) = self.link_source_path.clone() else {
+            return;
+        };
+        self.note_source_preview = None;
+        self.note_preview_error = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .read_preview(&relative_path)
+                .map_err(note_source_preview_error)
+                .and_then(|preview| {
+                    let source = preview.source.as_bytes();
+                    let text = match std::str::from_utf8(source) {
+                        Ok(text) => text.to_owned(),
+                        Err(error) if preview.truncated && error.error_len().is_none() => {
+                            std::str::from_utf8(&source[..error.valid_up_to()])
+                                .expect("the validated source prefix must be UTF-8")
+                                .to_owned()
+                        }
+                        Err(_) => {
+                            return Err(
+                                "The selected note preview contains invalid UTF-8; its original bytes remain unchanged and were not displayed."
+                                    .to_owned(),
+                            );
+                        }
+                    };
+                    Ok(NoteSourcePreview {
+                        relative_path,
+                        text,
+                        total_size_bytes: preview.total_size_bytes,
+                        truncated: preview.truncated,
+                    })
+                });
+            let _ = sender.send(result);
+        });
+        self.note_preview_receiver = Some(receiver);
+    }
+
     fn start_rename_apply(&mut self) {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
@@ -1153,6 +1276,8 @@ impl OpenObsidianApp {
                 self.link_resolutions.clear();
                 self.link_error = None;
                 self.link_status = None;
+                self.note_source_preview = None;
+                self.note_preview_error = None;
                 self.note_embed_report = None;
                 self.note_embed_error = None;
                 self.inline_image_textures.clear();
@@ -1236,6 +1361,32 @@ impl OpenObsidianApp {
                 self.note_embed_report = None;
                 self.note_embed_error =
                     Some("Note transclusion preview stopped unexpectedly.".to_owned());
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
+    }
+
+    fn poll_note_preview_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self.note_preview_receiver.as_ref().map(Receiver::try_recv);
+        match result {
+            Some(Ok(Ok(preview))) => {
+                self.note_preview_receiver = None;
+                self.note_source_preview = Some(preview);
+                self.note_preview_error = None;
+            }
+            Some(Ok(Err(error))) => {
+                self.note_preview_receiver = None;
+                self.note_source_preview = None;
+                self.note_preview_error = Some(error);
+            }
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.note_preview_receiver = None;
+                self.note_source_preview = None;
+                self.note_preview_error =
+                    Some("The note source preview stopped unexpectedly.".to_owned());
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -1427,6 +1578,18 @@ fn link_resolution_error(error: VaultError) -> String {
             "The selected note is no longer available. Reopen the vault and try again.".to_owned()
         }
         _ => "Link status could not be read safely from the vault.".to_owned(),
+    }
+}
+
+fn note_source_preview_error(error: VaultError) -> String {
+    match error {
+        VaultError::SnapshotChanged => {
+            "The note changed while its preview was being read. Read the preview again.".to_owned()
+        }
+        VaultError::NotAFile(_) => {
+            "The selected note is no longer available. Reopen the vault and try again.".to_owned()
+        }
+        _ => "The selected note source could not be read safely.".to_owned(),
     }
 }
 
@@ -1879,6 +2042,21 @@ mod tests {
         }
     }
 
+    fn wait_for_note_preview(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().note_preview_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "note preview worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
     fn wait_for_history(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -2019,6 +2197,62 @@ mod tests {
         drop(session);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before);
         assert!(existing_vault_tree_snapshot(&app_data_path).is_empty());
+    }
+
+    #[test]
+    fn egui_previews_existing_note_source_without_changing_its_tree() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let source_path = fixture["expected"]["revision_path"]
+            .as_str()
+            .expect("fixture must identify a note for preview checking");
+        let expected_source = fixture["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|file| file["relative_path"] == source_path)
+            .and_then(|file| file["source"].as_str())
+            .expect("preview fixture note must have text source");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open selected existing vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(PathBuf::from(source_path)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_error.is_none());
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the selected note source should be visible");
+        assert_eq!(preview.relative_path, PathBuf::from(source_path));
+        assert_eq!(preview.text.as_bytes(), expected_source.as_bytes());
+        assert_eq!(preview.total_size_bytes, expected_source.len() as u64);
+        assert!(!preview.truncated);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+
+        harness.get_by_label("Close source preview").click();
+        harness.step();
+        assert!(harness.state().note_source_preview.is_none());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
     }
 
     #[test]

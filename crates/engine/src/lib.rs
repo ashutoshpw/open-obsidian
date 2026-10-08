@@ -7,7 +7,8 @@ pub use openobsidian_vault::{
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultRenamePreview,
-    VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult, plan_history_retention,
+    VaultReadPreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
+    MAX_NOTE_SOURCE_PREVIEW_BYTES, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;
@@ -55,6 +56,14 @@ impl VaultSession {
     /// Reads a note through the vault's root-confinement and revision-hashing boundary.
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         self.store.root().read(relative_path)
+    }
+
+    /// Reads a bounded, lossless source prefix for read-only note inspection.
+    pub fn read_preview(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<VaultReadPreview, VaultError> {
+        self.store.root().read_preview(relative_path)
     }
 
     /// Extracts a note's links and resolves them against a stable, confined vault snapshot.
