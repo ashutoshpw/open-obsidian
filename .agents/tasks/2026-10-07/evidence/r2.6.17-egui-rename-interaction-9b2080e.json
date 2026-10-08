@@ -1,0 +1,173 @@
+{
+  "slice": "R2.6.17 headless egui interaction for rename review and apply",
+  "phase": "R2",
+  "status": "accepted slice; R2 remains in progress",
+  "source_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+  "implementation_commits": [
+    "48aa973145356d64ff9e470028a0a419da2c2cb7",
+    "619ab15c6fea5709faa201611bee9befabe4fe61",
+    "9b2080e3ea6559c4cf678f39c1fbaca2148f999b"
+  ],
+  "scope": "Exercise the production egui rename preview, review and apply flow with accessible widget interaction, and verify vault bytes and the refreshed UI session.",
+  "behavior": [
+    "Extracted OpenObsidianApp::show_ui so eframe and the headless egui_kittest harness render the same production UI.",
+    "The test creates a temporary vault with Old.md, Index.md and Archive/, then activates Build rename preview, Review and confirm rename, and Confirm and apply rename through accessible egui widgets.",
+    "Before the final confirmation, the source note and link bytes remain unchanged. After confirmation, the note is at Archive/New.md, the reference bytes are updated, and the refreshed session lists the new path.",
+    "The interaction test passed on Ubuntu, macOS and Windows in GitHub Actions."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37761060138,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060138",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113257296301, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113257296017, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113257296423, "conclusion": "success"}
+      ],
+      "checks": [
+        "Ubuntu formatting, workspace tests, Clippy, dependency-layer checks, native preview build and unchanged-plugin Wry feasibility probes passed.",
+        "Workspace tests, Clippy, dependency-layer checks, native preview builds and unchanged-plugin Wry feasibility probes passed on macOS and Windows.",
+        "The egui rename interaction test passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37761060028,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060028",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113257295460, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37761060110,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060110",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113257296295, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113257296684, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113257296688, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37761060020,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060020",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113257307178, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113257307326, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113257307459, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37761060163,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060163",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113257296938, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113257297214, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113257297271, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37761059999,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761059999",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113257295454, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113257295655, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113257295777, "conclusion": "success"}
+      ]
+    }
+  ],
+  "rust_toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "7 passed, including egui_rename_flow_requires_review_then_applies_and_refreshes_the_vault",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "7 passed, including egui_rename_flow_requires_review_then_applies_and_refreshes_the_vault",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "7 passed, including egui_rename_flow_requires_review_then_applies_and_refreshes_the_vault",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; all executable validation used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11542227371, "name": "openobsidian-rust-preview-9b2080e3ea6559c4cf678f39c1fbaca2148f999b", "digest": "sha256:87bc1b63739dbb6c9631063184f05e29fd06e9dabea75accdcaab3bbcd2bc85b"},
+    {"id": 11542686270, "name": "rust-plugin-runtime-Linux-9b2080e3ea6559c4cf678f39c1fbaca2148f999b", "digest": "sha256:a9bcce41528cf9ece0aaef5aee9b7e9e4b0b7fca515a3742283e2f6a348df6c2"},
+    {"id": 11542845762, "name": "rust-plugin-runtime-macOS-9b2080e3ea6559c4cf678f39c1fbaca2148f999b", "digest": "sha256:18c746a9b7850f47b455c2c183cdd346797a85f1bf42cb9f4605f075f4a295a3"},
+    {"id": 11542721586, "name": "rust-plugin-runtime-Windows-9b2080e3ea6559c4cf678f39c1fbaca2148f999b", "digest": "sha256:d96f08bb0c6bd4cc1425737ecad36a44a9951cc1f4d1a3ba9c08ec8d0d943baa"}
+  ],
+  "lockfile_provenance": {
+    "resolver_run_id": 37759781443,
+    "cargo_lock_sha256": "f4a107dadd3b042065eed718abe58fb1b39068609a811a6982f0a1ab1d379269",
+    "note": "Cargo.lock was generated from a GitHub Actions lockfile resolver artifact; the resolver run is not implementation validation."
+  },
+  "superseded_attempts": [
+    {
+      "source_sha": "48aa973145356d64ff9e470028a0a419da2c2cb7",
+      "rust_run_id": 37759944562,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37759944630, "conclusion": "success"},
+        "quality": {"run_id": 37759944702, "conclusion": "success"},
+        "desktop-build": {"run_id": 37759944627, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37759944680, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37759944599, "conclusion": "success"}
+      },
+      "findings": [
+        "The UI interaction test passed on all three operating systems.",
+        "Ubuntu requested the exact rustfmt layout later applied in 9b2080e.",
+        "macOS and Windows Clippy rejected a PathBuf comparison; changed the assertion to compare Path values."
+      ]
+    },
+    {
+      "source_sha": "619ab15c6fea5709faa201611bee9befabe4fe61",
+      "rust_run_id": 37760213622,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37760213594, "conclusion": "success"},
+        "quality": {"run_id": 37760213664, "conclusion": "success"},
+        "desktop-build": {"run_id": 37760213613, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37760213537, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37760213596, "conclusion": "success"}
+      },
+      "findings": [
+        "Ubuntu formatting requested one additional rustfmt layout correction.",
+        "macOS and Windows Rust jobs passed; the Windows cache finalization completed successfully.",
+        "Ubuntu workspace tests passed; the corrected UI interaction test had passed on all operating systems in the preceding attempt."
+      ]
+    }
+  ],
+  "limitations": [
+    "This is a headless egui accessible-widget interaction test, not a launched OS-native desktop session or visual snapshot across platform window systems.",
+    "C03/C03.2 remain pending full cross-layer rename acceptance. D16, SYNC-007, remaining R2 workflow gaps, history integration and uninstall preservation remain pending.",
+    "No local executable validation was run."
+  ]
+}

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T09:44:25Z",
+  "updated_at": "2026-10-08T10:10:01Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "927b77f240d962259fe507132ebfa3696e6872f8",
-  "current_milestone": "R2.6.16",
-  "next_action": "Establish native interaction evidence for rename preview and apply, then continue the remaining R2 acceptance gates for D16, SYNC-007, history integration and uninstall preservation; keep C03/C03.2 pending until full cross-layer acceptance passes in GitHub CI.",
+  "last_reconciled_head": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+  "current_milestone": "R2.6.17",
+  "next_action": "Continue the remaining R2 acceptance gates for C03/C03.2 full cross-layer rename acceptance, D16, SYNC-007, history integration and uninstall preservation; distinguish headless egui interaction evidence from native desktop inspection.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "927b77f240d962259fe507132ebfa3696e6872f8"
+      "implementation_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b"
     },
     "R3": {
       "status": "pending",
@@ -148,7 +148,8 @@
     "R2.6.12 passed all six required GitHub Actions workflows on exact source SHA fec449b5f99b01c275fdfdbb510b6f9fb73e3799; the successful Rust retry passed formatting, workspace tests, Clippy, layers, native builds and Wry probes on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.12-engine-rename-recovery-fec449b.json. No local executable validation was run.",
     "R2.6.14 made fixture:c03-rename-move executable through the Rust testkit and link planner; fixture rendering tests passed on Ubuntu, macOS and Windows and all six required workflows passed on exact source SHA 7f9b53ca22971e34e9f900f1185ed4376ee2ce2e. Evidence: evidence/r2.6.14-rename-plan-fixture-7f9b53c.json. C03/C03.2, D16, SYNC-007 and uninstall preservation remain pending; no local executable validation was run.",
     "R2.6.15 connected every rename fixture case to filesystem-backed VaultStore apply and added a fixture-driven failure test proving prior reference writes and the source move roll back. All six required GitHub Actions workflows passed on exact SHA fc8b896054979af3e0dc212a7f33576a3672a524; both fixture tests passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.15-rename-vault-transaction-fixture-fc8b896.json. No local executable validation was run. Interrupted-transaction recovery, native interaction, D16, SYNC-007 and uninstall preservation remain pending.",
-    "R2.6.16 extended fixture:c03-rename-move through interrupted VaultStore rename recovery, including byte-for-byte restoration, rolled_back journaling and idempotence. All six required workflows passed on exact SHA 927b77f240d962259fe507132ebfa3696e6872f8; the recovery test passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.16-rename-recovery-fixture-927b77f.json. No local executable validation was run. Native interaction, D16, SYNC-007, history integration and uninstall preservation remain pending."
+    "R2.6.16 extended fixture:c03-rename-move through interrupted VaultStore rename recovery, including byte-for-byte restoration, rolled_back journaling and idempotence. All six required workflows passed on exact SHA 927b77f240d962259fe507132ebfa3696e6872f8; the recovery test passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.16-rename-recovery-fixture-927b77f.json. No local executable validation was run. Native interaction, D16, SYNC-007, history integration and uninstall preservation remain pending.",
+    "R2.6.17 added a headless egui_kittest interaction over the production rename preview/review/apply UI; the test passed on Ubuntu, macOS and Windows, verified no pre-confirmation mutation, then verified destination bytes, updated references and refreshed session state. All six required workflows passed on exact source SHA 9b2080e3ea6559c4cf678f39c1fbaca2148f999b. Evidence: evidence/r2.6.17-egui-rename-interaction-9b2080e.json. No local executable validation was run. This is not native desktop visual acceptance; C03/C03.2 full cross-layer acceptance, D16, SYNC-007, history integration and uninstall preservation remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -3754,6 +3755,80 @@
         {"name": "windows-latest", "job_id": 113246721524, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804/job/113246721524"},
         {"name": "macos-latest", "job_id": 113246721537, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804/job/113246721537"}
       ]
+    },
+    {
+      "name": "rust",
+      "run_id": 37761060138,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060138",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113257296301, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060138/job/113257296301"},
+        {"name": "rust (windows-latest)", "job_id": 113257296017, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060138/job/113257296017"},
+        {"name": "rust (macos-latest)", "job_id": 113257296423, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060138/job/113257296423"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37761060028,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060028",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113257295460, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060028/job/113257295460"}]
+    },
+    {
+      "name": "quality",
+      "run_id": 37761060110,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060110",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113257296295, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060110/job/113257296295"},
+        {"name": "macos-latest", "job_id": 113257296684, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060110/job/113257296684"},
+        {"name": "windows-latest", "job_id": 113257296688, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060110/job/113257296688"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37761060020,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060020",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113257307178, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060020/job/113257307178"},
+        {"name": "macos-latest", "job_id": 113257307326, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060020/job/113257307326"},
+        {"name": "ubuntu-latest", "job_id": 113257307459, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060020/job/113257307459"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37761060163,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060163",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113257296938, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060163/job/113257296938"},
+        {"name": "windows-latest", "job_id": 113257297214, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060163/job/113257297214"},
+        {"name": "macos-latest", "job_id": 113257297271, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761060163/job/113257297271"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37761059999,
+      "head_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761059999",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113257295454, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761059999/job/113257295454"},
+        {"name": "macos-latest", "job_id": 113257295655, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761059999/job/113257295655"},
+        {"name": "ubuntu-latest", "job_id": 113257295777, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37761059999/job/113257295777"}
+      ]
     }
   ],
   "milestones": {
@@ -4387,6 +4462,63 @@
         "C03/C03.2 full cross-layer acceptance, D16, SYNC-007, remaining R2 workflow gaps, history integration details and uninstall preservation remain pending."
       ],
       "next_action": "Establish native interaction evidence for rename preview and apply, then continue the remaining R2 safety and uninstall acceptance gates."
+    },
+    "R2.6.17": {
+      "status": "complete",
+      "implementation_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+      "implementation_commits": [
+        "48aa973145356d64ff9e470028a0a419da2c2cb7",
+        "619ab15c6fea5709faa201611bee9befabe4fe61",
+        "9b2080e3ea6559c4cf678f39c1fbaca2148f999b"
+      ],
+      "scope": "Exercise the production egui rename preview, review and apply interaction through an accessible headless harness.",
+      "ci_attempts": [
+        {
+          "source_sha": "48aa973145356d64ff9e470028a0a419da2c2cb7",
+          "rust_run_id": 37759944562,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37759944630,
+          "quality_run_id": 37759944702,
+          "desktop_build_run_id": 37759944627,
+          "plugin_renderer_run_id": 37759944680,
+          "loaded_plugin_run_id": 37759944599,
+          "companion_conclusion": "all five passed",
+          "finding": "The new UI interaction test passed on all three OSes; Ubuntu requested rustfmt layout and macOS/Windows Clippy rejected a PathBuf comparison."
+        },
+        {
+          "source_sha": "619ab15c6fea5709faa201611bee9befabe4fe61",
+          "rust_run_id": 37760213622,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37760213594,
+          "quality_run_id": 37760213664,
+          "desktop_build_run_id": 37760213613,
+          "plugin_renderer_run_id": 37760213537,
+          "loaded_plugin_run_id": 37760213596,
+          "companion_conclusion": "all five passed",
+          "finding": "Ubuntu formatting requested one final layout adjustment; macOS and Windows Rust jobs passed, and the Windows post-cache step eventually completed successfully."
+        },
+        {
+          "source_sha": "9b2080e3ea6559c4cf678f39c1fbaca2148f999b",
+          "rust_run_id": 37761060138,
+          "inventory_run_id": 37761060028,
+          "quality_run_id": 37761060110,
+          "desktop_build_run_id": 37761060020,
+          "plugin_renderer_run_id": 37761060163,
+          "loaded_plugin_run_id": 37761059999,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.17-egui-rename-interaction-9b2080e.json",
+      "accepted_slice": [
+        "OpenObsidianApp::show_ui is shared by the eframe application and the egui_kittest headless harness.",
+        "The interaction test walks the production preview/review/apply UI, proves no source or reference mutation occurs before final confirmation, then verifies destination path, updated references and refreshed session listing.",
+        "The interaction test passed on Ubuntu, macOS and Windows. All six required workflows passed on exact source SHA 9b2080e3ea6559c4cf678f39c1fbaca2148f999b; no local executable validation was run."
+      ],
+      "remaining": [
+        "This headless interaction test does not establish native OS window launch, visual snapshot quality or human accessibility review.",
+        "C03/C03.2 full cross-layer acceptance, D16, SYNC-007, remaining R2 workflow gaps, history integration details and uninstall preservation remain pending."
+      ],
+      "next_action": "Continue the remaining R2 acceptance gates and keep C03/C03.2 pending until full fixture, cross-layer, transaction and platform acceptance passes in GitHub CI."
     }
   },
   "ci_preparation": {
