@@ -2179,7 +2179,7 @@ mod tests {
         assert_eq!(title.status, LinkSubpathStatus::Resolved);
         assert_eq!(
             title.text.as_deref(),
-            Some("Title\n=====\nBody\nChild\n-----\nChild body\n")
+            Some("Title\n=====\nBody\nChild\n-----\nChild body")
         );
         assert_eq!(title.line_start, Some(0));
         assert_eq!(title.line_end, Some(6));
