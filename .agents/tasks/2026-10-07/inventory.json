@@ -1562,7 +1562,7 @@
     },
     {
       "path": "fixtures/link-resolution.json",
-      "sha256": "71b9e54bb50d958306d147c094fd667621958e9ae54857da34eb8c6be838716e",
+      "sha256": "bdbec08dc94e56b1d0dc4905c0eae3223b0c751cab559e939697f15babed43ec",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
