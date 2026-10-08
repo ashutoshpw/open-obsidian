@@ -334,34 +334,46 @@ mod tests {
     use super::*;
 
     #[test]
-    fn matches_electron_user_data_locations() {
-        assert_eq!(
-            app_user_data_directory_for(
-                "windows",
-                None,
-                None,
-                Some(Path::new(r"C:\Users\Ada\AppData\Roaming")),
-            )
-            .unwrap(),
-            PathBuf::from(r"C:\Users\Ada\AppData\Roaming\OpenObsidian")
-        );
-        assert_eq!(
-            app_user_data_directory_for("macos", None, Some(Path::new("/Users/ada")), None,)
+    fn matches_electron_user_data_location_for_this_platform() {
+        #[cfg(target_os = "windows")]
+        {
+            assert_eq!(
+                app_user_data_directory_for(
+                    "windows",
+                    None,
+                    None,
+                    Some(Path::new(r"C:\Users\Ada\AppData\Roaming")),
+                )
                 .unwrap(),
-            PathBuf::from("/Users/ada/Library/Application Support/OpenObsidian")
-        );
-        assert_eq!(
-            app_user_data_directory_for(
-                "linux",
-                Some(Path::new("/home/ada/.config-custom")),
-                Some(Path::new("/home/ada")),
-                None,
-            )
-            .unwrap(),
-            PathBuf::from("/home/ada/.config-custom/OpenObsidian")
-        );
+                PathBuf::from(r"C:\Users\Ada\AppData\Roaming\OpenObsidian")
+            );
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            assert_eq!(
+                app_user_data_directory_for("macos", None, Some(Path::new("/Users/ada")), None,)
+                    .unwrap(),
+                PathBuf::from("/Users/ada/Library/Application Support/OpenObsidian")
+            );
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            assert_eq!(
+                app_user_data_directory_for(
+                    "linux",
+                    Some(Path::new("/home/ada/.config-custom")),
+                    Some(Path::new("/home/ada")),
+                    None,
+                )
+                .unwrap(),
+                PathBuf::from("/home/ada/.config-custom/OpenObsidian")
+            );
+        }
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn ignores_relative_xdg_home_and_uses_the_home_config_directory() {
         assert_eq!(
