@@ -33,6 +33,8 @@ pub enum VaultError {
     StaleRenamePreview,
     #[error("application data directory is invalid or inside the vault: {0}")]
     InvalidDataDirectory(PathBuf),
+    #[error("history record is invalid or unsafe: {0}")]
+    InvalidHistoryRecord(PathBuf),
     #[error(
         "revision conflict for {relative_path}; incoming bytes were preserved at {preserved_path}"
     )]
@@ -136,6 +138,11 @@ pub struct VaultStore {
 }
 
 mod rename_transaction;
+mod history;
+pub use history::{
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, plan_history_retention,
+};
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
 };
