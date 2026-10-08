@@ -775,3 +775,5 @@ Parent C01 and C01.2 remain open for the complete product read-only and referenc
 ## R2.6.41 existing-vault history UI preservation — awaiting GitHub CI
 
 Extended the history-retention UI interaction to include the arbitrary-content existing-vault fixture. The test now compares the complete vault path/type/byte tree after history preview, before cleanup confirmation, after app-data cleanup, and after UI close. History artifacts remain in app data; the vault includes its settings, unknown paths and binary files. Exact-SHA validation is pending; no local executable checks were run.
+
+The first exact-SHA attempt on source SHA 6616f92dca5076702f6595194074438fac407703 passed workspace tests on Ubuntu, macOS and Windows, including the new history UI interaction. Ubuntu rustfmt requested five layout adjustments; macOS and Windows Rust jobs and the other five required workflows passed. Applied the CI formatting diff; fresh exact-SHA validation is pending. No local executable validation was run.

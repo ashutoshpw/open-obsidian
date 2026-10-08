@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T20:39:07Z",
+  "updated_at": "2026-10-08T20:45:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
   "current_milestone": "R2.6.41",
-  "next_action": "Run all six required GitHub Actions workflows for R2.6.41 on the exact source SHA. Keep C01 and C01.2 open pending broader product read-only and reference-application evidence; use GitHub Actions only.",
+  "next_action": "Apply the Ubuntu rustfmt diff to R2.6.41 and obtain all six required GitHub Actions results on the corrected exact SHA. Keep C01 and C01.2 open; use GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8030,16 +8030,35 @@
     "R2.6.41": {
       "status": "in_progress",
       "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_commits": [
+        "6616f92dca5076702f6595194074438fac407703"
+      ],
       "scope": "Exercise history-retention preview and app-data cleanup against an existing vault containing settings, unknown paths and binary content, and verify the full vault path/type/byte tree stays unchanged throughout and after UI close.",
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "6616f92dca5076702f6595194074438fac407703",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37841080369,
+            "inventory": 37841080343,
+            "quality": 37841080390,
+            "desktop_build": 37841080265,
+            "plugin_renderer": 37841080355,
+            "loaded_plugin_workflows": 37841080312
+          },
+          "findings": [
+            "Workspace tests passed on Ubuntu, macOS and Windows, including the history UI preservation interaction. Ubuntu rustfmt requested five layout adjustments; macOS and Windows Rust jobs and the other five required workflows passed."
+          ],
+          "correction": "Apply the formatting diff emitted by the Ubuntu Check formatting step and rerun all six required workflows on the corrected exact SHA."
+        }
+      ],
       "evidence": null,
       "accepted_slice": [],
       "remaining": [
         "Exact-SHA GitHub Actions validation is pending.",
         "Parent C01 and C01.2 product-level read-only and reference-application coverage remain open."
       ],
-      "next_action": "Commit the history UI preservation fixture interaction and validate it only through all six required exact-SHA GitHub Actions workflows."
+      "next_action": "Apply the Ubuntu rustfmt diff to R2.6.41 and obtain all six required GitHub Actions results on the corrected exact SHA."
     }
   },
   "ci_preparation": {
