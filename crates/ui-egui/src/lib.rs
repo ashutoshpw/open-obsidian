@@ -3,7 +3,7 @@
 use openobsidian_engine::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
     VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultSession,
-    plan_history_retention,
+    VaultRenameRecoveryReport, plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -178,6 +178,20 @@ impl eframe::App for OpenObsidianApp {
                     .unwrap_or("Selected vault");
                 ui.label(format!("Vault: {vault_name}"));
                 ui.label(format!("{} Markdown files found.", session.entries().len()));
+                if let Some(summary) = rename_recovery_summary(session.rename_recovery_report()) {
+                    if session
+                        .rename_recovery_report()
+                        .needs_attention
+                        .is_empty()
+                    {
+                        ui.label(summary);
+                    } else {
+                        ui.colored_label(eframe::egui::Color32::YELLOW, summary);
+                        for issue in &session.rename_recovery_report().needs_attention {
+                            ui.small(format!("{}: {}", issue.operation_id, issue.reason));
+                        }
+                    }
+                }
             }
             None => {
                 ui.label("No vault is open. Choose an existing vault folder to continue.");
@@ -723,6 +737,23 @@ fn storage_protection_label(status: StorageProtectionDisplayStatus) -> &'static 
     }
 }
 
+fn rename_recovery_summary(report: &VaultRenameRecoveryReport) -> Option<String> {
+    let recovered = report.recovered_operations.len();
+    let needs_attention = report.needs_attention.len();
+    match (recovered, needs_attention) {
+        (0, 0) => None,
+        (recovered, 0) => Some(format!(
+            "Recovered {recovered} interrupted rename operation(s) before loading notes."
+        )),
+        (0, needs_attention) => Some(format!(
+            "{needs_attention} interrupted rename operation(s) need attention."
+        )),
+        (recovered, needs_attention) => Some(format!(
+            "Recovered {recovered} interrupted rename operation(s); {needs_attention} additional operation(s) need attention."
+        )),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -775,6 +806,30 @@ mod tests {
         assert_eq!(
             storage_protection_label(StorageProtectionDisplayStatus::Unknown),
             "Unknown (encryption not verified)"
+        );
+    }
+
+    #[test]
+    fn rename_recovery_summary_reports_restored_and_attention_counts() {
+        let recovered = VaultRenameRecoveryReport {
+            recovered_operations: vec!["rename-1".to_owned()],
+            needs_attention: Vec::new(),
+        };
+        assert_eq!(
+            rename_recovery_summary(&recovered).as_deref(),
+            Some("Recovered 1 interrupted rename operation(s) before loading notes.")
+        );
+
+        let attention = VaultRenameRecoveryReport {
+            recovered_operations: Vec::new(),
+            needs_attention: vec![openobsidian_engine::VaultRenameRecoveryIssue {
+                operation_id: "rename-2".to_owned(),
+                reason: "a source file needs review".to_owned(),
+            }],
+        };
+        assert_eq!(
+            rename_recovery_summary(&attention).as_deref(),
+            Some("1 interrupted rename operation(s) need attention.")
         );
     }
 }

@@ -3,7 +3,8 @@
 pub use openobsidian_vault::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, plan_history_retention,
+    VaultHistoryRecord, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
+    VaultRenameResult, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;
@@ -14,6 +15,7 @@ use std::time::SystemTime;
 pub struct VaultSession {
     store: VaultStore,
     entries: Vec<VaultEntry>,
+    rename_recovery: VaultRenameRecoveryReport,
 }
 
 impl VaultSession {
@@ -23,13 +25,23 @@ impl VaultSession {
         app_data_root: impl AsRef<Path>,
     ) -> Result<Self, VaultError> {
         let store = VaultStore::open(root, app_data_root)?;
+        let rename_recovery = store.recover_pending_rename_transactions()?;
         let entries = store.root().scan_markdown()?;
-        Ok(Self { store, entries })
+        Ok(Self {
+            store,
+            entries,
+            rename_recovery,
+        })
     }
 
-    /// Returns the current Markdown listing captured when the session was opened.
+    /// Returns the current Markdown listing captured when the session opened or refreshed.
     pub fn entries(&self) -> &[VaultEntry] {
         &self.entries
+    }
+
+    /// Returns the recovery outcome processed before the Markdown listing was scanned.
+    pub fn rename_recovery_report(&self) -> &VaultRenameRecoveryReport {
+        &self.rename_recovery
     }
 
     /// Returns the canonical vault root path.
@@ -40,6 +52,29 @@ impl VaultSession {
     /// Reads a note through the vault's root-confinement and revision-hashing boundary.
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         self.store.root().read(relative_path)
+    }
+
+    /// Builds a read-only rename preview bound to the current vault snapshot.
+    pub fn build_rename_preview(
+        &self,
+        old_path: impl AsRef<Path>,
+        new_path: impl AsRef<Path>,
+    ) -> Result<VaultRenamePreview, VaultError> {
+        self.store.root().build_rename_preview(old_path, new_path)
+    }
+
+    /// Applies a previously reviewed, vault-bound rename preview.
+    pub fn apply_rename_preview(
+        &self,
+        preview: &VaultRenamePreview,
+    ) -> Result<VaultRenameResult, VaultError> {
+        self.store.apply_rename_preview(preview)
+    }
+
+    /// Refreshes the session's Markdown listing after a committed vault operation.
+    pub fn refresh_entries(&mut self) -> Result<(), VaultError> {
+        self.entries = self.store.root().scan_markdown()?;
+        Ok(())
     }
 
     /// Lists validated recovery, failed-write and conflict records.
@@ -80,5 +115,121 @@ impl VaultSession {
         action: VaultConflictAction,
     ) -> Result<VaultConflictResolution, VaultError> {
         self.store.resolve_conflict(id, relative_path, action)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use openobsidian_vault::VaultRoot;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_TEMP_ID: AtomicU64 = AtomicU64::new(0);
+
+    struct TempTree(PathBuf);
+
+    impl TempTree {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "openobsidian-engine-{}-{}",
+                std::process::id(),
+                NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed),
+            ));
+            fs::create_dir_all(&path).unwrap();
+            Self(path)
+        }
+
+        fn layout(&self) -> (PathBuf, PathBuf) {
+            let vault = self.0.join("vault");
+            let app_data = self.0.join("app-data");
+            fs::create_dir_all(&vault).unwrap();
+            fs::create_dir_all(&app_data).unwrap();
+            (vault, app_data)
+        }
+    }
+
+    impl Drop for TempTree {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn session_exposes_snapshot_bound_rename_and_refreshes_listing_explicitly() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        fs::write(vault.join("Old.md"), b"# Old\r\n").unwrap();
+        fs::write(vault.join("Index.md"), b"[[Old]]\r\n").unwrap();
+
+        let mut session = VaultSession::open(&vault, &app_data).unwrap();
+        assert_eq!(
+            session.rename_recovery_report(),
+            &VaultRenameRecoveryReport::default()
+        );
+        let preview = session
+            .build_rename_preview("Old.md", "New.md")
+            .unwrap();
+        let result = session.apply_rename_preview(&preview).unwrap();
+
+        assert_eq!(result.updated_references, 1);
+        assert_eq!(result.read.document.as_bytes(), b"# Old\r\n");
+        assert_eq!(fs::read(vault.join("Index.md")).unwrap(), b"[[New]]\r\n");
+        assert!(session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == PathBuf::from("Old.md")));
+
+        session.refresh_entries().unwrap();
+        assert!(session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == PathBuf::from("New.md")));
+        assert!(!session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == PathBuf::from("Old.md")));
+    }
+
+    #[test]
+    fn opening_session_recovers_interrupted_rename_before_scanning_notes() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let original = b"# Existing\r\n";
+        fs::write(vault.join("Old.md"), original).unwrap();
+        let before_revision = VaultRoot::open(&vault)
+            .unwrap()
+            .read("Old.md")
+            .unwrap()
+            .revision_sha256;
+
+        let operation_id = "startup-recovery";
+        let before_file = format!("{operation_id}-rename-before-0.bin");
+        let recovery = app_data.join("recovery");
+        fs::create_dir_all(&recovery).unwrap();
+        fs::write(recovery.join(&before_file), original).unwrap();
+        let after_revision = "a".repeat(64);
+        let manifest = format!(
+            "{{\"schema_version\":2,\"id\":\"{operation_id}\",\"operation\":\"rename\",\"state\":\"prepared\",\"paths\":[\"Old.md\",\"New.md\"],\"old_path\":\"Old.md\",\"new_path\":\"New.md\",\"plan_id\":\"seeded-plan\",\"case_only\":false,\"temporary_path\":null,\"files\":[{{\"source_path\":\"Old.md\",\"target_path\":\"New.md\",\"before_revision\":\"{before_revision}\",\"after_revision\":\"{after_revision}\",\"before_file\":\"{before_file}\"}}],\"recorded_at\":\"2026-10-08T00:00:00Z\",\"error\":null}}\n"
+        );
+        fs::write(app_data.join("journal.jsonl"), manifest).unwrap();
+
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        assert_eq!(
+            session.rename_recovery_report().recovered_operations,
+            vec![operation_id]
+        );
+        assert!(session
+            .rename_recovery_report()
+            .needs_attention
+            .is_empty());
+        assert_eq!(fs::read(vault.join("Old.md")).unwrap(), original);
+        assert!(!vault.join("New.md").exists());
+        assert!(session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == PathBuf::from("Old.md")));
     }
 }
