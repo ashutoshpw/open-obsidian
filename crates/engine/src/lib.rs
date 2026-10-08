@@ -168,28 +168,32 @@ mod tests {
             session.rename_recovery_report(),
             &VaultRenameRecoveryReport::default()
         );
-        let preview = session
-            .build_rename_preview("Old.md", "New.md")
-            .unwrap();
+        let preview = session.build_rename_preview("Old.md", "New.md").unwrap();
         let result = session.apply_rename_preview(&preview).unwrap();
 
         assert_eq!(result.updated_references, 1);
         assert_eq!(result.read.document.as_bytes(), b"# Old\r\n");
         assert_eq!(fs::read(vault.join("Index.md")).unwrap(), b"[[New]]\r\n");
-        assert!(session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == PathBuf::from("Old.md")));
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == *"Old.md")
+        );
 
         session.refresh_entries().unwrap();
-        assert!(session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == PathBuf::from("New.md")));
-        assert!(!session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == PathBuf::from("Old.md")));
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == *"New.md")
+        );
+        assert!(
+            !session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == *"Old.md")
+        );
     }
 
     #[test]
@@ -221,15 +225,14 @@ mod tests {
             session.rename_recovery_report().recovered_operations,
             vec![operation_id]
         );
-        assert!(session
-            .rename_recovery_report()
-            .needs_attention
-            .is_empty());
+        assert!(session.rename_recovery_report().needs_attention.is_empty());
         assert_eq!(fs::read(vault.join("Old.md")).unwrap(), original);
         assert!(!vault.join("New.md").exists());
-        assert!(session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == PathBuf::from("Old.md")));
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == *"Old.md")
+        );
     }
 }

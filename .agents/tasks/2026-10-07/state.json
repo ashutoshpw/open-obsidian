@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T07:46:01Z",
+  "updated_at": "2026-10-08T07:58:37Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e1f5c180ebf53a213fcc86089853c58a916bcdcf",
-  "current_milestone": "R2.6.11b",
-  "next_action": "Audit the remaining R2 acceptance gaps (D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation) and define the next bounded GitHub-CI slice before beginning R3.",
+  "last_reconciled_head": "5a5dea83536ff53f5d05851ace0a5b10a045c571",
+  "current_milestone": "R2.6.12",
+  "next_action": "Await all six exact-SHA workflows on the focused R2.6.12 formatting and Clippy correction push.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "e1f5c180ebf53a213fcc86089853c58a916bcdcf"
+      "implementation_sha": "5a5dea83536ff53f5d05851ace0a5b10a045c571"
     },
     "R3": {
       "status": "pending",
@@ -143,7 +143,8 @@
     "R2.6.11a history listing and read-only retention preview passed all six required workflows on exact source SHA 82c9d2aea345417777704f11a1184acc96a33531. Evidence: evidence/r2.6.11a-history-preview-82c9d2a.json. Rust CI passed formatting, workspace tests, Clippy, layers, native builds and Wry probes on Ubuntu/macOS/Windows; UI tests passed twice per OS. Cargo.lock was generated through GitHub Actions resolver run 37742373924. No local executable validation was run.",
     "R2.6.11b source bab128387f27f5870610d3b13be0c79775c6d101: workspace tests passed on Ubuntu/macOS/Windows and all five companion workflows passed. Rust CI run 37743596109 failed Ubuntu formatting and macOS/Windows Clippy collapsible_if; exact-SHA job details and all six run results are in ci_results. Applied only the GitHub-reported formatter layout and let-chain correction.",
     "R2.6.11b source eab4f342d0ba459585f9b9c239a4aefdc0cc3c34: inventory, quality, desktop, plugin renderer and loaded-plugin workflows passed; macOS and Windows Rust jobs passed; Ubuntu workspace tests passed but rustfmt requested two formatting adjustments. Applied the exact CI-requested line breaks and button-call layout.",
-    "R2.6.11b passed all six required workflows on exact source SHA e1f5c180ebf53a213fcc86089853c58a916bcdcf. Rust formatting, workspace tests, Clippy, layering, native preview builds and unchanged-plugin probes passed on Ubuntu/macOS/Windows; the UI suite passed four tests per OS. Evidence: evidence/r2.6.11b-history-controls-e1f5c18.json. No local executable validation was run."
+    "R2.6.11b passed all six required workflows on exact source SHA e1f5c180ebf53a213fcc86089853c58a916bcdcf. Rust formatting, workspace tests, Clippy, layering, native preview builds and unchanged-plugin probes passed on Ubuntu/macOS/Windows; the UI suite passed four tests per OS. Evidence: evidence/r2.6.11b-history-controls-e1f5c18.json. No local executable validation was run.",
+    "R2.6.12 exact-SHA CI on 5a5dea83536ff53f5d05851ace0a5b10a045c571 passed workspace tests on all three OSes and all five companion workflows; Rust CI reported formatting and cmp_owned findings. Applied the exact formatter and Clippy corrections; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -3870,6 +3871,44 @@
         "D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation remain pending until full cross-layer acceptance."
       ],
       "next_action": "Audit remaining R2 safety gaps and define the next bounded GitHub-CI slice before beginning R3."
+    },
+    "R2.6.12": {
+      "status": "in_progress",
+      "implementation_sha": "5a5dea83536ff53f5d05851ace0a5b10a045c571",
+      "implementation_commits": [
+        "5a5dea83536ff53f5d05851ace0a5b10a045c571"
+      ],
+      "scope": "Expose snapshot-bound rename operations through VaultSession, recover interrupted rename transactions before the startup listing is scanned, and surface recovery outcomes in the native shell.",
+      "ci_attempts": [
+        {
+          "source_sha": "5a5dea83536ff53f5d05851ace0a5b10a045c571",
+          "rust_run_id": 37746429243,
+          "rust_conclusion": "failure",
+          "rust_jobs": {
+            "ubuntu": 113208891990,
+            "macos": 113208892257,
+            "windows": 113208892323
+          },
+          "findings": [
+            "Ubuntu rustfmt requested layout changes in the engine assertions and UI imports/recovery condition.",
+            "macOS and Windows Clippy flagged four PathBuf::from string comparisons as cmp_owned.",
+            "Workspace tests passed on Ubuntu, macOS and Windows."
+          ],
+          "companion_runs": {
+            "inventory": {"run_id": 37746429398, "conclusion": "success"},
+            "quality": {"run_id": 37746429373, "conclusion": "success"},
+            "desktop-build": {"run_id": 37746429341, "conclusion": "success"},
+            "plugin-renderer": {"run_id": 37746429326, "conclusion": "success"},
+            "loaded-plugins": {"run_id": 37746429329, "conclusion": "success"}
+          }
+        }
+      ],
+      "accepted_slice": [],
+      "remaining": [
+        "The formatting and Clippy corrections must pass all six exact-SHA GitHub Actions workflows.",
+        "D16, SYNC-007, C03/C03.2 and uninstall preservation remain pending for full R2 acceptance."
+      ],
+      "next_action": "Await all six exact-SHA GitHub Actions workflows on the focused CI correction push."
     }
   },
   "ci_preparation": {

@@ -2,8 +2,8 @@
 
 use openobsidian_engine::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
-    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultSession,
-    VaultRenameRecoveryReport, plan_history_retention,
+    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
+    VaultRenameRecoveryReport, VaultSession, plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -179,11 +179,7 @@ impl eframe::App for OpenObsidianApp {
                 ui.label(format!("Vault: {vault_name}"));
                 ui.label(format!("{} Markdown files found.", session.entries().len()));
                 if let Some(summary) = rename_recovery_summary(session.rename_recovery_report()) {
-                    if session
-                        .rename_recovery_report()
-                        .needs_attention
-                        .is_empty()
-                    {
+                    if session.rename_recovery_report().needs_attention.is_empty() {
                         ui.label(summary);
                     } else {
                         ui.colored_label(eframe::egui::Color32::YELLOW, summary);
