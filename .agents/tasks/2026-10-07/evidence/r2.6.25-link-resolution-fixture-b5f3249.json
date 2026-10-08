@@ -1,0 +1,156 @@
+{
+  "slice": "R2.6.25 shared source-aware link-resolution fixture and testkit coverage",
+  "phase": "R2",
+  "status": "accepted fixture-backed resolver slice; R2 remains in progress",
+  "recorded_at": "2026-10-08T12:53:42Z",
+  "source_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+  "implementation_commits": [
+    "2aecb9e349a06299e9a700140922ee94ce09d78a",
+    "b5f3249f2e6eb5b98ea6515722f397cea0f3db89"
+  ],
+  "scope": "Add fixtures/link-resolution.json and a shared testkit acceptance using production MarkdownSource extraction and source-aware link resolution.",
+  "fixture": {
+    "path": "fixtures/link-resolution.json",
+    "sha256": "921492be0afa54835910d31a862389d9b28ab759067b191eca7fd455a9e87400",
+    "inventory_registered": true
+  },
+  "behavior": [
+    "Covers wiki and Markdown links, aliases, relative targets, local headings, heading and block subpaths, wiki and Markdown image embeds, note transclusion, unresolved target/subpath, duplicate headings, duplicate-basename disambiguation and external links.",
+    "Records expected resolution targets, statuses and candidate paths, and verifies that resolution does not mutate source bytes.",
+    "The shared c03_link_forms_fixture_matches_source_aware_resolution test passed on Ubuntu, macOS and Windows."
+  ],
+  "ci_attempts": [
+    {
+      "source_sha": "2aecb9e349a06299e9a700140922ee94ce09d78a",
+      "rust_run_id": 37777662096,
+      "rust_conclusion": "failure after targeted Ubuntu rerun",
+      "inventory_run_id": 37777662054,
+      "quality_run_id": 37777662065,
+      "desktop_build_run_id": 37777662027,
+      "plugin_renderer_run_id": 37777662050,
+      "loaded_plugin_run_id": 37777662064,
+      "finding": "The initial Ubuntu Rust job stalled during system dependency installation and was canceled; the targeted same-SHA rerun completed the tests and found two rustfmt layout corrections. Windows plugin-renderer download integrity failed transiently for the pinned Iconize release asset and passed after rerunning the same-SHA job. Other companion workflows passed."
+    },
+    {
+      "source_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "conclusion": "all six required workflows passed"
+    }
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37779411992,
+      "head_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37779411992",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113318415936, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113318416211, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113318416313, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, crate layering, native preview builds and unchanged-plugin Wry feasibility probes passed on all three operating systems.",
+        "c03_link_forms_fixture_matches_source_aware_resolution passed on Ubuntu, macOS and Windows.",
+        "The native Actions Parallel group completed successfully after its grouped work passed."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37779411993,
+      "head_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37779411993",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113318415747, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37779412136,
+      "head_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37779412136",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113318416576, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113318416772, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113318416934, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37779412032,
+      "head_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37779412032",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113318416105, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113318416291, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113318416597, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37779412010,
+      "head_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37779412010",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113318416093, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113318416234, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113318416258, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37779412013,
+      "head_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37779412013",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113318416141, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113318416288, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113318416433, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "3 passed, including the new fixture test",
+      "openobsidian-ui-egui": "13 passed",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "3 passed, including the new fixture test",
+      "openobsidian-ui-egui": "13 passed",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "3 passed, including the new fixture test",
+      "openobsidian-ui-egui": "13 passed",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; executable checks used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11551443910, "name": "openobsidian-rust-preview-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 8849836, "digest": "sha256:6a685a5ef7fa3d20bceda16d789c7649c04b617d89aa286dc831d96a337846bf"},
+    {"id": 11551985159, "name": "rust-plugin-runtime-Linux-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 2695, "digest": "sha256:14844ae52ac0168188ccf1d6ca0de3e50fb69f95300e332118b41c1512898694"},
+    {"id": 11551138689, "name": "rust-plugin-runtime-macOS-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 2698, "digest": "sha256:84452d4ede19ceab13997fa0cb1b0ef20f00848ff4c4866bd17a00cc45f28d53"},
+    {"id": 11550669230, "name": "rust-plugin-runtime-Windows-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 2715, "digest": "sha256:9eae3750f241b8bcbd2a6cb888d00c02c7c08a62623e50943454ae306c96f675"},
+    {"id": 11551790218, "name": "openobsidian-macOS-preview-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 397395487, "digest": "sha256:612dd43ba417f7a4524a5f6c4d8d43e66f1eb1b1c7f703b1d36d259c9fea81eb"},
+    {"id": 11551755254, "name": "openobsidian-Windows-preview-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 163005824, "digest": "sha256:3ecd7c25dee250a97925f34028fa296f343b2602b92039285ebc156455fc4d0c"},
+    {"id": 11550898434, "name": "openobsidian-Linux-preview-b5f3249f2e6eb5b98ea6515722f397cea0f3db89", "size_bytes": 125946548, "digest": "sha256:8823155b7b748b021cc1e138cc56b41c01cc0c6485148dfa73bcd68549a74a68"}
+  ],
+  "limitations": [
+    "This is fixture-backed link-resolution coverage and does not complete full C03/C03.2 cross-layer acceptance or native interaction coverage for every link form.",
+    "SYNC-007 host-level uninstall integration remains pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions."
+}

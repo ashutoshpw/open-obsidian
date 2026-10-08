@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T12:22:10Z",
+  "updated_at": "2026-10-08T12:53:42Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a01c8a2d4d144816b393885e86aec9b633aa0949",
-  "current_milestone": "R2.6.24",
+  "last_reconciled_head": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+  "current_milestone": "R2.6.25",
   "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949"
+      "implementation_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89"
     },
     "R3": {
       "status": "pending",
@@ -157,7 +157,8 @@
     "R2.6.22 added a headless egui interaction that renders Enabled, Disabled and Unknown storage-protection reports, checks the OS-reported/encryption-not-verified wording, verifies ordinary redraws do not re-run the injected probe, and verifies Refresh storage status reruns it and updates the report. The interaction passed on Ubuntu, macOS and Windows; all six workflows passed on exact source SHA fc50e9bebe41a90c0e9b6b5a8a8579c9729babab. Evidence: evidence/r2.6.22-storage-status-refresh-fc50e9b.json. No local executable validation was run. D16 cap-warning UI rendering, host-level SYNC-007 uninstall integration and full C03/C03.2 cross-layer acceptance remain pending.",
     "The R2.6.22 evidence commit 50a21ac4cff1dc4660c219e54e5f387f634cfec2 also passed all six workflows on that exact SHA: Rust CI 37770975628, inventory 37770975657, quality 37770975668, desktop 37770975636, plugin renderer 37770975699 and loaded-plugin workflows 37770975619.",
     "R2.6.23 adds an over-cap history-warning egui interaction. The test renders the warning and Review eligible cleanup control, then confirms no cleanup task or confirmation state starts unless the user selects the review action. All six GitHub Actions workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; evidence: evidence/r2.6.23-history-warning-ui-b236009.json. The new interaction passed on Ubuntu, macOS and Windows. No local executable validation was run. Together with the fixture-backed retention/explicit-cleanup interaction, the platform storage-status probe and its UI refresh interaction, this closes the D16 cap-warning display gap. SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain open.",
-    "R2.6.24 drove the same-basename-disambiguated C03 rename fixture through the production egui preview, review, explicit apply and session refresh. Preview preserved bytes; confirmed apply updated the intended reference and moved note while preserving the unrelated same-basename note. All six GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949, including the Rust parallel group and the interaction on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.24-subpath-rename-ui-a01c8a2.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open."
+    "R2.6.24 drove the same-basename-disambiguated C03 rename fixture through the production egui preview, review, explicit apply and session refresh. Preview preserved bytes; confirmed apply updated the intended reference and moved note while preserving the unrelated same-basename note. All six GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949, including the Rust parallel group and the interaction on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.24-subpath-rename-ui-a01c8a2.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
+    "R2.6.25 added fixtures/link-resolution.json and a shared testkit case for source-aware wiki/Markdown link and embed resolution, aliases, subpaths, duplicate headings/basenames, unresolved paths and source immutability. All six GitHub Actions workflows passed on exact source SHA b5f3249f2e6eb5b98ea6515722f397cea0f3db89, and the fixture test passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.25-link-resolution-fixture-b5f3249.json. No local executable validation was run; C03/C03.2 full cross-layer acceptance and SYNC-007 host-level uninstall integration remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -5209,6 +5210,47 @@
       "remaining": [
         "This is headless egui interaction evidence and does not establish native-window visual or manual accessibility acceptance.",
         "Full C03/C03.2 fixture, cross-layer and reference-safety acceptance remains pending.",
+        "SYNC-007 host-level uninstall integration remains pending."
+      ],
+      "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+    },
+    "R2.6.25": {
+      "status": "complete",
+      "implementation_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+      "implementation_commits": [
+        "2aecb9e349a06299e9a700140922ee94ce09d78a",
+        "b5f3249f2e6eb5b98ea6515722f397cea0f3db89"
+      ],
+      "scope": "Add a shared fixture and testkit acceptance for source-aware resolution of C03 link forms and embeds.",
+      "ci_attempts": [
+        {
+          "source_sha": "2aecb9e349a06299e9a700140922ee94ce09d78a",
+          "rust_run_id": 37777662096,
+          "inventory_run_id": 37777662054,
+          "quality_run_id": 37777662065,
+          "desktop_build_run_id": 37777662027,
+          "plugin_renderer_run_id": 37777662050,
+          "loaded_plugin_run_id": 37777662064,
+          "finding": "The first Rust Ubuntu attempt stalled during system dependency installation; its targeted same-SHA rerun passed tests but reported two rustfmt differences. The Windows plugin-renderer attempt also hit a transient integrity failure downloading the pinned Iconize release asset and passed after rerunning that job on the same SHA. Inventory, quality, desktop and loaded-plugin workflows passed. The formatting corrections were applied in the follow-up source commit."
+        },
+        {
+          "source_sha": "b5f3249f2e6eb5b98ea6515722f397cea0f3db89",
+          "rust_run_id": 37779411992,
+          "inventory_run_id": 37779411993,
+          "quality_run_id": 37779412136,
+          "desktop_build_run_id": 37779412032,
+          "plugin_renderer_run_id": 37779412010,
+          "loaded_plugin_run_id": 37779412013,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.25-link-resolution-fixture-b5f3249.json",
+      "accepted_slice": [
+        "The shared fixture covers wiki and Markdown links, aliases, relative targets, local headings, heading and block subpaths, image embeds, note transclusion, unresolved targets/subpaths, duplicate headings, duplicate-basename disambiguation and external links, including expected targets/status/candidate paths and source immutability.",
+        "The fixture-backed test uses production MarkdownSource extraction and source-aware resolution and passed on Ubuntu, macOS and Windows. All six required GitHub Actions workflows passed on exact source SHA b5f3249f2e6eb5b98ea6515722f397cea0f3db89; no local executable validation was run."
+      ],
+      "remaining": [
+        "This is shared fixture-backed resolver coverage and does not complete full C03/C03.2 cross-layer acceptance or native interaction coverage for every link form.",
         "SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
