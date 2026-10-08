@@ -1018,7 +1018,9 @@ fn strip_trailing_block_identifier(line: &str) -> String {
         .strip_prefix('\u{feff}')
         .map_or(("", line), |content| ("\u{feff}", content));
     let content = content.trim_end_matches([' ', '\t']);
-    let marker_start = content.rfind([' ', '\t']).map_or(0, |separator| separator + 1);
+    let marker_start = content
+        .rfind([' ', '\t'])
+        .map_or(0, |separator| separator + 1);
     let retained = content[..marker_start].trim_end_matches([' ', '\t']);
     format!("{bom}{retained}")
 }
@@ -1719,9 +1721,9 @@ mod tests {
 
     use super::{
         FrontmatterBounds, LineEnding, LinkKind, LinkRenameAction, LinkRenamePlanError,
-        LinkResolution, LinkResolutionStatus, LinkSubpathStatus, MarkdownSource, RawDocument,
-        RenamePlanFile, SourceSpan, TransclusionBlockReason, TransclusionGuard,
-        MAX_NOTE_TRANSCLUSION_DEPTH, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, build_link_rename_plan,
+        LinkResolution, LinkResolutionStatus, LinkSubpathStatus, MAX_NOTE_TRANSCLUSION_DEPTH,
+        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, RawDocument, RenamePlanFile,
+        SourceSpan, TransclusionBlockReason, TransclusionGuard, build_link_rename_plan,
         guard_note_transclusion, note_transclusion_source_within_limit, render_link_rename_preview,
         resolve_link, resolve_link_with_sources, slice_markdown_subpath,
     };
@@ -2125,9 +2127,16 @@ mod tests {
 
         let overview = slice_markdown_subpath(&source, "Overview");
         assert_eq!(overview.status, LinkSubpathStatus::Resolved);
-        assert_eq!(overview.text.as_deref(), Some(source.text()));
+        let normalized_source = source.text().replace("\r\n", "\n");
+        assert_eq!(overview.text.as_deref(), Some(normalized_source.as_str()));
         assert_eq!(overview.line_start, Some(0));
         assert_eq!(overview.line_end, Some(source.text().split("\r\n").count()));
+
+        let entire_source = slice_markdown_subpath(&source, "");
+        assert_eq!(entire_source.status, LinkSubpathStatus::Resolved);
+        assert_eq!(entire_source.text.as_deref(), Some(source.text()));
+        assert_eq!(entire_source.line_start, Some(0));
+        assert_eq!(entire_source.line_end, Some(source.text().split("\r\n").count()));
 
         let details = slice_markdown_subpath(&source, "Details");
         assert_eq!(details.status, LinkSubpathStatus::Resolved);
@@ -2156,23 +2165,31 @@ mod tests {
 
     #[test]
     fn transclusion_slices_setext_headings_until_the_next_equal_or_higher_heading() {
-        let source = MarkdownSource::parse(
-            b"Title\r\n=====\r\nBody\r\nNext\r\n-----\r\nOther".to_vec(),
+        let bytes = concat!(
+            "Title\r\n=====\r\n",
+            "Body\r\nChild\r\n-----\r\n",
+            "Child body\r\nNext\r\n=====\r\n",
+            "Other"
         )
-        .unwrap();
+        .as_bytes()
+        .to_vec();
+        let source = MarkdownSource::parse(bytes.clone()).unwrap();
 
         let title = slice_markdown_subpath(&source, "Title");
         assert_eq!(title.status, LinkSubpathStatus::Resolved);
-        assert_eq!(title.text.as_deref(), Some("Title\n=====\nBody\n"));
+        assert_eq!(
+            title.text.as_deref(),
+            Some("Title\n=====\nBody\nChild\n-----\nChild body\n")
+        );
         assert_eq!(title.line_start, Some(0));
-        assert_eq!(title.line_end, Some(3));
+        assert_eq!(title.line_end, Some(6));
 
         let next = slice_markdown_subpath(&source, "Next");
         assert_eq!(next.status, LinkSubpathStatus::Resolved);
-        assert_eq!(next.text.as_deref(), Some("Next\n-----\nOther"));
-        assert_eq!(next.line_start, Some(3));
-        assert_eq!(next.line_end, Some(6));
-        assert_eq!(source.as_bytes(), b"Title\r\n=====\r\nBody\r\nNext\r\n-----\r\nOther");
+        assert_eq!(next.text.as_deref(), Some("Next\n=====\nOther"));
+        assert_eq!(next.line_start, Some(6));
+        assert_eq!(next.line_end, Some(9));
+        assert_eq!(source.as_bytes(), bytes);
     }
 
     #[test]
@@ -2186,7 +2203,11 @@ mod tests {
             })
         );
         assert_eq!(
-            guard_note_transclusion(1, &["Index.md".to_owned(), "Notes/Target.md".to_owned()], "Index.md"),
+            guard_note_transclusion(
+                1,
+                &["Index.md".to_owned(), "Notes/Target.md".to_owned()],
+                "Index.md"
+            ),
             Err(TransclusionBlockReason::Cycle)
         );
         assert_eq!(
@@ -2196,9 +2217,11 @@ mod tests {
         assert!(note_transclusion_source_within_limit(
             &vec![b'x'; MAX_NOTE_TRANSCLUSION_SOURCE_BYTES]
         ));
-        assert!(!note_transclusion_source_within_limit(
-            &vec![b'x'; MAX_NOTE_TRANSCLUSION_SOURCE_BYTES + 1]
-        ));
+        assert!(!note_transclusion_source_within_limit(&vec![
+            b'x';
+            MAX_NOTE_TRANSCLUSION_SOURCE_BYTES
+                + 1
+        ]));
     }
 
     #[test]
