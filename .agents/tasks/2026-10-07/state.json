@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T06:12:33Z",
+  "updated_at": "2026-10-08T06:41:17Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+  "last_reconciled_head": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
   "current_phase": "R2",
-  "current_milestone": "R2.6.8",
-  "next_action": "Continue R2.6.8: wire validated history listing, retention planning, explicit cleanup and conflict resolution into the native application/UI; establish per-vault app-data paths and user-only OS access controls. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
+  "current_milestone": "R2.6.9",
+  "next_action": "Start R2.6.10: add a native vault folder picker with rfd 0.17, use the per-user app-data service when opening a vault, and expose history listing, retention planning, explicit cleanup and conflict inspection/resolution in the native UI. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce"
+      "implementation_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b"
     },
     "R3": {
       "status": "pending",
@@ -136,7 +136,8 @@
     "R2.6.7 storage-protection UI slice passed all six exact-SHA GitHub Actions workflows on 428cc5a67e27816c9759441009f63a0ce1fbfd11. The UI displays the typed platform report and explicit Unknown state with manual refresh; nine platform tests and the UI label test passed on all three OSes. Evidence: evidence/r2.6.7-storage-status-ui-428cc5a.json. No local executable validation was run. History workflow and app-data access controls remain pending.",
     "R2.6.8 conflict inspection and explicit Keep Current/Keep Incoming vault APIs passed four focused tests across Ubuntu, macOS and Windows on exact SHA 117baa904cfb4dd0621f35c8279caf7669f27bce; evidence is evidence/r2.6.8-conflict-resolution-117baa9.json. Native history UI, per-vault app-data integration and user-only access controls remain pending.",
     "Applied the five formatting-only changes reported by Rust CI for source SHA 688522f21e3f2bfedf6e722f56c2098b80511fbd; all six required workflows passed for exact SHA 117baa904cfb4dd0621f35c8279caf7669f27bce. No local executable validation was run.",
-    "Verified that GitHub Actions native parallel step groups are already present in rust.yml, quality.yml, compatibility-pins.yml and desktop-build.yml; the exact-SHA Rust parallel group passed in run 37735896443. No duplicate workflow change was needed."
+    "Verified that GitHub Actions native parallel step groups are already present in rust.yml, quality.yml, compatibility-pins.yml and desktop-build.yml; the exact-SHA Rust parallel group passed in run 37735896443. No duplicate workflow change was needed.",
+    "R2.6.9 added the Electron-compatible per-vault app-data location, owner-only Unix permissions/current-user Windows ACL, and engine wrappers for vault history and conflict APIs. All six required workflows passed on exact source SHA fe2db5eb869e3171204fe92ff59d16096e0b966b; evidence: evidence/r2.6.9-private-vault-data-fe2db5e.json. The native folder picker/history UI and full uninstall acceptance remain for R2.6.10; D16, SYNC-007 and C03/C03.2 remain pending. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -2971,6 +2972,82 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896462/job/113175200141"
         }
       ]
+    },
+    {
+      "name": "rust",
+      "run_id": 37738397245,
+      "head_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397245",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113183125952, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397245/job/113183125952"},
+        {"name": "rust (macos-latest)", "job_id": 113183126075, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397245/job/113183126075"},
+        {"name": "rust (windows-latest)", "job_id": 113183126162, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397245/job/113183126162"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37738397204,
+      "head_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397204",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113183127761, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397204/job/113183127761"}
+      ]
+    },
+    {
+      "name": "quality",
+      "run_id": 37738397194,
+      "head_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397194",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113183126176, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397194/job/113183126176"},
+        {"name": "macos-latest", "job_id": 113183126251, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397194/job/113183126251"},
+        {"name": "windows-latest", "job_id": 113183126312, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397194/job/113183126312"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37738397198,
+      "head_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397198",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113183125709, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397198/job/113183125709"},
+        {"name": "ubuntu-latest", "job_id": 113183125966, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397198/job/113183125966"},
+        {"name": "macos-latest", "job_id": 113183125971, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397198/job/113183125971"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37738397355,
+      "head_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397355",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113183126386, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397355/job/113183126386"},
+        {"name": "windows-latest", "job_id": 113183126684, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397355/job/113183126684"},
+        {"name": "macos-latest", "job_id": 113183126779, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397355/job/113183126779"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37738397203,
+      "head_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397203",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113183125937, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397203/job/113183125937"},
+        {"name": "windows-latest", "job_id": 113183126194, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397203/job/113183126194"},
+        {"name": "ubuntu-latest", "job_id": 113183126279, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37738397203/job/113183126279"}
+      ]
     }
   ],
   "milestones": {
@@ -3208,6 +3285,49 @@
       ],
       "evidence": "evidence/r2.6.7-storage-status-ui-428cc5a.json",
       "next_action": "Begin R2.6.8: integrate Rust history listing, retention planning, explicit cleanup and conflict resolution through the native application/UI boundary; establish per-vault app-data paths and user-only OS access controls, and keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance."
+    },
+    "R2.6.8": {
+      "status": "complete",
+      "implementation_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "implementation_commits": [
+        "688522f21e3f2bfedf6e722f56c2098b80511fbd",
+        "117baa904cfb4dd0621f35c8279caf7669f27bce"
+      ],
+      "evidence": "evidence/r2.6.8-conflict-resolution-117baa9.json",
+      "scope": "Add validated conflict inspection and explicit Keep Current/Keep Incoming APIs to the Rust vault store.",
+      "accepted_slice": [
+        "Four focused conflict tests pass on Ubuntu, macOS and Windows; incoming data is revision-checked and unresolved conflict artifacts remain available after failed resolution.",
+        "All six required workflows pass on exact source SHA 117baa904cfb4dd0621f35c8279caf7669f27bce, including formatting, tests, Clippy, layers, native builds and Wry feasibility checks.",
+        "No local executable validation was run."
+      ],
+      "remaining": [
+        "Native history UI, per-vault app-data integration and user-only OS access controls remain for R2.6.9/R2.6.10.",
+        "D16, SYNC-007, R2.6.5 and C03/C03.2 remain pending until cross-layer and uninstall acceptance."
+      ],
+      "next_action": "R2.6.9: add per-vault app-data paths and user-only OS access controls, then wire the history APIs through the engine boundary."
+    },
+    "R2.6.9": {
+      "status": "complete",
+      "implementation_sha": "fe2db5eb869e3171204fe92ff59d16096e0b966b",
+      "implementation_commits": [
+        "73d090fea1d7597d12f9924a18316123d4dd5f6d",
+        "e5b19dc42df804f826d5cc320f5ccb9751c7f0cf",
+        "6ee95210cf6fcc4752aafb50320ab409c10fdfde",
+        "fe2db5eb869e3171204fe92ff59d16096e0b966b"
+      ],
+      "evidence": "evidence/r2.6.9-private-vault-data-fe2db5e.json",
+      "scope": "Add the legacy-compatible per-vault app-data service, per-user OS access restrictions and engine wrappers for the existing vault history APIs.",
+      "accepted_slice": [
+        "All six required workflows pass on exact source SHA fe2db5eb869e3171204fe92ff59d16096e0b966b; Rust formatting, workspace tests, parallel group, Clippy, layering, native preview builds and Wry feasibility probes pass on Ubuntu, macOS and Windows.",
+        "Document tests pass 21 on each OS; vault tests pass 28 on Ubuntu/macOS and 27 on Windows; platform tests pass 13 on Ubuntu, 12 on macOS and 13 on Windows; the UI suite has one passing test per OS.",
+        "Stable Rust 1.99.0; Cargo.lock was generated in GitHub Actions and has SHA-256 c8ec1aa39b07cbba1d1cbd11dccb8eb01d80cd7617cd58ff6834476881d84c7e.",
+        "No local executable validation was run."
+      ],
+      "remaining": [
+        "The native folder picker and history UI still need to use the service and engine history APIs.",
+        "Uninstall preservation and cross-layer recovery-history behavior remain unverified; D16, SYNC-007, R2.6.5 and C03/C03.2 remain pending."
+      ],
+      "next_action": "R2.6.10: add a native rfd folder picker, connect the per-user app-data service at the desktop boundary, and surface listing, retention planning, explicit cleanup and conflict resolution in native UI."
     }
   },
   "ci_preparation": {
