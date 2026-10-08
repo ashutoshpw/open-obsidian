@@ -3018,6 +3018,64 @@ mod tests {
     }
 
     #[test]
+    fn egui_existing_vault_uninstall_cleanup_selection_preserves_every_path_and_byte() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let original_vault_tree = existing_vault_tree_snapshot(&vault_path);
+        let original_app_data_tree = existing_vault_tree_snapshot(&app_data_path);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        assert_eq!(
+            uninstall_cleanup_summary(harness.state().uninstall_cleanup),
+            "No local cleanup selected; the vault remains preserved."
+        );
+        for label in ["App cache", "Stored credentials", "Clean up recovery history"] {
+            harness.get_by_label(label).click();
+            harness.step();
+            assert_eq!(
+                existing_vault_tree_snapshot(&vault_path),
+                original_vault_tree,
+                "selecting {label} must preserve every vault path and byte"
+            );
+            assert_eq!(
+                existing_vault_tree_snapshot(&app_data_path),
+                original_app_data_tree,
+                "selecting {label} must not perform app-data cleanup"
+            );
+        }
+
+        let selection = harness.state().uninstall_cleanup;
+        assert!(selection.app_cache);
+        assert!(selection.credentials);
+        assert!(selection.recovery_history);
+        assert_eq!(
+            uninstall_cleanup_summary(selection),
+            "Selected local cleanup: App cache, Stored credentials, Recovery history. The vault remains preserved."
+        );
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            original_vault_tree
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            original_app_data_tree
+        );
+    }
+
+    #[test]
     fn egui_rename_flow_keeps_ambiguous_and_unresolved_fixture_references_unchanged() {
         let fixture: serde_json::Value =
             serde_json::from_str(C03_RENAME_FIXTURE).expect("C03 rename fixture must be valid");
