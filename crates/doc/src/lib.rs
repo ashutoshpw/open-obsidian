@@ -674,9 +674,7 @@ fn is_list_item_start(line: &str) -> bool {
 
 fn block_id(line: &str) -> Option<&str> {
     let line = line.trim_end_matches([' ', '\t']);
-    let id_start = line
-        .rfind([' ', '\t'])
-        .map_or(0, |separator| separator + 1);
+    let id_start = line.rfind([' ', '\t']).map_or(0, |separator| separator + 1);
     let marker = line.get(id_start..)?.strip_prefix('^')?;
     let mut characters = marker.chars();
     let first = characters.next()?;
@@ -690,9 +688,7 @@ fn block_id(line: &str) -> Option<&str> {
 }
 
 fn heading_text(value: &str) -> &str {
-    let value = strip_trailing_heading_hashes(
-        value.trim_end_matches([' ', '\t']),
-    );
+    let value = strip_trailing_heading_hashes(value.trim_end_matches([' ', '\t']));
     strip_trailing_block_id(value).trim()
 }
 
