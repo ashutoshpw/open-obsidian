@@ -1,0 +1,154 @@
+{
+  "slice": "R2.6.27 snapshot-bound vault link resolution API",
+  "phase": "R2",
+  "status": "accepted cross-layer resolver API slice; R2 remains in progress",
+  "recorded_at": "2026-10-08T13:32:17Z",
+  "source_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+  "implementation_commits": [
+    "6bd5c5e2ec885fe0069ff54b38c374730de206e5",
+    "a6fb3309fcce87bd4d4644b1071763c56e12007b"
+  ],
+  "scope": "Resolve all parsed Markdown references in a note through the production document resolver and a stable, root-confined vault snapshot; expose the operation through VaultSession and exercise it with the shared C03 link-resolution fixture.",
+  "behavior": [
+    "VaultRoot::resolve_links_for_note requires an existing regular Markdown note, reads Markdown sources through the confined vault reader, and uses regular vault files as candidates while excluding symlinks.",
+    "The resolver is bound to matching before/after vault snapshots and returns LinkResolutionSnapshotChanged if the vault changes during resolution; it performs no writes.",
+    "VaultSession exposes the operation and the engine crate reexports the result and link-resolution types.",
+    "The testkit materializes the shared fixture, compares parsed reference fields, status, target and candidate paths with expected results, and verifies both the snapshot and every original file byte remain unchanged."
+  ],
+  "ci_attempts": [
+    {
+      "source_sha": "6bd5c5e2ec885fe0069ff54b38c374730de206e5",
+      "rust_run_id": 37783824402,
+      "inventory_run_id": 37783824408,
+      "quality_run_id": 37783824427,
+      "desktop_build_run_id": 37783824361,
+      "plugin_renderer_run_id": 37783824360,
+      "loaded_plugin_run_id": 37783824380,
+      "finding": "All five companion workflows passed and workspace tests passed on Ubuntu, macOS and Windows. Ubuntu rustfmt requested layout corrections in the new testkit and vault code; the Rust CI run failed only at formatting. Applied the exact CI-reported layout in a6fb3309fcce87bd4d4644b1071763c56e12007b."
+    },
+    {
+      "source_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "rust_run_id": 37784366922,
+      "inventory_run_id": 37784366970,
+      "quality_run_id": 37784366940,
+      "desktop_build_run_id": 37784367156,
+      "plugin_renderer_run_id": 37784367082,
+      "loaded_plugin_run_id": 37784367302,
+      "conclusion": "all six required workflows passed"
+    }
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37784366922,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366922",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113335203274, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113335202824, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113335203328, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, crate-layer checks, native preview builds and unchanged-plugin Wry feasibility probes passed on all three operating systems.",
+        "Ubuntu ran formatting and workspace tests in GitHub Actions' native Parallel group; the group wait barrier passed."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37784366970,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366970",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113335202598, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37784366940,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366940",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335202883, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113335203114, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113335203202, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37784367156,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367156",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335203854, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113335204224, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113335204473, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37784367082,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367082",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335202943, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113335203087, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113335203285, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37784367302,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335204531, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113335204798, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113335205038, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "4 passed, including the new snapshot-bound fixture case",
+      "openobsidian-ui-egui": "13 passed",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "4 passed, including the new snapshot-bound fixture case",
+      "openobsidian-ui-egui": "13 passed",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "4 passed, including the new snapshot-bound fixture case",
+      "openobsidian-ui-egui": "13 passed",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; executable checks used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11553547736, "name": "openobsidian-rust-preview-a6fb3309fcce87bd4d4644b1071763c56e12007b", "size_bytes": 8850668, "digest": "sha256:a86cbd4cf9ee2d2f4ef268b876ed33bdef48c3a8a66624b3b7880255e00aab98"},
+    {"id": 11553926018, "name": "rust-plugin-runtime-Linux-a6fb3309fcce87bd4d4644b1071763c56e12007b", "size_bytes": 2695, "digest": "sha256:c76fe07f3a6adbfc02d5bac5b72c5147bcad1df3071b05a0c2d344f7c67752cc"},
+    {"id": 11554025751, "name": "rust-plugin-runtime-macOS-a6fb3309fcce87bd4d4644b1071763c56e12007b", "size_bytes": 2698, "digest": "sha256:914aa4ab12623bf1f89def296ffb251acc637cff136e1dc839f81ea204f7f595"},
+    {"id": 11554016204, "name": "rust-plugin-runtime-Windows-a6fb3309fcce87bd4d4644b1071763c56e12007b", "size_bytes": 2715, "digest": "sha256:ab7f1ecc9537962ccbf54ea357b28c81212f0f113c733dcfd97193edab92b40e"}
+  ],
+  "limitations": [
+    "This adds a vault/engine resolution API and shared testkit acceptance; it does not add user-facing native link-status presentation.",
+    "C03/C03.2 still require broader native and cross-layer acceptance, including additional fixture cases.",
+    "SYNC-007 host-level uninstall integration remains pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions."
+}

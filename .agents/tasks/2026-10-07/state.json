@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T13:11:57Z",
+  "updated_at": "2026-10-08T13:32:17Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7b3c3d1a115d79badb4816182f74ab709b145bed",
-  "current_milestone": "R2.6.26",
+  "last_reconciled_head": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+  "current_milestone": "R2.6.27",
   "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "7b3c3d1a115d79badb4816182f74ab709b145bed"
+      "implementation_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b"
     },
     "R3": {
       "status": "pending",
@@ -159,7 +159,8 @@
     "R2.6.23 adds an over-cap history-warning egui interaction. The test renders the warning and Review eligible cleanup control, then confirms no cleanup task or confirmation state starts unless the user selects the review action. All six GitHub Actions workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; evidence: evidence/r2.6.23-history-warning-ui-b236009.json. The new interaction passed on Ubuntu, macOS and Windows. No local executable validation was run. Together with the fixture-backed retention/explicit-cleanup interaction, the platform storage-status probe and its UI refresh interaction, this closes the D16 cap-warning display gap. SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain open.",
     "R2.6.24 drove the same-basename-disambiguated C03 rename fixture through the production egui preview, review, explicit apply and session refresh. Preview preserved bytes; confirmed apply updated the intended reference and moved note while preserving the unrelated same-basename note. All six GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949, including the Rust parallel group and the interaction on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.24-subpath-rename-ui-a01c8a2.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
     "R2.6.25 added fixtures/link-resolution.json and a shared testkit case for source-aware wiki/Markdown link and embed resolution, aliases, subpaths, duplicate headings/basenames, unresolved paths and source immutability. All six GitHub Actions workflows passed on exact source SHA b5f3249f2e6eb5b98ea6515722f397cea0f3db89, and the fixture test passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.25-link-resolution-fixture-b5f3249.json. No local executable validation was run; C03/C03.2 full cross-layer acceptance and SYNC-007 host-level uninstall integration remain open.",
-    "R2.6.26 replaced the hardcoded egui rename fixture interaction with the shared resolved wiki/Markdown/embed case. Production UI preview/review/apply/session refresh preserved pre-confirmation bytes and matched all expected post-apply bytes, including BOM/CRLF source. All six workflows passed on exact source SHA 7b3c3d1a115d79badb4816182f74ab709b145bed, and the interaction passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open."
+    "R2.6.26 replaced the hardcoded egui rename fixture interaction with the shared resolved wiki/Markdown/embed case. Production UI preview/review/apply/session refresh preserved pre-confirmation bytes and matched all expected post-apply bytes, including BOM/CRLF source. All six workflows passed on exact source SHA 7b3c3d1a115d79badb4816182f74ab709b145bed, and the interaction passed on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open.",
+    "R2.6.27 added snapshot-bound, read-only link resolution through VaultRoot and VaultSession, with shared C03 fixture acceptance. All six GitHub Actions workflows passed on exact source SHA a6fb3309fcce87bd4d4644b1071763c56e12007b; package counts, job IDs and artifact digests are recorded in evidence/r2.6.27-vault-link-resolution-a6fb330.json. No local executable validation was run. Full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -4209,6 +4210,80 @@
         {"name": "macos-latest", "job_id": 113287693017, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095/job/113287693017"},
         {"name": "ubuntu-latest", "job_id": 113287693090, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37770218095/job/113287693090"}
       ]
+    },
+    {
+      "name": "rust-ci",
+      "run_id": 37784366922,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366922",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113335203274, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366922/job/113335203274"},
+        {"name": "rust (macos-latest)", "job_id": 113335202824, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366922/job/113335202824"},
+        {"name": "rust (windows-latest)", "job_id": 113335203328, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366922/job/113335203328"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37784366970,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366970",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113335202598, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366970/job/113335202598"}]
+    },
+    {
+      "name": "quality",
+      "run_id": 37784366940,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366940",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335202883, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366940/job/113335202883"},
+        {"name": "ubuntu-latest", "job_id": 113335203114, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366940/job/113335203114"},
+        {"name": "macos-latest", "job_id": 113335203202, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784366940/job/113335203202"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37784367156,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367156",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335203854, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367156/job/113335203854"},
+        {"name": "ubuntu-latest", "job_id": 113335204224, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367156/job/113335204224"},
+        {"name": "macos-latest", "job_id": 113335204473, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367156/job/113335204473"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37784367082,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367082",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335202943, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367082/job/113335202943"},
+        {"name": "macos-latest", "job_id": 113335203087, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367082/job/113335203087"},
+        {"name": "ubuntu-latest", "job_id": 113335203285, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367082/job/113335203285"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37784367302,
+      "head_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113335204531, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302/job/113335204531"},
+        {"name": "macos-latest", "job_id": 113335204798, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302/job/113335204798"},
+        {"name": "ubuntu-latest", "job_id": 113335205038, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37784367302/job/113335205038"}
+      ]
     }
   ],
   "milestones": {
@@ -5296,6 +5371,47 @@
         "SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Continue full C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+    },
+    "R2.6.27": {
+      "status": "complete",
+      "implementation_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+      "implementation_commits": [
+        "6bd5c5e2ec885fe0069ff54b38c374730de206e5",
+        "a6fb3309fcce87bd4d4644b1071763c56e12007b"
+      ],
+      "scope": "Exercise source-aware link resolution through a stable, root-confined vault snapshot and expose it through VaultSession.",
+      "ci_attempts": [
+        {
+          "source_sha": "6bd5c5e2ec885fe0069ff54b38c374730de206e5",
+          "rust_run_id": 37783824402,
+          "inventory_run_id": 37783824408,
+          "quality_run_id": 37783824427,
+          "desktop_build_run_id": 37783824361,
+          "plugin_renderer_run_id": 37783824360,
+          "loaded_plugin_run_id": 37783824380,
+          "finding": "Five companion workflows and workspace tests passed; Ubuntu rustfmt requested layout corrections. Applied the exact CI diff in a6fb3309fcce87bd4d4644b1071763c56e12007b."
+        },
+        {
+          "source_sha": "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+          "rust_run_id": 37784366922,
+          "inventory_run_id": 37784366970,
+          "quality_run_id": 37784366940,
+          "desktop_build_run_id": 37784367156,
+          "plugin_renderer_run_id": 37784367082,
+          "loaded_plugin_run_id": 37784367302,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.27-vault-link-resolution-a6fb330.json",
+      "accepted_slice": [
+        "The shared link-resolution fixture passes through VaultRoot and VaultSession on Ubuntu, macOS and Windows, including reference fields, expected resolution status/targets/candidates, stable snapshot and exact source-byte preservation.",
+        "Formatting, workspace tests, Clippy, crate layering, native preview builds and Wry feasibility probes passed on all three operating systems; all six required workflows passed on the exact source SHA. No local executable validation was run."
+      ],
+      "remaining": [
+        "The resolver API does not add user-facing native link-status presentation or complete all C03/C03.2 cross-layer cases.",
+        "SYNC-007 host-level uninstall integration remains pending."
+      ],
+      "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
     }
   },
   "ci_preparation": {
