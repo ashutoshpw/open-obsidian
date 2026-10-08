@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.48",
+  "source_sha": "c7267cc2c996e9264c92be6a1564840c92526fd6",
+  "workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37861418699,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418699",
+    "job_id": 113597799283,
+    "job_conclusion": "failure",
+    "artifact_id": 11586379123,
+    "artifact_name": "obsidian-vault-roundtrip-c7267cc2c996e9264c92be6a1564840c92526fd6",
+    "artifact_sha256": "d2d7f03cb92d79775abb7aa949934461d0032ce7fd0074172b654a69a6afe140",
+    "artifact_files": {
+      "obsidian-vault-roundtrip-report.json": "36e7e4073c9df97cdacd8b6a7850ac039ee05acf6210ee317b525c22c3a51a5c",
+      "obsidian-first-run.png": "2785aecf7ac1dce69ee3d6b8b5712ec03808e21a2018c1115eb81054b2e3d28c",
+      "obsidian-folder-picker-initial.png": "49daace12552dc346c9ba54562e4b7f6535250e698f5fa45b6dc1c0dc3440140",
+      "obsidian-folder-picker-path-entered.png": "e506ae5f46a9b12efffe269fa7c0ffd19e28889cf57143de973b6498022a1f1d",
+      "obsidian-folder-picker-after-open-click.png": "3f452dafdc1688732cb18f9586313829acfd508deda4e419505936fa647c08d2",
+      "obsidian-author.log": "f855d88435b86cf29541d6c254f6eb58a28710b62755c57440781371c0a04773"
+    }
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner": "ubuntu-24.04"
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37861418597,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418597",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113597798568, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113597798794, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113597798802, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37861418593,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418593",
+      "conclusion": "success",
+      "job_id": 113597798656
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37861418678,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418678",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113597798963, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113597799265, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113597799401, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37861418601,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418601",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113597798915, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113597799102, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113597799261, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37861418620,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418620",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113597798742, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113597799001, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113597799037, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37861418563,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37861418563",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113597798599, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113597798830, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113597799861, "conclusion": "success"}
+      ]
+    }
+  ],
+  "finding": {
+    "stage": "The native release build and AppImage verification passed. The geometry-based click selected the generated fixture folder; the screenshot shows the Obsidian workspace with the C01.2 Roundtrip Fixture vault and its Assets and Nested Ω folders, plus the first-open trust dialog. The active window changed from picker ID 4194310 to Obsidian window ID 2097168.",
+    "completed_acceptance": [
+      "Obsidian accepted the selected fixture folder and displayed its workspace."
+    ],
+    "not_completed": [
+      "The first-open trust dialog was not resolved by the runner.",
+      "No Obsidian-authored note was created.",
+      "OpenObsidian was not launched against the fixture.",
+      "No no-op or reopen snapshot comparison occurred."
+    ],
+    "diagnostic": "The runner treated any focus ID other than the original first-run window as an active picker and waited for focus to return to the original ID. The picker had already closed and Obsidian had opened the vault in a new window, so the completion predicate was wrong."
+  },
+  "correction": "Wait for focus to leave the native picker window ID, reconnect DevTools to the non-starter Obsidian vault page target, then choose Browse vault in Restricted Mode before authoring the synthetic note.",
+  "acceptance": "Folder selection is demonstrated. R2.6.48 and C01.2-01/C01.2-03 remain pending until note authorship, OpenObsidian no-op opening, and same-vault Obsidian reopen checks pass."
+}

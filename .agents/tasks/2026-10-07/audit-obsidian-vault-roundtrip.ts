@@ -6,6 +6,7 @@ import {join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
 
 type CdpTarget = {
+  id?: string;
   type?: string;
   title?: string;
   url?: string;
@@ -219,13 +220,21 @@ async function waitForDevToolsVersion(port: number): Promise<{Browser?: string; 
   return value;
 }
 
-async function waitForPageTarget(port: number): Promise<CdpTarget> {
-  const value = await waitFor<CdpTarget | null>(`Obsidian page target on port ${port}`, async () => {
+async function readPageTargets(port: number): Promise<CdpTarget[]> {
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/json/list`);
+    if (!response.ok) return [];
+    return await response.json() as CdpTarget[];
+  } catch {
+    return [];
+  }
+}
+
+async function waitForPageTarget(port: number, predicate: (target: CdpTarget) => boolean = () => true, label = `Obsidian page target on port ${port}`): Promise<CdpTarget> {
+  const value = await waitFor<CdpTarget | null>(label, async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/json/list`);
-      if (!response.ok) return null;
-      const targets = await response.json() as CdpTarget[];
-      return targets.find((target) => target.type === "page" && target.webSocketDebuggerUrl) ?? null;
+      const targets = await readPageTargets(port);
+      return targets.find((target) => target.type === "page" && target.webSocketDebuggerUrl && predicate(target)) ?? null;
     } catch {
       return null;
     }
@@ -234,13 +243,18 @@ async function waitForPageTarget(port: number): Promise<CdpTarget> {
   return value;
 }
 
-async function connectObsidian(port: number): Promise<{connection: DevToolsConnection; browserVersion: string; target: CdpTarget}> {
-  const version = await waitForDevToolsVersion(port);
-  const target = await waitForPageTarget(port);
+async function connectTarget(target: CdpTarget): Promise<DevToolsConnection> {
   if (!target.webSocketDebuggerUrl) throw new Error("Obsidian page target did not expose its DevTools WebSocket");
   const connection = await DevToolsConnection.connect(target.webSocketDebuggerUrl);
   await connection.request("Page.enable");
   await connection.request("Runtime.enable");
+  return connection;
+}
+
+async function connectObsidian(port: number): Promise<{connection: DevToolsConnection; browserVersion: string; target: CdpTarget}> {
+  const version = await waitForDevToolsVersion(port);
+  const target = await waitForPageTarget(port);
+  const connection = await connectTarget(target);
   return {connection, browserVersion: version.Browser ?? "unknown", target};
 }
 
@@ -366,7 +380,7 @@ async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<
   });
 }
 
-async function chooseVaultDirectory(connection: DevToolsConnection): Promise<void> {
+async function chooseVaultDirectory(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
   const initialWindowId = activeWindowId();
   const initialTitle = activeWindowTitle();
   await clickFirstRunOpenButton(connection);
@@ -386,7 +400,7 @@ async function chooseVaultDirectory(connection: DevToolsConnection): Promise<voi
   xdotool("key", "ctrl+l");
   xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
   pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-path-entered.png"));
-  const pickerStillActive = () => activeWindowId() !== initialWindowId;
+  const pickerStillActive = () => activeWindowId() === pickerWindow.windowId;
   const openButtonClick = clickWindowOpenButton(pickerWindow.windowId);
   (report.obsidian_authoring as Record<string, unknown>).folder_picker_open_button_click = openButtonClick;
   await delay(1_000);
@@ -404,14 +418,56 @@ async function chooseVaultDirectory(connection: DevToolsConnection): Promise<voi
     await delay(1_000);
   }
   if (pickerStillActive()) {
-    await waitFor("Obsidian folder picker to close", async () => activeWindowId(), (windowId) => windowId === initialWindowId, 15_000);
+    await waitFor("Obsidian folder picker to close", async () => activeWindowId(), (windowId) => windowId !== pickerWindow.windowId, 15_000);
   }
   (report.obsidian_authoring as Record<string, unknown>).folder_picker_closed = true;
 
-  const isVaultLoaded = (body: string) => body.trim().length > 0 && !body.includes("Open folder as vault") && !body.includes("Create new vault");
+  const vaultTarget = await waitForPageTarget(
+    port,
+    (candidate) => typeof candidate.url === "string" && candidate.url.startsWith("app://obsidian.md/") && !candidate.url.includes("/starter.html"),
+    "Obsidian vault renderer after folder selection",
+  );
+  const pageTargets = await readPageTargets(port);
+  const authoring = report.obsidian_authoring as Record<string, unknown>;
+  authoring.page_targets_after_folder_selection = pageTargets.map(({id, title, url, type}) => ({id, title, url, type}));
+  authoring.vault_renderer_target = {id: vaultTarget.id ?? null, title: vaultTarget.title ?? "", url: vaultTarget.url ?? ""};
+  connection.close();
+  connection = await connectTarget(vaultTarget);
+
+  const isVaultLoaded = (body: string) => body.includes("C01.2 Roundtrip Fixture") && !body.includes("Open folder as vault") && !body.includes("Create new vault");
   const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
-  (report.obsidian_authoring as Record<string, unknown>).selected_vault_text = body.slice(0, 2_000);
-  (report.obsidian_authoring as Record<string, unknown>).selected_vault_in_ui = true;
+  authoring.selected_vault_text = body.slice(0, 2_000);
+  authoring.selected_vault_in_ui = true;
+  return connection;
+}
+
+async function chooseRestrictedMode(connection: DevToolsConnection): Promise<void> {
+  const authoring = report.obsidian_authoring as Record<string, unknown>;
+  const state = await connection.evaluateJson<{body: string; buttons: string[]}>(`(() => {
+    const buttons = [...document.querySelectorAll('button,[role="button"]')];
+    return {
+      body: document.body?.innerText ?? '',
+      buttons: buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean),
+    };
+  })()`);
+  const restrictedModeLabel = "Browse vault in Restricted Mode";
+  authoring.trust_prompt_buttons = state.buttons;
+  if (!state.buttons.includes(restrictedModeLabel)) {
+    if (state.body.includes("Do you trust the author of this vault?")) {
+      throw new Error("Obsidian displayed the vault trust prompt without its Restricted Mode button");
+    }
+    authoring.restricted_mode_selected = false;
+    return;
+  }
+
+  connection.send("Runtime.evaluate", {
+    expression: `(() => [...document.querySelectorAll('button,[role="button"]')]
+      .find((button) => (button.innerText || button.textContent || '').trim() === '${restrictedModeLabel}')?.click())()`,
+    returnByValue: true,
+  });
+  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", (value) => !value.includes("Do you trust the author of this vault?") && value.includes("C01.2 Roundtrip Fixture"), "Obsidian to browse the fixture in Restricted Mode", 30_000);
+  authoring.restricted_mode_selected = true;
+  authoring.restricted_mode_text = body.slice(0, 2_000);
 }
 
 async function createFixture(): Promise<void> {
@@ -520,14 +576,15 @@ async function createObsidianProfile(profileDirectory: string, port: number): Pr
 
 async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{connection: DevToolsConnection; browserVersion: string; notePath: string}> {
   if (child.exitCode !== null) throw new Error(`Pinned Obsidian exited before authoring (code ${child.exitCode})`);
-  const {connection, browserVersion, target} = await connectObsidian(9222);
+  let {connection, browserVersion, target} = await connectObsidian(9222);
   const authoring = report.obsidian_authoring as Record<string, unknown>;
   authoring.devtools_browser = browserVersion;
   authoring.first_target = {title: target.title ?? "", url: target.url ?? ""};
   const firstRunBody = await waitForRenderer(connection, "document.body?.innerText ?? ''", (body) => body.includes("Open folder as vault"), "Obsidian's first-run vault screen");
   authoring.first_run_text = firstRunBody.slice(0, 2_000);
   await captureObsidianScreenshot(connection, "obsidian-first-run.png");
-  await chooseVaultDirectory(connection);
+  connection = await chooseVaultDirectory(connection, 9222);
+  await chooseRestrictedMode(connection);
 
   xdotool("key", "ctrl+n");
   const editor = await waitFor(connection, "Obsidian editor to become active", async () => await connection.evaluateJson<{count: number; active: boolean}>(`(() => {
