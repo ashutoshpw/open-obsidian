@@ -1,0 +1,147 @@
+{
+  "slice": "R2.6.18 native uninstall cleanup choices and vault preservation",
+  "phase": "R2",
+  "status": "accepted UI slice; R2 remains in progress",
+  "source_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+  "implementation_commits": [
+    "b142166afe39a44d56864414ea0c800bcb118b5e",
+    "bf4e3b32d3b163d6acd249f52f31a3e048ed305c"
+  ],
+  "scope": "Port the existing optional app-cache, credentials and recovery-history uninstall choices to the native egui shell, default them off and keep the active vault outside cleanup.",
+  "behavior": [
+    "The native UI presents the three existing optional cleanup choices with their descriptions and keeps them unselected by default.",
+    "The summary states that the vault remains preserved whether no choices or all choices are selected.",
+    "The headless egui interaction test toggles all three accessible options and verifies the open vault note remains present and byte-identical.",
+    "The cleanup choices are presentation/state only in this slice; actual operating-system uninstaller integration is deferred to packaging work."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37762742848,
+      "head_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742848",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113262887341, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113262887100, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113262887321, "conclusion": "success"}
+      ],
+      "checks": [
+        "Ubuntu formatting, workspace tests, Clippy, dependency-layer checks, native preview build and unchanged-plugin Wry feasibility probes passed.",
+        "Workspace tests, Clippy, dependency-layer checks, native preview builds and unchanged-plugin Wry feasibility probes passed on macOS and Windows.",
+        "The uninstall cleanup choices interaction test passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37762742918,
+      "head_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742918",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113262887474, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37762743044,
+      "head_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762743044",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113262888726, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113262888807, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113262889363, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37762742805,
+      "head_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742805",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113262887216, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113262887415, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113262887489, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37762742956,
+      "head_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742956",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113262887725, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113262887964, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113262888028, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37762742981,
+      "head_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742981",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113262887962, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113262888147, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113262888342, "conclusion": "success"}
+      ]
+    }
+  ],
+  "rust_toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "8 passed, including egui_uninstall_cleanup_choices_are_opt_in_and_preserve_the_open_vault",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "8 passed, including egui_uninstall_cleanup_choices_are_opt_in_and_preserve_the_open_vault",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "8 passed, including egui_uninstall_cleanup_choices_are_opt_in_and_preserve_the_open_vault",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; all executable validation used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11543217151, "name": "openobsidian-rust-preview-bf4e3b32d3b163d6acd249f52f31a3e048ed305c", "digest": "sha256:1d54dc0d5f10072872695b86529e7356faa539e933e31cac09e5e2be5e97328b"},
+    {"id": 11542714085, "name": "rust-plugin-runtime-Linux-bf4e3b32d3b163d6acd249f52f31a3e048ed305c", "digest": "sha256:a2766afb2505d3d4a567b7ea1f6160f3be2353ff2330ac9179eb8b3cd99fa80f"},
+    {"id": 11542758470, "name": "rust-plugin-runtime-macOS-bf4e3b32d3b163d6acd249f52f31a3e048ed305c", "digest": "sha256:c836a5af536409bad5cf562427b5a63d048c27f6a49be5007b04f87c5e9b99d4"},
+    {"id": 11542769093, "name": "rust-plugin-runtime-Windows-bf4e3b32d3b163d6acd249f52f31a3e048ed305c", "digest": "sha256:70e7532eb82778a1e3e225ac12292d66fae1c2f01b6d2a006edca08d14d9e30c"}
+  ],
+  "superseded_attempts": [
+    {
+      "source_sha": "b142166afe39a44d56864414ea0c800bcb118b5e",
+      "rust_run_id": 37762463675,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37762463670, "conclusion": "success"},
+        "quality": {"run_id": 37762463937, "conclusion": "success"},
+        "desktop-build": {"run_id": 37762463571, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37762463640, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37762463610, "conclusion": "success"}
+      },
+      "finding": "The new test used an egui_kittest label query for Recovery history, which matched both the existing history heading and the cleanup checkbox on every OS. Renamed the checkbox to Clean up recovery history."
+    }
+  ],
+  "limitations": [
+    "The cleanup choices update native UI state and summary only; no app-data, credential, history or vault deletion is performed or wired to a platform uninstaller in this slice.",
+    "This test verifies the open vault remains byte-identical when choices are selected. It does not execute an OS uninstall or validate installer integration.",
+    "D16, SYNC-007 full uninstall preservation, remaining R2 workflow gaps, history integration details and C03/C03.2 full cross-layer acceptance remain pending.",
+    "No local executable validation was run."
+  ]
+}
