@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.36",
+  "requirement": "C03",
+  "source_sha": "443b7161eacbfd4c770927dc368836f938878a04",
+  "implementation_commits": [
+    "a6fb3309fcce87bd4d4644b1071763c56e12007b",
+    "7b3c3d1a115d79badb4816182f74ab709b145bed",
+    "a30a98c90e4a8b97d3743c0960b0a02133b14327",
+    "08ab2379c9f96af4f1baece934f1711b6d78a24c",
+    "ea760a6fc6ed173d72412f4298445af8bd9f775f",
+    "158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b",
+    "a0a81e5b7464767204fa55c27c1dc7afb245c309",
+    "443b7161eacbfd4c770927dc368836f938878a04"
+  ],
+  "acceptance": {
+    "link_forms_and_resolution": "The shared fixture covers wiki and Markdown links, relative paths, spaces, aliases, headings, blocks, embeds, external links, unresolved targets and ambiguous duplicate headings/basenames. Document and confined VaultRoot/VaultSession resolver tests compare expected status, paths and candidates while preserving source bytes.",
+    "rename_and_reference_updates": "The rename fixture covers resolved wiki, Markdown and embed updates, BOM/CRLF/aliases/subpaths, same-basename disambiguation, duplicate headings, unresolved and ambiguous targets, exact post-apply bytes, transaction rollback, and native preview/review/confirmation interactions.",
+    "transclusion_and_attachments": "Snapshot-bound VaultSession note-embed resolution enforces Markdown-only targets, bounded reads, depth/cycle checks and report budgets; the native egui renderer displays formatted CommonMark and bounded static previews for BMP/GIF/ICO/JPEG/PNG/WebP. The UI interaction exercises actual vault file read/decode/render and unchanged attachment bytes.",
+    "fixture_evidence": [
+      "evidence/r2.6.25-link-resolution-fixture-b5f3249.json",
+      "evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json",
+      "evidence/r2.6.27-vault-link-resolution-a6fb330.json",
+      "evidence/r2.6.30-note-embed-vault-08ab237.json",
+      "evidence/r2.6.31-native-transclusion-preview-ea760a6.json",
+      "evidence/r2.6.32-link-rename-visibility-a30a98c.json",
+      "evidence/r2.6.33-formatted-markdown-transclusions-158ee2f.json",
+      "evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json",
+      "evidence/r2.6.35-vault-to-egui-image-preview-443b716.json"
+    ]
+  },
+  "accepted_validation": {
+    "source_sha": "443b7161eacbfd4c770927dc368836f938878a04",
+    "conclusion": "All six required workflows passed; the workspace test suite exercised the complete link, rename and transclusion test set on Ubuntu, macOS and Windows.",
+    "workflows": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37825268614,
+        "job_ids": [
+          113476382643
+        ]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37825268425,
+        "job_ids": [
+          113476381849,
+          113476382334,
+          113476382404
+        ]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37825268654,
+        "job_ids": [
+          113476383218,
+          113476383811,
+          113476383814
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37825268485,
+        "job_ids": [
+          113476383148,
+          113476383395,
+          113476383497
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37825268489,
+        "job_ids": [
+          113476382854,
+          113476383026,
+          113476383077
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37825268491,
+        "job_ids": [
+          113476382669,
+          113476382952,
+          113476383134
+        ]
+      }
+    ],
+    "passed_checks": [
+      "Rust formatting",
+      "workspace tests",
+      "Clippy",
+      "crate dependency layering",
+      "native preview builds",
+      "unchanged-plugin feasibility",
+      "parallel workflow group"
+    ],
+    "local_executable_validation": "None; executable validation ran only in GitHub Actions."
+  },
+  "limitations": [
+    "Only supported static raster formats are previewed; unsupported attachments remain resolved but inert, and GIF/WebP animation playback is not implemented.",
+    "This acceptance does not certify a human accessibility review in a packaged native window.",
+    "SYNC-007 host-level uninstall preservation remains separate and open."
+  ]
+}

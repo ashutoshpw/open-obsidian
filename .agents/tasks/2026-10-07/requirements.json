@@ -2603,9 +2603,18 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.6.25-link-resolution-fixture-b5f3249.json",
+        "evidence/r2.6.26-ui-mixed-link-rename-7b3c3d1.json",
+        "evidence/r2.6.30-note-embed-vault-08ab237.json",
+        "evidence/r2.6.32-link-rename-visibility-a30a98c.json",
+        "evidence/r2.6.33-formatted-markdown-transclusions-158ee2f.json",
+        "evidence/r2.6.34-bounded-vault-image-attachments-a0a81e5.json",
+        "evidence/r2.6.35-vault-to-egui-image-preview-443b716.json",
+        "evidence/r2.6.36-c03-cross-layer-acceptance-443b716.json"
+      ],
+      "tested_source_tree": "443b7161eacbfd4c770927dc368836f938878a04",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",
