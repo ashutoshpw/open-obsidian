@@ -362,7 +362,13 @@ mod tests {
             StorageProtectionPlatform::Windows,
             Some("D:"),
             &mut |command, arguments| {
-                observed.push((command.to_owned(), arguments.to_vec()));
+                observed.push((
+                    command.to_owned(),
+                    arguments
+                        .iter()
+                        .map(|argument| (*argument).to_owned())
+                        .collect(),
+                ));
                 Ok(output(
                     true,
                     "Conversion Status: Fully Encrypted\nProtection Status: Protection On\n",
@@ -373,7 +379,10 @@ mod tests {
         assert_eq!(report.status, StorageProtectionStatus::Enabled);
         assert_eq!(
             observed,
-            vec![("manage-bde".to_owned(), vec!["-status", "D:"])]
+            vec![(
+                "manage-bde".to_owned(),
+                vec!["-status".to_owned(), "D:".to_owned()]
+            )]
         );
     }
 
@@ -435,7 +444,13 @@ mod tests {
             StorageProtectionPlatform::Linux,
             None,
             &mut |command, arguments| {
-                calls.push((command.to_owned(), arguments.to_vec()));
+                calls.push((
+                    command.to_owned(),
+                    arguments
+                        .iter()
+                        .map(|argument| (*argument).to_owned())
+                        .collect(),
+                ));
                 if command == "findmnt" {
                     Ok(output(true, "/dev/mapper/cryptroot[/@]\n"))
                 } else {
@@ -453,9 +468,18 @@ mod tests {
             vec![
                 (
                     "findmnt".to_owned(),
-                    vec!["--noheadings", "--output", "SOURCE", "--target", "/"]
+                    vec![
+                        "--noheadings".to_owned(),
+                        "--output".to_owned(),
+                        "SOURCE".to_owned(),
+                        "--target".to_owned(),
+                        "/".to_owned(),
+                    ]
                 ),
-                ("cryptsetup".to_owned(), vec!["status", "cryptroot"])
+                (
+                    "cryptsetup".to_owned(),
+                    vec!["status".to_owned(), "cryptroot".to_owned()]
+                )
             ]
         );
     }
