@@ -51,6 +51,13 @@ struct RenameApplyOutcome {
     listing_refreshed: bool,
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct UninstallCleanupSelection {
+    app_cache: bool,
+    credentials: bool,
+    recovery_history: bool,
+}
+
 enum RenameTaskMessage {
     Preview(Result<VaultRenamePreview, String>),
     Applied(Result<RenameApplyOutcome, String>),
@@ -135,6 +142,7 @@ struct OpenObsidianApp {
     rename_error: Option<String>,
     rename_status: Option<String>,
     rename_confirmation: bool,
+    uninstall_cleanup: UninstallCleanupSelection,
 }
 
 impl eframe::App for OpenObsidianApp {
@@ -258,7 +266,29 @@ impl OpenObsidianApp {
             ui.label(&report.detail);
         }
         ui.small("This check covers only the reported system volume or root filesystem.");
+        self.show_uninstall_cleanup(ui);
         ui.label("Editing and plugin compatibility are not available in this preview.");
+    }
+
+    fn show_uninstall_cleanup(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        ui.heading("Uninstall cleanup");
+        ui.label(
+            "Your vault is never included in uninstall cleanup. Select only optional local app data for the operating-system uninstall flow.",
+        );
+        ui.checkbox(&mut self.uninstall_cleanup.app_cache, "App cache");
+        ui.small("Derived indexes, UI state and disposable runtime cache.");
+        ui.checkbox(
+            &mut self.uninstall_cleanup.credentials,
+            "Stored credentials",
+        );
+        ui.small("Provider credentials kept in OS-backed credential storage.");
+        ui.checkbox(
+            &mut self.uninstall_cleanup.recovery_history,
+            "Recovery history",
+        );
+        ui.small("Managed recovery snapshots; unresolved conflicts remain protected.");
+        ui.label(uninstall_cleanup_summary(self.uninstall_cleanup));
     }
 }
 
@@ -1057,6 +1087,28 @@ fn rename_apply_error(error: VaultError) -> String {
     }
 }
 
+fn uninstall_cleanup_summary(selection: UninstallCleanupSelection) -> String {
+    let mut selected = Vec::new();
+    if selection.app_cache {
+        selected.push("App cache");
+    }
+    if selection.credentials {
+        selected.push("Stored credentials");
+    }
+    if selection.recovery_history {
+        selected.push("Recovery history");
+    }
+
+    if selected.is_empty() {
+        "No local cleanup selected; the vault remains preserved.".to_owned()
+    } else {
+        format!(
+            "Selected local cleanup: {}. The vault remains preserved.",
+            selected.join(", ")
+        )
+    }
+}
+
 fn history_kind_label(kind: VaultHistoryKind) -> &'static str {
     match kind {
         VaultHistoryKind::Recovery => "Recovery",
@@ -1317,6 +1369,48 @@ mod tests {
         assert_eq!(
             std::fs::read(vault_path.join("Index.md")).unwrap(),
             b"[[Archive/New]]\r\n"
+        );
+    }
+
+    #[test]
+    fn egui_uninstall_cleanup_choices_are_opt_in_and_preserve_the_open_vault() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir(&vault_path).unwrap();
+        std::fs::create_dir(&app_data_path).unwrap();
+        std::fs::write(vault_path.join("Keep.md"), b"# Keep\r\n").unwrap();
+        let original_note = std::fs::read(vault_path.join("Keep.md")).unwrap();
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        assert_eq!(
+            uninstall_cleanup_summary(harness.state().uninstall_cleanup),
+            "No local cleanup selected; the vault remains preserved."
+        );
+        harness.get_by_label("App cache").click();
+        harness.step();
+        harness.get_by_label("Stored credentials").click();
+        harness.step();
+        harness.get_by_label("Recovery history").click();
+        harness.step();
+
+        let selection = harness.state().uninstall_cleanup;
+        assert!(selection.app_cache);
+        assert!(selection.credentials);
+        assert!(selection.recovery_history);
+        assert_eq!(
+            uninstall_cleanup_summary(selection),
+            "Selected local cleanup: App cache, Stored credentials, Recovery history. The vault remains preserved."
+        );
+        assert!(vault_path.join("Keep.md").exists());
+        assert_eq!(
+            std::fs::read(vault_path.join("Keep.md")).unwrap(),
+            original_note
         );
     }
 }
