@@ -3041,7 +3041,11 @@ mod tests {
             uninstall_cleanup_summary(harness.state().uninstall_cleanup),
             "No local cleanup selected; the vault remains preserved."
         );
-        for label in ["App cache", "Stored credentials", "Clean up recovery history"] {
+        for label in [
+            "App cache",
+            "Stored credentials",
+            "Clean up recovery history",
+        ] {
             harness.get_by_label(label).click();
             harness.step();
             assert_eq!(
