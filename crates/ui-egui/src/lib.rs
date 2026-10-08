@@ -1424,8 +1424,7 @@ mod tests {
                 })
                 .collect::<Vec<_>>()
         };
-        let original_vault_files =
-            materialize_files(&vault_path, &scenario["vault"]["files"]);
+        let original_vault_files = materialize_files(&vault_path, &scenario["vault"]["files"]);
         let original_app_data_files =
             materialize_files(&app_data_path, &scenario["app_data"]["files"]);
         let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
