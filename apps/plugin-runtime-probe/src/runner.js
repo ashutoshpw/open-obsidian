@@ -623,6 +623,11 @@
         try { if (typeof tab?.display === "function") { await tab.display(); apiCalls.push("displaySettingTab"); } }
         catch (error) { apiCalls.push(`settingTabError:${String(error?.message ?? error).slice(0, 90)}`); }
       }
+      if (config.pluginId === "PC08") {
+        for (const heading of Array.from(root.querySelectorAll(".style-settings-heading.is-collapsed")).slice(0, 8)) {
+          heading.click();
+        }
+      }
       for (const view of registrations.views.slice(0, 2)) {
         try {
           const leaf = {app, containerEl: root, titleEl: root, file: app.workspace.getActiveFile()};
