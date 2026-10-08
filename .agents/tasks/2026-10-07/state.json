@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T05:33:01Z",
+  "updated_at": "2026-10-08T05:56:45Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "ecfb3341baebcbffdb75824425346e8b1acceefe",
+  "last_reconciled_head": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
   "current_phase": "R2",
-  "current_milestone": "R2.6.6",
-  "next_action": "Integrate Rust history and storage-protection APIs with the native application boundary, then address OS access controls for recovery data; keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full acceptance.",
+  "current_milestone": "R2.6.7",
+  "next_action": "Begin R2.6.8: integrate Rust history listing, retention planning, explicit cleanup and conflict resolution through the native application/UI boundary; establish per-vault app-data paths and user-only OS access controls, and keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "ecfb3341baebcbffdb75824425346e8b1acceefe"
+      "implementation_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11"
     },
     "R3": {
       "status": "pending",
@@ -132,7 +132,8 @@
     "R2.6.6 adds a read-only Rust platform status probe for FileVault, BitLocker on the validated SystemDrive and Linux root cryptsetup mappings; inconclusive or unsupported states remain Unknown, and report details omit raw command output.",
     "All six required GitHub Actions workflows passed for exact source SHA ecfb3341baebcbffdb75824425346e8b1acceefe. Nine storage-protection tests passed on Ubuntu, macOS and Windows; the existing document and vault suites also passed. Evidence: evidence/r2.6.6-storage-protection-ecfb334.json.",
     "The first two R2.6.6 source SHAs were corrected from GitHub Rust CI diagnostics (owned status details, rustfmt layout, and test argument lifetimes). On ecfb334, the unchanged Linux Electron retrieval-boundary audit passed on quality attempt 2 after attempt 1 failed; no source change was made between attempts.",
-    "D16 and SYNC-007 remain Pending: the Rust status API is not yet surfaced in the native UI, and user-only OS access controls for managed recovery data are not yet enforced or verified. R2.6.5 and C03/C03.2 also remain Pending pending full cross-layer acceptance."
+    "At the end of R2.6.6 the Rust status API was not yet surfaced; R2.6.7 now surfaces it. D16 and SYNC-007 remain Pending because history integration, user-only access controls, uninstall preservation and full legacy workflow acceptance are still outstanding.",
+    "R2.6.7 storage-protection UI slice passed all six exact-SHA GitHub Actions workflows on 428cc5a67e27816c9759441009f63a0ce1fbfd11. The UI displays the typed platform report and explicit Unknown state with manual refresh; nine platform tests and the UI label test passed on all three OSes. Evidence: evidence/r2.6.7-storage-status-ui-428cc5a.json. No local executable validation was run. History workflow and app-data access controls remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -2639,6 +2640,162 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392505/job/113164246053"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37734329160,
+      "head_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329160",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329160/job/113170343537"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329160/job/113170343735"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329160/job/113170343760"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37734329109,
+      "head_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329109",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329109/job/113170343434"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37734329048,
+      "head_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329048",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329048/job/113170343190"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329048/job/113170343388"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329048/job/113170343426"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37734329028,
+      "head_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329028",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329028/job/113170343166"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329028/job/113170343418"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329028/job/113170343432"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37734329131,
+      "head_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329131",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329131/job/113170343381"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329131/job/113170343521"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329131/job/113170343570"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37734329126,
+      "head_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329126",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329126/job/113170343583"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329126/job/113170343788"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329126/job/113170343828"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -2837,7 +2994,7 @@
       "history_evidence": "evidence/r2.6.5-history-retention-d7862a3.json"
     },
     "R2.6.6": {
-      "status": "in_progress",
+      "status": "complete",
       "implementation_sha": "ecfb3341baebcbffdb75824425346e8b1acceefe",
       "implementation_commits": [
         "c98e027cb502e1b6ff1ac7ba1fdc7ac736a666bb",
@@ -2853,11 +3010,29 @@
         "No local executable validation was run."
       ],
       "remaining": [
-        "Surface the report through the native application boundary/UI and preserve honest Unknown status.",
         "Ensure managed history/recovery data is stored under user-only OS access controls and verify that policy on supported platforms.",
         "D16 and SYNC-007 remain Pending until full history integration, access-control, uninstall-preservation and legacy workflow acceptance."
       ],
-      "next_action": "Integrate Rust history and storage-protection APIs with the native application boundary, then address OS access controls for recovery data; keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full acceptance."
+      "next_action": "The checked storage-protection report is surfaced by R2.6.7. Continue with cross-layer history/recovery integration and user-only app-data access controls; D16 and SYNC-007 remain pending."
+    },
+    "R2.6.7": {
+      "status": "complete",
+      "implementation_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+      "implementation_commits": [
+        "660d18859f09236a1563f05480d2b0c3a62530f9",
+        "5ef6f54092ee764e45d290af90bfdb81e8068b49",
+        "1a819baa3bec07c7b1f8ee982293684d21215d43",
+        "428cc5a67e27816c9759441009f63a0ce1fbfd11"
+      ],
+      "scope": "Compose the evidence-backed platform storage-protection probe at the native application boundary and display its report in the eframe shell.",
+      "accepted_slice": [
+        "The UI displays Enabled, Disabled or explicit Unknown status, check method and safe details, with a system-volume/root-filesystem scope note and manual refresh.",
+        "The default UI path reports Unknown when no probe is supplied; the focused label test passes on Ubuntu, macOS and Windows.",
+        "All six required workflows pass for exact source SHA 428cc5a67e27816c9759441009f63a0ce1fbfd11, including Rust formatting/tests/Clippy/layers/native builds/Wry probes and the five companion workflows.",
+        "No local executable validation was run."
+      ],
+      "evidence": "evidence/r2.6.7-storage-status-ui-428cc5a.json",
+      "next_action": "Begin R2.6.8: integrate Rust history listing, retention planning, explicit cleanup and conflict resolution through the native application/UI boundary; establish per-vault app-data paths and user-only OS access controls, and keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance."
     }
   },
   "ci_preparation": {
