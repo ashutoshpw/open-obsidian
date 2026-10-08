@@ -139,6 +139,12 @@ struct OpenObsidianApp {
 
 impl eframe::App for OpenObsidianApp {
     fn ui(&mut self, ui: &mut eframe::egui::Ui, _frame: &mut eframe::Frame) {
+        self.show_ui(ui);
+    }
+}
+
+impl OpenObsidianApp {
+    fn show_ui(&mut self, ui: &mut eframe::egui::Ui) {
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
         let vault_operation_busy =
@@ -1114,6 +1120,52 @@ fn rename_recovery_summary(report: &VaultRenameRecoveryReport) -> Option<String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use egui_kittest::{Harness, kittest::Queryable as _};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_UI_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
+
+    struct UiTempDir(PathBuf);
+
+    impl UiTempDir {
+        fn new() -> Self {
+            let temp_root = std::env::temp_dir();
+            loop {
+                let id = NEXT_UI_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed);
+                let path = temp_root.join(format!(
+                    "openobsidian-ui-rename-{}-{id}",
+                    std::process::id()
+                ));
+                match std::fs::create_dir(&path) {
+                    Ok(()) => return Self(path),
+                    Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                    Err(error) => panic!("creating test directory {}: {error}", path.display()),
+                }
+            }
+        }
+    }
+
+    impl Drop for UiTempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn wait_for_rename(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().rename_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "rename worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
 
     #[test]
     fn history_labels_distinguish_protected_conflicts() {
@@ -1200,6 +1252,71 @@ mod tests {
         assert_eq!(
             rename_recovery_summary(&attention).as_deref(),
             Some("1 interrupted rename operation(s) need attention.")
+        );
+    }
+
+    #[test]
+    fn egui_rename_flow_requires_review_then_applies_and_refreshes_the_vault() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir(&vault_path).unwrap();
+        std::fs::create_dir(&app_data_path).unwrap();
+        std::fs::create_dir(vault_path.join("Archive")).unwrap();
+        std::fs::write(vault_path.join("Old.md"), b"# Old\r\n").unwrap();
+        std::fs::write(vault_path.join("Index.md"), b"[[Old]]\r\n").unwrap();
+        let original_index = std::fs::read(vault_path.join("Index.md")).unwrap();
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let app = OpenObsidianApp {
+            session: Some(std::sync::Arc::new(session)),
+            rename_source_path: Some(PathBuf::from("Old.md")),
+            rename_destination_path: "Archive/New.md".to_owned(),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Build rename preview").click();
+        harness.step();
+        assert!(harness.state().rename_receiver.is_some());
+        wait_for_rename(&mut harness);
+
+        let preview = harness
+            .state()
+            .rename_preview
+            .as_ref()
+            .expect("the build-preview interaction should produce a preview");
+        assert_eq!(preview.plan.update_count, 1);
+        assert!(vault_path.join("Old.md").exists());
+        assert!(!vault_path.join("Archive/New.md").exists());
+        assert_eq!(
+            std::fs::read(vault_path.join("Index.md")).unwrap(),
+            original_index
+        );
+
+        harness.get_by_label("Review and confirm rename").click();
+        harness.step();
+        assert!(harness.state().rename_confirmation);
+        harness.step();
+        harness.get_by_label("Confirm and apply rename").click();
+        harness.step();
+        assert!(harness.state().rename_receiver.is_some());
+        wait_for_rename(&mut harness);
+
+        let app = harness.state();
+        assert!(!app.rename_confirmation);
+        assert!(
+            app.rename_status
+                .as_deref()
+                .is_some_and(|status| status.contains("Updated 1 reference(s)"))
+        );
+        assert!(app.session.as_ref().unwrap().entries().iter().any(|entry| {
+            entry.relative_path == PathBuf::from("Archive/New.md")
+        }));
+        assert!(!vault_path.join("Old.md").exists());
+        assert!(vault_path.join("Archive/New.md").exists());
+        assert_eq!(
+            std::fs::read(vault_path.join("Index.md")).unwrap(),
+            b"[[Archive/New]]\r\n"
         );
     }
 }
