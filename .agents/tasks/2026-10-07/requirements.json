@@ -2312,10 +2312,11 @@
       ],
       "status": "pending",
       "evidence_paths": [
-        "evidence/r2.6.39-existing-vault-read-only-ebece90.json"
+        "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
+        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json"
       ],
-      "tested_source_tree": "ebece9002b2c574433012bc914e3d1b00466ca07",
-      "blocker": "Partial evidence covers existing-vault service operations and byte-preserving UI open/close; the complete product-level read-only workflow and reference-application matrix remains pending.",
+      "tested_source_tree": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
+      "blocker": "Partial evidence covers existing-vault open/close, shared service operations, and selected native UI link/transclusion/rename-preview flows. Remaining product-level read-only operations and the reference-application matrix are pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2362,9 +2363,10 @@
       "status": "passing",
       "evidence_paths": [
         "evidence/r2.6.38-existing-vault-in-place-10a69a8.json",
-        "evidence/r2.6.39-existing-vault-read-only-ebece90.json"
+        "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
+        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json"
       ],
-      "tested_source_tree": "ebece9002b2c574433012bc914e3d1b00466ca07",
+      "tested_source_tree": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D02",
@@ -2411,10 +2413,11 @@
       ],
       "status": "pending",
       "evidence_paths": [
-        "evidence/r2.6.39-existing-vault-read-only-ebece90.json"
+        "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
+        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json"
       ],
-      "tested_source_tree": "ebece9002b2c574433012bc914e3d1b00466ca07",
-      "blocker": "Partial evidence covers shared scan/read/link/embed/transclusion/rename-preview operations on Ubuntu, macOS and Windows. Complete product-level read-only flows and reference-application round trips remain pending.",
+      "tested_source_tree": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
+      "blocker": "Evidence covers shared service operations and selected native UI link/transclusion/rename-preview flows on Ubuntu, macOS and Windows. Other read-only flows and reference-application round trips remain pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
