@@ -1454,7 +1454,10 @@ mod tests {
             let path = vault_path.join(relative_path);
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
             std::fs::write(path, source.as_bytes()).unwrap();
-            original_files.push((std::path::PathBuf::from(relative_path), source.as_bytes().to_vec()));
+            original_files.push((
+                std::path::PathBuf::from(relative_path),
+                source.as_bytes().to_vec(),
+            ));
         }
 
         let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
@@ -1477,16 +1480,20 @@ mod tests {
             .expect("the fixture case should produce a rename preview");
         assert_eq!(preview.plan.update_count, 0);
         assert_eq!(preview.plan.skipped_count, 2);
-        assert!(preview
-            .plan
-            .edits
-            .iter()
-            .any(|edit| edit.action == LinkRenameAction::SkipAmbiguous));
-        assert!(preview
-            .plan
-            .edits
-            .iter()
-            .any(|edit| edit.action == LinkRenameAction::SkipUnresolved));
+        assert!(
+            preview
+                .plan
+                .edits
+                .iter()
+                .any(|edit| edit.action == LinkRenameAction::SkipAmbiguous)
+        );
+        assert!(
+            preview
+                .plan
+                .edits
+                .iter()
+                .any(|edit| edit.action == LinkRenameAction::SkipUnresolved)
+        );
         for (relative_path, original) in &original_files {
             assert_eq!(
                 std::fs::read(vault_path.join(relative_path)).unwrap(),
@@ -1497,6 +1504,7 @@ mod tests {
         }
 
         harness.get_by_label("Review and confirm rename").click();
+        harness.step();
         harness.step();
         harness.get_by_label("Confirm and apply rename").click();
         harness.step();
@@ -1521,8 +1529,13 @@ mod tests {
                 relative_path.display()
             );
         }
-        assert!(app.session.as_ref().unwrap().entries().iter().any(|entry| {
-            entry.relative_path.as_path() == std::path::Path::new(new_path)
-        }));
+        assert!(
+            app.session
+                .as_ref()
+                .unwrap()
+                .entries()
+                .iter()
+                .any(|entry| { entry.relative_path.as_path() == std::path::Path::new(new_path) })
+        );
     }
 }
