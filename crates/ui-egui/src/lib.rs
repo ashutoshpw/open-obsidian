@@ -1,10 +1,10 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
-    LinkRenameAction, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult,
-    VaultSession, plan_history_retention,
+    LinkKind, LinkRenameAction, LinkResolutionStatus, VaultConflictAction, VaultConflictRead,
+    VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan,
+    VaultHistoryPolicy, VaultHistoryRecord, VaultLinkResolution, VaultRenamePreview,
+    VaultRenameRecoveryReport, VaultRenameResult, VaultSession, plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -15,8 +15,11 @@ use std::time::{Duration, SystemTime};
 const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
+const MAX_LINK_STATUS_ROWS: usize = 100;
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
+#[cfg(test)]
+const C03_LINK_RESOLUTION_FIXTURE: &str = include_str!("../../../fixtures/link-resolution.json");
 #[cfg(test)]
 const HISTORY_RETENTION_FIXTURE: &str = include_str!("../../../fixtures/history-retention.json");
 #[cfg(test)]
@@ -26,6 +29,7 @@ const SYNC_UNINSTALL_FIXTURE: &str = include_str!("../../../fixtures/uninstall-p
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
 type HistoryReceiver = Receiver<HistoryTaskMessage>;
+type LinkReceiver = Receiver<Result<Vec<VaultLinkResolution>, String>>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
 
 struct HistoryPreview {
@@ -141,6 +145,11 @@ struct OpenObsidianApp {
     cleanup_confirmation: bool,
     conflict_inspection: Option<ConflictInspection>,
     pending_conflict_action: Option<VaultConflictAction>,
+    link_source_path: Option<std::path::PathBuf>,
+    link_resolutions: Vec<VaultLinkResolution>,
+    link_receiver: Option<LinkReceiver>,
+    link_error: Option<String>,
+    link_status: Option<String>,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -161,8 +170,9 @@ impl OpenObsidianApp {
     fn show_ui(&mut self, ui: &mut eframe::egui::Ui) {
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
-        let vault_operation_busy =
-            self.history_receiver.is_some() || self.rename_receiver.is_some();
+        let vault_operation_busy = self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.rename_receiver.is_some();
         let open_vault_requested = self.open_vault_action.as_ref().is_some_and(|_| {
             ui.add_enabled(
                 !self.vault_opening && !vault_operation_busy,
@@ -184,6 +194,7 @@ impl OpenObsidianApp {
                     .entries()
                     .first()
                     .map(|entry| entry.relative_path.clone());
+                self.link_source_path = self.rename_source_path.clone();
                 self.session = Some(Arc::new(session));
                 self.vault_open_receiver = None;
                 self.vault_opening = false;
@@ -196,6 +207,10 @@ impl OpenObsidianApp {
                 self.cleanup_confirmation = false;
                 self.conflict_inspection = None;
                 self.pending_conflict_action = None;
+                self.link_resolutions.clear();
+                self.link_receiver = None;
+                self.link_error = None;
+                self.link_status = None;
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
                 self.rename_receiver = None;
@@ -219,6 +234,7 @@ impl OpenObsidianApp {
             None => {}
         }
         self.poll_history_task(ui);
+        self.poll_link_task(ui);
         self.poll_rename_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
@@ -251,6 +267,7 @@ impl OpenObsidianApp {
             }
         }
         if self.session.is_some() {
+            self.show_links(ui);
             self.show_rename(ui);
             self.show_history(ui);
         }
@@ -299,6 +316,162 @@ impl OpenObsidianApp {
 }
 
 impl OpenObsidianApp {
+    fn show_links(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        ui.heading("Link status");
+        ui.small(
+            "Resolve wiki links, Markdown links and embeds against a stable vault snapshot. This check does not change vault files.",
+        );
+
+        let note_paths: Vec<std::path::PathBuf> = self
+            .session
+            .as_ref()
+            .map(|session| {
+                session
+                    .entries()
+                    .iter()
+                    .map(|entry| entry.relative_path.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        if self
+            .link_source_path
+            .as_ref()
+            .is_none_or(|selected| !note_paths.contains(selected))
+        {
+            self.link_source_path = note_paths.first().cloned();
+            self.link_resolutions.clear();
+        }
+
+        let operation_busy = self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.rename_receiver.is_some();
+        let selected_label = self.link_source_path.as_ref().map_or_else(
+            || "Choose a note".to_owned(),
+            |path| path.display().to_string(),
+        );
+        let mut source_changed = false;
+        ui.horizontal(|ui| {
+            ui.add_enabled_ui(!operation_busy, |ui| {
+                eframe::egui::ComboBox::from_label("Note to inspect")
+                    .selected_text(selected_label)
+                    .show_ui(ui, |ui| {
+                        for path in &note_paths {
+                            if ui
+                                .selectable_value(
+                                    &mut self.link_source_path,
+                                    Some(path.clone()),
+                                    path.display().to_string(),
+                                )
+                                .changed()
+                            {
+                                source_changed = true;
+                            }
+                        }
+                    });
+            });
+            let can_resolve = !operation_busy && self.link_source_path.is_some();
+            if ui
+                .add_enabled(can_resolve, eframe::egui::Button::new("Resolve link status"))
+                .clicked()
+            {
+                self.start_link_resolution();
+            }
+        });
+        if source_changed {
+            self.link_resolutions.clear();
+            self.link_error = None;
+            self.link_status = None;
+        }
+
+        if note_paths.is_empty() {
+            ui.label("This vault has no Markdown notes to inspect.");
+        } else if operation_busy {
+            ui.label("Wait for the current vault operation to finish before checking link status.");
+        }
+        if let Some(error) = &self.link_error {
+            ui.colored_label(eframe::egui::Color32::RED, error);
+        }
+        if let Some(status) = &self.link_status {
+            ui.label(status);
+        }
+        if self.link_receiver.is_some() {
+            ui.label("Resolving links against a stable vault snapshot…");
+        }
+
+        if self.link_status.is_some() {
+            if self.link_resolutions.is_empty() {
+                ui.label("No Markdown links or embeds were found in this note.");
+            } else {
+                ui.horizontal_wrapped(|ui| {
+                    for status in [
+                        LinkResolutionStatus::Resolved,
+                        LinkResolutionStatus::Unresolved,
+                        LinkResolutionStatus::Ambiguous,
+                        LinkResolutionStatus::External,
+                    ] {
+                        let count = self
+                            .link_resolutions
+                            .iter()
+                            .filter(|resolved| resolved.resolution.status == status)
+                            .count();
+                        ui.label(format!(
+                            "{}: {count}",
+                            link_resolution_status_label(status)
+                        ));
+                    }
+                });
+                ui.label(format!(
+                    "{} Markdown reference(s) checked.",
+                    self.link_resolutions.len()
+                ));
+                eframe::egui::ScrollArea::vertical()
+                    .max_height(260.0)
+                    .show(ui, |ui| {
+                        for resolved in self.link_resolutions.iter().take(MAX_LINK_STATUS_ROWS) {
+                            ui.group(|ui| {
+                                ui.horizontal_wrapped(|ui| {
+                                    ui.colored_label(
+                                        link_status_color(resolved.resolution.status),
+                                        format!(
+                                            "{} · {}",
+                                            link_resolution_status_label(
+                                                resolved.resolution.status
+                                            ),
+                                            link_kind_label(resolved.reference.kind),
+                                        ),
+                                    );
+                                    ui.monospace(&resolved.reference.raw);
+                                });
+                                ui.small(format!("Source target: {}", resolved.reference.target));
+                                if let Some(target) = &resolved.resolution.target {
+                                    ui.small(format!("Resolved target: {target}"));
+                                }
+                                if !resolved.resolution.candidates.is_empty() {
+                                    ui.small(format!(
+                                        "Candidate paths: {}",
+                                        resolved.resolution.candidates.join(", ")
+                                    ));
+                                }
+                                if let Some(alias) = &resolved.reference.alias {
+                                    ui.small(format!("Alias: {alias}"));
+                                }
+                                if let Some(subpath) = &resolved.reference.subpath {
+                                    ui.small(format!("Heading or block: {subpath}"));
+                                }
+                            });
+                        }
+                    });
+                if self.link_resolutions.len() > MAX_LINK_STATUS_ROWS {
+                    ui.small(format!(
+                        "Showing the first {MAX_LINK_STATUS_ROWS} of {} references.",
+                        self.link_resolutions.len()
+                    ));
+                }
+            }
+        }
+    }
+
     fn show_rename(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
         ui.heading("Rename Markdown note");
@@ -325,7 +498,9 @@ impl OpenObsidianApp {
             self.rename_source_path = note_paths.first().cloned();
         }
 
-        let operation_busy = self.history_receiver.is_some() || self.rename_receiver.is_some();
+        let operation_busy = self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.rename_receiver.is_some();
         let selected_label = self.rename_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
             |path| path.display().to_string(),
@@ -504,7 +679,9 @@ impl OpenObsidianApp {
             self.cleanup_confirmation = false;
         }
 
-        let history_busy = self.history_receiver.is_some() || self.rename_receiver.is_some();
+        let history_busy = self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.rename_receiver.is_some();
         if ui
             .add_enabled(
                 !history_busy,
@@ -824,6 +1001,26 @@ impl OpenObsidianApp {
         self.rename_receiver = Some(receiver);
     }
 
+    fn start_link_resolution(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let Some(relative_path) = self.link_source_path.clone() else {
+            return;
+        };
+        self.link_resolutions.clear();
+        self.link_error = None;
+        self.link_status = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .resolve_links_for_note(&relative_path)
+                .map_err(link_resolution_error);
+            let _ = sender.send(result);
+        });
+        self.link_receiver = Some(receiver);
+    }
+
     fn start_rename_apply(&mut self) {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
@@ -884,6 +1081,12 @@ impl OpenObsidianApp {
                 self.rename_receiver = None;
                 let result = &outcome.result;
                 self.rename_source_path = Some(result.new_path.clone());
+                if self.link_source_path.as_ref() == Some(&result.old_path) {
+                    self.link_source_path = Some(result.new_path.clone());
+                }
+                self.link_resolutions.clear();
+                self.link_error = None;
+                self.link_status = None;
                 self.session = Some(Arc::new(outcome.session));
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
@@ -915,6 +1118,38 @@ impl OpenObsidianApp {
                 self.rename_error = Some("Rename operation stopped unexpectedly.".to_owned());
                 self.rename_preview = None;
                 self.rename_confirmation = false;
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
+    }
+
+    fn poll_link_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self.link_receiver.as_ref().map(Receiver::try_recv);
+        match result {
+            Some(Ok(Ok(resolutions))) => {
+                self.link_receiver = None;
+                let source_label = self.link_source_path.as_deref().map_or_else(
+                    || "the selected note".to_owned(),
+                    |path| path.display().to_string(),
+                );
+                self.link_status = Some(format!("Link status refreshed for {source_label}."));
+                self.link_resolutions = resolutions;
+                self.link_error = None;
+            }
+            Some(Ok(Err(error))) => {
+                self.link_receiver = None;
+                self.link_resolutions.clear();
+                self.link_status = None;
+                self.link_error = Some(error);
+            }
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.link_receiver = None;
+                self.link_resolutions.clear();
+                self.link_status = None;
+                self.link_error = Some("Link status check stopped unexpectedly.".to_owned());
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -1093,6 +1328,48 @@ fn rename_apply_error(error: VaultError) -> String {
     }
 }
 
+fn link_resolution_error(error: VaultError) -> String {
+    match error {
+        VaultError::LinkResolutionSnapshotChanged => {
+            "The vault changed while links were being checked. Refresh the status and try again."
+                .to_owned()
+        }
+        VaultError::NotMarkdownNote(_) | VaultError::InvalidMarkdownNote(_) => {
+            "The selected Markdown note could not be read safely.".to_owned()
+        }
+        VaultError::NotAFile(_) => {
+            "The selected note is no longer available. Reopen the vault and try again.".to_owned()
+        }
+        _ => "Link status could not be read safely from the vault.".to_owned(),
+    }
+}
+
+fn link_resolution_status_label(status: LinkResolutionStatus) -> &'static str {
+    match status {
+        LinkResolutionStatus::Resolved => "Resolved",
+        LinkResolutionStatus::Unresolved => "Unresolved",
+        LinkResolutionStatus::Ambiguous => "Ambiguous",
+        LinkResolutionStatus::External => "External",
+    }
+}
+
+fn link_kind_label(kind: LinkKind) -> &'static str {
+    match kind {
+        LinkKind::WikiLink => "Wiki link",
+        LinkKind::Markdown => "Markdown link",
+        LinkKind::Embed => "Embed",
+    }
+}
+
+fn link_status_color(status: LinkResolutionStatus) -> eframe::egui::Color32 {
+    match status {
+        LinkResolutionStatus::Resolved => eframe::egui::Color32::from_rgb(72, 176, 112),
+        LinkResolutionStatus::Unresolved => eframe::egui::Color32::from_rgb(224, 96, 96),
+        LinkResolutionStatus::Ambiguous => eframe::egui::Color32::YELLOW,
+        LinkResolutionStatus::External => eframe::egui::Color32::from_rgb(120, 170, 220),
+    }
+}
+
 fn uninstall_cleanup_summary(selection: UninstallCleanupSelection) -> String {
     let mut selected = Vec::new();
     if selection.app_cache {
@@ -1225,6 +1502,21 @@ mod tests {
         }
     }
 
+    fn wait_for_links(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().link_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "link resolver worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+
     fn wait_for_history(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -1249,6 +1541,129 @@ mod tests {
             "Unresolved conflict"
         );
         assert_eq!(format_bytes(1024), "1.0 KiB");
+    }
+
+    #[test]
+    fn egui_link_status_displays_fixture_resolution_without_changing_vault_bytes() {
+        let fixture: serde_json::Value = serde_json::from_str(C03_LINK_RESOLUTION_FIXTURE)
+            .expect("C03 link-resolution fixture must be valid");
+        assert_eq!(fixture["id"], "fixture:c03-link-forms");
+        let case = fixture["cases"]
+            .as_array()
+            .expect("C03 fixture must contain cases")
+            .iter()
+            .find(|case| case["id"] == "wiki-markdown-embed-and-relative-link-forms")
+            .expect("C03 fixture must contain the mixed-link case");
+        let current_path = std::path::PathBuf::from(
+            case["current_path"]
+                .as_str()
+                .expect("C03 fixture must identify the current note"),
+        );
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir_all(&vault_path).unwrap();
+        std::fs::create_dir_all(&app_data_path).unwrap();
+        let mut original_files = Vec::new();
+        for file in case["files"]
+            .as_array()
+            .expect("C03 fixture must list the vault files")
+        {
+            let relative_path = std::path::PathBuf::from(
+                file["path"]
+                    .as_str()
+                    .expect("C03 fixture file must have a path"),
+            );
+            let source = file["source"].as_str().unwrap_or("").as_bytes().to_vec();
+            let path = vault_path.join(&relative_path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(&path, &source).unwrap();
+            original_files.push((relative_path, source));
+        }
+
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(current_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+
+        let app = harness.state();
+        assert!(app.link_error.is_none());
+        assert_eq!(
+            app.link_resolutions.len(),
+            case["expected_references"].as_array().unwrap().len()
+        );
+        assert!(app.link_status.as_deref().is_some_and(|status| {
+            status.contains(current_path.to_str().unwrap())
+        }));
+        for (actual, expected) in app
+            .link_resolutions
+            .iter()
+            .zip(case["expected_references"].as_array().unwrap())
+        {
+            let expected_kind = match expected["kind"].as_str().unwrap() {
+                "wiki" => LinkKind::WikiLink,
+                "markdown" => LinkKind::Markdown,
+                "embed" => LinkKind::Embed,
+                kind => panic!("unknown fixture link kind: {kind}"),
+            };
+            assert_eq!(actual.reference.kind, expected_kind);
+            assert_eq!(
+                actual.reference.raw,
+                expected["raw"].as_str().unwrap(),
+                "fixture reference text"
+            );
+            assert_eq!(
+                actual.reference.target,
+                expected["target"].as_str().unwrap(),
+                "fixture reference target"
+            );
+            assert_eq!(
+                actual.reference.alias.as_deref(),
+                expected["alias"].as_str()
+            );
+            assert_eq!(
+                actual.reference.subpath.as_deref(),
+                expected["subpath"].as_str()
+            );
+            assert_eq!(actual.resolution.target.as_deref(), expected["resolved_path"].as_str());
+            let expected_candidates: Vec<String> = expected["candidates"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|candidate| candidate.as_str().unwrap().to_owned())
+                .collect();
+            assert_eq!(actual.resolution.candidates, expected_candidates);
+            let expected_status = match expected["status"].as_str().unwrap() {
+                "resolved" => LinkResolutionStatus::Resolved,
+                "unresolved" => LinkResolutionStatus::Unresolved,
+                "ambiguous" => LinkResolutionStatus::Ambiguous,
+                "external" => LinkResolutionStatus::External,
+                status => panic!("unknown fixture link status: {status}"),
+            };
+            assert_eq!(actual.resolution.status, expected_status);
+        }
+
+        harness.get_by_label("Resolved: 8");
+        harness.get_by_label("Unresolved: 2");
+        harness.get_by_label("Ambiguous: 1");
+        harness.get_by_label("External: 1");
+        harness.get_by_label("Resolved · Wiki link");
+        for (relative_path, original) in &original_files {
+            assert_eq!(
+                std::fs::read(vault_path.join(relative_path)).unwrap(),
+                *original,
+                "link resolution must not change {}",
+                relative_path.display()
+            );
+        }
     }
 
     #[test]
