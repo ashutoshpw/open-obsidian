@@ -203,3 +203,7 @@ After the R2.1 completion record was pushed, all six GitHub Actions workflows pa
 ## R2.2 work — frontmatter source boundaries
 
 The next read-only document slice exposes opening delimiter, content and closing delimiter spans as byte offsets into the unchanged UTF-8 source. It handles an optional BOM and LF, CRLF and CR line endings, and returns no bounds for absent, unclosed or near-match delimiters. Focused Rust cases cover Unicode byte offsets and preserved content. No local executable validation was run. Next: commit and push this work slice, then inspect only exact-SHA GitHub Actions results.
+
+## R2.2 compiler feedback — source SHA cc2109d
+
+Rust CI run [37709950709](https://github.com/ashutoshpw/open-obsidian/actions/runs/37709950709) found the same compiler error on macOS job 113093277769 and Windows job 113093277790: Rust could not infer the integer type for the BOM-dependent `opening_start` before `.checked_add(3)`. The compiler diagnostic requests an explicit type; the correction sets it to `usize`, as required for byte offsets. The Ubuntu job remained in system-dependency installation while this was recorded, so its source test result is pending. Inventory, quality, desktop, plugin-renderer and loaded-plugin workflows passed on this SHA. The correction will be pushed as a focused commit and the entire exact-SHA matrix rerun.

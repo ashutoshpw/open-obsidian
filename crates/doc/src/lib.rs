@@ -103,7 +103,7 @@ impl MarkdownSource {
     /// is part of the source and shifts the opening delimiter's byte offset.
     pub fn frontmatter_bounds(&self) -> Option<FrontmatterBounds> {
         let bytes = self.raw.as_bytes();
-        let opening_start = if self.has_bom { 3 } else { 0 };
+        let opening_start: usize = if self.has_bom { 3 } else { 0 };
         let opening_end = opening_start.checked_add(3)?;
         if bytes.get(opening_start..opening_end)? != &b"---"[..] {
             return None;
