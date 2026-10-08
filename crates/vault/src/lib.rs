@@ -370,7 +370,8 @@ impl VaultStore {
                 &previous.revision_sha256,
                 request.expected_revision_sha256.as_deref(),
                 current_revision.as_deref(),
-            ) {
+            )
+        {
             let _ = self.append_journal(
                 &operation_id,
                 "failed",
