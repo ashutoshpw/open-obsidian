@@ -1,5 +1,12 @@
 //! Native operating-system service interfaces.
 
+mod storage_protection;
+
+pub use storage_protection::{
+    StorageProtectionPlatform, StorageProtectionReport, StorageProtectionStatus,
+    inspect_storage_protection,
+};
+
 /// A credential store backed by an operating-system protected secret facility.
 ///
 /// Implementations must return an error when protection is unavailable; they must never
