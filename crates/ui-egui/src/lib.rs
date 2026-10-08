@@ -41,7 +41,10 @@ impl eframe::App for OpenObsidianApp {
             self.storage_protection_report = Some(inspect_storage_protection());
         }
         if let Some(report) = &self.storage_protection_report {
-            ui.label(format!("Status: {}", storage_protection_label(report.status)));
+            ui.label(format!(
+                "Status: {}",
+                storage_protection_label(report.status)
+            ));
             ui.label(format!("Check: {}", report.method));
             ui.label(&report.detail);
         }

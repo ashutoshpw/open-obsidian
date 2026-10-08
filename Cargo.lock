@@ -2907,6 +2907,7 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "openobsidian-engine",
+ "openobsidian-platform",
 ]
 
 [[package]]
