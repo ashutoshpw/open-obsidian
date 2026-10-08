@@ -2633,10 +2633,10 @@ mod tests {
 
         harness.get_by_label("Review and confirm rename").click();
         harness.step();
+        harness.step();
         harness.get_by_label(
             "Confirm moving Folder/Target.md to Moved/Target.md and applying 0 reference update(s). Skipped ambiguous or unresolved references will remain unchanged.",
         );
-        harness.step();
         harness.get_by_label("Confirm and apply rename").click();
         harness.step();
         assert!(harness.state().rename_receiver.is_some());
