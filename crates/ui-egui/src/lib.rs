@@ -1748,11 +1748,13 @@ mod tests {
         assert_eq!(preview.plan.update_count, 4);
         assert_eq!(preview.plan.skipped_count, 0);
         assert_eq!(preview.plan.edits.len(), 4);
-        assert!(preview
-            .plan
-            .edits
-            .iter()
-            .all(|edit| edit.action == LinkRenameAction::Update));
+        assert!(
+            preview
+                .plan
+                .edits
+                .iter()
+                .all(|edit| edit.action == LinkRenameAction::Update)
+        );
         assert!(vault_path.join(&old_path).exists());
         assert!(!vault_path.join(&new_path).exists());
         for (relative_path, original) in &original_files {
@@ -1779,9 +1781,14 @@ mod tests {
             status.contains("Updated 4 reference(s)")
                 && status.contains("0 ambiguous or unresolved reference(s) were left unchanged")
         }));
-        assert!(app.session.as_ref().unwrap().entries().iter().any(|entry| {
-            entry.relative_path.as_path() == new_path.as_path()
-        }));
+        assert!(
+            app.session
+                .as_ref()
+                .unwrap()
+                .entries()
+                .iter()
+                .any(|entry| { entry.relative_path.as_path() == new_path.as_path() })
+        );
         assert!(!vault_path.join(&old_path).exists());
         assert!(vault_path.join(&new_path).exists());
         let expected_sources = case["expected_sources"]
