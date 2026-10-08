@@ -147,6 +147,24 @@ pub struct VaultNoteEmbedResolution {
     pub snapshot_sha256: String,
 }
 
+/// A resolved note embed and any nested note embeds found in its selected source.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultNoteEmbedNode {
+    pub resolution: VaultNoteEmbedResolution,
+    pub children: Vec<Self>,
+    pub omitted_children: bool,
+}
+
+/// Snapshot-bound transclusions discovered in one Markdown note.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultNoteEmbedReport {
+    pub embeds: Vec<VaultNoteEmbedNode>,
+    pub truncated: bool,
+    pub snapshot_sha256: String,
+}
+
+const MAX_NOTE_TRANSCLUSION_TREE_NODES: usize = 32;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultWriteRequest {
     pub relative_path: PathBuf,
@@ -509,6 +527,126 @@ impl VaultRoot {
         };
 
         self.finish_note_embed(&before, reference, resolution, slice, disposition)
+    }
+
+    /// Resolve and expand bounded note embeds from one Markdown note.
+    ///
+    /// Every node must match the same vault snapshot. Expansion stops at the
+    /// shared depth/cycle guards or after a bounded number of nodes.
+    pub fn resolve_note_embeds_for_note(
+        &self,
+        current_path: impl AsRef<Path>,
+    ) -> Result<VaultNoteEmbedReport, VaultError> {
+        let current_path = normalize_relative_path(current_path.as_ref())?;
+        if !current_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return Err(VaultError::NotMarkdownNote(current_path));
+        }
+
+        let before = self.snapshot()?;
+        let current_entry = before
+            .entries
+            .iter()
+            .find(|entry| {
+                entry.relative_path == current_path && entry.kind == VaultSnapshotEntryKind::File
+            })
+            .ok_or_else(|| VaultError::NotAFile(current_path.clone()))?;
+        let current_source = MarkdownSource::parse(self.read_transclusion_source(current_entry)?)
+            .map_err(|_| VaultError::InvalidMarkdownNote(current_path.clone()))?;
+        let current_path_text = path_to_slashes(&current_path)?;
+        let chain = vec![current_path_text];
+        let references = current_source
+            .extract_links()
+            .into_iter()
+            .filter(|reference| reference.kind == LinkKind::Embed)
+            .collect::<Vec<_>>();
+
+        let mut remaining_nodes = MAX_NOTE_TRANSCLUSION_TREE_NODES;
+        let mut embeds = Vec::new();
+        let mut truncated = false;
+        for reference in references {
+            if remaining_nodes == 0 {
+                truncated = true;
+                break;
+            }
+            embeds.push(self.resolve_note_embed_tree(
+                &current_path,
+                &reference,
+                0,
+                &chain,
+                &before.revision_sha256,
+                &mut remaining_nodes,
+            )?);
+        }
+
+        let after = self.snapshot()?;
+        if before.revision_sha256 != after.revision_sha256 {
+            return Err(VaultError::LinkResolutionSnapshotChanged);
+        }
+        Ok(VaultNoteEmbedReport {
+            embeds,
+            truncated,
+            snapshot_sha256: before.revision_sha256,
+        })
+    }
+
+    fn resolve_note_embed_tree(
+        &self,
+        current_path: &Path,
+        reference: &LinkReference,
+        depth: usize,
+        chain: &[String],
+        expected_snapshot: &str,
+        remaining_nodes: &mut usize,
+    ) -> Result<VaultNoteEmbedNode, VaultError> {
+        debug_assert!(*remaining_nodes > 0);
+        *remaining_nodes -= 1;
+        let resolution = self.resolve_note_embed(current_path, reference, depth, chain)?;
+        if resolution.snapshot_sha256 != expected_snapshot {
+            return Err(VaultError::LinkResolutionSnapshotChanged);
+        }
+
+        let mut children = Vec::new();
+        let mut omitted_children = false;
+        if let (
+            VaultNoteEmbedDisposition::Included(guard),
+            Some(slice),
+            Some(target),
+        ) = (
+            &resolution.disposition,
+            &resolution.slice,
+            resolution.resolution.target.as_deref(),
+        ) && let Some(text) = slice.text.as_deref()
+        {
+            let source = MarkdownSource::parse(text.as_bytes().to_vec())
+                .map_err(|_| VaultError::InvalidMarkdownNote(PathBuf::from(target)))?;
+            for child in source
+                .extract_links()
+                .into_iter()
+                .filter(|reference| reference.kind == LinkKind::Embed)
+            {
+                if *remaining_nodes == 0 {
+                    omitted_children = true;
+                    break;
+                }
+                children.push(self.resolve_note_embed_tree(
+                    Path::new(target),
+                    &child,
+                    guard.next_depth,
+                    &guard.chain,
+                    expected_snapshot,
+                    remaining_nodes,
+                )?);
+            }
+        }
+
+        Ok(VaultNoteEmbedNode {
+            resolution,
+            children,
+            omitted_children,
+        })
     }
 
     fn finish_note_embed(
@@ -1543,6 +1681,34 @@ mod tests {
         assert_eq!(
             result.slice.unwrap().text.as_deref(),
             Some("## Details\nselected\n")
+        );
+    }
+
+    #[test]
+    fn note_embed_tree_omits_entries_after_its_node_budget() {
+        let temp = TempDir::new();
+        let mut index_source = String::new();
+        for number in 0..=super::MAX_NOTE_TRANSCLUSION_TREE_NODES {
+            index_source.push_str(&format!("![[Target{number}]]\n"));
+            fs::write(
+                temp.0.join(format!("Target{number}.md")),
+                format!("# Target {number}\n"),
+            )
+            .unwrap();
+        }
+        fs::write(temp.0.join("Index.md"), index_source).unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let report = vault.resolve_note_embeds_for_note("Index.md").unwrap();
+
+        assert_eq!(
+            report.embeds.len(),
+            super::MAX_NOTE_TRANSCLUSION_TREE_NODES
+        );
+        assert!(report.truncated);
+        assert_eq!(
+            report.snapshot_sha256,
+            vault.snapshot().unwrap().revision_sha256
         );
     }
 

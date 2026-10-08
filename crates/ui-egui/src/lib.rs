@@ -1,10 +1,12 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
-    LinkKind, LinkRenameAction, LinkResolutionStatus, VaultConflictAction, VaultConflictRead,
-    VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan,
-    VaultHistoryPolicy, VaultHistoryRecord, VaultLinkResolution, VaultRenamePreview,
-    VaultRenameRecoveryReport, VaultRenameResult, VaultSession, plan_history_retention,
+    LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason,
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode,
+    VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult,
+    VaultSession, plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -16,6 +18,7 @@ const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 const MAX_LINK_STATUS_ROWS: usize = 100;
+const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = 16 * 1024;
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 #[cfg(test)]
@@ -29,8 +32,13 @@ const SYNC_UNINSTALL_FIXTURE: &str = include_str!("../../../fixtures/uninstall-p
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
 type HistoryReceiver = Receiver<HistoryTaskMessage>;
-type LinkReceiver = Receiver<Result<Vec<VaultLinkResolution>, String>>;
+type LinkReceiver = Receiver<LinkTaskMessage>;
 type RenameReceiver = Receiver<RenameTaskMessage>;
+
+struct LinkTaskMessage {
+    resolutions: Result<Vec<VaultLinkResolution>, String>,
+    note_embeds: Result<VaultNoteEmbedReport, String>,
+}
 
 struct HistoryPreview {
     records: Vec<VaultHistoryRecord>,
@@ -150,6 +158,8 @@ struct OpenObsidianApp {
     link_receiver: Option<LinkReceiver>,
     link_error: Option<String>,
     link_status: Option<String>,
+    note_embed_report: Option<VaultNoteEmbedReport>,
+    note_embed_error: Option<String>,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -211,6 +221,8 @@ impl OpenObsidianApp {
                 self.link_receiver = None;
                 self.link_error = None;
                 self.link_status = None;
+                self.note_embed_report = None;
+                self.note_embed_error = None;
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
                 self.rename_receiver = None;
@@ -341,6 +353,8 @@ impl OpenObsidianApp {
         {
             self.link_source_path = note_paths.first().cloned();
             self.link_resolutions.clear();
+            self.note_embed_report = None;
+            self.note_embed_error = None;
         }
 
         let operation_busy = self.history_receiver.is_some()
@@ -385,6 +399,8 @@ impl OpenObsidianApp {
             self.link_resolutions.clear();
             self.link_error = None;
             self.link_status = None;
+            self.note_embed_report = None;
+            self.note_embed_error = None;
         }
 
         if note_paths.is_empty() {
@@ -467,6 +483,32 @@ impl OpenObsidianApp {
                         "Showing the first {MAX_LINK_STATUS_ROWS} of {} references.",
                         self.link_resolutions.len()
                     ));
+                }
+            }
+        }
+
+        if self.link_status.is_some()
+            || self.note_embed_report.is_some()
+            || self.note_embed_error.is_some()
+        {
+            ui.separator();
+            ui.heading("Note transclusions");
+            if let Some(error) = &self.note_embed_error {
+                ui.colored_label(eframe::egui::Color32::YELLOW, error);
+            } else if let Some(report) = &self.note_embed_report {
+                if report.embeds.is_empty() {
+                    ui.label("No note embeds were found in this note.");
+                } else {
+                    eframe::egui::ScrollArea::vertical()
+                        .max_height(320.0)
+                        .show(ui, |ui| {
+                            for embed in &report.embeds {
+                                show_note_embed_node(ui, embed);
+                            }
+                            if report.truncated {
+                                ui.small("Additional note embeds were omitted to keep this preview bounded.");
+                            }
+                        });
                 }
             }
         }
@@ -1011,12 +1053,20 @@ impl OpenObsidianApp {
         self.link_resolutions.clear();
         self.link_error = None;
         self.link_status = None;
+        self.note_embed_report = None;
+        self.note_embed_error = None;
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
-            let result = session
+            let resolutions = session
                 .resolve_links_for_note(&relative_path)
                 .map_err(link_resolution_error);
-            let _ = sender.send(result);
+            let note_embeds = session
+                .resolve_note_embeds_for_note(&relative_path)
+                .map_err(note_embed_error);
+            let _ = sender.send(LinkTaskMessage {
+                resolutions,
+                note_embeds,
+            });
         });
         self.link_receiver = Some(receiver);
     }
@@ -1087,6 +1137,8 @@ impl OpenObsidianApp {
                 self.link_resolutions.clear();
                 self.link_error = None;
                 self.link_status = None;
+                self.note_embed_report = None;
+                self.note_embed_error = None;
                 self.session = Some(Arc::new(outcome.session));
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
@@ -1129,27 +1181,43 @@ impl OpenObsidianApp {
     fn poll_link_task(&mut self, ui: &mut eframe::egui::Ui) {
         let result = self.link_receiver.as_ref().map(Receiver::try_recv);
         match result {
-            Some(Ok(Ok(resolutions))) => {
+            Some(Ok(message)) => {
                 self.link_receiver = None;
-                let source_label = self.link_source_path.as_deref().map_or_else(
-                    || "the selected note".to_owned(),
-                    |path| path.display().to_string(),
-                );
-                self.link_status = Some(format!("Link status refreshed for {source_label}."));
-                self.link_resolutions = resolutions;
-                self.link_error = None;
-            }
-            Some(Ok(Err(error))) => {
-                self.link_receiver = None;
-                self.link_resolutions.clear();
-                self.link_status = None;
-                self.link_error = Some(error);
+                match message.resolutions {
+                    Ok(resolutions) => {
+                        let source_label = self.link_source_path.as_deref().map_or_else(
+                            || "the selected note".to_owned(),
+                            |path| path.display().to_string(),
+                        );
+                        self.link_status =
+                            Some(format!("Link status refreshed for {source_label}."));
+                        self.link_resolutions = resolutions;
+                        self.link_error = None;
+                    }
+                    Err(error) => {
+                        self.link_resolutions.clear();
+                        self.link_status = None;
+                        self.link_error = Some(error);
+                    }
+                }
+                match message.note_embeds {
+                    Ok(report) => {
+                        self.note_embed_report = Some(report);
+                        self.note_embed_error = None;
+                    }
+                    Err(error) => {
+                        self.note_embed_report = None;
+                        self.note_embed_error = Some(error);
+                    }
+                }
             }
             Some(Err(TryRecvError::Disconnected)) => {
                 self.link_receiver = None;
                 self.link_resolutions.clear();
                 self.link_status = None;
                 self.link_error = Some("Link status check stopped unexpectedly.".to_owned());
+                self.note_embed_report = None;
+                self.note_embed_error = Some("Note transclusion preview stopped unexpectedly.".to_owned());
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -1342,6 +1410,97 @@ fn link_resolution_error(error: VaultError) -> String {
         }
         _ => "Link status could not be read safely from the vault.".to_owned(),
     }
+}
+
+fn note_embed_error(error: VaultError) -> String {
+    match error {
+        VaultError::LinkResolutionSnapshotChanged | VaultError::SnapshotChanged => {
+            "The vault changed while note transclusions were being prepared. Refresh the preview and try again."
+                .to_owned()
+        }
+        VaultError::TransclusionSourceTooLarge(path) => format!(
+            "Note transclusion preview stopped because {} exceeds the 512 KiB source limit.",
+            path.display()
+        ),
+        VaultError::NotMarkdownNote(_) | VaultError::InvalidMarkdownNote(_) => {
+            "The selected Markdown note could not be read safely for transclusion preview.".to_owned()
+        }
+        VaultError::NotAFile(_) => {
+            "The selected note is no longer available. Reopen the vault and try again.".to_owned()
+        }
+        _ => "Note transclusions could not be read safely from the vault.".to_owned(),
+    }
+}
+
+fn show_note_embed_node(ui: &mut eframe::egui::Ui, node: &VaultNoteEmbedNode) {
+    let reference = &node.resolution.reference;
+    ui.group(|ui| {
+        ui.monospace(&reference.raw);
+        match &node.resolution.disposition {
+            VaultNoteEmbedDisposition::Included(_) => {
+                let target = node
+                    .resolution
+                    .resolution
+                    .target
+                    .as_deref()
+                    .unwrap_or("resolved note");
+                ui.colored_label(
+                    eframe::egui::Color32::from_rgb(72, 176, 112),
+                    format!("Included note: {target}"),
+                );
+                if let Some(text) = node
+                    .resolution
+                    .slice
+                    .as_ref()
+                    .and_then(|slice| slice.text.as_deref())
+                {
+                    let mut end = text.len().min(MAX_TRANSCLUSION_PREVIEW_BYTES);
+                    while !text.is_char_boundary(end) {
+                        end -= 1;
+                    }
+                    ui.monospace(&text[..end]);
+                    if end < text.len() {
+                        ui.small("Transcluded text preview shortened to 16 KiB.");
+                    }
+                }
+            }
+            VaultNoteEmbedDisposition::NotRendered => {
+                let message = match node.resolution.resolution.status {
+                    LinkResolutionStatus::Resolved => {
+                        "Not rendered: the selected heading or block could not be resolved."
+                    }
+                    LinkResolutionStatus::Unresolved => {
+                        "Not rendered: no matching Markdown note was found."
+                    }
+                    LinkResolutionStatus::Ambiguous => {
+                        "Not rendered: multiple Markdown notes match this embed."
+                    }
+                    LinkResolutionStatus::External => {
+                        "Not rendered: external targets are not opened in this preview."
+                    }
+                };
+                ui.colored_label(eframe::egui::Color32::YELLOW, message);
+            }
+            VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Cycle) => {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "Not rendered: this embed would create a cycle.",
+                );
+            }
+            VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Depth) => {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "Not rendered: the maximum note embed depth was reached.",
+                );
+            }
+        }
+        if node.omitted_children {
+            ui.small("Nested embeds were omitted to keep this preview bounded.");
+        }
+        for child in &node.children {
+            show_note_embed_node(ui, child);
+        }
+    });
 }
 
 fn link_resolution_status_label(status: LinkResolutionStatus) -> &'static str {
@@ -1661,6 +1820,34 @@ mod tests {
         harness.get_by_label("Ambiguous: 1");
         harness.get_by_label("External: 1");
         harness.get_by_label("[[#Overview]]");
+        assert!(app.note_embed_error.is_none());
+        let report = app
+            .note_embed_report
+            .as_ref()
+            .expect("fixture note embeds should be rendered");
+        assert_eq!(report.embeds.len(), 4);
+        let unique = report
+            .embeds
+            .iter()
+            .find(|embed| embed.resolution.reference.raw == "![[Unique#^intro]]")
+            .expect("fixture should render the selected block embed");
+        assert!(matches!(
+            unique.resolution.disposition,
+            VaultNoteEmbedDisposition::Included(_)
+        ));
+        assert_eq!(unique.children.len(), 1);
+        assert!(matches!(
+            unique.children[0].resolution.disposition,
+            VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Cycle)
+        ));
+        assert!(report.embeds.iter().any(|embed| {
+            embed.resolution.reference.raw == "![[Assets/plot.svg]]"
+                && embed.resolution.disposition == VaultNoteEmbedDisposition::NotRendered
+        }));
+        harness.get_by_label("Note transclusions");
+        harness.get_by_label("Opening paragraph ![[Unique]]");
+        harness.get_by_label("Not rendered: this embed would create a cycle.");
+        harness.get_by_label("Not rendered: no matching Markdown note was found.");
         for (relative_path, original) in &original_files {
             assert_eq!(
                 std::fs::read(vault_path.join(relative_path)).unwrap(),

@@ -1562,12 +1562,12 @@
     },
     {
       "path": "fixtures/link-resolution.json",
-      "sha256": "921492be0afa54835910d31a862389d9b28ab759067b191eca7fd455a9e87400",
+      "sha256": "71b9e54bb50d958306d147c094fd667621958e9ae54857da34eb8c6be838716e",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "Shared C03.1 link-form fixture covers wiki, Markdown and embed references, aliases, relative targets, headings, block IDs, ambiguous targets and unresolved targets.",
+      "purpose": "Shared C03.1 link-form fixture covers wiki, Markdown and embed references, aliases, relative targets, headings, block IDs, ambiguous and unresolved targets, and a nested cycle for transclusion UI coverage.",
       "fixture_reader": "crates/testkit"
     },
     {

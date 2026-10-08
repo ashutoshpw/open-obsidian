@@ -20,7 +20,7 @@
         },
         {
           "path": "Notes/Unique.md",
-          "source": "# Unique\n\nOpening paragraph ^intro\n\n## Duplicate\n\n## Duplicate\n"
+          "source": "# Unique\n\nOpening paragraph ![[Unique]] ^intro\n\n## Duplicate\n\n## Duplicate\n"
         },
         {
           "path": "Notes/Fragment.md",
