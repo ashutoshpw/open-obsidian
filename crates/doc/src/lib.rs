@@ -30,6 +30,25 @@ pub enum LineEnding {
     None,
 }
 
+/// A half-open byte range into a document's original UTF-8 source.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct SourceSpan {
+    pub start: usize,
+    pub end: usize,
+}
+
+/// Source boundaries for a YAML frontmatter block.
+///
+/// Delimiter spans exclude their line endings. The content span includes any
+/// line ending immediately before the closing delimiter, matching its position
+/// in the original source.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FrontmatterBounds {
+    pub opening_delimiter: SourceSpan,
+    pub content: SourceSpan,
+    pub closing_delimiter: SourceSpan,
+}
+
 /// A validated UTF-8 Markdown view backed by the original bytes.
 ///
 /// The text accessor includes a UTF-8 BOM when the source has one. This type does
@@ -77,6 +96,72 @@ impl MarkdownSource {
     pub fn line_ending(&self) -> LineEnding {
         self.line_ending
     }
+
+    /// Find a complete YAML frontmatter block without interpreting its contents.
+    ///
+    /// Returned offsets are byte offsets into `as_bytes()`. A leading UTF-8 BOM
+    /// is part of the source and shifts the opening delimiter's byte offset.
+    pub fn frontmatter_bounds(&self) -> Option<FrontmatterBounds> {
+        let bytes = self.raw.as_bytes();
+        let opening_start = if self.has_bom { 3 } else { 0 };
+        let opening_end = opening_start.checked_add(3)?;
+        if bytes.get(opening_start..opening_end)? != &b"---"[..] {
+            return None;
+        }
+
+        let (opening_line_end, opening_break_width) = line_bounds(bytes, opening_end);
+        if opening_line_end != opening_end || opening_break_width == 0 {
+            return None;
+        }
+
+        let content_start = opening_end + opening_break_width;
+        let mut line_start = content_start;
+        while line_start <= bytes.len() {
+            let (line_end, break_width) = line_bounds(bytes, line_start);
+            if is_closing_delimiter(&bytes[line_start..line_end]) {
+                return Some(FrontmatterBounds {
+                    opening_delimiter: SourceSpan {
+                        start: opening_start,
+                        end: opening_end,
+                    },
+                    content: SourceSpan {
+                        start: content_start,
+                        end: line_start,
+                    },
+                    closing_delimiter: SourceSpan {
+                        start: line_start,
+                        end: line_end,
+                    },
+                });
+            }
+            if break_width == 0 {
+                return None;
+            }
+            line_start = line_end + break_width;
+        }
+        None
+    }
+}
+
+fn line_bounds(bytes: &[u8], start: usize) -> (usize, usize) {
+    let mut end = start;
+    while end < bytes.len() && !matches!(bytes[end], b'\r' | b'\n') {
+        end += 1;
+    }
+    let break_width = match bytes.get(end) {
+        Some(&b'\r') if bytes.get(end + 1) == Some(&b'\n') => 2,
+        Some(&b'\r') | Some(&b'\n') => 1,
+        _ => 0,
+    };
+    (end, break_width)
+}
+
+fn is_closing_delimiter(line: &[u8]) -> bool {
+    let Some(rest) = line.strip_prefix(b"---") else {
+        return false;
+    };
+    rest.iter()
+        .all(|byte| *byte == b' ' || *byte == b'\t')
 }
 
 fn detect_line_ending(text: &str) -> LineEnding {
@@ -115,7 +200,7 @@ fn detect_line_ending(text: &str) -> LineEnding {
 
 #[cfg(test)]
 mod tests {
-    use super::{LineEnding, MarkdownSource, RawDocument};
+    use super::{FrontmatterBounds, LineEnding, MarkdownSource, RawDocument, SourceSpan};
 
     #[test]
     fn untouched_document_bytes_round_trip_exactly() {
@@ -160,5 +245,64 @@ mod tests {
 
         assert!(MarkdownSource::parse(bytes.clone()).is_err());
         assert_eq!(RawDocument::from_bytes(bytes.clone()).as_bytes(), bytes);
+    }
+
+    #[test]
+    fn frontmatter_bounds_use_byte_offsets_and_leave_delimiter_line_endings_out() {
+        let bytes = "\u{feff}---\r\nstatus: 🐈\n--- \t\r\nbody".as_bytes().to_vec();
+        let source = MarkdownSource::parse(bytes.clone()).unwrap();
+        let bounds = source.frontmatter_bounds().unwrap();
+
+        assert_eq!(
+            bounds,
+            FrontmatterBounds {
+                opening_delimiter: SourceSpan { start: 3, end: 6 },
+                content: SourceSpan { start: 8, end: 21 },
+                closing_delimiter: SourceSpan { start: 21, end: 26 },
+            }
+        );
+        assert_eq!(
+            &bytes[bounds.opening_delimiter.start..bounds.opening_delimiter.end],
+            b"---"
+        );
+        assert_eq!(&bytes[bounds.content.start..bounds.content.end], "status: 🐈\n".as_bytes());
+        assert_eq!(
+            &bytes[bounds.closing_delimiter.start..bounds.closing_delimiter.end],
+            b"--- \t"
+        );
+        assert_eq!(source.as_bytes(), bytes);
+    }
+
+    #[test]
+    fn frontmatter_bounds_support_lf_crlf_and_cr_delimiters() {
+        let cases = [
+            (b"---\nkey: value\n---".as_slice(), b"key: value\n".as_slice()),
+            (
+                b"---\r\nkey: value\r\n---".as_slice(),
+                b"key: value\r\n".as_slice(),
+            ),
+            (b"---\rkey: value\r---".as_slice(), b"key: value\r".as_slice()),
+        ];
+
+        for (bytes, expected_content) in cases {
+            let source = MarkdownSource::parse(bytes.to_vec()).unwrap();
+            let bounds = source.frontmatter_bounds().unwrap();
+            assert_eq!(
+                &source.as_bytes()[bounds.content.start..bounds.content.end],
+                expected_content
+            );
+        }
+    }
+
+    #[test]
+    fn frontmatter_bounds_fail_closed_for_absent_unclosed_or_near_match_delimiters() {
+        for bytes in [
+            b"body\n---\nkey: value\n---".as_slice(),
+            b"---\nkey: value".as_slice(),
+            b"---\nkey: value\n----".as_slice(),
+        ] {
+            let source = MarkdownSource::parse(bytes.to_vec()).unwrap();
+            assert_eq!(source.frontmatter_bounds(), None);
+        }
     }
 }

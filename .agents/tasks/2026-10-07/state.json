@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:46:44+00:00",
+  "updated_at": "2026-10-08T00:51:07+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+  "last_reconciled_head": "a654a419bac1a12c097556f895e3486adf824a1f",
   "current_phase": "R2",
   "current_milestone": "R2.2",
-  "next_action": "Add byte-accurate Markdown frontmatter delimiter/content spans without interpreting or rewriting YAML; cover BOM, CRLF/LF/CR and malformed or absent frontmatter in GitHub CI.",
+  "next_action": "Commit and push the R2.2 frontmatter source-boundary slice to origin/main, then inspect exact-SHA GitHub Actions only; do not run local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -108,7 +108,9 @@
     "R1.2 and R1 passed exact-SHA GitHub Actions on 5ea3ea6c9e0d02a562daa696eac19b826dad0efa: Rust format, parallel group, tests, Clippy, layering and native builds passed; unchanged PC05/PC08 feasibility probes and all five companion workflows passed on Linux, macOS and Windows. Evidence: evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json. Legacy compatibility remains Pending and the result is feasibility-only.",
     "Started R2.1 after reviewing the inherited implementation plan, vault compatibility contract, C02 requirements, Rust doc/vault boundaries and source-preservation fixtures. The first slice adds a strict UTF-8 Markdown view backed by original bytes, BOM and line-ending metadata, and fail-closed invalid UTF-8 behavior; its Rust unit tests are pending GitHub Actions.",
     "R2.1 first exact-SHA CI on 634dab790330a79ac44f50ae84257936eb8cabaf compiled and passed the new tests on all OSes; macOS and Windows passed Clippy, layering, native builds and plugin probes. Ubuntu reported one rustfmt-only line wrap; companion inventory, desktop, renderer and loaded-plugin runs passed, while quality was cancelled. Applied the exact formatting requested in the GitHub log; the corrected exact-SHA run is pending.",
-    "R2.1 passed exact-SHA GitHub Actions on a8b0f67311f022884c24786cee78b1ba39beeb7a. All four openobsidian-doc tests passed on Ubuntu, macOS and Windows; Ubuntu formatting, Clippy, layering, three native builds, plugin probes and all five companion workflows passed. Rust stable was 1.99.0 and Bun was 1.4.2. Evidence: evidence/r2.1-markdown-source-a8b0f67.json. No local executable validation was run."
+    "R2.1 passed exact-SHA GitHub Actions on a8b0f67311f022884c24786cee78b1ba39beeb7a. All four openobsidian-doc tests passed on Ubuntu, macOS and Windows; Ubuntu formatting, Clippy, layering, three native builds, plugin probes and all five companion workflows passed. Rust stable was 1.99.0 and Bun was 1.4.2. Evidence: evidence/r2.1-markdown-source-a8b0f67.json. No local executable validation was run.",
+    "The R2.1 evidence/state commit a654a419bac1a12c097556f895e3486adf824a1f passed all six GitHub Actions workflows, including the full Rust three-OS matrix and inventory validation of the recorded evidence. R2.2 implementation began only after those runs completed.",
+    "R2.2 adds read-only frontmatter delimiter/content spans as UTF-8 byte offsets, including BOM and LF/CRLF/CR handling, with absent/unclosed/near-match cases. Focused Rust unit tests are authored; all execution remains pending GitHub Actions."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1212,6 +1214,54 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133576",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37709579577,
+      "head_sha": "a654a419bac1a12c097556f895e3486adf824a1f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709579577",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37709579542,
+      "head_sha": "a654a419bac1a12c097556f895e3486adf824a1f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709579542",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37709579573,
+      "head_sha": "a654a419bac1a12c097556f895e3486adf824a1f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709579573",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37709580707,
+      "head_sha": "a654a419bac1a12c097556f895e3486adf824a1f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709580707",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37709579541,
+      "head_sha": "a654a419bac1a12c097556f895e3486adf824a1f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709579541",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37709579612,
+      "head_sha": "a654a419bac1a12c097556f895e3486adf824a1f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709579612",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -1264,7 +1314,7 @@
       "next_action": "R2.1 accepted. Proceed to R2.2 frontmatter source bounds; property interpretation and editing remain pending."
     },
     "R2.2": {
-      "status": "pending",
+      "status": "in_progress",
       "implementation_sha": null,
       "scope": "Expose byte-accurate opening delimiter, content and closing delimiter spans for Markdown YAML frontmatter, without interpreting or rewriting its contents.",
       "acceptance": [
@@ -1274,7 +1324,7 @@
         "Focused Rust unit tests and all required Rust/companion CI gates pass on the exact pushed SHA."
       ],
       "evidence": null,
-      "next_action": "Implement and test a read-only frontmatter-boundary view in crates/doc."
+      "next_action": "Push the read-only frontmatter boundary implementation and confirm its unit cases and Rust/companion CI gates."
     }
   },
   "ci_preparation": {

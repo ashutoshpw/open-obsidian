@@ -195,3 +195,11 @@ Rust CI run [37708730866](https://github.com/ashutoshpw/open-obsidian/actions/ru
 Rust CI run [37709133512](https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133512) passed on exact SHA `a8b0f67311f022884c24786cee78b1ba39beeb7a`. Formatting on Ubuntu, the Rust parallel group, workspace tests (including all four `openobsidian-doc` tests), Clippy, crate layering, native preview builds and unchanged-plugin probes passed on Ubuntu, macOS and Windows. The five companion workflows—inventory, quality, desktop build, plugin renderer and loaded plugins—also passed on the same SHA. GitHub used Rust stable 1.99.0 and Bun 1.4.2. The Linux preview and three platform reports, with artifact and report hashes, are recorded in `evidence/r2.1-markdown-source-a8b0f67.json`.
 
 R2.1 is complete. The new type is only a strict UTF-8 source view: frontmatter/YAML parsing, source-span edits and vault writes are still pending. No local executable validation was run. Next is R2.2: expose byte-accurate frontmatter delimiter/content spans without interpreting or rewriting YAML, then validate only through exact-SHA GitHub Actions.
+
+## R2.1 evidence commit CI reconciliation — source SHA a654a41
+
+After the R2.1 completion record was pushed, all six GitHub Actions workflows passed on tracking/evidence commit `a654a419bac1a12c097556f895e3486adf824a1f`, including the inventory check of the new evidence record. The exact tested implementation remains `a8b0f67311f022884c24786cee78b1ba39beeb7a`; `a654a41` contains only its acceptance record. All runs are listed in `state.json`.
+
+## R2.2 work — frontmatter source boundaries
+
+The next read-only document slice exposes opening delimiter, content and closing delimiter spans as byte offsets into the unchanged UTF-8 source. It handles an optional BOM and LF, CRLF and CR line endings, and returns no bounds for absent, unclosed or near-match delimiters. Focused Rust cases cover Unicode byte offsets and preserved content. No local executable validation was run. Next: commit and push this work slice, then inspect only exact-SHA GitHub Actions results.
