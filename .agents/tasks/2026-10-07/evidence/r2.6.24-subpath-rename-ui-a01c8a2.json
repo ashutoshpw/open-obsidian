@@ -1,0 +1,159 @@
+{
+  "slice": "R2.6.24 fixture-backed native UI rename with duplicate-basename disambiguation",
+  "phase": "R2",
+  "status": "accepted UI interaction slice; R2 remains in progress",
+  "recorded_at": "2026-10-08T12:22:10Z",
+  "source_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+  "implementation_commits": [
+    "c4d717bb85276f6cd6415507a23b4771e2713352",
+    "a01c8a2d4d144816b393885e86aec9b633aa0949"
+  ],
+  "scope": "Exercise fixture:c03-rename-move's same-basename-disambiguated case through the production egui rename preview, review, confirmation, apply and session refresh flow.",
+  "behavior": [
+    "The Folder/Target.md and Archive/Target.md fixture notes share a basename; a heading subpath resolves [[Target#Overview]] to the intended moved note.",
+    "The preview contains one reference update and no skipped edits. Preview leaves fixture files byte-identical and does not move the source note.",
+    "After separate review and explicit confirmation, the source moves to its expected destination, the intended reference bytes update, the unrelated same-basename note remains byte-identical, and the refreshed session lists the destination."
+  ],
+  "ci_attempts": [
+    {
+      "source_sha": "c4d717bb85276f6cd6415507a23b4771e2713352",
+      "rust_run_id": 37773268853,
+      "rust_conclusion": "failure",
+      "inventory_run_id": 37773268789,
+      "quality_run_id": 37773268839,
+      "desktop_build_run_id": 37773268831,
+      "plugin_renderer_run_id": 37773268828,
+      "loaded_plugin_run_id": 37773268767,
+      "companion_workflows": "inventory, quality, desktop build and loaded-plugin workflows passed; renderer passed on macOS and Windows, while Ubuntu was cancelled after the 20-minute runner timeout.",
+      "finding": "Rust CI found a missing Path import in the new fixture interaction and rustfmt layout differences. The Ubuntu renderer probe was cancelled by its timeout. Added the import and applied the exact rustfmt layout requested by CI in the follow-up commit."
+    },
+    {
+      "source_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "rust_run_id": 37775644956,
+      "inventory_run_id": 37775644873,
+      "quality_run_id": 37775644982,
+      "desktop_build_run_id": 37775644939,
+      "plugin_renderer_run_id": 37775644978,
+      "loaded_plugin_run_id": 37775645024,
+      "conclusion": "all six required workflows passed"
+    }
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37775644956,
+      "head_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37775644956",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113305656522, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113305656905, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113305656727, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, crate dependency layers, native preview builds and unchanged-plugin Wry feasibility probes passed on all three operating systems.",
+        "egui_rename_flow_resolves_fixture_subpath_with_duplicate_basename passed on Ubuntu, macOS and Windows.",
+        "The native Actions Parallel group completed after formatting and workspace tests succeeded."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37775644873,
+      "head_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37775644873",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113305656843, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37775644982,
+      "head_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37775644982",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113305657113, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113305657604, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113305657760, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37775644939,
+      "head_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37775644939",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113305657374, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113305657687, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113305657707, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37775644978,
+      "head_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37775644978",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113305656770, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113305656891, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113305656969, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37775645024,
+      "head_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37775645024",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113305657093, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113305657391, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113305657464, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "13 passed, including the new fixture interaction",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "13 passed, including the new fixture interaction",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "13 passed, including the new fixture interaction",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; executable checks used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11548874634, "name": "openobsidian-rust-preview-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 8849836, "digest": "sha256:08396a4621fc5c1f166ce0e02478eb5c42c137d726d3710b477f2eaafcc6c132"},
+    {"id": 11548814767, "name": "rust-plugin-runtime-Linux-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 2695, "digest": "sha256:d8eda1416b5a7b3474b1222208c1bcbea33679a596fa061cc75edf71b8c2e285"},
+    {"id": 11549113545, "name": "rust-plugin-runtime-macOS-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 2698, "digest": "sha256:f6b5500e5eac465e67a538a606ae916b2d5dfd0e3add85828ebaa3fb6cf6e1a9"},
+    {"id": 11549513359, "name": "rust-plugin-runtime-Windows-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 2715, "digest": "sha256:fd20ceb69ed886e9d3dba9fa231d2b7ac8c08409d3471f31537e78aa55756a05"},
+    {"id": 11549354001, "name": "openobsidian-macOS-preview-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 397395487, "digest": "sha256:c6634b0c39ba829e45802d9287aac6e8df2004350e234fb5d88554f43d5f7c30"},
+    {"id": 11549328959, "name": "openobsidian-Windows-preview-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 163005824, "digest": "sha256:6a2d8884eacd76f76f3c51bb92a5f3b153633eea6d2ef30ef625eb3bc71abe1e"},
+    {"id": 11548814215, "name": "openobsidian-Linux-preview-a01c8a2d4d144816b393885e86aec9b633aa0949", "size_bytes": 125946548, "digest": "sha256:6601a9de59fe9382fa65cf476b99a5bea1ffe32fd689ec249b4dd98465185c38"}
+  ],
+  "limitations": [
+    "The interaction is headless egui evidence; it does not establish native-window visual or manual accessibility acceptance.",
+    "Fixture interaction validates the selected same-basename case but does not complete full C03/C03.2 cross-layer acceptance.",
+    "SYNC-007 host-level uninstall integration remains pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions."
+}

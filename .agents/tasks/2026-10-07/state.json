@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T11:49:52Z",
+  "updated_at": "2026-10-08T12:22:10Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b2360095025f8c6f3277a8b97119a09a54ee529d",
-  "current_milestone": "R2.6.23",
+  "last_reconciled_head": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+  "current_milestone": "R2.6.24",
   "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "b2360095025f8c6f3277a8b97119a09a54ee529d"
+      "implementation_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949"
     },
     "R3": {
       "status": "pending",
@@ -156,7 +156,8 @@
     "R2.6.21 added fixture:history-retention and a production UI/VaultSession interaction for age-based history preview, review and explicit cleanup. The test confirmed an expired recovery record is removed only after confirmation, while the unresolved conflict and vault note remain byte-identical. All six workflows passed on exact source SHA 3ed8e6dd9573a55ae8ff573ca5f6f2d2a206d4d0. Evidence: evidence/r2.6.21-history-retention-ui-3ed8e6d.json. No local executable validation was run. This headless interaction does not render-test the cap warning or complete D16, host-level SYNC-007 uninstall acceptance or full C03/C03.2 cross-layer acceptance.",
     "R2.6.22 added a headless egui interaction that renders Enabled, Disabled and Unknown storage-protection reports, checks the OS-reported/encryption-not-verified wording, verifies ordinary redraws do not re-run the injected probe, and verifies Refresh storage status reruns it and updates the report. The interaction passed on Ubuntu, macOS and Windows; all six workflows passed on exact source SHA fc50e9bebe41a90c0e9b6b5a8a8579c9729babab. Evidence: evidence/r2.6.22-storage-status-refresh-fc50e9b.json. No local executable validation was run. D16 cap-warning UI rendering, host-level SYNC-007 uninstall integration and full C03/C03.2 cross-layer acceptance remain pending.",
     "The R2.6.22 evidence commit 50a21ac4cff1dc4660c219e54e5f387f634cfec2 also passed all six workflows on that exact SHA: Rust CI 37770975628, inventory 37770975657, quality 37770975668, desktop 37770975636, plugin renderer 37770975699 and loaded-plugin workflows 37770975619.",
-    "R2.6.23 adds an over-cap history-warning egui interaction. The test renders the warning and Review eligible cleanup control, then confirms no cleanup task or confirmation state starts unless the user selects the review action. All six GitHub Actions workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; evidence: evidence/r2.6.23-history-warning-ui-b236009.json. The new interaction passed on Ubuntu, macOS and Windows. No local executable validation was run. Together with the fixture-backed retention/explicit-cleanup interaction, the platform storage-status probe and its UI refresh interaction, this closes the D16 cap-warning display gap. SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain open."
+    "R2.6.23 adds an over-cap history-warning egui interaction. The test renders the warning and Review eligible cleanup control, then confirms no cleanup task or confirmation state starts unless the user selects the review action. All six GitHub Actions workflows passed on exact source SHA b2360095025f8c6f3277a8b97119a09a54ee529d; evidence: evidence/r2.6.23-history-warning-ui-b236009.json. The new interaction passed on Ubuntu, macOS and Windows. No local executable validation was run. Together with the fixture-backed retention/explicit-cleanup interaction, the platform storage-status probe and its UI refresh interaction, this closes the D16 cap-warning display gap. SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain open.",
+    "R2.6.24 drove the same-basename-disambiguated C03 rename fixture through the production egui preview, review, explicit apply and session refresh. Preview preserved bytes; confirmed apply updated the intended reference and moved note while preserving the unrelated same-basename note. All six GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949, including the Rust parallel group and the interaction on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.24-subpath-rename-ui-a01c8a2.json. No local executable validation was run; full C03/C03.2 acceptance and SYNC-007 host-level uninstall integration remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -5166,6 +5167,49 @@
       "remaining": [
         "The over-cap UI case uses synthetic planner metadata to avoid a large fixture artifact; the UI interaction is headless and does not establish native-window visual/manual accessibility acceptance.",
         "SYNC-007 host-level uninstall integration and C03/C03.2 full cross-layer acceptance remain pending."
+      ],
+      "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+    },
+    "R2.6.24": {
+      "status": "complete",
+      "implementation_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+      "implementation_commits": [
+        "c4d717bb85276f6cd6415507a23b4771e2713352",
+        "a01c8a2d4d144816b393885e86aec9b633aa0949"
+      ],
+      "scope": "Exercise the shared C03 rename fixture through production egui preview, review, explicit apply, duplicate-basename disambiguation and session refresh.",
+      "ci_attempts": [
+        {
+          "source_sha": "c4d717bb85276f6cd6415507a23b4771e2713352",
+          "rust_run_id": 37773268853,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37773268789,
+          "quality_run_id": 37773268839,
+          "desktop_build_run_id": 37773268831,
+          "plugin_renderer_run_id": 37773268828,
+          "loaded_plugin_run_id": 37773268767,
+          "finding": "Rust CI found a missing Path import and rustfmt layout differences. The plugin-renderer Ubuntu job was cancelled after the 20-minute timeout; macOS and Windows passed. The import/format findings were fixed in the follow-up commit."
+        },
+        {
+          "source_sha": "a01c8a2d4d144816b393885e86aec9b633aa0949",
+          "rust_run_id": 37775644956,
+          "inventory_run_id": 37775644873,
+          "quality_run_id": 37775644982,
+          "desktop_build_run_id": 37775644939,
+          "plugin_renderer_run_id": 37775644978,
+          "loaded_plugin_run_id": 37775645024,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.24-subpath-rename-ui-a01c8a2.json",
+      "accepted_slice": [
+        "The same-basename-disambiguated fixture previews one reference update with no skips and no pre-confirmation byte changes; confirmed apply moves the intended note, updates the resolved reference, preserves the unrelated same-basename note and refreshes the session path.",
+        "The new native UI interaction and all six required GitHub Actions workflows passed on exact source SHA a01c8a2d4d144816b393885e86aec9b633aa0949 on Ubuntu, macOS and Windows. The native Actions Parallel group also completed successfully; no local executable validation was run."
+      ],
+      "remaining": [
+        "This is headless egui interaction evidence and does not establish native-window visual or manual accessibility acceptance.",
+        "Full C03/C03.2 fixture, cross-layer and reference-safety acceptance remains pending.",
+        "SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
     }
