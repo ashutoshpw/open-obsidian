@@ -1309,9 +1309,11 @@ mod tests {
                 .as_deref()
                 .is_some_and(|status| status.contains("Updated 1 reference(s)"))
         );
-        assert!(app.session.as_ref().unwrap().entries().iter().any(|entry| {
-            entry.relative_path == PathBuf::from("Archive/New.md")
-        }));
+        assert!(
+            app.session.as_ref().unwrap().entries().iter().any(|entry| {
+                entry.relative_path.as_path() == std::path::Path::new("Archive/New.md")
+            })
+        );
         assert!(!vault_path.join("Old.md").exists());
         assert!(vault_path.join("Archive/New.md").exists());
         assert_eq!(
