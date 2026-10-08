@@ -136,7 +136,9 @@ pub struct VaultStore {
 }
 
 mod rename_transaction;
-pub use rename_transaction::VaultRenameResult;
+pub use rename_transaction::{
+    VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
+};
 
 #[derive(Clone, Debug)]
 pub struct VaultRoot {

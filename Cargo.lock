@@ -2914,6 +2914,7 @@ name = "openobsidian-vault"
 version = "0.1.0"
 dependencies = [
  "openobsidian-doc",
+ "serde_json",
  "sha2",
  "thiserror 2.0.21",
 ]
