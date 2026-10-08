@@ -1,11 +1,14 @@
 //! Source-preserving vault reads and revision-bound rename previews.
 
-pub use openobsidian_doc::LinkRenameAction;
+pub use openobsidian_doc::{
+    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+};
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument, RenamePlanFile,
-    build_link_rename_plan,
+    build_link_rename_plan, resolve_link_with_sources,
 };
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write as IoWrite};
@@ -30,6 +33,12 @@ pub enum VaultError {
     UnsupportedEntry(PathBuf),
     #[error("vault changed while its rename preview was being prepared")]
     SnapshotChanged,
+    #[error("vault changed while link resolutions were being prepared")]
+    LinkResolutionSnapshotChanged,
+    #[error("vault path is not a Markdown note: {0}")]
+    NotMarkdownNote(PathBuf),
+    #[error("Markdown note is not valid UTF-8: {0}")]
+    InvalidMarkdownNote(PathBuf),
     #[error("rename preview is stale; prepare it again before applying")]
     StaleRenamePreview,
     #[error("application data directory is invalid or inside the vault: {0}")]
@@ -107,6 +116,13 @@ pub struct VaultRenamePreview {
     pub plan: LinkRenamePlan,
     pub snapshot_sha256: String,
     pub plan_id: String,
+}
+
+/// A source reference and its read-only resolution against one stable vault snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultLinkResolution {
+    pub reference: LinkReference,
+    pub resolution: LinkResolution,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -200,6 +216,63 @@ impl VaultRoot {
         })
     }
 
+    /// Extract and resolve links from one note against a stable, vault-confined snapshot.
+    ///
+    /// Regular files, including non-Markdown embeds, participate in file resolution.
+    /// Markdown source is read without changing bytes; symlinks are not followed or
+    /// treated as candidate targets. A concurrent vault change fails closed.
+    pub fn resolve_links_for_note(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<Vec<VaultLinkResolution>, VaultError> {
+        let relative_path = normalize_relative_path(relative_path.as_ref())?;
+        if !relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return Err(VaultError::NotMarkdownNote(relative_path));
+        }
+
+        let before = self.snapshot()?;
+        if !before.entries.iter().any(|entry| {
+            entry.relative_path == relative_path && entry.kind == VaultSnapshotEntryKind::File
+        }) {
+            return Err(VaultError::NotAFile(relative_path));
+        }
+
+        let relative_path_text = path_to_slashes(&relative_path)?;
+        let markdown_sources = self.read_markdown_sources(&before)?;
+        let sources: HashMap<String, MarkdownSource> =
+            markdown_sources.into_iter().collect();
+        let current_source = sources
+            .get(&relative_path_text)
+            .ok_or_else(|| VaultError::InvalidMarkdownNote(relative_path.clone()))?;
+        let files = before
+            .entries
+            .iter()
+            .filter(|entry| entry.kind == VaultSnapshotEntryKind::File)
+            .filter_map(|entry| path_to_slashes(&entry.relative_path).ok())
+            .collect::<Vec<_>>();
+
+        let after = self.snapshot()?;
+        if before.revision_sha256 != after.revision_sha256 {
+            return Err(VaultError::LinkResolutionSnapshotChanged);
+        }
+
+        Ok(current_source
+            .extract_links()
+            .into_iter()
+            .map(|reference| {
+                let resolution =
+                    resolve_link_with_sources(&reference, &files, &relative_path_text, &sources);
+                VaultLinkResolution {
+                    reference,
+                    resolution,
+                }
+            })
+            .collect())
+    }
+
     /// Build a read-only rename plan bound to the exact vault snapshot used to
     /// resolve its references. The source tree is sampled again after reading
     /// note contents so concurrent changes fail closed.
@@ -253,7 +326,21 @@ impl VaultRoot {
         &self,
         snapshot: &VaultSnapshot,
     ) -> Result<Vec<RenamePlanFile>, VaultError> {
-        let mut files = Vec::new();
+        Ok(self
+            .read_markdown_sources(snapshot)?
+            .into_iter()
+            .map(|(relative_path, source)| RenamePlanFile {
+                relative_path,
+                source,
+            })
+            .collect())
+    }
+
+    fn read_markdown_sources(
+        &self,
+        snapshot: &VaultSnapshot,
+    ) -> Result<Vec<(String, MarkdownSource)>, VaultError> {
+        let mut sources = Vec::new();
         for entry in &snapshot.entries {
             if entry.kind != VaultSnapshotEntryKind::File
                 || !entry
@@ -271,12 +358,9 @@ impl VaultRoot {
             let Ok(source) = MarkdownSource::parse(read.document.as_bytes().to_vec()) else {
                 continue;
             };
-            files.push(RenamePlanFile {
-                relative_path: path_to_slashes(&entry.relative_path)?,
-                source,
-            });
+            sources.push((path_to_slashes(&entry.relative_path)?, source));
         }
-        Ok(files)
+        Ok(sources)
     }
 
     fn resolve_vault_path(

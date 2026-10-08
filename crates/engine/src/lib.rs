@@ -1,10 +1,11 @@
 //! Application services that compose document and vault behavior without UI dependencies.
 
 pub use openobsidian_vault::{
-    LinkRenameAction, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
-    VaultRenameResult, plan_history_retention,
+    VaultHistoryRecord, VaultLinkResolution, VaultRenamePreview, VaultRenameRecoveryIssue,
+    VaultRenameRecoveryReport, VaultRenameResult, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;
@@ -52,6 +53,14 @@ impl VaultSession {
     /// Reads a note through the vault's root-confinement and revision-hashing boundary.
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         self.store.root().read(relative_path)
+    }
+
+    /// Extracts a note's links and resolves them against a stable, confined vault snapshot.
+    pub fn resolve_links_for_note(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<Vec<VaultLinkResolution>, VaultError> {
+        self.store.root().resolve_links_for_note(relative_path)
     }
 
     /// Builds a read-only rename preview bound to the current vault snapshot.

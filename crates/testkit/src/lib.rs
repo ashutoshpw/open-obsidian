@@ -393,10 +393,35 @@ mod link_resolution_fixture_tests {
     use openobsidian_doc::{
         LinkKind, LinkResolutionStatus, MarkdownSource, resolve_link_with_sources,
     };
+    use openobsidian_vault::VaultRoot;
     use serde_json::Value;
     use std::collections::HashMap;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     const LINK_RESOLUTION_FIXTURE: &str = include_str!("../../../fixtures/link-resolution.json");
+    static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
+
+    struct LinkFixtureTempDir(PathBuf);
+
+    impl LinkFixtureTempDir {
+        fn new() -> Self {
+            let path = std::env::temp_dir().join(format!(
+                "openobsidian-testkit-link-resolution-{}-{}",
+                std::process::id(),
+                NEXT_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed)
+            ));
+            fs::create_dir(&path).expect("create link-resolution fixture temp directory");
+            Self(path)
+        }
+    }
+
+    impl Drop for LinkFixtureTempDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
 
     #[test]
     fn c03_link_forms_fixture_matches_source_aware_resolution() {
@@ -525,6 +550,135 @@ mod link_resolution_fixture_tests {
                 original_bytes,
                 "{case_id}: resolution must not modify source bytes"
             );
+        }
+    }
+
+    #[test]
+    fn c03_link_forms_fixture_resolves_through_the_confined_vault_snapshot() {
+        let fixture: Value = serde_json::from_str(LINK_RESOLUTION_FIXTURE)
+            .expect("link-resolution fixture must be valid JSON");
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let current_path = case["current_path"]
+                .as_str()
+                .expect("fixture must identify the current note");
+            let temporary = LinkFixtureTempDir::new();
+            let vault_path = temporary.0.join("vault");
+            fs::create_dir(&vault_path).expect("create fixture vault");
+            let mut original_files = Vec::new();
+
+            for file in case["files"]
+                .as_array()
+                .expect("fixture files must be an array")
+            {
+                let relative_path = PathBuf::from(
+                    file["path"].as_str().expect("fixture file must have a path"),
+                );
+                let source = file["source"].as_str().unwrap_or("").as_bytes().to_vec();
+                let path = vault_path.join(&relative_path);
+                fs::create_dir_all(path.parent().unwrap()).expect("create fixture parents");
+                fs::write(&path, &source).expect("write fixture bytes");
+                original_files.push((relative_path, source));
+            }
+
+            let root = VaultRoot::open(&vault_path)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let before = root
+                .snapshot()
+                .unwrap_or_else(|error| panic!("{case_id}: snapshot fixture vault: {error}"));
+            let resolved = root
+                .resolve_links_for_note(current_path)
+                .unwrap_or_else(|error| panic!("{case_id}: resolve fixture links: {error}"));
+            let expected_references = case["expected_references"]
+                .as_array()
+                .expect("fixture must state expected references");
+            assert_eq!(
+                resolved.len(),
+                expected_references.len(),
+                "{case_id}: resolved reference count"
+            );
+
+            for (actual, expected) in resolved.iter().zip(expected_references) {
+                assert_eq!(
+                    actual.reference.raw,
+                    expected["raw"].as_str().expect("expected raw reference"),
+                    "{case_id}: raw reference"
+                );
+                assert_eq!(
+                    link_kind_name(actual.reference.kind),
+                    expected["kind"].as_str().expect("expected link kind"),
+                    "{case_id}/{}: kind",
+                    actual.reference.raw
+                );
+                assert_eq!(
+                    actual.reference.target,
+                    expected["target"].as_str().expect("expected link target"),
+                    "{case_id}/{}: target",
+                    actual.reference.raw
+                );
+                assert_eq!(
+                    actual.reference.alias.as_deref(),
+                    expected["alias"].as_str(),
+                    "{case_id}/{}: alias",
+                    actual.reference.raw
+                );
+                assert_eq!(
+                    actual.reference.subpath.as_deref(),
+                    expected["subpath"].as_str(),
+                    "{case_id}/{}: subpath",
+                    actual.reference.raw
+                );
+                assert_eq!(
+                    resolution_name(actual.resolution.status),
+                    expected["status"]
+                        .as_str()
+                        .expect("expected resolution status"),
+                    "{case_id}/{}: status",
+                    actual.reference.raw
+                );
+                assert_eq!(
+                    actual.resolution.target.as_deref(),
+                    expected["resolved_path"].as_str(),
+                    "{case_id}/{}: target path",
+                    actual.reference.raw
+                );
+                let expected_candidates = expected["candidates"]
+                    .as_array()
+                    .expect("fixture must state candidate paths")
+                    .iter()
+                    .map(|candidate| {
+                        candidate
+                            .as_str()
+                            .expect("candidate path must be text")
+                            .to_owned()
+                    })
+                    .collect::<Vec<_>>();
+                assert_eq!(
+                    actual.resolution.candidates,
+                    expected_candidates,
+                    "{case_id}/{}: candidate paths",
+                    actual.reference.raw
+                );
+            }
+
+            assert_eq!(
+                root.snapshot()
+                    .unwrap_or_else(|error| panic!("{case_id}: re-snapshot fixture vault: {error}")),
+                before,
+                "{case_id}: resolution must not change the vault snapshot"
+            );
+            for (relative_path, original) in &original_files {
+                assert_eq!(
+                    fs::read(vault_path.join(relative_path)).unwrap(),
+                    *original,
+                    "{case_id}: resolution must preserve {}",
+                    relative_path.display()
+                );
+            }
         }
     }
 
