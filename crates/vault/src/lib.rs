@@ -1,5 +1,6 @@
 //! Source-preserving vault reads and revision-bound rename previews.
 
+use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
     LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
@@ -9,7 +10,6 @@ use openobsidian_doc::{
     RawDocument, RenamePlanFile, build_link_rename_plan, guard_note_transclusion, resolve_link,
     resolve_link_with_sources, resolve_link_with_subpath_statuses, slice_markdown_subpath,
 };
-use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -899,10 +899,7 @@ impl VaultRoot {
         }))
     }
 
-    fn read_inline_image_source(
-        &self,
-        entry: &VaultSnapshotEntry,
-    ) -> Result<Vec<u8>, VaultError> {
+    fn read_inline_image_source(&self, entry: &VaultSnapshotEntry) -> Result<Vec<u8>, VaultError> {
         let canonical = self.resolve_vault_path(&entry.relative_path, false)?;
         let mut file = fs::File::open(canonical)?;
         if file.metadata()?.len() != entry.size_bytes {
@@ -1838,7 +1835,10 @@ mod tests {
             attachment.resolution.status,
             super::LinkResolutionStatus::Resolved
         );
-        assert_eq!(attachment.resolution.target.as_deref(), Some("Images/photo.png"));
+        assert_eq!(
+            attachment.resolution.target.as_deref(),
+            Some("Images/photo.png")
+        );
         let VaultNoteEmbedDisposition::Attachment(image) = attachment.disposition else {
             panic!("a valid in-budget PNG should produce a decoded attachment preview");
         };
@@ -1861,22 +1861,29 @@ mod tests {
         }
         fs::create_dir_all(temp.0.join("Images")).unwrap();
         fs::write(temp.0.join("Index.md"), index_bytes).unwrap();
-        fs::write(
-            temp.0.join("Images/photo.png"),
-            rgba_png([0, 255, 0, 255]),
-        )
-        .unwrap();
+        fs::write(temp.0.join("Images/photo.png"), rgba_png([0, 255, 0, 255])).unwrap();
 
         let vault = VaultRoot::open(&temp.0).unwrap();
         let report = vault.resolve_note_embeds_for_note("Index.md").unwrap();
 
         assert_eq!(report.embeds.len(), super::MAX_REPORT_INLINE_IMAGES + 1);
-        assert!(report.embeds[..super::MAX_REPORT_INLINE_IMAGES]
-            .iter()
-            .all(|node| matches!(node.resolution.disposition, VaultNoteEmbedDisposition::Attachment(_))));
+        assert!(
+            report.embeds[..super::MAX_REPORT_INLINE_IMAGES]
+                .iter()
+                .all(|node| matches!(
+                    node.resolution.disposition,
+                    VaultNoteEmbedDisposition::Attachment(_)
+                ))
+        );
         let last = report.embeds.last().unwrap();
-        assert_eq!(last.resolution.resolution.status, super::LinkResolutionStatus::Resolved);
-        assert_eq!(last.resolution.disposition, VaultNoteEmbedDisposition::NotRendered);
+        assert_eq!(
+            last.resolution.resolution.status,
+            super::LinkResolutionStatus::Resolved
+        );
+        assert_eq!(
+            last.resolution.disposition,
+            VaultNoteEmbedDisposition::NotRendered
+        );
     }
 
     #[test]
@@ -1896,8 +1903,14 @@ mod tests {
             .resolve_note_embed("Index.md", &reference, 0, &["Index.md".to_owned()])
             .unwrap();
 
-        assert_eq!(result.resolution.status, super::LinkResolutionStatus::Resolved);
-        assert_eq!(result.resolution.target.as_deref(), Some("Images/large.png"));
+        assert_eq!(
+            result.resolution.status,
+            super::LinkResolutionStatus::Resolved
+        );
+        assert_eq!(
+            result.resolution.target.as_deref(),
+            Some("Images/large.png")
+        );
         assert_eq!(result.disposition, VaultNoteEmbedDisposition::NotRendered);
     }
 

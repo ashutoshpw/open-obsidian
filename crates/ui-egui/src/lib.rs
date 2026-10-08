@@ -4,8 +4,8 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
     LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason, VaultConflictAction,
     VaultConflictRead, VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind,
-    VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultLinkResolution,
-    VaultInlineImage, VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport,
+    VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage,
+    VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport,
     VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult, VaultSession,
     plan_history_retention,
 };
@@ -1994,15 +1994,16 @@ mod tests {
         std::fs::write(vault_path.0.join("Images/photo.png"), [1, 2, 3]).unwrap();
         let session = VaultSession::open(&vault_path.0, &app_data_path.0).unwrap();
         let mut report = session.resolve_note_embeds_for_note("Index.md").unwrap();
-        report.embeds[0].resolution.disposition = VaultNoteEmbedDisposition::Attachment(
-            VaultInlineImage {
+        report.embeds[0].resolution.disposition =
+            VaultNoteEmbedDisposition::Attachment(VaultInlineImage {
                 revision_sha256: "fixture-image-sha256".to_owned(),
                 width: 1,
                 height: 1,
                 rgba_bytes: vec![255, 0, 0, 255],
-            },
-        );
+            });
         let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(Path::new("Index.md").to_path_buf()),
             link_status: Some("fixture links resolved".to_owned()),
             note_embed_report: Some(report),
             ..OpenObsidianApp::default()
