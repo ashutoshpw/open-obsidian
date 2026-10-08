@@ -10,6 +10,7 @@ workspace = true
 
 [dependencies]
 eframe = { workspace = true }
+egui_commonmark = { version = "=0.25.0", default-features = false }
 openobsidian-engine = { workspace = true }
 rayon = { workspace = true }
 

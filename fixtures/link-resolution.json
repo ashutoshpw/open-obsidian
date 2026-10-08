@@ -20,11 +20,11 @@
         },
         {
           "path": "Notes/Unique.md",
-          "source": "# Unique\n\nOpening paragraph ![[Unique]] ^intro\n\n## Duplicate\n\n## Duplicate\n"
+          "source": "# Unique\n\nOpening **formatted paragraph** ![[Unique]] ^intro\n\n## Duplicate\n\n## Duplicate\n"
         },
         {
           "path": "Notes/Fragment.md",
-          "source": "# Fragment\n"
+          "source": "# Rendered transcluded heading\n"
         },
         {
           "path": "Notes/Target.md",

@@ -7,6 +7,7 @@ use openobsidian_engine::{
     VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
     VaultRenameRecoveryReport, VaultRenameResult, VaultSession, plan_history_retention,
 };
+use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use std::sync::{
     Arc,
     mpsc::{self, Receiver, TryRecvError},
@@ -159,6 +160,7 @@ struct OpenObsidianApp {
     link_status: Option<String>,
     note_embed_report: Option<VaultNoteEmbedReport>,
     note_embed_error: Option<String>,
+    markdown_cache: CommonMarkCache,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
     rename_preview: Option<VaultRenamePreview>,
@@ -502,7 +504,7 @@ impl OpenObsidianApp {
                         .max_height(320.0)
                         .show(ui, |ui| {
                             for embed in &report.embeds {
-                                show_note_embed_node(ui, embed);
+                                show_note_embed_node(ui, embed, &mut self.markdown_cache);
                             }
                             if report.truncated {
                                 ui.small("Additional note embeds were omitted to keep this preview bounded.");
@@ -1432,7 +1434,11 @@ fn note_embed_error(error: VaultError) -> String {
     }
 }
 
-fn show_note_embed_node(ui: &mut eframe::egui::Ui, node: &VaultNoteEmbedNode) {
+fn show_note_embed_node(
+    ui: &mut eframe::egui::Ui,
+    node: &VaultNoteEmbedNode,
+    markdown_cache: &mut CommonMarkCache,
+) {
     let reference = &node.resolution.reference;
     ui.group(|ui| {
         ui.monospace(&reference.raw);
@@ -1458,7 +1464,7 @@ fn show_note_embed_node(ui: &mut eframe::egui::Ui, node: &VaultNoteEmbedNode) {
                     while !text.is_char_boundary(end) {
                         end -= 1;
                     }
-                    ui.monospace(&text[..end]);
+                    CommonMarkViewer::new().show(ui, markdown_cache, &text[..end]);
                     if end < text.len() {
                         ui.small("Transcluded text preview shortened to 16 KiB.");
                     }
@@ -1507,7 +1513,7 @@ fn show_note_embed_node(ui: &mut eframe::egui::Ui, node: &VaultNoteEmbedNode) {
             ui.small("Nested embeds were omitted to keep this preview bounded.");
         }
         for child in &node.children {
-            show_note_embed_node(ui, child);
+            show_note_embed_node(ui, child, markdown_cache);
         }
     });
 }
@@ -1856,7 +1862,8 @@ mod tests {
                 && embed.resolution.disposition == VaultNoteEmbedDisposition::NotRendered
         }));
         harness.get_by_label("Note transclusions");
-        harness.get_by_label("Opening paragraph ![[Unique]]");
+        harness.get_by_label("Rendered transcluded heading");
+        harness.get_by_label("formatted paragraph");
         harness.get_by_label("Not rendered: this embed would create a cycle. ![[Unique]]");
         harness.get_by_label(
             "Not rendered: no matching Markdown note was found. ![[Assets/plot.svg]]",
