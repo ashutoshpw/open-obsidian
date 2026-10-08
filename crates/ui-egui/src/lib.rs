@@ -315,7 +315,7 @@ impl OpenObsidianApp {
         ui.separator();
         ui.heading("Uninstall cleanup");
         ui.label(
-            "Your vault is never included in uninstall cleanup. Select only optional local app data for the operating-system uninstall flow.",
+            "Preview optional app-data cleanup choices for the operating-system uninstaller. Package integration is pending; changing these choices here does not delete data. Vaults are never cleanup targets.",
         );
         ui.checkbox(&mut self.uninstall_cleanup.app_cache, "App cache");
         ui.small("Derived indexes, UI state and disposable runtime cache.");

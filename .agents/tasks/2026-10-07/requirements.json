@@ -7856,11 +7856,11 @@
       ],
       "legacy_checkpoint": "P2.3",
       "migration_phase": "R2",
-      "rust_owner": "crates/vault",
+      "rust_owner": "crates/platform",
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
+      "migration_acceptance": "Keep verified OS-protection reporting and implement selection-driven cleanup over marked app-owned data while preserving vault files, conflicts, and journal-required recovery images. Wire the adapter into the R6 native uninstaller after desktop shutdown and verify package behavior through GitHub CI."
     },
     {
       "id": "Q-001",

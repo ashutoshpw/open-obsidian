@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T18:46:19Z",
+  "updated_at": "2026-10-08T19:06:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "443b7161eacbfd4c770927dc368836f938878a04",
-  "current_milestone": "R2.6.36",
-  "next_action": "Implement an explicit, conflict-safe cleanup executor over app-owned user data and define its adapter seam for the R6 native uninstaller; validate only through GitHub Actions.",
+  "last_reconciled_head": "9610bc40cd0015b2d1940a06bd20febe63987e63",
+  "current_milestone": "R2.6.37",
+  "next_action": "Commit and push the cleanup executor slice, then review exact-SHA GitHub Actions results; do not run executable validation locally.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -7090,6 +7090,21 @@
         "Native-window human accessibility checks remain external."
       ],
       "next_action": "Implement an explicit, conflict-safe cleanup executor over app-owned user data and define its adapter seam for the R6 native uninstaller; validate only through GitHub Actions."
+    },
+    "R2.6.37": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Add an ownership-checked cleanup executor and package adapter seam for app-owned user data while retaining unresolved conflicts, operation journals and recovery images.",
+      "ci_attempts": [],
+      "evidence": null,
+      "accepted_slice": [],
+      "remaining": [
+        "Exact-SHA GitHub Actions validation is pending.",
+        "A native OS package does not yet invoke the adapter; this remains an R6 handoff.",
+        "Credential cleanup remains unavailable until an OS credential backend implements application-scoped deletion."
+      ],
+      "next_action": "Commit and push the cleanup executor slice, then review exact-SHA GitHub Actions results; do not run executable validation locally."
     }
   },
   "ci_preparation": {

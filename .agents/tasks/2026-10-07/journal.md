@@ -708,3 +708,12 @@ Closed the parent C03 row after reviewing the accumulated fixtures and rerunning
 All six required workflows passed on the tested source: Rust CI [37825268425](https://github.com/ashutoshpw/open-obsidian/actions/runs/37825268425), inventory [37825268614](https://github.com/ashutoshpw/open-obsidian/actions/runs/37825268614), quality [37825268654](https://github.com/ashutoshpw/open-obsidian/actions/runs/37825268654), desktop build [37825268485](https://github.com/ashutoshpw/open-obsidian/actions/runs/37825268485), plugin renderer [37825268489](https://github.com/ashutoshpw/open-obsidian/actions/runs/37825268489), and loaded-plugin workflows [37825268491](https://github.com/ashutoshpw/open-obsidian/actions/runs/37825268491). The indexed fixture mapping is in `evidence/r2.6.36-c03-cross-layer-acceptance-443b716.json`.
 
 Next: implement an explicit, conflict-safe cleanup executor for app-owned data and define its adapter seam for the native uninstaller. The actual OS uninstall workflow will be validated when the R6 packaging format is selected; all executable checks remain in GitHub Actions.
+
+
+## R2.6.37 cleanup executor implementation — GitHub CI pending
+
+Added an explicit platform cleanup API for app-owned root/per-vault data, with ownership markers, target preflight checks, and a CLI adapter for package-supplied selections. Cache cleanup is restricted to marked per-vault data roots; conflicts, vault files, journals, unknown neighbors, and recovery directories referenced by pending, failed, malformed, unreadable, or oversized operation journals are preserved. The shared fixture now includes a prepared rename journal and its before-image. Recovery cleanup reports preserved journal directories to the caller.
+
+Added an application-scoped credential deletion method to the platform seam. There is still no native credential backend, so the CLI reports that selected credential cleanup as unavailable rather than claiming success. The UI checkboxes remain a preview, and no OS package invokes the cleanup adapter yet; that integration remains an R6 handoff and must run after the desktop process exits.
+
+Focused platform and CLI tests are authored but have not been executed locally. R2.6.37 remains in progress until the exact pushed implementation SHA passes GitHub Actions; no local executable validation was run.

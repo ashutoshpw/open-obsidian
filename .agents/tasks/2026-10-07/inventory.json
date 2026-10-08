@@ -1582,13 +1582,13 @@
     },
     {
       "path": "fixtures/uninstall-preservation.json",
-      "sha256": "c07a7af32907764addf89c7568f53b9480b1e47bbacf9a0bb32aadbba69498fa",
-      "rust_owner": "crates/ui-egui",
+      "sha256": "1940151c2f3c43be7de419e40542d9569dcd90bd1f708fb3b74ef69f2d24653f",
+      "rust_owner": "crates/platform",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "Synthetic vault and managed-data preservation case for the native uninstall-choice interaction; host-level uninstall acceptance remains pending.",
-      "fixture_reader": "crates/ui-egui"
+      "purpose": "Synthetic vault and managed-data preservation case for the platform cleanup executor and native uninstall-choice interaction; host-level uninstall acceptance remains pending.",
+      "fixture_reader": "crates/platform and crates/ui-egui"
     },
     {
       "path": "fixtures/history-retention.json",

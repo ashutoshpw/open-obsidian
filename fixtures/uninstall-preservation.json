@@ -17,9 +17,17 @@
       "app_data": {
         "path": "workspace/app-data",
         "files": [
+          {"relative_path": ".openobsidian-user-data-root", "source": "openobsidian-user-data-root-v1\n"},
           {"relative_path": "cache/index.json", "source": "{\"derived\":true}\n"},
-          {"relative_path": "vaults/current/recovery/record.bin", "source": "previous note bytes\n"},
-          {"relative_path": "vaults/current/conflicts/unresolved.bin", "source": "incoming conflict bytes\n"}
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/.openobsidian-vault-data", "source": "openobsidian-vault-data-v1\n"},
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/cache/graph.json", "source": "{\"graph\":true}\n"},
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/recovery/record.bin", "source": "previous note bytes\n"},
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/recovery/fixture-rename-rename-before-0.bin", "source": "before-image required by pending rename recovery\n"},
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/failed/failed-write.bin", "source": "failed write bytes\n"},
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/conflicts/unresolved.bin", "source": "incoming conflict bytes\n"},
+          {"relative_path": "vaults/f37dd519f426bfdfeb4dbc3e/journal.jsonl", "source": "{\"id\":\"fixture-rename\",\"operation\":\"rename\",\"state\":\"prepared\",\"files\":[{\"before_file\":\"fixture-rename-rename-before-0.bin\"}]}\n"},
+          {"relative_path": "vaults/0123456789abcdef01234567/cache/vault-owned.json", "source": "vault bytes must never be cleanup-owned\n"},
+          {"relative_path": "user-notes.txt", "source": "user-owned app-data neighbor\n"}
         ]
       },
       "expected": {
@@ -27,7 +35,18 @@
         "selected_summary": "Selected local cleanup: App cache, Stored credentials, Recovery history. The vault remains preserved.",
         "selection_does_not_delete_files": true,
         "vault_bytes_remain_identical": true,
-        "unresolved_conflict_bytes_remain_identical": true
+        "unresolved_conflict_bytes_remain_identical": true,
+        "selected_cleanup": {
+          "app_cache_directories_removed": 2,
+          "recovery_history_directories_removed": 1,
+          "journal_recovery_directories_preserved": 1,
+          "credentials_cleared_by_explicit_adapter": true,
+          "unresolved_conflict_bytes_remain_identical": true,
+          "rename_journal_bytes_remain_identical": true,
+          "ownership_marker_remains": true,
+          "unowned_hash_directory_remains": true,
+          "unknown_app_data_remains": true
+        }
       }
     }
   ]
