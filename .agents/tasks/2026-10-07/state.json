@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T22:00:03Z",
+  "updated_at": "2026-10-08T22:30:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
-  "current_milestone": "R2.6.44",
+  "last_reconciled_head": "b6153f9ea900ef64baf66a65054c0835652b6687",
+  "current_milestone": "R2.6.45",
   "next_action": "Continue R2 with the next uncovered C01 read-only product flow. Obtain a privacy-safe Obsidian-authored fixture and run the C01.2 provenance/reopen cases through GitHub Actions; keep C01 and C01.2 open. Use GitHub Actions only.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53"
+      "implementation_sha": "b6153f9ea900ef64baf66a65054c0835652b6687"
     },
     "R3": {
       "status": "pending",
@@ -176,7 +176,9 @@
     "R2.6.40 existing-vault link/transclusion and rename-preview UI preservation passed all six exact-SHA GitHub Actions workflows; the named interaction passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json.",
     "R2.6.41 existing-vault history UI preservation passed all six exact-SHA GitHub Actions workflows on c58cbed45b9815af038f19fef7676d021b667a56; the named UI test passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json. No local executable validation was run.",
     "R2.6.42 existing-vault uninstall cleanup-choice preview passed all six exact-SHA GitHub Actions workflows on 3b0e251e4044699d90d1844709290f74a7805588; the new UI preservation test passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json. No local executable validation was run.",
-    "R2.6.43 existing-vault conflict inspection passed all six required GitHub Actions workflows on exact source SHA e9a0afe7a66b93857f4c0bae8493a8a8e22510af; the named interaction, including the explicit close control, passed on Ubuntu, macOS and Windows. Evidence and artifact digests: evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json. No local executable validation was run."
+    "R2.6.43 existing-vault conflict inspection passed all six required GitHub Actions workflows on exact source SHA e9a0afe7a66b93857f4c0bae8493a8a8e22510af; the named interaction, including the explicit close control, passed on Ubuntu, macOS and Windows. Evidence and artifact digests: evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json. No local executable validation was run.",
+    "R2.6.44 added bounded, source-preserving existing-note preview; exact corrected source SHA 37a1f7cd80003be356ed7ed1ad273f6fa97f4f53 passed all six required GitHub Actions workflows. Evidence: evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json. Parent C01 and C01.2 remain open.",
+    "R2.6.45 added an asynchronous existing-vault note-list refresh and full vault/app-data no-op assertions. Exact corrected source SHA b6153f9ea900ef64baf66a65054c0835652b6687 passed all six GitHub Actions workflows; see evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json. C01 and C01.2 remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -8683,6 +8685,95 @@
       "remaining": [
         "The C01.2 matrix is defined, but Obsidian-authored fixture provenance and the Obsidian desktop reopen CI case are pending.",
         "Parent C01 and C01.2 remain open; this synthetic-fixture slice does not establish reference-application compatibility."
+      ],
+      "next_action": "Continue R2 with the next uncovered C01 read-only product flow. Obtain a privacy-safe Obsidian-authored fixture and run the C01.2 provenance/reopen cases through GitHub Actions; keep C01 and C01.2 open. Use GitHub Actions only."
+    },
+    "R2.6.45": {
+      "status": "complete",
+      "implementation_sha": "b6153f9ea900ef64baf66a65054c0835652b6687",
+      "implementation_commits": [
+        "b73274736e1774d48ab8c959390f97d3c7a00400",
+        "ea784a985bd6653b240db54a0e64756465887e21",
+        "1acd6b20c2b8b4836ee95e48823b3512b0b9945b",
+        "b6153f9ea900ef64baf66a65054c0835652b6687"
+      ],
+      "scope": "Add an asynchronous UI action to refresh an existing vault's Markdown note list after an external note appears; verify the complete vault and separate app-data trees remain unchanged.",
+      "ci_attempts": [
+        {
+          "source_sha": "b73274736e1774d48ab8c959390f97d3c7a00400",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37851587697,
+            "inventory": 37851587723,
+            "quality": 37851587705,
+            "desktop_build": 37851587664,
+            "plugin_renderer": 37851587665,
+            "loaded_plugin_workflows": 37851587814
+          },
+          "findings": [
+            "The refresh test passed on all three OSes, but an existing rename preview interaction missed its button on all three OSes; Ubuntu also reported rustfmt differences. Five companion workflows passed."
+          ],
+          "correction": "Applied CI formatting and reduced the refresh button size."
+        },
+        {
+          "source_sha": "ea784a985bd6653b240db54a0e64756465887e21",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37852090313,
+            "inventory": 37852090327,
+            "quality": 37852090271,
+            "desktop_build": 37852090148,
+            "plugin_renderer": 37852090314,
+            "loaded_plugin_workflows": 37852090357
+          },
+          "findings": [
+            "Formatting and the refresh test passed, but the existing rename preview interaction still missed its button on all three OSes. Five companion workflows passed."
+          ],
+          "correction": "Moved the note count into the wrapped vault header to keep the refresh control within the existing panel space."
+        },
+        {
+          "source_sha": "1acd6b20c2b8b4836ee95e48823b3512b0b9945b",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37852458934,
+            "inventory": 37852459004,
+            "quality": 37852458924,
+            "desktop_build": 37852458929,
+            "plugin_renderer": 37852459099,
+            "loaded_plugin_workflows": 37852458952
+          },
+          "findings": [
+            "Workspace tests passed on all platforms. Clippy rejected a test comparison that allocated a PathBuf solely for comparison; the five companion workflows passed."
+          ],
+          "correction": "Compared borrowed Path values without allocation."
+        },
+        {
+          "source_sha": "b6153f9ea900ef64baf66a65054c0835652b6687",
+          "conclusion": "success",
+          "workflows": {
+            "rust_ci": 37853242520,
+            "inventory": 37853242599,
+            "quality": 37853242632,
+            "desktop_build": 37853242563,
+            "plugin_renderer": 37853242643,
+            "loaded_plugin_workflows": 37853242503
+          },
+          "findings": [
+            "All six workflows passed on the exact corrected SHA. The refresh interaction and full vault/app-data preservation assertions passed on Ubuntu, macOS, and Windows."
+          ],
+          "evidence": "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json",
+      "accepted_slice": [
+        "The compact native UI refreshes the open session's Markdown listing asynchronously and reports the updated count.",
+        "An external note added before refresh appears in the listing; existing note selection remains stable when its path still exists.",
+        "The complete vault and separate app-data path/type/byte snapshots remain unchanged after refresh and UI teardown.",
+        "All six required GitHub Actions workflows passed on exact source SHA b6153f9ea900ef64baf66a65054c0835652b6687; the focused UI interaction passed on all three supported CI platforms."
+      ],
+      "remaining": [
+        "Parent C01 product-level read-only coverage remains open for additional flows.",
+        "C01.2 still needs an Obsidian-authored fixture with provenance and an Obsidian desktop reopen CI case; this synthetic-fixture result is not reference-app evidence."
       ],
       "next_action": "Continue R2 with the next uncovered C01 read-only product flow. Obtain a privacy-safe Obsidian-authored fixture and run the C01.2 provenance/reopen cases through GitHub Actions; keep C01 and C01.2 open. Use GitHub Actions only."
     }

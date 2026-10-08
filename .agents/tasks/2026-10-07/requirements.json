@@ -2317,10 +2317,11 @@
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
         "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
-        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
+        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
+        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
       ],
-      "tested_source_tree": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
-      "blocker": "Partial evidence also covers a bounded existing-note source preview and explicit preview close with complete vault/app-data preservation. Remaining product-level read-only operations and the C01.2 Obsidian-authored fixture/reopen cases are pending; see c01.2-reference-roundtrip-matrix.md.",
+      "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
+      "blocker": "Partial evidence now also covers asynchronous note-list refresh after an external note appears, alongside bounded source preview and explicit close, with complete vault/app-data preservation. Remaining product-level read-only operations and the C01.2 Obsidian-authored fixture/reopen cases are pending; see c01.2-reference-roundtrip-matrix.md.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2372,9 +2373,10 @@
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
         "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
-        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
+        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
+        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
       ],
-      "tested_source_tree": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
+      "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D02",
@@ -2426,10 +2428,11 @@
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
         "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
-        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json"
+        "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
+        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
       ],
-      "tested_source_tree": "37a1f7cd80003be356ed7ed1ad273f6fa97f4f53",
-      "blocker": "The C01.2 reference-application matrix is defined in c01.2-reference-roundtrip-matrix.md. Evidence still needs an Obsidian-authored fixture with recorded provenance and an Obsidian desktop reopen case executed through GitHub Actions, plus the remaining read-only product flows.",
+      "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
+      "blocker": "The C01.2 reference-application matrix is defined in c01.2-reference-roundtrip-matrix.md. Synthetic-fixture evidence now includes explicit note-list refresh, but still needs an Obsidian-authored fixture with recorded provenance and an Obsidian desktop reopen case executed through GitHub Actions, plus the remaining read-only product flows.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -10409,7 +10412,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-08T21:11:13+00:00",
+  "reviewed_at": "2026-10-08T22:30:40+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
