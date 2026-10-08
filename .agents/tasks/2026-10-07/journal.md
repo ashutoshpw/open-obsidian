@@ -749,3 +749,13 @@ The source slice is ready for exact-SHA GitHub Actions validation. No local test
 
 
 The first R2.6.39 CI attempt used exact source SHA `8aa618b78ed47800c8a773ccc1c6863f33a9845a`. The new shared test passed on Ubuntu, macOS and Windows. Rust CI failed only on the six Ubuntu rustfmt layout requests; macOS and Windows Rust jobs passed. The quality, desktop build, plugin renderer and loaded-plugin workflows passed. Inventory CI reported the stale `fixtures/existing-vault.json` hash; I refreshed it and updated reader metadata to include the testkit consumer. Fresh exact-SHA CI is pending.
+
+## R2.6.39 accepted existing-vault read-only operation no-op corpus — source SHA ebece90
+
+Extended the shared arbitrary-content existing-vault fixture with a resolved wiki link and heading embed. The testkit now scans and reads the vault, checks SHA-256 revisions, resolves links and note embeds, renders a transclusion, prepares and revalidates a rename preview, and verifies the complete path/type/byte tree remains unchanged after each read-only operation. The rename path remains preview-only.
+
+The first source SHA 8aa618b78ed47800c8a773ccc1c6863f33a9845a passed the new test on all three operating systems, but Ubuntu rustfmt requested six layout changes and inventory CI reported the stale fixture hash. Applied the CI diff and refreshed fixture hash and reader metadata in ebece9002b2c574433012bc914e3d1b00466ca07.
+
+All six required workflows passed on exact source SHA ebece9002b2c574433012bc914e3d1b00466ca07: Rust CI [37838299698](https://github.com/ashutoshpw/open-obsidian/actions/runs/37838299698), inventory [37838299814](https://github.com/ashutoshpw/open-obsidian/actions/runs/37838299814), quality [37838300055](https://github.com/ashutoshpw/open-obsidian/actions/runs/37838300055), desktop build [37838299733](https://github.com/ashutoshpw/open-obsidian/actions/runs/37838299733), plugin renderer [37838299747](https://github.com/ashutoshpw/open-obsidian/actions/runs/37838299747), and loaded-plugin workflows [37838299825](https://github.com/ashutoshpw/open-obsidian/actions/runs/37838299825). The named test passed on Ubuntu, macOS and Windows. Job IDs and artifact IDs/digests are in evidence/r2.6.39-existing-vault-read-only-ebece90.json. No local executable validation was run.
+
+C01.1 now passes for this arbitrary-content no-op corpus slice. Parent C01 and C01.2 remain open for the complete product-level read-only workflow and reference-application round-trip matrix; this result does not certify every vault content combination. Next: cover the next smallest end-to-end read-only flow through GitHub Actions.
