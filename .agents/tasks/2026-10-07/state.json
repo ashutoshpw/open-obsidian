@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T10:25:32Z",
+  "updated_at": "2026-10-08T10:38:23Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c",
-  "current_milestone": "R2.6.18",
+  "last_reconciled_head": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+  "current_milestone": "R2.6.19",
   "next_action": "Add a fixture-backed cross-layer uninstall preservation contract for SYNC-007 and finish the remaining D16/history gates; keep R2 open until uninstall integration and full rename acceptance pass in GitHub CI.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "bf4e3b32d3b163d6acd249f52f31a3e048ed305c"
+      "implementation_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e"
     },
     "R3": {
       "status": "pending",
@@ -150,7 +150,8 @@
     "R2.6.15 connected every rename fixture case to filesystem-backed VaultStore apply and added a fixture-driven failure test proving prior reference writes and the source move roll back. All six required GitHub Actions workflows passed on exact SHA fc8b896054979af3e0dc212a7f33576a3672a524; both fixture tests passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.15-rename-vault-transaction-fixture-fc8b896.json. No local executable validation was run. Interrupted-transaction recovery, native interaction, D16, SYNC-007 and uninstall preservation remain pending.",
     "R2.6.16 extended fixture:c03-rename-move through interrupted VaultStore rename recovery, including byte-for-byte restoration, rolled_back journaling and idempotence. All six required workflows passed on exact SHA 927b77f240d962259fe507132ebfa3696e6872f8; the recovery test passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.16-rename-recovery-fixture-927b77f.json. No local executable validation was run. Native interaction, D16, SYNC-007, history integration and uninstall preservation remain pending.",
     "R2.6.17 added a headless egui_kittest interaction over the production rename preview/review/apply UI; the test passed on Ubuntu, macOS and Windows, verified no pre-confirmation mutation, then verified destination bytes, updated references and refreshed session state. All six required workflows passed on exact source SHA 9b2080e3ea6559c4cf678f39c1fbaca2148f999b. Evidence: evidence/r2.6.17-egui-rename-interaction-9b2080e.json. No local executable validation was run. This is not native desktop visual acceptance; C03/C03.2 full cross-layer acceptance, D16, SYNC-007, history integration and uninstall preservation remain pending.",
-    "R2.6.18 ported the three opt-in uninstall cleanup choices into the native UI with all options off by default and an explicit vault-preservation summary; its egui interaction test passed on Ubuntu, macOS and Windows without changing vault bytes. All six required workflows passed on exact source SHA bf4e3b32d3b163d6acd249f52f31a3e048ed305c. Evidence: evidence/r2.6.18-uninstall-cleanup-choices-bf4e3b3.json. No local executable validation was run. This slice does not execute uninstall cleanup or connect to a platform uninstaller; SYNC-007, D16 and remaining R2 acceptance gates remain open."
+    "R2.6.18 ported the three opt-in uninstall cleanup choices into the native UI with all options off by default and an explicit vault-preservation summary; its egui interaction test passed on Ubuntu, macOS and Windows without changing vault bytes. All six required workflows passed on exact source SHA bf4e3b32d3b163d6acd249f52f31a3e048ed305c. Evidence: evidence/r2.6.18-uninstall-cleanup-choices-bf4e3b3.json. No local executable validation was run. This slice does not execute uninstall cleanup or connect to a platform uninstaller; SYNC-007, D16 and remaining R2 acceptance gates remain open.",
+    "R2.6.19 exercised the ambiguous/unresolved C03 fixture through the production egui rename preview, review and apply flow; the UI test passed on Ubuntu, macOS and Windows and all six workflows passed on exact source SHA 842615dc6be2c6ba7ed3408208098717ca623e2e. Evidence: evidence/r2.6.19-egui-rename-fixture-skips-842615d.json. No local executable validation was run. C03/C03.2 full cross-layer acceptance, D16, SYNC-007 uninstall preservation and history integration remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -3904,6 +3905,80 @@
         {"name": "windows-latest", "job_id": 113262888147, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742981/job/113262888147"},
         {"name": "macos-latest", "job_id": 113262888342, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37762742981/job/113262888342"}
       ]
+    },
+    {
+      "name": "rust-ci",
+      "run_id": 37764171330,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171330",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113267607180, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171330/job/113267607180"},
+        {"name": "rust (macos-latest)", "job_id": 113267607467, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171330/job/113267607467"},
+        {"name": "rust (windows-latest)", "job_id": 113267607608, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171330/job/113267607608"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37764171447,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171447",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113267612278, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171447/job/113267612278"}]
+    },
+    {
+      "name": "quality",
+      "run_id": 37764171360,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171360",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113267607771, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171360/job/113267607771"},
+        {"name": "macos-latest", "job_id": 113267608154, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171360/job/113267608154"},
+        {"name": "ubuntu-latest", "job_id": 113267608164, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171360/job/113267608164"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37764171390,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171390",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113267607486, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171390/job/113267607486"},
+        {"name": "macos-latest", "job_id": 113267607778, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171390/job/113267607778"},
+        {"name": "ubuntu-latest", "job_id": 113267607851, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171390/job/113267607851"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37764171419,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171419",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113267608516, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171419/job/113267608516"},
+        {"name": "ubuntu-latest", "job_id": 113267608709, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171419/job/113267608709"},
+        {"name": "windows-latest", "job_id": 113267608876, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171419/job/113267608876"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37764171450,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171450",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113267607841, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171450/job/113267607841"},
+        {"name": "ubuntu-latest", "job_id": 113267608235, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171450/job/113267608235"},
+        {"name": "macos-latest", "job_id": 113267608531, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171450/job/113267608531"}
+      ]
     }
   ],
   "milestones": {
@@ -4638,6 +4713,52 @@
         "The test does not execute an OS uninstall. D16, SYNC-007 full uninstall preservation, remaining R2 workflow gaps, history integration and C03/C03.2 full cross-layer acceptance remain pending."
       ],
       "next_action": "Add a fixture-backed cross-layer uninstall preservation contract for SYNC-007 and finish the remaining D16/history gates; keep R2 open until uninstall integration and full rename acceptance pass in GitHub CI."
+    },
+    "R2.6.19": {
+      "status": "complete",
+      "implementation_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "implementation_commits": [
+        "daf4e4e1949fc9b2b0302d2c0afa05c713b39727",
+        "842615dc6be2c6ba7ed3408208098717ca623e2e"
+      ],
+      "scope": "Exercise ambiguous and unresolved C03 fixture references through the production egui rename preview, review and apply flow.",
+      "ci_attempts": [
+        {
+          "source_sha": "daf4e4e1949fc9b2b0302d2c0afa05c713b39727",
+          "rust_run_id": 37763860969,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37763861071,
+          "quality_run_id": 37763860886,
+          "desktop_build_run_id": 37763860995,
+          "plugin_renderer_run_id": 37763860842,
+          "loaded_plugin_run_id": 37763860847,
+          "companion_conclusion": "all five passed",
+          "findings": [
+            "Ubuntu rustfmt reported source layout changes in the new fixture interaction test.",
+            "macOS could not find Confirm and apply rename because the harness needed another UI step after the review action."
+          ]
+        },
+        {
+          "source_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+          "rust_run_id": 37764171330,
+          "inventory_run_id": 37764171447,
+          "quality_run_id": 37764171360,
+          "desktop_build_run_id": 37764171390,
+          "plugin_renderer_run_id": 37764171450,
+          "loaded_plugin_run_id": 37764171419,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.19-egui-rename-fixture-skips-842615d.json",
+      "accepted_slice": [
+        "The accessible interaction drives preview, review and explicit apply for the fixture case; preview reports zero reference edits and two skips and does not mutate fixture files.",
+        "After apply the source note moves, skipped and unrelated references remain unchanged, and the refreshed session lists the destination. The test and all six required workflows passed on exact source SHA 842615dc6be2c6ba7ed3408208098717ca623e2e; no local executable validation was run."
+      ],
+      "remaining": [
+        "The interaction is headless and does not establish native-window visual acceptance.",
+        "C03/C03.2 full cross-layer acceptance, D16, SYNC-007 uninstall preservation, remaining R2 workflow gaps and history integration remain pending."
+      ],
+      "next_action": "Add the fixture-backed uninstall preservation contract for SYNC-007 and finish the remaining D16/history gates; keep R2 open until uninstall integration and full rename acceptance pass in GitHub CI."
     }
   },
   "ci_preparation": {

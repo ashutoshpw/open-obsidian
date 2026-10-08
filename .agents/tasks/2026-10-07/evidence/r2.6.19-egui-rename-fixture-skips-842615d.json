@@ -1,0 +1,154 @@
+{
+  "slice": "R2.6.19 fixture-backed ambiguous and unresolved rename skips in native UI",
+  "phase": "R2",
+  "status": "accepted UI slice; R2 remains in progress",
+  "source_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+  "implementation_commits": [
+    "daf4e4e1949fc9b2b0302d2c0afa05c713b39727",
+    "842615dc6be2c6ba7ed3408208098717ca623e2e"
+  ],
+  "scope": "Exercise the C03 rename fixture's ambiguous and unresolved references through the production egui preview, review and apply flow.",
+  "behavior": [
+    "The egui_kittest harness renders the production OpenObsidianApp UI and loads the ambiguous/unresolved case from fixtures/rename-plan.json.",
+    "Preview reports zero reference updates and two skipped edits; all fixture files remain byte-identical before confirmation.",
+    "After review and explicit apply, the source note moves to its destination while ambiguous/unresolved references and unrelated files remain byte-identical; the session listing reflects the new path."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37764171330,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171330",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113267607180, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113267607467, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113267607608, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, crate layering, native preview builds and unchanged-plugin Wry feasibility probes passed on Ubuntu, macOS and Windows.",
+        "egui_rename_flow_keeps_ambiguous_and_unresolved_fixture_references_unchanged passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37764171447,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171447",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113267612278, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37764171360,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171360",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113267607771, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113267608154, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113267608164, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37764171390,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171390",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113267607486, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113267607778, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113267607851, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37764171419,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171419",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113267608516, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113267608709, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113267608876, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37764171450,
+      "head_sha": "842615dc6be2c6ba7ed3408208098717ca623e2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37764171450",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113267607841, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113267608235, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113267608531, "conclusion": "success"}
+      ]
+    }
+  ],
+  "rust_toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "9 passed, including egui_rename_flow_keeps_ambiguous_and_unresolved_fixture_references_unchanged",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "9 passed, including egui_rename_flow_keeps_ambiguous_and_unresolved_fixture_references_unchanged",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "9 passed, including egui_rename_flow_keeps_ambiguous_and_unresolved_fixture_references_unchanged",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; all executable validation used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11543841641, "name": "openobsidian-rust-preview-842615dc6be2c6ba7ed3408208098717ca623e2e", "digest": "sha256:2320360bce44148584e8d7fcd0c3118f82ce26409f4d323c3e8ecfadbdcd2f9c"},
+    {"id": 11544310476, "name": "rust-plugin-runtime-Linux-842615dc6be2c6ba7ed3408208098717ca623e2e", "digest": "sha256:ce5079131b996f08e698ce1b12622b96a1ba39fe255a3f5f22a2553227074ffd"},
+    {"id": 11544155624, "name": "rust-plugin-runtime-macOS-842615dc6be2c6ba7ed3408208098717ca623e2e", "digest": "sha256:7f51b7d06ef3e0e54fc1156859edbdd60097c402921d043bdf06d4dea0126ce8"},
+    {"id": 11544420348, "name": "rust-plugin-runtime-Windows-842615dc6be2c6ba7ed3408208098717ca623e2e", "digest": "sha256:cee76a76daa83cd07ddd63a78fab220227f134eea853a500dd0832b4d1c53d16"}
+  ],
+  "superseded_attempts": [
+    {
+      "source_sha": "daf4e4e1949fc9b2b0302d2c0afa05c713b39727",
+      "rust_run_id": 37763860969,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37763861071, "conclusion": "success"},
+        "quality": {"run_id": 37763860886, "conclusion": "success"},
+        "desktop-build": {"run_id": 37763860995, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37763860842, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37763860847, "conclusion": "success"}
+      },
+      "rust_jobs": {
+        "ubuntu-latest": {"job_id": 113266591912, "conclusion": "failure"},
+        "macos-latest": {"job_id": 113266591988, "conclusion": "failure"},
+        "windows-latest": {"job_id": 113266591616, "conclusion": "success"}
+      },
+      "findings": [
+        "Ubuntu rustfmt reported exact source layout changes in the new test; applied the CI-requested formatting.",
+        "macOS could not find Confirm and apply rename because the harness needed another UI step after the review button; added the missing step."
+      ]
+    }
+  ],
+  "limitations": [
+    "This is a headless UI interaction; CI did not launch the native desktop window for visual or human accessibility review.",
+    "The fixture interaction checks ambiguous and unresolved references remain byte-identical, but C03/C03.2 full cross-layer acceptance remains pending.",
+    "D16, SYNC-007 full uninstall preservation, remaining R2 workflow gaps and history integration acceptance remain pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Add the fixture-backed uninstall preservation contract for SYNC-007 and finish the remaining D16/history gates; keep R2 open until uninstall integration and full rename acceptance pass in GitHub CI."
+}
