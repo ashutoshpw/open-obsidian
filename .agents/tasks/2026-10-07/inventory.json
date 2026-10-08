@@ -1561,6 +1561,16 @@
       "fixture_reader": "crates/testkit"
     },
     {
+      "path": "fixtures/link-resolution.json",
+      "sha256": "921492be0afa54835910d31a862389d9b28ab759067b191eca7fd455a9e87400",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Shared C03.1 link-form fixture covers wiki, Markdown and embed references, aliases, relative targets, headings, block IDs, ambiguous targets and unresolved targets.",
+      "fixture_reader": "crates/testkit"
+    },
+    {
       "path": "fixtures/rename-plan.json",
       "sha256": "3f3d3983d210efc21b7961375f915c8eb24a2a11317240d1f62005e7d769ca69",
       "rust_owner": "crates/doc",

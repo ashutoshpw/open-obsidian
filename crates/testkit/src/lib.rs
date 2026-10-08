@@ -387,3 +387,160 @@ mod rename_plan_fixture_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod link_resolution_fixture_tests {
+    use openobsidian_doc::{
+        LinkKind, LinkResolutionStatus, MarkdownSource, resolve_link_with_sources,
+    };
+    use serde_json::Value;
+    use std::collections::HashMap;
+
+    const LINK_RESOLUTION_FIXTURE: &str =
+        include_str!("../../../fixtures/link-resolution.json");
+
+    #[test]
+    fn c03_link_forms_fixture_matches_source_aware_resolution() {
+        let fixture: Value = serde_json::from_str(LINK_RESOLUTION_FIXTURE)
+            .expect("link-resolution fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:c03-link-forms");
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
+
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let current_path = case["current_path"]
+                .as_str()
+                .expect("fixture case must identify the current note");
+            let file_cases = case["files"]
+                .as_array()
+                .expect("fixture files must be an array");
+            let mut files = Vec::with_capacity(file_cases.len());
+            let mut sources = HashMap::new();
+
+            for file in file_cases {
+                let path = file["path"]
+                    .as_str()
+                    .expect("fixture file must have a path")
+                    .to_owned();
+                files.push(path.clone());
+                if let Some(source_text) = file["source"].as_str() {
+                    let source = MarkdownSource::parse(source_text.as_bytes().to_vec())
+                        .unwrap_or_else(|error| panic!("{case_id}/{path}: {error}"));
+                    sources.insert(path, source);
+                }
+            }
+
+            let current_source = sources
+                .get(current_path)
+                .expect("fixture current note must have Markdown source");
+            let original_bytes = current_source.as_bytes().to_vec();
+            let references = current_source.extract_links();
+            let expected_references = case["expected_references"]
+                .as_array()
+                .expect("fixture must state expected references");
+            assert_eq!(
+                references.len(),
+                expected_references.len(),
+                "{case_id}: reference count"
+            );
+
+            for (reference, expected) in references.iter().zip(expected_references) {
+                assert_eq!(
+                    reference.raw,
+                    expected["raw"].as_str().expect("expected raw reference"),
+                    "{case_id}: raw reference"
+                );
+                assert_eq!(
+                    link_kind_name(reference.kind),
+                    expected["kind"].as_str().expect("expected link kind"),
+                    "{case_id}/{}: kind",
+                    reference.raw
+                );
+                assert_eq!(
+                    reference.target,
+                    expected["target"].as_str().expect("expected link target"),
+                    "{case_id}/{}: target",
+                    reference.raw
+                );
+                assert_eq!(
+                    reference.alias.as_deref(),
+                    expected["alias"].as_str(),
+                    "{case_id}/{}: alias",
+                    reference.raw
+                );
+                assert_eq!(
+                    reference.subpath.as_deref(),
+                    expected["subpath"].as_str(),
+                    "{case_id}/{}: subpath",
+                    reference.raw
+                );
+
+                let resolution =
+                    resolve_link_with_sources(reference, &files, current_path, &sources);
+                assert_eq!(
+                    resolution_name(resolution.status),
+                    expected["status"].as_str().expect("expected resolution status"),
+                    "{case_id}/{}: status",
+                    reference.raw
+                );
+                assert_eq!(
+                    resolution.target.as_deref(),
+                    expected["resolved_path"].as_str(),
+                    "{case_id}/{}: resolved path",
+                    reference.raw
+                );
+                let expected_candidates = expected["candidates"]
+                    .as_array()
+                    .expect("fixture must state resolution candidates")
+                    .iter()
+                    .map(|candidate| {
+                        candidate
+                            .as_str()
+                            .expect("candidate path must be text")
+                            .to_owned()
+                    })
+                    .collect::<Vec<_>>();
+                assert_eq!(
+                    resolution.candidates, expected_candidates,
+                    "{case_id}/{}: candidates",
+                    reference.raw
+                );
+            }
+
+            assert_eq!(
+                sources.get(current_path).unwrap().as_bytes(),
+                original_bytes,
+                "{case_id}: resolution must not modify source bytes"
+            );
+        }
+    }
+
+    fn link_kind_name(kind: LinkKind) -> &'static str {
+        match kind {
+            LinkKind::WikiLink => "wiki",
+            LinkKind::Markdown => "markdown",
+            LinkKind::Embed => "embed",
+        }
+    }
+
+    fn resolution_name(resolution: LinkResolutionStatus) -> &'static str {
+        match resolution {
+            LinkResolutionStatus::Resolved => "resolved",
+            LinkResolutionStatus::Unresolved => "unresolved",
+            LinkResolutionStatus::Ambiguous => "ambiguous",
+            LinkResolutionStatus::External => "external",
+        }
+    }
+}

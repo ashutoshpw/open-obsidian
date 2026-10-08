@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c03-link-forms",
+  "name": "source-aware-link-form-resolution",
+  "invariants": {
+    "source_bytes_are_read_only": true,
+    "unresolved_targets_remain_explicit": true,
+    "external_links_are_not_vault_files": true,
+    "heading_and_block_subpaths_are_validated": true,
+    "embeds_and_transclusions_are_resolved": true
+  },
+  "cases": [
+    {
+      "id": "wiki-markdown-embed-and-relative-link-forms",
+      "current_path": "Notes/Index.md",
+      "files": [
+        {
+          "path": "Notes/Index.md",
+          "source": "# Overview\n\n[[#Overview]] [[Unique|friendly alias]] [Guide](Guides/Target%20File.md#Guide) ![[Unique#^intro]] ![[Assets/plot.svg]] ![plot](Assets/plot.svg) ![[Fragment]] [[Missing]] [[Unique#Missing]] [[Unique#Duplicate]] [[Target#Overview]] [web](https://example.test/note.md)\n"
+        },
+        {
+          "path": "Notes/Unique.md",
+          "source": "# Unique\n\nOpening paragraph ^intro\n\n## Duplicate\n\n## Duplicate\n"
+        },
+        {
+          "path": "Notes/Fragment.md",
+          "source": "# Fragment\n"
+        },
+        {
+          "path": "Notes/Target.md",
+          "source": "# Overview\n"
+        },
+        {
+          "path": "Archive/Target.md",
+          "source": "# Other\n"
+        },
+        {
+          "path": "Guides/Target File.md",
+          "source": "# Guide\n"
+        },
+        {
+          "path": "Assets/plot.svg"
+        }
+      ],
+      "expected_references": [
+        {"raw": "[[#Overview]]", "kind": "wiki", "target": "", "alias": null, "subpath": "Overview", "status": "resolved", "resolved_path": "Notes/Index.md", "candidates": ["Notes/Index.md"]},
+        {"raw": "[[Unique|friendly alias]]", "kind": "wiki", "target": "Unique", "alias": "friendly alias", "subpath": null, "status": "resolved", "resolved_path": "Notes/Unique.md", "candidates": ["Notes/Unique.md"]},
+        {"raw": "[Guide](Guides/Target%20File.md#Guide)", "kind": "markdown", "target": "Guides/Target%20File.md", "alias": null, "subpath": "Guide", "status": "resolved", "resolved_path": "Guides/Target File.md", "candidates": ["Guides/Target File.md"]},
+        {"raw": "![[Unique#^intro]]", "kind": "embed", "target": "Unique", "alias": null, "subpath": "^intro", "status": "resolved", "resolved_path": "Notes/Unique.md", "candidates": ["Notes/Unique.md"]},
+        {"raw": "![[Assets/plot.svg]]", "kind": "embed", "target": "Assets/plot.svg", "alias": null, "subpath": null, "status": "resolved", "resolved_path": "Assets/plot.svg", "candidates": ["Assets/plot.svg"]},
+        {"raw": "![plot](Assets/plot.svg)", "kind": "embed", "target": "Assets/plot.svg", "alias": null, "subpath": null, "status": "resolved", "resolved_path": "Assets/plot.svg", "candidates": ["Assets/plot.svg"]},
+        {"raw": "![[Fragment]]", "kind": "embed", "target": "Fragment", "alias": null, "subpath": null, "status": "resolved", "resolved_path": "Notes/Fragment.md", "candidates": ["Notes/Fragment.md"]},
+        {"raw": "[[Missing]]", "kind": "wiki", "target": "Missing", "alias": null, "subpath": null, "status": "unresolved", "resolved_path": null, "candidates": ["Notes/Missing", "Notes/Missing.md"]},
+        {"raw": "[[Unique#Missing]]", "kind": "wiki", "target": "Unique", "alias": null, "subpath": "Missing", "status": "unresolved", "resolved_path": null, "candidates": ["Notes/Unique.md"]},
+        {"raw": "[[Unique#Duplicate]]", "kind": "wiki", "target": "Unique", "alias": null, "subpath": "Duplicate", "status": "ambiguous", "resolved_path": null, "candidates": ["Notes/Unique.md"]},
+        {"raw": "[[Target#Overview]]", "kind": "wiki", "target": "Target", "alias": null, "subpath": "Overview", "status": "resolved", "resolved_path": "Notes/Target.md", "candidates": ["Notes/Target.md"]},
+        {"raw": "[web](https://example.test/note.md)", "kind": "markdown", "target": "https://example.test/note.md", "alias": null, "subpath": null, "status": "external", "resolved_path": null, "candidates": []}
+      ]
+    }
+  ]
+}
