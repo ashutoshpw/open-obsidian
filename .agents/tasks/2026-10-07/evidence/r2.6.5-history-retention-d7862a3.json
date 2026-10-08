@@ -1,0 +1,134 @@
+{
+  "phase": "R2.6.5",
+  "slice": "R2.6.5d",
+  "status": "accepted_slice; R2.6.5 remains in progress",
+  "source_sha": "d7862a34578cfd918e5b93480a868b8d10ed3437",
+  "implementation_commits": [
+    "6aa9562d9caa9f17949c4b92ef8d864dd84b449f",
+    "8038a17f1de16b44bd4f3b4e5d1d95e4a5300047",
+    "ce2a4ceb46e15265d3262daac78a2d2c89912d12",
+    "d7862a34578cfd918e5b93480a868b8d10ed3437"
+  ],
+  "scope": "Add read-only retention planning and explicit, path-confined cleanup for recovery, failed-write and conflict history in the Rust vault layer.",
+  "behavior": [
+    "The default policy retains up to 30 days and 5 GiB, with policy values supplied by the caller.",
+    "Planning is read-only, orders records by capture time, reports retained/pruneable/protected bytes, and warns when protected data alone exceeds the cap.",
+    "Conflict records are always protected. Cleanup is an explicit call and removes only currently pruneable recovery/failed artifacts and their manifests.",
+    "The reader accepts Rust snake_case fields and legacy TypeScript camelCase fields, including epoch-second and ISO timestamps.",
+    "History directories and artifacts are checked as regular, non-symlink entries. Artifact locations are derived from validated record IDs; stored manifest paths cannot redirect cleanup."
+  ],
+  "focused_tests": [
+    "default_policy_matches_the_existing_thirty_day_five_gib_policy",
+    "plans_age_and_byte_pruning_without_pruning_protected_conflicts",
+    "lists_validated_history_from_each_managed_category",
+    "reads_legacy_camel_case_history_manifests",
+    "explicit_cleanup_removes_expired_recovery_but_preserves_conflicts_over_cap",
+    "parses_rust_epoch_and_legacy_iso_timestamps",
+    "refuses_symlinked_history_directories"
+  ],
+  "test_results": {
+    "ubuntu": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "24 passed"
+    },
+    "macos": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "24 passed"
+    },
+    "windows": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "23 passed; Unix-only symlink test is not compiled"
+    },
+    "local_executable_validation": "not run; executable validation was through GitHub Actions"
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37730671686,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37730671686",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113158824243, "conclusion": "success"},
+        "windows": {"job_id": 113158824436, "conclusion": "success"},
+        "macos": {"job_id": 113158824443, "conclusion": "success"}
+      },
+      "checks": [
+        "formatting",
+        "workspace tests",
+        "parallel group",
+        "Clippy",
+        "crate layers",
+        "native preview builds",
+        "Wry feasibility probes"
+      ]
+    },
+    "inventory": {
+      "run_id": 37730671698,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37730671698",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 113158824223, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 37730671833,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37730671833",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113158825395, "conclusion": "success"},
+        "macos": {"job_id": 113158825480, "conclusion": "success"},
+        "windows": {"job_id": 113158825574, "conclusion": "success"}
+      }
+    },
+    "desktop": {
+      "run_id": 37730671682,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37730671682",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113158824398, "conclusion": "success"},
+        "macos": {"job_id": 113158824521, "conclusion": "success"},
+        "windows": {"job_id": 113158824537, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37730671731,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37730671731",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113158824501, "conclusion": "success"},
+        "macos": {"job_id": 113158824667, "conclusion": "success"},
+        "windows": {"job_id": 113158824717, "conclusion": "success"}
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37730671695,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37730671695",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113158824454, "conclusion": "success"},
+        "macos": {"job_id": 113158824560, "conclusion": "success"},
+        "windows": {"job_id": 113158824675, "conclusion": "success"}
+      }
+    }
+  },
+  "repair_history": [
+    {
+      "source_sha": "6aa9562d9caa9f17949c4b92ef8d864dd84b449f",
+      "rust_run_id": 37729960326,
+      "finding": "GitHub Rust CI found the timestamp parser used an unavailable integer method and reported Ubuntu rustfmt differences."
+    },
+    {
+      "source_sha": "8038a17f1de16b44bd4f3b4e5d1d95e4a5300047",
+      "rust_run_id": 37730178080,
+      "finding": "GitHub Clippy flagged a manual character comparison and an identity operation; Ubuntu rustfmt requested one timestamp-expression layout change."
+    },
+    {
+      "source_sha": "ce2a4ceb46e15265d3262daac78a2d2c89912d12",
+      "rust_run_id": 37730394298,
+      "finding": "GitHub rustfmt requested the final timestamp offset expression on one line. Workspace tests passed; the formatting correction is in the accepted SHA."
+    }
+  ],
+  "limitations": [
+    "The Rust history API is not yet wired through the application IPC/UI boundary; cross-layer history workflow acceptance remains outstanding.",
+    "R2.6.5 remains in progress, and C03/C03.2 remain Pending until full R2 acceptance and exact-SHA GitHub CI pass.",
+    "The separate OS-level history-encryption requirement must be reconciled before claiming that requirement complete."
+  ],
+  "next_action": "Review cross-layer history integration and the remaining OS-encryption requirement, then define the next bounded R2 slice; keep R2.6.5 and C03/C03.2 pending until full acceptance."
+}
