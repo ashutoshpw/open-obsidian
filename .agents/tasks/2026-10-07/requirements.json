@@ -2315,10 +2315,11 @@
         "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
         "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
-        "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json"
+        "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
+        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
       ],
-      "tested_source_tree": "3b0e251e4044699d90d1844709290f74a7805588",
-      "blocker": "Partial evidence covers existing-vault open/close, shared service operations, and selected native UI link/transclusion/rename-preview, history-retention, and uninstall cleanup-choice flows. Remaining product-level read-only operations and the reference-application matrix are pending.",
+      "tested_source_tree": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "blocker": "Partial evidence covers existing-vault open/close, shared service operations, link/transclusion/rename previews, history review, uninstall cleanup-choice preview, and read-only conflict inspection with preservation of protected current/incoming versions. Remaining product-level read-only operations and the reference-application round-trip matrix are pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2368,9 +2369,10 @@
         "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
         "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
-        "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json"
+        "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
+        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
       ],
-      "tested_source_tree": "3b0e251e4044699d90d1844709290f74a7805588",
+      "tested_source_tree": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D02",
@@ -2420,10 +2422,11 @@
         "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
         "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
         "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json",
-        "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json"
+        "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
+        "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
       ],
-      "tested_source_tree": "3b0e251e4044699d90d1844709290f74a7805588",
-      "blocker": "Evidence covers shared service operations and selected native UI link/transclusion/rename-preview, history-retention, and uninstall cleanup-choice flows on Ubuntu, macOS and Windows. Other read-only flows and reference-application round trips remain pending.",
+      "tested_source_tree": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "blocker": "Evidence includes read-only conflict inspection and full-tree preservation on the existing-vault fixture, but this slice does not exercise reference applications. The C01.2 round-trip matrix and remaining read-only flows are pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T21:11:13Z",
+  "updated_at": "2026-10-08T21:36:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3b0e251e4044699d90d1844709290f74a7805588",
-  "current_milestone": "R2.6.42",
-  "next_action": "Continue R2 by covering existing-vault conflict inspection as a read-only preview and prepare the C01.2 reference-application round-trip matrix; keep C01 and C01.2 open. Use GitHub Actions only.",
+  "last_reconciled_head": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+  "current_milestone": "R2.6.43",
+  "next_action": "Continue R2 by covering the next uncovered C01 read-only product flow and define the C01.2 reference-application round-trip matrix; keep C01 and C01.2 open. Use GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "3b0e251e4044699d90d1844709290f74a7805588"
+      "implementation_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af"
     },
     "R3": {
       "status": "pending",
@@ -175,7 +175,8 @@
     "R2.6.39 existing-vault scan/read/link/embed/rename-preview no-op coverage passed the exact-SHA GitHub Actions matrix on Ubuntu, macOS and Windows; all six required workflows passed. C01.1 is accepted for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.39-existing-vault-read-only-ebece90.json.",
     "R2.6.40 existing-vault link/transclusion and rename-preview UI preservation passed all six exact-SHA GitHub Actions workflows; the named interaction passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json.",
     "R2.6.41 existing-vault history UI preservation passed all six exact-SHA GitHub Actions workflows on c58cbed45b9815af038f19fef7676d021b667a56; the named UI test passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json. No local executable validation was run.",
-    "R2.6.42 existing-vault uninstall cleanup-choice preview passed all six exact-SHA GitHub Actions workflows on 3b0e251e4044699d90d1844709290f74a7805588; the new UI preservation test passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json. No local executable validation was run."
+    "R2.6.42 existing-vault uninstall cleanup-choice preview passed all six exact-SHA GitHub Actions workflows on 3b0e251e4044699d90d1844709290f74a7805588; the new UI preservation test passed on Ubuntu, macOS and Windows. C01.1 remains passing for the tested arbitrary-content no-op corpus; parent C01 and C01.2 remain open. Evidence: evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json. No local executable validation was run.",
+    "R2.6.43 existing-vault conflict inspection passed all six required GitHub Actions workflows on exact source SHA e9a0afe7a66b93857f4c0bae8493a8a8e22510af; the named interaction, including the explicit close control, passed on Ubuntu, macOS and Windows. Evidence and artifact digests: evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -6567,6 +6568,82 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37844353350/job/113541375096"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37847216053,
+      "head_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216053",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113550976565, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216053/job/113550976565"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113550976798, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216053/job/113550976798"},
+        {"name": "rust (macos-latest)", "job_id": 113550976868, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216053/job/113550976868"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37847216058,
+      "head_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216058",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113550976189, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216058/job/113550976189"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37847216043,
+      "head_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216043",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113550977720, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216043/job/113550977720"},
+        {"name": "ubuntu-latest", "job_id": 113550978064, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216043/job/113550978064"},
+        {"name": "windows-latest", "job_id": 113550978371, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216043/job/113550978371"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37847216224,
+      "head_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216224",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113550977361, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216224/job/113550977361"},
+        {"name": "macos-latest", "job_id": 113550977807, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216224/job/113550977807"},
+        {"name": "ubuntu-latest", "job_id": 113550977813, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216224/job/113550977813"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37847216046,
+      "head_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216046",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113550976020, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216046/job/113550976020"},
+        {"name": "macos-latest", "job_id": 113550976398, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216046/job/113550976398"},
+        {"name": "ubuntu-latest", "job_id": 113550976409, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216046/job/113550976409"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37847216069,
+      "head_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216069",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113550976950, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216069/job/113550976950"},
+        {"name": "macos-latest", "job_id": 113550977128, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216069/job/113550977128"},
+        {"name": "ubuntu-latest", "job_id": 113550977143, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216069/job/113550977143"}
+      ]
     }
   ],
   "milestones": {
@@ -8483,6 +8560,76 @@
         "The actual package uninstaller and selected cleanup executor are outside this preview-only test."
       ],
       "next_action": "Continue R2 by covering existing-vault conflict inspection as a read-only preview and prepare the C01.2 reference-application round-trip matrix; keep C01 and C01.2 open. Use GitHub Actions only."
+    },
+    "R2.6.43": {
+      "status": "complete",
+      "implementation_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+      "implementation_commits": [
+        "d043d6205d1f0b730fc43985018d838e10bca202",
+        "041c1912f173742ca8a086c775b263cad72287f1",
+        "e9a0afe7a66b93857f4c0bae8493a8a8e22510af"
+      ],
+      "scope": "Exercise existing-vault conflict inspection as a read-only preview after confirmed history cleanup, verify current/incoming versions and full vault/app-data preservation, then explicitly close the inspection.",
+      "ci_attempts": [
+        {
+          "source_sha": "d043d6205d1f0b730fc43985018d838e10bca202",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37845971060,
+            "inventory": 37845971090,
+            "quality": 37845971204,
+            "desktop_build": 37845971078,
+            "plugin_renderer": 37845971066,
+            "loaded_plugin_workflows": 37845971082
+          },
+          "findings": [
+            "Conflict content and preservation assertions passed, but the explicit close click did not clear conflict_inspection on Ubuntu, macOS or Windows; all three Rust jobs failed the close-state assertion. The other five required workflows passed."
+          ],
+          "correction": "Moved inspection after confirmed cleanup, expanded the headless contents and exercised the close control explicitly."
+        },
+        {
+          "source_sha": "041c1912f173742ca8a086c775b263cad72287f1",
+          "conclusion": "success",
+          "workflows": {
+            "rust_ci": 37846501049,
+            "inventory": 37846501134,
+            "quality": 37846501074,
+            "desktop_build": 37846501076,
+            "plugin_renderer": 37846501086,
+            "loaded_plugin_workflows": 37846501075
+          },
+          "findings": [
+            "All six workflows and conflict inspection preservation checks passed on Ubuntu, macOS and Windows. This intermediate version checked app teardown rather than activating the explicit close control."
+          ]
+        },
+        {
+          "source_sha": "e9a0afe7a66b93857f4c0bae8493a8a8e22510af",
+          "conclusion": "success",
+          "workflows": {
+            "rust_ci": 37847216053,
+            "inventory": 37847216058,
+            "quality": 37847216043,
+            "desktop_build": 37847216224,
+            "plugin_renderer": 37847216046,
+            "loaded_plugin_workflows": 37847216069
+          },
+          "findings": [
+            "All six exact-SHA workflows passed. The focused test inspected the retained conflict, verified full vault and app-data preservation, activated Close inspection and confirmed the inspection state cleared on all three operating systems."
+          ],
+          "evidence": "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
+      "accepted_slice": [
+        "The existing-vault UI can inspect the protected conflict's current and incoming versions without changing any path, entry type or byte in the vault or app-data tree.",
+        "Close inspection clears the preview state, and both complete trees remain unchanged after closing.",
+        "All six required GitHub Actions workflows passed on exact source SHA e9a0afe7a66b93857f4c0bae8493a8a8e22510af; the named interaction passed on Ubuntu, macOS and Windows."
+      ],
+      "remaining": [
+        "Parent C01 product-level read-only coverage and C01.2 reference-application round trips remain open.",
+        "This slice previews a protected conflict; accepting or resolving either version is not covered."
+      ],
+      "next_action": "Continue R2 by covering the next uncovered C01 read-only product flow and define the C01.2 reference-application round-trip matrix; keep C01 and C01.2 open. Use GitHub Actions only."
     }
   },
   "ci_preparation": {
