@@ -2313,10 +2313,11 @@
       "status": "pending",
       "evidence_paths": [
         "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
-        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json"
+        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
+        "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json"
       ],
-      "tested_source_tree": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
-      "blocker": "Partial evidence covers existing-vault open/close, shared service operations, and selected native UI link/transclusion/rename-preview flows. Remaining product-level read-only operations and the reference-application matrix are pending.",
+      "tested_source_tree": "c58cbed45b9815af038f19fef7676d021b667a56",
+      "blocker": "Partial evidence covers existing-vault open/close, shared service operations, and selected native UI link/transclusion/rename-preview and history-retention cleanup flows. Remaining product-level read-only operations and the reference-application matrix are pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2364,9 +2365,10 @@
       "evidence_paths": [
         "evidence/r2.6.38-existing-vault-in-place-10a69a8.json",
         "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
-        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json"
+        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
+        "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json"
       ],
-      "tested_source_tree": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
+      "tested_source_tree": "c58cbed45b9815af038f19fef7676d021b667a56",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D02",
@@ -2414,10 +2416,11 @@
       "status": "pending",
       "evidence_paths": [
         "evidence/r2.6.39-existing-vault-read-only-ebece90.json",
-        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json"
+        "evidence/r2.6.40-existing-vault-ui-preservation-8819bb4.json",
+        "evidence/r2.6.41-existing-vault-history-preservation-c58cbed.json"
       ],
-      "tested_source_tree": "8819bb44722b8652d8ba40e10ec85ea41cb065a5",
-      "blocker": "Evidence covers shared service operations and selected native UI link/transclusion/rename-preview flows on Ubuntu, macOS and Windows. Other read-only flows and reference-application round trips remain pending.",
+      "tested_source_tree": "c58cbed45b9815af038f19fef7676d021b667a56",
+      "blocker": "Evidence covers shared service operations and selected native UI link/transclusion/rename-preview and history-retention flows on Ubuntu, macOS and Windows. Other read-only flows and reference-application round trips remain pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -10397,7 +10400,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-07T19:58:51+00:00",
+  "reviewed_at": "2026-10-08T20:52:58+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
