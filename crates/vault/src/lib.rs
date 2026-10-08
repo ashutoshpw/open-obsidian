@@ -1,6 +1,9 @@
-//! Read-only vault foundation. Transactional writes are added with the R2 migration slices.
+//! Source-preserving vault reads and revision-bound rename previews.
 
-use openobsidian_doc::RawDocument;
+use openobsidian_doc::{
+    LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument, RenamePlanFile,
+    build_link_rename_plan,
+};
 use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
 use std::fs;
@@ -17,6 +20,16 @@ pub enum VaultError {
     OutsideRoot(PathBuf),
     #[error("vault entry is not a regular file: {0}")]
     NotAFile(PathBuf),
+    #[error("vault path traverses a symbolic link: {0}")]
+    Symlink(PathBuf),
+    #[error("vault contains an unsupported filesystem entry: {0}")]
+    UnsupportedEntry(PathBuf),
+    #[error("vault changed while its rename preview was being prepared")]
+    SnapshotChanged,
+    #[error("rename preview is stale; prepare it again before applying")]
+    StaleRenamePreview,
+    #[error(transparent)]
+    RenamePlan(#[from] LinkRenamePlanError),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -28,6 +41,34 @@ pub struct VaultEntry {
 pub struct VaultRead {
     pub document: RawDocument,
     pub revision_sha256: String,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VaultSnapshotEntryKind {
+    File,
+    Symlink,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultSnapshotEntry {
+    pub relative_path: PathBuf,
+    pub kind: VaultSnapshotEntryKind,
+    pub size_bytes: u64,
+    pub revision_sha256: String,
+    pub symlink_target: Option<PathBuf>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultSnapshot {
+    pub entries: Vec<VaultSnapshotEntry>,
+    pub revision_sha256: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultRenamePreview {
+    pub plan: LinkRenamePlan,
+    pub snapshot_sha256: String,
+    pub plan_id: String,
 }
 
 #[derive(Clone, Debug)]
@@ -55,7 +96,18 @@ impl VaultRoot {
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         let relative_path = relative_path.as_ref();
         validate_relative_path(relative_path)?;
-        let candidate = self.canonical_root.join(relative_path);
+        let components: Vec<_> = relative_path.components().collect();
+        let mut candidate = self.canonical_root.clone();
+        for (index, component) in components.iter().enumerate() {
+            candidate.push(component.as_os_str());
+            let metadata = fs::symlink_metadata(&candidate)?;
+            if metadata.file_type().is_symlink() {
+                return Err(VaultError::Symlink(relative_path.to_path_buf()));
+            }
+            if index + 1 < components.len() && !metadata.is_dir() {
+                return Err(VaultError::NotAFile(relative_path.to_path_buf()));
+            }
+        }
         let canonical = fs::canonicalize(&candidate)?;
         if !canonical.starts_with(&self.canonical_root) {
             return Err(VaultError::OutsideRoot(relative_path.to_path_buf()));
@@ -70,6 +122,204 @@ impl VaultRoot {
             revision_sha256,
         })
     }
+
+    /// Capture a sorted, content-addressed view of regular files and symlinks.
+    /// Symlink targets are recorded without following them.
+    pub fn snapshot(&self) -> Result<VaultSnapshot, VaultError> {
+        let mut entries = Vec::new();
+        snapshot_directory(&self.canonical_root, &self.canonical_root, &mut entries)?;
+        entries.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
+        let revision_sha256 = snapshot_revision(&entries);
+        Ok(VaultSnapshot {
+            entries,
+            revision_sha256,
+        })
+    }
+
+    /// Build a read-only rename plan bound to the exact vault snapshot used to
+    /// resolve its references. The source tree is sampled again after reading
+    /// note contents so concurrent changes fail closed.
+    pub fn build_rename_preview(
+        &self,
+        old_path: impl AsRef<Path>,
+        new_path: impl AsRef<Path>,
+    ) -> Result<VaultRenamePreview, VaultError> {
+        let old_path = normalize_relative_path(old_path.as_ref())?;
+        let new_path = normalize_relative_path(new_path.as_ref())?;
+        if old_path == new_path {
+            return Err(LinkRenamePlanError::SamePath.into());
+        }
+
+        let before = self.snapshot()?;
+        if !before.entries.iter().any(|entry| {
+            entry.relative_path == old_path && entry.kind == VaultSnapshotEntryKind::File
+        }) {
+            return Err(VaultError::NotAFile(old_path));
+        }
+
+        let files = self.read_rename_files(&before)?;
+        let after = self.snapshot()?;
+        if before.revision_sha256 != after.revision_sha256 {
+            return Err(VaultError::SnapshotChanged);
+        }
+
+        let old_path_text = path_to_slashes(&old_path)?;
+        let new_path_text = path_to_slashes(&new_path)?;
+        let plan = build_link_rename_plan(&files, &old_path_text, &new_path_text)?;
+        let plan_id = rename_preview_identity(
+            &before.revision_sha256,
+            &old_path_text,
+            &new_path_text,
+        );
+        Ok(VaultRenamePreview {
+            plan,
+            snapshot_sha256: before.revision_sha256,
+            plan_id,
+        })
+    }
+
+    /// Reject a preview if any vault file, symlink or reference decision changed.
+    pub fn verify_rename_preview(
+        &self,
+        preview: &VaultRenamePreview,
+    ) -> Result<(), VaultError> {
+        let current = self.build_rename_preview(&preview.plan.old_path, &preview.plan.new_path)?;
+        if current == *preview {
+            Ok(())
+        } else {
+            Err(VaultError::StaleRenamePreview)
+        }
+    }
+
+    fn read_rename_files(
+        &self,
+        snapshot: &VaultSnapshot,
+    ) -> Result<Vec<RenamePlanFile>, VaultError> {
+        let mut files = Vec::new();
+        for entry in &snapshot.entries {
+            if entry.kind != VaultSnapshotEntryKind::File
+                || !entry
+                    .relative_path
+                    .extension()
+                    .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+            {
+                continue;
+            }
+
+            let read = self.read(&entry.relative_path)?;
+            if read.revision_sha256 != entry.revision_sha256 {
+                return Err(VaultError::SnapshotChanged);
+            }
+            let Ok(source) = MarkdownSource::parse(read.document.as_bytes().to_vec()) else {
+                continue;
+            };
+            files.push(RenamePlanFile {
+                relative_path: path_to_slashes(&entry.relative_path)?,
+                source,
+            });
+        }
+        Ok(files)
+    }
+}
+
+fn normalize_relative_path(path: &Path) -> Result<PathBuf, VaultError> {
+    let text = path.to_str().ok_or(VaultError::InvalidPath)?;
+    let portable = text.replace('\\', "/");
+    let normalized = PathBuf::from(portable);
+    validate_relative_path(&normalized)?;
+    Ok(normalized)
+}
+
+fn path_to_slashes(path: &Path) -> Result<String, VaultError> {
+    Ok(path
+        .to_str()
+        .ok_or(VaultError::InvalidPath)?
+        .replace('\\', "/"))
+}
+
+fn snapshot_directory(
+    root: &Path,
+    directory: &Path,
+    output: &mut Vec<VaultSnapshotEntry>,
+) -> Result<(), VaultError> {
+    for entry in fs::read_dir(directory)? {
+        let entry = entry?;
+        let path = entry.path();
+        let relative_path = path
+            .strip_prefix(root)
+            .map_err(|_| VaultError::OutsideRoot(path.clone()))?
+            .to_path_buf();
+        let file_type = entry.file_type()?;
+        if file_type.is_symlink() {
+            let target = fs::read_link(&path)?;
+            let target_bytes = target.as_os_str().as_encoded_bytes();
+            output.push(VaultSnapshotEntry {
+                relative_path,
+                kind: VaultSnapshotEntryKind::Symlink,
+                size_bytes: target_bytes.len() as u64,
+                revision_sha256: sha256_hex(target_bytes),
+                symlink_target: Some(target),
+            });
+        } else if file_type.is_dir() {
+            snapshot_directory(root, &path, output)?;
+        } else if file_type.is_file() {
+            let bytes = fs::read(&path)?;
+            output.push(VaultSnapshotEntry {
+                relative_path,
+                kind: VaultSnapshotEntryKind::File,
+                size_bytes: bytes.len() as u64,
+                revision_sha256: sha256_hex(&bytes),
+                symlink_target: None,
+            });
+        } else {
+            return Err(VaultError::UnsupportedEntry(relative_path));
+        }
+    }
+    Ok(())
+}
+
+fn snapshot_revision(entries: &[VaultSnapshotEntry]) -> String {
+    let mut digest = Sha256::new();
+    digest.update(b"openobsidian-vault-snapshot-v1");
+    for entry in entries {
+        digest.update([match entry.kind {
+            VaultSnapshotEntryKind::File => 1,
+            VaultSnapshotEntryKind::Symlink => 2,
+        }]);
+        update_hash_field(
+            &mut digest,
+            entry.relative_path.as_os_str().as_encoded_bytes(),
+        );
+        update_hash_field(&mut digest, &entry.size_bytes.to_be_bytes());
+        update_hash_field(&mut digest, entry.revision_sha256.as_bytes());
+        if let Some(target) = &entry.symlink_target {
+            update_hash_field(&mut digest, target.as_os_str().as_encoded_bytes());
+        }
+    }
+    sha256_digest_hex(digest)
+}
+
+fn update_hash_field(digest: &mut Sha256, bytes: &[u8]) {
+    digest.update((bytes.len() as u64).to_be_bytes());
+    digest.update(bytes);
+}
+
+fn rename_preview_identity(snapshot: &str, old_path: &str, new_path: &str) -> String {
+    let mut digest = Sha256::new();
+    digest.update(b"openobsidian-rename-preview-v1");
+    update_hash_field(&mut digest, snapshot.as_bytes());
+    update_hash_field(&mut digest, old_path.as_bytes());
+    update_hash_field(&mut digest, new_path.as_bytes());
+    sha256_digest_hex(digest)
+}
+
+fn sha256_digest_hex(digest: Sha256) -> String {
+    let digest = digest.finalize();
+    let mut output = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        write!(&mut output, "{byte:02x}").expect("writing into a String cannot fail");
+    }
+    output
 }
 
 fn scan_directory(
@@ -116,12 +366,9 @@ fn validate_relative_path(path: &Path) -> Result<(), VaultError> {
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
-    let digest = Sha256::digest(bytes);
-    let mut output = String::with_capacity(digest.len() * 2);
-    for byte in digest {
-        write!(&mut output, "{byte:02x}").expect("writing into a String cannot fail");
-    }
-    output
+    let mut digest = Sha256::new();
+    digest.update(bytes);
+    sha256_digest_hex(digest)
 }
 
 #[cfg(test)]
@@ -181,5 +428,70 @@ mod tests {
         let temp = TempDir::new();
         let vault = VaultRoot::open(&temp.0).unwrap();
         assert!(vault.read("../outside.md").is_err());
+    }
+
+    #[test]
+    fn snapshots_hash_all_regular_files_and_notice_content_changes() {
+        let temp = TempDir::new();
+        let note = temp.0.join("note.md");
+        let asset = temp.0.join("asset.bin");
+        fs::write(&note, b"# Note\r\n").unwrap();
+        fs::write(&asset, [0, 255, 7, 10]).unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let before = vault.snapshot().unwrap();
+        assert_eq!(before.entries.len(), 2);
+        assert_ne!(before.entries[0].revision_sha256, before.entries[1].revision_sha256);
+
+        fs::write(&asset, [0, 255, 7, 11]).unwrap();
+        let after = vault.snapshot().unwrap();
+        assert_ne!(before.revision_sha256, after.revision_sha256);
+    }
+
+    #[test]
+    fn rename_preview_is_snapshot_bound_and_does_not_change_vault_bytes() {
+        let temp = TempDir::new();
+        let index = temp.0.join("Index.md");
+        let original = b"\xef\xbb\xbf[[Old|alias]]\r\n";
+        fs::write(&index, original).unwrap();
+        fs::write(temp.0.join("Old.md"), b"# Old\n").unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let preview = vault.build_rename_preview("Old.md", "New.md").unwrap();
+        assert_eq!(preview.plan.update_count, 1);
+        assert_eq!(preview.plan_id.len(), 64);
+        vault.verify_rename_preview(&preview).unwrap();
+        assert_eq!(fs::read(&index).unwrap(), original);
+
+        fs::write(&index, b"external edit\n").unwrap();
+        assert!(matches!(
+            vault.verify_rename_preview(&preview),
+            Err(super::VaultError::StaleRenamePreview)
+        ));
+        assert_eq!(fs::read(temp.0.join("Old.md")).unwrap(), b"# Old\n");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn snapshots_symlinks_without_following_them_and_reads_reject_them() {
+        use std::os::unix::fs::symlink;
+
+        let temp = TempDir::new();
+        fs::write(temp.0.join("target.md"), b"# Target\n").unwrap();
+        symlink("target.md", temp.0.join("alias.md")).unwrap();
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let snapshot = vault.snapshot().unwrap();
+        let alias = snapshot
+            .entries
+            .iter()
+            .find(|entry| entry.relative_path == PathBuf::from("alias.md"))
+            .unwrap();
+        assert_eq!(alias.kind, super::VaultSnapshotEntryKind::Symlink);
+        assert_eq!(alias.symlink_target.as_deref(), Some(std::path::Path::new("target.md")));
+        assert!(matches!(
+            vault.read("alias.md"),
+            Err(super::VaultError::Symlink(_))
+        ));
     }
 }
