@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T23:12:47Z",
+  "updated_at": "2026-10-08T23:25:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
-  "current_milestone": "R2.6.47",
-  "next_action": "Add a GitHub Actions round-trip workflow: have pinned Obsidian author a privacy-safe fixture, open that exact vault with OpenObsidian --open-vault, verify unchanged vault/app-data snapshots, then reopen the same vault in Obsidian. Start on Linux and expand to all supported platforms. Keep C01 and C01.2 open.",
+  "last_reconciled_head": "da8eff872aa1a9c41c4cec9c842973a559458a4b",
+  "current_milestone": "R2.6.48",
+  "next_action": "Commit and push the Linux Obsidian-authored vault round-trip runner; review its exact-SHA GitHub Actions run and all six required project workflows, correct CI findings in a small follow-up, then expand reference acceptance to macOS and Windows. Keep C01 and C01.2 open.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8880,6 +8880,19 @@
         "C01, C01.2-01, and C01.2-03 remain pending until fixture provenance and same-vault Obsidian reopen checks pass on supported platforms."
       ],
       "next_action": "Add the Linux GitHub Actions Obsidian-authored fixture and no-op round-trip workflow, then expand the same acceptance to macOS and Windows."
+    },
+    "R2.6.48": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Add a Linux-only GitHub Actions workflow that creates a synthetic vault, has pinned Obsidian author a note, launches the native app with --open-vault, compares full vault and app-data snapshots, and reopens the exact vault in Obsidian.",
+      "ci_attempts": [],
+      "accepted_slice": [],
+      "remaining": [
+        "Exact-SHA CI for the new reference-app round-trip workflow and the six required project workflows is pending.",
+        "C01.2 acceptance on macOS and Windows, broader C01 product flows, and edit/save acceptance remain pending."
+      ],
+      "next_action": "Push this implementation slice to origin/main, inspect the new workflow and required exact-SHA CI, and fix any runner or application findings before recording acceptance."
     }
   },
   "ci_preparation": {

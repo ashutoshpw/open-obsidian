@@ -77,6 +77,8 @@ actual.discard(".github/workflows/rust-migration-inventory.yml")
 actual.discard(".github/workflows/rust.yml")
 # This manually dispatched reference-app runner probe is migration evidence tooling.
 actual.discard(".github/workflows/obsidian-reference-feasibility.yml")
+# The pinned Linux vault author/open/reopen workflow is migration acceptance tooling.
+actual.discard(".github/workflows/obsidian-vault-roundtrip.yml")
 if actual != recorded:
     errors.append(f"File inventory differs: added={actual-recorded}, missing={recorded-actual}")
 for item in inventory["files"]:
