@@ -29,9 +29,40 @@ mod rename_plan_fixture_tests {
         LinkRenameAction, LinkResolutionStatus, MarkdownSource, RenamePlanFile,
         build_link_rename_plan, render_link_rename_preview,
     };
+    use openobsidian_vault::VaultStore;
     use serde_json::Value;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     const RENAME_PLAN_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
+    static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
+
+    struct TempDir(PathBuf);
+
+    impl TempDir {
+        fn new() -> Self {
+            let temp_root = std::env::temp_dir();
+            loop {
+                let id = NEXT_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed);
+                let path = temp_root.join(format!(
+                    "openobsidian-testkit-rename-{}-{id}",
+                    std::process::id()
+                ));
+                match fs::create_dir(&path) {
+                    Ok(()) => return Self(path),
+                    Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                    Err(error) => panic!("creating test directory {}: {error}", path.display()),
+                }
+            }
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
 
     #[test]
     fn c03_rename_move_fixture_matches_the_rust_planner_without_changing_unplanned_bytes() {
@@ -188,6 +219,151 @@ mod rename_plan_fixture_tests {
                     "{case_id}/{relative_path}: rendered bytes"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn c03_rename_move_fixture_matches_vault_store_apply_bytes_and_journal() {
+        let fixture: Value = serde_json::from_str(RENAME_PLAN_FIXTURE)
+            .expect("rename-plan fixture must be valid JSON");
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let old_path = PathBuf::from(
+                case["old_path"]
+                    .as_str()
+                    .expect("fixture case must have an old path"),
+            );
+            let new_path = PathBuf::from(
+                case["new_path"]
+                    .as_str()
+                    .expect("fixture case must have a new path"),
+            );
+            let temporary = TempDir::new();
+            let vault_path = temporary.0.join("vault");
+            let app_data_path = temporary.0.join("app-data");
+            fs::create_dir(&vault_path).expect("create fixture vault");
+            fs::create_dir(&app_data_path).expect("create fixture application data");
+
+            for file in case["files"]
+                .as_array()
+                .expect("fixture files must be an array")
+            {
+                let relative_path = Path::new(
+                    file["relative_path"]
+                        .as_str()
+                        .expect("fixture file must have a relative path"),
+                );
+                let path = vault_path.join(relative_path);
+                fs::create_dir_all(path.parent().expect("fixture file has a parent"))
+                    .expect("create fixture file parents");
+                fs::write(
+                    path,
+                    file["source"]
+                        .as_str()
+                        .expect("fixture file must have source text")
+                        .as_bytes(),
+                )
+                .expect("write fixture source");
+            }
+            fs::create_dir_all(
+                vault_path
+                    .join(&new_path)
+                    .parent()
+                    .expect("rename destination must have a parent"),
+            )
+            .expect("create rename destination parent");
+
+            let store = VaultStore::open(&vault_path, &app_data_path)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let preview = store
+                .root()
+                .build_rename_preview(&old_path, &new_path)
+                .unwrap_or_else(|error| panic!("{case_id}: build rename preview: {error}"));
+            let result = store
+                .apply_rename_preview(&preview)
+                .unwrap_or_else(|error| panic!("{case_id}: apply rename preview: {error}"));
+
+            assert_eq!(
+                result.updated_references,
+                usize::try_from(
+                    case["expected_update_count"]
+                        .as_u64()
+                        .expect("fixture must state expected update count"),
+                )
+                .expect("fixture update count must fit usize"),
+                "{case_id}: applied reference count"
+            );
+            assert_eq!(
+                result.skipped_references,
+                usize::try_from(
+                    case["expected_skipped_count"]
+                        .as_u64()
+                        .expect("fixture must state expected skipped count"),
+                )
+                .expect("fixture skipped count must fit usize"),
+                "{case_id}: skipped reference count"
+            );
+            let expected_warnings: Vec<&str> = case["expected_warnings"]
+                .as_array()
+                .expect("fixture expected warnings must be an array")
+                .iter()
+                .map(|warning| warning.as_str().expect("fixture warning must be text"))
+                .collect();
+            assert_eq!(
+                result.warnings.iter().map(String::as_str).collect::<Vec<_>>(),
+                expected_warnings,
+                "{case_id}: applied warning list"
+            );
+
+            let expected_sources = case["expected_sources"]
+                .as_object()
+                .expect("fixture expected sources must be an object");
+            for (relative_path, expected) in expected_sources {
+                let relative_path = Path::new(relative_path);
+                let actual_relative_path: &Path = if relative_path == old_path.as_path() {
+                    new_path.as_path()
+                } else {
+                    relative_path
+                };
+                let expected_bytes = expected
+                    .as_str()
+                    .expect("fixture expected source must be text")
+                    .as_bytes();
+                assert_eq!(
+                    fs::read(vault_path.join(actual_relative_path))
+                        .unwrap_or_else(|error| {
+                            panic!("{case_id}/{actual_relative_path:?}: {error}")
+                        }),
+                    expected_bytes,
+                    "{case_id}/{actual_relative_path:?}: applied bytes"
+                );
+            }
+            assert!(
+                !vault_path.join(old_path).exists(),
+                "{case_id}: old source path must be gone after apply"
+            );
+            assert_eq!(
+                result.read.document.as_bytes(),
+                fs::read(vault_path.join(&new_path))
+                    .expect("renamed note must remain readable")
+                    .as_slice(),
+                "{case_id}: returned renamed note bytes"
+            );
+
+            let journal = fs::read_to_string(app_data_path.join("journal.jsonl"))
+                .expect("rename apply must write its journal");
+            assert!(
+                journal.contains("\"operation\":\"rename\",\"state\":\"prepared\""),
+                "{case_id}: journal must record preparation"
+            );
+            assert!(
+                journal.contains("\"operation\":\"rename\",\"state\":\"committed\""),
+                "{case_id}: journal must record commit"
+            );
         }
     }
 

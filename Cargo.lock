@@ -2930,6 +2930,7 @@ name = "openobsidian-testkit"
 version = "0.1.0"
 dependencies = [
  "openobsidian-doc",
+ "openobsidian-vault",
  "serde_json",
 ]
 

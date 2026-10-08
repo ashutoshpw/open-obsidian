@@ -980,9 +980,12 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{VaultError, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex};
+    use serde_json::Value;
     use std::fs;
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
+
+    const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -1290,6 +1293,86 @@ mod tests {
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         assert!(journal.contains("\"operation\":\"rename\",\"state\":\"prepared\""));
         assert!(journal.contains("\"operation\":\"rename\",\"state\":\"committed\""));
+    }
+
+    #[test]
+    fn c03_fixture_failed_apply_restores_prior_reference_write_and_source_move() {
+        let fixture: Value = serde_json::from_str(C03_RENAME_FIXTURE)
+            .expect("rename-plan fixture must be valid JSON");
+        let case = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array")
+            .iter()
+            .find(|case| {
+                case["id"].as_str() == Some("resolved-wiki-markdown-embed-and-unrelated-targets")
+            })
+            .expect("fixture must contain the resolved rename case");
+
+        let temporary = TempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        fs::create_dir(&vault_path).unwrap();
+        fs::create_dir(&app_data_path).unwrap();
+        let mut originals = Vec::new();
+        for file in case["files"].as_array().expect("fixture files") {
+            let relative_path = PathBuf::from(file["relative_path"].as_str().unwrap());
+            let source = file["source"].as_str().unwrap().as_bytes().to_vec();
+            let path = vault_path.join(&relative_path);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, &source).unwrap();
+            originals.push((relative_path, source));
+        }
+
+        let old_path = PathBuf::from(case["old_path"].as_str().unwrap());
+        let new_path = PathBuf::from(case["new_path"].as_str().unwrap());
+        let rollback = case["rollback"].as_object().expect("fixture rollback contract");
+        let fail_on_path = PathBuf::from(rollback["fail_on_path"].as_str().unwrap());
+        let prior_write_path = rollback["must_restore_prior_write_to"]
+            .as_str()
+            .unwrap();
+        fs::create_dir_all(vault_path.join(&new_path).parent().unwrap()).unwrap();
+
+        let mut store = VaultStore::open(&vault_path, &app_data_path).unwrap();
+        store.fail_replace_path = Some(fail_on_path);
+        let preview = store
+            .root()
+            .build_rename_preview(&old_path, &new_path)
+            .unwrap();
+
+        let error = store.apply_rename_preview(&preview).unwrap_err();
+
+        assert!(error.to_string().contains("injected atomic replace failure"));
+        for (relative_path, original) in &originals {
+            assert_eq!(fs::read(vault_path.join(relative_path)).unwrap(), *original);
+        }
+        assert!(vault_path.join(&old_path).exists());
+        assert!(!vault_path.join(&new_path).exists());
+
+        let journal = fs::read_to_string(app_data_path.join("journal.jsonl")).unwrap();
+        let records: Vec<Value> = journal
+            .lines()
+            .map(|line| serde_json::from_str(line).expect("journal line must be valid JSON"))
+            .collect();
+        let committed_prior_writes = records
+            .iter()
+            .filter(|record| {
+                record["operation"].as_str() == Some("write")
+                    && record["relative_path"].as_str() == Some(prior_write_path)
+                    && record["state"].as_str() == Some("committed")
+            })
+            .count();
+        assert_eq!(
+            committed_prior_writes, 2,
+            "the earlier fixture reference write must commit and then be restored"
+        );
+        assert!(records.iter().any(|record| {
+            record["operation"].as_str() == Some("rename")
+                && record["state"].as_str() == Some("prepared")
+        }));
+        assert!(records.iter().any(|record| {
+            record["operation"].as_str() == Some("rename")
+                && record["state"].as_str() == Some("rolled_back")
+        }));
     }
 
     #[test]
