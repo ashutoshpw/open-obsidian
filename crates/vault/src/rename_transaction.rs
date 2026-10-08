@@ -1253,7 +1253,28 @@ fn exact_vault_entry(
         .parent()
         .filter(|parent| !parent.as_os_str().is_empty());
     let parent_path = match parent {
-        Some(parent) => root.resolve_vault_path(parent, false)?,
+        Some(parent) => {
+            let mut candidate = root.canonical_root.clone();
+            for component in parent.components() {
+                candidate.push(component.as_os_str());
+                let metadata = match fs::symlink_metadata(&candidate) {
+                    Ok(metadata) => metadata,
+                    Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+                    Err(error) => return Err(error.into()),
+                };
+                if metadata.file_type().is_symlink() {
+                    return Err(VaultError::Symlink(relative_path.clone()));
+                }
+                if !metadata.is_dir() {
+                    return Err(VaultError::NotAFile(relative_path.clone()));
+                }
+            }
+            let canonical = fs::canonicalize(&candidate)?;
+            if !canonical.starts_with(&root.canonical_root) {
+                return Err(VaultError::OutsideRoot(relative_path.clone()));
+            }
+            canonical
+        }
         None => root.canonical_root.clone(),
     };
     for entry in fs::read_dir(parent_path)? {
