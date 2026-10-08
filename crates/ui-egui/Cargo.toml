@@ -12,3 +12,6 @@ workspace = true
 eframe = { workspace = true }
 openobsidian-engine = { workspace = true }
 rayon = { workspace = true }
+
+[dev-dependencies]
+egui_kittest = { workspace = true }

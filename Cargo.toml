@@ -19,6 +19,8 @@ rayon = "1"
 eframe = { version = "0.36", default-features = false, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11", "persistence"] }
 egui = "0.36"
 egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+# Photocraft-aligned accessibility-driven native UI interaction tests.
+egui_kittest = { version = "0.36", default-features = false }
 # Photocraft-aligned native file and folder dialogs.
 rfd = "0.17"
 
