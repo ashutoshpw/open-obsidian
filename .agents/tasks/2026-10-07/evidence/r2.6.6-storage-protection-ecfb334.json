@@ -1,0 +1,137 @@
+{
+  "phase": "R2",
+  "slice": "R2.6.6",
+  "status": "accepted backend slice; D16 remains pending",
+  "source_sha": "ecfb3341baebcbffdb75824425346e8b1acceefe",
+  "implementation_commits": [
+    "c98e027cb502e1b6ff1ac7ba1fdc7ac736a666bb",
+    "310c7c5deabf596c6f545fb9981f8260b69b67a0",
+    "ecfb3341baebcbffdb75824425346e8b1acceefe"
+  ],
+  "scope": "Add a read-only Rust platform API for checked OS storage-protection status on macOS, Windows and Linux.",
+  "behavior": [
+    "macOS reports enabled or disabled only from explicit FileVault status output.",
+    "Windows inspects only the validated SystemDrive and reports enabled only when BitLocker reports both Fully Encrypted and Protection On.",
+    "Linux reports enabled only when the root source resolves to a device-mapper name and cryptsetup reports an active mapping with a non-empty cipher and positive key size.",
+    "Missing commands, unsupported platforms and inconclusive output report Unknown; command output and volume identifiers are not copied into report details.",
+    "The probe is read-only and does not change OS encryption settings."
+  ],
+  "focused_tests": [
+    "macos_reports_only_explicit_filevault_states",
+    "macos_reports_unknown_when_the_probe_fails",
+    "windows_checks_only_the_validated_system_drive",
+    "windows_reports_disabled_or_unknown_from_bitlocker_output",
+    "windows_does_not_probe_when_system_drive_is_missing_or_invalid",
+    "linux_requires_active_cryptsetup_evidence_for_mapper_roots",
+    "linux_does_not_treat_a_mapper_path_alone_as_encryption_evidence",
+    "linux_returns_unknown_for_unresolved_root_sources",
+    "unsupported_platforms_are_unknown_without_running_commands"
+  ],
+  "test_results": {
+    "ubuntu": {
+      "openobsidian_platform": "9 passed",
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "24 passed"
+    },
+    "macos": {
+      "openobsidian_platform": "9 passed",
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "24 passed"
+    },
+    "windows": {
+      "openobsidian_platform": "9 passed",
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "23 passed; Unix-only symlink test is not compiled"
+    },
+    "local_executable_validation": "not run; all executable validation was through GitHub Actions"
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37732392551,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392551",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113164246203, "conclusion": "success"},
+        "macos": {"job_id": 113164246276, "conclusion": "success"},
+        "windows": {"job_id": 113164246354, "conclusion": "success"}
+      },
+      "checks": [
+        "formatting",
+        "workspace tests",
+        "parallel group",
+        "Clippy",
+        "crate layers",
+        "native preview builds",
+        "Wry feasibility probes"
+      ]
+    },
+    "inventory": {
+      "run_id": 37732392549,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392549",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 113164246135, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 37732392552,
+      "attempt": 2,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392552",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113164760521, "conclusion": "success"},
+        "windows": {"job_id": 113164761485, "conclusion": "success"},
+        "macos": {"job_id": 113164762077, "conclusion": "success"}
+      },
+      "attempt_1_failure": "The unchanged Linux Electron vault round-trip audit did not reach its local retrieval boundary; attempt 2 passed without source changes."
+    },
+    "desktop": {
+      "run_id": 37732392581,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392581",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113164246192, "conclusion": "success"},
+        "macos": {"job_id": 113164246377, "conclusion": "success"},
+        "windows": {"job_id": 113164246420, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37732392553,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392553",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113164246785, "conclusion": "success"},
+        "windows": {"job_id": 113164247037, "conclusion": "success"},
+        "macos": {"job_id": 113164247052, "conclusion": "success"}
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37732392505,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37732392505",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 113164246053, "conclusion": "success"},
+        "ubuntu": {"job_id": 113164246204, "conclusion": "success"},
+        "macos": {"job_id": 113164246221, "conclusion": "success"}
+      }
+    }
+  },
+  "repair_history": [
+    {
+      "source_sha": "c98e027cb502e1b6ff1ac7ba1fdc7ac736a666bb",
+      "rust_run_id": 37731971269,
+      "finding": "Rust CI found String versus &str mismatches in failure details on all platforms and rustfmt layout changes on Ubuntu."
+    },
+    {
+      "source_sha": "310c7c5deabf596c6f545fb9981f8260b69b67a0",
+      "rust_run_id": 37732207511,
+      "finding": "Rust CI found test closures retaining borrowed command arguments beyond their lifetime on all platforms; tests now capture owned strings."
+    }
+  ],
+  "limitations": [
+    "This is a backend status API; it is not yet displayed in the native application UI.",
+    "Managed history and recovery directories do not yet enforce or verify user-only OS access controls.",
+    "The report checks system storage/root mapping and does not prove that every separate mounted volume is encrypted.",
+    "D16 and SYNC-007 remain Pending until the storage status is surfaced honestly in the app, recovery access controls are addressed, uninstall preservation is accepted, and legacy history workflows pass through GitHub CI.",
+    "R2.6.5 and C03/C03.2 remain in progress/Pending until full cross-layer acceptance."
+  ],
+  "next_action": "Integrate Rust history and storage-protection APIs with the native application boundary, then address OS access controls for recovery data; keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full acceptance."
+}
