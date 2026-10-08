@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.47",
+  "source_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
+  "implementation_commits": [
+    "ea834034bbede7a108e33028a2d7e0bc996abbd4",
+    "fe1b9343e9b0ae969fc627fb06623f990f225c9d"
+  ],
+  "scope": {
+    "change": "Allow the native desktop to start with an existing vault selected by --open-vault PATH.",
+    "cli_behavior": [
+      "Parse paths as OS-native arguments so spaces and non-UTF-8 path bytes are not normalized through String.",
+      "Require exactly one folder path and fail closed for missing, extra, non-directory, or unsafe vault paths.",
+      "Prepare private per-vault application data outside the selected vault before opening the VaultSession.",
+      "Pass the initial session to the egui application before its first frame."
+    ],
+    "focused_tests": [
+      "open_vault_arguments_preserve_paths_and_reject_ambiguous_invocations",
+      "egui_displays_an_existing_vault_session_selected_at_launch_without_changing_its_tree"
+    ]
+  },
+  "ci": {
+    "source_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
+    "conclusion": "All six required GitHub Actions workflows passed on the exact corrected source SHA.",
+    "local_executable_validation": false,
+    "focused_tests": {
+      "ubuntu-latest": "both passed",
+      "macos-latest": "both passed",
+      "windows-latest": "both passed"
+    },
+    "workflows": [
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37857618635,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37857618635",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 113585481874, "conclusion": "success"},
+          {"name": "rust (macos-latest)", "job_id": 113585481612, "conclusion": "success"},
+          {"name": "rust (windows-latest)", "job_id": 113585481799, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37857618600,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37857618600",
+        "conclusion": "success",
+        "jobs": [{"name": "inventory", "job_id": 113585481470, "conclusion": "success"}]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37857618603,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37857618603",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 113585482182, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113585482417, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 113585482572, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37857618593,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37857618593",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113585481884, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113585481952, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113585482916, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37857618545,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37857618545",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 113585481817, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113585482017, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 113585482062, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37857618832,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37857618832",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 113585482359, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113585482632, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 113585482813, "conclusion": "success"}
+        ]
+      }
+    ],
+    "artifacts": [
+      {"id": 11585141267, "name": "openobsidian-rust-preview-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:939e2727cd6d6b7e0932fdfaecd0a4e45e9f5a2a5f372af548ebe48c1cb20bde"},
+      {"id": 11585027000, "name": "rust-plugin-runtime-Linux-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:95732ab8cb34de3ec62ce0a0c9fb8641f0ef8f7f4a7ad015891a5a8a0f9b9670"},
+      {"id": 11584972037, "name": "rust-plugin-runtime-macOS-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:c7422bd2bbc38dd1c0b9d00c881347ed044672b90381f294bf67115539f71bd1"},
+      {"id": 11584194385, "name": "rust-plugin-runtime-Windows-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:c36db3e599395acf472083f48b64be125bec5ed2c9f2aead406b4f3a7d9f9387"},
+      {"id": 11584278371, "name": "openobsidian-Linux-preview-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:1dc92d2a455153fe6643405f15233c005d6f37a0389e7310feb0bf8e091632e9"},
+      {"id": 11584144911, "name": "openobsidian-Windows-preview-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:db05a55f36d22c707971b31ab659f29592d5a29dab2e427a7455c57e77924abc"},
+      {"id": 11583909170, "name": "openobsidian-macOS-preview-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:61a59ec0748a3c2bb3c943e1eda91d9c42bde154607f4903c0b49ee10796f80a"},
+      {"id": 11584577807, "name": "plugin-renderer-lifecycle-Windows-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:e0afd1b1cb9c640d38d61c69efe526d59b8054faf9a4cae154b9a2f5fd69059c"},
+      {"id": 11584458409, "name": "plugin-renderer-lifecycle-Linux-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:534657d88355d555fc4e6e41b91bd761be830ac2709e5ff33d86138ba4d77ee5"},
+      {"id": 11583969276, "name": "plugin-renderer-lifecycle-macOS-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:2dbe672d45cd7fabab4a36421ffe8d9f7e62b252b02e88dc50f7e52b649093b0"},
+      {"id": 11584946959, "name": "loaded-plugin-workflows-Windows-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:345bb735f8d72290bab00082a9179dd974ec0387683ea55ea6c1a559953916a7"},
+      {"id": 11584896700, "name": "loaded-plugin-workflows-macOS-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:6d886c494fe733c940d155cf2b9dfee8464e40c8b8b3a3de67acf81abe83c878"},
+      {"id": 11584053875, "name": "loaded-plugin-workflows-Linux-fe1b9343e9b0ae969fc627fb06623f990f225c9d", "digest": "sha256:312372a5a9e2ac49274e7fc7611123679e0db879af975e0aaff4ae78a11d175d"}
+    ]
+  },
+  "ci_attempts": [
+    {
+      "source_sha": "ea834034bbede7a108e33028a2d7e0bc996abbd4",
+      "conclusion": "failure",
+      "workflows": {
+        "rust_ci": 37857320246,
+        "inventory": 37857320291,
+        "quality": 37857320337,
+        "desktop_build": 37857320372,
+        "plugin_renderer": 37857320275,
+        "loaded_plugin_workflows": 37857320359
+      },
+      "findings": [
+        "Workspace tests, UI preservation checks, and all five companion workflows passed. Ubuntu rustfmt requested an import and assertion wrap; macOS and Windows Clippy rejected an unnecessary mutable egui harness."
+      ],
+      "correction": "Applied the exact GitHub rustfmt layout and removed the unused mutability."
+    },
+    {
+      "source_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
+      "conclusion": "success",
+      "workflows": {
+        "rust_ci": 37857618635,
+        "inventory": 37857618600,
+        "quality": 37857618603,
+        "desktop_build": 37857618593,
+        "plugin_renderer": 37857618545,
+        "loaded_plugin_workflows": 37857618832
+      },
+      "findings": [
+        "All six required workflows passed. Both new tests passed on Ubuntu, macOS, and Windows; the Rust parallel group, formatting, Clippy, dependency layering, native builds, plugin probes, quality checks, and artifact production all passed."
+      ],
+      "evidence": "evidence/r2.6.47-existing-vault-launch-fe1b934.json"
+    }
+  ],
+  "acceptance_limits": [
+    "The workspace tests exercise CLI argument parsing and egui initial-session rendering, but do not launch the desktop process with --open-vault.",
+    "No Obsidian-authored fixture was created and Obsidian was not reopened after OpenObsidian; C01, C01.2-01, and C01.2-03 remain pending."
+  ],
+  "next_action": "Add a GitHub Actions round-trip workflow: have pinned Obsidian author a privacy-safe fixture, open that exact vault with OpenObsidian --open-vault, verify unchanged vault/app-data snapshots, then reopen the same vault in Obsidian. Start on Linux and expand to all supported platforms."
+}

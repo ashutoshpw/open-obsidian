@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T22:56:21Z",
+  "updated_at": "2026-10-08T23:12:47Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5",
-  "current_milestone": "R2.6.46",
-  "next_action": "Add a direct existing-vault startup path to the native desktop and use it to test an Obsidian-authored fixture through OpenObsidian and back into Obsidian on GitHub Actions. Keep C01 and C01.2 open until the full cross-platform matrix passes.",
+  "last_reconciled_head": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
+  "current_milestone": "R2.6.47",
+  "next_action": "Add a GitHub Actions round-trip workflow: have pinned Obsidian author a privacy-safe fixture, open that exact vault with OpenObsidian --open-vault, verify unchanged vault/app-data snapshots, then reopen the same vault in Obsidian. Start on Linux and expand to all supported platforms. Keep C01 and C01.2 open.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5"
+      "implementation_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d"
     },
     "R3": {
       "status": "pending",
@@ -179,7 +179,8 @@
     "R2.6.43 existing-vault conflict inspection passed all six required GitHub Actions workflows on exact source SHA e9a0afe7a66b93857f4c0bae8493a8a8e22510af; the named interaction, including the explicit close control, passed on Ubuntu, macOS and Windows. Evidence and artifact digests: evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json. No local executable validation was run.",
     "R2.6.44 added bounded, source-preserving existing-note preview; exact corrected source SHA 37a1f7cd80003be356ed7ed1ad273f6fa97f4f53 passed all six required GitHub Actions workflows. Evidence: evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json. Parent C01 and C01.2 remain open.",
     "R2.6.45 added an asynchronous existing-vault note-list refresh and full vault/app-data no-op assertions. Exact corrected source SHA b6153f9ea900ef64baf66a65054c0835652b6687 passed all six GitHub Actions workflows; see evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json. C01 and C01.2 remain open.",
-    "R2.6.46 pinned the official Obsidian 1.14.4 Linux AppImage, launched its first-run renderer on ubuntu-24.04 in GitHub Actions, and captured DOM, screenshot, and log evidence. The corrected feasibility run and all six required workflows passed on exact source SHA e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5; see evidence/r2.6.46-obsidian-runner-feasibility-e02368d.json. No vault was opened; C01 and C01.2 remain pending."
+    "R2.6.46 pinned the official Obsidian 1.14.4 Linux AppImage, launched its first-run renderer on ubuntu-24.04 in GitHub Actions, and captured DOM, screenshot, and log evidence. The corrected feasibility run and all six required workflows passed on exact source SHA e02368dac3bd5c0434a1a8929bd3c2377ba7d5b5; see evidence/r2.6.46-obsidian-runner-feasibility-e02368d.json. No vault was opened; C01 and C01.2 remain pending.",
+    "R2.6.47 added --open-vault PATH startup, initializes private app data outside the selected folder, and passes the initial VaultSession into the egui shell. Argument and UI preservation tests passed on Ubuntu, macOS, and Windows on corrected exact SHA fe1b9343e9b0ae969fc627fb06623f990f225c9d; all six required workflows passed. Evidence: evidence/r2.6.47-existing-vault-launch-fe1b934.json. The desktop process has not yet been launched against an Obsidian-authored fixture; C01/C01.2 remain open."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -8823,7 +8824,62 @@
         "No vault was opened, no Obsidian-authored fixture was created, and OpenObsidian was not launched against a vault.",
         "C01, C01.2-01 and C01.2-03 remain pending until the fixture provenance and round-trip acceptance pass on supported platforms."
       ],
-      "next_action": "Add direct existing-vault startup and implement the Obsidian-authored fixture provenance/reopen workflow through GitHub Actions; keep C01 and C01.2 open."
+      "next_action": "Direct existing-vault startup is implemented in R2.6.47. Add the GitHub Actions fixture provenance and same-vault reopen workflow; keep C01 and C01.2 open."
+    },
+    "R2.6.47": {
+      "status": "complete",
+      "implementation_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
+      "implementation_commits": [
+        "ea834034bbede7a108e33028a2d7e0bc996abbd4",
+        "fe1b9343e9b0ae969fc627fb06623f990f225c9d"
+      ],
+      "scope": "Add a native desktop startup argument that selects an existing vault folder and verify that the initial egui session displays it without changing the vault or app-data tree.",
+      "ci_attempts": [
+        {
+          "source_sha": "ea834034bbede7a108e33028a2d7e0bc996abbd4",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37857320246,
+            "inventory": 37857320291,
+            "quality": 37857320337,
+            "desktop_build": 37857320372,
+            "plugin_renderer": 37857320275,
+            "loaded_plugin_workflows": 37857320359
+          },
+          "findings": [
+            "Workspace tests and five companion workflows passed. Ubuntu formatting failed; macOS and Windows Clippy reported an unnecessary mutable harness."
+          ],
+          "correction": "Applied the exact CI formatting and Clippy corrections."
+        },
+        {
+          "source_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d",
+          "conclusion": "success",
+          "workflows": {
+            "rust_ci": 37857618635,
+            "inventory": 37857618600,
+            "quality": 37857618603,
+            "desktop_build": 37857618593,
+            "plugin_renderer": 37857618545,
+            "loaded_plugin_workflows": 37857618832
+          },
+          "findings": [
+            "Both focused tests passed on Ubuntu, macOS, and Windows; all six required workflows passed on the exact corrected SHA."
+          ],
+          "evidence": "evidence/r2.6.47-existing-vault-launch-fe1b934.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.47-existing-vault-launch-fe1b934.json",
+      "accepted_slice": [
+        "The CLI preserves native path values and rejects missing or ambiguous --open-vault arguments.",
+        "The egui application displays an existing VaultSession selected before first render.",
+        "The complete synthetic vault and separate app-data trees remain unchanged after the focused UI interaction and teardown.",
+        "All six required GitHub Actions workflows passed on exact source SHA fe1b9343e9b0ae969fc627fb06623f990f225c9d, with both focused tests passing on the three supported CI operating systems."
+      ],
+      "remaining": [
+        "A GitHub Actions workflow must still launch the actual desktop process with --open-vault against an Obsidian-authored fixture.",
+        "C01, C01.2-01, and C01.2-03 remain pending until fixture provenance and same-vault Obsidian reopen checks pass on supported platforms."
+      ],
+      "next_action": "Add the Linux GitHub Actions Obsidian-authored fixture and no-op round-trip workflow, then expand the same acceptance to macOS and Windows."
     }
   },
   "ci_preparation": {
