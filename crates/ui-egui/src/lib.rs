@@ -2420,6 +2420,7 @@ mod tests {
         let listed_records = session.history_records().unwrap_or_else(|error| {
             panic!("fixture history must be readable through VaultSession: {error:?}")
         });
+        let original_app_data_tree = existing_vault_tree_snapshot(&app_data_path);
         assert_eq!(
             listed_records.len(),
             usize::try_from(expected["initial_record_count"].as_u64().unwrap()).unwrap()
@@ -2496,6 +2497,58 @@ mod tests {
         for (path, source) in &original_history_files {
             assert_eq!(std::fs::read(path).unwrap(), *source);
         }
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            original_app_data_tree
+        );
+
+        harness.get_by_label("Inspect conflict").click();
+        harness.step();
+        wait_for_history(&mut harness);
+        let inspection = harness
+            .state()
+            .conflict_inspection
+            .as_ref()
+            .expect("the conflict inspection action should load both versions");
+        assert_eq!(inspection.record.id, "open-conflict");
+        assert_eq!(
+            inspection.record.relative_path.to_string_lossy(),
+            "notes/current.md"
+        );
+        assert_eq!(
+            inspection
+                .current
+                .as_ref()
+                .map(|current| current.text.as_str()),
+            Some("Current vault bytes.\r\n")
+        );
+        assert_eq!(inspection.incoming.text, "Incoming conflicted bytes.\r\n");
+        harness.get_by_label("Conflict inspection: notes/current.md");
+        harness.get_by_label("Current version");
+        harness.get_by_label("Incoming version");
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            original_vault_tree
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            original_app_data_tree
+        );
+        for (path, source) in &original_history_files {
+            assert_eq!(std::fs::read(path).unwrap(), *source);
+        }
+
+        harness.get_by_label("Close inspection").click();
+        harness.step();
+        assert!(harness.state().conflict_inspection.is_none());
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            original_vault_tree
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            original_app_data_tree
+        );
 
         harness.get_by_label("Review eligible cleanup").click();
         harness.step();
