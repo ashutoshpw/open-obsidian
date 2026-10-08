@@ -181,3 +181,11 @@ The R1.2 feasibility gate and R1 phase are complete. This is limited evidence fo
 ## R2.1 work — Markdown source metadata
 
 Reviewed the inherited implementation plan, vault compatibility contract, C02 migration requirements, Rust document/vault crate boundaries and source-preservation fixtures. The first R2.1 slice adds `MarkdownSource`, a strict UTF-8 view backed by the existing exact-byte `RawDocument`; it records UTF-8 BOM and LF/CRLF/CR/mixed/no line-ending metadata without normalizing source, and rejects invalid UTF-8 while retaining binary-safe `RawDocument` behavior. Unit cases cover these contracts and are pending GitHub Actions. No local executable validation was run. Next: commit and push this coherent work slice, then inspect the exact-SHA Rust matrix and companion workflows.
+
+## R1 evidence-commit CI reconciliation — source SHA 7ef175e
+
+The state/evidence commit for R1 was also exercised by GitHub Actions on exact SHA `7ef175e955b42a1796a93ae66364f416094f0740`: Rust CI, inventory, desktop build, plugin renderer and loaded-plugin workflows passed. The quality workflow's first macOS attempt stopped before the Electron vault audit reached local retrieval (`Local index complete · 1/1 Markdown files visited · 1 passages indexed · 3 excluded.`); rerunning the failed same-SHA job passed. The failed attempt and successful rerun are recorded separately in `state.json`.
+
+## R2.1 formatting feedback — source SHA 634dab7
+
+Rust CI run [37708730866](https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730866) compiled the R2.1 code and passed all four new document tests plus the existing workspace tests on Ubuntu, macOS and Windows. macOS and Windows also passed Clippy, layering, native builds and the unchanged-plugin probes. Ubuntu formatting failed on one long byte-string assignment; the exact rustfmt layout from the GitHub log is applied. The quality run was cancelled; inventory, desktop, renderer and loaded-plugin companion workflows passed. This SHA is not accepted. Next: push the small formatting correction and obtain fresh exact-SHA CI, including quality.

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:37:06+00:00",
+  "updated_at": "2026-10-08T00:41:46+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "7ef175e955b42a1796a93ae66364f416094f0740",
+  "last_reconciled_head": "634dab790330a79ac44f50ae84257936eb8cabaf",
   "current_phase": "R2",
   "current_milestone": "R2.1",
-  "next_action": "Commit and push the R2.1 Markdown source metadata slice to origin/main, then inspect exact-SHA GitHub Actions only; do not run local executable validation.",
+  "next_action": "Commit and push the CI-requested Rust formatting correction for R2.1, then inspect fresh exact-SHA GitHub Actions; no local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -106,7 +106,8 @@
     "Rust CI run 37705662792 on 4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. Expanding the collapsed PC08 Appearance heading rendered the compact toggle. The pinned plugin rejected its Accent variable-color row because the theme fixture omitted required default-light/default-dark values. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-4de1ae5.json. The next slice adds valid defaults to both theme fixture copies and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
     "Rust CI run 37706599128 on c08207f6783e5432031a553e8831e97c7f39ee94 passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. PC08 rendered Compact after expanding Appearance, but the pinned Style Settings bundle rejected Accent because the variable-color fixture used `default-light`/`default-dark` instead of `default`. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-c08207f.json. The follow-up corrects the field and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
     "R1.2 and R1 passed exact-SHA GitHub Actions on 5ea3ea6c9e0d02a562daa696eac19b826dad0efa: Rust format, parallel group, tests, Clippy, layering and native builds passed; unchanged PC05/PC08 feasibility probes and all five companion workflows passed on Linux, macOS and Windows. Evidence: evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json. Legacy compatibility remains Pending and the result is feasibility-only.",
-    "Started R2.1 after reviewing the inherited implementation plan, vault compatibility contract, C02 requirements, Rust doc/vault boundaries and source-preservation fixtures. The first slice adds a strict UTF-8 Markdown view backed by original bytes, BOM and line-ending metadata, and fail-closed invalid UTF-8 behavior; its Rust unit tests are pending GitHub Actions."
+    "Started R2.1 after reviewing the inherited implementation plan, vault compatibility contract, C02 requirements, Rust doc/vault boundaries and source-preservation fixtures. The first slice adds a strict UTF-8 Markdown view backed by original bytes, BOM and line-ending metadata, and fail-closed invalid UTF-8 behavior; its Rust unit tests are pending GitHub Actions.",
+    "R2.1 first exact-SHA CI on 634dab790330a79ac44f50ae84257936eb8cabaf compiled and passed the new tests on all OSes; macOS and Windows passed Clippy, layering, native builds and plugin probes. Ubuntu reported one rustfmt-only line wrap; companion inventory, desktop, renderer and loaded-plugin runs passed, while quality was cancelled. Applied the exact formatting requested in the GitHub log; the corrected exact-SHA run is pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1036,6 +1037,110 @@
       "run_id": 37707607302,
       "head_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37707607302",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37708570876,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570876",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37708570892,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570892",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37708570896,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570896",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37708570886,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570886",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37708570938,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570938",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality (initial attempt)",
+      "run_id": 37708570910,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570910",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "OpenObsidian quality (same-SHA rerun)",
+      "run_id": 37708570910,
+      "head_sha": "7ef175e955b42a1796a93ae66364f416094f0740",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708570910",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37708730866,
+      "head_sha": "634dab790330a79ac44f50ae84257936eb8cabaf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730866",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37708730782,
+      "head_sha": "634dab790330a79ac44f50ae84257936eb8cabaf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730782",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37708730745,
+      "head_sha": "634dab790330a79ac44f50ae84257936eb8cabaf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730745",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37708730795,
+      "head_sha": "634dab790330a79ac44f50ae84257936eb8cabaf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730795",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37708730855,
+      "head_sha": "634dab790330a79ac44f50ae84257936eb8cabaf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730855",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37708730881,
+      "head_sha": "634dab790330a79ac44f50ae84257936eb8cabaf",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730881",
       "status": "completed",
       "conclusion": "success"
     }

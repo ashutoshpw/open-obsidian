@@ -126,7 +126,8 @@ mod tests {
 
     #[test]
     fn markdown_source_preserves_bom_crlf_and_original_bytes() {
-        let bytes = b"\xef\xbb\xbf---\r\nunknown: [value, {nested: true}]\r\n---\r\ntext\r\n".to_vec();
+        let bytes =
+            b"\xef\xbb\xbf---\r\nunknown: [value, {nested: true}]\r\n---\r\ntext\r\n".to_vec();
         let source = MarkdownSource::parse(bytes.clone()).unwrap();
 
         assert!(source.has_bom());
