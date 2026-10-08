@@ -2965,6 +2965,7 @@ dependencies = [
  "egui_kittest",
  "openobsidian-engine",
  "rayon",
+ "serde_json",
 ]
 
 [[package]]

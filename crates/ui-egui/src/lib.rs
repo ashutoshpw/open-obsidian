@@ -15,6 +15,8 @@ use std::time::{Duration, SystemTime};
 const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
+#[cfg(test)]
+const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
@@ -1412,5 +1414,115 @@ mod tests {
             std::fs::read(vault_path.join("Keep.md")).unwrap(),
             original_note
         );
+    }
+
+    #[test]
+    fn egui_rename_flow_keeps_ambiguous_and_unresolved_fixture_references_unchanged() {
+        let fixture: serde_json::Value =
+            serde_json::from_str(C03_RENAME_FIXTURE).expect("C03 rename fixture must be valid");
+        let case = fixture["cases"]
+            .as_array()
+            .expect("C03 rename fixture must contain cases")
+            .iter()
+            .find(|case| case["id"] == "ambiguous-unresolved-and-unrelated-targets")
+            .expect("C03 rename fixture must contain the ambiguous/unresolved case");
+        let old_path = case["old_path"]
+            .as_str()
+            .expect("fixture case must state its source path");
+        let new_path = case["new_path"]
+            .as_str()
+            .expect("fixture case must state its destination path");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir(&vault_path).unwrap();
+        std::fs::create_dir(&app_data_path).unwrap();
+        std::fs::create_dir_all(vault_path.join(std::path::Path::new(new_path).parent().unwrap()))
+            .unwrap();
+
+        let mut original_files = Vec::new();
+        for file in case["files"]
+            .as_array()
+            .expect("fixture case must list its files")
+        {
+            let relative_path = file["relative_path"]
+                .as_str()
+                .expect("fixture file must state its path");
+            let source = file["source"]
+                .as_str()
+                .expect("fixture file must state its source");
+            let path = vault_path.join(relative_path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, source.as_bytes()).unwrap();
+            original_files.push((std::path::PathBuf::from(relative_path), source.as_bytes().to_vec()));
+        }
+
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            rename_source_path: Some(std::path::PathBuf::from(old_path)),
+            rename_destination_path: new_path.to_owned(),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Build rename preview").click();
+        harness.step();
+        assert!(harness.state().rename_receiver.is_some());
+        wait_for_rename(&mut harness);
+        let preview = harness
+            .state()
+            .rename_preview
+            .as_ref()
+            .expect("the fixture case should produce a rename preview");
+        assert_eq!(preview.plan.update_count, 0);
+        assert_eq!(preview.plan.skipped_count, 2);
+        assert!(preview
+            .plan
+            .edits
+            .iter()
+            .any(|edit| edit.action == LinkRenameAction::SkipAmbiguous));
+        assert!(preview
+            .plan
+            .edits
+            .iter()
+            .any(|edit| edit.action == LinkRenameAction::SkipUnresolved));
+        for (relative_path, original) in &original_files {
+            assert_eq!(
+                std::fs::read(vault_path.join(relative_path)).unwrap(),
+                *original,
+                "preview must not mutate {}",
+                relative_path.display()
+            );
+        }
+
+        harness.get_by_label("Review and confirm rename").click();
+        harness.step();
+        harness.get_by_label("Confirm and apply rename").click();
+        harness.step();
+        assert!(harness.state().rename_receiver.is_some());
+        wait_for_rename(&mut harness);
+
+        let app = harness.state();
+        assert!(app.rename_status.as_deref().is_some_and(|status| {
+            status.contains("Updated 0 reference(s)")
+                && status.contains("2 ambiguous or unresolved reference(s) were left unchanged")
+        }));
+        assert!(!vault_path.join(old_path).exists());
+        assert!(vault_path.join(new_path).exists());
+        for (relative_path, original) in &original_files {
+            if relative_path == std::path::Path::new(old_path) {
+                continue;
+            }
+            assert_eq!(
+                std::fs::read(vault_path.join(relative_path)).unwrap(),
+                *original,
+                "apply must preserve {}",
+                relative_path.display()
+            );
+        }
+        assert!(app.session.as_ref().unwrap().entries().iter().any(|entry| {
+            entry.relative_path.as_path() == std::path::Path::new(new_path)
+        }));
     }
 }
