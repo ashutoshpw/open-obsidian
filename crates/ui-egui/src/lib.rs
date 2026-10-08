@@ -1,9 +1,10 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
-    VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
-    VaultRenameRecoveryReport, VaultSession, plan_history_retention,
+    LinkRenameAction, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
+    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult,
+    VaultSession, plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -13,11 +14,13 @@ use std::time::{Duration, SystemTime};
 
 const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
+const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
 type HistoryReceiver = Receiver<HistoryTaskMessage>;
+type RenameReceiver = Receiver<RenameTaskMessage>;
 
 struct HistoryPreview {
     records: Vec<VaultHistoryRecord>,
@@ -40,6 +43,17 @@ enum HistoryTaskMessage {
     Cleanup(Result<(VaultHistoryCleanup, HistoryPreview), ()>),
     ConflictInspection(Result<ConflictInspection, ()>),
     ConflictResolution(Result<(VaultConflictResolution, HistoryPreview), ()>),
+}
+
+struct RenameApplyOutcome {
+    session: VaultSession,
+    result: VaultRenameResult,
+    listing_refreshed: bool,
+}
+
+enum RenameTaskMessage {
+    Preview(Result<VaultRenamePreview, String>),
+    Applied(Result<RenameApplyOutcome, String>),
 }
 
 /// Display-safe storage state passed from the desktop composition boundary.
@@ -114,15 +128,27 @@ struct OpenObsidianApp {
     cleanup_confirmation: bool,
     conflict_inspection: Option<ConflictInspection>,
     pending_conflict_action: Option<VaultConflictAction>,
+    rename_source_path: Option<std::path::PathBuf>,
+    rename_destination_path: String,
+    rename_preview: Option<VaultRenamePreview>,
+    rename_receiver: Option<RenameReceiver>,
+    rename_error: Option<String>,
+    rename_status: Option<String>,
+    rename_confirmation: bool,
 }
 
 impl eframe::App for OpenObsidianApp {
     fn ui(&mut self, ui: &mut eframe::egui::Ui, _frame: &mut eframe::Frame) {
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
+        let vault_operation_busy =
+            self.history_receiver.is_some() || self.rename_receiver.is_some();
         let open_vault_requested = self.open_vault_action.as_ref().is_some_and(|_| {
-            ui.add_enabled(!self.vault_opening, eframe::egui::Button::new("Open vault"))
-                .clicked()
+            ui.add_enabled(
+                !self.vault_opening && !vault_operation_busy,
+                eframe::egui::Button::new("Open vault"),
+            )
+            .clicked()
         });
         if open_vault_requested {
             self.vault_open_error = None;
@@ -134,6 +160,10 @@ impl eframe::App for OpenObsidianApp {
         let open_result = self.vault_open_receiver.as_ref().map(Receiver::try_recv);
         match open_result {
             Some(Ok(Ok(session))) => {
+                self.rename_source_path = session
+                    .entries()
+                    .first()
+                    .map(|entry| entry.relative_path.clone());
                 self.session = Some(Arc::new(session));
                 self.vault_open_receiver = None;
                 self.vault_opening = false;
@@ -146,6 +176,12 @@ impl eframe::App for OpenObsidianApp {
                 self.cleanup_confirmation = false;
                 self.conflict_inspection = None;
                 self.pending_conflict_action = None;
+                self.rename_destination_path.clear();
+                self.rename_preview = None;
+                self.rename_receiver = None;
+                self.rename_error = None;
+                self.rename_status = None;
+                self.rename_confirmation = false;
             }
             Some(Ok(Err(error))) => {
                 self.vault_open_receiver = None;
@@ -163,6 +199,7 @@ impl eframe::App for OpenObsidianApp {
             None => {}
         }
         self.poll_history_task(ui);
+        self.poll_rename_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
         }
@@ -194,6 +231,7 @@ impl eframe::App for OpenObsidianApp {
             }
         }
         if self.session.is_some() {
+            self.show_rename(ui);
             self.show_history(ui);
         }
         ui.separator();
@@ -219,6 +257,176 @@ impl eframe::App for OpenObsidianApp {
 }
 
 impl OpenObsidianApp {
+    fn show_rename(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        ui.heading("Rename Markdown note");
+        ui.small(
+            "Review every planned reference change before applying. Ambiguous and unresolved references stay unchanged.",
+        );
+
+        let note_paths: Vec<std::path::PathBuf> = self
+            .session
+            .as_ref()
+            .map(|session| {
+                session
+                    .entries()
+                    .iter()
+                    .map(|entry| entry.relative_path.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        if self
+            .rename_source_path
+            .as_ref()
+            .is_none_or(|selected| !note_paths.contains(selected))
+        {
+            self.rename_source_path = note_paths.first().cloned();
+        }
+
+        let operation_busy =
+            self.history_receiver.is_some() || self.rename_receiver.is_some();
+        let selected_label = self
+            .rename_source_path
+            .as_ref()
+            .map_or_else(|| "Choose a note".to_owned(), |path| path.display().to_string());
+        let mut source_changed = false;
+        let mut destination_changed = false;
+        ui.horizontal(|ui| {
+            ui.add_enabled_ui(!operation_busy, |ui| {
+                eframe::egui::ComboBox::from_label("Note to rename")
+                    .selected_text(selected_label)
+                    .show_ui(ui, |ui| {
+                        for path in &note_paths {
+                            if ui
+                                .selectable_value(
+                                    &mut self.rename_source_path,
+                                    Some(path.clone()),
+                                    path.display().to_string(),
+                                )
+                                .changed()
+                            {
+                                source_changed = true;
+                            }
+                        }
+                    });
+            });
+            ui.label("Destination path");
+            destination_changed = ui
+                .add_enabled(
+                    !operation_busy,
+                    eframe::egui::TextEdit::singleline(&mut self.rename_destination_path)
+                        .desired_width(240.0),
+                )
+                .changed();
+        });
+        if source_changed || destination_changed {
+            self.rename_preview = None;
+            self.rename_confirmation = false;
+            self.rename_error = None;
+            self.rename_status = None;
+        }
+
+        if note_paths.is_empty() {
+            ui.label("This vault has no Markdown notes to rename.");
+        } else if operation_busy {
+            ui.label("Wait for the current vault operation to finish before creating a rename preview.");
+        }
+        if let Some(error) = &self.rename_error {
+            ui.colored_label(eframe::egui::Color32::RED, error);
+        }
+        if let Some(status) = &self.rename_status {
+            ui.label(status);
+        }
+
+        let can_preview = !operation_busy
+            && self.rename_source_path.is_some()
+            && !self.rename_destination_path.trim().is_empty();
+        let request_preview = ui
+            .add_enabled(
+                can_preview,
+                eframe::egui::Button::new("Build rename preview"),
+            )
+            .clicked();
+        if request_preview {
+            self.start_rename_preview();
+        }
+        if self.rename_receiver.is_some() {
+            ui.label("Building the snapshot-bound rename preview…");
+        }
+
+        let mut request_review = false;
+        let mut confirm_apply = false;
+        let mut cancel_review = false;
+        if let Some(preview) = self.rename_preview.as_ref() {
+            let plan = &preview.plan;
+            ui.group(|ui| {
+                ui.label(format!(
+                    "{} → {} · {} references will be updated · {} will stay unchanged",
+                    plan.old_path, plan.new_path, plan.update_count, plan.skipped_count,
+                ));
+                for warning in &plan.warnings {
+                    ui.colored_label(eframe::egui::Color32::YELLOW, warning);
+                }
+                if plan.edits.is_empty() {
+                    ui.label("No references to this note were found.");
+                } else {
+                    eframe::egui::ScrollArea::vertical()
+                        .max_height(220.0)
+                        .show(ui, |ui| {
+                            for edit in plan.edits.iter().take(MAX_RENAME_PREVIEW_EDITS) {
+                                ui.horizontal_wrapped(|ui| {
+                                    ui.label(format!("{} · {}", edit.source_path, edit.raw));
+                                    ui.small(rename_action_label(edit.action));
+                                    if edit.action == LinkRenameAction::Update
+                                        && let Some(replacement) = &edit.replacement
+                                    {
+                                        ui.small(format!("Target becomes {replacement}"));
+                                    }
+                                });
+                            }
+                        });
+                    if plan.edits.len() > MAX_RENAME_PREVIEW_EDITS {
+                        ui.small(format!(
+                            "Showing the first {MAX_RENAME_PREVIEW_EDITS} of {} affected references.",
+                            plan.edits.len(),
+                        ));
+                    }
+                }
+
+                if self.rename_confirmation {
+                    ui.separator();
+                    ui.label(format!(
+                        "Confirm moving {} to {} and applying {} reference update(s). Skipped ambiguous or unresolved references will remain unchanged.",
+                        plan.old_path, plan.new_path, plan.update_count,
+                    ));
+                    ui.horizontal(|ui| {
+                        confirm_apply = ui
+                            .add_enabled(
+                                !operation_busy,
+                                eframe::egui::Button::new("Confirm and apply rename"),
+                            )
+                            .clicked();
+                        cancel_review = ui.button("Cancel review").clicked();
+                    });
+                } else {
+                    request_review = ui
+                        .add_enabled(
+                            !operation_busy,
+                            eframe::egui::Button::new("Review and confirm rename"),
+                        )
+                        .clicked();
+                }
+            });
+        }
+        if request_review {
+            self.rename_confirmation = true;
+        } else if confirm_apply {
+            self.start_rename_apply();
+        } else if cancel_review {
+            self.rename_confirmation = false;
+        }
+    }
+
     fn show_history(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
         ui.heading("Recovery history");
@@ -253,7 +461,7 @@ impl OpenObsidianApp {
             self.cleanup_confirmation = false;
         }
 
-        let history_busy = self.history_receiver.is_some();
+        let history_busy = self.history_receiver.is_some() || self.rename_receiver.is_some();
         if ui
             .add_enabled(
                 !history_busy,
@@ -263,7 +471,7 @@ impl OpenObsidianApp {
         {
             self.start_history_preview();
         }
-        if history_busy {
+        if self.history_receiver.is_some() {
             ui.label("Working with history safely…");
         }
         if let Some(error) = &self.history_error {
@@ -330,7 +538,7 @@ impl OpenObsidianApp {
             }
         }
 
-        let history_busy = self.history_receiver.is_some();
+        let history_busy = self.history_receiver.is_some() || self.rename_receiver.is_some();
         if self.history_records.is_empty() && self.history_plan.is_some() {
             ui.label("No recovery, failed-write, or conflict history records were found.");
         } else if !self.history_records.is_empty() {
@@ -551,6 +759,56 @@ impl OpenObsidianApp {
         });
     }
 
+    fn start_rename_preview(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let Some(old_path) = self.rename_source_path.clone() else {
+            return;
+        };
+        let new_path = std::path::PathBuf::from(self.rename_destination_path.trim());
+        self.rename_preview = None;
+        self.rename_confirmation = false;
+        self.rename_error = None;
+        self.rename_status = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session
+                .build_rename_preview(old_path, new_path)
+                .map_err(rename_preview_error);
+            let _ = sender.send(RenameTaskMessage::Preview(result));
+        });
+        self.rename_receiver = Some(receiver);
+    }
+
+    fn start_rename_apply(&mut self) {
+        let Some(session) = self.session.as_ref().map(|session| (**session).clone()) else {
+            return;
+        };
+        let Some(preview) = self.rename_preview.clone() else {
+            return;
+        };
+        self.rename_confirmation = false;
+        self.rename_error = None;
+        self.rename_status = None;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = match session.apply_rename_preview(&preview) {
+                Ok(result) => {
+                    let listing_refreshed = session.refresh_entries().is_ok();
+                    Ok(RenameApplyOutcome {
+                        session,
+                        result,
+                        listing_refreshed,
+                    })
+                }
+                Err(error) => Err(rename_apply_error(error)),
+            };
+            let _ = sender.send(RenameTaskMessage::Applied(result));
+        });
+        self.rename_receiver = Some(receiver);
+    }
+
     fn start_history_task(&mut self, task: impl FnOnce() -> HistoryTaskMessage + Send + 'static) {
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
@@ -559,6 +817,67 @@ impl OpenObsidianApp {
         self.history_receiver = Some(receiver);
         self.history_error = None;
         self.history_status = None;
+    }
+
+    fn poll_rename_task(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self.rename_receiver.as_ref().map(Receiver::try_recv);
+        match result {
+            Some(Ok(RenameTaskMessage::Preview(Ok(preview)))) => {
+                self.rename_receiver = None;
+                self.rename_preview = Some(preview);
+                self.rename_error = None;
+                self.rename_status = Some(
+                    "Preview ready. Review the listed changes before confirming the rename."
+                        .to_owned(),
+                );
+            }
+            Some(Ok(RenameTaskMessage::Preview(Err(error)))) => {
+                self.rename_receiver = None;
+                self.rename_preview = None;
+                self.rename_confirmation = false;
+                self.rename_error = Some(error);
+            }
+            Some(Ok(RenameTaskMessage::Applied(Ok(outcome)))) => {
+                self.rename_receiver = None;
+                let result = &outcome.result;
+                self.rename_source_path = Some(result.new_path.clone());
+                self.session = Some(Arc::new(outcome.session));
+                self.rename_destination_path.clear();
+                self.rename_preview = None;
+                self.rename_confirmation = false;
+                self.rename_error = if outcome.listing_refreshed {
+                    None
+                } else {
+                    Some(
+                        "The rename committed, but the note list could not be refreshed. Reopen the vault to refresh it."
+                            .to_owned(),
+                    )
+                };
+                self.rename_status = Some(format!(
+                    "Renamed {} to {}. Updated {} reference(s); {} ambiguous or unresolved reference(s) were left unchanged.",
+                    result.old_path.display(),
+                    result.new_path.display(),
+                    result.updated_references,
+                    result.skipped_references,
+                ));
+            }
+            Some(Ok(RenameTaskMessage::Applied(Err(error)))) => {
+                self.rename_receiver = None;
+                self.rename_preview = None;
+                self.rename_confirmation = false;
+                self.rename_error = Some(error);
+            }
+            Some(Err(TryRecvError::Disconnected)) => {
+                self.rename_receiver = None;
+                self.rename_error = Some("Rename operation stopped unexpectedly.".to_owned());
+                self.rename_preview = None;
+                self.rename_confirmation = false;
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
     }
 
     fn poll_history_task(&mut self, ui: &mut eframe::egui::Ui) {
@@ -690,6 +1009,47 @@ fn conflict_action_label(action: VaultConflictAction) -> &'static str {
     }
 }
 
+fn rename_action_label(action: LinkRenameAction) -> &'static str {
+    match action {
+        LinkRenameAction::Update => "Will update",
+        LinkRenameAction::SkipAmbiguous => "Ambiguous; will stay unchanged",
+        LinkRenameAction::SkipUnresolved => "Unresolved; will stay unchanged",
+    }
+}
+
+fn rename_preview_error(error: VaultError) -> String {
+    match error {
+        VaultError::SnapshotChanged => {
+            "The vault changed while the preview was being prepared. Build a fresh preview."
+                .to_owned()
+        }
+        VaultError::NotAFile(_) => {
+            "The selected note is no longer available. Reopen the vault and try again.".to_owned()
+        }
+        VaultError::InvalidPath | VaultError::OutsideRoot(_) => {
+            "Choose a non-empty relative destination path inside the vault.".to_owned()
+        }
+        error => format!("A safe rename preview could not be prepared: {error}"),
+    }
+}
+
+fn rename_apply_error(error: VaultError) -> String {
+    match error {
+        VaultError::StaleRenamePreview | VaultError::SnapshotChanged => {
+            "The vault changed after this preview. Build and review a fresh preview before applying."
+                .to_owned()
+        }
+        VaultError::RenameDestinationExists(_) => {
+            "The destination already exists. Choose another path and build a fresh preview."
+                .to_owned()
+        }
+        VaultError::RenameTransactionRecoveryRequired { reason, .. } => {
+            format!("The rename needs recovery before another attempt: {reason}")
+        }
+        error => format!("The rename could not be completed: {error}"),
+    }
+}
+
 fn history_kind_label(kind: VaultHistoryKind) -> &'static str {
     match kind {
         VaultHistoryKind::Recovery => "Recovery",
@@ -786,6 +1146,19 @@ mod tests {
         assert_eq!(
             conflict_action_label(VaultConflictAction::KeepIncoming),
             "Keep Incoming"
+        );
+    }
+
+    #[test]
+    fn rename_action_labels_explain_which_references_remain_unchanged() {
+        assert_eq!(rename_action_label(LinkRenameAction::Update), "Will update");
+        assert_eq!(
+            rename_action_label(LinkRenameAction::SkipAmbiguous),
+            "Ambiguous; will stay unchanged"
+        );
+        assert_eq!(
+            rename_action_label(LinkRenameAction::SkipUnresolved),
+            "Unresolved; will stay unchanged"
         );
     }
 

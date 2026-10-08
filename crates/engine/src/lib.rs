@@ -1,7 +1,7 @@
 //! Application services that compose document and vault behavior without UI dependencies.
 
 pub use openobsidian_vault::{
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    LinkRenameAction, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
     VaultRenameResult, plan_history_retention,
@@ -11,7 +11,7 @@ use std::path::Path;
 use std::time::SystemTime;
 
 /// Application session for a vault and its app-owned history directory.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VaultSession {
     store: VaultStore,
     entries: Vec<VaultEntry>,

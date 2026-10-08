@@ -1,9 +1,10 @@
 //! Source-preserving vault reads and revision-bound rename previews.
 
 use openobsidian_doc::{
-    LinkRenameAction, LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument,
-    RenamePlanFile, build_link_rename_plan,
+    LinkRenamePlan, LinkRenamePlanError, MarkdownSource, RawDocument, RenamePlanFile,
+    build_link_rename_plan,
 };
+pub use openobsidian_doc::LinkRenameAction;
 use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
 use std::fs::{self, OpenOptions};
