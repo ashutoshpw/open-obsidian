@@ -1332,10 +1332,18 @@ mod tests {
             });
             std::fs::write(&metadata_path, serde_json::to_vec(&metadata).unwrap()).unwrap();
             original_history_files.push((artifact_path, source));
-            original_history_files.push((metadata_path.clone(), std::fs::read(metadata_path).unwrap()));
+            original_history_files
+                .push((metadata_path.clone(), std::fs::read(metadata_path).unwrap()));
         }
 
         let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        let listed_records = session.history_records().unwrap_or_else(|error| {
+            panic!("fixture history must be readable through VaultSession: {error:?}")
+        });
+        assert_eq!(
+            listed_records.len(),
+            usize::try_from(expected["initial_record_count"].as_u64().unwrap()).unwrap()
+        );
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             history_policy: VaultHistoryPolicy {
@@ -1354,15 +1362,24 @@ mod tests {
             .get_by_label("Refresh history and retention preview")
             .click();
         harness.step();
+        assert!(
+            harness.state().history_receiver.is_some(),
+            "refresh interaction must start the background history task"
+        );
         wait_for_history(&mut harness);
 
-        let preview = harness
-            .state()
+        let app = harness.state();
+        assert!(
+            app.history_error.is_none(),
+            "history preview failed: {:?}",
+            app.history_error
+        );
+        let preview = app
             .history_plan
             .as_ref()
             .expect("the refresh interaction should produce a retention plan");
         assert_eq!(
-            harness.state().history_records.len(),
+            app.history_records.len(),
             usize::try_from(expected["initial_record_count"].as_u64().unwrap()).unwrap()
         );
         assert_eq!(
@@ -1408,7 +1425,10 @@ mod tests {
         wait_for_history(&mut harness);
 
         let app = harness.state();
-        assert_eq!(app.history_status.as_deref(), expected["cleanup_status"].as_str());
+        assert_eq!(
+            app.history_status.as_deref(),
+            expected["cleanup_status"].as_str()
+        );
         assert_eq!(
             app.history_records
                 .iter()
@@ -1433,7 +1453,10 @@ mod tests {
         assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.incoming")).unwrap());
         assert!(std::fs::exists(app_data_path.join("conflicts/open-conflict.json")).unwrap());
         for (relative_path, source) in &original_vault_files {
-            assert_eq!(std::fs::read(vault_path.join(relative_path)).unwrap(), *source);
+            assert_eq!(
+                std::fs::read(vault_path.join(relative_path)).unwrap(),
+                *source
+            );
         }
         for (path, source) in original_history_files
             .iter()

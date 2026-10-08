@@ -34,13 +34,13 @@
     ],
     "policy": {
       "max_age_days": 30,
-      "max_bytes": 0
+      "max_bytes": 5368709120
     },
     "expected": {
       "initial_record_count": 2,
       "eligible_ids": ["old-recovery"],
       "protected_ids": ["open-conflict"],
-      "warning": true,
+      "warning": false,
       "remaining_record_ids": ["open-conflict"],
       "cleanup_status": "Removed 1 eligible history items; 1 protected items remain.",
       "vault_bytes_remain_identical": true,
