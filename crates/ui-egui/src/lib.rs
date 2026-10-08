@@ -285,7 +285,9 @@ impl OpenObsidianApp {
             );
         }
 
-        if let Some(plan) = &plan && !plan.pruneable.is_empty() {
+        if let Some(plan) = &plan
+            && !plan.pruneable.is_empty()
+        {
             if self.cleanup_confirmation {
                 ui.group(|ui| {
                     ui.label(format!(
@@ -298,10 +300,7 @@ impl OpenObsidianApp {
                 let mut cancel_cleanup = false;
                 ui.horizontal(|ui| {
                     confirm_cleanup = ui
-                        .add_enabled(
-                            !history_busy,
-                            eframe::egui::Button::new("Confirm cleanup"),
-                        )
+                        .add_enabled(!history_busy, eframe::egui::Button::new("Confirm cleanup"))
                         .clicked();
                     cancel_cleanup = ui.button("Cancel").clicked();
                 });

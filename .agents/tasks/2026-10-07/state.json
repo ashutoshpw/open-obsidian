@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T07:32:44Z",
+  "updated_at": "2026-10-08T07:38:11Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bab128387f27f5870610d3b13be0c79775c6d101",
+  "last_reconciled_head": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
   "current_milestone": "R2.6.11b",
-  "next_action": "Commit and push the exact GitHub CI formatting and Clippy corrections, then wait for all six workflows on that SHA. Keep history work off the UI thread and never clean up automatically or delete unresolved conflicts. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
+  "next_action": "Commit and push the final GitHub-reported formatting corrections, then wait for all six workflows on that SHA. Keep history work off the UI thread and never clean up automatically or delete unresolved conflicts. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -141,7 +141,8 @@
     "R2.6.10 added the Photocraft-aligned rfd 0.17 native folder picker and opens selected vaults through protected app-data setup and VaultSession on a Rayon worker. All six required workflows passed on exact source SHA ee9b40fc348f09c3ad1bf514ed3ae8a63b1e14ec; evidence: evidence/r2.6.10-native-vault-picker-ee9b40f.json. History UI and actual interactive desktop picker handoff remain. D16, SYNC-007 and C03/C03.2 remain pending; no local executable validation was run.",
     "R2.6.11a source d9528ac9a67c68fbf3818b27e26d017e790d4b9c: inventory, quality, desktop, plugin renderer and loaded-plugin workflows passed (runs 37742058070, 37742058244, 37742058240, 37742058313 and 37742058222). Rust CI 37742058141 failed because cargo --locked needs Cargo.lock updated for the UI crate's direct Rayon dependency; Ubuntu also requested the exact rustfmt changes applied in the follow-up. No local executable validation was run.",
     "R2.6.11a history listing and read-only retention preview passed all six required workflows on exact source SHA 82c9d2aea345417777704f11a1184acc96a33531. Evidence: evidence/r2.6.11a-history-preview-82c9d2a.json. Rust CI passed formatting, workspace tests, Clippy, layers, native builds and Wry probes on Ubuntu/macOS/Windows; UI tests passed twice per OS. Cargo.lock was generated through GitHub Actions resolver run 37742373924. No local executable validation was run.",
-    "R2.6.11b source bab128387f27f5870610d3b13be0c79775c6d101: workspace tests passed on Ubuntu/macOS/Windows and all five companion workflows passed. Rust CI run 37743596109 failed Ubuntu formatting and macOS/Windows Clippy collapsible_if; exact-SHA job details and all six run results are in ci_results. Applied only the GitHub-reported formatter layout and let-chain correction; rerun the corrected source through all six workflows before acceptance. No local executable validation was run."
+    "R2.6.11b source bab128387f27f5870610d3b13be0c79775c6d101: workspace tests passed on Ubuntu/macOS/Windows and all five companion workflows passed. Rust CI run 37743596109 failed Ubuntu formatting and macOS/Windows Clippy collapsible_if; exact-SHA job details and all six run results are in ci_results. Applied only the GitHub-reported formatter layout and let-chain correction.",
+    "R2.6.11b source eab4f342d0ba459585f9b9c239a4aefdc0cc3c34: inventory, quality, desktop, plugin renderer and loaded-plugin workflows passed; macOS and Windows Rust jobs passed; Ubuntu workspace tests passed but rustfmt requested two formatting adjustments. Applied the exact CI-requested line breaks and button-call layout; all six exact-SHA workflows are required again. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -3367,6 +3368,82 @@
         {"name": "macos-latest", "job_id": 113199765315, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37743595955/job/113199765315"},
         {"name": "ubuntu-latest", "job_id": 113199765327, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37743595955/job/113199765327"}
       ]
+    },
+    {
+      "name": "rust",
+      "run_id": 37744133732,
+      "head_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133732",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 113201484397, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133732/job/113201484397"},
+        {"name": "rust (windows-latest)", "job_id": 113201484748, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133732/job/113201484748"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113201484811, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133732/job/113201484811"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37744133748,
+      "head_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133748",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113201484705, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133748/job/113201484705"}
+      ]
+    },
+    {
+      "name": "quality",
+      "run_id": 37744133698,
+      "head_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133698",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113201484655, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133698/job/113201484655"},
+        {"name": "ubuntu-latest", "job_id": 113201484766, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133698/job/113201484766"},
+        {"name": "macos-latest", "job_id": 113201484875, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133698/job/113201484875"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37744133704,
+      "head_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133704",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113201484468, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133704/job/113201484468"},
+        {"name": "ubuntu-latest", "job_id": 113201484668, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133704/job/113201484668"},
+        {"name": "windows-latest", "job_id": 113201484737, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133704/job/113201484737"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37744133697,
+      "head_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133697",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113201484786, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133697/job/113201484786"},
+        {"name": "ubuntu-latest", "job_id": 113201485196, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133697/job/113201485196"},
+        {"name": "macos-latest", "job_id": 113201485249, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133697/job/113201485249"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37744133694,
+      "head_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133694",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113201484833, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133694/job/113201484833"},
+        {"name": "windows-latest", "job_id": 113201484943, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133694/job/113201484943"},
+        {"name": "ubuntu-latest", "job_id": 113201484971, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37744133694/job/113201484971"}
+      ]
     }
   ],
   "milestones": {
@@ -3696,18 +3773,19 @@
     },
     "R2.6.11b": {
       "status": "in_progress",
-      "implementation_sha": "bab128387f27f5870610d3b13be0c79775c6d101",
+      "implementation_sha": "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34",
       "implementation_commits": [
-        "bab128387f27f5870610d3b13be0c79775c6d101"
+        "bab128387f27f5870610d3b13be0c79775c6d101",
+        "eab4f342d0ba459585f9b9c239a4aefdc0cc3c34"
       ],
       "evidence": null,
       "scope": "Add confirmed history cleanup and validated conflict inspection/resolution controls to the native UI.",
       "accepted_slice": [],
       "remaining": [
-        "The first Rust CI attempt passed workspace tests but reported Ubuntu rustfmt changes and macOS/Windows Clippy collapsible_if diagnostics; corrections are applied and require exact-SHA CI.",
+        "First CI run reported Ubuntu formatting and macOS/Windows Clippy diagnostics; second run passed macOS/Windows and Ubuntu tests but requested two rustfmt adjustments. Those changes are applied and require all six workflows on the next exact SHA.",
         "CI has not visually inspected the interactive history controls; D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation remain pending."
       ],
-      "next_action": "Commit and push the CI-reported formatting and Clippy corrections, then wait for all six exact-SHA workflows before accepting R2.6.11b."
+      "next_action": "Commit and push the final rustfmt adjustments, then wait for all six exact-SHA workflows before accepting R2.6.11b."
     }
   },
   "ci_preparation": {
