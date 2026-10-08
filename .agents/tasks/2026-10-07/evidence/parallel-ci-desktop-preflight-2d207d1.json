@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "feature_reference": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/",
+  "change_commit": "825189d763aa39f2a67bb643063dec9c1ec1a2a4",
+  "validated_sha": "2d207d1823d486c64acb2192ae14ebe82c19a87e",
+  "inventory_reconciliation_commit": "2d207d1823d486c64acb2192ae14ebe82c19a87e",
+  "workflow": ".github/workflows/desktop-build.yml",
+  "parallel_group": [
+    {
+      "name": "Validate release gate before packaging",
+      "command": "bun run release:gate",
+      "inputs": "Job-level release mode, tag, signing readiness, and staging configuration."
+    },
+    {
+      "name": "Verify update/rollback manifest contract",
+      "command": "bun run release:update-check",
+      "inputs": "The update/rollback fixture."
+    }
+  ],
+  "barrier": "Both read-only preflight checks complete before signing configuration and packaging proceed.",
+  "first_attempt": {
+    "sha": "825189d763aa39f2a67bb643063dec9c1ec1a2a4",
+    "inventory_run_id": 37814353026,
+    "inventory_conclusion": "failure",
+    "finding": "The tracked workflow hash in the Rust migration inventory needed reconciliation.",
+    "other_five_workflows": "success"
+  },
+  "validation": {
+    "conclusion": "All six required workflows passed.",
+    "workflows": [
+      {"name": "Rust migration inventory", "run_id": 37814827922, "jobs": [{"name": "inventory", "job_id": 113440656929}]},
+      {"name": "OpenObsidian Rust CI", "run_id": 37814827806, "jobs": [{"name": "rust (macos-latest)", "job_id": 113440656285}, {"name": "rust (ubuntu-latest)", "job_id": 113440656688}, {"name": "rust (windows-latest)", "job_id": 113440656785}]},
+      {"name": "OpenObsidian quality", "run_id": 37814827797, "jobs": [{"name": "macos-latest", "job_id": 113440656050}, {"name": "ubuntu-latest", "job_id": 113440656369}, {"name": "windows-latest", "job_id": 113440656456}]},
+      {"name": "OpenObsidian desktop build", "run_id": 37814827874, "jobs": [{"name": "macos-latest", "job_id": 113440657146}, {"name": "ubuntu-latest", "job_id": 113440657363}, {"name": "windows-latest", "job_id": 113440657518}]},
+      {"name": "OpenObsidian plugin renderer matrix", "run_id": 37814827811, "jobs": [{"name": "windows-latest", "job_id": 113440657893}, {"name": "macos-latest", "job_id": 113440658200}, {"name": "ubuntu-latest", "job_id": 113440658255}]},
+      {"name": "OpenObsidian loaded plugin workflows", "run_id": 37814827805, "jobs": [{"name": "ubuntu-latest", "job_id": 113440658081}, {"name": "windows-latest", "job_id": 113440658597}, {"name": "macos-latest", "job_id": 113440658778}]}
+    ],
+    "desktop_parallel_group": "Passed on Ubuntu, macOS, and Windows."
+  }
+}

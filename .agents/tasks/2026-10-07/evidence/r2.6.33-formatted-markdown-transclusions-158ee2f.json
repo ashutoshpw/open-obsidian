@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.33",
+  "source_sha": "158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b",
+  "implementation_commits": [
+    "0f1c98475f00112f9523ce4b5b359c125810de7e",
+    "3b9dc56a60d04d7cb277bf276fdd3ff435008d6b",
+    "158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b"
+  ],
+  "scope": {
+    "renderer": "egui_commonmark = 0.25.0, aligned with egui 0.36",
+    "integration": "OpenObsidianApp owns a CommonMarkCache and renders resolved note transclusions through CommonMarkViewer",
+    "safety": [
+      "default features are disabled",
+      "image loading is disabled",
+      "network fetching is disabled",
+      "rendering remains read-only and cannot open arbitrary local files"
+    ],
+    "fixture_coverage": "The fixture-backed UI test asserts rendered heading and bold text and verifies the vault bytes remain unchanged."
+  },
+  "ci_attempts": [
+    {
+      "source_sha": "0f1c98475f00112f9523ce4b5b359c125810de7e",
+      "runs": {
+        "inventory": 37811463421,
+        "rust": 37811463369,
+        "quality": 37811463445,
+        "desktop": 37811463439,
+        "plugin_renderer": 37811463458,
+        "loaded_plugins": 37811463335,
+        "temporary_lockfile_bootstrap": 37811463372
+      },
+      "finding": "The first attempt had no refreshed Cargo.lock and an unregistered temporary bootstrap workflow; inventory and locked Rust CI failed. The four companion workflows and temporary GitHub Actions lockfile bootstrap succeeded."
+    },
+    {
+      "source_sha": "3b9dc56a60d04d7cb277bf276fdd3ff435008d6b",
+      "runs": {
+        "inventory": 37812375665,
+        "rust": 37812375748,
+        "quality": 37812375652,
+        "desktop": 37812375670,
+        "plugin_renderer": 37812375790,
+        "loaded_plugins": 37812375644
+      },
+      "finding": "Cargo.lock was added from the GitHub Actions resolver artifact, the temporary bootstrap workflow was removed, and the fixture hash was refreshed. Rust CI passed on macOS and Windows; Ubuntu reported only import ordering from rustfmt. All five companion workflows passed."
+    }
+  ],
+  "accepted_validation": {
+    "source_sha": "158ee2ff5e8be7e569c8a34da05dfa5ffe66c21b",
+    "conclusion": "All six required workflows passed.",
+    "workflows": [
+      {"name": "Rust migration inventory", "run_id": 37813290516, "job_ids": [113435352552]},
+      {"name": "OpenObsidian Rust CI", "run_id": 37813290567, "job_ids": [113435353523, 113435353949, 113435354157]},
+      {"name": "OpenObsidian quality", "run_id": 37813290528, "job_ids": [113435353614, 113435354049, 113435354065]},
+      {"name": "OpenObsidian desktop build", "run_id": 37813290498, "job_ids": [113435357947, 113435358087, 113435358312]},
+      {"name": "OpenObsidian plugin renderer matrix", "run_id": 37813290629, "job_ids": [113435355096, 113435355325, 113435355647]},
+      {"name": "OpenObsidian loaded plugin workflows", "run_id": 37813290575, "job_ids": [113435353664, 113435354135, 113435354384]}
+    ],
+    "test_counts": {
+      "ubuntu-latest": {"openobsidian-doc": 24, "openobsidian-engine": 2, "openobsidian-platform": 13, "openobsidian-plugins": 0, "openobsidian-testkit": 4, "openobsidian-ui-egui": 14, "openobsidian-vault": 34},
+      "macos-latest": {"openobsidian-doc": 24, "openobsidian-engine": 2, "openobsidian-platform": 12, "openobsidian-plugins": 0, "openobsidian-testkit": 4, "openobsidian-ui-egui": 14, "openobsidian-vault": 34},
+      "windows-latest": {"openobsidian-doc": 24, "openobsidian-engine": 2, "openobsidian-platform": 13, "openobsidian-plugins": 0, "openobsidian-testkit": 4, "openobsidian-ui-egui": 14, "openobsidian-vault": 33}
+    },
+    "passed_checks": [
+      "Rust formatting",
+      "workspace tests",
+      "Clippy",
+      "crate dependency layering",
+      "native preview builds",
+      "unchanged-plugin feasibility",
+      "fixture-backed Markdown rendering"
+    ],
+    "local_executable_validation": "None; executable validation ran only in GitHub Actions."
+  },
+  "lockfile_bootstrap_artifact": {
+    "run_id": 37811463372,
+    "job_id": 113429092843,
+    "artifact_id": 11564044895,
+    "name": "cargo-lock-0f1c98475f00112f9523ce4b5b359c125810de7e",
+    "size": 33896,
+    "digest": "sha256:f64c7ad98f4a7fbb94f805d5175b5e98f9d0f77bc8485a222038755f082b6b95"
+  },
+  "artifacts": [
+    {"name": "Rust runtime Windows", "id": 11566770696, "size": 2715, "digest": "sha256:68902192154e3f343dcf923828131d37f88f3e276af9f78ee424987ae86ef9d4"},
+    {"name": "Rust runtime Linux", "id": 11566521000, "size": 2695, "digest": "sha256:c2b8c376d8c590b0fd3bee246fe17a1ed6d6fb4aefe63cd3eb4b2024557a1bb4"},
+    {"name": "Rust runtime macOS", "id": 11565603328, "size": 2698, "digest": "sha256:aae0d29ee136cb7b71e8177dd8348333cfac69a44fdf44de0f80dda11579dc7b"},
+    {"name": "Rust preview Linux", "id": 11566386409, "size": 9133970, "digest": "sha256:d41c3820e6964091ac92cfb966d7744290ae7d214f0e01ce6b6180c324f6e0d5"},
+    {"name": "Desktop Linux", "id": 11566480707, "size": 125946548, "digest": "sha256:a875944858ecd23758f423a4a2761440b824325f701d4b24324a1fb5bd55dfb1"},
+    {"name": "Desktop Windows", "id": 11566106879, "size": 163005824, "digest": "sha256:3b98f07ceed67df0aa04319ea1a012f39f25efb10aa27615c2348b0b18cff63b"},
+    {"name": "Desktop macOS", "id": 11565494105, "size": 397395487, "digest": "sha256:ab9c9f06effed9d01afc067bbfcdc7a309ebbca36f7d5d04a0ffc2f8bf0e7bf2"},
+    {"name": "Renderer Linux", "id": 11566655391, "size": 3221, "digest": "sha256:9bbd53ffa634d61f036aec61b99c50f5a5addb427afa47307a0b332e2030da52"},
+    {"name": "Renderer Windows", "id": 11566171468, "size": 3242, "digest": "sha256:567f72e9e15798f71aa8507a709a44ea8addaf1dec30daad04f72d4c8b80ec32"},
+    {"name": "Renderer macOS", "id": 11566106842, "size": 3238, "digest": "sha256:3148e8a832579b78bb6627dde9b43fdb9cc596c80951123ed5cd47367b25b217"},
+    {"name": "Loaded plugin Windows", "id": 11566485823, "size": 171502, "digest": "sha256:d27e5a0341aefc9376e3e3e2ac412c22b46ff43a45bbdcc0c9ed94ecdbcc373c"},
+    {"name": "Loaded plugin macOS", "id": 11566460809, "size": 171503, "digest": "sha256:7bc88c50986fb05db714aa37355ec3db728f43256f2a34e979f46905c893786e"},
+    {"name": "Loaded plugin Linux", "id": 11565697923, "size": 171487, "digest": "sha256:c89fd20275023d6efde45c9f3ac18f7a74627476b016b10af6b1ad21cbf92fcf"}
+  ],
+  "remaining": [
+    "This slice does not yet render attachment images or complete parent C03 attachment preview through bounded vault-mediated reads.",
+    "SYNC-007 host-level uninstall preservation remains open."
+  ]
+}
