@@ -160,8 +160,7 @@ fn is_closing_delimiter(line: &[u8]) -> bool {
     let Some(rest) = line.strip_prefix(b"---") else {
         return false;
     };
-    rest.iter()
-        .all(|byte| *byte == b' ' || *byte == b'\t')
+    rest.iter().all(|byte| *byte == b' ' || *byte == b'\t')
 }
 
 fn detect_line_ending(text: &str) -> LineEnding {
@@ -249,7 +248,9 @@ mod tests {
 
     #[test]
     fn frontmatter_bounds_use_byte_offsets_and_leave_delimiter_line_endings_out() {
-        let bytes = "\u{feff}---\r\nstatus: 🐈\n--- \t\r\nbody".as_bytes().to_vec();
+        let bytes = "\u{feff}---\r\nstatus: 🐈\n--- \t\r\nbody"
+            .as_bytes()
+            .to_vec();
         let source = MarkdownSource::parse(bytes.clone()).unwrap();
         let bounds = source.frontmatter_bounds().unwrap();
 
@@ -265,7 +266,10 @@ mod tests {
             &bytes[bounds.opening_delimiter.start..bounds.opening_delimiter.end],
             b"---"
         );
-        assert_eq!(&bytes[bounds.content.start..bounds.content.end], "status: 🐈\n".as_bytes());
+        assert_eq!(
+            &bytes[bounds.content.start..bounds.content.end],
+            "status: 🐈\n".as_bytes()
+        );
         assert_eq!(
             &bytes[bounds.closing_delimiter.start..bounds.closing_delimiter.end],
             b"--- \t"
@@ -276,12 +280,18 @@ mod tests {
     #[test]
     fn frontmatter_bounds_support_lf_crlf_and_cr_delimiters() {
         let cases = [
-            (b"---\nkey: value\n---".as_slice(), b"key: value\n".as_slice()),
+            (
+                b"---\nkey: value\n---".as_slice(),
+                b"key: value\n".as_slice(),
+            ),
             (
                 b"---\r\nkey: value\r\n---".as_slice(),
                 b"key: value\r\n".as_slice(),
             ),
-            (b"---\rkey: value\r---".as_slice(), b"key: value\r".as_slice()),
+            (
+                b"---\rkey: value\r---".as_slice(),
+                b"key: value\r".as_slice(),
+            ),
         ];
 
         for (bytes, expected_content) in cases {

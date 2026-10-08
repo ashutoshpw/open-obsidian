@@ -207,3 +207,7 @@ The next read-only document slice exposes opening delimiter, content and closing
 ## R2.2 compiler feedback — source SHA cc2109d
 
 Rust CI run [37709950709](https://github.com/ashutoshpw/open-obsidian/actions/runs/37709950709) found the same compiler error on macOS job 113093277769 and Windows job 113093277790: Rust could not infer the integer type for the BOM-dependent `opening_start` before `.checked_add(3)`. The compiler diagnostic requests an explicit type; the correction sets it to `usize`, as required for byte offsets. The Ubuntu job remained in system-dependency installation while this was recorded, so its source test result is pending. Inventory, quality, desktop, plugin-renderer and loaded-plugin workflows passed on this SHA. The correction will be pushed as a focused commit and the entire exact-SHA matrix rerun.
+
+## R2.2 rustfmt feedback — source SHA 5f24fc2
+
+Rust CI run [37710356848](https://github.com/ashutoshpw/open-obsidian/actions/runs/37710356848) compiled the corrected byte-offset implementation and passed all seven `openobsidian-doc` tests on Ubuntu. Ubuntu rustfmt reported five layout changes in the new helper and tests; applied the exact GitHub diff. macOS passed workspace tests, Clippy, layering, native build and plugin probes. Windows passed workspace tests, Clippy and layering and was still building when this correction was prepared. All five companion workflows passed on the same SHA. This source SHA is not accepted; the next pushed SHA must pass formatting and the full matrix.
