@@ -567,7 +567,8 @@ impl VaultStore {
             temporary.sync_all()?;
             drop(temporary);
             #[cfg(test)]
-            if self.fail_before_replace || self.fail_replace_path.as_deref() == Some(relative_path) {
+            if self.fail_before_replace || self.fail_replace_path.as_deref() == Some(relative_path)
+            {
                 if let Some((external_path, external_bytes)) = &self.external_change_on_failure {
                     let external_path = self
                         .root
