@@ -1,12 +1,11 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
-    LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason,
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode,
-    VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult,
-    VaultSession, plan_history_retention,
+    LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason, VaultConflictAction,
+    VaultConflictRead, VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind,
+    VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultLinkResolution,
+    VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
+    VaultRenameRecoveryReport, VaultRenameResult, VaultSession, plan_history_retention,
 };
 use std::sync::{
     Arc,
@@ -1217,7 +1216,8 @@ impl OpenObsidianApp {
                 self.link_status = None;
                 self.link_error = Some("Link status check stopped unexpectedly.".to_owned());
                 self.note_embed_report = None;
-                self.note_embed_error = Some("Note transclusion preview stopped unexpectedly.".to_owned());
+                self.note_embed_error =
+                    Some("Note transclusion preview stopped unexpectedly.".to_owned());
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -1479,18 +1479,27 @@ fn show_note_embed_node(ui: &mut eframe::egui::Ui, node: &VaultNoteEmbedNode) {
                         "Not rendered: external targets are not opened in this preview."
                     }
                 };
-                ui.colored_label(eframe::egui::Color32::YELLOW, message);
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    format!("{message} {}", reference.raw),
+                );
             }
             VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Cycle) => {
                 ui.colored_label(
                     eframe::egui::Color32::YELLOW,
-                    "Not rendered: this embed would create a cycle.",
+                    format!(
+                        "Not rendered: this embed would create a cycle. {}",
+                        reference.raw
+                    ),
                 );
             }
             VaultNoteEmbedDisposition::Blocked(TransclusionBlockReason::Depth) => {
                 ui.colored_label(
                     eframe::egui::Color32::YELLOW,
-                    "Not rendered: the maximum note embed depth was reached.",
+                    format!(
+                        "Not rendered: the maximum note embed depth was reached. {}",
+                        reference.raw
+                    ),
                 );
             }
         }
@@ -1846,8 +1855,10 @@ mod tests {
         }));
         harness.get_by_label("Note transclusions");
         harness.get_by_label("Opening paragraph ![[Unique]]");
-        harness.get_by_label("Not rendered: this embed would create a cycle.");
-        harness.get_by_label("Not rendered: no matching Markdown note was found.");
+        harness.get_by_label("Not rendered: this embed would create a cycle. ![[Unique]]");
+        harness.get_by_label(
+            "Not rendered: no matching Markdown note was found. ![[Assets/plot.svg]]",
+        );
         for (relative_path, original) in &original_files {
             assert_eq!(
                 std::fs::read(vault_path.join(relative_path)).unwrap(),

@@ -6,9 +6,8 @@ pub use openobsidian_vault::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode,
-    VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultRenamePreview,
-    VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
-    plan_history_retention,
+    VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultRenamePreview, VaultRenameRecoveryIssue,
+    VaultRenameRecoveryReport, VaultRenameResult, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;

@@ -610,11 +610,7 @@ impl VaultRoot {
 
         let mut children = Vec::new();
         let mut omitted_children = false;
-        if let (
-            VaultNoteEmbedDisposition::Included(guard),
-            Some(slice),
-            Some(target),
-        ) = (
+        if let (VaultNoteEmbedDisposition::Included(guard), Some(slice), Some(target)) = (
             &resolution.disposition,
             &resolution.slice,
             resolution.resolution.target.as_deref(),
@@ -1701,10 +1697,7 @@ mod tests {
         let vault = VaultRoot::open(&temp.0).unwrap();
         let report = vault.resolve_note_embeds_for_note("Index.md").unwrap();
 
-        assert_eq!(
-            report.embeds.len(),
-            super::MAX_NOTE_TRANSCLUSION_TREE_NODES
-        );
+        assert_eq!(report.embeds.len(), super::MAX_NOTE_TRANSCLUSION_TREE_NODES);
         assert!(report.truncated);
         assert_eq!(
             report.snapshot_sha256,
