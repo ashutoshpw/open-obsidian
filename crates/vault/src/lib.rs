@@ -191,6 +191,12 @@ struct InlineImageBudget {
     remaining_pixels: u64,
 }
 
+struct NoteEmbedTreeBudget<'a> {
+    expected_snapshot: &'a str,
+    remaining_nodes: usize,
+    image_budget: InlineImageBudget,
+}
+
 impl InlineImageBudget {
     fn single() -> Self {
         Self {
@@ -687,12 +693,15 @@ impl VaultRoot {
             .filter(|reference| reference.kind == LinkKind::Embed)
             .collect::<Vec<_>>();
 
-        let mut remaining_nodes = MAX_NOTE_TRANSCLUSION_TREE_NODES;
-        let mut image_budget = InlineImageBudget::for_report();
+        let mut tree_budget = NoteEmbedTreeBudget {
+            expected_snapshot: &before.revision_sha256,
+            remaining_nodes: MAX_NOTE_TRANSCLUSION_TREE_NODES,
+            image_budget: InlineImageBudget::for_report(),
+        };
         let mut embeds = Vec::new();
         let mut truncated = false;
         for reference in references {
-            if remaining_nodes == 0 {
+            if tree_budget.remaining_nodes == 0 {
                 truncated = true;
                 break;
             }
@@ -701,9 +710,7 @@ impl VaultRoot {
                 &reference,
                 0,
                 &chain,
-                &before.revision_sha256,
-                &mut remaining_nodes,
-                &mut image_budget,
+                &mut tree_budget,
             )?);
         }
 
@@ -724,20 +731,18 @@ impl VaultRoot {
         reference: &LinkReference,
         depth: usize,
         chain: &[String],
-        expected_snapshot: &str,
-        remaining_nodes: &mut usize,
-        image_budget: &mut InlineImageBudget,
+        tree_budget: &mut NoteEmbedTreeBudget<'_>,
     ) -> Result<VaultNoteEmbedNode, VaultError> {
-        debug_assert!(*remaining_nodes > 0);
-        *remaining_nodes -= 1;
+        debug_assert!(tree_budget.remaining_nodes > 0);
+        tree_budget.remaining_nodes -= 1;
         let resolution = self.resolve_note_embed_with_budget(
             current_path,
             reference,
             depth,
             chain,
-            image_budget,
+            &mut tree_budget.image_budget,
         )?;
-        if resolution.snapshot_sha256 != expected_snapshot {
+        if resolution.snapshot_sha256 != tree_budget.expected_snapshot {
             return Err(VaultError::LinkResolutionSnapshotChanged);
         }
 
@@ -756,7 +761,7 @@ impl VaultRoot {
                 .into_iter()
                 .filter(|reference| reference.kind == LinkKind::Embed)
             {
-                if *remaining_nodes == 0 {
+                if tree_budget.remaining_nodes == 0 {
                     omitted_children = true;
                     break;
                 }
@@ -765,9 +770,7 @@ impl VaultRoot {
                     &child,
                     guard.next_depth,
                     &guard.chain,
-                    expected_snapshot,
-                    remaining_nodes,
-                    image_budget,
+                    tree_budget,
                 )?);
             }
         }
