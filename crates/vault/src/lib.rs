@@ -6,8 +6,11 @@ use openobsidian_doc::{
 };
 use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::{self, Write as IoWrite};
 use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -28,6 +31,25 @@ pub enum VaultError {
     SnapshotChanged,
     #[error("rename preview is stale; prepare it again before applying")]
     StaleRenamePreview,
+    #[error("application data directory is invalid or inside the vault: {0}")]
+    InvalidDataDirectory(PathBuf),
+    #[error("revision conflict for {relative_path}; incoming bytes were preserved at {preserved_path}")]
+    RevisionConflict {
+        relative_path: PathBuf,
+        expected_revision: Option<String>,
+        current_revision: Option<String>,
+        preserved_path: PathBuf,
+    },
+    #[error("write for {relative_path} needs recovery: {reason}")]
+    RecoveryRequired { relative_path: PathBuf, reason: String },
+    #[error("could not write vault entry {relative_path}: {source}")]
+    WriteFailed {
+        relative_path: PathBuf,
+        #[source]
+        source: io::Error,
+    },
+    #[error("could not append transaction journal: {0}")]
+    Journal(#[source] io::Error),
     #[error(transparent)]
     RenamePlan(#[from] LinkRenamePlanError),
 }
@@ -71,6 +93,29 @@ pub struct VaultRenamePreview {
     pub plan_id: String,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultWriteRequest {
+    pub relative_path: PathBuf,
+    pub expected_revision_sha256: Option<String>,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultWriteResult {
+    pub read: VaultRead,
+    pub operation_id: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct VaultStore {
+    root: VaultRoot,
+    app_data_root: PathBuf,
+    #[cfg(test)]
+    fail_before_replace: bool,
+    #[cfg(test)]
+    fail_committed_journal: bool,
+}
+
 #[derive(Clone, Debug)]
 pub struct VaultRoot {
     canonical_root: PathBuf,
@@ -95,26 +140,7 @@ impl VaultRoot {
 
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         let relative_path = relative_path.as_ref();
-        validate_relative_path(relative_path)?;
-        let components: Vec<_> = relative_path.components().collect();
-        let mut candidate = self.canonical_root.clone();
-        for (index, component) in components.iter().enumerate() {
-            candidate.push(component.as_os_str());
-            let metadata = fs::symlink_metadata(&candidate)?;
-            if metadata.file_type().is_symlink() {
-                return Err(VaultError::Symlink(relative_path.to_path_buf()));
-            }
-            if index + 1 < components.len() && !metadata.is_dir() {
-                return Err(VaultError::NotAFile(relative_path.to_path_buf()));
-            }
-        }
-        let canonical = fs::canonicalize(&candidate)?;
-        if !canonical.starts_with(&self.canonical_root) {
-            return Err(VaultError::OutsideRoot(relative_path.to_path_buf()));
-        }
-        if !canonical.is_file() {
-            return Err(VaultError::NotAFile(relative_path.to_path_buf()));
-        }
+        let canonical = self.resolve_vault_path(relative_path, false)?;
         let bytes = fs::read(canonical)?;
         let revision_sha256 = sha256_hex(&bytes);
         Ok(VaultRead {
@@ -214,6 +240,535 @@ impl VaultRoot {
         }
         Ok(files)
     }
+
+    fn resolve_vault_path(
+        &self,
+        relative_path: &Path,
+        allow_missing_leaf: bool,
+    ) -> Result<PathBuf, VaultError> {
+        validate_relative_path(relative_path)?;
+        let components: Vec<_> = relative_path.components().collect();
+        let mut candidate = self.canonical_root.clone();
+        for (index, component) in components.iter().enumerate() {
+            candidate.push(component.as_os_str());
+            let metadata = match fs::symlink_metadata(&candidate) {
+                Ok(metadata) => metadata,
+                Err(error)
+                    if allow_missing_leaf
+                        && index + 1 == components.len()
+                        && error.kind() == io::ErrorKind::NotFound =>
+                {
+                    return Ok(candidate);
+                }
+                Err(error) => return Err(error.into()),
+            };
+            if metadata.file_type().is_symlink() {
+                return Err(VaultError::Symlink(relative_path.to_path_buf()));
+            }
+            if index + 1 < components.len() && !metadata.is_dir() {
+                return Err(VaultError::NotAFile(relative_path.to_path_buf()));
+            }
+            if index + 1 == components.len() && !metadata.is_file() {
+                return Err(VaultError::NotAFile(relative_path.to_path_buf()));
+            }
+        }
+        let canonical = fs::canonicalize(&candidate)?;
+        if !canonical.starts_with(&self.canonical_root) {
+            return Err(VaultError::OutsideRoot(relative_path.to_path_buf()));
+        }
+        Ok(canonical)
+    }
+}
+
+static NEXT_OPERATION_ID: AtomicU64 = AtomicU64::new(0);
+
+impl VaultStore {
+    /// Open an existing vault and an existing app-owned data directory.
+    /// Recovery history and journals are always kept outside the vault.
+    pub fn open(
+        vault_root: impl AsRef<Path>,
+        app_data_root: impl AsRef<Path>,
+    ) -> Result<Self, VaultError> {
+        let root = VaultRoot::open(vault_root)?;
+        let app_data_root = fs::canonicalize(app_data_root)?;
+        if !app_data_root.is_dir() || app_data_root.starts_with(&root.canonical_root) {
+            return Err(VaultError::InvalidDataDirectory(app_data_root));
+        }
+        Ok(Self {
+            root,
+            app_data_root,
+            #[cfg(test)]
+            fail_before_replace: false,
+            #[cfg(test)]
+            fail_committed_journal: false,
+        })
+    }
+
+    pub fn root(&self) -> &VaultRoot {
+        &self.root
+    }
+
+    /// Write a file only when its current SHA-256 revision matches the caller's
+    /// expectation. Previous, conflicting and failed incoming bytes are stored
+    /// under app-owned data; each operation is appended to `journal.jsonl`.
+    pub fn write(&self, request: VaultWriteRequest) -> Result<VaultWriteResult, VaultError> {
+        let relative_path = normalize_relative_path(&request.relative_path)?;
+        let relative_path_text = path_to_slashes(&relative_path)?;
+        let target_path = self.root.resolve_vault_path(&relative_path, true)?;
+        let operation_id = next_operation_id();
+        let before = self.read_if_present(&relative_path, &target_path)?;
+        let current_revision = before
+            .as_ref()
+            .map(|read| read.revision_sha256.clone());
+        if current_revision.as_deref() != request.expected_revision_sha256.as_deref() {
+            let preserved_path = self.preserve_bytes(
+                "conflicts",
+                &operation_id,
+                ".incoming",
+                &relative_path_text,
+                &request.bytes,
+                &sha256_hex(&request.bytes),
+                request.expected_revision_sha256.as_deref(),
+                current_revision.as_deref(),
+            )?;
+            self.append_journal(
+                &operation_id,
+                "conflict",
+                &relative_path_text,
+                request.expected_revision_sha256.as_deref(),
+                &sha256_hex(&request.bytes),
+                None,
+            )?;
+            return Err(VaultError::RevisionConflict {
+                relative_path,
+                expected_revision: request.expected_revision_sha256,
+                current_revision,
+                preserved_path,
+            });
+        }
+
+        let next_revision = sha256_hex(&request.bytes);
+        self.append_journal(
+            &operation_id,
+            "prepared",
+            &relative_path_text,
+            request.expected_revision_sha256.as_deref(),
+            &next_revision,
+            None,
+        )?;
+
+        if let Some(previous) = &before {
+            if let Err(error) = self.preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-previous"),
+                ".bin",
+                &relative_path_text,
+                previous.document.as_bytes(),
+                &previous.revision_sha256,
+                request.expected_revision_sha256.as_deref(),
+                current_revision.as_deref(),
+            ) {
+                let _ = self.append_journal(
+                    &operation_id,
+                    "failed",
+                    &relative_path_text,
+                    request.expected_revision_sha256.as_deref(),
+                    &next_revision,
+                    Some(&error.to_string()),
+                );
+                return Err(error);
+            }
+        }
+
+        let latest_revision = match self.read_if_present(&relative_path, &target_path) {
+            Ok(read) => read.map(|read| read.revision_sha256),
+            Err(error) => {
+                let _ = self.preserve_bytes(
+                    "failed",
+                    &operation_id,
+                    ".bin",
+                    &relative_path_text,
+                    &request.bytes,
+                    &next_revision,
+                    request.expected_revision_sha256.as_deref(),
+                    current_revision.as_deref(),
+                );
+                let _ = self.append_journal(
+                    &operation_id,
+                    "failed",
+                    &relative_path_text,
+                    request.expected_revision_sha256.as_deref(),
+                    &next_revision,
+                    Some(&error.to_string()),
+                );
+                return Err(error);
+            }
+        };
+        if latest_revision.as_deref() != current_revision.as_deref() {
+            let preserved_path = self.preserve_bytes(
+                "conflicts",
+                &format!("{operation_id}-late-conflict"),
+                ".incoming",
+                &relative_path_text,
+                &request.bytes,
+                &next_revision,
+                request.expected_revision_sha256.as_deref(),
+                latest_revision.as_deref(),
+            )?;
+            let message = "vault file changed after the write was prepared";
+            let _ = self.append_journal(
+                &operation_id,
+                "failed",
+                &relative_path_text,
+                request.expected_revision_sha256.as_deref(),
+                &next_revision,
+                Some(message),
+            );
+            return Err(VaultError::RevisionConflict {
+                relative_path,
+                expected_revision: request.expected_revision_sha256,
+                current_revision: latest_revision,
+                preserved_path,
+            });
+        }
+
+        if let Err(error) = self.atomic_replace(
+            &target_path,
+            &relative_path,
+            &operation_id,
+            &request.bytes,
+        ) {
+            let preservation = self.preserve_bytes(
+                "failed",
+                &operation_id,
+                ".bin",
+                &relative_path_text,
+                &request.bytes,
+                &next_revision,
+                request.expected_revision_sha256.as_deref(),
+                current_revision.as_deref(),
+            );
+            let _ = self.append_journal(
+                &operation_id,
+                "failed",
+                &relative_path_text,
+                request.expected_revision_sha256.as_deref(),
+                &next_revision,
+                Some(&error.to_string()),
+            );
+            if let Err(preservation_error) = preservation {
+                return Err(VaultError::RecoveryRequired {
+                    relative_path,
+                    reason: format!(
+                        "write failed: {error}; preserving incoming bytes failed: {preservation_error}"
+                    ),
+                });
+            }
+            return Err(error);
+        }
+
+        if let Err(journal_error) = self.append_journal(
+            &operation_id,
+            "committed",
+            &relative_path_text,
+            request.expected_revision_sha256.as_deref(),
+            &next_revision,
+            None,
+        ) {
+            let rollback = self.rollback_single_write(
+                &target_path,
+                &relative_path,
+                &operation_id,
+                before.as_ref(),
+                &next_revision,
+            );
+            let _ = self.append_journal(
+                &operation_id,
+                "failed",
+                &relative_path_text,
+                request.expected_revision_sha256.as_deref(),
+                &next_revision,
+                Some(&journal_error.to_string()),
+            );
+            if let Err(rollback_error) = rollback {
+                return Err(VaultError::RecoveryRequired {
+                    relative_path,
+                    reason: format!("journal commit failed: {journal_error}; rollback failed: {rollback_error}"),
+                });
+            }
+            return Err(journal_error);
+        }
+
+        Ok(VaultWriteResult {
+            read: VaultRead {
+                document: RawDocument::from_bytes(request.bytes),
+                revision_sha256: next_revision,
+            },
+            operation_id,
+        })
+    }
+
+    fn read_if_present(
+        &self,
+        relative_path: &Path,
+        target_path: &Path,
+    ) -> Result<Option<VaultRead>, VaultError> {
+        match fs::symlink_metadata(target_path) {
+            Ok(_) => self.root.read(relative_path).map(Some),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(error.into()),
+        }
+    }
+
+    fn atomic_replace(
+        &self,
+        target_path: &Path,
+        relative_path: &Path,
+        operation_id: &str,
+        bytes: &[u8],
+    ) -> Result<(), VaultError> {
+        let parent = target_path.parent().ok_or(VaultError::InvalidPath)?;
+        let file_name = target_path
+            .file_name()
+            .ok_or(VaultError::InvalidPath)?
+            .to_string_lossy();
+        let temporary_path = parent.join(format!(".{file_name}.{operation_id}.tmp"));
+        let result = (|| -> io::Result<()> {
+            let mut temporary = OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temporary_path)?;
+            temporary.write_all(bytes)?;
+            temporary.sync_all()?;
+            drop(temporary);
+            #[cfg(test)]
+            if self.fail_before_replace {
+                return Err(io::Error::other("injected atomic replace failure"));
+            }
+            replace_temporary(&temporary_path, target_path, operation_id)
+        })();
+
+        if temporary_path.exists() {
+            let _ = fs::remove_file(&temporary_path);
+        }
+        result.map_err(|source| VaultError::WriteFailed {
+            relative_path: relative_path.to_path_buf(),
+            source,
+        })
+    }
+
+    fn rollback_single_write(
+        &self,
+        target_path: &Path,
+        relative_path: &Path,
+        operation_id: &str,
+        before: Option<&VaultRead>,
+        next_revision: &str,
+    ) -> Result<(), String> {
+        let current = match self.root.read(relative_path) {
+            Ok(current) => Some(current),
+            Err(VaultError::Root(error)) if error.kind() == io::ErrorKind::NotFound => None,
+            Err(error) => return Err(error.to_string()),
+        };
+        if current.as_ref().map(|read| read.revision_sha256.as_str())
+            != Some(next_revision)
+        {
+            if current.is_none() && before.is_none() {
+                return Ok(());
+            }
+            return Err("file changed after the write; rollback left it untouched".to_owned());
+        }
+        match before {
+            Some(previous) => self
+                .atomic_replace(
+                    target_path,
+                    relative_path,
+                    &format!("{operation_id}-rollback"),
+                    previous.document.as_bytes(),
+                )
+                .map_err(|error| error.to_string()),
+            None => fs::remove_file(target_path).map_err(|error| error.to_string()),
+        }
+    }
+
+    fn append_journal(
+        &self,
+        operation_id: &str,
+        state: &str,
+        relative_path: &str,
+        expected_revision: Option<&str>,
+        next_revision: &str,
+        error: Option<&str>,
+    ) -> Result<(), VaultError> {
+        #[cfg(test)]
+        if state == "committed" && self.fail_committed_journal {
+            return Err(VaultError::Journal(io::Error::other(
+                "injected committed journal failure",
+            )));
+        }
+        let journal_path = self.app_data_root.join("journal.jsonl");
+        match fs::symlink_metadata(&journal_path) {
+            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_file() => {
+                return Err(VaultError::InvalidDataDirectory(journal_path));
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
+        let error_json = error.map_or_else(|| "null".to_owned(), json_string);
+        let line = format!(
+            "{{\"id\":{},\"operation\":\"write\",\"state\":{},\"relative_path\":{},\"expected_revision\":{},\"next_revision\":{},\"recorded_at\":{},\"error\":{}}}\n",
+            json_string(operation_id),
+            json_string(state),
+            json_string(relative_path),
+            json_option_string(expected_revision),
+            json_string(next_revision),
+            json_string(&timestamp()),
+            error_json,
+        );
+        let mut journal = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(journal_path)
+            .map_err(VaultError::Journal)?;
+        journal
+            .write_all(line.as_bytes())
+            .map_err(VaultError::Journal)?;
+        journal.sync_all().map_err(VaultError::Journal)?;
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn preserve_bytes(
+        &self,
+        category: &str,
+        record_id: &str,
+        extension: &str,
+        relative_path: &str,
+        bytes: &[u8],
+        revision: &str,
+        expected_revision: Option<&str>,
+        current_revision: Option<&str>,
+    ) -> Result<PathBuf, VaultError> {
+        let directory = self.app_data_root.join(category);
+        match fs::symlink_metadata(&directory) {
+            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() => {
+                return Err(VaultError::InvalidDataDirectory(directory));
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => fs::create_dir(&directory)?,
+            Err(error) => return Err(error.into()),
+        }
+        let canonical_directory = fs::canonicalize(&directory)?;
+        if !canonical_directory.starts_with(&self.app_data_root) {
+            return Err(VaultError::InvalidDataDirectory(directory));
+        }
+        let artifact_path = canonical_directory.join(format!("{record_id}{extension}"));
+        let record_path = canonical_directory.join(format!("{record_id}.json"));
+        write_new_file(&artifact_path, bytes)?;
+        let record = format!(
+            "{{\"id\":{},\"relative_path\":{},\"revision\":{},\"bytes\":{},\"path\":{},\"captured_at\":{},\"expected_revision\":{},\"current_revision\":{}}}\n",
+            json_string(record_id),
+            json_string(relative_path),
+            json_string(revision),
+            bytes.len(),
+            json_string(&artifact_path.to_string_lossy()),
+            json_string(&timestamp()),
+            json_option_string(expected_revision),
+            json_option_string(current_revision),
+        );
+        if let Err(error) = write_new_file(&record_path, record.as_bytes()) {
+            let _ = fs::remove_file(&artifact_path);
+            return Err(error.into());
+        }
+        Ok(artifact_path)
+    }
+}
+
+fn replace_temporary(temporary_path: &Path, target_path: &Path, operation_id: &str) -> io::Result<()> {
+    #[cfg(windows)]
+    {
+        if fs::symlink_metadata(target_path).is_ok() {
+            let file_name = target_path
+                .file_name()
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing target name"))?
+                .to_string_lossy();
+            let backup_path = target_path
+                .parent()
+                .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing target parent"))?
+                .join(format!(".{file_name}.{operation_id}.backup"));
+            fs::rename(target_path, &backup_path)?;
+            if let Err(error) = fs::rename(temporary_path, target_path) {
+                if let Err(restore_error) = fs::rename(&backup_path, target_path) {
+                    return Err(io::Error::other(format!(
+                        "replace failed: {error}; restoring previous file failed: {restore_error}"
+                    )));
+                }
+                return Err(error);
+            }
+            // The previous bytes are already preserved in app-owned recovery
+            // history. If Windows refuses to remove this backup, keep the new
+            // target and treat the replacement as committed; reporting failure
+            // here would leave callers believing the old bytes were restored.
+            let _ = fs::remove_file(&backup_path);
+            return Ok(());
+        }
+    }
+    #[cfg(not(windows))]
+    let _ = operation_id;
+    fs::rename(temporary_path, target_path)
+}
+
+fn write_new_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let mut file = OpenOptions::new().write(true).create_new(true).open(path)?;
+    let result = file.write_all(bytes).and_then(|()| file.sync_all());
+    drop(file);
+    if let Err(error) = result {
+        let _ = fs::remove_file(path);
+        return Err(error);
+    }
+    Ok(())
+}
+
+fn next_operation_id() -> String {
+    let ticks = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let sequence = NEXT_OPERATION_ID.fetch_add(1, Ordering::Relaxed);
+    format!("{}-{ticks}-{sequence}", std::process::id())
+}
+
+fn timestamp() -> String {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+        .to_string()
+}
+
+fn json_option_string(value: Option<&str>) -> String {
+    value.map_or_else(|| "null".to_owned(), json_string)
+}
+
+fn json_string(value: &str) -> String {
+    let mut output = String::from("\"");
+    for character in value.chars() {
+        match character {
+            '"' => output.push_str("\\\""),
+            '\\' => output.push_str("\\\\"),
+            '\n' => output.push_str("\\n"),
+            '\r' => output.push_str("\\r"),
+            '\t' => output.push_str("\\t"),
+            character if character <= '\u{1f}' => {
+                write!(output, "\\u{:04x}", character as u32)
+                    .expect("writing into a String cannot fail");
+            }
+            character => output.push(character),
+        }
+    }
+    output.push('"');
+    output
 }
 
 fn normalize_relative_path(path: &Path) -> Result<PathBuf, VaultError> {
@@ -367,7 +922,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::VaultRoot;
+    use super::{VaultError, VaultRoot, VaultStore, VaultWriteRequest};
     use std::fs;
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -493,5 +1048,136 @@ mod tests {
             vault.read("alias.md"),
             Err(super::VaultError::Symlink(_))
         ));
+    }
+
+    #[test]
+    fn revision_checked_writes_preserve_previous_bytes_and_journal_the_operation() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let note_path = vault_temp.0.join("note.md");
+        let original = b"\xef\xbb\xbfstatus: old\r\n";
+        let next = b"\xef\xbb\xbfstatus: new\r\n";
+        fs::write(&note_path, original).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let before = store.root().read("note.md").unwrap();
+
+        let result = store
+            .write(VaultWriteRequest {
+                relative_path: PathBuf::from("note.md"),
+                expected_revision_sha256: Some(before.revision_sha256),
+                bytes: next.to_vec(),
+            })
+            .unwrap();
+
+        assert_eq!(fs::read(&note_path).unwrap(), next);
+        assert_eq!(result.read.document.as_bytes(), next);
+        assert_ne!(result.read.revision_sha256, sha256_hex(original));
+        let recovery_dir = app_data_temp.0.join("recovery");
+        let recovery_bytes = fs::read_dir(recovery_dir)
+            .unwrap()
+            .map(Result::unwrap)
+            .find(|entry| {
+                entry.path().extension().is_some_and(|extension| {
+                    extension == std::ffi::OsStr::new("bin")
+                })
+            })
+            .map(|entry| fs::read(entry.path()).unwrap())
+            .unwrap();
+        assert_eq!(recovery_bytes, original);
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"state\":\"prepared\""));
+        assert!(journal.contains("\"state\":\"committed\""));
+        assert!(journal.contains(&result.operation_id));
+    }
+
+    #[test]
+    fn stale_writes_preserve_incoming_bytes_without_replacing_external_changes() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let note_path = vault_temp.0.join("note.md");
+        fs::write(&note_path, b"original\n").unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let stale = store.root().read("note.md").unwrap();
+        let external = b"external edit\n";
+        let incoming = b"agent edit\n";
+        fs::write(&note_path, external).unwrap();
+
+        let result = store.write(VaultWriteRequest {
+            relative_path: PathBuf::from("note.md"),
+            expected_revision_sha256: Some(stale.revision_sha256),
+            bytes: incoming.to_vec(),
+        });
+        let preserved_path = match result {
+            Err(VaultError::RevisionConflict { preserved_path, .. }) => preserved_path,
+            _ => panic!("stale write did not return a preserved revision conflict"),
+        };
+
+        assert_eq!(fs::read(&note_path).unwrap(), external);
+        assert_eq!(fs::read(preserved_path).unwrap(), incoming);
+    }
+
+    #[test]
+    fn failed_atomic_write_keeps_original_and_preserves_incoming_bytes() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let note_path = vault_temp.0.join("note.md");
+        let original = b"original\n";
+        let incoming = b"incoming\n";
+        fs::write(&note_path, original).unwrap();
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_before_replace = true;
+        let expected = store.root().read("note.md").unwrap().revision_sha256;
+
+        let error = store
+            .write(VaultWriteRequest {
+                relative_path: PathBuf::from("note.md"),
+                expected_revision_sha256: Some(expected),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap_err();
+
+        assert!(error.to_string().contains("injected atomic replace failure"));
+        assert_eq!(fs::read(&note_path).unwrap(), original);
+        let failed_dir = app_data_temp.0.join("failed");
+        let failed_bytes = fs::read_dir(failed_dir)
+            .unwrap()
+            .map(Result::unwrap)
+            .find(|entry| {
+                entry.path().extension().is_some_and(|extension| {
+                    extension == std::ffi::OsStr::new("bin")
+                })
+            })
+            .map(|entry| fs::read(entry.path()).unwrap())
+            .unwrap();
+        assert_eq!(failed_bytes, incoming);
+        assert!(!fs::read_dir(&vault_temp.0)
+            .unwrap()
+            .map(Result::unwrap)
+            .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp")));
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"state\":\"failed\""));
+    }
+
+    #[test]
+    fn failed_commit_journal_rolls_back_a_new_file() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let note_path = vault_temp.0.join("new.md");
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_committed_journal = true;
+
+        let error = store
+            .write(VaultWriteRequest {
+                relative_path: PathBuf::from("new.md"),
+                expected_revision_sha256: None,
+                bytes: b"new note\n".to_vec(),
+            })
+            .unwrap_err();
+
+        assert!(error.to_string().contains("injected committed journal failure"));
+        assert!(!note_path.exists());
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"state\":\"prepared\""));
+        assert!(journal.contains("\"state\":\"failed\""));
     }
 }
