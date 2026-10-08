@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:41:46+00:00",
+  "updated_at": "2026-10-08T00:46:44+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "634dab790330a79ac44f50ae84257936eb8cabaf",
+  "last_reconciled_head": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
   "current_phase": "R2",
-  "current_milestone": "R2.1",
-  "next_action": "Commit and push the CI-requested Rust formatting correction for R2.1, then inspect fresh exact-SHA GitHub Actions; no local executable validation.",
+  "current_milestone": "R2.2",
+  "next_action": "Add byte-accurate Markdown frontmatter delimiter/content spans without interpreting or rewriting YAML; cover BOM, CRLF/LF/CR and malformed or absent frontmatter in GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": null
+      "implementation_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a"
     },
     "R3": {
       "status": "pending",
@@ -107,7 +107,8 @@
     "Rust CI run 37706599128 on c08207f6783e5432031a553e8831e97c7f39ee94 passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. PC08 rendered Compact after expanding Appearance, but the pinned Style Settings bundle rejected Accent because the variable-color fixture used `default-light`/`default-dark` instead of `default`. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-c08207f.json. The follow-up corrects the field and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
     "R1.2 and R1 passed exact-SHA GitHub Actions on 5ea3ea6c9e0d02a562daa696eac19b826dad0efa: Rust format, parallel group, tests, Clippy, layering and native builds passed; unchanged PC05/PC08 feasibility probes and all five companion workflows passed on Linux, macOS and Windows. Evidence: evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json. Legacy compatibility remains Pending and the result is feasibility-only.",
     "Started R2.1 after reviewing the inherited implementation plan, vault compatibility contract, C02 requirements, Rust doc/vault boundaries and source-preservation fixtures. The first slice adds a strict UTF-8 Markdown view backed by original bytes, BOM and line-ending metadata, and fail-closed invalid UTF-8 behavior; its Rust unit tests are pending GitHub Actions.",
-    "R2.1 first exact-SHA CI on 634dab790330a79ac44f50ae84257936eb8cabaf compiled and passed the new tests on all OSes; macOS and Windows passed Clippy, layering, native builds and plugin probes. Ubuntu reported one rustfmt-only line wrap; companion inventory, desktop, renderer and loaded-plugin runs passed, while quality was cancelled. Applied the exact formatting requested in the GitHub log; the corrected exact-SHA run is pending."
+    "R2.1 first exact-SHA CI on 634dab790330a79ac44f50ae84257936eb8cabaf compiled and passed the new tests on all OSes; macOS and Windows passed Clippy, layering, native builds and plugin probes. Ubuntu reported one rustfmt-only line wrap; companion inventory, desktop, renderer and loaded-plugin runs passed, while quality was cancelled. Applied the exact formatting requested in the GitHub log; the corrected exact-SHA run is pending.",
+    "R2.1 passed exact-SHA GitHub Actions on a8b0f67311f022884c24786cee78b1ba39beeb7a. All four openobsidian-doc tests passed on Ubuntu, macOS and Windows; Ubuntu formatting, Clippy, layering, three native builds, plugin probes and all five companion workflows passed. Rust stable was 1.99.0 and Bun was 1.4.2. Evidence: evidence/r2.1-markdown-source-a8b0f67.json. No local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -1143,6 +1144,74 @@
       "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730881",
       "status": "completed",
       "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37709133512,
+      "head_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133512",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133512/job/113090609292"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133512/job/113090609373"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133512/job/113090609032"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37709133508,
+      "head_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133508",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37709133509,
+      "head_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133509",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37709133521,
+      "head_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133521",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37709133557,
+      "head_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133557",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37709133576,
+      "head_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133576",
+      "status": "completed",
+      "conclusion": "success"
     }
   ],
   "milestones": {
@@ -1182,8 +1251,8 @@
       "next_action": "R1 complete. Begin R2.1 by reviewing document/vault contracts and defining a narrow source-preserving model slice."
     },
     "R2.1": {
-      "status": "in_progress",
-      "implementation_sha": null,
+      "status": "complete",
+      "implementation_sha": "a8b0f67311f022884c24786cee78b1ba39beeb7a",
       "scope": "Add a strict UTF-8 MarkdownSource view backed by RawDocument; report BOM and LF/CRLF/CR/mixed/no line endings while preserving original bytes; reject invalid UTF-8 without changing RawDocument binary behavior.",
       "acceptance": [
         "Ubuntu cargo fmt --all -- --check passes in GitHub Actions.",
@@ -1191,8 +1260,21 @@
         "MarkdownSource tests cover BOM, each line-ending style, mixed/no endings, exact byte round-trip and invalid UTF-8 rejection.",
         "All required companion workflows pass on the exact implementation SHA."
       ],
+      "evidence": "evidence/r2.1-markdown-source-a8b0f67.json",
+      "next_action": "R2.1 accepted. Proceed to R2.2 frontmatter source bounds; property interpretation and editing remain pending."
+    },
+    "R2.2": {
+      "status": "pending",
+      "implementation_sha": null,
+      "scope": "Expose byte-accurate opening delimiter, content and closing delimiter spans for Markdown YAML frontmatter, without interpreting or rewriting its contents.",
+      "acceptance": [
+        "Frontmatter detection handles an optional UTF-8 BOM and LF, CRLF or CR source lines without normalization.",
+        "Returned spans are UTF-8 byte offsets into the exact original source.",
+        "Absent, unclosed or malformed frontmatter is represented without destructive fallback.",
+        "Focused Rust unit tests and all required Rust/companion CI gates pass on the exact pushed SHA."
+      ],
       "evidence": null,
-      "next_action": "Push the small R2.1 work commit and reconcile exact-SHA GitHub Actions results."
+      "next_action": "Implement and test a read-only frontmatter-boundary view in crates/doc."
     }
   },
   "ci_preparation": {

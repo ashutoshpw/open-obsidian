@@ -189,3 +189,9 @@ The state/evidence commit for R1 was also exercised by GitHub Actions on exact S
 ## R2.1 formatting feedback — source SHA 634dab7
 
 Rust CI run [37708730866](https://github.com/ashutoshpw/open-obsidian/actions/runs/37708730866) compiled the R2.1 code and passed all four new document tests plus the existing workspace tests on Ubuntu, macOS and Windows. macOS and Windows also passed Clippy, layering, native builds and the unchanged-plugin probes. Ubuntu formatting failed on one long byte-string assignment; the exact rustfmt layout from the GitHub log is applied. The quality run was cancelled; inventory, desktop, renderer and loaded-plugin companion workflows passed. This SHA is not accepted. Next: push the small formatting correction and obtain fresh exact-SHA CI, including quality.
+
+## R2.1 acceptance — source SHA a8b0f67
+
+Rust CI run [37709133512](https://github.com/ashutoshpw/open-obsidian/actions/runs/37709133512) passed on exact SHA `a8b0f67311f022884c24786cee78b1ba39beeb7a`. Formatting on Ubuntu, the Rust parallel group, workspace tests (including all four `openobsidian-doc` tests), Clippy, crate layering, native preview builds and unchanged-plugin probes passed on Ubuntu, macOS and Windows. The five companion workflows—inventory, quality, desktop build, plugin renderer and loaded plugins—also passed on the same SHA. GitHub used Rust stable 1.99.0 and Bun 1.4.2. The Linux preview and three platform reports, with artifact and report hashes, are recorded in `evidence/r2.1-markdown-source-a8b0f67.json`.
+
+R2.1 is complete. The new type is only a strict UTF-8 source view: frontmatter/YAML parsing, source-span edits and vault writes are still pending. No local executable validation was run. Next is R2.2: expose byte-accurate frontmatter delimiter/content spans without interpreting or rewriting YAML, then validate only through exact-SHA GitHub Actions.
