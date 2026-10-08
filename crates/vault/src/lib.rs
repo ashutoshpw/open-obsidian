@@ -1773,9 +1773,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
-        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason, VaultError,
-        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex,
+        LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES,
+        MarkdownSource, TransclusionBlockReason, VaultError, VaultNoteEmbedDisposition, VaultRoot,
+        VaultStore, VaultWriteRequest, sha256_hex,
     };
     use serde_json::Value;
     use std::fs;
@@ -1843,7 +1843,10 @@ mod tests {
 
         let preview = vault.read_preview("Large.md").unwrap();
 
-        assert_eq!(preview.source.as_bytes(), &original[..MAX_NOTE_SOURCE_PREVIEW_BYTES]);
+        assert_eq!(
+            preview.source.as_bytes(),
+            &original[..MAX_NOTE_SOURCE_PREVIEW_BYTES]
+        );
         assert_eq!(preview.total_size_bytes, original.len() as u64);
         assert!(preview.truncated);
         assert_eq!(vault.snapshot().unwrap(), before);

@@ -2,12 +2,12 @@
 
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
-    LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason, VaultConflictAction,
-    VaultConflictRead, VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind,
-    VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage,
-    VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport,
-    VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult, VaultSession,
-    MAX_NOTE_SOURCE_PREVIEW_BYTES, plan_history_retention,
+    LinkKind, LinkRenameAction, LinkResolutionStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+    TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
+    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
+    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
+    VaultRenameResult, VaultSession, plan_history_retention,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -551,54 +551,57 @@ impl OpenObsidianApp {
     }
 
     fn show_note_source_preview(&mut self, ui: &mut eframe::egui::Ui, operation_busy: bool) {
-        ui.separator();
-        ui.heading("Note source preview");
-        ui.small(format!(
-            "Read up to {} KiB of the selected note's original UTF-8 source. This preview never edits the vault.",
-            MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
-        ));
-
         let mut request_preview = false;
-        let can_preview = !operation_busy && self.link_source_path.is_some();
-        if ui
-            .add_enabled(
-                can_preview,
-                eframe::egui::Button::new("Read note source preview"),
-            )
-            .clicked()
-        {
-            request_preview = true;
-        }
+        let mut close_preview = false;
+        eframe::egui::CollapsingHeader::new("Note source preview")
+            .id_salt("note-source-preview")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.small(format!(
+                    "Read up to {} KiB of the selected note's original UTF-8 source. This preview never edits the vault.",
+                    MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
+                ));
+
+                let can_preview = !operation_busy && self.link_source_path.is_some();
+                if ui
+                    .add_enabled(
+                        can_preview,
+                        eframe::egui::Button::new("Read note source preview"),
+                    )
+                    .clicked()
+                {
+                    request_preview = true;
+                }
+
+                if self.note_preview_receiver.is_some() {
+                    ui.label("Reading a bounded note source preview…");
+                }
+                if let Some(error) = &self.note_preview_error {
+                    ui.colored_label(eframe::egui::Color32::YELLOW, error);
+                }
+
+                if let Some(preview) = &mut self.note_source_preview {
+                    ui.label(format!("Source: {}", preview.relative_path.display()));
+                    ui.add(
+                        eframe::egui::TextEdit::multiline(&mut preview.text)
+                            .font(eframe::egui::TextStyle::Monospace)
+                            .desired_rows(8)
+                            .desired_width(f32::INFINITY)
+                            .interactive(false),
+                    );
+                    if preview.truncated {
+                        ui.small(format!(
+                            "Showing the first {} of {} source bytes.",
+                            MAX_NOTE_SOURCE_PREVIEW_BYTES, preview.total_size_bytes
+                        ));
+                    } else {
+                        ui.small(format!("Showing all {} source bytes.", preview.total_size_bytes));
+                    }
+                    close_preview = ui.button("Close source preview").clicked();
+                }
+            });
         if request_preview {
             self.start_note_source_preview();
-        }
-
-        if self.note_preview_receiver.is_some() {
-            ui.label("Reading a bounded note source preview…");
-        }
-        if let Some(error) = &self.note_preview_error {
-            ui.colored_label(eframe::egui::Color32::YELLOW, error);
-        }
-
-        let mut close_preview = false;
-        if let Some(preview) = &mut self.note_source_preview {
-            ui.label(format!("Source: {}", preview.relative_path.display()));
-            ui.add(
-                eframe::egui::TextEdit::multiline(&mut preview.text)
-                    .font(eframe::egui::TextStyle::Monospace)
-                    .desired_rows(12)
-                    .desired_width(f32::INFINITY)
-                    .interactive(false),
-            );
-            if preview.truncated {
-                ui.small(format!(
-                    "Showing the first {} of {} source bytes.",
-                    MAX_NOTE_SOURCE_PREVIEW_BYTES, preview.total_size_bytes
-                ));
-            } else {
-                ui.small(format!("Showing all {} source bytes.", preview.total_size_bytes));
-            }
-            close_preview = ui.button("Close source preview").clicked();
         }
         if close_preview {
             self.note_source_preview = None;
@@ -2231,6 +2234,8 @@ mod tests {
         };
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
+        harness.get_by_label("Note source preview").click();
+        harness.step();
         harness.get_by_label("Read note source preview").click();
         harness.step();
         assert!(harness.state().note_preview_receiver.is_some());
@@ -2246,13 +2251,19 @@ mod tests {
         assert_eq!(preview.total_size_bytes, expected_source.len() as u64);
         assert!(!preview.truncated);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         harness.get_by_label("Close source preview").click();
         harness.step();
         assert!(harness.state().note_source_preview.is_none());
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
     }
 
     #[test]

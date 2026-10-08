@@ -2,13 +2,13 @@
 
 pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
-    LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    LinkSubpathSlice, LinkSubpathStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES, TransclusionBlockReason,
+    TransclusionGuard, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
-    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultRenamePreview,
-    VaultReadPreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
-    MAX_NOTE_SOURCE_PREVIEW_BYTES, plan_history_retention,
+    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
+    VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
+    plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;
