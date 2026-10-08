@@ -701,3 +701,325 @@ mod link_resolution_fixture_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod existing_vault_no_op_tests {
+    use openobsidian_vault::{
+        LinkKind, LinkResolutionStatus, VaultNoteEmbedDisposition, VaultRoot, VaultSnapshot,
+    };
+    use serde_json::Value;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    const EXISTING_VAULT_FIXTURE: &str = include_str!("../../../fixtures/existing-vault.json");
+    static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
+
+    struct ExistingVaultTempDir(PathBuf);
+
+    impl ExistingVaultTempDir {
+        fn new() -> Self {
+            let root = std::env::temp_dir();
+            loop {
+                let id = NEXT_TEMP_DIR_ID.fetch_add(1, Ordering::Relaxed);
+                let path = root.join(format!(
+                    "openobsidian-testkit-existing-vault-{}-{id}",
+                    std::process::id()
+                ));
+                match fs::create_dir(&path) {
+                    Ok(()) => return Self(path),
+                    Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                    Err(error) => {
+                        panic!("creating existing-vault test directory {}: {error}", path.display())
+                    }
+                }
+            }
+        }
+    }
+
+    impl Drop for ExistingVaultTempDir {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn fixture_bytes(file: &Value) -> Vec<u8> {
+        if let Some(source) = file["source"].as_str() {
+            return source.as_bytes().to_vec();
+        }
+        file["bytes"]
+            .as_array()
+            .expect("binary fixture file must contain byte values")
+            .iter()
+            .map(|value| {
+                u8::try_from(
+                    value
+                        .as_u64()
+                        .expect("binary fixture values must be unsigned"),
+                )
+                .expect("binary fixture values must fit in one byte")
+            })
+            .collect()
+    }
+
+    fn materialize_fixture(root: &Path, fixture: &Value) {
+        for file in fixture["files"]
+            .as_array()
+            .expect("existing-vault fixture must list its files")
+        {
+            let relative_path = PathBuf::from(
+                file["relative_path"]
+                    .as_str()
+                    .expect("fixture file must have a relative path"),
+            );
+            assert!(relative_path.is_relative());
+            assert!(relative_path.components().all(|component| {
+                !matches!(component, std::path::Component::ParentDir)
+            }));
+            let path = root.join(relative_path);
+            fs::create_dir_all(path.parent().expect("fixture file must have a parent"))
+                .expect("create existing-vault fixture parents");
+            fs::write(path, fixture_bytes(file)).expect("write existing-vault fixture bytes");
+        }
+    }
+
+    fn append_tree(root: &Path, directory: &Path, entries: &mut Vec<(String, u8, Vec<u8>)>) {
+        let mut children = fs::read_dir(directory)
+            .expect("read existing-vault fixture directory")
+            .map(|entry| entry.expect("read existing-vault fixture entry"))
+            .collect::<Vec<_>>();
+        children.sort_by_key(std::fs::DirEntry::file_name);
+
+        for child in children {
+            let path = child.path();
+            let relative_path = path
+                .strip_prefix(root)
+                .expect("fixture path must remain under its root")
+                .to_string_lossy()
+                .replace('\\', "/");
+            let file_type = child
+                .file_type()
+                .expect("inspect existing-vault fixture entry type");
+            if file_type.is_dir() {
+                entries.push((relative_path, 0, Vec::new()));
+                append_tree(root, &path, entries);
+            } else if file_type.is_file() {
+                entries.push((
+                    relative_path,
+                    1,
+                    fs::read(path).expect("read existing-vault fixture file bytes"),
+                ));
+            } else {
+                panic!("existing-vault fixture contains an unsupported filesystem entry");
+            }
+        }
+    }
+
+    fn tree_snapshot(root: &Path) -> Vec<(String, u8, Vec<u8>)> {
+        let mut entries = Vec::new();
+        append_tree(root, root, &mut entries);
+        entries.sort_by(|left, right| left.0.cmp(&right.0));
+        entries
+    }
+
+    fn assert_unchanged(
+        vault: &VaultRoot,
+        root: &Path,
+        expected_snapshot: &VaultSnapshot,
+        expected_tree: &[(String, u8, Vec<u8>)],
+    ) {
+        assert_eq!(
+            &vault.snapshot().expect("snapshot after a read-only operation"),
+            expected_snapshot
+        );
+        assert_eq!(tree_snapshot(root), expected_tree);
+    }
+
+    fn link_kind_name(kind: LinkKind) -> &'static str {
+        match kind {
+            LinkKind::WikiLink => "wiki",
+            LinkKind::Markdown => "markdown",
+            LinkKind::Embed => "embed",
+        }
+    }
+
+    fn resolution_name(status: LinkResolutionStatus) -> &'static str {
+        match status {
+            LinkResolutionStatus::Resolved => "resolved",
+            LinkResolutionStatus::Unresolved => "unresolved",
+            LinkResolutionStatus::Ambiguous => "ambiguous",
+            LinkResolutionStatus::External => "external",
+        }
+    }
+
+    #[test]
+    fn c01_existing_vault_read_only_operations_preserve_every_path_and_byte() {
+        let fixture: Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        assert_eq!(fixture["id"], "fixture:existing-vault");
+
+        let temporary = ExistingVaultTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        fs::create_dir(&vault_path).expect("create existing-vault fixture root");
+        materialize_fixture(&vault_path, &fixture);
+        let before_tree = tree_snapshot(&vault_path);
+        let expected_tree_paths = fixture["expected"]["tree_paths"]
+            .as_array()
+            .expect("fixture must list every path")
+            .iter()
+            .map(|path| path.as_str().expect("fixture path must be text").to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            before_tree
+                .iter()
+                .map(|(path, _, _)| path.clone())
+                .collect::<Vec<_>>(),
+            expected_tree_paths
+        );
+
+        let vault = VaultRoot::open(&vault_path).expect("open existing fixture vault");
+        let before_snapshot = vault.snapshot().expect("snapshot fixture before reads");
+        assert_eq!(tree_snapshot(&vault_path), before_tree);
+        let markdown_paths = vault
+            .scan_markdown()
+            .expect("scan existing Markdown files")
+            .into_iter()
+            .map(|entry| entry.relative_path.to_string_lossy().replace('\\', "/"))
+            .collect::<Vec<_>>();
+        let expected_markdown_paths = fixture["expected"]["markdown_paths"]
+            .as_array()
+            .expect("fixture must list Markdown paths")
+            .iter()
+            .map(|path| path.as_str().expect("Markdown path must be text").to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(markdown_paths, expected_markdown_paths);
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+
+        let revision_path = fixture["expected"]["revision_path"]
+            .as_str()
+            .expect("fixture must identify its revision note");
+        for relative_path in &markdown_paths {
+            let read = vault
+                .read(relative_path)
+                .unwrap_or_else(|error| panic!("read existing note {relative_path}: {error}"));
+            let source = fixture["files"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|file| file["relative_path"].as_str() == Some(relative_path.as_str()))
+                .map(fixture_bytes)
+                .expect("every scanned note must be present in the fixture");
+            assert_eq!(read.document.as_bytes(), source);
+            if relative_path == revision_path {
+                assert_eq!(
+                    read.revision_sha256,
+                    fixture["expected"]["revision_sha256"]
+                        .as_str()
+                        .expect("fixture must record the note SHA-256")
+                );
+            }
+            assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+        }
+
+        let operations = &fixture["expected"]["read_only_operations"];
+        let link_source = operations["link_source"]
+            .as_str()
+            .expect("fixture must identify the link source note");
+        let links = vault
+            .resolve_links_for_note(link_source)
+            .expect("resolve links through the existing vault snapshot");
+        let expected_links = operations["links"]
+            .as_array()
+            .expect("fixture must state expected link resolutions");
+        assert_eq!(links.len(), expected_links.len());
+        for (actual, expected) in links.iter().zip(expected_links) {
+            assert_eq!(
+                link_kind_name(actual.reference.kind),
+                expected["kind"].as_str().expect("fixture must state link kind")
+            );
+            assert_eq!(
+                actual.reference.target,
+                expected["target"]
+                    .as_str()
+                    .expect("fixture must state link target")
+            );
+            assert_eq!(
+                actual.reference.alias.as_deref(),
+                expected["alias"].as_str()
+            );
+            assert_eq!(
+                actual.reference.subpath.as_deref(),
+                expected["subpath"].as_str()
+            );
+            assert_eq!(
+                resolution_name(actual.resolution.status),
+                expected["status"]
+                    .as_str()
+                    .expect("fixture must state resolution status")
+            );
+            assert_eq!(
+                actual.resolution.target.as_deref(),
+                expected["resolved_path"].as_str()
+            );
+        }
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+
+        let embeds = vault
+            .resolve_note_embeds_for_note(link_source)
+            .expect("resolve note embeds from the existing vault");
+        let expected_embed_count = usize::try_from(
+            operations["embed_count"]
+                .as_u64()
+                .expect("fixture must state the embed count"),
+        )
+        .expect("embed count must fit usize");
+        assert_eq!(embeds.embeds.len(), expected_embed_count);
+        assert!(!embeds.truncated);
+        assert_eq!(embeds.snapshot_sha256, before_snapshot.revision_sha256);
+        assert!(matches!(
+            &embeds.embeds[0].resolution.disposition,
+            VaultNoteEmbedDisposition::Included(_)
+        ));
+        assert_eq!(
+            resolution_name(embeds.embeds[0].resolution.resolution.status),
+            expected_links[1]["status"]
+                .as_str()
+                .expect("fixture must state embed resolution status")
+        );
+        assert_eq!(
+            embeds.embeds[0]
+                .resolution
+                .resolution
+                .target
+                .as_deref(),
+            expected_links[1]["resolved_path"].as_str()
+        );
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+
+        let rename = &operations["rename_preview"];
+        let preview = vault
+            .build_rename_preview(
+                rename["old_path"]
+                    .as_str()
+                    .expect("fixture must state the old rename path"),
+                rename["new_path"]
+                    .as_str()
+                    .expect("fixture must state the new rename path"),
+            )
+            .expect("prepare read-only rename preview");
+        assert_eq!(
+            preview.plan.update_count,
+            usize::try_from(
+                rename["update_count"]
+                    .as_u64()
+                    .expect("fixture must state the preview update count")
+            )
+            .expect("preview update count must fit usize")
+        );
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+        vault
+            .verify_rename_preview(&preview)
+            .expect("revalidate read-only rename preview");
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+    }
+}

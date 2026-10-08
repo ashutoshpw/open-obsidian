@@ -22,7 +22,7 @@
     },
     {
       "relative_path": "README.md",
-      "source": "This is an existing vault.\n"
+      "source": "# Vault home\nThis is an existing vault.\n[[Notes/Welcome|Welcome]]\n![[Notes/Welcome#Welcome]]\n"
     },
     {
       "relative_path": ".obsidian/app.json",
@@ -51,6 +51,33 @@
     ],
     "markdown_paths": ["Notes/Welcome.md", "README.md"],
     "revision_path": "Notes/Welcome.md",
-    "revision_sha256": "ebed119a0dfbaf5046b579cb9b7ae4703a79a249270c03009775254cee1410b6"
+    "revision_sha256": "ebed119a0dfbaf5046b579cb9b7ae4703a79a249270c03009775254cee1410b6",
+    "read_only_operations": {
+      "link_source": "README.md",
+      "links": [
+        {
+          "kind": "wiki",
+          "target": "Notes/Welcome",
+          "alias": "Welcome",
+          "subpath": null,
+          "status": "resolved",
+          "resolved_path": "Notes/Welcome.md"
+        },
+        {
+          "kind": "embed",
+          "target": "Notes/Welcome",
+          "alias": null,
+          "subpath": "Welcome",
+          "status": "resolved",
+          "resolved_path": "Notes/Welcome.md"
+        }
+      ],
+      "embed_count": 1,
+      "rename_preview": {
+        "old_path": "Notes/Welcome.md",
+        "new_path": "Notes/Welcome-renamed.md",
+        "update_count": 2
+      }
+    }
   }
 }
