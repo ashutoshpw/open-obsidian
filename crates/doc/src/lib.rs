@@ -532,7 +532,10 @@ fn candidate_paths(target: &str, current_path: &str) -> Vec<String> {
 
 fn file_matches_reference(file: &str, normalized_target: &str, candidates: &[String]) -> bool {
     let normalized_file = normalize_target(file);
-    if candidates.iter().any(|candidate| candidate == &normalized_file) {
+    if candidates
+        .iter()
+        .any(|candidate| candidate == &normalized_file)
+    {
         return true;
     }
 
@@ -548,7 +551,10 @@ fn basename_without_extension(path: &str) -> &str {
 fn normalize_target(target: &str) -> String {
     let decoded = percent_decode(target).unwrap_or_else(|| target.to_owned());
     let normalized = decoded.replace('\\', "/");
-    normalized.strip_prefix("./").unwrap_or(&normalized).to_owned()
+    normalized
+        .strip_prefix("./")
+        .unwrap_or(&normalized)
+        .to_owned()
 }
 
 fn percent_decode(value: &str) -> Option<String> {
