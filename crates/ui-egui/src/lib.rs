@@ -1,8 +1,8 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
 use openobsidian_engine::{
-    LinkRenameAction, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
-    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    LinkRenameAction, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultRenamePreview, VaultRenameRecoveryReport, VaultRenameResult,
     VaultSession, plan_history_retention,
 };
@@ -283,12 +283,11 @@ impl OpenObsidianApp {
             self.rename_source_path = note_paths.first().cloned();
         }
 
-        let operation_busy =
-            self.history_receiver.is_some() || self.rename_receiver.is_some();
-        let selected_label = self
-            .rename_source_path
-            .as_ref()
-            .map_or_else(|| "Choose a note".to_owned(), |path| path.display().to_string());
+        let operation_busy = self.history_receiver.is_some() || self.rename_receiver.is_some();
+        let selected_label = self.rename_source_path.as_ref().map_or_else(
+            || "Choose a note".to_owned(),
+            |path| path.display().to_string(),
+        );
         let mut source_changed = false;
         let mut destination_changed = false;
         ui.horizontal(|ui| {
@@ -329,7 +328,9 @@ impl OpenObsidianApp {
         if note_paths.is_empty() {
             ui.label("This vault has no Markdown notes to rename.");
         } else if operation_busy {
-            ui.label("Wait for the current vault operation to finish before creating a rename preview.");
+            ui.label(
+                "Wait for the current vault operation to finish before creating a rename preview.",
+            );
         }
         if let Some(error) = &self.rename_error {
             ui.colored_label(eframe::egui::Color32::RED, error);
@@ -782,7 +783,7 @@ impl OpenObsidianApp {
     }
 
     fn start_rename_apply(&mut self) {
-        let Some(session) = self.session.as_ref().map(|session| (**session).clone()) else {
+        let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
         };
         let Some(preview) = self.rename_preview.clone() else {
