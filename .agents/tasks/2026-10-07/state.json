@@ -2,11 +2,11 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T19:37:27Z",
+  "updated_at": "2026-10-08T19:43:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "513cb2de8fc041705ede595027cbe0bfffb6ca93",
+  "last_reconciled_head": "120df20b4f6d78b79391b56bb187f2a0533b7586",
   "current_milestone": "R2.6.38",
   "next_action": "Add a shared existing-vault fixture and egui folder-open interaction proving in-place scan, SHA-256 revisions, app-data separation, and byte/tree preservation; validate only through exact-SHA GitHub Actions.",
   "blockers": [],
@@ -7143,7 +7143,8 @@
       "status": "in_progress",
       "implementation_sha": null,
       "implementation_commits": [
-        "513cb2de8fc041705ede595027cbe0bfffb6ca93"
+        "513cb2de8fc041705ede595027cbe0bfffb6ca93",
+        "120df20b4f6d78b79391b56bb187f2a0533b7586"
       ],
       "scope": "Prove that selecting and opening an existing vault uses the selected directory in place, preserves every path and byte through the initial read-only UI session, keeps app data outside the vault, and retains SHA-256 note revisions.",
       "ci_attempts": [
@@ -7163,6 +7164,23 @@
             "Ubuntu cargo fmt --all -- --check requested two layout changes in crates/ui-egui/src/lib.rs."
           ],
           "correction": "Assert each fixture invariant against its intended boolean value and apply the two rustfmt layouts from the Ubuntu CI diff."
+        },
+        {
+          "source_sha": "120df20b4f6d78b79391b56bb187f2a0533b7586",
+          "conclusion": "failure",
+          "workflows": {
+            "rust_ci": 37833353340,
+            "inventory": 37833353346,
+            "quality": 37833353354,
+            "desktop_build": 37833353602,
+            "plugin_renderer": 37833353351,
+            "loaded_plugin_workflows": 37833353401
+          },
+          "findings": [
+            "Workspace tests passed on Ubuntu, macOS, and Windows. macOS and Windows also passed Clippy, crate layering, native build, and the Wry plugin feasibility probe.",
+            "Ubuntu rustfmt requested one line-wrap change in the app-state invariant assertion; the other five workflows passed."
+          ],
+          "correction": "Apply the remaining Ubuntu rustfmt line-wrap change."
         }
       ],
       "evidence": null,
@@ -7171,7 +7189,7 @@
         "Exact-SHA GitHub Actions validation is pending.",
         "Broad C01 no-op coverage for every read-only operation and reference-application round trips remains open."
       ],
-      "next_action": "Obtain fresh results from all six required GitHub Actions workflows on the corrected exact SHA; record every workflow and platform result before accepting this slice."
+      "next_action": "Commit and push the final Ubuntu rustfmt correction, then obtain fresh results from all six required GitHub Actions workflows on the exact SHA."
     }
   },
   "ci_preparation": {

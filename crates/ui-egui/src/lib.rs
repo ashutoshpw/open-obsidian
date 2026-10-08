@@ -1916,7 +1916,10 @@ mod tests {
             fixture["invariants"]["read_only_open_preserves_vault_tree"],
             true
         );
-        assert_eq!(fixture["invariants"]["app_state_is_outside_the_vault"], true);
+        assert_eq!(
+            fixture["invariants"]["app_state_is_outside_the_vault"],
+            true
+        );
         assert_eq!(fixture["invariants"]["note_revisions_use_sha256"], true);
 
         let temporary = UiTempDir::new();
