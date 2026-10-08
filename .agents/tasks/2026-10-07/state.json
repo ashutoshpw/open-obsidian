@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T05:56:45Z",
+  "updated_at": "2026-10-08T06:12:33Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "428cc5a67e27816c9759441009f63a0ce1fbfd11",
+  "last_reconciled_head": "117baa904cfb4dd0621f35c8279caf7669f27bce",
   "current_phase": "R2",
-  "current_milestone": "R2.6.7",
-  "next_action": "Begin R2.6.8: integrate Rust history listing, retention planning, explicit cleanup and conflict resolution through the native application/UI boundary; establish per-vault app-data paths and user-only OS access controls, and keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
+  "current_milestone": "R2.6.8",
+  "next_action": "Continue R2.6.8: wire validated history listing, retention planning, explicit cleanup and conflict resolution into the native application/UI; establish per-vault app-data paths and user-only OS access controls. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "428cc5a67e27816c9759441009f63a0ce1fbfd11"
+      "implementation_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce"
     },
     "R3": {
       "status": "pending",
@@ -133,7 +133,10 @@
     "All six required GitHub Actions workflows passed for exact source SHA ecfb3341baebcbffdb75824425346e8b1acceefe. Nine storage-protection tests passed on Ubuntu, macOS and Windows; the existing document and vault suites also passed. Evidence: evidence/r2.6.6-storage-protection-ecfb334.json.",
     "The first two R2.6.6 source SHAs were corrected from GitHub Rust CI diagnostics (owned status details, rustfmt layout, and test argument lifetimes). On ecfb334, the unchanged Linux Electron retrieval-boundary audit passed on quality attempt 2 after attempt 1 failed; no source change was made between attempts.",
     "At the end of R2.6.6 the Rust status API was not yet surfaced; R2.6.7 now surfaces it. D16 and SYNC-007 remain Pending because history integration, user-only access controls, uninstall preservation and full legacy workflow acceptance are still outstanding.",
-    "R2.6.7 storage-protection UI slice passed all six exact-SHA GitHub Actions workflows on 428cc5a67e27816c9759441009f63a0ce1fbfd11. The UI displays the typed platform report and explicit Unknown state with manual refresh; nine platform tests and the UI label test passed on all three OSes. Evidence: evidence/r2.6.7-storage-status-ui-428cc5a.json. No local executable validation was run. History workflow and app-data access controls remain pending."
+    "R2.6.7 storage-protection UI slice passed all six exact-SHA GitHub Actions workflows on 428cc5a67e27816c9759441009f63a0ce1fbfd11. The UI displays the typed platform report and explicit Unknown state with manual refresh; nine platform tests and the UI label test passed on all three OSes. Evidence: evidence/r2.6.7-storage-status-ui-428cc5a.json. No local executable validation was run. History workflow and app-data access controls remain pending.",
+    "R2.6.8 conflict inspection and explicit Keep Current/Keep Incoming vault APIs passed four focused tests across Ubuntu, macOS and Windows on exact SHA 117baa904cfb4dd0621f35c8279caf7669f27bce; evidence is evidence/r2.6.8-conflict-resolution-117baa9.json. Native history UI, per-vault app-data integration and user-only access controls remain pending.",
+    "Applied the five formatting-only changes reported by Rust CI for source SHA 688522f21e3f2bfedf6e722f56c2098b80511fbd; all six required workflows passed for exact SHA 117baa904cfb4dd0621f35c8279caf7669f27bce. No local executable validation was run.",
+    "Verified that GitHub Actions native parallel step groups are already present in rust.yml, quality.yml, compatibility-pins.yml and desktop-build.yml; the exact-SHA Rust parallel group passed in run 37735896443. No duplicate workflow change was needed."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -2794,6 +2797,178 @@
           "status": "completed",
           "conclusion": "success",
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37734329126/job/113170343828"
+        }
+      ]
+    },
+    {
+      "name": "rust",
+      "run_id": 37735896443,
+      "head_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896443",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113175199509,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896443/job/113175199509"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113175199490,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896443/job/113175199490"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113175199384,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896443/job/113175199384"
+        }
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37735896464,
+      "head_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896464",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 113175199506,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896464/job/113175199506"
+        }
+      ]
+    },
+    {
+      "name": "quality",
+      "run_id": 37735896473,
+      "head_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896473",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113175199738,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896473/job/113175199738"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113175199980,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896473/job/113175199980"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113175200156,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896473/job/113175200156"
+        }
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37735896475,
+      "head_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896475",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113175199814,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896475/job/113175199814"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113175199913,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896475/job/113175199913"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113175199996,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896475/job/113175199996"
+        }
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37735896492,
+      "head_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896492",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113175199853,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896492/job/113175199853"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113175200027,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896492/job/113175200027"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113175200063,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896492/job/113175200063"
+        }
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37735896462,
+      "head_sha": "117baa904cfb4dd0621f35c8279caf7669f27bce",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896462",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113175199783,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896462/job/113175199783"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113175200010,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896462/job/113175200010"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113175200141,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37735896462/job/113175200141"
         }
       ]
     }
