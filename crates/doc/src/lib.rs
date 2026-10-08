@@ -1,5 +1,7 @@
 //! Lossless document values shared by the vault engine and native UI.
 
+use std::collections::HashMap;
+
 /// Original document bytes remain authoritative until an explicit transform is approved.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RawDocument {
@@ -382,6 +384,7 @@ fn fenced_code_ranges(bytes: &[u8]) -> Vec<SourceSpan> {
 }
 
 fn opening_fence(line: &[u8]) -> Option<(u8, usize)> {
+    let line = line.strip_prefix(b"\xef\xbb\xbf").unwrap_or(line);
     let indentation = line.iter().take_while(|byte| **byte == b' ').count();
     if indentation > 3 {
         return None;
@@ -511,6 +514,245 @@ fn is_escaped_backtick(bytes: &[u8], start: usize) -> bool {
         cursor -= 1;
     }
     preceding_backslashes % 2 == 1
+}
+
+fn source_subpath_keys(source: &MarkdownSource) -> Vec<String> {
+    let bytes = source.as_bytes();
+    let fenced_ranges = fenced_code_ranges(bytes);
+    let mut keys = Vec::new();
+    let mut fence_index = 0;
+    let mut line_start = 0;
+
+    while line_start < bytes.len() {
+        while fenced_ranges
+            .get(fence_index)
+            .is_some_and(|range| range.end <= line_start)
+        {
+            fence_index += 1;
+        }
+
+        let (line_end, break_width) = line_bounds(bytes, line_start);
+        if let Some(range) = fenced_ranges.get(fence_index)
+            && range.start <= line_start
+        {
+            line_start = line_end + break_width;
+            continue;
+        }
+
+        let line_bytes = &bytes[line_start..line_end];
+        let line_bytes = if line_start == 0 {
+            line_bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(line_bytes)
+        } else {
+            line_bytes
+        };
+        let line = std::str::from_utf8(line_bytes)
+            .expect("MarkdownSource stores validated UTF-8")
+            .trim_end_matches(|character| matches!(character, ' ' | '\t'));
+
+        let next_line_start = line_end + break_width;
+        let next_line = if break_width > 0 && next_line_start < bytes.len() {
+            let (next_line_end, _) = line_bounds(bytes, next_line_start);
+            std::str::from_utf8(&bytes[next_line_start..next_line_end])
+                .expect("MarkdownSource stores validated UTF-8")
+                .trim_end_matches(|character| matches!(character, ' ' | '\t'))
+        } else {
+            ""
+        };
+
+        keys.extend(source_line_subpath_keys(line, next_line));
+        if break_width == 0 {
+            break;
+        }
+        line_start = next_line_start;
+    }
+
+    keys
+}
+
+fn source_line_subpath_keys(line: &str, next_line: &str) -> Vec<String> {
+    let mut keys = Vec::new();
+    if let Some((heading, _level)) = atx_heading(line) {
+        keys.push(normalized_heading(heading_text(heading)));
+    } else if setext_heading_level(line, next_line).is_some() {
+        keys.push(normalized_heading(heading_text(line)));
+    }
+
+    if let Some(id) = block_id(line) {
+        keys.push(format!("^{id}"));
+    }
+    keys
+}
+
+fn atx_heading(line: &str) -> Option<(&str, u8)> {
+    let indentation = line.bytes().take_while(|byte| *byte == b' ').count();
+    if indentation > 3 {
+        return None;
+    }
+
+    let bytes = line.as_bytes();
+    let marker_length = bytes[indentation..]
+        .iter()
+        .take_while(|byte| **byte == b'#')
+        .count();
+    if !(1..=6).contains(&marker_length) {
+        return None;
+    }
+
+    let content_start = indentation + marker_length;
+    if !bytes
+        .get(content_start)
+        .is_some_and(|byte| matches!(*byte, b' ' | b'\t'))
+    {
+        return None;
+    }
+    let content_start = content_start
+        + bytes[content_start..]
+            .iter()
+            .take_while(|byte| matches!(**byte, b' ' | b'\t'))
+            .count();
+
+    Some((&line[content_start..], marker_length as u8))
+}
+
+fn setext_heading_level(line: &str, underline: &str) -> Option<u8> {
+    if line.trim().is_empty() || is_list_item_start(line) {
+        return None;
+    }
+
+    let indentation = underline.bytes().take_while(|byte| *byte == b' ').count();
+    if indentation > 3 {
+        return None;
+    }
+    let bytes = underline.as_bytes();
+    let marker = *bytes.get(indentation)?;
+    if !matches!(marker, b'=' | b'-') {
+        return None;
+    }
+    let marker_length = bytes[indentation..]
+        .iter()
+        .take_while(|byte| **byte == marker)
+        .count();
+    if marker_length == 0
+        || !bytes[indentation + marker_length..]
+            .iter()
+            .all(|byte| matches!(*byte, b' ' | b'\t'))
+    {
+        return None;
+    }
+
+    Some(if marker == b'=' { 1 } else { 2 })
+}
+
+fn is_list_item_start(line: &str) -> bool {
+    let indentation = line.bytes().take_while(|byte| *byte == b' ').count();
+    if indentation > 3 {
+        return false;
+    }
+    let bytes = line.as_bytes();
+    let rest = &bytes[indentation..];
+
+    if rest
+        .first()
+        .is_some_and(|byte| matches!(*byte, b'-' | b'+' | b'*'))
+    {
+        return rest
+            .get(1)
+            .is_some_and(|byte| matches!(*byte, b' ' | b'\t'));
+    }
+
+    let digits = rest.iter().take_while(|byte| byte.is_ascii_digit()).count();
+    digits > 0
+        && rest
+            .get(digits)
+            .is_some_and(|byte| matches!(*byte, b'.' | b')'))
+        && rest
+            .get(digits + 1)
+            .is_some_and(|byte| matches!(*byte, b' ' | b'\t'))
+}
+
+fn block_id(line: &str) -> Option<&str> {
+    let line = line.trim_end_matches(|character| matches!(character, ' ' | '\t'));
+    let id_start = line
+        .rfind(|character| matches!(character, ' ' | '\t'))
+        .map_or(0, |separator| separator + 1);
+    let marker = line.get(id_start..)?.strip_prefix('^')?;
+    let mut characters = marker.chars();
+    let first = characters.next()?;
+    if !first.is_ascii_alphanumeric()
+        || !characters.all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '_' | '-')
+        })
+    {
+        return None;
+    }
+    Some(marker)
+}
+
+fn heading_text(value: &str) -> &str {
+    let value = strip_trailing_heading_hashes(
+        value.trim_end_matches(|character| matches!(character, ' ' | '\t')),
+    );
+    strip_trailing_block_id(value).trim()
+}
+
+fn strip_trailing_block_id(value: &str) -> &str {
+    let value = value.trim_end_matches(|character| matches!(character, ' ' | '\t'));
+    let Some(separator) = value.rfind(|character| matches!(character, ' ' | '\t')) else {
+        return value;
+    };
+    let marker = &value[separator + 1..];
+    let Some(id) = marker.strip_prefix('^') else {
+        return value;
+    };
+    let mut characters = id.chars();
+    if !characters
+        .next()
+        .is_some_and(|character| character.is_ascii_alphanumeric())
+        || !characters.all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '_' | '-')
+        })
+    {
+        return value;
+    }
+    value[..separator].trim_end_matches(|character| matches!(character, ' ' | '\t'))
+}
+
+fn strip_trailing_heading_hashes(value: &str) -> &str {
+    let hash_start = value.trim_end_matches('#').len();
+    if hash_start == value.len()
+        || !value[..hash_start]
+            .chars()
+            .next_back()
+            .is_some_and(char::is_whitespace)
+    {
+        return value;
+    }
+    value[..hash_start].trim_end()
+}
+
+fn normalized_heading(value: &str) -> String {
+    let decoded = percent_decode(value).unwrap_or_else(|| value.to_owned());
+    strip_trailing_heading_hashes(decoded.trim())
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
+}
+
+fn subpath_match_count(source: &MarkdownSource, requested: &str) -> usize {
+    let requested = requested.trim();
+    if requested.is_empty() {
+        return 0;
+    }
+    let key = if requested.starts_with('^') {
+        requested.to_owned()
+    } else {
+        normalized_heading(requested)
+    };
+    source_subpath_keys(source)
+        .iter()
+        .filter(|subpath| subpath.as_str() == key.as_str())
+        .count()
 }
 
 fn wiki_link_at(bytes: &[u8], start: usize) -> Option<LinkReference> {
@@ -659,12 +901,35 @@ fn split_link_target(value: &str) -> (String, Option<String>, Option<String>) {
 
 /// Resolve a link against vault-relative paths without reading or changing source files.
 ///
-/// A supplied subpath is retained on the reference but is not validated here;
-/// heading and block identity checks require source-aware resolution.
+/// This path-only form retains existing file-level behavior for references with
+/// subpaths. Use [`resolve_link_with_sources`] to validate heading and block IDs.
 pub fn resolve_link(
     reference: &LinkReference,
     files: &[String],
     current_path: &str,
+) -> LinkResolution {
+    resolve_link_inner(reference, files, current_path, None)
+}
+
+/// Resolve a link and validate a Markdown subpath against source-preserving notes.
+///
+/// The source map is read-only. Missing headings or block IDs remain unresolved;
+/// duplicate identities remain ambiguous. Non-Markdown paths keep file-level
+/// resolution behavior.
+pub fn resolve_link_with_sources(
+    reference: &LinkReference,
+    files: &[String],
+    current_path: &str,
+    sources: &HashMap<String, MarkdownSource>,
+) -> LinkResolution {
+    resolve_link_inner(reference, files, current_path, Some(sources))
+}
+
+fn resolve_link_inner(
+    reference: &LinkReference,
+    files: &[String],
+    current_path: &str,
+    sources: Option<&HashMap<String, MarkdownSource>>,
 ) -> LinkResolution {
     if has_uri_scheme(&reference.target) {
         return LinkResolution {
@@ -683,12 +948,21 @@ pub fn resolve_link(
         }
     }
 
-    match matches.len() {
-        0 => LinkResolution {
+    if matches.is_empty() {
+        return LinkResolution {
             status: LinkResolutionStatus::Unresolved,
             target: None,
             candidates,
-        },
+        };
+    }
+
+    if let Some(subpath) = reference.subpath.as_deref()
+        && let Some(sources) = sources
+    {
+        return resolve_subpath(matches, subpath, sources);
+    }
+
+    match matches.len() {
         1 => LinkResolution {
             status: LinkResolutionStatus::Resolved,
             target: matches.first().cloned(),
@@ -702,6 +976,53 @@ pub fn resolve_link(
                 candidates: matches,
             }
         }
+    }
+}
+
+fn resolve_subpath(
+    mut matches: Vec<String>,
+    subpath: &str,
+    sources: &HashMap<String, MarkdownSource>,
+) -> LinkResolution {
+    matches.sort();
+    let mut valid_matches = Vec::new();
+    let mut duplicate_subpath = false;
+
+    for file in &matches {
+        if !file.to_ascii_lowercase().ends_with(".md") {
+            valid_matches.push(file.clone());
+            continue;
+        }
+
+        let count = sources
+            .get(file)
+            .map_or(0, |source| subpath_match_count(source, subpath));
+        if count > 1 {
+            duplicate_subpath = true;
+        } else if count == 1 {
+            valid_matches.push(file.clone());
+        }
+    }
+
+    if duplicate_subpath || valid_matches.len() > 1 {
+        return LinkResolution {
+            status: LinkResolutionStatus::Ambiguous,
+            target: None,
+            candidates: matches,
+        };
+    }
+
+    match valid_matches.pop() {
+        Some(target) => LinkResolution {
+            status: LinkResolutionStatus::Resolved,
+            target: Some(target.clone()),
+            candidates: vec![target],
+        },
+        None => LinkResolution {
+            status: LinkResolutionStatus::Unresolved,
+            target: None,
+            candidates: matches,
+        },
     }
 }
 
@@ -897,9 +1218,11 @@ fn detect_line_ending(text: &str) -> LineEnding {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::{
         FrontmatterBounds, LineEnding, LinkKind, LinkResolution, LinkResolutionStatus,
-        MarkdownSource, RawDocument, SourceSpan, resolve_link,
+        MarkdownSource, RawDocument, SourceSpan, resolve_link, resolve_link_with_sources,
     };
 
     #[test]
@@ -1118,6 +1441,21 @@ mod tests {
             );
         }
         assert_eq!(source.as_bytes(), bytes);
+
+        let bom_fence = MarkdownSource::parse(
+            "\u{feff}```md\n[[HiddenByBomFence]]\n```\n[[Visible]]"
+                .as_bytes()
+                .to_vec(),
+        )
+        .unwrap();
+        assert_eq!(
+            bom_fence
+                .extract_links()
+                .iter()
+                .map(|link| link.target.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Visible"]
+        );
     }
 
     #[test]
@@ -1215,5 +1553,119 @@ mod tests {
         let external = resolve_link(&links[3], &files, "Index.md");
         assert_eq!(external.status, LinkResolutionStatus::External);
         assert!(external.candidates.is_empty());
+    }
+
+    #[test]
+    fn source_aware_link_resolution_validates_heading_block_and_fenced_subpaths() {
+        let reference_source = MarkdownSource::parse(
+            b"[[Target#Overview]] [[Target#Welcome%20note]] [[Target#^intro]] [[Target#Missing]] [[Target#Duplicate]] [[Target#Hidden]] [[Target#TildeHidden]] [[Target#^fenced]]".to_vec(),
+        )
+        .unwrap();
+        let links = reference_source.extract_links();
+        let target_source = MarkdownSource::parse(
+            "\u{feff}# Overview ###\r\n\r\nWelcome note\r\n===\r\n\r\nOpening paragraph ^intro\r\n\r\n## Duplicate\r\n## Duplicate\r\n\r\n```md\r\n# Hidden\r\nHidden paragraph ^fenced\r\n```\r\n~~~\r\n# TildeHidden\r\n~~~"
+                .as_bytes()
+                .to_vec(),
+        )
+        .unwrap();
+        let mut sources = HashMap::new();
+        sources.insert("Target.md".to_owned(), target_source);
+        let files = vec!["Target.md".to_owned()];
+
+        for index in [0, 1, 2] {
+            assert_eq!(
+                resolve_link_with_sources(&links[index], &files, "Index.md", &sources).status,
+                LinkResolutionStatus::Resolved
+            );
+        }
+        assert_eq!(
+            resolve_link_with_sources(&links[3], &files, "Index.md", &sources),
+            LinkResolution {
+                status: LinkResolutionStatus::Unresolved,
+                target: None,
+                candidates: vec!["Target.md".to_owned()],
+            }
+        );
+        assert_eq!(
+            resolve_link_with_sources(&links[4], &files, "Index.md", &sources),
+            LinkResolution {
+                status: LinkResolutionStatus::Ambiguous,
+                target: None,
+                candidates: vec!["Target.md".to_owned()],
+            }
+        );
+        for index in [5, 6, 7] {
+            assert_eq!(
+                resolve_link_with_sources(&links[index], &files, "Index.md", &sources).status,
+                LinkResolutionStatus::Unresolved
+            );
+        }
+
+        let current_note = MarkdownSource::parse(b"[[#Overview]]".to_vec())
+            .unwrap()
+            .extract_links();
+        assert_eq!(
+            resolve_link_with_sources(&current_note[0], &files, "Target.md", &sources).status,
+            LinkResolutionStatus::Resolved
+        );
+
+        assert_eq!(
+            resolve_link(&links[3], &files, "Index.md").status,
+            LinkResolutionStatus::Resolved
+        );
+    }
+
+    #[test]
+    fn source_aware_link_resolution_uses_subpaths_to_disambiguate_files() {
+        let mut references =
+            MarkdownSource::parse(b"[[Target#Overview]]".to_vec())
+                .unwrap()
+                .extract_links();
+        let reference = references.remove(0);
+        let files = vec!["Notes/Target.md".to_owned(), "Archive/Target.md".to_owned()];
+        let mut sources = HashMap::new();
+        sources.insert(
+            "Notes/Target.md".to_owned(),
+            MarkdownSource::parse(b"# Overview\n".to_vec()).unwrap(),
+        );
+        sources.insert(
+            "Archive/Target.md".to_owned(),
+            MarkdownSource::parse(b"# Other\n".to_vec()).unwrap(),
+        );
+
+        assert_eq!(
+            resolve_link_with_sources(&reference, &files, "Index.md", &sources),
+            LinkResolution {
+                status: LinkResolutionStatus::Resolved,
+                target: Some("Notes/Target.md".to_owned()),
+                candidates: vec!["Notes/Target.md".to_owned()],
+            }
+        );
+
+        sources.insert(
+            "Archive/Target.md".to_owned(),
+            MarkdownSource::parse(b"# Overview\n# OVERVIEW\n".to_vec()).unwrap(),
+        );
+        assert_eq!(
+            resolve_link_with_sources(&reference, &files, "Index.md", &sources),
+            LinkResolution {
+                status: LinkResolutionStatus::Ambiguous,
+                target: None,
+                candidates: vec!["Archive/Target.md".to_owned(), "Notes/Target.md".to_owned()],
+            }
+        );
+
+        sources.insert(
+            "Target.md".to_owned(),
+            MarkdownSource::parse("\u{feff}~~~md\n# Hidden\n".as_bytes().to_vec()).unwrap(),
+        );
+        let hidden_reference = MarkdownSource::parse(b"[[Target#Hidden]]".to_vec())
+            .unwrap()
+            .extract_links();
+        assert_eq!(
+            resolve_link_with_sources(&hidden_reference[0], &["Target.md".to_owned()], "Index.md", &sources)
+                .status,
+            LinkResolutionStatus::Unresolved
+        );
     }
 }
