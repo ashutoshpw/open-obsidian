@@ -166,11 +166,8 @@ impl VaultRoot {
         let old_path_text = path_to_slashes(&old_path)?;
         let new_path_text = path_to_slashes(&new_path)?;
         let plan = build_link_rename_plan(&files, &old_path_text, &new_path_text)?;
-        let plan_id = rename_preview_identity(
-            &before.revision_sha256,
-            &old_path_text,
-            &new_path_text,
-        );
+        let plan_id =
+            rename_preview_identity(&before.revision_sha256, &old_path_text, &new_path_text);
         Ok(VaultRenamePreview {
             plan,
             snapshot_sha256: before.revision_sha256,
@@ -179,10 +176,7 @@ impl VaultRoot {
     }
 
     /// Reject a preview if any vault file, symlink or reference decision changed.
-    pub fn verify_rename_preview(
-        &self,
-        preview: &VaultRenamePreview,
-    ) -> Result<(), VaultError> {
+    pub fn verify_rename_preview(&self, preview: &VaultRenamePreview) -> Result<(), VaultError> {
         let current = self.build_rename_preview(&preview.plan.old_path, &preview.plan.new_path)?;
         if current == *preview {
             Ok(())
@@ -441,7 +435,10 @@ mod tests {
         let vault = VaultRoot::open(&temp.0).unwrap();
         let before = vault.snapshot().unwrap();
         assert_eq!(before.entries.len(), 2);
-        assert_ne!(before.entries[0].revision_sha256, before.entries[1].revision_sha256);
+        assert_ne!(
+            before.entries[0].revision_sha256,
+            before.entries[1].revision_sha256
+        );
 
         fs::write(&asset, [0, 255, 7, 11]).unwrap();
         let after = vault.snapshot().unwrap();
@@ -485,10 +482,13 @@ mod tests {
         let alias = snapshot
             .entries
             .iter()
-            .find(|entry| entry.relative_path == PathBuf::from("alias.md"))
+            .find(|entry| entry.relative_path == std::path::Path::new("alias.md"))
             .unwrap();
         assert_eq!(alias.kind, super::VaultSnapshotEntryKind::Symlink);
-        assert_eq!(alias.symlink_target.as_deref(), Some(std::path::Path::new("target.md")));
+        assert_eq!(
+            alias.symlink_target.as_deref(),
+            Some(std::path::Path::new("target.md"))
+        );
         assert!(matches!(
             vault.read("alias.md"),
             Err(super::VaultError::Symlink(_))
