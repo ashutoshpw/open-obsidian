@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T14:04:06Z",
+  "updated_at": "2026-10-08T14:41:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "63ad990443aeade86806709775ec3eb8a2ab5398",
-  "current_milestone": "R2.6.28",
-  "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007, keeping all executable validation in GitHub Actions.",
+  "last_reconciled_head": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283",
+  "current_milestone": "R2.6.29",
+  "next_action": "Integrate bounded note-embed resolution through the snapshot-bound VaultSession path, including Markdown-only target filtering and bounded reads; continue all C03/C03.2 acceptance and SYNC-007 via GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "63ad990443aeade86806709775ec3eb8a2ab5398"
+      "implementation_sha": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283"
     },
     "R3": {
       "status": "pending",
@@ -5539,6 +5539,69 @@
         "SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Continue C03/C03.2 cross-layer acceptance and implement host-level uninstall preservation for SYNC-007; keep R2 open until all acceptance criteria pass in GitHub Actions."
+    },
+    "R2.6.29": {
+      "status": "complete",
+      "implementation_sha": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283",
+      "implementation_commits": [
+        "e8cb44c41b3753c4392e7521e5645066314041da",
+        "7da8f143d74736d7f6974776ef9e93472b6b646a",
+        "9a3e8c09e7e276625250bf79062668b26b583111",
+        "3db8464e48bfc54e8f2fdf0b60f37becdc43b283"
+      ],
+      "scope": "Add read-only Markdown subpath slicing and bounded-depth/cycle guard primitives in crates/doc.",
+      "ci_attempts": [
+        {
+          "source_sha": "e8cb44c41b3753c4392e7521e5645066314041da",
+          "rust_run_id": 37790492018,
+          "inventory_run_id": 37790492029,
+          "quality_run_id": 37790492122,
+          "desktop_build_run_id": 37790491931,
+          "plugin_renderer_run_id": 37790492006,
+          "loaded_plugin_run_id": 37790491998,
+          "finding": "Rust CI found incorrect slice expectations and Ubuntu rustfmt differences; the five companion workflows passed."
+        },
+        {
+          "source_sha": "7da8f143d74736d7f6974776ef9e93472b6b646a",
+          "rust_run_id": 37791352386,
+          "inventory_run_id": 37791352305,
+          "quality_run_id": 37791352279,
+          "desktop_build_run_id": 37791352301,
+          "plugin_renderer_run_id": 37791352420,
+          "loaded_plugin_run_id": 37791352359,
+          "finding": "Rust tests still expected a trailing newline for a heading slice on all platforms; the Ubuntu job was delayed during system dependency setup. The five companion workflows passed."
+        },
+        {
+          "source_sha": "9a3e8c09e7e276625250bf79062668b26b583111",
+          "rust_run_id": 37792366623,
+          "inventory_run_id": 37792366636,
+          "quality_run_id": 37792366606,
+          "desktop_build_run_id": 37792366789,
+          "plugin_renderer_run_id": 37792366618,
+          "loaded_plugin_run_id": 37792366594,
+          "finding": "Rust tests passed on all platforms; Ubuntu requested one rustfmt layout and macOS/Windows Clippy reported collapsible_if. The quality workflow's macOS Electron retrieval-boundary audit failed; the other four companion workflows passed."
+        },
+        {
+          "source_sha": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283",
+          "rust_run_id": 37792786996,
+          "inventory_run_id": 37792787021,
+          "quality_run_id": 37792786975,
+          "desktop_build_run_id": 37792786974,
+          "plugin_renderer_run_id": 37792787006,
+          "loaded_plugin_run_id": 37792786992,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.29-bounded-transclusion-3db8464.json",
+      "accepted_slice": [
+        "Heading and block slice outcomes distinguish resolved, unresolved and ambiguous references, preserve source bytes, and match the existing heading-boundary/line-ending behavior. The depth/cycle and 512 KiB size-bound primitives have unit coverage.",
+        "The openobsidian-doc suite passed 24 tests on Ubuntu, macOS and Windows. Workspace formatting, tests, Clippy, layering, native builds, and unchanged-plugin feasibility passed on the exact implementation SHA. No local executable validation was run."
+      ],
+      "remaining": [
+        "The vault/session path does not yet resolve embed targets or enforce the source size bound while reading; Markdown-only filtering and native transclusion rendering remain pending.",
+        "Full C03/C03.1 and C03.2 cross-layer, fixture, transaction and interaction acceptance remains open; SYNC-007 host-level uninstall integration remains pending."
+      ],
+      "next_action": "Integrate bounded note-embed resolution through the snapshot-bound VaultSession path, including Markdown-only target filtering and bounded reads; keep broader C03/C03.2 and SYNC-007 acceptance pending until GitHub Actions proves it."
     }
   },
   "ci_preparation": {

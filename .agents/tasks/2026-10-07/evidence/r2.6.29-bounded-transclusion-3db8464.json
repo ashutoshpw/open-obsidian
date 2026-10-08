@@ -1,0 +1,150 @@
+{
+  "slice": "R2.6.29 bounded Markdown transclusion primitives",
+  "phase": "R2",
+  "status": "accepted document-core slice; R2 remains in progress",
+  "recorded_at": "2026-10-08T14:41:22Z",
+  "source_sha": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283",
+  "implementation_commits": [
+    "e8cb44c41b3753c4392e7521e5645066314041da",
+    "7da8f143d74736d7f6974776ef9e93472b6b646a",
+    "9a3e8c09e7e276625250bf79062668b26b583111",
+    "3db8464e48bfc54e8f2fdf0b60f37becdc43b283"
+  ],
+  "scope": "Add pure Markdown subpath slicing and finite-depth/cycle guards in crates/doc, preserving the original source bytes and making unresolved or duplicate subpaths explicit.",
+  "behavior": [
+    "Heading and block slices use the existing fence-aware subpath identity parser. Heading slices stop before the next heading of equal or higher outline level; block slices remove only the block marker. Selected slices normalize line endings to LF, while an empty subpath returns the full original text.",
+    "Subpath outcomes distinguish resolved, unresolved and ambiguous. The source MarkdownSource remains byte-identical after selection.",
+    "Nested transclusion guards reject depth beyond three and repeated target paths. A 512 KiB decoded-source bound is exposed for callers.",
+    "Vault path resolution, Markdown-only embed filtering, bounded file reads, VaultSession integration and native rendering remain follow-up work; the byte-bound helper is not itself a bounded read."
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "24 passed, including CRLF/BOM/fence-aware slicing, setext/ATX section boundaries, block IDs, ambiguity, depth/cycle limits and source-size boundary",
+      "workspace": "passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "24 passed",
+      "workspace": "passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "24 passed",
+      "workspace": "passed"
+    },
+    "formatting": "cargo fmt --all -- --check passed",
+    "clippy": "cargo clippy --workspace --all-targets --locked -- -D warnings passed",
+    "layering": "cargo xtask layers passed",
+    "native_build": "cargo build --workspace --release --locked passed on Ubuntu, macOS and Windows",
+    "unchanged_plugin_feasibility": "passed on Ubuntu, macOS and Windows",
+    "local_executable_validation": "not run; executable checks ran in GitHub Actions only"
+  },
+  "toolchain": {
+    "workspace_edition": "2024",
+    "workspace_rust_version": "1.95 minimum",
+    "ci_toolchain": "stable via dtolnay/rust-toolchain@stable; the workflow does not pin or report the resolved patch version",
+    "locked_dependencies": true
+  },
+  "required_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37792786996,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37792786996",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113364304543, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113364304469, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113364304113, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37792787021,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37792787021",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37792786975,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37792786975",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37792786974,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37792786974",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37792787006,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37792787006",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37792786992,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37792786992",
+      "conclusion": "success"
+    }
+  ],
+  "artifact_digests": [
+    {"workflow": "OpenObsidian Rust CI", "name": "rust-plugin-runtime-Linux-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11558000267, "digest": "sha256:a5e5b8239d676f5aa876923cae5b936de5f2f96453032bf4613b2b669c30d734"},
+    {"workflow": "OpenObsidian Rust CI", "name": "rust-plugin-runtime-macOS-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11556649616, "digest": "sha256:e116cd47c4894393949134941e18249b7bf33f6b1c17ccac0c76622690ae24b3"},
+    {"workflow": "OpenObsidian Rust CI", "name": "rust-plugin-runtime-Windows-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11556794497, "digest": "sha256:b9cae72b84e283ba271e05fc199e1cab2fdf29c8b56871680d02cda04fca93bd"},
+    {"workflow": "OpenObsidian Rust CI", "name": "openobsidian-rust-preview-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11557895823, "digest": "sha256:d67fddb3322df17effbb31f0551ef06a80076b36b0509a021b372ee2bafb98bd"},
+    {"workflow": "OpenObsidian desktop build", "name": "openobsidian-Linux-preview-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11556773844, "digest": "sha256:55e2162c49a5c28e1c504cf2824105164a9ba9c8e84981e7ae37c619fb88f8c5"},
+    {"workflow": "OpenObsidian desktop build", "name": "openobsidian-Windows-preview-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11557266405, "digest": "sha256:c8c5e4b5cae88101d2d3c3fd8a86ec6863c6852ca53ed6a429ce15596ec30b43"},
+    {"workflow": "OpenObsidian desktop build", "name": "openobsidian-macOS-preview-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11557750655, "digest": "sha256:655594c466bf7127b4bb17af1be9ae5c410f6ca9981c4ffa04c35e26d5fe7e09"},
+    {"workflow": "OpenObsidian plugin renderer matrix", "name": "plugin-renderer-lifecycle-Linux-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11556479703, "digest": "sha256:a3888a20bc67330fe3da46b6808c97520bcae4b4bb15555d8990604e99702844"},
+    {"workflow": "OpenObsidian plugin renderer matrix", "name": "plugin-renderer-lifecycle-Windows-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11556439715, "digest": "sha256:5d1d00f8c1cb3b135bfb936a47d3240d10dc77f63a9beeddb205df53f8a2a944"},
+    {"workflow": "OpenObsidian plugin renderer matrix", "name": "plugin-renderer-lifecycle-macOS-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11557397400, "digest": "sha256:2c293a3e6c80e72bae74a1629112ed45b76686f6c0ce65fc62f93ff427b46d83"},
+    {"workflow": "OpenObsidian loaded plugin workflows", "name": "loaded-plugin-workflows-Linux-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11556409901, "digest": "sha256:18276a70de5776b05c7485368fcf5e03f6eafffff0abfc8502eb84861e51d665"},
+    {"workflow": "OpenObsidian loaded plugin workflows", "name": "loaded-plugin-workflows-Windows-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11557401273, "digest": "sha256:7e3624304894fe0cea9d6c61e48d4afd8b3a9bccb04594175a22d1edb9ef7ca7"},
+    {"workflow": "OpenObsidian loaded plugin workflows", "name": "loaded-plugin-workflows-macOS-3db8464e48bfc54e8f2fdf0b60f37becdc43b283", "artifact_id": 11557637611, "digest": "sha256:dd1324259dd6fbc86ecc5b32b60ad2669e592ca556cfd7901452c996219e8e71"}
+  ],
+  "ci_attempts": [
+    {
+      "source_sha": "e8cb44c41b3753c4392e7521e5645066314041da",
+      "rust_run_id": 37790492018,
+      "inventory_run_id": 37790492029,
+      "quality_run_id": 37790492122,
+      "desktop_build_run_id": 37790491931,
+      "plugin_renderer_run_id": 37790492006,
+      "loaded_plugin_run_id": 37790491998,
+      "conclusion": "Rust CI failed on subpath slice expectations and Ubuntu rustfmt layout; the five companion workflows passed."
+    },
+    {
+      "source_sha": "7da8f143d74736d7f6974776ef9e93472b6b646a",
+      "rust_run_id": 37791352386,
+      "inventory_run_id": 37791352305,
+      "quality_run_id": 37791352279,
+      "desktop_build_run_id": 37791352301,
+      "plugin_renderer_run_id": 37791352420,
+      "loaded_plugin_run_id": 37791352359,
+      "conclusion": "Rust tests still expected a trailing newline for a heading slice; Ubuntu setup was delayed. The five companion workflows passed."
+    },
+    {
+      "source_sha": "9a3e8c09e7e276625250bf79062668b26b583111",
+      "rust_run_id": 37792366623,
+      "inventory_run_id": 37792366636,
+      "quality_run_id": 37792366606,
+      "desktop_build_run_id": 37792366789,
+      "plugin_renderer_run_id": 37792366618,
+      "loaded_plugin_run_id": 37792366594,
+      "conclusion": "Rust tests passed on all platforms; Ubuntu reported one rustfmt layout and macOS/Windows Clippy reported collapsible_if. Quality's macOS Electron retrieval-boundary audit failed; the other four companion workflows passed."
+    },
+    {
+      "source_sha": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283",
+      "rust_run_id": 37792786996,
+      "inventory_run_id": 37792787021,
+      "quality_run_id": 37792786975,
+      "desktop_build_run_id": 37792786974,
+      "plugin_renderer_run_id": 37792787006,
+      "loaded_plugin_run_id": 37792786992,
+      "conclusion": "all six required workflows passed"
+    }
+  ],
+  "limitations": [
+    "This is pure document-core selection and guard coverage. It does not yet read or resolve embed targets through the vault/session layer, enforce the source byte bound during file reads, filter attachment targets at the caller, or render transclusions in the UI.",
+    "C03/C03.1 and C03.2 remain pending full cross-layer, fixture, transaction, interaction and platform acceptance. SYNC-007 host-level uninstall integration also remains pending."
+  ]
+}
