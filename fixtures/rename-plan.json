@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "id": "fixture:c03-rename-move",
   "name": "resolution-aware-rename-plan",
   "actions": ["update", "skip-ambiguous", "skip-unresolved"],
   "invariants": {
@@ -7,5 +8,149 @@
     "ambiguous_targets_are_not_rewritten": true,
     "unrelated_targets_are_not_rewritten": true,
     "plan_precedes_filesystem_mutation": true
+  },
+  "cases": [
+    {
+      "id": "resolved-wiki-markdown-embed-and-unrelated-targets",
+      "old_path": "Old.md",
+      "new_path": "Archive/New.md",
+      "files": [
+        {
+          "relative_path": "Index.md",
+          "source": "\uFEFF🌱 [[Old|alias]] [Old](Old.md#Section) ![[Old#^block]] [[Other]] ![[Images/photo.png]]\r\n"
+        },
+        {
+          "relative_path": "Old.md",
+          "source": "# Section\r\n\r\nOpening paragraph ^block\r\n"
+        },
+        {
+          "relative_path": "Other.md",
+          "source": "# Other\r\n"
+        }
+      ],
+      "expected_edits": [
+        {
+          "source_path": "Index.md",
+          "target": "Old",
+          "resolution": "resolved",
+          "action": "update",
+          "replacement": "Archive/New"
+        },
+        {
+          "source_path": "Index.md",
+          "target": "Old.md",
+          "resolution": "resolved",
+          "action": "update",
+          "replacement": "Archive/New.md"
+        },
+        {
+          "source_path": "Index.md",
+          "target": "Old",
+          "resolution": "resolved",
+          "action": "update",
+          "replacement": "Archive/New"
+        }
+      ],
+      "expected_update_count": 3,
+      "expected_skipped_count": 0,
+      "expected_warnings": [],
+      "expected_sources": {
+        "Index.md": "\uFEFF🌱 [[Archive/New|alias]] [Old](Archive/New.md#Section) ![[Archive/New#^block]] [[Other]] ![[Images/photo.png]]\r\n",
+        "Old.md": "# Section\r\n\r\nOpening paragraph ^block\r\n",
+        "Other.md": "# Other\r\n"
+      }
+    },
+    {
+      "id": "ambiguous-unresolved-and-unrelated-targets",
+      "old_path": "Folder/Target.md",
+      "new_path": "Moved/Target.md",
+      "files": [
+        {
+          "relative_path": "Index.md",
+          "source": "[[Target#Duplicate]] [[Folder/Target#Missing]] [[Other]] ![[Images/photo.png]]\n"
+        },
+        {
+          "relative_path": "Folder/Target.md",
+          "source": "# Duplicate\n# DUPLICATE\n"
+        },
+        {
+          "relative_path": "Archive/Target.md",
+          "source": "# Duplicate\n"
+        },
+        {
+          "relative_path": "Other.md",
+          "source": "# Other\n"
+        }
+      ],
+      "expected_edits": [
+        {
+          "source_path": "Index.md",
+          "target": "Target",
+          "resolution": "ambiguous",
+          "action": "skip-ambiguous",
+          "replacement": null
+        },
+        {
+          "source_path": "Index.md",
+          "target": "Folder/Target",
+          "resolution": "unresolved",
+          "action": "skip-unresolved",
+          "replacement": null
+        }
+      ],
+      "expected_update_count": 0,
+      "expected_skipped_count": 2,
+      "expected_warnings": [
+        "Ambiguous links are shown but not rewritten.",
+        "Unresolved links are shown but require explicit resolution before rewriting."
+      ],
+      "expected_sources": {
+        "Index.md": "[[Target#Duplicate]] [[Folder/Target#Missing]] [[Other]] ![[Images/photo.png]]\n",
+        "Folder/Target.md": "# Duplicate\n# DUPLICATE\n",
+        "Archive/Target.md": "# Duplicate\n",
+        "Other.md": "# Other\n"
+      }
+    },
+    {
+      "id": "subpath-disambiguates-same-basename",
+      "old_path": "Folder/Target.md",
+      "new_path": "Moved/Target.md",
+      "files": [
+        {
+          "relative_path": "Index.md",
+          "source": "[[Target#Overview]] [[Other]]\n"
+        },
+        {
+          "relative_path": "Folder/Target.md",
+          "source": "# Overview\n"
+        },
+        {
+          "relative_path": "Archive/Target.md",
+          "source": "# Other\n"
+        },
+        {
+          "relative_path": "Other.md",
+          "source": "# Other\n"
+        }
+      ],
+      "expected_edits": [
+        {
+          "source_path": "Index.md",
+          "target": "Target",
+          "resolution": "resolved",
+          "action": "update",
+          "replacement": "Moved/Target"
+        }
+      ],
+      "expected_update_count": 1,
+      "expected_skipped_count": 0,
+      "expected_warnings": [],
+      "expected_sources": {
+        "Index.md": "[[Moved/Target#Overview]] [[Other]]\n",
+        "Folder/Target.md": "# Overview\n",
+        "Archive/Target.md": "# Other\n",
+        "Other.md": "# Other\n"
+      }
+    }
   }
 }

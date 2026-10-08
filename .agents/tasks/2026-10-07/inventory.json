@@ -1562,7 +1562,7 @@
     },
     {
       "path": "fixtures/rename-plan.json",
-      "sha256": "77c0fdab2b3bccdf8ec0d9d0fe3b734092640f158248b28c010268f0fb1392c7",
+      "sha256": "67be34778838e08e1f59aab633fae622fd36bbdc0f533557dd72a5a234c1bb3d",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",

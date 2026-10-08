@@ -2928,6 +2928,10 @@ dependencies = [
 [[package]]
 name = "openobsidian-testkit"
 version = "0.1.0"
+dependencies = [
+ "openobsidian-doc",
+ "serde_json",
+]
 
 [[package]]
 name = "openobsidian-ui-egui"
