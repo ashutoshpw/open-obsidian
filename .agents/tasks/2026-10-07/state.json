@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T08:36:58Z",
+  "updated_at": "2026-10-08T09:01:56Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "4e9a5c6ae17f4641529a687d82735212bb5dc68c",
-  "current_milestone": "R2.6.13",
-  "next_action": "Audit remaining R2 acceptance gaps (D16, SYNC-007, R2.6.5, C03/C03.2 and uninstall preservation); keep those rows pending until the required fixtures and interaction evidence pass in GitHub CI.",
+  "last_reconciled_head": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+  "current_milestone": "R2.6.14",
+  "next_action": "Extend the linked rename fixture through VaultStore apply/recovery and native interaction evidence, then continue D16, SYNC-007 and uninstall preservation; keep C03/C03.2 pending until full cross-layer acceptance passes in GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "4e9a5c6ae17f4641529a687d82735212bb5dc68c"
+      "implementation_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e"
     },
     "R3": {
       "status": "pending",
@@ -145,7 +145,8 @@
     "R2.6.11b source eab4f342d0ba459585f9b9c239a4aefdc0cc3c34: inventory, quality, desktop, plugin renderer and loaded-plugin workflows passed; macOS and Windows Rust jobs passed; Ubuntu workspace tests passed but rustfmt requested two formatting adjustments. Applied the exact CI-requested line breaks and button-call layout.",
     "R2.6.11b passed all six required workflows on exact source SHA e1f5c180ebf53a213fcc86089853c58a916bcdcf. Rust formatting, workspace tests, Clippy, layering, native preview builds and unchanged-plugin probes passed on Ubuntu/macOS/Windows; the UI suite passed four tests per OS. Evidence: evidence/r2.6.11b-history-controls-e1f5c18.json. No local executable validation was run.",
     "R2.6.12 exact-SHA CI on 5a5dea83536ff53f5d05851ace0a5b10a045c571 passed workspace tests on all three OSes and all five companion workflows; Rust CI reported formatting and cmp_owned findings. Applied the exact formatter and Clippy corrections; no local executable validation was run.",
-    "R2.6.12 passed all six required GitHub Actions workflows on exact source SHA fec449b5f99b01c275fdfdbb510b6f9fb73e3799; the successful Rust retry passed formatting, workspace tests, Clippy, layers, native builds and Wry probes on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.12-engine-rename-recovery-fec449b.json. No local executable validation was run."
+    "R2.6.12 passed all six required GitHub Actions workflows on exact source SHA fec449b5f99b01c275fdfdbb510b6f9fb73e3799; the successful Rust retry passed formatting, workspace tests, Clippy, layers, native builds and Wry probes on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.12-engine-rename-recovery-fec449b.json. No local executable validation was run.",
+    "R2.6.14 made fixture:c03-rename-move executable through the Rust testkit and link planner; fixture rendering tests passed on Ubuntu, macOS and Windows and all six required workflows passed on exact source SHA 7f9b53ca22971e34e9f900f1185ed4376ee2ce2e. Evidence: evidence/r2.6.14-rename-plan-fixture-7f9b53c.json. C03/C03.2, D16, SYNC-007 and uninstall preservation remain pending; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -4063,6 +4064,73 @@
         "C03/C03.2 remain pending until their full fixture and reference-safety acceptance is recorded; D16, SYNC-007, R2.6.5 and uninstall preservation also remain pending for full R2 acceptance."
       ],
       "next_action": "Continue the R2 acceptance audit and select the next bounded GitHub-CI slice."
+    },
+    "R2.6.14": {
+      "status": "complete",
+      "implementation_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "implementation_commits": [
+        "d0147fb4ddf0417d1feba703cf29fe0ce686872a",
+        "6d7c9687fc3e9a242be7dd22cf6bed71493510b0",
+        "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e"
+      ],
+      "scope": "Turn the existing C03.2 rename/move plan contract into concrete fixture cases consumed by Rust testkit and the document planner.",
+      "ci_attempts": [
+        {
+          "source_sha": "d0147fb4ddf0417d1feba703cf29fe0ce686872a",
+          "rust_run_id": 37752292730,
+          "rust_conclusion": "failure",
+          "findings": [
+            "The new cases array closed with an object brace, so both the Rust fixture reader and legacy Bun fixture consumer rejected the JSON.",
+            "Ubuntu rustfmt reported layout changes in the new fixture test."
+          ],
+          "quality_run_id": 37752292551,
+          "quality_conclusion": "failure",
+          "inventory_run_id": 37752292632,
+          "inventory_conclusion": "success"
+        },
+        {
+          "source_sha": "6d7c9687fc3e9a242be7dd22cf6bed71493510b0",
+          "rust_run_id": 37752439231,
+          "rust_conclusion": "failure",
+          "findings": [
+            "The corrected fixture and its Rust planner test passed workspace tests on Ubuntu, macOS and Windows.",
+            "Ubuntu rustfmt requested the exact layout applied in the next source commit."
+          ],
+          "companion_runs": {
+            "inventory": 37752439283,
+            "quality": 37752439371,
+            "desktop-build": 37752439225,
+            "plugin-renderer": 37752439341,
+            "loaded-plugins": 37752439292
+          },
+          "companion_conclusion": "all five passed"
+        },
+        {
+          "source_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+          "rust_run_id": 37752643862,
+          "rust_conclusion": "success",
+          "quality_run_id": 37752644021,
+          "quality_initial_attempt": "failed on the existing macOS Electron retrieval-boundary audit; rerun on the same SHA passed",
+          "companion_runs": {
+            "inventory": 37752643929,
+            "desktop-build": 37752643754,
+            "plugin-renderer": 37752643695,
+            "loaded-plugins": 37752643985
+          }
+        }
+      ],
+      "evidence": "evidence/r2.6.14-rename-plan-fixture-7f9b53c.json",
+      "accepted_slice": [
+        "fixtures/rename-plan.json now identifies fixture:c03-rename-move and provides resolved, same-basename-disambiguated, ambiguous, unresolved and unrelated-reference cases across wiki, Markdown and embedded links.",
+        "The Rust testkit consumes the fixture, checks planned actions/resolutions/replacements and warnings, renders every note byte-for-byte, and verifies planning leaves each original source unchanged.",
+        "All six required workflows passed on exact source SHA 7f9b53ca22971e34e9f900f1185ed4376ee2ce2e. The fixture test passed on Ubuntu, macOS and Windows; Rust formatting, tests, Clippy, layering, native builds and Wry probes passed on the configured matrix.",
+        "No local executable validation was run."
+      ],
+      "remaining": [
+        "This slice exercises the document planner and in-memory rendering; it does not add filesystem transaction, crash-recovery or graphical interaction coverage.",
+        "C03 and C03.2 remain pending full cross-layer fixture, transaction, reference-safety and native interaction acceptance. D16, SYNC-007, history integration details and uninstall preservation also remain pending for R2."
+      ],
+      "next_action": "Extend fixture coverage through VaultStore apply/rollback and native interaction evidence; continue the remaining R2 safety and uninstall acceptance audit."
     }
   },
   "ci_preparation": {

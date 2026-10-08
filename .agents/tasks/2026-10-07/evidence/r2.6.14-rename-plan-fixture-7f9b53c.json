@@ -1,0 +1,202 @@
+{
+  "slice": "R2.6.14 fixture-backed rename and move planning",
+  "phase": "R2",
+  "status": "accepted slice; R2 remains in progress",
+  "source_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+  "implementation_commits": [
+    "d0147fb4ddf0417d1feba703cf29fe0ce686872a",
+    "6d7c9687fc3e9a242be7dd22cf6bed71493510b0",
+    "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e"
+  ],
+  "scope": "Make the C03.2 rename/move contract fixture executable against the Rust document planner and renderer through the shared testkit.",
+  "behavior": [
+    "The fixture identifies fixture:c03-rename-move and specifies resolved wiki, Markdown and embed updates, alias/subpath preservation, duplicate-basename disambiguation, ambiguous and unresolved skips, and unrelated references that must remain byte-identical.",
+    "The testkit reads the checked-in fixture, compares planned resolution/action/replacement decisions and warnings, renders every note against exact expected bytes, and confirms planning leaves the input sources unchanged.",
+    "Cargo.lock includes the testkit's development dependencies; cargo test --workspace --locked passed on Ubuntu, macOS and Windows."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37752643862,
+      "head_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37752643862",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113229367045, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113229366941, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113229366890, "conclusion": "success"}
+      ],
+      "checks": [
+        "Ubuntu formatting and the format/test parallel group passed.",
+        "Workspace tests, Clippy, dependency-layer checks, native preview builds and Wry feasibility probes passed on Ubuntu, macOS and Windows."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37752643929,
+      "head_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37752643929",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113229366309, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37752644021,
+      "attempt": 2,
+      "head_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37752644021",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113230355197, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113230356608, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113230418308, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37752643754,
+      "head_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37752643754",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113229366446, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113229366544, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113229366612, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37752643695,
+      "head_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37752643695",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113229366332, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113229366522, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113229367330, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37752643985,
+      "head_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37752643985",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113229367372, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113229367433, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113229367577, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "1 passed: c03_rename_move_fixture_matches_the_rust_planner_without_changing_unplanned_bytes",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "28 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "1 passed: c03_rename_move_fixture_matches_the_rust_planner_without_changing_unplanned_bytes",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "28 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "1 passed: c03_rename_move_fixture_matches_the_rust_planner_without_changing_unplanned_bytes",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "27 passed; Unix-only symlink test is not compiled"
+    },
+    "local_executable_validation": "not run; validation was performed through GitHub Actions only"
+  },
+  "artifacts": [
+    {
+      "id": 11539060558,
+      "name": "openobsidian-rust-preview-7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "size_bytes": 8839465,
+      "sha256": "6b423e6629f61b9c6d58f8cd903d21b144b0265488cf5d4078626e82735664c6"
+    },
+    {
+      "id": 11538742869,
+      "name": "rust-plugin-runtime-macOS-7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "size_bytes": 2698,
+      "sha256": "a7aa18b111eb5cc98cea609dece7298a4c44753d6a0f0e93158a51eb1a6b6820"
+    },
+    {
+      "id": 11538717921,
+      "name": "rust-plugin-runtime-Linux-7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "size_bytes": 2695,
+      "sha256": "a274fd5b905235c7e306072801589c982bbac3a90af577188a842b81d3246fc8"
+    },
+    {
+      "id": 11538374708,
+      "name": "rust-plugin-runtime-Windows-7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "size_bytes": 2715,
+      "sha256": "4832fd788aa49f70078d18a5bc9dc8ac521cdf66b0d31250d0f92c4f353009a9"
+    }
+  ],
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28) on Ubuntu, macOS and Windows",
+    "edition": "2024",
+    "cargo_lock_sha256": "facae3b5cf056a1dfa1c40ad8d10b8833a598ec5d4c4721fb49c054e5d7e5076"
+  },
+  "limitations": [
+    "The test exercises document planning and in-memory rendering; it does not exercise filesystem transaction apply/rollback, rename recovery or graphical interaction.",
+    "CI compiled and tested the native UI but did not launch it for visual inspection. C03 and C03.2 remain pending full cross-layer fixture, transaction, reference-safety and native interaction acceptance.",
+    "D16, SYNC-007, history integration details and uninstall preservation remain pending for full R2 acceptance.",
+    "No local executable validation was run."
+  ],
+  "superseded_attempts": [
+    {
+      "source_sha": "d0147fb4ddf0417d1feba703cf29fe0ce686872a",
+      "rust_run_id": 37752292730,
+      "rust_conclusion": "failure",
+      "quality_run_id": 37752292551,
+      "quality_conclusion": "failure",
+      "findings": [
+        "The rename fixture had a malformed cases-array closing delimiter; both the Rust testkit and legacy Bun consumer rejected it.",
+        "Ubuntu rustfmt reported layout changes in the new Rust fixture test."
+      ],
+      "other_workflows": {
+        "inventory": {"run_id": 37752292632, "conclusion": "success"},
+        "desktop-build": {"run_id": 37752292487, "conclusion": "cancelled"},
+        "plugin-renderer": {"run_id": 37752292470, "conclusion": "cancelled"},
+        "loaded-plugins": {"run_id": 37752292539, "conclusion": "success"}
+      }
+    },
+    {
+      "source_sha": "6d7c9687fc3e9a242be7dd22cf6bed71493510b0",
+      "rust_run_id": 37752439231,
+      "rust_conclusion": "failure",
+      "findings": [
+        "The fixture parser and planner test passed on all three operating systems.",
+        "Ubuntu rustfmt requested only the layout change applied at 7f9b53c."
+      ],
+      "companion_runs": {
+        "inventory": 37752439283,
+        "quality": 37752439371,
+        "desktop-build": 37752439225,
+        "plugin-renderer": 37752439341,
+        "loaded-plugins": 37752439292
+      },
+      "companion_conclusion": "all five passed"
+    },
+    {
+      "source_sha": "7f9b53ca22971e34e9f900f1185ed4376ee2ce2e",
+      "workflow": "OpenObsidian quality",
+      "run_id": 37752644021,
+      "attempt": 1,
+      "conclusion": "failure",
+      "finding": "The existing macOS Electron vault audit did not reach the local retrieval boundary. No source changes followed; attempt 2 on the same SHA passed all quality jobs."
+    }
+  ]
+}
