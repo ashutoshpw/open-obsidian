@@ -1325,11 +1325,11 @@ mod tests {
 
         let old_path = PathBuf::from(case["old_path"].as_str().unwrap());
         let new_path = PathBuf::from(case["new_path"].as_str().unwrap());
-        let rollback = case["rollback"].as_object().expect("fixture rollback contract");
+        let rollback = case["rollback"]
+            .as_object()
+            .expect("fixture rollback contract");
         let fail_on_path = PathBuf::from(rollback["fail_on_path"].as_str().unwrap());
-        let prior_write_path = rollback["must_restore_prior_write_to"]
-            .as_str()
-            .unwrap();
+        let prior_write_path = rollback["must_restore_prior_write_to"].as_str().unwrap();
         fs::create_dir_all(vault_path.join(&new_path).parent().unwrap()).unwrap();
 
         let mut store = VaultStore::open(&vault_path, &app_data_path).unwrap();
@@ -1341,7 +1341,11 @@ mod tests {
 
         let error = store.apply_rename_preview(&preview).unwrap_err();
 
-        assert!(error.to_string().contains("injected atomic replace failure"));
+        assert!(
+            error
+                .to_string()
+                .contains("injected atomic replace failure")
+        );
         for (relative_path, original) in &originals {
             assert_eq!(fs::read(vault_path.join(relative_path)).unwrap(), *original);
         }

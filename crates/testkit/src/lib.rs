@@ -314,7 +314,11 @@ mod rename_plan_fixture_tests {
                 .map(|warning| warning.as_str().expect("fixture warning must be text"))
                 .collect();
             assert_eq!(
-                result.warnings.iter().map(String::as_str).collect::<Vec<_>>(),
+                result
+                    .warnings
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>(),
                 expected_warnings,
                 "{case_id}: applied warning list"
             );
@@ -334,10 +338,9 @@ mod rename_plan_fixture_tests {
                     .expect("fixture expected source must be text")
                     .as_bytes();
                 assert_eq!(
-                    fs::read(vault_path.join(actual_relative_path))
-                        .unwrap_or_else(|error| {
-                            panic!("{case_id}/{actual_relative_path:?}: {error}")
-                        }),
+                    fs::read(vault_path.join(actual_relative_path)).unwrap_or_else(|error| {
+                        panic!("{case_id}/{actual_relative_path:?}: {error}")
+                    }),
                     expected_bytes,
                     "{case_id}/{actual_relative_path:?}: applied bytes"
                 );
