@@ -100,6 +100,43 @@ pub struct LinkResolution {
     pub candidates: Vec<String>,
 }
 
+/// Maximum number of nested Markdown note transclusions rendered below the source note.
+pub const MAX_NOTE_TRANSCLUSION_DEPTH: usize = 3;
+
+/// Maximum decoded Markdown source size permitted for an inline transclusion.
+pub const MAX_NOTE_TRANSCLUSION_SOURCE_BYTES: usize = 512 * 1024;
+
+/// A source slice selected by a Markdown heading or block identifier.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LinkSubpathStatus {
+    Resolved,
+    Unresolved,
+    Ambiguous,
+}
+
+/// Read-only content and zero-based line bounds for a validated link subpath.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LinkSubpathSlice {
+    pub status: LinkSubpathStatus,
+    pub text: Option<String>,
+    pub line_start: Option<usize>,
+    pub line_end: Option<usize>,
+}
+
+/// Reason a note transclusion was rejected before reading or rendering its source.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TransclusionBlockReason {
+    Depth,
+    Cycle,
+}
+
+/// Updated depth and path chain for a permitted nested note transclusion.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TransclusionGuard {
+    pub next_depth: usize,
+    pub chain: Vec<String>,
+}
+
 /// Action proposed for a link that points at a note being renamed.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LinkRenameAction {
@@ -580,12 +617,33 @@ fn is_escaped_backtick(bytes: &[u8], start: usize) -> bool {
     preceding_backslashes % 2 == 1
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum SourceSubpathKind {
+    Heading { level: u8 },
+    Block,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct SourceSubpathEntry {
+    key: String,
+    line: usize,
+    kind: SourceSubpathKind,
+}
+
 fn source_subpath_keys(source: &MarkdownSource) -> Vec<String> {
+    source_subpath_entries(source)
+        .into_iter()
+        .map(|entry| entry.key)
+        .collect()
+}
+
+fn source_subpath_entries(source: &MarkdownSource) -> Vec<SourceSubpathEntry> {
     let bytes = source.as_bytes();
     let fenced_ranges = fenced_code_ranges(bytes);
-    let mut keys = Vec::new();
+    let mut entries = Vec::new();
     let mut fence_index = 0;
     let mut line_start = 0;
+    let mut line_number = 0;
 
     while line_start < bytes.len() {
         while fenced_ranges
@@ -600,6 +658,7 @@ fn source_subpath_keys(source: &MarkdownSource) -> Vec<String> {
             && range.start <= line_start
         {
             line_start = line_end + break_width;
+            line_number += 1;
             continue;
         }
 
@@ -625,28 +684,42 @@ fn source_subpath_keys(source: &MarkdownSource) -> Vec<String> {
             ""
         };
 
-        keys.extend(source_line_subpath_keys(line, next_line));
+        entries.extend(source_line_subpath_entries(line, next_line, line_number));
         if break_width == 0 {
             break;
         }
         line_start = next_line_start;
+        line_number += 1;
     }
 
-    keys
+    entries
 }
 
-fn source_line_subpath_keys(line: &str, next_line: &str) -> Vec<String> {
-    let mut keys = Vec::new();
-    if let Some((heading, _level)) = atx_heading(line) {
-        keys.push(normalized_heading(heading_text(heading)));
-    } else if setext_heading_level(line, next_line).is_some() {
-        keys.push(normalized_heading(heading_text(line)));
+fn source_line_subpath_entries(
+    line: &str,
+    next_line: &str,
+    line_number: usize,
+) -> Vec<SourceSubpathEntry> {
+    let mut entries = Vec::new();
+    let heading = atx_heading(line)
+        .map(|(heading, level)| (heading_text(heading), level))
+        .or_else(|| setext_heading_level(line, next_line).map(|level| (heading_text(line), level)));
+    if let Some((text, level)) = heading {
+        entries.push(SourceSubpathEntry {
+            key: normalized_heading(text),
+            line: line_number,
+            kind: SourceSubpathKind::Heading { level },
+        });
     }
 
     if let Some(id) = block_id(line) {
-        keys.push(format!("^{id}"));
+        entries.push(SourceSubpathEntry {
+            key: format!("^{id}"),
+            line: line_number,
+            kind: SourceSubpathKind::Block,
+        });
     }
-    keys
+    entries
 }
 
 fn atx_heading(line: &str) -> Option<(&str, u8)> {
@@ -813,6 +886,141 @@ fn subpath_match_count(source: &MarkdownSource, requested: &str) -> usize {
         .iter()
         .filter(|subpath| subpath.as_str() == key.as_str())
         .count()
+}
+
+/// Select a validated heading or block slice without editing the Markdown source.
+///
+/// Fenced code is ignored using the same identity parser as link resolution.
+/// Selected heading and block slices normalize line endings to LF, matching the
+/// preview-facing source selection contract. An empty subpath returns the full
+/// source unchanged; the original [`MarkdownSource`] always remains unchanged.
+pub fn slice_markdown_subpath(
+    source: &MarkdownSource,
+    requested_subpath: &str,
+) -> LinkSubpathSlice {
+    let lines = source_lines(source.text());
+    let requested = requested_subpath.trim();
+    if requested.is_empty() {
+        return LinkSubpathSlice {
+            status: LinkSubpathStatus::Resolved,
+            text: Some(source.text().to_owned()),
+            line_start: Some(0),
+            line_end: Some(lines.len()),
+        };
+    }
+
+    let key = if requested.starts_with('^') {
+        requested.to_owned()
+    } else {
+        normalized_heading(requested)
+    };
+    let entries = source_subpath_entries(source);
+    let mut matches = entries.iter().filter(|entry| entry.key == key);
+    let Some(selected) = matches.next() else {
+        return unresolved_subpath_slice();
+    };
+    if matches.next().is_some() {
+        return LinkSubpathSlice {
+            status: LinkSubpathStatus::Ambiguous,
+            text: None,
+            line_start: None,
+            line_end: None,
+        };
+    }
+
+    let line_start = selected.line;
+    let line_end = match selected.kind {
+        SourceSubpathKind::Heading { level } => entries
+            .iter()
+            .filter_map(|entry| match entry.kind {
+                SourceSubpathKind::Heading {
+                    level: candidate_level,
+                } if entry.line > line_start && candidate_level <= level => Some(entry.line),
+                _ => None,
+            })
+            .min()
+            .unwrap_or(lines.len()),
+        SourceSubpathKind::Block => (line_start + 1).min(lines.len()),
+    };
+    let mut selected_lines = lines[line_start..line_end]
+        .iter()
+        .map(|line| (*line).to_owned())
+        .collect::<Vec<_>>();
+    if selected.kind == SourceSubpathKind::Block {
+        if let Some(line) = selected_lines.first_mut() {
+            *line = strip_trailing_block_identifier(line);
+        }
+    }
+
+    LinkSubpathSlice {
+        status: LinkSubpathStatus::Resolved,
+        text: Some(selected_lines.join("\n")),
+        line_start: Some(line_start),
+        line_end: Some(line_end),
+    }
+}
+
+/// Check the decoded byte length before a Markdown note is rendered inline.
+pub fn note_transclusion_source_within_limit(source_bytes: &[u8]) -> bool {
+    source_bytes.len() <= MAX_NOTE_TRANSCLUSION_SOURCE_BYTES
+}
+
+/// Reject excessive nesting and cycles before reading or rendering a note embed.
+pub fn guard_note_transclusion(
+    depth: usize,
+    chain: &[String],
+    target: &str,
+) -> Result<TransclusionGuard, TransclusionBlockReason> {
+    if depth >= MAX_NOTE_TRANSCLUSION_DEPTH {
+        return Err(TransclusionBlockReason::Depth);
+    }
+    if chain.iter().any(|path| path == target) {
+        return Err(TransclusionBlockReason::Cycle);
+    }
+    let mut next_chain = chain.to_vec();
+    next_chain.push(target.to_owned());
+    Ok(TransclusionGuard {
+        next_depth: depth + 1,
+        chain: next_chain,
+    })
+}
+
+fn unresolved_subpath_slice() -> LinkSubpathSlice {
+    LinkSubpathSlice {
+        status: LinkSubpathStatus::Unresolved,
+        text: None,
+        line_start: None,
+        line_end: None,
+    }
+}
+
+fn source_lines(source: &str) -> Vec<&str> {
+    let bytes = source.as_bytes();
+    let mut lines = Vec::new();
+    let mut line_start = 0;
+    loop {
+        let (line_end, break_width) = line_bounds(bytes, line_start);
+        lines.push(&source[line_start..line_end]);
+        if break_width == 0 {
+            break;
+        }
+        line_start = line_end + break_width;
+        if line_start == bytes.len() {
+            lines.push("");
+            break;
+        }
+    }
+    lines
+}
+
+fn strip_trailing_block_identifier(line: &str) -> String {
+    let (bom, content) = line
+        .strip_prefix('\u{feff}')
+        .map_or(("", line), |content| ("\u{feff}", content));
+    let content = content.trim_end_matches([' ', '\t']);
+    let marker_start = content.rfind([' ', '\t']).map_or(0, |separator| separator + 1);
+    let retained = content[..marker_start].trim_end_matches([' ', '\t']);
+    format!("{bom}{retained}")
 }
 
 fn wiki_link_at(bytes: &[u8], start: usize) -> Option<LinkReference> {
@@ -1511,9 +1719,11 @@ mod tests {
 
     use super::{
         FrontmatterBounds, LineEnding, LinkKind, LinkRenameAction, LinkRenamePlanError,
-        LinkResolution, LinkResolutionStatus, MarkdownSource, RawDocument, RenamePlanFile,
-        SourceSpan, build_link_rename_plan, render_link_rename_preview, resolve_link,
-        resolve_link_with_sources,
+        LinkResolution, LinkResolutionStatus, LinkSubpathStatus, MarkdownSource, RawDocument,
+        RenamePlanFile, SourceSpan, TransclusionBlockReason, TransclusionGuard,
+        MAX_NOTE_TRANSCLUSION_DEPTH, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, build_link_rename_plan,
+        guard_note_transclusion, note_transclusion_source_within_limit, render_link_rename_preview,
+        resolve_link, resolve_link_with_sources, slice_markdown_subpath,
     };
 
     #[test]
@@ -1904,6 +2114,91 @@ mod tests {
             resolve_link(&links[3], &files, "Index.md").status,
             LinkResolutionStatus::Resolved
         );
+    }
+
+    #[test]
+    fn transclusion_slices_validated_heading_and_block_sources_read_only() {
+        let bytes = "\u{feff}# Overview\r\n\r\nVisible paragraph\r\n\r\n## Details\r\nDetails paragraph ^details\r\n\r\n## Next\r\nNext paragraph\r\n\r\n```md\r\n# Fenced\r\n```\r\n## Duplicate\r\n## Duplicate\r\n"
+            .as_bytes()
+            .to_vec();
+        let source = MarkdownSource::parse(bytes.clone()).unwrap();
+
+        let overview = slice_markdown_subpath(&source, "Overview");
+        assert_eq!(overview.status, LinkSubpathStatus::Resolved);
+        assert_eq!(overview.text.as_deref(), Some(source.text()));
+        assert_eq!(overview.line_start, Some(0));
+        assert_eq!(overview.line_end, Some(source.text().split("\r\n").count()));
+
+        let details = slice_markdown_subpath(&source, "Details");
+        assert_eq!(details.status, LinkSubpathStatus::Resolved);
+        assert_eq!(
+            details.text.as_deref(),
+            Some("## Details\nDetails paragraph ^details\n")
+        );
+        assert_eq!(details.line_start, Some(4));
+        assert_eq!(details.line_end, Some(7));
+
+        let block = slice_markdown_subpath(&source, "^details");
+        assert_eq!(block.status, LinkSubpathStatus::Resolved);
+        assert_eq!(block.text.as_deref(), Some("Details paragraph"));
+        assert_eq!(block.line_start, Some(5));
+        assert_eq!(block.line_end, Some(6));
+
+        assert_eq!(
+            slice_markdown_subpath(&source, "Fenced").status,
+            LinkSubpathStatus::Unresolved
+        );
+        let duplicate = slice_markdown_subpath(&source, "Duplicate");
+        assert_eq!(duplicate.status, LinkSubpathStatus::Ambiguous);
+        assert_eq!(duplicate.text, None);
+        assert_eq!(source.as_bytes(), bytes);
+    }
+
+    #[test]
+    fn transclusion_slices_setext_headings_until_the_next_equal_or_higher_heading() {
+        let source = MarkdownSource::parse(
+            b"Title\r\n=====\r\nBody\r\nNext\r\n-----\r\nOther".to_vec(),
+        )
+        .unwrap();
+
+        let title = slice_markdown_subpath(&source, "Title");
+        assert_eq!(title.status, LinkSubpathStatus::Resolved);
+        assert_eq!(title.text.as_deref(), Some("Title\n=====\nBody\n"));
+        assert_eq!(title.line_start, Some(0));
+        assert_eq!(title.line_end, Some(3));
+
+        let next = slice_markdown_subpath(&source, "Next");
+        assert_eq!(next.status, LinkSubpathStatus::Resolved);
+        assert_eq!(next.text.as_deref(), Some("Next\n-----\nOther"));
+        assert_eq!(next.line_start, Some(3));
+        assert_eq!(next.line_end, Some(6));
+        assert_eq!(source.as_bytes(), b"Title\r\n=====\r\nBody\r\nNext\r\n-----\r\nOther");
+    }
+
+    #[test]
+    fn transclusion_depth_cycles_and_source_size_fail_closed() {
+        let chain = vec!["Index.md".to_owned()];
+        assert_eq!(
+            guard_note_transclusion(0, &chain, "Notes/Target.md"),
+            Ok(TransclusionGuard {
+                next_depth: 1,
+                chain: vec!["Index.md".to_owned(), "Notes/Target.md".to_owned()],
+            })
+        );
+        assert_eq!(
+            guard_note_transclusion(1, &["Index.md".to_owned(), "Notes/Target.md".to_owned()], "Index.md"),
+            Err(TransclusionBlockReason::Cycle)
+        );
+        assert_eq!(
+            guard_note_transclusion(MAX_NOTE_TRANSCLUSION_DEPTH, &chain, "Notes/Target.md"),
+            Err(TransclusionBlockReason::Depth)
+        );
+        assert!(note_transclusion_source_within_limit(
+            &vec![b'x'; MAX_NOTE_TRANSCLUSION_SOURCE_BYTES]
+        ));
+        assert!(!note_transclusion_source_within_limit(
+            &vec![b'x'; MAX_NOTE_TRANSCLUSION_SOURCE_BYTES + 1]
+        ));
     }
 
     #[test]
