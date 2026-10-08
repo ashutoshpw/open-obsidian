@@ -2342,7 +2342,8 @@
       "mandatory": true,
       "acceptance_criteria": "The no-op corpus retains every path and byte sequence, including unknown extensions and binary data.",
       "fixture_ids": [
-        "fixture:c01-arbitrary-files"
+        "fixture:c01-arbitrary-files",
+        "fixture:existing-vault"
       ],
       "reference_versions": [
         {
@@ -2388,7 +2389,8 @@
       "mandatory": true,
       "acceptance_criteria": "Filesystem snapshots are byte-identical before and after each read-only operation on all available platforms.",
       "fixture_ids": [
-        "fixture:c01-no-op"
+        "fixture:c01-no-op",
+        "fixture:existing-vault"
       ],
       "reference_versions": [
         {
@@ -10153,7 +10155,8 @@
       "mandatory": true,
       "acceptance_criteria": "Golden vault fixtures prove byte fidelity, SHA-256 revisions and separation of app state on three operating systems.",
       "fixture_ids": [
-        "fixture:mig-012"
+        "fixture:mig-012",
+        "fixture:existing-vault"
       ],
       "reference_versions": [
         {

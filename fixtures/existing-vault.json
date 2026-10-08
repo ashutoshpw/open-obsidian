@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "fixture:existing-vault",
+  "covers": [
+    "fixture:c01-arbitrary-files",
+    "fixture:c01-no-op",
+    "fixture:mig-012"
+  ],
+  "purpose": "Open a user-selected existing Obsidian vault folder directly and prove that its paths, bytes, and app-data boundary remain unchanged.",
+  "invariants": {
+    "opens_existing_directory_in_place": true,
+    "requires_import_or_conversion": false,
+    "preserves_unknown_paths_and_binary_bytes": true,
+    "read_only_open_preserves_vault_tree": true,
+    "app_state_is_outside_the_vault": true,
+    "note_revisions_use_sha256": true
+  },
+  "files": [
+    {
+      "relative_path": "Notes/Welcome.md",
+      "source": "\uFEFF---\r\nstatus: open\r\nunknown: [keep, me]\r\n---\r\n# Welcome\r\n"
+    },
+    {
+      "relative_path": "README.md",
+      "source": "This is an existing vault.\n"
+    },
+    {
+      "relative_path": ".obsidian/app.json",
+      "source": "{\"theme\":\"obsidian\",\"unknown\":true}\n"
+    },
+    {
+      "relative_path": "Attachments/unknown.dat",
+      "bytes": [0, 255, 7, 10, 128]
+    },
+    {
+      "relative_path": "Plugin Data/unrecognized.bin",
+      "bytes": [80, 75, 3, 4, 0, 255, 1]
+    }
+  ],
+  "expected": {
+    "tree_paths": [
+      ".obsidian",
+      ".obsidian/app.json",
+      "Attachments",
+      "Attachments/unknown.dat",
+      "Notes",
+      "Notes/Welcome.md",
+      "Plugin Data",
+      "Plugin Data/unrecognized.bin",
+      "README.md"
+    ],
+    "markdown_paths": ["Notes/Welcome.md", "README.md"],
+    "revision_path": "Notes/Welcome.md",
+    "revision_sha256": "ebed119a0dfbaf5046b579cb9b7ae4703a79a249270c03009775254cee1410b6"
+  }
+}

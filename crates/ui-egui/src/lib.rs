@@ -30,6 +30,8 @@ const C03_LINK_RESOLUTION_FIXTURE: &str = include_str!("../../../fixtures/link-r
 const HISTORY_RETENTION_FIXTURE: &str = include_str!("../../../fixtures/history-retention.json");
 #[cfg(test)]
 const SYNC_UNINSTALL_FIXTURE: &str = include_str!("../../../fixtures/uninstall-preservation.json");
+#[cfg(test)]
+const EXISTING_VAULT_FIXTURE: &str = include_str!("../../../fixtures/existing-vault.json");
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
@@ -1763,6 +1765,91 @@ mod tests {
         }
     }
 
+    fn materialize_existing_vault_fixture(root: &Path, fixture: &serde_json::Value) {
+        for file in fixture["files"]
+            .as_array()
+            .expect("fixture files must be an array")
+        {
+            let relative_path = PathBuf::from(
+                file["relative_path"]
+                    .as_str()
+                    .expect("fixture file must have a relative path"),
+            );
+            assert!(relative_path.is_relative(), "fixture paths must be relative");
+            assert!(
+                relative_path
+                    .components()
+                    .all(|component| !matches!(component, std::path::Component::ParentDir)),
+                "fixture paths must remain inside the selected folder"
+            );
+            let bytes = if let Some(source) = file["source"].as_str() {
+                source.as_bytes().to_vec()
+            } else {
+                file["bytes"]
+                    .as_array()
+                    .expect("binary fixture file must contain byte values")
+                    .iter()
+                    .map(|byte| {
+                        u8::try_from(
+                            byte.as_u64()
+                                .expect("binary fixture values must be unsigned"),
+                        )
+                        .expect("binary fixture values must fit in one byte")
+                    })
+                    .collect()
+            };
+            let path = root.join(relative_path);
+            std::fs::create_dir_all(path.parent().expect("fixture file must have a parent"))
+                .expect("create fixture file parents");
+            std::fs::write(path, bytes).expect("write fixture bytes");
+        }
+    }
+
+    fn existing_vault_tree_snapshot(root: &Path) -> Vec<(PathBuf, u8, Vec<u8>)> {
+        fn collect(
+            root: &Path,
+            directory: &Path,
+            entries: &mut Vec<(PathBuf, u8, Vec<u8>)>,
+        ) {
+            for entry in std::fs::read_dir(directory).expect("read fixture directory") {
+                let entry = entry.expect("read fixture directory entry");
+                let path = entry.path();
+                let relative_path = path
+                    .strip_prefix(root)
+                    .expect("fixture entry must remain beneath its root")
+                    .to_path_buf();
+                let file_type = entry.file_type().expect("inspect fixture entry type");
+                if file_type.is_dir() {
+                    entries.push((relative_path, 0, Vec::new()));
+                    collect(root, &path, entries);
+                } else if file_type.is_file() {
+                    entries.push((
+                        relative_path,
+                        1,
+                        std::fs::read(path).expect("read fixture file bytes"),
+                    ));
+                } else if file_type.is_symlink() {
+                    entries.push((
+                        relative_path,
+                        2,
+                        std::fs::read_link(path)
+                            .expect("read fixture symlink target")
+                            .to_string_lossy()
+                            .as_bytes()
+                            .to_vec(),
+                    ));
+                } else {
+                    panic!("fixture contains an unsupported filesystem entry");
+                }
+            }
+        }
+
+        let mut entries = Vec::new();
+        collect(root, root, &mut entries);
+        entries.sort_by(|left, right| left.0.cmp(&right.0));
+        entries
+    }
+
     fn wait_for_rename(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -1806,6 +1893,119 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
+    }
+
+    #[test]
+    fn egui_opens_an_existing_vault_in_place_without_changing_its_tree() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:existing-vault");
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let before = existing_vault_tree_snapshot(&vault_path);
+        let before_paths = before
+            .iter()
+            .map(|(path, _, _)| path.to_string_lossy().replace('\\', "/"))
+            .collect::<Vec<_>>();
+        let expected_paths = fixture["expected"]["tree_paths"]
+            .as_array()
+            .expect("fixture must list every original path")
+            .iter()
+            .map(|path| {
+                path.as_str()
+                    .expect("fixture paths must be text")
+                    .to_owned()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(before_paths, expected_paths);
+
+        let canonical_vault = std::fs::canonicalize(&vault_path).expect("canonicalize vault path");
+        let canonical_app_data =
+            std::fs::canonicalize(&app_data_path).expect("canonicalize app-data path");
+        assert!(!canonical_app_data.starts_with(&canonical_vault));
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open selected existing folder directly");
+        assert_eq!(session.root_path(), canonical_vault);
+
+        let markdown_paths = session
+            .entries()
+            .iter()
+            .map(|entry| entry.relative_path.to_string_lossy().replace('\\', "/"))
+            .collect::<Vec<_>>();
+        let expected_markdown_paths = fixture["expected"]["markdown_paths"]
+            .as_array()
+            .expect("fixture must list Markdown entries")
+            .iter()
+            .map(|path| {
+                path.as_str()
+                    .expect("Markdown paths must be text")
+                    .to_owned()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(markdown_paths, expected_markdown_paths);
+
+        let revision_path = fixture["expected"]["revision_path"]
+            .as_str()
+            .expect("fixture must identify a note for revision checking");
+        let expected_source = fixture["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|file| file["relative_path"] == revision_path)
+            .and_then(|file| file["source"].as_str())
+            .expect("revision fixture file must have a text source");
+        let read = session
+            .read(revision_path)
+            .expect("read selected note without conversion");
+        assert_eq!(read.document.as_bytes(), expected_source.as_bytes());
+        assert_eq!(
+            read.revision_sha256,
+            fixture["expected"]["revision_sha256"]
+                .as_str()
+                .expect("fixture must state the SHA-256 revision")
+        );
+
+        let selected_vault = vault_path.clone();
+        let selected_app_data = app_data_path.clone();
+        let app = OpenObsidianApp {
+            open_vault_action: Some(Box::new(move || {
+                let (sender, receiver) = std::sync::mpsc::channel();
+                let result = VaultSession::open(&selected_vault, &selected_app_data)
+                    .map_err(|_| "The selected vault could not be opened safely.".to_owned());
+                sender
+                    .send(result)
+                    .expect("UI must receive the selected vault session");
+                Some(receiver)
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.get_by_label("Open vault").click();
+        harness.step();
+        assert!(harness.state().session.is_some());
+        assert!(!harness.state().vault_opening);
+        assert!(harness.state().vault_open_error.is_none());
+        harness.get_by_label("Vault: Existing Vault");
+        harness.get_by_label("2 Markdown files found.");
+
+        drop(harness);
+        drop(session);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before);
+        assert!(existing_vault_tree_snapshot(&app_data_path).is_empty());
     }
 
     #[test]

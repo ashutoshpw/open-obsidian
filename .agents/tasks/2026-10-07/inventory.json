@@ -2236,6 +2236,16 @@
       "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers.",
       "migration_phase": "R0",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
+    },
+    {
+      "path": "fixtures/existing-vault.json",
+      "sha256": "726d7799760bc40e4f6ded71638d4207f72e89a4573581eba770a8a7d7048185",
+      "rust_owner": "crates/ui-egui",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Golden existing-vault fixture records arbitrary paths and bytes, source revision SHA-256, direct in-place opening and the app-data boundary.",
+      "fixture_reader": "crates/ui-egui"
     }
   ],
   "spec_hashes": {
