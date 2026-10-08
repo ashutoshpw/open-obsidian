@@ -81,6 +81,23 @@ pub struct LinkReference {
     pub target_span: SourceSpan,
 }
 
+/// The path-level resolution outcome for a Markdown link reference.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LinkResolutionStatus {
+    Resolved,
+    Unresolved,
+    Ambiguous,
+    External,
+}
+
+/// Candidate files for a link, keeping unresolved and ambiguous cases explicit.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LinkResolution {
+    pub status: LinkResolutionStatus,
+    pub target: Option<String>,
+    pub candidates: Vec<String>,
+}
+
 /// A validated UTF-8 Markdown view backed by the original bytes.
 ///
 /// The text accessor includes a UTF-8 BOM when the source has one. This type does
@@ -437,6 +454,147 @@ fn split_link_target(value: &str) -> (String, Option<String>, Option<String>) {
     (target.to_owned(), alias, subpath)
 }
 
+/// Resolve a link against vault-relative paths without reading or changing source files.
+///
+/// A supplied subpath is retained on the reference but is not validated here;
+/// heading and block identity checks require source-aware resolution.
+pub fn resolve_link(
+    reference: &LinkReference,
+    files: &[String],
+    current_path: &str,
+) -> LinkResolution {
+    if has_uri_scheme(&reference.target) {
+        return LinkResolution {
+            status: LinkResolutionStatus::External,
+            target: None,
+            candidates: Vec::new(),
+        };
+    }
+
+    let normalized_target = normalize_target(&reference.target);
+    let candidates = candidate_paths(&reference.target, current_path);
+    let mut matches = Vec::new();
+    for file in files {
+        if file_matches_reference(file, &normalized_target, &candidates) {
+            matches.push(file.clone());
+        }
+    }
+
+    match matches.len() {
+        0 => LinkResolution {
+            status: LinkResolutionStatus::Unresolved,
+            target: None,
+            candidates,
+        },
+        1 => LinkResolution {
+            status: LinkResolutionStatus::Resolved,
+            target: matches.first().cloned(),
+            candidates: matches,
+        },
+        _ => {
+            matches.sort();
+            LinkResolution {
+                status: LinkResolutionStatus::Ambiguous,
+                target: None,
+                candidates: matches,
+            }
+        }
+    }
+}
+
+fn candidate_paths(target: &str, current_path: &str) -> Vec<String> {
+    let normalized = normalize_target(target);
+    if normalized.is_empty() {
+        let current = normalize_target(current_path);
+        return if current.is_empty() {
+            Vec::new()
+        } else {
+            vec![current]
+        };
+    }
+    if normalized.starts_with('#') || has_uri_scheme(&normalized) {
+        return Vec::new();
+    }
+
+    let current = normalize_target(current_path);
+    let directory = current.rsplit_once('/').map_or("", |(parent, _)| parent);
+    let relative_target = if !directory.is_empty() && !normalized.contains('/') {
+        format!("{directory}/{normalized}")
+    } else {
+        normalized
+    };
+    let mut candidates = vec![relative_target.clone()];
+    if !relative_target.ends_with(".md") {
+        candidates.push(format!("{relative_target}.md"));
+    }
+    candidates
+}
+
+fn file_matches_reference(file: &str, normalized_target: &str, candidates: &[String]) -> bool {
+    let normalized_file = normalize_target(file);
+    if candidates.iter().any(|candidate| candidate == &normalized_file) {
+        return true;
+    }
+
+    !normalized_target.contains('/')
+        && basename_without_extension(&normalized_file) == normalized_target
+}
+
+fn basename_without_extension(path: &str) -> &str {
+    let basename = path.rsplit('/').next().unwrap_or(path);
+    basename.strip_suffix(".md").unwrap_or(basename)
+}
+
+fn normalize_target(target: &str) -> String {
+    let decoded = percent_decode(target).unwrap_or_else(|| target.to_owned());
+    let normalized = decoded.replace('\\', "/");
+    normalized.strip_prefix("./").unwrap_or(&normalized).to_owned()
+}
+
+fn percent_decode(value: &str) -> Option<String> {
+    let mut decoded = Vec::with_capacity(value.len());
+    let bytes = value.as_bytes();
+    let mut index = 0;
+
+    while index < bytes.len() {
+        if bytes[index] == b'%' {
+            let high = hex_value(*bytes.get(index + 1)?)?;
+            let low = hex_value(*bytes.get(index + 2)?)?;
+            decoded.push((high << 4) | low);
+            index += 3;
+        } else {
+            let character = value.get(index..)?.chars().next()?;
+            let mut encoded = [0; 4];
+            decoded.extend_from_slice(character.encode_utf8(&mut encoded).as_bytes());
+            index += character.len_utf8();
+        }
+    }
+
+    String::from_utf8(decoded).ok()
+}
+
+fn hex_value(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
+}
+
+fn has_uri_scheme(value: &str) -> bool {
+    let Some((scheme, _)) = value.split_once(':') else {
+        return false;
+    };
+    let mut characters = scheme.chars();
+    characters
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic())
+        && characters.all(|character| {
+            character.is_ascii_alphanumeric() || matches!(character, '+' | '.' | '-')
+        })
+}
+
 fn yaml_inline_comment_start(value: &[u8]) -> Option<usize> {
     let mut quote = None;
     let mut depth = 0usize;
@@ -530,7 +688,10 @@ fn detect_line_ending(text: &str) -> LineEnding {
 
 #[cfg(test)]
 mod tests {
-    use super::{FrontmatterBounds, LineEnding, LinkKind, MarkdownSource, RawDocument, SourceSpan};
+    use super::{
+        FrontmatterBounds, LineEnding, LinkKind, LinkResolution, LinkResolutionStatus,
+        MarkdownSource, RawDocument, SourceSpan, resolve_link,
+    };
 
     #[test]
     fn untouched_document_bytes_round_trip_exactly() {
@@ -739,5 +900,68 @@ mod tests {
             &source.as_bytes()[links[0].target_span.start..links[0].target_span.end],
             b"Same"
         );
+    }
+
+    #[test]
+    fn link_resolution_reports_resolved_ambiguous_and_unresolved_paths() {
+        let source = MarkdownSource::parse(b"[[Target]] [[Target]] [[Missing]]".to_vec()).unwrap();
+        let links = source.extract_links();
+
+        assert_eq!(
+            resolve_link(&links[0], &["Target.md".to_owned()], "Index.md"),
+            LinkResolution {
+                status: LinkResolutionStatus::Resolved,
+                target: Some("Target.md".to_owned()),
+                candidates: vec!["Target.md".to_owned()],
+            }
+        );
+        let ambiguous = resolve_link(
+            &links[1],
+            &["Target.md".to_owned(), "Target".to_owned()],
+            "Index.md",
+        );
+        assert_eq!(ambiguous.status, LinkResolutionStatus::Ambiguous);
+        assert_eq!(
+            ambiguous.candidates,
+            vec!["Target".to_owned(), "Target.md".to_owned()]
+        );
+
+        let unresolved = resolve_link(&links[2], &["Other.md".to_owned()], "Index.md");
+        assert_eq!(unresolved.status, LinkResolutionStatus::Unresolved);
+        assert_eq!(
+            unresolved.candidates,
+            vec!["Missing".to_owned(), "Missing.md".to_owned()]
+        );
+    }
+
+    #[test]
+    fn link_resolution_handles_current_note_relative_encoded_and_external_targets() {
+        let source = MarkdownSource::parse(
+            b"[[#Overview]] [[Notes\\Target%20File.md]] [[Target]] [web](https://example.test/note.md)"
+                .to_vec(),
+        )
+        .unwrap();
+        let links = source.extract_links();
+        let files = vec![
+            "Notes/Current.md".to_owned(),
+            "Notes/Target File.md".to_owned(),
+            "Notes/Target.md".to_owned(),
+        ];
+
+        let current = resolve_link(&links[0], &files, "Notes/Current.md");
+        assert_eq!(current.status, LinkResolutionStatus::Resolved);
+        assert_eq!(current.target.as_deref(), Some("Notes/Current.md"));
+
+        let relative = resolve_link(&links[1], &files, "Index.md");
+        assert_eq!(relative.status, LinkResolutionStatus::Resolved);
+        assert_eq!(relative.target.as_deref(), Some("Notes/Target File.md"));
+
+        let same_directory = resolve_link(&links[2], &files, "Notes/Current.md");
+        assert_eq!(same_directory.status, LinkResolutionStatus::Resolved);
+        assert_eq!(same_directory.target.as_deref(), Some("Notes/Target.md"));
+
+        let external = resolve_link(&links[3], &files, "Index.md");
+        assert_eq!(external.status, LinkResolutionStatus::External);
+        assert!(external.candidates.is_empty());
     }
 }

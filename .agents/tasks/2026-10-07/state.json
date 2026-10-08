@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T01:39:36+00:00",
+  "updated_at": "2026-10-08T01:45:05+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "last_reconciled_head": "75aeac4ba1fa5096c84db08028d3bfd54f626afe",
   "current_phase": "R2",
   "current_milestone": "R2.5",
-  "next_action": "Port path-level resolved, unresolved, ambiguous and external link outcomes into crates/doc, based on the C03.1 contract; preserve code-context and rename safety as explicit follow-on requirements.",
+  "next_action": "Commit and push R2.5 path-level link resolution, then inspect exact-SHA Rust and companion workflow results on GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
