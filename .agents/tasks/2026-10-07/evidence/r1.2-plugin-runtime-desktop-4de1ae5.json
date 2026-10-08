@@ -1,0 +1,94 @@
+{
+  "phase": "R1.2",
+  "source_sha": "4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b",
+  "workflow": "OpenObsidian Rust CI",
+  "run_id": 37705662792,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37705662792",
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113079298951,
+      "artifact_id": 11520235219,
+      "artifact_sha256": "c9400a0bfc02589e7d17f1c37dfdf3c623e02c7cae2cd7354c6d814234b6e8ef",
+      "report_sha256": "99ebf7a31f06fb4cbdddf73044306fde0f13c6372a78159a14cf4355bd9178ea",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "format": "passed",
+      "parallel_group": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 compact rendered, but Accent was rejected because the fixture omitted valid default-light and default-dark colors"
+    },
+    "windows": {
+      "job_id": 113079299088,
+      "artifact_id": 11519911340,
+      "artifact_sha256": "058087ab8ec2292bee49c36b4f52b2c85c23d389ba0a82ad4a0e663fca4949fa",
+      "report_sha256": "f41eb41bd065ef6fad642cd9081cbeab6b2cc73cd30003f563d29e3485977955",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "parallel_group": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 compact rendered, but Accent was rejected because the fixture omitted valid default-light and default-dark colors"
+    },
+    "macos": {
+      "job_id": 113079299254,
+      "artifact_id": 11520315116,
+      "artifact_sha256": "42255d7b60619b1c4237f30fb231ad38f7454f1fb3a525c181fd7567d278fe61",
+      "report_sha256": "02e7331d46bea692bde745de96167c8e7a60c1df8559928a81f16356be2e9496",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "parallel_group": "passed",
+      "workspace_tests": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "failed: PC08 compact rendered, but Accent was rejected because the fixture omitted valid default-light and default-dark colors"
+    }
+  },
+  "shared_probe_result": {
+    "wry_version": "0.57.0",
+    "legacy_compatibility_state": "Pending",
+    "capability_denials": "passed on all three platforms",
+    "PC05": {
+      "version": "0.23.2",
+      "bundle_sha256": "cf5dd4ddbddebef68cc99cd93a883e33895c7f123d04bc5d1106ea6e338ba791",
+      "integrity": "passed",
+      "plugin_loaded": true,
+      "setting_controls": 5,
+      "editor_callbacks": "1/1 completed and changed the synthetic note on all three platforms"
+    },
+    "PC08": {
+      "version": "1.0.9",
+      "bundle_sha256": "1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468",
+      "integrity": "passed",
+      "theme_fixture": {
+        "path": "Themes/Minimal.css",
+        "sha256": "4445ec64a79343de33a14a8a829a4155e1377f3428f8bc87251901b588754155",
+        "verified_on_all_platforms": true
+      },
+      "stylesheet_rules": 110,
+      "setting_controls": 5,
+      "setting_ids": ["appearance", "compact"],
+      "expected_child_control_ids": ["compact", "accent"],
+      "rendered_rows": ["Appearance", "Compact"],
+      "console_errors": ["Error: Accent missing default value, or value is not in a valid color format"],
+      "asynchronous_errors": [],
+      "capability_denials": "passed on all three platforms"
+    }
+  },
+  "ci_gates": {
+    "inventory_run": 37705662783,
+    "inventory": "passed",
+    "quality_run": 37705662759,
+    "quality": "passed",
+    "desktop_run": 37705662840,
+    "desktop": "passed",
+    "plugin_renderer_run": 37705662830,
+    "plugin_renderer": "passed",
+    "loaded_plugins_run": 37705662782,
+    "loaded_plugins": "passed"
+  },
+  "finding": "The exact-SHA Rust matrix passed formatting on Ubuntu, workspace tests, Clippy, layering and native preview builds on all three platforms. The Rust parallel group passed. PC05 passed everywhere. Expanding PC08's default-collapsed Appearance heading mounted the compact toggle, confirming the interaction path. The unchanged Style Settings 1.0.9 bundle then rejected Accent because the theme fixture lacked valid default-light and default-dark color fields for its variable-color setting. Static inspection of the SHA-verified bundle confirms those two fields are required. The follow-up adds valid defaults to both fixture copies and updates the source inventory hash. No local executable validation was run. R1.2 and compatibility remain pending.",
+  "scope": "These probes do not certify broad legacy compatibility or WebView isolation."
+}
