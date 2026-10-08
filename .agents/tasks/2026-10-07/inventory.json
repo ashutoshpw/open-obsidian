@@ -2158,10 +2158,12 @@
     },
     {
       "path": ".github/workflows/compatibility-pins.yml",
-      "sha256": "6f2162fe41879c202e6f07bfc36a29f62adef5a07f4a98b39dab932324c713ca",
+      "sha256": "4c15c09f7298829cc9c12b1e8e5ece52a02a496dc7f55be26246025324ab7d7c",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
+      "baseline_sha256": "6f2162fe41879c202e6f07bfc36a29f62adef5a07f4a98b39dab932324c713ca",
+      "reconciliation_reason": "User-requested native parallel step group for independent compatibility-pin verifications; the group waits for every check before job completion.",
       "migration_phase": "R0",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
