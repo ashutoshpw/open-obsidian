@@ -299,7 +299,7 @@ impl OpenObsidianApp {
                     ui.label(format!("Vault: {vault_name}"));
                     ui.add_enabled_ui(!vault_operation_busy, |ui| {
                         refresh_note_list_requested = ui
-                            .button("Refresh note list")
+                            .small_button("Refresh note list")
                             .on_hover_text("Rescan Markdown paths without changing vault files.")
                             .clicked();
                     });
@@ -1453,10 +1453,7 @@ impl OpenObsidianApp {
     }
 
     fn poll_vault_refresh_task(&mut self, ui: &mut eframe::egui::Ui) {
-        let result = self
-            .vault_refresh_receiver
-            .as_ref()
-            .map(Receiver::try_recv);
+        let result = self.vault_refresh_receiver.as_ref().map(Receiver::try_recv);
         match result {
             Some(Ok(Ok(session))) => {
                 self.vault_refresh_receiver = None;
@@ -2439,22 +2436,30 @@ mod tests {
                 .len(),
             3
         );
-        assert!(harness
-            .state()
-            .session
-            .as_ref()
-            .unwrap()
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == PathBuf::from("Notes/External.md")));
+        assert!(
+            harness
+                .state()
+                .session
+                .as_ref()
+                .unwrap()
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == PathBuf::from("Notes/External.md"))
+        );
         harness.get_by_label("3 Markdown files found.");
         harness.get_by_label("Note list refreshed: 3 Markdown files found.");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         drop(harness);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
     }
 
     #[test]
