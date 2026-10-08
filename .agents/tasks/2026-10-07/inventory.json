@@ -2199,7 +2199,7 @@
     },
     {
       "path": ".github/workflows/desktop-build.yml",
-      "sha256": "400f901742e79ec3f46276b9ccb383a8facdfbcd270be54ebad9691203de8767",
+      "sha256": "b25edc6950c3cf39da3b1d4ff577f188f8842bf1a780da5d2e1911ce925b4a9d",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
