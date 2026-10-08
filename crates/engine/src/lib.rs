@@ -1,8 +1,9 @@
 //! Application services that compose document and vault behavior without UI dependencies.
 
 pub use openobsidian_vault::{
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
+    plan_history_retention, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
+    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;

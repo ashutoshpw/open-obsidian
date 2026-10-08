@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T07:01:35Z",
+  "updated_at": "2026-10-08T07:12:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "ee9b40fc348f09c3ad1bf514ed3ae8a63b1e14ec",
   "current_phase": "R2",
-  "current_milestone": "R2.6.10",
-  "next_action": "Start R2.6.11: add native history listing, configurable retention preview and explicit cleanup, plus validated conflict inspection and explicit Keep Current/Keep Incoming actions. Never clean up automatically or delete unresolved conflicts. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
+  "last_reconciled_head": "797d39ceeb26ba3577b4847b94a33e204bfadfe3",
+  "current_milestone": "R2.6.11a",
+  "next_action": "Push the history-listing and retention-preview slice to origin/main and wait for exact-SHA GitHub Actions. After it passes, add explicit cleanup confirmation and validated conflict inspection/resolution; never clean up automatically or delete unresolved conflicts. Keep D16, SYNC-007, R2.6.5 and C03/C03.2 pending until full cross-layer and uninstall acceptance.",
   "blockers": [],
   "phases": {
     "R0": {

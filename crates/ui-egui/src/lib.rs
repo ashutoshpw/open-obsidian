@@ -1,12 +1,27 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
-use openobsidian_engine::VaultSession;
-use std::sync::mpsc::{Receiver, TryRecvError};
-use std::time::Duration;
+use openobsidian_engine::{
+    plan_history_retention, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultSession,
+};
+use std::sync::{
+    Arc,
+    mpsc::{self, Receiver, TryRecvError},
+};
+use std::time::{Duration, SystemTime};
+
+const GIBIBYTE: u64 = 1024 * 1024 * 1024;
+const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 
 /// Receives the result of opening a user-selected vault on a background worker.
 pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
+type HistoryPreviewReceiver = Receiver<Result<HistoryPreview, ()>>;
+
+struct HistoryPreview {
+    records: Vec<VaultHistoryRecord>,
+    plan: VaultHistoryPlan,
+}
 
 /// Display-safe storage state passed from the desktop composition boundary.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -64,13 +79,18 @@ pub fn run_with_desktop_services(
 
 #[derive(Default)]
 struct OpenObsidianApp {
-    session: Option<openobsidian_engine::VaultSession>,
+    session: Option<Arc<VaultSession>>,
     storage_protection_report: Option<StorageProtectionDisplay>,
     storage_protection_probe: Option<Box<dyn Fn() -> StorageProtectionDisplay + Send + Sync>>,
     open_vault_action: Option<Box<VaultOpenAction>>,
     vault_open_receiver: Option<VaultOpenReceiver>,
     vault_opening: bool,
     vault_open_error: Option<String>,
+    history_policy: VaultHistoryPolicy,
+    history_records: Vec<VaultHistoryRecord>,
+    history_plan: Option<VaultHistoryPlan>,
+    history_preview_receiver: Option<HistoryPreviewReceiver>,
+    history_error: Option<String>,
 }
 
 impl eframe::App for OpenObsidianApp {
@@ -91,10 +111,14 @@ impl eframe::App for OpenObsidianApp {
         let open_result = self.vault_open_receiver.as_ref().map(Receiver::try_recv);
         match open_result {
             Some(Ok(Ok(session))) => {
-                self.session = Some(session);
+                self.session = Some(Arc::new(session));
                 self.vault_open_receiver = None;
                 self.vault_opening = false;
                 self.vault_open_error = None;
+                self.history_records.clear();
+                self.history_plan = None;
+                self.history_preview_receiver = None;
+                self.history_error = None;
             }
             Some(Ok(Err(error))) => {
                 self.vault_open_receiver = None;
@@ -111,6 +135,7 @@ impl eframe::App for OpenObsidianApp {
             }
             None => {}
         }
+        self.poll_history_preview(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
         }
@@ -130,6 +155,9 @@ impl eframe::App for OpenObsidianApp {
             None => {
                 ui.label("No vault is open. Choose an existing vault folder to continue.");
             }
+        }
+        if self.session.is_some() {
+            self.show_history(ui);
         }
         ui.separator();
         ui.heading("OS storage protection");
@@ -153,6 +181,181 @@ impl eframe::App for OpenObsidianApp {
     }
 }
 
+impl OpenObsidianApp {
+    fn show_history(&mut self, ui: &mut eframe::egui::Ui) {
+        ui.separator();
+        ui.heading("Recovery history");
+        ui.small("History is stored in private application data outside the vault.");
+
+        let mut policy_changed = false;
+        ui.horizontal(|ui| {
+            ui.label("Retain days:");
+            policy_changed |= ui
+                .add(
+                    eframe::egui::DragValue::new(&mut self.history_policy.max_age_days)
+                        .range(1..=3650),
+                )
+                .changed();
+
+            ui.label("Maximum size (GiB):");
+            let mut max_gib = self.history_policy.max_bytes as f64 / GIBIBYTE_F64;
+            if ui
+                .add(
+                    eframe::egui::DragValue::new(&mut max_gib)
+                        .range(0.1..=1024.0)
+                        .speed(0.1),
+                )
+                .changed()
+            {
+                self.history_policy.max_bytes = (max_gib * GIBIBYTE_F64).round() as u64;
+                policy_changed = true;
+            }
+        });
+        if policy_changed {
+            self.history_plan = None;
+        }
+
+        let preview_busy = self.history_preview_receiver.is_some();
+        if ui
+            .add_enabled(
+                !preview_busy,
+                eframe::egui::Button::new("Refresh history and retention preview"),
+            )
+            .clicked()
+        {
+            self.start_history_preview();
+        }
+        if preview_busy {
+            ui.label("Reading history safely…");
+        }
+        if let Some(error) = &self.history_error {
+            ui.colored_label(eframe::egui::Color32::RED, error);
+        }
+
+        if let Some(plan) = &self.history_plan {
+            ui.label(format!(
+                "Retained: {} items ({}); eligible for cleanup: {} items ({}); protected: {} items.",
+                plan.retained.len(),
+                format_bytes(plan.retained_bytes),
+                plan.pruneable.len(),
+                format_bytes(plan.pruneable_bytes),
+                plan.protected.len(),
+            ));
+            if plan.warning {
+                ui.colored_label(
+                    eframe::egui::Color32::YELLOW,
+                    "Protected history exceeds the configured size limit and will be kept.",
+                );
+            }
+        } else {
+            ui.small("Refresh the preview to apply the selected retention settings to the listing.");
+        }
+
+        if self.history_records.is_empty() && self.history_plan.is_some() {
+            ui.label("No recovery, failed-write, or conflict history records were found.");
+        } else if !self.history_records.is_empty() {
+            let records = self.history_records.clone();
+            eframe::egui::ScrollArea::vertical()
+                .max_height(220.0)
+                .show(ui, |ui| {
+                    for record in &records {
+                        ui.horizontal_wrapped(|ui| {
+                            let protection = if record.protected {
+                                " · protected"
+                            } else {
+                                ""
+                            };
+                            ui.label(format!(
+                                "{} · {} · {} · {} · {}{}",
+                                history_kind_label(record.kind),
+                                record.relative_path.display(),
+                                format_bytes(record.bytes),
+                                history_age_label(record.captured_at),
+                                record.id,
+                                protection,
+                            ));
+                        });
+                    }
+                });
+        }
+    }
+
+    fn start_history_preview(&mut self) {
+        let Some(session) = self.session.as_ref().cloned() else {
+            return;
+        };
+        let policy = self.history_policy;
+        let (sender, receiver) = mpsc::channel();
+        rayon::spawn(move || {
+            let result = session.history_records().map_err(|_| ()).map(|records| {
+                let plan = plan_history_retention(&records, policy, SystemTime::now());
+                HistoryPreview { records, plan }
+            });
+            let _ = sender.send(result);
+        });
+        self.history_preview_receiver = Some(receiver);
+        self.history_error = None;
+    }
+
+    fn poll_history_preview(&mut self, ui: &mut eframe::egui::Ui) {
+        let result = self
+            .history_preview_receiver
+            .as_ref()
+            .map(Receiver::try_recv);
+        match result {
+            Some(Ok(Ok(preview))) => {
+                self.history_records = preview.records;
+                self.history_plan = Some(preview.plan);
+                self.history_preview_receiver = None;
+                self.history_error = None;
+            }
+            Some(Ok(Err(()))) | Some(Err(TryRecvError::Disconnected)) => {
+                self.history_preview_receiver = None;
+                self.history_error = Some("History could not be read safely.".to_owned());
+            }
+            Some(Err(TryRecvError::Empty)) => {
+                ui.ctx().request_repaint_after(Duration::from_millis(100));
+            }
+            None => {}
+        }
+    }
+}
+
+fn history_kind_label(kind: VaultHistoryKind) -> &'static str {
+    match kind {
+        VaultHistoryKind::Recovery => "Recovery",
+        VaultHistoryKind::Failed => "Failed write",
+        VaultHistoryKind::Conflict => "Unresolved conflict",
+    }
+}
+
+fn history_age_label(captured_at: SystemTime) -> String {
+    match SystemTime::now().duration_since(captured_at) {
+        Ok(age) if age.as_secs() >= 24 * 60 * 60 => {
+            format!("{}d ago", age.as_secs() / (24 * 60 * 60))
+        }
+        Ok(age) if age.as_secs() >= 60 * 60 => format!("{}h ago", age.as_secs() / (60 * 60)),
+        Ok(age) if age.as_secs() >= 60 => format!("{}m ago", age.as_secs() / 60),
+        Ok(age) => format!("{}s ago", age.as_secs()),
+        Err(_) => "captured in the future".to_owned(),
+    }
+}
+
+fn format_bytes(bytes: u64) -> String {
+    const UNITS: [&str; 5] = ["B", "KiB", "MiB", "GiB", "TiB"];
+    let mut amount = bytes as f64;
+    let mut unit = 0;
+    while amount >= 1024.0 && unit < UNITS.len() - 1 {
+        amount /= 1024.0;
+        unit += 1;
+    }
+    if unit == 0 {
+        format!("{bytes} B")
+    } else {
+        format!("{amount:.1} {}", UNITS[unit])
+    }
+}
+
 fn storage_protection_label(status: StorageProtectionDisplayStatus) -> &'static str {
     match status {
         StorageProtectionDisplayStatus::Enabled => "Enabled (OS reported)",
@@ -164,6 +367,17 @@ fn storage_protection_label(status: StorageProtectionDisplayStatus) -> &'static 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn history_labels_distinguish_protected_conflicts() {
+        assert_eq!(history_kind_label(VaultHistoryKind::Recovery), "Recovery");
+        assert_eq!(history_kind_label(VaultHistoryKind::Failed), "Failed write");
+        assert_eq!(
+            history_kind_label(VaultHistoryKind::Conflict),
+            "Unresolved conflict"
+        );
+        assert_eq!(format_bytes(1024), "1.0 KiB");
+    }
 
     #[test]
     fn storage_status_labels_keep_unknown_explicit() {
