@@ -1377,7 +1377,10 @@ fn move_vault_file(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
     use std::sync::atomic::{AtomicU64, Ordering};
+
+    const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -1420,8 +1423,16 @@ mod tests {
     }
 
     fn simulate_interrupted_rename(store: &VaultStore, new_path: &str) -> String {
-        let old_path = PathBuf::from("Old.md");
-        let new_path = PathBuf::from(new_path);
+        simulate_interrupted_rename_between(store, Path::new("Old.md"), Path::new(new_path))
+    }
+
+    fn simulate_interrupted_rename_between(
+        store: &VaultStore,
+        old_path: &Path,
+        new_path: &Path,
+    ) -> String {
+        let old_path = old_path.to_path_buf();
+        let new_path = new_path.to_path_buf();
         let preview = store
             .root
             .build_rename_preview(&old_path, &new_path)
@@ -1537,6 +1548,74 @@ mod tests {
             original_index
         );
         assert!(!vault_path.join("New.md").exists());
+
+        let repeated = store.recover_pending_rename_transactions().unwrap();
+        assert!(repeated.recovered_operations.is_empty());
+        assert!(repeated.needs_attention.is_empty());
+    }
+
+    #[test]
+    fn recovers_interrupted_c03_fixture_rename_and_restores_every_original_byte() {
+        let fixture: Value = serde_json::from_str(C03_RENAME_FIXTURE)
+            .expect("rename-plan fixture must be valid JSON");
+        let case = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array")
+            .iter()
+            .find(|case| {
+                case["id"].as_str() == Some("resolved-wiki-markdown-embed-and-unrelated-targets")
+            })
+            .expect("fixture must contain the resolved rename case");
+
+        let temporary = TempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        fs::create_dir(&vault_path).unwrap();
+        fs::create_dir(&app_data_path).unwrap();
+        let mut originals = Vec::new();
+        for file in case["files"].as_array().expect("fixture files") {
+            let relative_path = PathBuf::from(file["relative_path"].as_str().unwrap());
+            let source = file["source"].as_str().unwrap().as_bytes().to_vec();
+            let path = vault_path.join(&relative_path);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, &source).unwrap();
+            originals.push((relative_path, source));
+        }
+
+        let old_path = PathBuf::from(case["old_path"].as_str().unwrap());
+        let new_path = PathBuf::from(case["new_path"].as_str().unwrap());
+        fs::create_dir_all(vault_path.join(&new_path).parent().unwrap()).unwrap();
+        let store = VaultStore::open(&vault_path, &app_data_path).unwrap();
+        let operation_id = simulate_interrupted_rename_between(&store, &old_path, &new_path);
+        assert!(!vault_path.join(&old_path).exists());
+        assert!(vault_path.join(&new_path).exists());
+        assert_eq!(
+            fs::read(vault_path.join("Index.md")).unwrap(),
+            case["expected_sources"]["Index.md"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+        );
+        assert_eq!(
+            fs::read(vault_path.join("Notes/Second.md")).unwrap(),
+            case["expected_sources"]["Notes/Second.md"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+        );
+        drop(store);
+
+        let store = VaultStore::open(&vault_path, &app_data_path).unwrap();
+        let report = store.recover_pending_rename_transactions().unwrap();
+
+        assert_eq!(report.recovered_operations, vec![operation_id]);
+        assert!(report.needs_attention.is_empty());
+        for (relative_path, original) in &originals {
+            assert_eq!(fs::read(vault_path.join(relative_path)).unwrap(), *original);
+        }
+        assert!(!vault_path.join(&new_path).exists());
+        let journal = fs::read_to_string(app_data_path.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"operation\":\"rename\",\"state\":\"rolled_back\""));
 
         let repeated = store.recover_pending_rename_transactions().unwrap();
         assert!(repeated.recovered_operations.is_empty());
