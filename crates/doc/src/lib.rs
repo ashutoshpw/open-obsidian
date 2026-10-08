@@ -61,6 +61,26 @@ pub struct MarkdownPropertySource {
     pub value_span: SourceSpan,
 }
 
+/// The source syntax used by an extracted Markdown reference.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LinkKind {
+    WikiLink,
+    Markdown,
+    Embed,
+}
+
+/// A link-like reference with byte ranges into the original Markdown source.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LinkReference {
+    pub kind: LinkKind,
+    pub raw: String,
+    pub target: String,
+    pub alias: Option<String>,
+    pub subpath: Option<String>,
+    pub source_span: SourceSpan,
+    pub target_span: SourceSpan,
+}
+
 /// A validated UTF-8 Markdown view backed by the original bytes.
 ///
 /// The text accessor includes a UTF-8 BOM when the source has one. This type does
@@ -165,6 +185,14 @@ impl MarkdownSource {
         };
         frontmatter_properties(self.raw.as_bytes(), bounds.content)
     }
+
+    /// Extract supported wiki, Markdown and embed references without changing source bytes.
+    ///
+    /// Returned ranges are UTF-8 byte offsets. This structural pass does not resolve
+    /// targets or edit references.
+    pub fn extract_links(&self) -> Vec<LinkReference> {
+        extract_links(self.raw.as_bytes())
+    }
 }
 
 fn frontmatter_properties(bytes: &[u8], content: SourceSpan) -> Vec<MarkdownPropertySource> {
@@ -236,6 +264,180 @@ fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySou
             end: line_start + value_end,
         },
     })
+}
+
+fn extract_links(bytes: &[u8]) -> Vec<LinkReference> {
+    let mut references = Vec::new();
+    let mut cursor = 0;
+
+    while cursor < bytes.len() {
+        if let Some(reference) = wiki_link_at(bytes, cursor) {
+            cursor = reference.source_span.end;
+            references.push(reference);
+        } else {
+            cursor += 1;
+        }
+    }
+
+    cursor = 0;
+    while cursor < bytes.len() {
+        if let Some(reference) = markdown_link_at(bytes, cursor) {
+            cursor = reference.source_span.end;
+            references.push(reference);
+        } else {
+            cursor += 1;
+        }
+    }
+
+    references.sort_by_key(|reference| reference.source_span.start);
+    references
+}
+
+fn wiki_link_at(bytes: &[u8], start: usize) -> Option<LinkReference> {
+    let (content_start, kind) = if bytes.get(start..start + 3) == Some(&b"![["[..]) {
+        (start + 3, LinkKind::Embed)
+    } else if bytes.get(start..start + 2) == Some(&b"[["[..]) {
+        (start + 2, LinkKind::WikiLink)
+    } else {
+        return None;
+    };
+
+    let mut content_end = content_start;
+    while let Some(byte) = bytes.get(content_end) {
+        if *byte == b']' {
+            if content_end == content_start || bytes.get(content_end + 1) != Some(&b']') {
+                return None;
+            }
+
+            let raw_end = content_end + 2;
+            return link_reference(
+                bytes,
+                kind,
+                start,
+                raw_end,
+                content_start,
+                &bytes[content_start..content_end],
+            );
+        }
+        content_end += 1;
+    }
+
+    None
+}
+
+fn markdown_link_at(bytes: &[u8], start: usize) -> Option<LinkReference> {
+    let (label_start, kind) = if bytes.get(start..start + 2) == Some(&b"!["[..]) {
+        (start + 2, LinkKind::Embed)
+    } else if bytes.get(start) == Some(&b'[') {
+        (start + 1, LinkKind::Markdown)
+    } else {
+        return None;
+    };
+
+    let label_end = label_start
+        + bytes
+            .get(label_start..)?
+            .iter()
+            .position(|byte| *byte == b']')?;
+    let target_open = label_end + 1;
+    if bytes.get(target_open) != Some(&b'(') {
+        return None;
+    }
+
+    let target_start = target_open + 1;
+    let target_tail = std::str::from_utf8(bytes.get(target_start..)?).ok()?;
+    let target_length = target_tail
+        .char_indices()
+        .find(|(_, character)| *character == ')' || character.is_whitespace())
+        .map_or(target_tail.len(), |(offset, _)| offset);
+    if target_length == 0 {
+        return None;
+    }
+
+    let target_end = target_start + target_length;
+    let close_paren = if bytes.get(target_end) == Some(&b')') {
+        target_end
+    } else {
+        let whitespace_tail = std::str::from_utf8(bytes.get(target_end..)?).ok()?;
+        let whitespace_length = whitespace_tail
+            .char_indices()
+            .take_while(|(_, character)| character.is_whitespace())
+            .map(|(offset, character)| offset + character.len_utf8())
+            .last()?;
+        let title_start = target_end + whitespace_length;
+        if bytes.get(title_start) != Some(&b'"') {
+            return None;
+        }
+        let title_tail = std::str::from_utf8(bytes.get(title_start + 1..)?).ok()?;
+        let title_end = title_start + 1 + title_tail.find('"')?;
+        let close_paren = title_end + 1;
+        if bytes.get(close_paren) != Some(&b')') {
+            return None;
+        }
+        close_paren
+    };
+
+    link_reference(
+        bytes,
+        kind,
+        start,
+        close_paren + 1,
+        target_start,
+        &bytes[target_start..target_end],
+    )
+}
+
+fn link_reference(
+    bytes: &[u8],
+    kind: LinkKind,
+    source_start: usize,
+    source_end: usize,
+    target_start: usize,
+    raw_target: &[u8],
+) -> Option<LinkReference> {
+    let raw = std::str::from_utf8(&bytes[source_start..source_end])
+        .ok()?
+        .to_owned();
+    let raw_target = std::str::from_utf8(raw_target).ok()?;
+    let (target, alias, subpath) = split_link_target(raw_target);
+    let target_end = target_start + target.len();
+
+    Some(LinkReference {
+        kind,
+        raw,
+        target,
+        alias,
+        subpath,
+        source_span: SourceSpan {
+            start: source_start,
+            end: source_end,
+        },
+        target_span: SourceSpan {
+            start: target_start,
+            end: target_end,
+        },
+    })
+}
+
+fn split_link_target(value: &str) -> (String, Option<String>, Option<String>) {
+    let (without_alias, alias) = if let Some(separator) = value.find('|') {
+        (
+            &value[..separator],
+            Some(value[separator + 1..].to_owned()),
+        )
+    } else {
+        (value, None)
+    };
+    let (target, subpath) = if let Some(separator) = without_alias.find('#') {
+        (
+            &without_alias[..separator],
+            Some(without_alias[separator + 1..].to_owned()),
+        )
+    } else {
+        (without_alias, None)
+    };
+
+    (target.to_owned(), alias, subpath)
 }
 
 fn yaml_inline_comment_start(value: &[u8]) -> Option<usize> {
@@ -331,7 +533,9 @@ fn detect_line_ending(text: &str) -> LineEnding {
 
 #[cfg(test)]
 mod tests {
-    use super::{FrontmatterBounds, LineEnding, MarkdownSource, RawDocument, SourceSpan};
+    use super::{
+        FrontmatterBounds, LineEnding, LinkKind, MarkdownSource, RawDocument, SourceSpan,
+    };
 
     #[test]
     fn untouched_document_bytes_round_trip_exactly() {
@@ -489,5 +693,56 @@ mod tests {
             let source = MarkdownSource::parse(bytes.to_vec()).unwrap();
             assert!(source.frontmatter_properties().is_empty());
         }
+    }
+
+    #[test]
+    fn markdown_link_references_preserve_targets_aliases_subpaths_and_byte_spans() {
+        let text = "\u{feff}🐈 [[Notes/Target#heading|alias]] ![[Images/photo.png]] [target](Notes/Target.md#heading) ![alt](Images/plot.svg \"title\")";
+        let bytes = text.as_bytes().to_vec();
+        let source = MarkdownSource::parse(bytes.clone()).unwrap();
+        let links = source.extract_links();
+
+        assert_eq!(
+            links.iter().map(|link| link.kind).collect::<Vec<_>>(),
+            vec![
+                LinkKind::WikiLink,
+                LinkKind::Embed,
+                LinkKind::Markdown,
+                LinkKind::Embed
+            ]
+        );
+        assert_eq!(links[0].target, "Notes/Target");
+        assert_eq!(links[0].alias.as_deref(), Some("alias"));
+        assert_eq!(links[0].subpath.as_deref(), Some("heading"));
+        assert_eq!(links[1].target, "Images/photo.png");
+        assert_eq!(links[2].target, "Notes/Target.md");
+        assert_eq!(links[2].subpath.as_deref(), Some("heading"));
+        assert_eq!(links[3].target, "Images/plot.svg");
+
+        for link in &links {
+            assert_eq!(
+                &bytes[link.source_span.start..link.source_span.end],
+                link.raw.as_bytes()
+            );
+            assert_eq!(
+                &bytes[link.target_span.start..link.target_span.end],
+                link.target.as_bytes()
+            );
+        }
+        assert_eq!(source.as_bytes(), bytes);
+    }
+
+    #[test]
+    fn markdown_link_target_span_points_past_an_identical_visible_label() {
+        let source = MarkdownSource::parse(b"[Same](Same)".to_vec()).unwrap();
+        let links = source.extract_links();
+
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0].source_span, SourceSpan { start: 0, end: 12 });
+        assert_eq!(links[0].target_span, SourceSpan { start: 7, end: 11 });
+        assert_eq!(
+            &source.as_bytes()[links[0].target_span.start..links[0].target_span.end],
+            b"Same"
+        );
     }
 }
