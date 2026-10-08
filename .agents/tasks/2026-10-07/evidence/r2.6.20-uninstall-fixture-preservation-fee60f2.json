@@ -1,0 +1,149 @@
+{
+  "slice": "R2.6.20 fixture-backed uninstall preservation through native UI and VaultSession",
+  "phase": "R2",
+  "status": "accepted UI and vault-session slice; R2 remains in progress",
+  "source_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+  "implementation_commits": [
+    "17d19f316b7bf2fb3e8eac1733ce471cdb9e2fad",
+    "fee60f234ce7225b5eb4bb6261fd8820aed5ec10"
+  ],
+  "scope": "Add a synthetic uninstall-preservation fixture and exercise the native cleanup choices with a production VaultSession, checking that every fixture file remains byte-identical.",
+  "behavior": [
+    "fixtures/uninstall-preservation.json describes a nested synthetic vault, app cache, managed recovery file and unresolved conflict file; its baseline inventory SHA-256 is c07a7af32907764addf89c7568f53b9480b1e47bbacf9a0bb32aadbba69498fa.",
+    "The headless egui_kittest interaction loads and materializes the fixture, renders the production UI, opens it through VaultSession and selects all three optional cleanup choices.",
+    "The interaction verifies every fixture file remains byte-identical after the choices are selected."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37766196839,
+      "head_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37766196839",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113274353141, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113274353170, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113274352822, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, crate layering, native preview builds and unchanged-plugin Wry feasibility probes passed on Ubuntu, macOS and Windows.",
+        "egui_uninstall_fixture_preserves_vault_and_conflict_bytes passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37766196822,
+      "head_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37766196822",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113274352881, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37766196836,
+      "head_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37766196836",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113274353143, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113274353393, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113274353577, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37766196832,
+      "head_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37766196832",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113274353472, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113274353685, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113274353825, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37766196870,
+      "head_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37766196870",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113274353926, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113274354274, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113274354339, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37766196872,
+      "head_sha": "fee60f234ce7225b5eb4bb6261fd8820aed5ec10",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37766196872",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113274354191, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113274354413, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113274354483, "conclusion": "success"}
+      ]
+    }
+  ],
+  "rust_toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "9 passed, including egui_uninstall_fixture_preserves_vault_and_conflict_bytes",
+      "openobsidian-vault": "30 passed"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "9 passed, including egui_uninstall_fixture_preserves_vault_and_conflict_bytes",
+      "openobsidian-vault": "30 passed"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "9 passed, including egui_uninstall_fixture_preserves_vault_and_conflict_bytes",
+      "openobsidian-vault": "29 passed"
+    },
+    "local_executable_validation": "not run; all executable validation used GitHub Actions"
+  },
+  "artifacts": [
+    {"id": 11544940433, "name": "openobsidian-rust-preview-fee60f234ce7225b5eb4bb6261fd8820aed5ec10", "digest": "sha256:7ea5fedb07a032100f4b4536988913ef95e91ed5f2fc365e6c773281a63ce700"},
+    {"id": 11543779708, "name": "rust-plugin-runtime-Linux-fee60f234ce7225b5eb4bb6261fd8820aed5ec10", "digest": "sha256:826ae6e2b73c0f18af88ac53d5d7c2f5f96d9e4d62c31a009b0df7bc3341de05"},
+    {"id": 11544761600, "name": "rust-plugin-runtime-macOS-fee60f234ce7225b5eb4bb6261fd8820aed5ec10", "digest": "sha256:d0ab35e57f19f34025c98de076dbfcc9a0c894de1dc76e40cf5efbb6dbeccb34"},
+    {"id": 11544413776, "name": "rust-plugin-runtime-Windows-fee60f234ce7225b5eb4bb6261fd8820aed5ec10", "digest": "sha256:9252777e679b0930139b9bc740ba1dc4293d0f8f58dfe9d7e3c0e2d6603a2a61"}
+  ],
+  "superseded_attempts": [
+    {
+      "source_sha": "17d19f316b7bf2fb3e8eac1733ce471cdb9e2fad",
+      "rust_run_id": 37765743470,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37765743577, "conclusion": "success"},
+        "quality": {"run_id": 37765743636, "conclusion": "success"},
+        "desktop-build": {"run_id": 37765743550, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37765743641, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37765743485, "conclusion": "success"}
+      },
+      "findings": [
+        "All three operating systems passed the new UI interaction test; Ubuntu Rust CI failed only on rustfmt.",
+        "Applied the exact CI-requested shorter let-binding layout: let original_vault_files = materialize_files(&vault_path, &scenario[\"vault\"][\"files\"]);"
+      ]
+    }
+  ],
+  "limitations": [
+    "The interaction is headless; CI did not launch an OS-native window or inspect a packaged uninstaller.",
+    "Selecting cleanup choices does not execute cleanup, call an OS uninstaller or prove removal boundaries. Keep full SYNC-007 pending host-level uninstall integration and acceptance.",
+    "D16 and history integration, and C03/C03.2 full cross-layer acceptance, remain pending.",
+    "No local executable validation was run."
+  ],
+  "next_action": "Continue the remaining D16 and history integration gates and complete C03/C03.2 cross-layer acceptance; keep SYNC-007 pending until host-level uninstall integration proves vault and conflict preservation in GitHub CI."
+}
