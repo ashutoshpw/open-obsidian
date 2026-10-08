@@ -3,9 +3,9 @@
 use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
 #[cfg(not(windows))]
 use std::path::Component;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 const PRODUCT_NAME: &str = "OpenObsidian";
@@ -79,9 +79,7 @@ pub fn vault_app_data_directory_under(
         .to_str()
         .ok_or(UserDataError::InvalidVaultPath)?;
     let digest = format!("{:x}", Sha256::digest(resolved_text.as_bytes()));
-    Ok(user_data_root
-        .join("vaults")
-        .join(&digest[..24]))
+    Ok(user_data_root.join("vaults").join(&digest[..24]))
 }
 
 /// Prepare the matching per-vault user-data directory and restrict it to the current user.
@@ -325,9 +323,10 @@ fn current_user_sid(output: &str) -> Option<&str> {
 fn is_sid(value: &str) -> bool {
     let mut parts = value.split('-');
     parts.next() == Some("S")
-        && parts.next().is_some_and(|version| version.parse::<u8>().is_ok())
         && parts
-            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+            .next()
+            .is_some_and(|version| version.parse::<u8>().is_ok())
+        && parts.all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
 }
 
 #[cfg(test)]
@@ -347,13 +346,8 @@ mod tests {
             PathBuf::from(r"C:\Users\Ada\AppData\Roaming\OpenObsidian")
         );
         assert_eq!(
-            app_user_data_directory_for(
-                "macos",
-                None,
-                Some(Path::new("/Users/ada")),
-                None,
-            )
-            .unwrap(),
+            app_user_data_directory_for("macos", None, Some(Path::new("/Users/ada")), None,)
+                .unwrap(),
             PathBuf::from("/Users/ada/Library/Application Support/OpenObsidian")
         );
         assert_eq!(
@@ -386,8 +380,8 @@ mod tests {
     #[test]
     fn matches_node_resolve_and_hashes_only_the_first_twenty_four_sha256_digits() {
         let root = Path::new("/var/tmp/Vault/../Vault/.");
-        let directory = vault_app_data_directory_under(Path::new("/user-data/OpenObsidian"), root)
-            .unwrap();
+        let directory =
+            vault_app_data_directory_under(Path::new("/user-data/OpenObsidian"), root).unwrap();
         assert_eq!(
             directory,
             PathBuf::from("/user-data/OpenObsidian/vaults/f37dd519f426bfdfeb4dbc3e")
@@ -398,8 +392,8 @@ mod tests {
     #[test]
     fn matches_windows_node_resolve_for_drive_paths() {
         let root = Path::new(r"C:\Users\Test\Vault\..\Case");
-        let directory = vault_app_data_directory_under(Path::new(r"C:\AppData\OpenObsidian"), root)
-            .unwrap();
+        let directory =
+            vault_app_data_directory_under(Path::new(r"C:\AppData\OpenObsidian"), root).unwrap();
         assert_eq!(
             directory,
             PathBuf::from(r"C:\AppData\OpenObsidian\vaults\21e3a7e70213929e99aaceb9")
@@ -414,7 +408,10 @@ mod tests {
         let path = unique_test_directory();
         ensure_real_directory(&path).unwrap();
         restrict_directory_to_current_user(&path).unwrap();
-        assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o700);
+        assert_eq!(
+            fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o700
+        );
         fs::remove_dir_all(path).unwrap();
     }
 

@@ -8,8 +8,7 @@ pub use storage_protection::{
     inspect_storage_protection,
 };
 pub use user_data::{
-    UserDataError, app_user_data_directory, prepare_vault_app_data,
-    vault_app_data_directory_under,
+    UserDataError, app_user_data_directory, prepare_vault_app_data, vault_app_data_directory_under,
 };
 
 /// A credential store backed by an operating-system protected secret facility.
