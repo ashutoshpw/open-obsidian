@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T14:41:22Z",
+  "updated_at": "2026-10-08T15:32:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283",
-  "current_milestone": "R2.6.29",
-  "next_action": "Integrate bounded note-embed resolution through the snapshot-bound VaultSession path, including Markdown-only target filtering and bounded reads; continue all C03/C03.2 acceptance and SYNC-007 via GitHub Actions.",
+  "last_reconciled_head": "08ab2379c9f96af4f1baece934f1711b6d78a24c",
+  "current_milestone": "R2.6.30",
+  "next_action": "Connect VaultSession::resolve_note_embed to the native egui transclusion renderer and fixture-backed interactions, then continue full C03/C03.2 acceptance and SYNC-007 through GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "3db8464e48bfc54e8f2fdf0b60f37becdc43b283"
+      "implementation_sha": "08ab2379c9f96af4f1baece934f1711b6d78a24c"
     },
     "R3": {
       "status": "pending",
@@ -5602,6 +5602,70 @@
         "Full C03/C03.1 and C03.2 cross-layer, fixture, transaction and interaction acceptance remains open; SYNC-007 host-level uninstall integration remains pending."
       ],
       "next_action": "Integrate bounded note-embed resolution through the snapshot-bound VaultSession path, including Markdown-only target filtering and bounded reads; keep broader C03/C03.2 and SYNC-007 acceptance pending until GitHub Actions proves it."
+    },
+    "R2.6.30": {
+      "status": "complete",
+      "implementation_sha": "08ab2379c9f96af4f1baece934f1711b6d78a24c",
+      "implementation_commits": [
+        "a66f0578ecd3e72940717d57292b7b457ecc0a44",
+        "da2131b369dc6c9921fae17b8612253b7afe74f7",
+        "fd3d159cfbee90a89d5210eeaae7b524aca25dfd",
+        "08ab2379c9f96af4f1baece934f1711b6d78a24c"
+      ],
+      "scope": "Integrate bounded, Markdown-only note-embed resolution through snapshot-bound VaultRoot and VaultSession APIs, with cycle/depth guards, subpath validation, and streaming snapshot hashes.",
+      "ci_attempts": [
+        {
+          "source_sha": "a66f0578ecd3e72940717d57292b7b457ecc0a44",
+          "rust_run_id": 37797342918,
+          "inventory_run_id": 37797343014,
+          "quality_run_id": 37797342891,
+          "desktop_build_run_id": 37797342984,
+          "plugin_renderer_run_id": 37797342986,
+          "loaded_plugin_run_id": 37797343012,
+          "finding": "Rust CI found an ambiguous Read::by_ref call and rustfmt changes; earlier duplicate workflow attempts included cancellations. The five companion workflows passed."
+        },
+        {
+          "source_sha": "da2131b369dc6c9921fae17b8612253b7afe74f7",
+          "rust_run_id": 37798666030,
+          "inventory_run_id": 37798666119,
+          "quality_run_id": 37798666154,
+          "desktop_build_run_id": 37798666137,
+          "plugin_renderer_run_id": 37798666080,
+          "loaded_plugin_run_id": 37798666151,
+          "finding": "Clippy identified identical NotRendered branches. The duplicate-basename status condition was combined; some duplicate push workflows were cancelled by concurrency."
+        },
+        {
+          "source_sha": "fd3d159cfbee90a89d5210eeaae7b524aca25dfd",
+          "rust_run_id": 37799695828,
+          "inventory_run_id": 37799695822,
+          "quality_run_id": 37799695640,
+          "desktop_build_run_id": 37799695626,
+          "plugin_renderer_run_id": 37799695711,
+          "loaded_plugin_run_id": 37799695802,
+          "finding": "Rust CI requested two remaining rustfmt changes; duplicate desktop and renderer runs were cancelled by concurrency."
+        },
+        {
+          "source_sha": "08ab2379c9f96af4f1baece934f1711b6d78a24c",
+          "rust_run_id": 37800020938,
+          "inventory_run_id": 37800020928,
+          "quality_run_id": 37800020964,
+          "desktop_build_run_id": 37800020941,
+          "plugin_renderer_run_id": 37800020936,
+          "loaded_plugin_run_id": 37800020931,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.30-note-embed-vault-08ab237.json",
+      "accepted_slice": [
+        "VaultRoot and VaultSession now resolve note embeds against a stable snapshot, filter targets to regular Markdown files, guard cycles/depth before unique-target reads, enforce the 512 KiB source bound, validate subpaths, and fail closed when snapshots change.",
+        "Ambiguous basename candidates are checked one at a time; snapshot hashing uses a fixed-size streaming buffer. CI tests cover subpath rendering, attachment exclusion, ambiguity, guard ordering, and oversized targets.",
+        "The document, engine, platform, plugins, UI and vault suites passed on Ubuntu, macOS and Windows. Formatting, Clippy, layering, native builds, Wry feasibility and all five companion workflows passed on exact source SHA. No local executable validation was run."
+      ],
+      "remaining": [
+        "The native UI does not yet consume the new resolver to render note transclusions; connect it to a fixture-backed egui interaction and verify recursion and failure presentation.",
+        "Full C03/C03.1 and C03.2 cross-layer fixture, transaction and interaction acceptance remains pending; SYNC-007 host-level uninstall integration remains pending."
+      ],
+      "next_action": "Connect VaultSession::resolve_note_embed to native egui transclusion rendering and fixture-backed interactions; keep full C03/C03.2 and SYNC-007 acceptance pending until GitHub Actions proves them."
     }
   },
   "ci_preparation": {
