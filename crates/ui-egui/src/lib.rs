@@ -1,5 +1,6 @@
 //! Native eframe application shell. Product workflows are migrated in later phases.
 
+use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
     LinkKind, LinkRenameAction, LinkResolutionStatus, TransclusionBlockReason, VaultConflictAction,
     VaultConflictRead, VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind,
@@ -7,7 +8,6 @@ use openobsidian_engine::{
     VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
     VaultRenameRecoveryReport, VaultRenameResult, VaultSession, plan_history_retention,
 };
-use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use std::sync::{
     Arc,
     mpsc::{self, Receiver, TryRecvError},
