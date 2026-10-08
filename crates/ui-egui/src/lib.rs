@@ -1179,7 +1179,7 @@ fn rename_recovery_summary(report: &VaultRenameRecoveryReport) -> Option<String>
 mod tests {
     use super::*;
     use egui_kittest::{Harness, kittest::Queryable as _};
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
     static NEXT_UI_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
@@ -2041,7 +2041,10 @@ mod tests {
         assert_eq!(preview.plan.edits[0].source_path, "Index.md");
         assert_eq!(preview.plan.edits[0].target, "Target");
         assert_eq!(preview.plan.edits[0].action, LinkRenameAction::Update);
-        assert_eq!(preview.plan.edits[0].replacement.as_deref(), Some("Moved/Target"));
+        assert_eq!(
+            preview.plan.edits[0].replacement.as_deref(),
+            Some("Moved/Target")
+        );
         harness.get_by_label("Will update");
         assert_eq!(
             std::fs::read(vault_path.join("Index.md")).unwrap(),
@@ -2097,8 +2100,13 @@ mod tests {
                 );
             }
         }
-        assert!(app.session.as_ref().unwrap().entries().iter().any(|entry| {
-            entry.relative_path.as_path() == Path::new(new_path)
-        }));
+        assert!(
+            app.session
+                .as_ref()
+                .unwrap()
+                .entries()
+                .iter()
+                .any(|entry| { entry.relative_path.as_path() == Path::new(new_path) })
+        );
     }
 }
