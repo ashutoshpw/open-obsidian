@@ -1,0 +1,131 @@
+{
+  "phase": "R2.6.5",
+  "slice": "R2.6.5a",
+  "status": "accepted_slice; rename transaction remains in progress",
+  "source_sha": "8be9112ceee2a4df1b2512891828dfeefaf03f30",
+  "implementation_commits": [
+    "d34e9c277f87620534766e916f3e29233acf8e11",
+    "bbc3adedae0f1c70288a1999bd845b898932c04f",
+    "0e449c4b7ceaa82ec6fc5b1e7d6d5f17132e7245",
+    "8be9112ceee2a4df1b2512891828dfeefaf03f30"
+  ],
+  "scope": "Add the reusable revision-checked vault write, preservation and journal foundation for the R2.6.5 multi-file rename transaction.",
+  "behavior": [
+    "VaultStore requires an existing app-owned data directory outside the selected vault.",
+    "Writes compare the caller's expected SHA-256 revision, preserve conflicting incoming bytes, preserve prior bytes before replacement, and append prepared/committed/failed journal entries.",
+    "Writes use same-directory temporary files and platform replacement behavior; Windows uses a backup fallback because filesystem replacement semantics differ.",
+    "A failed commit-journal append attempts a revision-guarded rollback; rollback leaves a changed file untouched and reports recovery-required state when restoration cannot be established."
+  ],
+  "focused_tests": [
+    "revision_checked_writes_preserve_previous_bytes_and_journal_the_operation",
+    "stale_writes_preserve_incoming_bytes_without_replacing_external_changes",
+    "failed_atomic_write_keeps_original_and_preserves_incoming_bytes",
+    "failed_commit_journal_rolls_back_a_new_file"
+  ],
+  "test_results": {
+    "ubuntu": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "9 passed"
+    },
+    "macos": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "9 passed"
+    },
+    "windows": {
+      "openobsidian_doc": "21 passed",
+      "openobsidian_vault": "8 passed; Unix-only symlink test is not compiled on Windows"
+    },
+    "local_executable_validation": "not run; executable validation was through GitHub Actions"
+  },
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2+744846f84"
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37724381031,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37724381031",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113139095558, "conclusion": "success"},
+        "macos": {"job_id": 113139095676, "conclusion": "success"},
+        "windows": {"job_id": 113139095708, "conclusion": "success"}
+      },
+      "checks": ["formatting", "workspace tests", "parallel group", "Clippy", "crate layers", "native preview builds", "Wry feasibility probes"]
+    },
+    "inventory": {
+      "run_id": 37724381029,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37724381029",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 113139095636, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 37724381014,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37724381014",
+      "conclusion": "success",
+      "attempt": 2,
+      "jobs": {
+        "windows": {"job_id": 113140035579, "conclusion": "success"},
+        "macos": {"job_id": 113140036581, "conclusion": "success"},
+        "ubuntu": {"job_id": 113140037158, "conclusion": "success"}
+      },
+      "retry_note": "The first Windows attempt timed out the unchanged restricted-runtime resource-exhaustion test after 5 seconds; rerunning the failed job on the same SHA passed."
+    },
+    "desktop": {
+      "run_id": 37724380962,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37724380962",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 113139095618, "conclusion": "success"},
+        "macos": {"job_id": 113139095698, "conclusion": "success"},
+        "ubuntu": {"job_id": 113139095753, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37724381040,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37724381040",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113139095675, "conclusion": "success"},
+        "macos": {"job_id": 113139095762, "conclusion": "success"},
+        "windows": {"job_id": 113139095786, "conclusion": "success"}
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37724380967,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37724380967",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 113139095755, "conclusion": "success"},
+        "ubuntu": {"job_id": 113139095843, "conclusion": "success"},
+        "macos": {"job_id": 113139096050, "conclusion": "success"}
+      }
+    }
+  },
+  "artifacts": [
+    {"run_id": 37724381031, "id": 11527785549, "name": "rust-plugin-runtime-macOS-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 2698, "archive_digest": "sha256:3afef957b1a3afc76f335928149119d10428858dc50a20802ebc02f5b89aa68d"},
+    {"run_id": 37724381031, "id": 11527656094, "name": "rust-plugin-runtime-Linux-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 2695, "archive_digest": "sha256:11effdbca36da5b8a091a22694c13fb0b90e6f6b6fb04fa835123a6182879562"},
+    {"run_id": 37724381031, "id": 11527331475, "name": "rust-plugin-runtime-Windows-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 2715, "archive_digest": "sha256:16018726232697b03c680ccc21fe8c1c73ea185b73d938841ad7da9a65be0219"},
+    {"run_id": 37724381031, "id": 11527207642, "name": "openobsidian-rust-preview-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 8257819, "archive_digest": "sha256:4c6a487b7a945cc8d0147dc91f14c2ab749f6ede64a6ee520f53a8a8c05e6501"},
+    {"run_id": 37724380962, "id": 11527805261, "name": "openobsidian-macOS-preview-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 397395487, "archive_digest": "sha256:c75688b6f482d929cbd0511df83da92d5e958a5a8e43ea565088df4f76ce9d3f"},
+    {"run_id": 37724380962, "id": 11526997839, "name": "openobsidian-Windows-preview-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 163005824, "archive_digest": "sha256:d650877a8da9e1c2a612a337861a322db0e77de0945c424366c82a18d5e4ea09"},
+    {"run_id": 37724380962, "id": 11526897943, "name": "openobsidian-Linux-preview-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 125946548, "archive_digest": "sha256:87abe7a8dacdb7dfe69ee29b8ef24c7ca7099f3f967d1d88727415f32503ebd2"},
+    {"run_id": 37724381040, "id": 11527560617, "name": "plugin-renderer-lifecycle-Windows-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 3242, "archive_digest": "sha256:37fa83c7d8b390eb8c2e9cf391f23e317f5a673785f3fc70bafb18ed53318556"},
+    {"run_id": 37724381040, "id": 11526808258, "name": "plugin-renderer-lifecycle-Linux-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 3221, "archive_digest": "sha256:993781d4b8b3e57f411a04138aa071b9e05290fc8a8161c3553e55c63b0cbc81"},
+    {"run_id": 37724381040, "id": 11526658760, "name": "plugin-renderer-lifecycle-macOS-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 3238, "archive_digest": "sha256:bd36c7733cf28108c893d48b0c2a093dfedb48b27dc9a314a8a4c39fa984e7b0"},
+    {"run_id": 37724380967, "id": 11526972796, "name": "loaded-plugin-workflows-Linux-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 171482, "archive_digest": "sha256:18c80e145f75ffcb47a17813ebf89f9296bf687182d9a9fa8e1aeb2360a26343"},
+    {"run_id": 37724380967, "id": 11526853082, "name": "loaded-plugin-workflows-Windows-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 171499, "archive_digest": "sha256:d4d7a3b30da882b2f79585dcc0a98fcac2bbfd86e0823e44e9d215327f2c813d"},
+    {"run_id": 37724380967, "id": 11526718646, "name": "loaded-plugin-workflows-macOS-8be9112ceee2a4df1b2512891828dfeefaf03f30", "size_bytes": 171476, "archive_digest": "sha256:0026cbc1876be62fac4dd3c069f91b9aa83f9d90116cbfe6d0a999cc61d2a945"}
+  ],
+  "repair_history": [
+    {"source_sha": "d34e9c277f87620534766e916f3e29233acf8e11", "rust_run_id": 37723602933, "finding": "Ubuntu rustfmt differences and test compilation failed because the vault test module had not imported sha256_hex."},
+    {"source_sha": "bbc3adedae0f1c70288a1999bd845b898932c04f", "rust_run_id": 37723839431, "finding": "All three Clippy jobs flagged the nested previous-bytes preservation if statement as collapsible."},
+    {"source_sha": "0e449c4b7ceaa82ec6fc5b1e7d6d5f17132e7245", "rust_run_id": 37724057916, "finding": "Ubuntu rustfmt required the let-chain opening brace on its own line; Windows and macOS Rust jobs passed."},
+    {"source_sha": "8be9112ceee2a4df1b2512891828dfeefaf03f30", "quality_run_id": 37724381014, "first_attempt": "Windows restricted-runtime resource-exhaustion test exceeded its 5-second timeout; same-SHA rerun passed all three OS jobs."}
+  ],
+  "limitations": [
+    "This slice does not yet implement multi-file rename apply, rollback, crash recovery or history cleanup; C03 and C03.2 remain Pending.",
+    "Revision checks are optimistic; a separate external writer can still race between the final revision read and replacement. The multi-file transaction slice must explicitly preserve and report external changes without claiming an OS-level compare-and-swap."
+  ],
+  "next_action": "Implement journaled, revision-checked multi-file rename apply and rollback with failure injection and preservation of external changes; keep C03/C03.2 pending until exact-SHA GitHub CI passes."
+}

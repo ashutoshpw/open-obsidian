@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T03:26:01Z",
+  "updated_at": "2026-10-08T03:53:42Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a",
+  "last_reconciled_head": "8be9112ceee2a4df1b2512891828dfeefaf03f30",
   "current_phase": "R2",
-  "current_milestone": "R2.6.4",
-  "next_action": "Begin R2.6.5 with a small journaled, revision-checked multi-file rename transaction slice. Port apply/rollback and recovery behavior from the existing vault broker, preserving external changes; keep C03/C03.2 pending until the exact implementation SHA passes required GitHub CI.",
+  "current_milestone": "R2.6.5",
+  "next_action": "Continue R2.6.5 by implementing journaled, revision-checked multi-file rename apply and rollback with failure injection and external-change preservation; keep C03/C03.2 pending until exact-SHA GitHub CI passes.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "84b4f843c20d7b8699f84cc08001a027c9a4ca2a"
+      "implementation_sha": "8be9112ceee2a4df1b2512891828dfeefaf03f30"
     },
     "R3": {
       "status": "pending",
@@ -2480,6 +2480,28 @@
         "Rust formatting, parallel checks, Clippy, layering, native builds, plugin feasibility probes and all five companion workflows pass on exact implementation SHA."
       ],
       "next_action": "R2.6.5: implement journaled, revision-checked rename apply and rollback with failure injection and external-change preservation; keep C03/C03.2 pending until exact-SHA CI acceptance."
+    },
+    "R2.6.5": {
+      "status": "in_progress",
+      "implementation_sha": "8be9112ceee2a4df1b2512891828dfeefaf03f30",
+      "implementation_commits": [
+        "d34e9c277f87620534766e916f3e29233acf8e11",
+        "bbc3adedae0f1c70288a1999bd845b898932c04f",
+        "0e449c4b7ceaa82ec6fc5b1e7d6d5f17132e7245",
+        "8be9112ceee2a4df1b2512891828dfeefaf03f30"
+      ],
+      "evidence": "evidence/r2.6.5-write-foundation-8be9112.json",
+      "scope": "Add a revision-checked, journaled single-file write foundation with previous/conflict/failed-byte preservation and guarded rollback when the commit journal fails.",
+      "accepted_slice": [
+        "Four focused vault tests pass through GitHub Rust CI on Ubuntu, macOS and Windows (the existing Unix-only symlink test is not compiled on Windows).",
+        "Rust formatting, workspace tests, parallel checks, Clippy, crate layers, native preview builds, Wry feasibility probes and all five companion workflows pass for the exact source SHA.",
+        "Local executable validation was not run."
+      ],
+      "remaining": [
+        "Implement multi-file rename apply/rollback and failure injection before considering R2.6.5 complete.",
+        "Preserve/report external changes without claiming OS-level compare-and-swap; crash recovery and history cleanup remain later work."
+      ],
+      "next_action": "Implement the journaled multi-file rename transaction using revision-bound previews and the new write foundation."
     }
   },
   "ci_preparation": {
