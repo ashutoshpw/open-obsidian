@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T00:12:39+00:00",
+  "updated_at": "2026-10-08T00:23:51+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
-  "last_reconciled_head": "4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b",
+  "last_reconciled_head": "c08207f6783e5432031a553e8831e97c7f39ee94",
   "current_phase": "R1",
   "current_milestone": "R1.2",
-  "next_action": "Run exact-SHA GitHub Actions after adding valid default-light/default-dark values to both PC08 theme fixture copies; verify compact/accent IDs and keep compatibility Pending.",
+  "next_action": "Run exact-SHA GitHub Actions after correcting PC08 variable-color metadata to use `default`; verify compact/accent IDs and keep compatibility Pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -103,7 +103,8 @@
     "Rust CI run 37701425250 on 47639e3cffd1b09c9c8292914e1a9328bbfa424f passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on all three platforms. PC05 passed. PC08 advanced through Setting.setHeading and Setting.setClass, rendered the appearance setting, then reported the missing global createSpan helper on every WebView. All companion workflows passed; the macOS quality job passed after rerunning its failed same-SHA attempt. Evidence is in evidence/r1.2-plugin-runtime-desktop-47639e3.json. The follow-up adds global and module createSpan support; compatibility remains Pending and no local executable validation was run.",
     "Rust CI run 37702519338 on 7a83009025b7dbe8ced99b4f366a36882a82b4cc passed Ubuntu formatting, workspace tests, Clippy, layering and native preview builds on all three platforms. All five companion workflows passed, and PC05 passed on every OS. PC08 advanced through createSpan, had no captured JS errors and rendered three controls, but only exposed the appearance group ID. Static inspection of the pinned bundle showed it uses helper callbacks and DocumentFragment creation methods. The next slice adds callback-aware createEl/createDiv/createSpan and createFragment support; compatibility remains Pending and no local executable validation was run. Evidence is in evidence/r1.2-plugin-runtime-desktop-7a83009.json.",
     "Rust CI run 37704569741 on b16801ce36fb7da83f1cd284a9c69bf785606dea passed the Rust parallel group, workspace tests, Clippy, layering and native preview builds on Ubuntu, macOS and Windows; Ubuntu formatting passed. PC05 passed on all three platforms. Bounded PC08 row snapshots showed the Appearance setting heading marked is-collapsed, explaining why its compact/accent child IDs were not mounted. No JS errors were captured. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-b16801c.json. The follow-up expands collapsed headings before checking controls; compatibility remains Pending and no local executable validation was run.",
-    "Rust CI run 37705662792 on 4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. Expanding the collapsed PC08 Appearance heading rendered the compact toggle. The pinned plugin rejected its Accent variable-color row because the theme fixture omitted required default-light/default-dark values. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-4de1ae5.json. The next slice adds valid defaults to both theme fixture copies and updates the inventory hash; compatibility remains Pending and no local executable validation was run."
+    "Rust CI run 37705662792 on 4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. Expanding the collapsed PC08 Appearance heading rendered the compact toggle. The pinned plugin rejected its Accent variable-color row because the theme fixture omitted required default-light/default-dark values. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-4de1ae5.json. The next slice adds valid defaults to both theme fixture copies and updates the inventory hash; compatibility remains Pending and no local executable validation was run.",
+    "Rust CI run 37706599128 on c08207f6783e5432031a553e8831e97c7f39ee94 passed the parallel group, workspace tests, Clippy, layering and native preview builds on all three platforms; Ubuntu formatting passed. PC05 passed everywhere. PC08 rendered Compact after expanding Appearance, but the pinned Style Settings bundle rejected Accent because the variable-color fixture used `default-light`/`default-dark` instead of `default`. All five companion workflows passed. Evidence is in evidence/r1.2-plugin-runtime-desktop-c08207f.json. The follow-up corrects the field and updates the inventory hash; compatibility remains Pending and no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -991,8 +992,8 @@
     },
     "R1.2": {
       "status": "in_progress",
-      "implementation_sha": "4de1ae5e7e4a841a6ea80ec3b65d3620673cb82b",
-      "evidence": "evidence/r1.2-plugin-runtime-desktop-4de1ae5.json",
+      "implementation_sha": "c08207f6783e5432031a553e8831e97c7f39ee94",
+      "evidence": "evidence/r1.2-plugin-runtime-desktop-c08207f.json",
       "candidate_stack": "Wry 0.57.0 + winit 0.30; Linux GTK/WebKitGTK 4.1; system WKWebView/WebView2 on macOS/Windows",
       "candidate_plugins": [
         "PC05",
@@ -1003,7 +1004,7 @@
       "lock_resolver_evidence": "evidence/r1.2-lock-resolver.json",
       "lockfile_sha256": "dfc3e567b971232e9f9b0e6768c161fdadddfeae7622f0925baab0c6fdb556f9",
       "temporary_lock_workflow": "removed",
-      "next_action": "Run exact-SHA GitHub Actions after adding valid default-light/default-dark values to both PC08 theme fixture copies; verify compact/accent IDs and keep compatibility Pending."
+      "next_action": "Run exact-SHA GitHub Actions after correcting PC08 variable-color metadata to use `default`; verify compact/accent IDs and keep compatibility Pending."
     }
   },
   "ci_preparation": {

@@ -1482,7 +1482,7 @@
     },
     {
       "path": "fixtures/plugin-loaded-workflows.json",
-      "sha256": "a19636960dd98cb786402026b0e77da11919a59aa77291b00d86c47dcb1e8703",
+      "sha256": "aca947901f9606d63b9e73c6af253eebb2022ba140bae14b2c16ef4214ba7649",
       "rust_owner": "crates/plugins",
       "mapping_status": "reviewed",
       "status": "pending",
