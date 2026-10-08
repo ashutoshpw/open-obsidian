@@ -1,0 +1,162 @@
+{
+  "phase": "R2.6.3",
+  "source_sha": "7b3b14bc5a8dac5762e0f957a3d922c09bab83fa",
+  "implementation_commits": [
+    "83295e66ccb8e163b39aaab95422ac4ccea73d72",
+    "7b3b14bc5a8dac5762e0f957a3d922c09bab83fa"
+  ],
+  "scope": "Build a pure, source-ranged preview plan for renaming a note and updating confidently resolved Markdown link targets; retain ambiguous and unresolved references as skipped warnings.",
+  "behavior": [
+    "Uses source-aware link resolution, including heading and block subpaths, to select unambiguous update targets.",
+    "Preserves link aliases, subpaths, relative Markdown path form, and byte-ranged target boundaries while rendering an in-memory preview.",
+    "Skips ambiguous and unresolved candidates with warnings rather than guessing.",
+    "Does not write files or mutate a vault; snapshot-bound transactions, apply and rollback remain future work."
+  ],
+  "focused_tests": [
+    "link_rename_plan_preserves_aliases_subpaths_bom_crlf_and_byte_ranges",
+    "link_rename_plan_uses_subpaths_to_disambiguate_same_basename_notes",
+    "link_rename_plan_skips_ambiguous_and_missing_subpaths",
+    "link_rename_plan_keeps_relative_markdown_targets_and_rejects_stale_preview_sources"
+  ],
+  "test_results": {
+    "ubuntu": "21 openobsidian-doc tests passed",
+    "macos": "21 openobsidian-doc tests passed",
+    "windows": "21 openobsidian-doc tests passed",
+    "local_executable_validation": "not run; all executable validation was through GitHub Actions"
+  },
+  "toolchain": {
+    "rust": "stable rustc 1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2+744846f84",
+    "wry": "0.57.0"
+  },
+  "platforms": {
+    "ubuntu": {
+      "job_id": 113127791127,
+      "rust_tests": "passed; openobsidian-doc 21 passed",
+      "format": "passed",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WebKitGTK 2.52.6",
+      "runtime_artifact_id": 11525359102,
+      "runtime_archive_sha256": "18b528f25f8f6c9f94133d01e8d6433a0190537b3ffef960a4fa2a045fb07068",
+      "runtime_report_sha256": "6b49f7a56a0e721c9152c38f883dfeaaa27cc1701737a9aeeed29022f4fc003b"
+    },
+    "macos": {
+      "job_id": 113127790876,
+      "rust_tests": "passed; openobsidian-doc 21 passed",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WKWebView 21624.5.1.11.3",
+      "runtime_artifact_id": 11526116491,
+      "runtime_archive_sha256": "d79f874b783c4bbfdd0f229733da903dbece2bd45f9476d1e5963bc5a0820655",
+      "runtime_report_sha256": "a9eb908edd51de7ba6c459b53796c83142bb225c825461d7ba9564882b17d6ce"
+    },
+    "windows": {
+      "job_id": 113127791047,
+      "rust_tests": "passed; openobsidian-doc 21 passed",
+      "format": "not scheduled",
+      "parallel_group": "passed",
+      "clippy": "passed",
+      "layering": "passed",
+      "native_build": "passed",
+      "plugin_probe": "PC05 and PC08 passed feasibility probes; legacy compatibility remains Pending",
+      "webview_engine": "WebView2 153.0.4234.48",
+      "runtime_artifact_id": 11525771434,
+      "runtime_archive_sha256": "e15937bba8e096bd6b6943bfac75c4a3ce24ae5e024461b26a319c41923f914b",
+      "runtime_report_sha256": "998583ef846bbedc3c27076106be8cc3b1e486c8b1c318a5963160e3d2a5a5af"
+    }
+  },
+  "linux_preview_artifact": {
+    "artifact_id": 11525334393,
+    "archive_sha256": "a6fdd6121c85094b7123f60be42a6a9313be3b648275591b122feb6a9c9b2b6c",
+    "size_bytes": 8257819,
+    "binary_sha256": "62711e410931df619b746dab41ff55cea5da4034cef56e4f358aafdf8585b91c",
+    "binary_size_bytes": 21289944
+  },
+  "ci_gates": {
+    "rust": {
+      "run_id": 37720822974,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720822974",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 113127790876, "conclusion": "success"},
+        "windows": {"job_id": 113127791047, "conclusion": "success"},
+        "ubuntu": {"job_id": 113127791127, "conclusion": "success"}
+      }
+    },
+    "inventory": {
+      "run_id": 37720822975,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720822975",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 113127790902, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 37720822991,
+      "attempt_1": "failure: macOS Electron theme screenshot audit",
+      "attempt_2": "success without source changes",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720822991",
+      "jobs_attempt_2": {
+        "macos": {"job_id": 113128771815, "conclusion": "success"},
+        "windows": {"job_id": 113128772645, "conclusion": "success"},
+        "ubuntu": {"job_id": 113128773217, "conclusion": "success"}
+      }
+    },
+    "desktop": {
+      "run_id": 37720823018,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720823018",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 113127791146, "conclusion": "success"},
+        "windows": {"job_id": 113127791343, "conclusion": "success"},
+        "ubuntu": {"job_id": 113127791545, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37720823017,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720823017",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113127791298, "conclusion": "success"},
+        "macos": {"job_id": 113127791472, "conclusion": "success"},
+        "windows": {"job_id": 113127791526, "conclusion": "success"}
+      }
+    },
+    "loaded_plugins": {
+      "run_id": 37720822984,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37720822984",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113127791436, "conclusion": "success"},
+        "windows": {"job_id": 113127791448, "conclusion": "success"},
+        "macos": {"job_id": 113127791483, "conclusion": "success"}
+      }
+    }
+  },
+  "repair_history": [
+    {
+      "source_sha": "83295e66ccb8e163b39aaab95422ac4ccea73d72",
+      "rust_run_id": 37720529091,
+      "companion_runs": [37720529046, 37720529100, 37720529005, 37720528963, 37720528964],
+      "finding": "Workspace tests passed, including the new document tests, but Ubuntu rustfmt requested layout changes and strict Clippy found an unnecessary sort comparator on macOS and Windows; applied only CI-reported corrections."
+    },
+    {
+      "source_sha": "7b3b14bc5a8dac5762e0f957a3d922c09bab83fa",
+      "rust_run_id": 37720822974,
+      "finding": "All three Rust OS jobs passed. The exact-SHA quality workflow's first attempt failed during the macOS Electron theme screenshot audit; attempt 2 passed without source changes."
+    }
+  ],
+  "limitations": [
+    "The plan and preview are read-only; no vault write, transaction, snapshot validation, rollback or crash-recovery behavior is implemented by this milestone.",
+    "Indented-code-block filtering remains outside this slice.",
+    "Unchanged-plugin probes remain feasibility-only and do not establish broad legacy compatibility or isolation certification.",
+    "No local executable validation was run."
+  ],
+  "finding": "R2.6.3 passed all six required exact-SHA GitHub Actions workflows on 7b3b14bc5a8dac5762e0f957a3d922c09bab83fa."
+}
