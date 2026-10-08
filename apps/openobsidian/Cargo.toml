@@ -13,3 +13,5 @@ openobsidian-engine = { workspace = true }
 openobsidian-platform = { workspace = true }
 openobsidian-plugins = { workspace = true }
 openobsidian-ui-egui = { workspace = true }
+rayon = { workspace = true }
+rfd = { workspace = true }
