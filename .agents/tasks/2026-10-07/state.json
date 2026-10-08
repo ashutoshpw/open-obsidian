@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-08T09:23:46Z",
+  "updated_at": "2026-10-08T09:44:25Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fc8b896054979af3e0dc212a7f33576a3672a524",
-  "current_milestone": "R2.6.15",
-  "next_action": "Extend the linked rename fixture through interrupted-transaction recovery and native interaction evidence, then continue D16, SYNC-007 and uninstall preservation; keep C03/C03.2 pending until full cross-layer acceptance passes in GitHub CI.",
+  "last_reconciled_head": "927b77f240d962259fe507132ebfa3696e6872f8",
+  "current_milestone": "R2.6.16",
+  "next_action": "Establish native interaction evidence for rename preview and apply, then continue the remaining R2 acceptance gates for D16, SYNC-007, history integration and uninstall preservation; keep C03/C03.2 pending until full cross-layer acceptance passes in GitHub CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "fc8b896054979af3e0dc212a7f33576a3672a524"
+      "implementation_sha": "927b77f240d962259fe507132ebfa3696e6872f8"
     },
     "R3": {
       "status": "pending",
@@ -147,7 +147,8 @@
     "R2.6.12 exact-SHA CI on 5a5dea83536ff53f5d05851ace0a5b10a045c571 passed workspace tests on all three OSes and all five companion workflows; Rust CI reported formatting and cmp_owned findings. Applied the exact formatter and Clippy corrections; no local executable validation was run.",
     "R2.6.12 passed all six required GitHub Actions workflows on exact source SHA fec449b5f99b01c275fdfdbb510b6f9fb73e3799; the successful Rust retry passed formatting, workspace tests, Clippy, layers, native builds and Wry probes on Ubuntu/macOS/Windows. Evidence: evidence/r2.6.12-engine-rename-recovery-fec449b.json. No local executable validation was run.",
     "R2.6.14 made fixture:c03-rename-move executable through the Rust testkit and link planner; fixture rendering tests passed on Ubuntu, macOS and Windows and all six required workflows passed on exact source SHA 7f9b53ca22971e34e9f900f1185ed4376ee2ce2e. Evidence: evidence/r2.6.14-rename-plan-fixture-7f9b53c.json. C03/C03.2, D16, SYNC-007 and uninstall preservation remain pending; no local executable validation was run.",
-    "R2.6.15 connected every rename fixture case to filesystem-backed VaultStore apply and added a fixture-driven failure test proving prior reference writes and the source move roll back. All six required GitHub Actions workflows passed on exact SHA fc8b896054979af3e0dc212a7f33576a3672a524; both fixture tests passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.15-rename-vault-transaction-fixture-fc8b896.json. No local executable validation was run. Interrupted-transaction recovery, native interaction, D16, SYNC-007 and uninstall preservation remain pending."
+    "R2.6.15 connected every rename fixture case to filesystem-backed VaultStore apply and added a fixture-driven failure test proving prior reference writes and the source move roll back. All six required GitHub Actions workflows passed on exact SHA fc8b896054979af3e0dc212a7f33576a3672a524; both fixture tests passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.15-rename-vault-transaction-fixture-fc8b896.json. No local executable validation was run. Interrupted-transaction recovery, native interaction, D16, SYNC-007 and uninstall preservation remain pending.",
+    "R2.6.16 extended fixture:c03-rename-move through interrupted VaultStore rename recovery, including byte-for-byte restoration, rolled_back journaling and idempotence. All six required workflows passed on exact SHA 927b77f240d962259fe507132ebfa3696e6872f8; the recovery test passed on Ubuntu, macOS and Windows. Evidence: evidence/r2.6.16-rename-recovery-fixture-927b77f.json. No local executable validation was run. Native interaction, D16, SYNC-007, history integration and uninstall preservation remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -3677,6 +3678,82 @@
         {"name": "windows-latest", "job_id": 113238485407, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755371910/job/113238485407"},
         {"name": "macos-latest", "job_id": 113238485459, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37755371910/job/113238485459"}
       ]
+    },
+    {
+      "name": "rust",
+      "run_id": 37757851922,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851922",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113246721859, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851922/job/113246721859"},
+        {"name": "rust (windows-latest)", "job_id": 113246722136, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851922/job/113246722136"},
+        {"name": "rust (macos-latest)", "job_id": 113246722231, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851922/job/113246722231"}
+      ]
+    },
+    {
+      "name": "inventory",
+      "run_id": 37757852034,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757852034",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113246722113, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757852034/job/113246722113"}
+      ]
+    },
+    {
+      "name": "quality",
+      "run_id": 37757851871,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851871",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113246722003, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851871/job/113246722003"},
+        {"name": "ubuntu-latest", "job_id": 113246722274, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851871/job/113246722274"},
+        {"name": "windows-latest", "job_id": 113246722325, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851871/job/113246722325"}
+      ]
+    },
+    {
+      "name": "desktop-build",
+      "run_id": 37757851825,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851825",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113246720794, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851825/job/113246720794"},
+        {"name": "ubuntu-latest", "job_id": 113246721034, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851825/job/113246721034"},
+        {"name": "windows-latest", "job_id": 113246721186, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851825/job/113246721186"}
+      ]
+    },
+    {
+      "name": "plugin-renderer",
+      "run_id": 37757851891,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851891",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113246721627, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851891/job/113246721627"},
+        {"name": "macos-latest", "job_id": 113246721832, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851891/job/113246721832"},
+        {"name": "ubuntu-latest", "job_id": 113246721879, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851891/job/113246721879"}
+      ]
+    },
+    {
+      "name": "loaded-plugins",
+      "run_id": 37757851804,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113246721190, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804/job/113246721190"},
+        {"name": "windows-latest", "job_id": 113246721524, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804/job/113246721524"},
+        {"name": "macos-latest", "job_id": 113246721537, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804/job/113246721537"}
+      ]
     }
   ],
   "milestones": {
@@ -4252,6 +4329,64 @@
         "C03/C03.2, D16, SYNC-007, history integration details, remaining R2 workflow gaps and uninstall preservation remain pending for full migration acceptance."
       ],
       "next_action": "Extend fixture coverage through interrupted-transaction recovery and native interaction evidence; continue D16, SYNC-007 and uninstall preservation."
+    },
+    "R2.6.16": {
+      "status": "complete",
+      "implementation_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "implementation_commits": [
+        "38b7ac0bf81e7e9205910fe2df46f4152a95ce56",
+        "8a45120a3a8c92222cc5a0fdc49b68c495ed5bd8",
+        "927b77f240d962259fe507132ebfa3696e6872f8"
+      ],
+      "scope": "Drive the shared C03 rename fixture through interrupted VaultStore transaction recovery.",
+      "ci_attempts": [
+        {
+          "source_sha": "38b7ac0bf81e7e9205910fe2df46f4152a95ce56",
+          "rust_run_id": 37757201156,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37757201165,
+          "quality_run_id": 37757201162,
+          "desktop_build_run_id": 37757201187,
+          "plugin_renderer_run_id": 37757201174,
+          "loaded_plugin_run_id": 37757201160,
+          "companion_conclusion": "all five passed",
+          "finding": "The new recovery test returned no recovered operation; the assertion did not yet show the report's needs_attention details."
+        },
+        {
+          "source_sha": "8a45120a3a8c92222cc5a0fdc49b68c495ed5bd8",
+          "rust_run_id": 37757613272,
+          "rust_conclusion": "failure",
+          "inventory_run_id": 37757613503,
+          "quality_run_id": 37757613389,
+          "desktop_build_run_id": 37757613546,
+          "plugin_renderer_run_id": 37757613420,
+          "loaded_plugin_run_id": 37757613252,
+          "companion_conclusion": "all five passed",
+          "finding": "The recovery report showed that exact_vault_entry rejected the nested destination parent Archive as though it were a file."
+        },
+        {
+          "source_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+          "rust_run_id": 37757851922,
+          "inventory_run_id": 37757852034,
+          "quality_run_id": 37757851871,
+          "desktop_build_run_id": 37757851825,
+          "plugin_renderer_run_id": 37757851891,
+          "loaded_plugin_run_id": 37757851804,
+          "conclusion": "all six required workflows passed"
+        }
+      ],
+      "evidence": "evidence/r2.6.16-rename-recovery-fixture-927b77f.json",
+      "accepted_slice": [
+        "The fixture-driven recovery test simulates a crash after moving Old.md to Archive/New.md and applying linked-reference writes, then reopens the vault and calls recover_pending_rename_transactions.",
+        "Recovery restores every original fixture byte, removes the renamed source path, appends a rolled_back journal record, reports no attention items, and is idempotent on a second call.",
+        "The nested destination parent lookup now validates each directory component, rejects symlinks and non-directories, and checks the canonical directory remains inside the vault root.",
+        "All six required workflows passed on exact source SHA 927b77f240d962259fe507132ebfa3696e6872f8. The recovery test passed on Ubuntu, macOS and Windows; no local executable validation was run."
+      ],
+      "remaining": [
+        "The fixture has not yet been inspected through an interactive native desktop session.",
+        "C03/C03.2 full cross-layer acceptance, D16, SYNC-007, remaining R2 workflow gaps, history integration details and uninstall preservation remain pending."
+      ],
+      "next_action": "Establish native interaction evidence for rename preview and apply, then continue the remaining R2 safety and uninstall acceptance gates."
     }
   },
   "ci_preparation": {

@@ -1,0 +1,154 @@
+{
+  "slice": "R2.6.16 fixture-backed interrupted VaultStore rename recovery",
+  "phase": "R2",
+  "status": "accepted slice; R2 remains in progress",
+  "source_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+  "implementation_commits": [
+    "38b7ac0bf81e7e9205910fe2df46f4152a95ce56",
+    "8a45120a3a8c92222cc5a0fdc49b68c495ed5bd8",
+    "927b77f240d962259fe507132ebfa3696e6872f8"
+  ],
+  "scope": "Exercise the shared C03 resolved rename fixture through a simulated interrupted transaction, vault reopen and recovery.",
+  "behavior": [
+    "The recovery test materializes the resolved fixture in a temporary vault, records before-images and a prepared rename manifest, moves Old.md to Archive/New.md, and writes the planned reference updates before simulating process interruption.",
+    "On reopen, recovery restores every original fixture byte, moves the source back, removes Archive/New.md, appends a rolled_back journal record, reports no needs_attention items and performs no duplicate work when called again.",
+    "Nested exact-path lookup now validates each parent component as a directory, rejects symlinks and non-directories, and checks canonical containment beneath the vault root.",
+    "No local executable validation was run; all executable validation used GitHub Actions."
+  ],
+  "ci_runs": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37757851922,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851922",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113246721859, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113246722136, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113246722231, "conclusion": "success"}
+      ],
+      "checks": [
+        "Formatting, workspace tests, Clippy, dependency-layer checks, native preview builds and unchanged-plugin Wry feasibility probes passed on Ubuntu, macOS and Windows.",
+        "The interrupted C03 fixture recovery test passed on all three operating systems."
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37757852034,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757852034",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113246722113, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37757851871,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851871",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113246722003, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113246722274, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113246722325, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37757851825,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851825",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113246720794, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113246721034, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113246721186, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37757851891,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851891",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113246721627, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113246721832, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113246721879, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37757851804,
+      "head_sha": "927b77f240d962259fe507132ebfa3696e6872f8",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37757851804",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113246721190, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113246721524, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113246721537, "conclusion": "success"}
+      ]
+    }
+  ],
+  "test_results": {
+    "ubuntu-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "30 passed, including interrupted C03 fixture recovery"
+    },
+    "macos-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "12 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "30 passed, including interrupted C03 fixture recovery"
+    },
+    "windows-latest": {
+      "openobsidian-doc": "21 passed",
+      "openobsidian-engine": "2 passed",
+      "openobsidian-platform": "13 passed",
+      "openobsidian-testkit": "2 passed",
+      "openobsidian-ui-egui": "6 passed",
+      "openobsidian-vault": "29 passed, including interrupted C03 fixture recovery"
+    },
+    "local_executable_validation": "not run; validation was performed through GitHub Actions only"
+  },
+  "superseded_attempts": [
+    {
+      "source_sha": "38b7ac0bf81e7e9205910fe2df46f4152a95ce56",
+      "rust_run_id": 37757201156,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37757201165, "conclusion": "success"},
+        "quality": {"run_id": 37757201162, "conclusion": "success"},
+        "desktop-build": {"run_id": 37757201187, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37757201174, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37757201160, "conclusion": "success"}
+      },
+      "finding": "The new recovery test returned no recovered operation; the failure assertion did not yet print needs_attention details."
+    },
+    {
+      "source_sha": "8a45120a3a8c92222cc5a0fdc49b68c495ed5bd8",
+      "rust_run_id": 37757613272,
+      "rust_conclusion": "failure",
+      "other_workflows": {
+        "inventory": {"run_id": 37757613503, "conclusion": "success"},
+        "quality": {"run_id": 37757613389, "conclusion": "success"},
+        "desktop-build": {"run_id": 37757613546, "conclusion": "success"},
+        "plugin-renderer": {"run_id": 37757613420, "conclusion": "success"},
+        "loaded-plugins": {"run_id": 37757613252, "conclusion": "success"}
+      },
+      "finding": "The diagnostic assertion identified that the nested destination parent Archive was passed to a vault resolver that accepts only regular-file leaves."
+    }
+  ],
+  "limitations": [
+    "This slice verifies interrupted rename recovery through VaultStore fixtures, but it does not inspect the flow in an interactive native desktop session.",
+    "C03/C03.2 remain pending full cross-layer and native interaction acceptance. D16, SYNC-007, remaining R2 workflow gaps, history integration and uninstall preservation remain pending.",
+    "No local executable validation was run."
+  ]
+}
