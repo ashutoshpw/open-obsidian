@@ -1467,6 +1467,70 @@ mod tests {
     }
 
     #[test]
+    fn egui_over_cap_history_warning_does_not_start_cleanup() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        std::fs::create_dir(&vault_path).unwrap();
+        std::fs::create_dir(&app_data_path).unwrap();
+        let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+
+        let now = SystemTime::now();
+        let policy = VaultHistoryPolicy {
+            max_age_days: 30,
+            max_bytes: GIBIBYTE / 10 + 1,
+        };
+        let protected_bytes = policy.max_bytes + 1;
+        let records = vec![
+            VaultHistoryRecord {
+                id: "over-cap-conflict".to_owned(),
+                relative_path: PathBuf::from("notes/current.md"),
+                revision_sha256: "a".repeat(64),
+                bytes: protected_bytes,
+                captured_at: now,
+                kind: VaultHistoryKind::Conflict,
+                protected: true,
+                expected_revision_sha256: Some("b".repeat(64)),
+                current_revision_sha256: Some("c".repeat(64)),
+            },
+            VaultHistoryRecord {
+                id: "aged-recovery".to_owned(),
+                relative_path: PathBuf::from("notes/current.md"),
+                revision_sha256: "d".repeat(64),
+                bytes: 64,
+                captured_at: SystemTime::UNIX_EPOCH,
+                kind: VaultHistoryKind::Recovery,
+                protected: false,
+                expected_revision_sha256: None,
+                current_revision_sha256: None,
+            },
+        ];
+        let plan = plan_history_retention(&records, policy, now);
+        assert!(plan.warning);
+        assert_eq!(plan.pruneable.len(), 1);
+
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            history_policy: policy,
+            history_records: records,
+            history_plan: Some(plan),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label(
+            "Protected history exceeds the configured size limit and will be kept.",
+        );
+        harness.get_by_label("Review eligible cleanup");
+        let app = harness.state();
+        assert!(app.history_plan.as_ref().unwrap().warning);
+        assert!(!app.cleanup_confirmation);
+        assert!(app.history_receiver.is_none());
+        assert!(app.history_status.is_none());
+        assert_eq!(app.history_records.len(), 2);
+    }
+
+    #[test]
     fn conflict_preview_is_bounded_and_omits_binary_bytes() {
         let long_text = "é".repeat(10_000);
         let preview = bounded_text_preview(long_text.as_bytes());
