@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.37",
+  "requirement": "SYNC-007",
+  "source_sha": "62c2dfd07615af2110beaa49bf1627162be469fd",
+  "implementation_commits": [
+    "951b1677c251a5f05bef19350decc015428a365d",
+    "62c2dfd07615af2110beaa49bf1627162be469fd"
+  ],
+  "scope": {
+    "change": "Add an ownership-checked cleanup executor over app-owned user data and a package adapter seam.",
+    "preservation": "Only marked app-owned root and per-vault cache/recovery/failed directories are eligible. Vault files, unresolved conflicts, journals, ownership markers, unknown paths, and unowned neighboring directories remain. Recovery directories are retained when journals are pending, failed, malformed, unreadable, oversized, or exceed the pending-operation bound.",
+    "adapter": "Expose explicit CLI selection flags and CredentialStore::delete_all_for_application for a future native package adapter. There is no OS credential backend or package-manager invocation yet; credential deletion reports unavailable instead of claiming success.",
+    "fixture": "The shared uninstall-preservation fixture includes ownership markers, a prepared rename journal, its before-image, conflicts, cache/history, unknown neighbors, and an unowned hash directory."
+  },
+  "accepted_validation": {
+    "source_sha": "62c2dfd07615af2110beaa49bf1627162be469fd",
+    "conclusion": "All six required GitHub Actions workflows passed on the exact source SHA.",
+    "workflows": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37830288726,
+        "job_ids": [113493559296]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37830288660,
+        "job_ids": [113493558774, 113493559175, 113493559355]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37830288730,
+        "job_ids": [113493560235, 113493560573, 113493560709]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37830288689,
+        "job_ids": [113493559991, 113493560379, 113493560872]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37830288825,
+        "job_ids": [113493559740, 113493560267, 113493560270]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37830288775,
+        "job_ids": [113493561196, 113493561432, 113493561442]
+      }
+    ],
+    "passed_checks": [
+      "Rust formatting",
+      "workspace tests, including cleanup and preservation fixtures",
+      "Clippy",
+      "crate dependency layering",
+      "native preview builds",
+      "unchanged-plugin feasibility probes",
+      "all five companion workflows"
+    ],
+    "local_executable_validation": "None; executable validation ran only in GitHub Actions."
+  },
+  "artifacts": [
+    {
+      "name": "Rust preview Linux",
+      "id": 11573945570,
+      "size": 9571602,
+      "digest": "sha256:534c9d2a56552c0c79132cdecab861942e8ecd79eb3200da71a121880bb53a69"
+    },
+    {
+      "name": "Rust runtime Windows",
+      "id": 11572823565,
+      "size": 2715,
+      "digest": "sha256:43f72e453af808f2f90d9807bc4e0967dccc4032b65f6d9fc0014f871bcbe8b8"
+    },
+    {
+      "name": "Rust runtime macOS",
+      "id": 11574090482,
+      "size": 2698,
+      "digest": "sha256:bf869bd9e3185a54f26d008bed72367d94a6e386d1c8ec82d1c313cb989375d7"
+    },
+    {
+      "name": "Rust runtime Linux",
+      "id": 11574055451,
+      "size": 2695,
+      "digest": "sha256:0e387042e9badaae475eea2b2ffb8b1a72c2385671edca64b909a6a073873673"
+    },
+    {
+      "name": "Desktop Linux preview",
+      "id": 11573395877,
+      "size": 125946548,
+      "digest": "sha256:60ffc88f73e02d3c2853215a3899c75144c7218f0979831dc1a90ea681e32e90"
+    },
+    {
+      "name": "Desktop macOS preview",
+      "id": 11573805324,
+      "size": 397395487,
+      "digest": "sha256:23dfc4eabfa956ea2b6496eecae5deefbe7ccf0a2000c3e9d22f65bda17f577c"
+    },
+    {
+      "name": "Desktop Windows preview",
+      "id": 11573960408,
+      "size": 163005824,
+      "digest": "sha256:2c604dd9e3a12c52ce47141266d8d80a55b779de4ea35195e810b88987e6a58c"
+    },
+    {
+      "name": "Plugin renderer Linux",
+      "id": 11573271087,
+      "size": 3221,
+      "digest": "sha256:efc779bbe4f8cb21eee9b2aab73b10b38b387f17b58e376c15aff0d44dc69138"
+    },
+    {
+      "name": "Plugin renderer macOS",
+      "id": 11573331323,
+      "size": 3238,
+      "digest": "sha256:d1b087b03300428755d1630496f7a1d54aaa81c19695b8cbd7911a4edb314516"
+    },
+    {
+      "name": "Plugin renderer Windows",
+      "id": 11573456031,
+      "size": 3242,
+      "digest": "sha256:250f306bd44bc7ab850ae78c127b704651a329512cd6acd5495fdc5b836e80dc"
+    }
+  ],
+  "remaining": [
+    "The R6 native package/uninstaller must call the cleanup adapter only after the desktop process exits; actual OS uninstall preservation remains unvalidated until a package format is selected.",
+    "Credential cleanup remains unavailable until an OS credential backend implements application-scoped deletion.",
+    "The current UI cleanup choices are a preview and do not invoke the adapter."
+  ]
+}

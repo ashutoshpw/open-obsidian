@@ -7092,9 +7092,12 @@
       "next_action": "Implement an explicit, conflict-safe cleanup executor over app-owned user data and define its adapter seam for the R6 native uninstaller; validate only through GitHub Actions."
     },
     "R2.6.37": {
-      "status": "in_progress",
-      "implementation_sha": null,
-      "implementation_commits": [],
+      "status": "complete",
+      "implementation_sha": "62c2dfd07615af2110beaa49bf1627162be469fd",
+      "implementation_commits": [
+        "951b1677c251a5f05bef19350decc015428a365d",
+        "62c2dfd07615af2110beaa49bf1627162be469fd"
+      ],
       "scope": "Add an ownership-checked cleanup executor and package adapter seam for app-owned user data while retaining unresolved conflicts, operation journals and recovery images.",
       "ci_attempts": [
         {
@@ -7105,17 +7108,35 @@
             "Ubuntu rustfmt reported formatting changes in the cleanup CLI and platform implementation; macOS and Windows Clippy reported that UserDataCleanupOutcome can derive Default. Workspace tests passed on Ubuntu, macOS and Windows.",
             "The five companion workflows passed on this SHA: inventory 37829742187, quality 37829742154, desktop build 37829742221, plugin renderer 37829742225 and loaded-plugin workflows 37829742268."
           ],
-          "correction": "Applied the CI-reported formatting and derived Default; fresh exact-SHA validation is pending."
+          "correction": "Applied the CI-reported formatting and derived Default in 62c2dfd; the corrected source passed all six workflows on that exact SHA."
+        },
+        {
+          "source_sha": "62c2dfd07615af2110beaa49bf1627162be469fd",
+          "conclusion": "success",
+          "workflows": {
+            "rust_ci": 37830288660,
+            "inventory": 37830288726,
+            "quality": 37830288730,
+            "desktop_build": 37830288689,
+            "plugin_renderer": 37830288825,
+            "loaded_plugin_workflows": 37830288775
+          },
+          "evidence": "evidence/r2.6.37-uninstall-cleanup-62c2dfd.json"
         }
       ],
-      "evidence": null,
-      "accepted_slice": [],
-      "remaining": [
-        "Exact-SHA GitHub Actions validation after the CI-reported formatting and Clippy fixes is pending.",
-        "A native OS package does not yet invoke the adapter; this remains an R6 handoff.",
-        "Credential cleanup remains unavailable until an OS credential backend implements application-scoped deletion."
+      "evidence": "evidence/r2.6.37-uninstall-cleanup-62c2dfd.json",
+      "accepted_slice": [
+        "Ownership-checked cleanup executor preserves vault files, conflicts, journals, recovery images needed by unfinished operations, ownership markers and unknown paths.",
+        "Journal inspection is bounded and retains recovery directories when status is pending, failed, malformed, unreadable or over configured limits.",
+        "Explicit CLI selection and application-scoped credential deletion seam are available; missing credential support is reported as unavailable.",
+        "All six required workflows passed on exact source SHA 62c2dfd07615af2110beaa49bf1627162be469fd."
       ],
-      "next_action": "Commit and push the GitHub-reported formatting and Clippy correction, then review all six exact-SHA workflows; do not run executable validation locally."
+      "remaining": [
+        "A native OS package does not yet invoke the adapter; this remains an R6 handoff.",
+        "Credential cleanup remains unavailable until an OS credential backend implements application-scoped deletion.",
+        "The UI cleanup choices remain a preview and do not invoke the adapter."
+      ],
+      "next_action": "Continue the next Rust migration slice. Complete actual native uninstall integration during R6 after selecting the package format; do not run executable validation locally."
     }
   },
   "ci_preparation": {
