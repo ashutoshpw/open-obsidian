@@ -1991,16 +1991,17 @@ mod tests {
             b"![[Images/photo.png|Accessible red dot]]\n",
         )
         .unwrap();
-        std::fs::write(vault_path.0.join("Images/photo.png"), [1, 2, 3]).unwrap();
+        let source_image = include_bytes!("../../../assets/openobsidian-icon.png");
+        std::fs::write(vault_path.0.join("Images/photo.png"), source_image).unwrap();
         let session = VaultSession::open(&vault_path.0, &app_data_path.0).unwrap();
-        let mut report = session.resolve_note_embeds_for_note("Index.md").unwrap();
-        report.embeds[0].resolution.disposition =
-            VaultNoteEmbedDisposition::Attachment(VaultInlineImage {
-                revision_sha256: "fixture-image-sha256".to_owned(),
-                width: 1,
-                height: 1,
-                rgba_bytes: vec![255, 0, 0, 255],
-            });
+        let report = session.resolve_note_embeds_for_note("Index.md").unwrap();
+        assert!(matches!(
+            &report.embeds[0].resolution.disposition,
+            VaultNoteEmbedDisposition::Attachment(image)
+                if image.width > 0
+                    && image.height > 0
+                    && image.rgba_bytes.len() == (image.width * image.height * 4) as usize
+        ));
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             link_source_path: Some(Path::new("Index.md").to_path_buf()),
@@ -2012,6 +2013,12 @@ mod tests {
 
         harness.get_by_label("Accessible red dot");
         assert_eq!(harness.state().inline_image_textures.len(), 1);
+        assert_eq!(
+            std::fs::read(vault_path.0.join("Images/photo.png"))
+                .unwrap()
+                .as_slice(),
+            source_image.as_slice()
+        );
     }
 
     #[test]
