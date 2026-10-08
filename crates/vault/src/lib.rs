@@ -170,6 +170,11 @@ impl VaultRoot {
         Ok(entries)
     }
 
+    /// Returns the canonical path of the opened vault root.
+    pub fn path(&self) -> &Path {
+        &self.canonical_root
+    }
+
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         let relative_path = relative_path.as_ref();
         let canonical = self.resolve_vault_path(relative_path, false)?;

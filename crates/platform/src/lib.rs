@@ -1,10 +1,15 @@
 //! Native operating-system service interfaces.
 
 mod storage_protection;
+mod user_data;
 
 pub use storage_protection::{
     StorageProtectionPlatform, StorageProtectionReport, StorageProtectionStatus,
     inspect_storage_protection,
+};
+pub use user_data::{
+    UserDataError, app_user_data_directory, prepare_vault_app_data,
+    vault_app_data_directory_under,
 };
 
 /// A credential store backed by an operating-system protected secret facility.
