@@ -285,7 +285,7 @@ impl OpenObsidianApp {
         ui.small("Provider credentials kept in OS-backed credential storage.");
         ui.checkbox(
             &mut self.uninstall_cleanup.recovery_history,
-            "Recovery history",
+            "Clean up recovery history",
         );
         ui.small("Managed recovery snapshots; unresolved conflicts remain protected.");
         ui.label(uninstall_cleanup_summary(self.uninstall_cleanup));
@@ -1396,7 +1396,7 @@ mod tests {
         harness.step();
         harness.get_by_label("Stored credentials").click();
         harness.step();
-        harness.get_by_label("Recovery history").click();
+        harness.get_by_label("Clean up recovery history").click();
         harness.step();
 
         let selection = harness.state().uninstall_cleanup;
