@@ -1566,7 +1566,12 @@ mod tests {
         harness.step();
         assert_eq!(probe_calls.load(Ordering::SeqCst), 2);
         assert_eq!(
-            harness.state().storage_protection_report.as_ref().unwrap().status,
+            harness
+                .state()
+                .storage_protection_report
+                .as_ref()
+                .unwrap()
+                .status,
             StorageProtectionDisplayStatus::Disabled
         );
         harness.get_by_label("Status: Disabled (OS reported)");
@@ -1576,7 +1581,12 @@ mod tests {
         harness.step();
         assert_eq!(probe_calls.load(Ordering::SeqCst), 3);
         assert_eq!(
-            harness.state().storage_protection_report.as_ref().unwrap().status,
+            harness
+                .state()
+                .storage_protection_report
+                .as_ref()
+                .unwrap()
+                .status,
             StorageProtectionDisplayStatus::Unknown
         );
         harness.get_by_label("Status: Unknown (encryption not verified)");
