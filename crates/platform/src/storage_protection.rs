@@ -100,9 +100,17 @@ fn inspect_macos(
     };
     let lower = output.to_ascii_lowercase();
     if lower.contains("filevault is on") {
-        enabled(platform, method, "FileVault reports enabled for system storage.")
+        enabled(
+            platform,
+            method,
+            "FileVault reports enabled for system storage.",
+        )
     } else if lower.contains("filevault is off") {
-        disabled(platform, method, "FileVault reports disabled for system storage.")
+        disabled(
+            platform,
+            method,
+            "FileVault reports disabled for system storage.",
+        )
     } else {
         unknown(platform, method, "FileVault status was inconclusive.")
     }
@@ -130,11 +138,19 @@ fn inspect_windows(
     if matches_ignore_ascii_case(protection, "Protection On")
         && matches_ignore_ascii_case(conversion, "Fully Encrypted")
     {
-        enabled(platform, method, "BitLocker reports the system drive fully encrypted and protected.")
+        enabled(
+            platform,
+            method,
+            "BitLocker reports the system drive fully encrypted and protected.",
+        )
     } else if matches_ignore_ascii_case(protection, "Protection Off")
         || matches_ignore_ascii_case(conversion, "Fully Decrypted")
     {
-        disabled(platform, method, "BitLocker reports the system drive unprotected or fully decrypted.")
+        disabled(
+            platform,
+            method,
+            "BitLocker reports the system drive unprotected or fully decrypted.",
+        )
     } else {
         unknown(
             platform,
@@ -230,9 +246,8 @@ fn linux_mapper_name(source: &str) -> Option<&str> {
     let mut bytes = name.bytes();
     let first = bytes.next()?;
     if !first.is_ascii_alphanumeric()
-        || !bytes.all(|byte| {
-            byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'+')
-        })
+        || !bytes
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'+'))
     {
         return None;
     }
@@ -274,9 +289,14 @@ fn disabled(
 fn unknown(
     platform: StorageProtectionPlatform,
     method: &str,
-    detail: &str,
+    detail: impl AsRef<str>,
 ) -> StorageProtectionReport {
-    report(platform, StorageProtectionStatus::Unknown, method, detail)
+    report(
+        platform,
+        StorageProtectionStatus::Unknown,
+        method,
+        detail.as_ref(),
+    )
 }
 
 fn report(
@@ -306,21 +326,18 @@ mod tests {
 
     #[test]
     fn macos_reports_only_explicit_filevault_states() {
-        let enabled = inspect_storage_protection_with(
-            StorageProtectionPlatform::MacOS,
-            None,
-            &mut |_, _| Ok(output(true, "FileVault is On.\n")),
-        );
-        let disabled = inspect_storage_protection_with(
-            StorageProtectionPlatform::MacOS,
-            None,
-            &mut |_, _| Ok(output(true, "FileVault is Off.\n")),
-        );
-        let unknown = inspect_storage_protection_with(
-            StorageProtectionPlatform::MacOS,
-            None,
-            &mut |_, _| Ok(output(true, "FileVault status pending.\n")),
-        );
+        let enabled =
+            inspect_storage_protection_with(StorageProtectionPlatform::MacOS, None, &mut |_, _| {
+                Ok(output(true, "FileVault is On.\n"))
+            });
+        let disabled =
+            inspect_storage_protection_with(StorageProtectionPlatform::MacOS, None, &mut |_, _| {
+                Ok(output(true, "FileVault is Off.\n"))
+            });
+        let unknown =
+            inspect_storage_protection_with(StorageProtectionPlatform::MacOS, None, &mut |_, _| {
+                Ok(output(true, "FileVault status pending.\n"))
+            });
 
         assert_eq!(enabled.status, StorageProtectionStatus::Enabled);
         assert_eq!(disabled.status, StorageProtectionStatus::Disabled);
@@ -329,11 +346,10 @@ mod tests {
 
     #[test]
     fn macos_reports_unknown_when_the_probe_fails() {
-        let report = inspect_storage_protection_with(
-            StorageProtectionPlatform::MacOS,
-            None,
-            &mut |_, _| Err("permission denied".to_owned()),
-        );
+        let report =
+            inspect_storage_protection_with(StorageProtectionPlatform::MacOS, None, &mut |_, _| {
+                Err("permission denied".to_owned())
+            });
 
         assert_eq!(report.status, StorageProtectionStatus::Unknown);
         assert_eq!(report.detail, "fdesetup could not be started.");
@@ -355,7 +371,10 @@ mod tests {
         );
 
         assert_eq!(report.status, StorageProtectionStatus::Enabled);
-        assert_eq!(observed, vec![("manage-bde".to_owned(), vec!["-status", "D:"])]);
+        assert_eq!(
+            observed,
+            vec![("manage-bde".to_owned(), vec!["-status", "D:"])]
+        );
     }
 
     #[test]
@@ -436,10 +455,7 @@ mod tests {
                     "findmnt".to_owned(),
                     vec!["--noheadings", "--output", "SOURCE", "--target", "/"]
                 ),
-                (
-                    "cryptsetup".to_owned(),
-                    vec!["status", "cryptroot"]
-                )
+                ("cryptsetup".to_owned(), vec!["status", "cryptroot"])
             ]
         );
     }
@@ -467,14 +483,11 @@ mod tests {
     #[test]
     fn linux_returns_unknown_for_unresolved_root_sources() {
         let mut calls = 0;
-        let report = inspect_storage_protection_with(
-            StorageProtectionPlatform::Linux,
-            None,
-            &mut |_, _| {
+        let report =
+            inspect_storage_protection_with(StorageProtectionPlatform::Linux, None, &mut |_, _| {
                 calls += 1;
                 Ok(output(true, "/dev/nvme0n1p2\n"))
-            },
-        );
+            });
 
         assert_eq!(calls, 1);
         assert_eq!(report.status, StorageProtectionStatus::Unknown);
