@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.48",
+  "source_sha": "c027e0ed1b4a2fac179be30c30e84385052f9cbe",
+  "workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37860710075,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710075",
+    "job_id": 113595485752,
+    "job_conclusion": "failure",
+    "artifact_id": 11585693842,
+    "artifact_name": "obsidian-vault-roundtrip-c027e0ed1b4a2fac179be30c30e84385052f9cbe",
+    "artifact_sha256": "8a4b77017843ffab6932ccdfe44fc5cad380b8897c13fd687bf4c7015081bdbf",
+    "artifact_files": {
+      "obsidian-vault-roundtrip-report.json": "f28ec7c57396867b2d03f50b7abe104f6a374d4dc4f453524c807ca4fc70d7c0",
+      "obsidian-first-run.png": "2785aecf7ac1dce69ee3d6b8b5712ec03808e21a2018c1115eb81054b2e3d28c",
+      "obsidian-folder-picker-initial.png": "349e56de838ca3a94112711ce402eb2a4e37d98bd02a9d0b682f9ff07baa4909",
+      "obsidian-folder-picker-path-entered.png": "e57844509abb79bed92b6373128251e815285e8013347d5a8381d05d88f2af8a",
+      "obsidian-folder-picker-after-location-submit.png": "403ed5f7d35cddf9c1a51969687fa6351c6acbc21d243a6b16dfb36cdb09b873",
+      "obsidian-author.log": "cf5b36133c8f4dbea49f041147b97b579f498f22aefd82c4a1c3b4d938089f46"
+    }
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner": "ubuntu-24.04"
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37860710040,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710040",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113595485330, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113595485544, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113595485565, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37860710022,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710022",
+      "conclusion": "success",
+      "job_id": 113595485346
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37860710079,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710079",
+      "conclusion": "success",
+      "attempt_note": "The first macOS job attempt failed before reaching the renderer retrieval boundary; a failed-job-only rerun on the same source SHA passed.",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113596207348, "conclusion": "success", "rerun": true},
+        {"name": "ubuntu-latest", "job_id": 113596208651, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113596239520, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37860710030,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710030",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113595485571, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113595485685, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113595485725, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37860710029,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710029",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113595485935, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113595486105, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113595486121, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37860710054,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37860710054",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113595485952, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113595486164, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113595486232, "conclusion": "success"}
+      ]
+    }
+  ],
+  "finding": {
+    "stage": "The native release build and pinned AppImage verification passed. Obsidian opened its GTK folder picker; the absolute vault path appeared in the location entry with a directory suggestion list, but Return, GTK Alt+O, and another Return did not close the picker.",
+    "completed_acceptance": [],
+    "not_completed": [
+      "The folder was not accepted by Obsidian.",
+      "No Obsidian-authored note was created.",
+      "OpenObsidian was not launched against the fixture.",
+      "No no-op or reopen snapshot comparison occurred."
+    ],
+    "diagnostic": "The screenshots show the folder picker's bottom-right Open button remained visible while the location entry was active; the next runner revision clicks this button using screen coordinates derived from the picker's measured X11 window bounds."
+  },
+  "correction": "Capture the native picker around path entry, derive a click at the bottom-right Open button from xdotool getwindowgeometry, and retain bounded keyboard/window-focus fallbacks.",
+  "acceptance": "R2.6.48 and C01.2-01/C01.2-03 remain pending."
+}

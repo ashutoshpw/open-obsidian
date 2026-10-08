@@ -295,6 +295,24 @@ function xdotool(...args: string[]): void {
   execFileSync("xdotool", args, {stdio: "ignore"});
 }
 
+function clickWindowOpenButton(windowId: string): {window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number} {
+  const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+  const readGeometry = (key: string): number => {
+    const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
+    if (!match) throw new Error(`Could not read ${key} from Obsidian folder picker geometry`);
+    return Number(match[1]);
+  };
+  const windowX = readGeometry("X");
+  const windowY = readGeometry("Y");
+  const windowWidth = readGeometry("WIDTH");
+  const windowHeight = readGeometry("HEIGHT");
+  const clickX = Math.round(windowX + windowWidth * 0.956);
+  const clickY = Math.round(windowY + windowHeight * 0.969);
+  xdotool("mousemove", "--sync", String(clickX), String(clickY));
+  xdotool("click", "1");
+  return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
+}
+
 function activeWindowTitle(): string {
   try {
     return execFileSync("xdotool", ["getwindowfocus", "getwindowname"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
@@ -368,11 +386,15 @@ async function chooseVaultDirectory(connection: DevToolsConnection): Promise<voi
   xdotool("key", "ctrl+l");
   xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
   pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-path-entered.png"));
-  xdotool("key", "Return");
-
   const pickerStillActive = () => activeWindowId() !== initialWindowId;
+  const openButtonClick = clickWindowOpenButton(pickerWindow.windowId);
+  (report.obsidian_authoring as Record<string, unknown>).folder_picker_open_button_click = openButtonClick;
   await delay(1_000);
-  pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-after-location-submit.png"));
+  pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-after-open-click.png"));
+  if (pickerStillActive()) {
+    xdotool("key", "Return");
+    await delay(1_000);
+  }
   if (pickerStillActive()) {
     xdotool("key", "alt+o");
     await delay(1_000);
