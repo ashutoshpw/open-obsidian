@@ -25,26 +25,25 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Install Linux system dependencies (egui/winit/Wry)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxrandr-dev libxi-dev \
-            libgl1-mesa-dev libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
+      - parallel:
+          - name: Install Linux system dependencies (egui/winit/Wry)
+            if: runner.os == 'Linux'
+            run: |
+              sudo apt-get update
+              sudo apt-get install -y --no-install-recommends \
+                libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxrandr-dev libxi-dev \
+                libgl1-mesa-dev libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
+          - name: Set up Rust
+            uses: dtolnay/rust-toolchain@stable
+            with:
+              components: clippy, rustfmt
+          - name: Set up Bun for pinned compatibility fixtures
+            uses: oven-sh/setup-bun@v2
+            with:
+              bun-version-file: package.json
 
       - name: Cache Cargo outputs
         uses: Swatinem/rust-cache@v2
-
-      - name: Set up Bun for pinned compatibility fixtures
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
 
       # Formatting does not share Cargo's build directory with tests, so run it concurrently.
       - parallel:

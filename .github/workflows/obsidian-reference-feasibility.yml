@@ -19,16 +19,17 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
+      - parallel:
+          - name: Set up Bun
+            uses: oven-sh/setup-bun@v2
+            with:
+              bun-version-file: package.json
 
-      - name: Install desktop runtime dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            xvfb libgtk-3-0 libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
+          - name: Install desktop runtime dependencies
+            run: |
+              sudo apt-get update
+              sudo apt-get install -y --no-install-recommends \
+                xvfb libgtk-3-0 libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
 
       - name: Read pinned official Obsidian release
         id: pin

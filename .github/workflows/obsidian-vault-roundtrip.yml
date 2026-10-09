@@ -45,45 +45,46 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
+      - parallel:
+          - name: Set up Bun
+            uses: oven-sh/setup-bun@v2
+            with:
+              bun-version-file: package.json
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+          - name: Set up Rust
+            uses: dtolnay/rust-toolchain@stable
+
+          - name: Install Linux desktop and UI evidence dependencies
+            if: runner.os == 'Linux'
+            run: |
+              sudo apt-get update
+              sudo apt-get install -y --no-install-recommends \
+                xvfb xdotool x11-apps imagemagick tesseract-ocr \
+                libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxrandr-dev libxi-dev \
+                libgl1-mesa-dev libgtk-3-dev libgtk-3-0 libwebkit2gtk-4.1-dev libwebkit2gtk-4.1-0 \
+                libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
+
+          - name: Install macOS screenshot OCR dependencies
+            if: runner.os == 'macOS'
+            run: |
+              for package in imagemagick tesseract; do
+                if ! brew list --versions "$package" >/dev/null 2>&1; then
+                  brew install "$package"
+                fi
+              done
+
+          - name: Install Windows screenshot OCR dependency
+            if: runner.os == 'Windows'
+            run: |
+              choco install tesseract --yes --no-progress
+              choco install imagemagick --yes --no-progress
+              "$env:ProgramFiles\Tesseract-OCR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+              $imageMagick = Get-ChildItem -Path $env:ProgramFiles -Directory -Filter 'ImageMagick*' | ForEach-Object { Join-Path $_.FullName 'magick.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1
+              if (-not $imageMagick) { throw 'ImageMagick magick.exe was not installed under Program Files' }
+              (Split-Path $imageMagick) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Cache Cargo outputs
         uses: Swatinem/rust-cache@v2
-
-      - name: Install Linux desktop and UI evidence dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            xvfb xdotool x11-apps imagemagick tesseract-ocr \
-            libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxrandr-dev libxi-dev \
-            libgl1-mesa-dev libgtk-3-dev libgtk-3-0 libwebkit2gtk-4.1-dev libwebkit2gtk-4.1-0 \
-            libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
-
-      - name: Install macOS screenshot OCR dependencies
-        if: runner.os == 'macOS'
-        run: |
-          for package in imagemagick tesseract; do
-            if ! brew list --versions "$package" >/dev/null 2>&1; then
-              brew install "$package"
-            fi
-          done
-
-      - name: Install Windows screenshot OCR dependency
-        if: runner.os == 'Windows'
-        run: |
-          choco install tesseract --yes --no-progress
-          choco install imagemagick --yes --no-progress
-          "$env:ProgramFiles\Tesseract-OCR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          $imageMagick = Get-ChildItem -Path $env:ProgramFiles -Directory -Filter 'ImageMagick*' | ForEach-Object { Join-Path $_.FullName 'magick.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $imageMagick) { throw 'ImageMagick magick.exe was not installed under Program Files' }
-          (Split-Path $imageMagick) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       # The pinned Obsidian extraction and Rust build write to separate directories.
       - parallel:
