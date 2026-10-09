@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T17:57:28Z",
+  "updated_at": "2026-10-09T18:05:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "73e4b8cab8ef5944951dfe3c5fb06d23b40318ce",
+  "last_reconciled_head": "c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41",
   "current_milestone": "R2.6.72",
-  "next_action": "Push the R2.6.72 directory-symlink-cycle acceptance slice and validate it through exact-SHA GitHub Actions; keep broader C01/C01.2 acceptance pending.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.71 passed on exact source SHA e6f47c7a6d39950d20f1922022fa39e28d075b63. Rust CI, all seven required workflows, and C01.2-22 workspace tests passed on Ubuntu, macOS, and Windows. Ubuntu round-trip attempt 1 failed before cancellation assertions because xdotool found no visible window; the same-SHA retry passed. Evidence: evidence/r2.6.71-attempt-3-e6f47c7.json.",
+  "push_status": "R2.6.72 passed on exact source SHA c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41. The C01.2-23 workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. The first attempt's formatter/Clippy feedback was corrected; its same-SHA Ubuntu round-trip retry stalled in dependency setup and was cancelled, while the fresh exact-SHA round-trip passed all platforms. Evidence: evidence/r2.6.72-attempt-2-c0b5d28.json.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13451,13 +13451,13 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending."
     },
     "R2.6.72": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "73e4b8cab8ef5944951dfe3c5fb06d23b40318ce",
-      "implementation_sha": "26d82e079045718c5f7c88c65dfb6221bca987f9",
-      "implementation_commits": ["26d82e079045718c5f7c88c65dfb6221bca987f9"],
+      "implementation_sha": "c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41",
+      "implementation_commits": ["26d82e079045718c5f7c88c65dfb6221bca987f9", "c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41"],
       "scope": "Exercise existing-vault scanning and link/embed resolution when a directory symlink points back into its own tree, proving scans terminate without traversal and the alias remains unresolved.",
       "accepted_slice": ["C01.2-23"],
-      "remaining": ["Exact-SHA GitHub Actions acceptance is pending.", "Broader C01/C01.2 acceptance remains pending."],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
       "acceptance": [
         "On Ubuntu, macOS, and Windows, opening a vault with a self-referential directory symlink terminates and lists each real Markdown file once.",
         "Reads and source previews through the cycle fail with the symlink error; all Markdown/wiki references remain unresolved and embeds remain unrendered, with target sentinel content absent from reports.",
@@ -13488,9 +13488,46 @@
             "roundtrip_ubuntu_retry": 113950447731
           },
           "correction": "Apply the Ubuntu rustfmt diff and Clippy's borrowed-path comparison suggestion. Push the focused correction for fresh exact-SHA validation across all seven workflows."
+        },
+        {
+          "source_sha": "c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41",
+          "attempt": 2,
+          "conclusion": "C01.2-23 passed. The focused workspace test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on this exact source SHA.",
+          "workflows": {
+            "rust_ci": 37969958828,
+            "obsidian_vault_roundtrip": 37969958822,
+            "inventory": 37969958858,
+            "loaded_plugin_workflows": 37969958821,
+            "desktop_build": 37969958872,
+            "quality": 37969958830,
+            "plugin_renderer": 37969958837
+          },
+          "jobs": {
+            "rust_ubuntu": 113953757614,
+            "rust_macos": 113953757630,
+            "rust_windows": 113953757354,
+            "roundtrip_ubuntu": 113953757809,
+            "roundtrip_macos": 113953757562,
+            "roundtrip_windows": 113953757908,
+            "inventory": 113953757077,
+            "loaded_plugin_ubuntu": 113953758330,
+            "loaded_plugin_macos": 113953758111,
+            "loaded_plugin_windows": 113953758493,
+            "desktop_ubuntu": 113953758139,
+            "desktop_macos": 113953757735,
+            "desktop_windows": 113953758172,
+            "quality_ubuntu": 113953757501,
+            "quality_macos": 113953757787,
+            "quality_windows": 113953757683,
+            "plugin_renderer_ubuntu": 113953757797,
+            "plugin_renderer_macos": 113953758264,
+            "plugin_renderer_windows": 113953758064
+          },
+          "evidence": "evidence/r2.6.72-attempt-2-c0b5d28.json"
         }
       ],
-      "next_action": "Push the CI-directed formatting and Clippy corrections, then inspect every required exact-SHA GitHub Actions workflow."
+      "evidence": "evidence/r2.6.72-attempt-2-c0b5d28.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
