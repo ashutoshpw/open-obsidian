@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T22:28:41Z",
+  "updated_at": "2026-10-09T23:04:41Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "80c2508854b593aff115fd2396df88442a5a9f61",
-  "current_milestone": "R2.6.83",
-  "next_action": "Commit and push the CI-reported brace-indentation correction, then validate the corrected SHA in GitHub Actions; keep broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "746809778e8aa49dd7a3e47a159986a8435a532c",
+  "current_milestone": "R2.6.84",
+  "next_action": "Push the C01.2-35 external invalid-UTF-8 refresh test on an exact source SHA and inspect all seven required GitHub Actions workflows; run no local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14436,6 +14436,28 @@
       ],
       "evidence": "evidence/r2.6.83-attempt-3-5797966.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.84": {
+      "status": "in_progress",
+      "starting_sha": "746809778e8aa49dd7a3e47a159986a8435a532c",
+      "implementation_sha": null,
+      "scope": "Externally replace the source of a selected note with invalid UTF-8 while its valid preview is open, refresh, and verify stale preview state is cleared and a new preview fails closed without vault or app-data writes.",
+      "accepted_slice": ["C01.2-35"],
+      "remaining": [
+        "Exact-SHA GitHub Actions validation is pending.",
+        "Broader C01/C01.2 acceptance remains pending."
+      ],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note existing vault and display the selected note's valid UTF-8 source preview.",
+        "Externally replace the selected note bytes with invalid UTF-8 and capture the exact post-edit vault snapshot while separate app data remains unchanged.",
+        "Refresh keeps the vault and note active, preserves the selected path, and clears the stale preview, error, and asynchronous receiver state.",
+        "A fresh source-preview request fails closed with the explicit invalid-UTF-8 error and returns no stale source preview.",
+        "The exact post-edit vault snapshot and separate app-data snapshot remain unchanged through refresh, failed re-preview, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Commit and push the focused C01.2-35 test, then inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {
