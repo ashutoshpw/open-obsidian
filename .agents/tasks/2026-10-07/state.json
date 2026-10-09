@@ -14304,12 +14304,17 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.83": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "1cb2fe699dc7eb4324acbdfc8db45b92bdc4304e",
-      "implementation_sha": null,
+      "implementation_sha": "5797966411632b3e9a0def6fe526ccf4c0ca3bcd",
+      "implementation_commits": [
+        "2c73106dd52e838895481e11780d81c7dbd2b658",
+        "80c2508854b593aff115fd2396df88442a5a9f61",
+        "5797966411632b3e9a0def6fe526ccf4c0ca3bcd"
+      ],
       "scope": "Externally rename one of two same-basename attachments, refresh a basename-only embed, and verify it uniquely resolves and renders the remaining attachment while preserving the renamed file and avoiding vault/app-data writes.",
       "accepted_slice": ["C01.2-34"],
-      "remaining": ["Brace-indentation correction is applied; fresh exact-SHA GitHub Actions validation is pending.", "Broader C01/C01.2 acceptance remains pending."],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
       "acceptance": [
         "On Ubuntu, macOS, and Windows, open a one-note vault whose ![[photo.png]] embed is initially ambiguous between Attachments/photo.png and Images/photo.png, with no target and no rendered texture.",
         "Open the note source preview, externally rename Images/photo.png to Images/renamed-photo.png, and capture the exact post-rename vault snapshot.",
@@ -14391,10 +14396,46 @@
             "plugin_renderer_windows": 114048825633
           },
           "evidence": "evidence/r2.6.83-attempt-2-80c2508.json"
+        },
+        {
+          "source_sha": "5797966411632b3e9a0def6fe526ccf4c0ca3bcd",
+          "attempt": 3,
+          "conclusion": "C01.2-34 passed. The focused workspace test and all seven required workflows passed on the exact source SHA. The Obsidian round-trip workflow passed on attempt 4 after same-SHA retries for transient dependency and UI startup failures.",
+          "workflows": {
+            "rust_ci": 37999608331,
+            "obsidian_vault_roundtrip": 37999608438,
+            "inventory": 37999608424,
+            "loaded_plugin_workflows": 37999608426,
+            "desktop_build": 37999608363,
+            "quality": 37999608354,
+            "plugin_renderer": 37999608402
+          },
+          "jobs": {
+            "rust_ubuntu": 114054192827,
+            "rust_windows": 114054192995,
+            "rust_macos": 114054193293,
+            "roundtrip_windows_attempt4": 114059251432,
+            "roundtrip_macos_attempt4": 114059253327,
+            "roundtrip_ubuntu_attempt4": 114059294117,
+            "inventory": 114054192829,
+            "loaded_windows": 114054193256,
+            "loaded_macos": 114054193472,
+            "loaded_ubuntu": 114054193504,
+            "desktop_ubuntu": 114054192805,
+            "desktop_windows": 114054193022,
+            "desktop_macos": 114054193035,
+            "quality_ubuntu": 114054192819,
+            "quality_windows": 114054193116,
+            "quality_macos": 114054193164,
+            "plugin_renderer_windows": 114054192632,
+            "plugin_renderer_ubuntu": 114054193003,
+            "plugin_renderer_macos": 114054193061
+          },
+          "evidence": "evidence/r2.6.83-attempt-3-5797966.json"
         }
       ],
-      "evidence": null,
-      "next_action": "Push the brace-indentation correction to origin/main and inspect exact-SHA GitHub Actions results."
+      "evidence": "evidence/r2.6.83-attempt-3-5797966.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
