@@ -349,7 +349,7 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
   const clickX = Math.round(windowX + windowWidth * 0.045);
   const clickY = Math.round(windowY + windowHeight * 0.085);
   xdotool("mousemove", "--sync", String(clickX), String(clickY));
-  xdotool("click", "--window", windowId, "1");
+  xdotool("click", "1");
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
@@ -516,6 +516,54 @@ function windowsTopLevelWindowInventory(): WindowsTopLevelWindow[] {
   return Array.isArray(value) ? value : [value];
 }
 
+function windowsOpenVaultControlInventory(processId: number): unknown {
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    $application = Get-Process -Id $env:OPENOBSIDIAN_WINDOW_PROCESS_ID -ErrorAction SilentlyContinue
+    if ($null -eq $application -or $application.MainWindowHandle -eq 0) {
+      $application = Get-Process -Name "openobsidian" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+    }
+    if ($null -eq $application -or $application.MainWindowHandle -eq 0) { throw "OpenObsidian did not expose its main window handle" }
+    $root = [System.Windows.Automation.AutomationElement]::FromHandle($application.MainWindowHandle)
+    $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+    $controls = @()
+    foreach ($element in $elements) {
+      try {
+        $current = $element.Current
+        $name = [string]$current.Name
+        $automationId = [string]$current.AutomationId
+        $controlType = [string]$current.ControlType.ProgrammaticName
+        if ($name -or $automationId -or $controlType -match "Button") {
+          $bounds = $current.BoundingRectangle
+          $controls += [PSCustomObject]@{
+            name = $name
+            automation_id = $automationId
+            control_type = $controlType
+            class_name = [string]$current.ClassName
+            is_enabled = [bool]$current.IsEnabled
+            is_offscreen = [bool]$current.IsOffscreen
+            bounds = "$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height)"
+          }
+        }
+      } catch {}
+    }
+    ConvertTo-Json -InputObject @($controls) -Depth 4 -Compress
+  `;
+  try {
+    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      env: {...process.env, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId)},
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+    return output ? JSON.parse(output) : [];
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {error: detail};
+  }
+}
+
 function isNewWindowsNativePicker(windowDescription: WindowsTopLevelWindow, previousHandles: Set<number>, applicationPid: number): boolean {
   if (windowDescription.is_offscreen || previousHandles.has(windowDescription.native_window_handle)) return false;
   return windowDescription.process_id === applicationPid ||
@@ -677,9 +725,8 @@ async function prepareScreenshotForOcr(imagePath: string): Promise<string> {
 
 async function readScreenshotOcr(imagePath: string): Promise<string> {
   const ocrImagePath = await prepareScreenshotForOcr(imagePath);
-  const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" || process.platform === "win32" ? ["11", "6"] : ["6"];
-  return pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrImagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
+  return runTesseractOcr(ocrImagePath, pageSegmentationModes);
 }
 
 async function readNativeFolderPickerOcr(imagePath: string): Promise<string> {
@@ -687,7 +734,12 @@ async function readNativeFolderPickerOcr(imagePath: string): Promise<string> {
   const ocrImagePath = join(reportDirectory, "openobsidian-vault-picker-cancel-open-ocr.png");
   execFileSync("magick", [imagePath, "-gravity", "center", "-crop", "90%x75%+0+0", "+repage", "-colorspace", "Gray", "-level", "0%,35%", "-resize", "250%", ocrImagePath], {stdio: "ignore"});
   const pageSegmentationModes = ["11", "6"];
-  return pageSegmentationModes.map((mode) => execFileSync("tesseract", [ocrImagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
+  return runTesseractOcr(ocrImagePath, pageSegmentationModes);
+}
+
+function runTesseractOcr(imagePath: string, pageSegmentationModes: string[]): string {
+  const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
+  return pageSegmentationModes.map((mode) => execFileSync(tesseract, [imagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
 }
 
 function ocrTokenMatches(token: string, expected: string): boolean {
@@ -1032,6 +1084,16 @@ async function snapshotTree(root: string): Promise<SnapshotEntry[]> {
   return entries;
 }
 
+async function readSnapshotTextFiles(root: string, snapshot: SnapshotEntry[], matchesPath: (path: string) => boolean): Promise<Array<{path: string; bytes: number; sha256: string; content: string}>> {
+  const files = snapshot.filter((entry) => entry.kind === "file" && matchesPath(entry.path));
+  return await Promise.all(files.map(async (entry) => ({
+    path: entry.path,
+    bytes: entry.bytes ?? 0,
+    sha256: entry.sha256 ?? "",
+    content: await readFile(join(root, entry.path), "utf8"),
+  })));
+}
+
 function changedPaths(before: SnapshotEntry[], after: SnapshotEntry[]): Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> {
   const oldByPath = new Map(before.map((entry) => [entry.path, entry]));
   const newByPath = new Map(after.map((entry) => [entry.path, entry]));
@@ -1281,13 +1343,51 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
         "Open vault"
       )
       $button = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.AndCondition]::new($buttonType, $buttonName))
-      if ($null -ne $button) {
-        $isEnabled = $button.Current.IsEnabled
-        $bounds = $button.Current.BoundingRectangle
+      $deadline = [DateTime]::UtcNow.AddSeconds(10)
+      $isEnabled = $false
+      $bounds = $null
+      $lastState = "not found"
+      $stateTransitions = @()
+      while ([DateTime]::UtcNow -lt $deadline) {
+        $root = [System.Windows.Automation.AutomationElement]::FromHandle($application.MainWindowHandle)
+        $button = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.AndCondition]::new($buttonType, $buttonName))
+        if ($null -ne $button) {
+          try {
+            $current = $button.Current
+            $isEnabled = [bool]$current.IsEnabled
+            $bounds = $current.BoundingRectangle
+            $observedState = "found; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height)"
+          } catch {
+            $observedState = "stale UI Automation element: $($_.Exception.Message)"
+            $isEnabled = $false
+          }
+        } else {
+          $observedState = "not found"
+          $isEnabled = $false
+        }
+        if ($observedState -ne $lastState) {
+          $stateTransitions += ([DateTime]::UtcNow.ToString('HH:mm:ss.fffZ') + ":" + $observedState)
+          $lastState = $observedState
+        }
+        if ($isEnabled) { break }
+        Start-Sleep -Milliseconds 250
+      }
+      if ($null -eq $button) {
+        Write-Output "Open vault was not exposed through UI Automation after polling; state_transitions=$($stateTransitions -join ' | ')"
+        return
+      }
+      $invoked = $false
+      $invokeFailure = "UI Automation continued to report IsEnabled=$isEnabled after polling"
+      if ($isEnabled) {
         try {
           $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-          Write-Output "Invoked the Open vault accessibility button; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height)"
+          $invoked = $true
+          Write-Output "Invoked the Open vault accessibility button after UI Automation polling; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height); state_transitions=$($stateTransitions -join ' | ')"
         } catch {
+          $invokeFailure = $_.Exception.Message
+        }
+      }
+      if (-not $invoked) {
           Add-Type -TypeDefinition @'
             using System;
             using System.Runtime.InteropServices;
@@ -1296,17 +1396,14 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
               [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extraInfo);
             }
 '@
-          if ($bounds.Width -le 0 -or $bounds.Height -le 0) { throw "Open vault has no clickable UI Automation bounds; IsEnabled=$isEnabled; InvokePattern failed: $($_.Exception.Message)" }
+          if ($bounds.Width -le 0 -or $bounds.Height -le 0) { throw "Open vault has no clickable UI Automation bounds; IsEnabled=$isEnabled; state_transitions=$($stateTransitions -join ' | '); InvokePattern failed: $invokeFailure" }
           $clickX = [int][Math]::Round($bounds.Left + ($bounds.Width / 2))
           $clickY = [int][Math]::Round($bounds.Top + ($bounds.Height / 2))
           [OpenObsidianMouse]::SetCursorPos($clickX, $clickY) | Out-Null
           [OpenObsidianMouse]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
           Start-Sleep -Milliseconds 80
           [OpenObsidianMouse]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
-          Write-Output "Sent a screen click to Open vault; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height); InvokePattern failed: $($_.Exception.Message)"
-        }
-      } else {
-        throw "Open vault was not exposed through UI Automation; refusing an unverified keyboard click"
+          Write-Output "Sent a screen click to Open vault after UI Automation polling; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height); state_transitions=$($stateTransitions -join ' | '); InvokePattern result: $invokeFailure"
       }
     `;
     return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
@@ -1449,6 +1546,10 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
   if (windowsBefore) openReport.picker_cancel_windows_before = windowsBefore;
   const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
   openReport.picker_cancel_open_button_interaction = openButtonInteraction;
+  if (process.platform === "win32") {
+    const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
+    openReport.picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
+  }
   if (process.platform === "linux") openReport.picker_cancel_x11_windows_after_click = x11WindowInventory();
   if (process.platform === "win32") openReport.picker_cancel_windows_after_click = windowsTopLevelWindowInventory();
   await saveReport();
@@ -1499,7 +1600,7 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
       const candidates = windowsTopLevelWindowInventory().filter((candidate) => isNewWindowsNativePicker(candidate, previousHandles, applicationPid));
       return candidates[0] ?? null;
     }, (candidate) => candidate !== null, 15_000);
-    if (!windowsPicker) throw new Error(`OpenObsidian did not expose a new Windows native folder-picker window; before=${JSON.stringify(windowsBefore)}; after=${JSON.stringify(windowsTopLevelWindowInventory())}`);
+    if (!windowsPicker) throw new Error(`OpenObsidian did not expose a new Windows native folder-picker window; before=${JSON.stringify(windowsBefore)}; after=${JSON.stringify(windowsTopLevelWindowInventory())}; OpenObsidian UI Automation controls=${JSON.stringify(windowsOpenVaultControlInventory(applicationPid))}`);
     pickerWindowId = String(windowsPicker.native_window_handle);
     pickerWindowTitle = `${windowsPicker.name} (${windowsPicker.class_name})`;
     const focusScript = `
@@ -1734,14 +1835,16 @@ async function runOpenObsidianPickerCancellation(
   }
   const vaultSnapshotBeforeCancel = await snapshotTree(vaultRoot);
   const appDataSnapshotBeforeCancel = await snapshotTree(appDataRoot);
+  const appRonFilesBeforeCancel = await readSnapshotTextFiles(appDataRoot, appDataSnapshotBeforeCancel, (path) => path.toLowerCase().endsWith(".ron"));
   ensureExactSnapshot(vaultBeforeCancellation, vaultSnapshotBeforeCancel, "OpenObsidian vault before picker cancellation");
   ensureExactSnapshot(appDataBeforeCancellation, appDataSnapshotBeforeCancel, "OpenObsidian app data before picker cancellation");
 
   const pickerCancellation = await cancelOpenObsidianNativePicker(child, window);
   const vaultAfterCancellation = await snapshotTree(vaultRoot);
   const appDataAfterCancellation = await snapshotTree(appDataRoot);
-  ensureExactSnapshot(vaultSnapshotBeforeCancel, vaultAfterCancellation, "OpenObsidian native picker cancellation");
-  ensureExactSnapshot(appDataSnapshotBeforeCancel, appDataAfterCancellation, "OpenObsidian app data after native picker cancellation");
+  const appRonFilesAfterCancel = await readSnapshotTextFiles(appDataRoot, appDataAfterCancellation, (path) => path.toLowerCase().endsWith(".ron"));
+  const vaultChangesAfterCancel = changedPaths(vaultSnapshotBeforeCancel, vaultAfterCancellation);
+  const appDataChangesAfterCancel = changedPaths(appDataSnapshotBeforeCancel, appDataAfterCancellation);
 
   open.folder_picker_cancel = {
     active_session: true,
@@ -1749,8 +1852,12 @@ async function runOpenObsidianPickerCancellation(
     startup_markdown_count_visible: true,
     startup_screen_ocr: startupScreen.ocrText.slice(0, 2_000),
     ...pickerCancellation,
-    vault_snapshot_unchanged_after_cancel: true,
-    app_data_snapshot_unchanged_after_cancel: true,
+    vault_snapshot_unchanged_after_cancel: vaultChangesAfterCancel.length === 0,
+    app_data_snapshot_unchanged_after_cancel: appDataChangesAfterCancel.length === 0,
+    vault_changes_after_cancel: vaultChangesAfterCancel,
+    app_data_changes_after_cancel: appDataChangesAfterCancel,
+    eframe_persistence_files_before_cancel: appRonFilesBeforeCancel,
+    eframe_persistence_files_after_cancel: appRonFilesAfterCancel,
     vault_snapshot_before_cancel: vaultSnapshotBeforeCancel,
     vault_snapshot_after_cancel: vaultAfterCancellation,
     app_data_snapshot_before_cancel: appDataSnapshotBeforeCancel,
@@ -1759,6 +1866,8 @@ async function runOpenObsidianPickerCancellation(
   (report.vault_snapshots as Record<string, unknown>).after_picker_cancellation = vaultAfterCancellation;
   (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation = appDataAfterCancellation;
   await saveReport();
+  ensureExactSnapshot(vaultSnapshotBeforeCancel, vaultAfterCancellation, "OpenObsidian native picker cancellation");
+  ensureExactSnapshot(appDataSnapshotBeforeCancel, appDataAfterCancellation, "OpenObsidian app data after native picker cancellation");
 }
 
 async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<DevToolsConnection> {

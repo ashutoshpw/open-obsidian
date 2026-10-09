@@ -1,0 +1,181 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 7,
+  "source_sha": "e982f11f38c64ebd702bce49d951f0005ccfe1d3",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37918171371,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171371",
+      "conclusion": "failure",
+      "jobs": {
+        "macos": {
+          "job_id": 113779356802,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "failure"
+        },
+        "windows": {
+          "job_id": 113779357050,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "failure"
+        },
+        "ubuntu": {
+          "job_id": 113779357082,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "failure"
+        }
+      }
+    },
+    "rust_ci": {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37918171265,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171265",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {
+          "job_id": 113779356347,
+          "name": "rust (macos-latest)",
+          "conclusion": "success"
+        },
+        "windows": {
+          "job_id": 113779356553,
+          "name": "rust (windows-latest)",
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113779356717,
+          "name": "rust (ubuntu-latest)",
+          "conclusion": "success"
+        }
+      }
+    },
+    "quality": {
+      "name": "OpenObsidian quality",
+      "run_id": 37918171223,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171223",
+      "conclusion": "failure",
+      "jobs": {
+        "windows": {
+          "job_id": 113779356409,
+          "name": "windows-latest",
+          "conclusion": "failure"
+        },
+        "ubuntu": {
+          "job_id": 113779356630,
+          "name": "ubuntu-latest",
+          "conclusion": "failure"
+        },
+        "macos": {
+          "job_id": 113779356643,
+          "name": "macos-latest",
+          "conclusion": "failure"
+        }
+      }
+    },
+    "desktop_build": {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37918171317,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171317",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {
+          "job_id": 113779358607,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113779358894,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        "windows": {
+          "job_id": 113779359007,
+          "name": "windows-latest",
+          "conclusion": "success"
+        }
+      }
+    },
+    "plugin_renderer": {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37918171382,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171382",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {
+          "job_id": 113779356709,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        "windows": {
+          "job_id": 113779357100,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113779357118,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      }
+    },
+    "loaded_plugin_workflows": {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37918171230,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171230",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {
+          "job_id": 113779356495,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        "macos": {
+          "job_id": 113779356788,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113779357120,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        }
+      }
+    },
+    "inventory": {
+      "name": "Rust migration inventory",
+      "run_id": 37918171388,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171388",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": {
+          "job_id": 113779356293,
+          "name": "inventory",
+          "conclusion": "success"
+        }
+      }
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu": {
+      "artifact_id": 11611002324,
+      "digest": "sha256:7a5f502a3fd7255313bd08226402648ab468cb2e015212ccfee34bd140b77b0d"
+    },
+    "macos": {
+      "artifact_id": 11610897496,
+      "digest": "sha256:7d17b49819fccb2bf5b8b4cc25024bd738567d5a0fba11609d7f9e2451b6c103"
+    },
+    "windows": {
+      "artifact_id": 11611247421,
+      "digest": "sha256:ea8cbef2dd2db324959eab26482fc7d174b3c696a7fba839c0a3d1c93a2f9b5f"
+    }
+  },
+  "parallel_setup_groups": "Passed on all applicable runners.",
+  "platform_findings": {
+    "ubuntu": "Round-trip stopped at cancellation: the active OpenObsidian window remained visible after the direct X11 click; no new native picker window appeared. Prior Linux fixture selection had passed with relative pointer motion and a normal click.",
+    "windows": "Round-trip stopped at cancellation: UI Automation reported Open vault disabled and the screen click did not produce a new top-level picker. CI app diagnostics reported an active session, no busy receivers, and open_vault_enabled=true.",
+    "macos": "The native panel was visible, Escape closed it, and the original vault screen returned. The app-data snapshot assertion failed because app.ron appeared after cancellation; the report had not yet captured the before/after file contents.",
+    "quality": "Knip failed on all operating systems because it reported tesseract as an unlisted binary from duplicate direct invocations in the OCR helper."
+  },
+  "correction": "Share one tesseract invocation helper, restore Linux relative pointer movement plus a normal click, poll Windows UI Automation for Open vault to become enabled before invocation/click and attach the final control inventory if no picker appears, and save app-data changes plus raw .ron contents before snapshot assertions.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run."
+}

@@ -1427,3 +1427,34 @@ focuses the newly detected native picker before Escape, and crops/enlarges the
 macOS panel for OCR while recording accessibility descriptions in failures.
 Exact-SHA validation is pending on `origin/main`. No local tests, builds,
 formatters, linters, or application launches were run.
+
+### R2.6.65 attempt 7 result and targeted correction — SHA `e982f11`
+
+The seventh exact-SHA round-trip run
+[37918171371](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171371)
+failed the cancellation gate on Ubuntu, macOS, and Windows. Linux remained on
+the active vault after the direct X11 click. Windows reported `Open vault` as
+disabled and exposed no new top-level picker window, despite the application
+log reporting an active session, no busy receivers, and `open_vault_enabled=true`.
+macOS displayed the native Open panel and returned to the original vault after
+Escape, but cancellation changed app data: `app.ron` appeared, so the snapshot
+check failed before the report recorded its contents.
+
+Rust CI [37918171265](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171265),
+desktop build [37918171317](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171317),
+plugin renderer [37918171382](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171382),
+loaded-plugin workflows [37918171230](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171230),
+and inventory [37918171388](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171388)
+passed on this SHA. Quality [37918171223](https://github.com/ashutoshpw/open-obsidian/actions/runs/37918171223)
+failed on all three operating systems because Knip reported the duplicated
+`tesseract` binary invocation. The native parallel setup groups passed. Reports,
+run/job links, artifact IDs, and digests are recorded in
+[`evidence/r2.6.65-cancellation-attempt-7-e982f11.json`](evidence/r2.6.65-cancellation-attempt-7-e982f11.json).
+
+The next slice shares the OCR invocation, restores Linux's relative pointer
+motion and normal click, polls Windows UI Automation for the Open button and
+records its full control inventory if the picker does not appear, and saves
+before/after app-data snapshots plus raw `.ron` contents before asserting
+unchanged state. Exact-SHA GitHub Actions validation is pending on
+`origin/main`. No local tests, builds, formatters, linters, or application
+launches were run.
