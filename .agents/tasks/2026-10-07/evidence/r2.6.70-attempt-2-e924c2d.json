@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.70",
+  "attempt": 2,
+  "source_sha": "e924c2daf831428601ddb9ae3cdc8811f7171394",
+  "change": "Apply the exact Ubuntu rustfmt layout requested for the dangling-directory symlink metadata assertion.",
+  "conclusion": "C01.2-21 passed. The dangling-symlink workspace test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on the exact source SHA.",
+  "accepted_slice": "C01.2-21",
+  "dangling_symlink_boundary": {
+    "fixture": "fixture:symlink-boundary",
+    "test": "egui_keeps_dangling_vault_symlinks_unresolved",
+    "observed": [
+      "The vault scan listed only the real Markdown note and recorded dangling file and directory symlink entries without following their missing outside targets.",
+      "All four Markdown/wiki references remained unresolved without a link error; both embeds remained unrendered.",
+      "The unrelated outside sentinel was absent from the embed report.",
+      "Complete vault, separate app-data, and outside-target snapshots remained unchanged after open, resolution, and teardown."
+    ],
+    "workspace_test_results": {
+      "ubuntu-latest": "passed",
+      "macos-latest": "passed",
+      "windows-latest": "passed"
+    }
+  },
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37962678665,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962678665",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929205586, "name": "rust (ubuntu-latest)", "conclusion": "success" },
+        { "id": 113929205282, "name": "rust (macos-latest)", "conclusion": "success" },
+        { "id": 113929205684, "name": "rust (windows-latest)", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37962678682,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962678682",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929205329, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+        { "id": 113929205251, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+        { "id": 113929204990, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37962678803,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962678803",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929205334, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37962678699,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962678699",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929205082, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113929205415, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113929205658, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37962680186,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962680186",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929209878, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113929210109, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113929210146, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37962678739,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962678739",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929206351, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113929206537, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113929206611, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37962678657,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37962678657",
+      "attempt": 1,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113929204946, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113929205457, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113929205674, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    }
+  ],
+  "artifacts": [
+    { "workflow": "OpenObsidian Rust CI", "platform": "Linux Wry probe", "id": 11632272096, "digest": "sha256:819785db9d1a6fc67e84ea77640e0cd3c37b9895b0c9573673b93ff84620e95a" },
+    { "workflow": "OpenObsidian Rust CI", "platform": "macOS Wry probe", "id": 11632177184, "digest": "sha256:1f1500f4e4f994c3bee7fe0534e11d933488ff4503776c54d99a2998ece303ee" },
+    { "workflow": "OpenObsidian Rust CI", "platform": "Windows Wry probe", "id": 11632132104, "digest": "sha256:39827bbe31b07c8550a6581bb836e880e1b3618656ba97dde11c5925093a959e" },
+    { "workflow": "OpenObsidian Rust CI", "platform": "Linux preview executable", "id": 11631892236, "digest": "sha256:0a24b69ed4c100d81f8c12ffb43f3f5a1ffb4aff8613d089a6639d9de5550645" },
+    { "workflow": "Obsidian vault round-trip acceptance", "platform": "Windows", "id": 11632536721, "digest": "sha256:a86496c552daacc0a2f327598b12360580f3c43dfebe7088eea294b1d3bebc71" },
+    { "workflow": "Obsidian vault round-trip acceptance", "platform": "Linux", "id": 11632056828, "digest": "sha256:5ae824ff5ce903fde11e4e26250ad92939f19180e98bba2c598789aa3450ab40" },
+    { "workflow": "Obsidian vault round-trip acceptance", "platform": "macOS", "id": 11631932304, "digest": "sha256:c2d026f1753c847c21c23ca4784d7587862f3381365d9ca18833f1db34234893" },
+    { "workflow": "OpenObsidian loaded plugin workflows", "platform": "Windows", "id": 11632296469, "digest": "sha256:06c7258155fc36b230e5def8602110d0fd4fbe662216b0aa6516bdb6ca6b3056" },
+    { "workflow": "OpenObsidian loaded plugin workflows", "platform": "Linux", "id": 11632116671, "digest": "sha256:434b1d46b8d2bf044234e00459028b4636d6671fc5b795954edf38287910a379" },
+    { "workflow": "OpenObsidian loaded plugin workflows", "platform": "macOS", "id": 11631557562, "digest": "sha256:68fc06ab55bc071b576a23361f2e4b74eba5b716678dcb845831417564ee5081" },
+    { "workflow": "OpenObsidian desktop build", "platform": "macOS", "id": 11632281765, "digest": "sha256:01ea92e3c633c51d2b9442d063a546b5b556d8d544a3a9364c2e7897a3edc0dc" },
+    { "workflow": "OpenObsidian desktop build", "platform": "Windows", "id": 11631981924, "digest": "sha256:e6bb9820c40fa1debb0782ba86e2388e7b5b74cbc8bfbfcfc633ce498a2b7245" },
+    { "workflow": "OpenObsidian desktop build", "platform": "Linux", "id": 11631876979, "digest": "sha256:3486b58c8a58cef79228d9511a0c8f526e9c3eeb1bdf9eedb413bea77e8bfa71" },
+    { "workflow": "OpenObsidian plugin renderer matrix", "platform": "macOS", "id": 11632561414, "digest": "sha256:22c8b693d88e988e0f8d28034bdba80062d452edced3422e41c65841a85844e0" },
+    { "workflow": "OpenObsidian plugin renderer matrix", "platform": "Linux", "id": 11632266412, "digest": "sha256:8cf882eaeb5c189e66ed92735a5b3eec78b7a9fa5212378fd685e0506df2a67c" },
+    { "workflow": "OpenObsidian plugin renderer matrix", "platform": "Windows", "id": 11632186641, "digest": "sha256:e058853c6cc4a7d67490499ec0cef2700087973603d746a29d1a54c6c631b7ee" }
+  ],
+  "parallel_step_groups": "The repository already uses GitHub Actions parallel groups in Rust CI, quality, desktop build, compatibility-pin verification, Obsidian round-trip acceptance, and reference-feasibility workflows. Parallel groups passed in the exact-SHA workflow runs; no workflow YAML change was needed for this feature.",
+  "prior_attempt": {
+    "source_sha": "c580968fc0df3ea1ca1300696095f37ed0b49019",
+    "summary": "The dangling-symlink workspace test passed on Ubuntu, macOS, and Windows; all other Rust checks and six companion workflows passed. Ubuntu Rust CI failed only formatting, requesting a multiline layout for the dangling-directory symlink metadata assertion. The next source SHA applies that exact diff."
+  },
+  "scope_limitations": [
+    "This is synthetic egui coverage; it does not claim that Obsidian Desktop resolves dangling symlinks in the same way.",
+    "C01 and C01.2 remain pending because broader read-only acceptance flows are incomplete."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, or application launches were run. Validation and acceptance evidence came from GitHub Actions on the exact pushed source SHA."
+}

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T16:55:45Z",
+  "updated_at": "2026-10-09T17:01:48Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c580968fc0df3ea1ca1300696095f37ed0b49019",
+  "last_reconciled_head": "e924c2daf831428601ddb9ae3cdc8811f7171394",
   "current_milestone": "R2.6.70",
-  "next_action": "Commit and push the exact Ubuntu rustfmt correction for C01.2-21, then inspect all required exact-SHA GitHub Actions workflows; keep broader C01/C01.2 acceptance pending.",
+  "next_action": "Select the next uncovered C01 read-only acceptance flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.70 attempt 1 on c580968fc0df3ea1ca1300696095f37ed0b49019: the new cross-platform dangling-symlink test passed; only Ubuntu rustfmt failed. The other six workflows and all non-format Rust gates passed. Exact run details are in journal.md pending the corrected rerun.",
+  "push_status": "R2.6.70 passed on exact source SHA e924c2daf831428601ddb9ae3cdc8811f7171394. The dangling-symlink workspace test passed on Ubuntu, macOS, and Windows and all seven required workflows passed. Evidence: evidence/r2.6.70-attempt-2-e924c2d.json.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13337,13 +13337,12 @@
       "next_action": "Select and implement the next uncovered C01.2 read-only flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending."
     },
     "R2.6.70": {
-      "status": "in_progress",
-      "implementation_sha": null,
-      "implementation_commits": ["c580968fc0df3ea1ca1300696095f37ed0b49019"],
+      "status": "complete",
+      "implementation_sha": "e924c2daf831428601ddb9ae3cdc8811f7171394",
+      "implementation_commits": ["c580968fc0df3ea1ca1300696095f37ed0b49019", "e924c2daf831428601ddb9ae3cdc8811f7171394"],
       "scope": "Exercise existing-vault scanning, link resolution, and transclusion reporting for dangling file and directory symlinks that point outside the vault, preserving complete vault, separate app-data, and outside-target snapshots.",
       "accepted_slice": ["C01.2-21"],
       "remaining": [
-        "Exact-SHA GitHub Actions evidence is pending.",
         "Broader C01/C01.2 acceptance remains pending."
       ],
       "acceptance": [
@@ -13367,9 +13366,24 @@
             "plugin_renderer": 37962018641
           },
           "correction": "Apply the exact Ubuntu rustfmt layout for the missing-directory symlink metadata assertion, then validate all seven required workflows on a fresh exact SHA."
+        },
+        {
+          "source_sha": "e924c2daf831428601ddb9ae3cdc8811f7171394",
+          "attempt": 2,
+          "conclusion": "The dangling-symlink workspace test passed on Ubuntu, macOS, and Windows. All seven required workflows passed on the exact source SHA.",
+          "workflows": {
+            "rust_ci": 37962678665,
+            "obsidian_vault_roundtrip": 37962678682,
+            "inventory": 37962678803,
+            "loaded_plugin_workflows": 37962678699,
+            "desktop_build": 37962680186,
+            "quality": 37962678739,
+            "plugin_renderer": 37962678657
+          },
+          "evidence": "evidence/r2.6.70-attempt-2-e924c2d.json"
         }
       ],
-      "next_action": "Commit and push the exact CI-requested formatting correction to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
+      "next_action": "Select the next uncovered C01 read-only acceptance flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending."
     }
   },
   "ci_preparation": {
