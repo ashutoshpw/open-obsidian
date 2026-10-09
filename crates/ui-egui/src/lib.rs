@@ -647,6 +647,7 @@ impl OpenObsidianApp {
 
                 if let Some(preview) = &mut self.note_source_preview {
                     ui.label(format!("Source: {}", preview.relative_path.display()));
+                    close_preview = ui.button("Close source preview").clicked();
                     ui.add(
                         eframe::egui::TextEdit::multiline(&mut preview.text)
                             .font(eframe::egui::TextStyle::Monospace)
@@ -662,7 +663,6 @@ impl OpenObsidianApp {
                     } else {
                         ui.small(format!("Showing all {} source bytes.", preview.total_size_bytes));
                     }
-                    close_preview = ui.button("Close source preview").clicked();
                 }
             });
         if request_preview {
