@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T04:02:23Z",
+  "updated_at": "2026-10-09T04:18:59Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bf5bc3349a73753d0ee236e2656a0c59de6f24be",
-  "current_milestone": "R2.6.52",
+  "last_reconciled_head": "7f77ad0f69d315db6514b04435c2fe9a0c8def6b",
+  "current_milestone": "R2.6.53",
   "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "bf5bc3349a73753d0ee236e2656a0c59de6f24be"
+      "implementation_sha": "7f77ad0f69d315db6514b04435c2fe9a0c8def6b"
     },
     "R3": {
       "status": "pending",
@@ -9700,6 +9700,53 @@
         "The integrated UI test deliberately removed Notes/Welcome.md while its source preview was open, refreshed the production vault session, verified the stale preview cleared and README.md became selected, then previewed and closed README.md.",
         "On Linux, macOS, and Windows, the complete vault matched the expected snapshot after the external deletion throughout subsequent refresh/preview/close/teardown, and separate app data remained unchanged.",
         "Rust CI, inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the Obsidian 1.14.4 reference round trip passed on exact SHA bf5bc3349a73753d0ee236e2656a0c59de6f24be. Job IDs and artifact digests are recorded in evidence/r2.6.52-external-deletion-refresh-bf5bc33.json."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader cross-platform read-only product coverage; the ComboBox popup itself remains unverified for Windows accessibility.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes."
+    },
+    "R2.6.53": {
+      "status": "complete",
+      "implementation_sha": "7f77ad0f69d315db6514b04435c2fe9a0c8def6b",
+      "implementation_commits": ["eb700df", "7f77ad0"],
+      "scope": "Exercise the native UI with an existing note larger than the 16 KiB source-preview limit, including a multibyte character split at the boundary, and confirm preview, close, and teardown do not write vault or app-data files.",
+      "ci_attempts": [
+        {
+          "source_sha": "eb700dfe408d15c04846a094fed3be956e8b2a51",
+          "conclusion": "The six companion workflows passed; all three Rust CI workspace-test jobs failed at the new close-preview assertion.",
+          "workflows": {
+            "rust_ci": 37882378952,
+            "inventory": 37882378912,
+            "quality": 37882378873,
+            "desktop_build": 37882378991,
+            "plugin_renderer": 37882378896,
+            "loaded_plugin_workflows": 37882378895,
+            "obsidian_vault_roundtrip": 37882378869
+          },
+          "finding": "The preview boundary, UTF-8 prefix, full-size, and truncation assertions passed; the close button after the large text field was not activated on Ubuntu, macOS, or Windows.",
+          "correction": "Move Close source preview above the source field, keep the close assertion, and rerun all seven workflows."
+        },
+        {
+          "source_sha": "7f77ad0f69d315db6514b04435c2fe9a0c8def6b",
+          "conclusion": "All seven required workflows and all jobs passed on Linux, macOS, and Windows; the focused test passed on all three platforms.",
+          "workflows": {
+            "rust_ci": 37882649530,
+            "inventory": 37882649556,
+            "quality": 37882650321,
+            "desktop_build": 37882649514,
+            "plugin_renderer": 37882649666,
+            "loaded_plugin_workflows": 37882649551,
+            "obsidian_vault_roundtrip": 37882649490
+          },
+          "evidence": "evidence/r2.6.53-bounded-note-preview-7f77ad0.json"
+        }
+      ],
+      "accepted_slice": [
+        "The UI preview returns the valid UTF-8 prefix capped at 16 KiB, reports the full source byte size and marks it truncated when the read limit splits an emoji.",
+        "The close-preview control is placed before the large source field and was activated successfully on Ubuntu, macOS, and Windows.",
+        "Vault and separate app-data snapshots remain unchanged through preview, close, and UI teardown."
       ],
       "remaining": [
         "C01 and C01.2 remain pending for broader cross-platform read-only product coverage; the ComboBox popup itself remains unverified for Windows accessibility.",

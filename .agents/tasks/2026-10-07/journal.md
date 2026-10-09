@@ -921,3 +921,13 @@ The first exact-SHA attempt, `7a9ab971d1e7577b925ce4678eb501e8af484416`, passed 
 On corrected exact source SHA `bf5bc3349a73753d0ee236e2656a0c59de6f24be`, the focused removal/refresh test passed on all three OSes and all seven required workflows passed: Rust CI, inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the pinned Obsidian 1.14.4 round trip. Exact job IDs and artifact SHA-256 digests are in [`evidence/r2.6.52-external-deletion-refresh-bf5bc33.json`](evidence/r2.6.52-external-deletion-refresh-bf5bc33.json). C01/C01.2 remain pending for broader read-only product coverage; edit/save remains deferred to C02/C14. No local executable validation was run.
 
 Next: continue R2 by selecting another uncovered C01/C01.2 read-only product flow; do not close either requirement until the full acceptance coverage passes.
+
+## R2.6.53 — bounded oversized note preview
+
+Added a cross-platform UI test for an existing note larger than the 16 KiB source-preview bound. The preview limit splits an emoji's UTF-8 encoding; the UI keeps only the valid source prefix, reports the full original byte count and marks it truncated. Vault and separate app-data snapshots stay unchanged through preview, closing the preview, and app teardown. Moved the Close source preview control above the source field so the action remains reachable with large content.
+
+The first exact-SHA attempt, `eb700dfe408d15c04846a094fed3be956e8b2a51`, failed the new close assertion in Rust CI on Ubuntu, macOS, and Windows. The preview size, truncation, UTF-8 boundary and status assertions passed; the control below the large field was not activated. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows and the Obsidian round trip passed. Run/job IDs and the failure are recorded in [`evidence/r2.6.53-bounded-note-preview-7f77ad0.json`](evidence/r2.6.53-bounded-note-preview-7f77ad0.json).
+
+On corrected exact source SHA `7f77ad0f69d315db6514b04435c2fe9a0c8def6b`, all seven GitHub Actions workflows passed. The focused test passed on Linux, macOS and Windows, and the pinned Obsidian 1.14.4 round trip passed on all three platforms. Run/job IDs and artifact SHA-256 digests are in the evidence file. C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14. No local executable validation was run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parents pending until their full acceptance coverage passes.
