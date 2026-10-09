@@ -203,7 +203,8 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
     if (predicate(last)) return last;
     await delay(500);
   }
-  throw new Error(`Timed out waiting for ${label}; last value=${JSON.stringify(last).slice(0, 2_000)}`);
+  const serializedLast = JSON.stringify(last);
+  throw new Error(`Timed out waiting for ${label}; last value=${(serializedLast ?? String(last)).slice(0, 2_000)}`);
 }
 
 async function waitForDevToolsVersion(port: number): Promise<{Browser?: string; "Protocol-Version"?: string}> {
@@ -585,12 +586,31 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   await captureObsidianScreenshot(connection, "obsidian-first-run.png");
   connection = await chooseVaultDirectory(connection, 9222);
   await chooseRestrictedMode(connection);
+  await captureObsidianScreenshot(connection, "obsidian-vault-restricted-mode.png");
 
-  xdotool("key", "ctrl+n");
+  const newNoteButtons = await connection.evaluateJson<{labels: string[]; found: boolean}>(`(() => {
+    const buttons = [...document.querySelectorAll('button,[role="button"]')];
+    const labels = buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean);
+    return {labels, found: buttons.some((button) => (button.innerText || button.textContent || '').trim().startsWith('New note'))};
+  })()`);
+  authoring.new_note_action_buttons = newNoteButtons.labels;
+  if (!newNoteButtons.found) throw new Error("Obsidian did not expose its visible New note action after Restricted Mode opened the vault");
+  authoring.new_note_action = "DOM click on Obsidian's visible New note button";
+  connection.send("Runtime.evaluate", {
+    expression: `(() => [...document.querySelectorAll('button,[role="button"]')]
+      .find((button) => (button.innerText || button.textContent || '').trim().startsWith('New note'))?.click())()`,
+    returnByValue: true,
+  });
+  await delay(750);
+  await captureObsidianScreenshot(connection, "obsidian-new-note-action.png");
+
   const editor = await waitFor(connection, "Obsidian editor to become active", async () => await connection.evaluateJson<{count: number; active: boolean}>(`(() => {
     const editors = [...document.querySelectorAll('[contenteditable="true"]')];
     return {count: editors.length, active: editors.some((element) => element === document.activeElement || element.contains(document.activeElement))};
-  })()`), (value) => value.count > 0 && value.active, 30_000);
+  })()`), (value) => {
+    (report.obsidian_authoring as Record<string, unknown>).last_editor_state = value;
+    return value.count > 0 && value.active;
+  }, 30_000);
   authoring.editor_after_new_note = editor;
   const inserted = await connection.request("Input.insertText", {text: noteContents});
   if (inserted.error) throw new Error(`Could not insert synthetic note content into Obsidian: ${inserted.error.message ?? "unknown error"}`);
