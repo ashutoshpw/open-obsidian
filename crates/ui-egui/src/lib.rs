@@ -2399,6 +2399,80 @@ mod tests {
     }
 
     #[test]
+    fn egui_opens_and_refreshes_an_existing_empty_vault_without_changing_its_tree() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Empty Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(vault_path.join(".obsidian"))
+            .expect("create existing vault configuration directory");
+        std::fs::create_dir_all(vault_path.join("Assets"))
+            .expect("create existing vault assets directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        std::fs::write(
+            vault_path.join(".obsidian/app.json"),
+            b"{\"unknownEmptyVaultOption\":{\"keep\":true}}\n",
+        )
+        .expect("seed opaque Obsidian configuration");
+        std::fs::write(vault_path.join("Assets/opaque.bin"), [0x00, 0xff, 0x42, 0x80])
+            .expect("seed arbitrary binary content");
+        std::fs::write(vault_path.join("README.txt"), b"This is not a Markdown note.\n")
+            .expect("seed a non-Markdown text file");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let canonical_vault = std::fs::canonicalize(&vault_path).expect("canonicalize vault");
+        let selected_vault = vault_path.clone();
+        let selected_app_data = app_data_path.clone();
+        let app = OpenObsidianApp {
+            open_vault_action: Some(Box::new(move || {
+                let (sender, receiver) = std::sync::mpsc::channel();
+                let result = VaultSession::open(&selected_vault, &selected_app_data)
+                    .map_err(|_| "The selected vault could not be opened safely.".to_owned());
+                sender
+                    .send(result)
+                    .expect("UI must receive the selected empty vault session");
+                Some(receiver)
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Open vault").click();
+        harness.step();
+        assert!(harness.state().session.is_some());
+        assert!(!harness.state().vault_opening);
+        assert!(harness.state().vault_open_error.is_none());
+        let session = harness.state().session.as_ref().expect("vault session is open");
+        assert_eq!(session.root_path(), canonical_vault);
+        assert!(session.entries().is_empty());
+        harness.get_by_label("Vault: Existing Empty Vault");
+        harness.get_by_label("0 Markdown files found.");
+        harness.get_by_label("This vault has no Markdown notes to inspect.");
+        harness.get_by_label("This vault has no Markdown notes to rename.");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        harness.get_by_label("Note list refreshed: 0 Markdown files found.");
+        assert!(harness
+            .state()
+            .session
+            .as_ref()
+            .expect("empty vault remains open after refresh")
+            .entries()
+            .is_empty());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+    }
+
+    #[test]
     fn egui_previews_existing_note_source_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
