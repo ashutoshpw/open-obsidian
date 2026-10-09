@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T20:20:17Z",
+  "updated_at": "2026-10-09T20:29:24Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "9242b850106480d7c8e5ee37f0fc3b7aca1dc427",
-  "current_milestone": "R2.6.77",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "5a355d933ed696bd1a848154ae1931d176370396",
+  "current_milestone": "R2.6.78",
+  "next_action": "Push the focused C01.2-29 corrupted attachment refresh test and start record to origin/main, then inspect all seven required exact-SHA GitHub Actions workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -226,7 +226,7 @@
     "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json.",
     "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json."
   ],
-  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel barriers passed in Rust CI, quality, desktop build, and Obsidian round-trip. The preceding 85f3a10 attempt and its Ubuntu formatting/window-discovery failures plus same-SHA round-trip retry are retained in evidence. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. Its focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel barriers passed in Rust CI, quality, desktop build, and Obsidian round-trip. Progress-record commit 5a355d933ed696bd1a848154ae1931d176370396 passed its six triggered workflows after a same-SHA quality retry for a missing X display; the round-trip workflow was skipped by its docs-only path filter. R2.6.78 / C01.2-29 is in progress from that starting SHA. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13995,6 +13995,23 @@
       ],
       "evidence": "evidence/r2.6.77-attempt-2-9242b85.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.78": {
+      "status": "in_progress",
+      "starting_sha": "5a355d933ed696bd1a848154ae1931d176370396",
+      "scope": "Exercise an external in-place replacement of a rendered PNG with a truncated PNG stream; refresh the active vault and verify the malformed image remains resolved as a path but fails closed without stale image rendering or vault/app-data writes.",
+      "accepted_slice": ["C01.2-29"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose PNG embed resolves, decodes, and renders before external modification.",
+        "Open the note source preview, replace the PNG at the same path outside OpenObsidian with deterministic bytes containing a valid PNG header but no image data, and capture the exact post-corruption vault snapshot.",
+        "Refresh keeps the vault and note active while clearing stale link/embed/preview/error/texture state.",
+        "A fresh report resolves the same attachment path but uses NotRendered for the truncated image, displays the safe-preview explanation, and creates no stale image texture.",
+        "The post-corruption vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Push the focused C01.2-29 UI test and start record to origin/main, then inspect all seven required exact-SHA workflows."
     }
   },
   "ci_preparation": {
