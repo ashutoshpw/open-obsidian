@@ -1067,19 +1067,6 @@ linters or application launches were run.
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
 
-## R2.6.65 — cancel the native folder picker with an active vault
-
-Extended the cross-platform Obsidian round-trip runner to open OpenObsidian's
-native folder picker a second time after the fixture vault is active, then
-cancel it with Escape. The runner now requires the same vault name and note
-count to return and compares full vault and separate app-data snapshots across
-the cancellation. The case exercises Linux's zenity fallback, the macOS Open
-panel, and the Windows folder picker. The matrix row is pending exact-SHA CI;
-no local executable validation was run.
-
-Next: commit and push this runner/UI change, then inspect the reference
-round-trip and required workflows for that exact source SHA.
-
 ## R2.6.58 — switch between existing vaults
 
 Added an egui UI case that begins with the existing-vault fixture open and its
@@ -1276,5 +1263,27 @@ C01.2 remain pending for broader read-only coverage; edit/save remains deferred
 to C02/C14. No local tests, builds, formatters, linters, or application
 launches were run.
 
-Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
-both parent requirements pending until their full cross-platform coverage passes.
+## R2.6.65 — cancel the native folder picker with an active vault
+
+Extended the three-platform Obsidian round-trip runner to test cancelling
+OpenObsidian's actual native folder picker while a fixture vault is already
+active. The first attempt, exact SHA
+`14bdd060750bc526e38501ac8e35eeaa6a0d14e7`, passed on macOS: the Open panel
+was visible, Escape closed it, and vault/app-data snapshots stayed unchanged.
+Linux remained on the OpenObsidian window after the attempted second picker;
+Windows UI Automation reported the button disabled after the async open. The
+round-trip run therefore failed on Linux and Windows, while the six companion
+workflows passed. Run `37911081741` uploaded all three platform reports and
+screenshots; artifact IDs, digests and job IDs will be retained in milestone
+evidence.
+
+The follow-up keeps the original native folder-selection case, then launches a
+separate OpenObsidian process with `--open-vault` so the fixture is active
+before the first picker request. It verifies the platform dialog is visible
+before sending Escape, confirms the selected vault name and note count return,
+and compares complete vault and separate app-data snapshots after
+cancellation and teardown. The corrected exact-SHA matrix is pending. No local
+tests, builds, formatters, linters, or application launches were run.
+
+Next: push the corrected runner and record to `origin/main`; inspect the
+three-OS native-picker cancellation round trip and required companion workflows.

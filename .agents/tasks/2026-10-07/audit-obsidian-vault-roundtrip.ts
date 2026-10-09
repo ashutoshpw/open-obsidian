@@ -51,7 +51,7 @@ const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.6.63-C01.2-01/03/14-cross-platform-native-picker-roundtrip",
+  milestone: "R2.6.63/R2.6.65-C01.2-native-folder-picker-roundtrip-and-cancel",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -85,7 +85,7 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves the read-only startup, native folder-picker selection, and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves the read-only startup, native folder-picker selection and cancellation, and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
     "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -519,6 +519,13 @@ async function prepareScreenshotForOcr(imagePath: string): Promise<string> {
     return ocrImagePath;
   }
   return imagePath;
+}
+
+async function readScreenshotOcr(imagePath: string): Promise<string> {
+  const ocrImagePath = await prepareScreenshotForOcr(imagePath);
+  const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
+  const pageSegmentationModes = process.platform === "darwin" || process.platform === "win32" ? ["11", "6"] : ["6"];
+  return pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrImagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
 }
 
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
@@ -1208,26 +1215,43 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
 async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {window_id: string}): Promise<Record<string, unknown>> {
   const screenshots: string[] = [];
   const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
-  await delay(750);
-  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png")));
-
   let pickerWindowId: string | null = null;
   let pickerWindowTitle = "native platform folder picker";
   let cancellationInteraction: string;
+  let pickerOpenOcr: string | null = null;
   if (process.platform === "linux") {
-    pickerWindowId = activeWindowId();
-    pickerWindowTitle = activeWindowTitle();
-    if (!pickerWindowId || pickerWindowId === window.window_id) {
-      throw new Error(`OpenObsidian native folder picker did not become active for cancellation; title=${pickerWindowTitle}`);
-    }
+    const picker = await waitFor("OpenObsidian native folder picker for cancellation", async () => {
+      const windowId = activeWindowId();
+      return windowId && windowId !== window.window_id
+        ? {window_id: windowId, title: activeWindowTitle()}
+        : null;
+    }, (candidate) => candidate !== null, 10_000);
+    if (!picker) throw new Error("OpenObsidian native folder picker did not become active for cancellation");
+    pickerWindowId = picker.window_id;
+    pickerWindowTitle = picker.title;
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png")));
     xdotool("key", "Escape");
     await waitFor("OpenObsidian folder picker cancellation", async () => activeWindowId(), (windowId) => windowId === window.window_id, 10_000);
     cancellationInteraction = "Sent Escape to the active Linux native folder picker.";
   } else if (process.platform === "darwin") {
+    await delay(1_000);
+    const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
+    screenshots.push(relative(reportDirectory, pickerScreenshot));
+    pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
+    if (!/open(?: an)? existing vault/i.test(pickerOpenOcr)) {
+      throw new Error(`The native macOS Open panel was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
+    }
     const script = `tell application "System Events" to key code 53`;
     execFileSync("osascript", ["-e", script], {stdio: "ignore"});
     cancellationInteraction = "Sent Escape to the native macOS Open panel.";
   } else if (process.platform === "win32") {
+    await delay(1_000);
+    const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
+    screenshots.push(relative(reportDirectory, pickerScreenshot));
+    pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
+    if (!/open(?: an)? existing vault/i.test(pickerOpenOcr)) {
+      throw new Error(`The native Windows folder picker was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
+    }
     const script = `
       $ErrorActionPreference = "Stop"
       $shell = New-Object -ComObject WScript.Shell
@@ -1242,8 +1266,13 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
   }
 
   await delay(1_000);
-  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-cancelled.png")));
-  const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child);
+  const cancelledScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancelled.png");
+  screenshots.push(relative(reportDirectory, cancelledScreenshot));
+  const cancelledOcr = await readScreenshotOcr(cancelledScreenshot);
+  if (process.platform !== "linux" && /open(?: an)? existing vault/i.test(cancelledOcr)) {
+    throw new Error(`The native folder picker remained visible after Escape; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}`);
+  }
+  const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-after-picker-cancelled");
   const restoredVaultVisible = restoredWindow.ocrText.toLowerCase().includes("roundtrip fixture");
   const expectedNoteCountVisible = /2\s+Markdown files found/i.test(restoredWindow.ocrText);
   if (!restoredVaultVisible || !expectedNoteCountVisible) {
@@ -1256,22 +1285,26 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     picker_window_title: pickerWindowTitle,
     cancellation_interaction: cancellationInteraction,
     screenshots,
+    picker_open_verified: true,
+    picker_open_screen_ocr: pickerOpenOcr,
+    picker_closed_verified: true,
+    cancelled_screen_ocr: process.platform === "linux" ? null : cancelledOcr.slice(0, 2_000),
     restored_vault_visible: restoredVaultVisible,
     expected_markdown_count_visible: expectedNoteCountVisible,
     restored_ui_ocr: restoredWindow.ocrText.slice(0, 2_000),
   };
 }
 
-async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string}> {
+async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess, prefix = "openobsidian-vault"): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string}> {
   await focusOpenObsidian(child);
-  const pngPath = await captureDesktopScreenshot("openobsidian-vault.png");
+  const pngPath = await captureDesktopScreenshot(`${prefix}.png`);
   const windowsCapture = process.platform === "win32"
-    ? await captureWindowsWindowScreenshot(child.pid ?? -1, "openobsidian-vault-window.png")
+    ? await captureWindowsWindowScreenshot(child.pid ?? -1, `${prefix}-window.png`)
     : null;
   const windowPngPath = process.platform === "linux"
-    ? await captureX11WindowScreenshot(windowId, "openobsidian-vault-window.png")
+    ? await captureX11WindowScreenshot(windowId, `${prefix}-window.png`)
     : process.platform === "darwin"
-      ? await captureMacOSWindowScreenshot(child.pid ?? -1, "openobsidian-vault-window.png")
+      ? await captureMacOSWindowScreenshot(child.pid ?? -1, `${prefix}-window.png`)
       : windowsCapture?.pngPath ?? pngPath;
   if (windowsCapture) {
     (report.openobsidian_open as Record<string, unknown>).native_window = {
@@ -1367,23 +1400,6 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
       throw new Error("OpenObsidian's managed application data directory is inside the selected vault");
     }
-    const vaultBeforePickerCancellation = await snapshotTree(vaultRoot);
-    const appDataBeforePickerCancellation = await snapshotTree(appDataRoot);
-    const pickerCancellation = await cancelOpenObsidianNativePicker(child, window);
-    const vaultAfterPickerCancellation = await snapshotTree(vaultRoot);
-    const appDataAfterPickerCancellation = await snapshotTree(appDataRoot);
-    ensureExactSnapshot(vaultBeforePickerCancellation, vaultAfterPickerCancellation, "OpenObsidian native picker cancellation");
-    ensureExactSnapshot(appDataBeforePickerCancellation, appDataAfterPickerCancellation, "OpenObsidian app data after native picker cancellation");
-    open.folder_picker_cancel = {
-      ...pickerCancellation,
-      vault_snapshot_unchanged: true,
-      app_data_snapshot_unchanged: true,
-      vault_snapshot: vaultAfterPickerCancellation,
-      app_data_snapshot: appDataAfterPickerCancellation,
-    };
-    (report.vault_snapshots as Record<string, unknown>).after_picker_cancellation = vaultAfterPickerCancellation;
-    (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation = appDataAfterPickerCancellation;
-
     (report.openobsidian_open as Record<string, unknown>).status = "passed";
     (report.openobsidian_open as Record<string, unknown>).selected_vault_visible = true;
     (report.openobsidian_open as Record<string, unknown>).expected_markdown_count_visible = true;
@@ -1402,6 +1418,120 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_close = afterAppData;
     (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_initial_startup = true;
     return afterVault;
+  } finally {
+    await stopProcess(child).catch(() => undefined);
+  }
+}
+
+async function runOpenObsidianPickerCancellation(): Promise<void> {
+  const userConfigRoot = join(workDirectory, "openobsidian-user-config");
+  const homeRoot = join(workDirectory, "openobsidian-home");
+  const localDataRoot = join(workDirectory, "openobsidian-local-data");
+  const appEnv: NodeJS.ProcessEnv = {
+    ...process.env,
+    HOME: homeRoot,
+  };
+  let appDataRoot: string;
+  if (process.platform === "win32") {
+    appEnv.APPDATA = userConfigRoot;
+    appEnv.LOCALAPPDATA = localDataRoot;
+    appEnv.USERPROFILE = homeRoot;
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  } else if (process.platform === "darwin") {
+    appDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
+  } else {
+    appEnv.XDG_CONFIG_HOME = userConfigRoot;
+    appEnv.XDG_CACHE_HOME = join(workDirectory, "openobsidian-cache");
+    appEnv.XDG_DATA_HOME = join(workDirectory, "openobsidian-data");
+    appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
+    appEnv.WGPU_BACKEND = "gl";
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  }
+  await mkdir(homeRoot, {recursive: true});
+  await mkdir(join(homeRoot, "Desktop"), {recursive: true});
+  const child = launchLogged(openObsidianBinary, ["--open-vault", vaultRoot], join(reportDirectory, "openobsidian-picker-cancel.log"), appEnv);
+  (report.openobsidian_open as Record<string, unknown>).picker_cancel_pid = child.pid ?? null;
+  try {
+    await delay(1_000);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error(`OpenObsidian exited before rendering the startup-selected vault (code=${child.exitCode}, signal=${child.signalCode})`);
+    }
+    let window: {window_id: string; title: string; geometry: string};
+    if (process.platform === "linux") {
+      const x11Window = await waitFor("OpenObsidian cancellation-test window to become visible", async () => {
+        try {
+          const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
+          if (!windowId) return null;
+          const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+          const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          return {window_id: windowId, title, geometry};
+        } catch {
+          return null;
+        }
+      }, (candidate) => candidate !== null, 30_000);
+      if (!x11Window) throw new Error("OpenObsidian did not expose a visible X11 window for picker cancellation");
+      window = x11Window;
+      try {
+        xdotool("windowfocus", "--sync", window.window_id);
+      } catch {
+        // Direct per-window capture below still works if Xvfb has no window manager.
+      }
+    } else {
+      window = {window_id: String(child.pid ?? "unknown"), title: "OpenObsidian main window", geometry: "native window bounds captured during screenshot"};
+    }
+
+    const open = report.openobsidian_open as Record<string, unknown>;
+    let startupScreen: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | null = null;
+    await waitFor("OpenObsidian to display the startup-selected vault before picker cancellation", async () => {
+      await delay(500);
+      startupScreen = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-before-picker-cancel");
+      return startupScreen;
+    }, (candidate) => candidate !== null
+      && candidate.ocrText.toLowerCase().includes("roundtrip fixture")
+      && /2\s+Markdown files found/i.test(candidate.ocrText), 30_000);
+
+    const canonicalVault = await realpath(vaultRoot);
+    const canonicalAppData = await realpath(appDataRoot);
+    const relativeAppData = relative(canonicalVault, canonicalAppData);
+    if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
+      throw new Error("OpenObsidian's managed application data directory is inside the selected vault");
+    }
+    const vaultBeforeCancellation = await snapshotTree(vaultRoot);
+    const appDataBeforeCancellation = await snapshotTree(appDataRoot);
+    const pickerCancellation = await cancelOpenObsidianNativePicker(child, window);
+    const vaultAfterCancellation = await snapshotTree(vaultRoot);
+    const appDataAfterCancellation = await snapshotTree(appDataRoot);
+    ensureExactSnapshot(vaultBeforeCancellation, vaultAfterCancellation, "OpenObsidian native picker cancellation");
+    ensureExactSnapshot(appDataBeforeCancellation, appDataAfterCancellation, "OpenObsidian app data after native picker cancellation");
+
+    await delay(1_000);
+    await stopProcess(child);
+    const vaultAfterClose = await snapshotTree(vaultRoot);
+    const appDataAfterClose = await snapshotTree(appDataRoot);
+    ensureExactSnapshot(vaultBeforeCancellation, vaultAfterClose, "OpenObsidian vault after picker-cancellation teardown");
+    ensureExactSnapshot(appDataBeforeCancellation, appDataAfterClose, "OpenObsidian app data after picker-cancellation teardown");
+    open.folder_picker_cancel = {
+      startup_argument: "--open-vault <generated fixture path>",
+      startup_vault_visible: true,
+      startup_markdown_count_visible: true,
+      startup_screen_ocr: startupScreen?.ocrText.slice(0, 2_000) ?? null,
+      ...pickerCancellation,
+      vault_snapshot_unchanged_after_cancel: true,
+      app_data_snapshot_unchanged_after_cancel: true,
+      vault_snapshot_unchanged_after_close: true,
+      app_data_snapshot_unchanged_after_close: true,
+      vault_snapshot_before_cancel: vaultBeforeCancellation,
+      vault_snapshot_after_cancel: vaultAfterCancellation,
+      vault_snapshot_after_close: vaultAfterClose,
+      app_data_snapshot_before_cancel: appDataBeforeCancellation,
+      app_data_snapshot_after_cancel: appDataAfterCancellation,
+      app_data_snapshot_after_close: appDataAfterClose,
+    };
+    (report.vault_snapshots as Record<string, unknown>).after_picker_cancellation = vaultAfterCancellation;
+    (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation = appDataAfterCancellation;
+    (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation_close = appDataAfterClose;
+    await saveReport();
   } finally {
     await stopProcess(child).catch(() => undefined);
   }
@@ -1515,6 +1645,7 @@ async function run(): Promise<void> {
 
     await runOpenObsidian(beforeRust);
     await writeFile(join(reportDirectory, "vault-after-openobsidian.json"), `${JSON.stringify(report.vault_snapshots && (report.vault_snapshots as Record<string, unknown>).after_openobsidian, null, 2)}\n`);
+    await runOpenObsidianPickerCancellation();
 
     reopenProcess = await createObsidianProfile(join(workDirectory, "obsidian-profile"), 9223);
     reopenConnection = await reopenInObsidian(reopenProcess, authored.notePath);
