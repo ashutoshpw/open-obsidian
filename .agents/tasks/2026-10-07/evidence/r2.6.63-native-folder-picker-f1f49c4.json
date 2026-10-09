@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.63",
+  "status": "complete",
+  "source_sha": "f1f49c4289984ef6d26437894fcca0cc53627576",
+  "implementation_commits": [
+    "adbe4668a2997702c53197b27be2733f9edfa068",
+    "d23b14b30df8155a9cc70dac89bd0edd4cb4faf8",
+    "f37fff81e01d4c217786b0de1cb790e4fdcf35eb",
+    "f1f49c4289984ef6d26437894fcca0cc53627576"
+  ],
+  "scope": {
+    "workflow": ".github/workflows/obsidian-vault-roundtrip.yml",
+    "harness": ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts",
+    "change": "Launch OpenObsidian normally, select a generated space-containing vault using the native rfd folder picker, verify read-only startup, then reopen the same vault in Obsidian Desktop 1.14.4.",
+    "checks": [
+      "Use the native folder-picker flow on Ubuntu, macOS, and Windows; confirm OpenObsidian visibly opens the generated fixture.",
+      "Verify the Obsidian-authored fixture has 22 matching path/byte/hash entries before OpenObsidian, after OpenObsidian, and after Obsidian reopens it.",
+      "Verify non-workspace vault paths are unchanged, no workspace-state changes were recorded, and separate OpenObsidian app data remains outside the vault and unchanged after startup/close."
+    ],
+    "fixture": "Synthetic C01.2 Roundtrip Fixture with a space in its name; no personal vault content or credentials."
+  },
+  "ci": {
+    "conclusion": "All seven required GitHub Actions workflows passed on exact source SHA f1f49c4289984ef6d26437894fcca0cc53627576. The native folder-picker and Obsidian reopen flow passed on Ubuntu, macOS, and Windows.",
+    "toolchain": {
+      "rust": "stable toolchain selected by dtolnay/rust-toolchain@stable",
+      "rfd": "0.17.2 from Cargo.lock",
+      "reference_application": "Obsidian Desktop 1.14.4; platform-specific verified asset hashes are recorded in each round-trip report."
+    },
+    "workflows": [
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 37906172356,
+        "attempt": 1,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172356",
+        "jobs": [
+          { "name": "rust (macos-latest)", "job_id": 113740050491, "conclusion": "success" },
+          { "name": "rust (windows-latest)", "job_id": 113740050839, "conclusion": "success" },
+          { "name": "rust (ubuntu-latest)", "job_id": 113740050916, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 37906172449,
+        "attempt": 1,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172449",
+        "jobs": [
+          { "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 113740050961, "conclusion": "success" },
+          { "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 113740051169, "conclusion": "success" },
+          { "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 113740051262, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 37906172378,
+        "attempt": 2,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172378",
+        "same_sha_rerun": {
+          "attempt_1": {
+            "conclusion": "Ubuntu Electron vault round-trip audit did not reach the expected local retrieval boundary.",
+            "jobs": [
+              { "name": "ubuntu-latest", "job_id": 113740050781, "conclusion": "failure" },
+              { "name": "macos-latest", "job_id": 113740050334, "conclusion": "success" },
+              { "name": "windows-latest", "job_id": 113740050703, "conclusion": "success" }
+            ]
+          },
+          "attempt_2": "All three quality jobs passed on the same source SHA."
+        },
+        "jobs": [
+          { "name": "ubuntu-latest", "job_id": 113740702623, "conclusion": "success" },
+          { "name": "macos-latest", "job_id": 113740704517, "conclusion": "success" },
+          { "name": "windows-latest", "job_id": 113740705070, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 37906172306,
+        "attempt": 1,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172306",
+        "jobs": [
+          { "name": "macos-latest", "job_id": 113740050759, "conclusion": "success" },
+          { "name": "windows-latest", "job_id": 113740050955, "conclusion": "success" },
+          { "name": "ubuntu-latest", "job_id": 113740051026, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 37906172336,
+        "attempt": 1,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172336",
+        "jobs": [
+          { "name": "ubuntu-latest", "job_id": 113740050449, "conclusion": "success" },
+          { "name": "macos-latest", "job_id": 113740050864, "conclusion": "success" },
+          { "name": "windows-latest", "job_id": 113740050922, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 37906172328,
+        "attempt": 1,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172328",
+        "jobs": [
+          { "name": "macos-latest", "job_id": 113740050943, "conclusion": "success" },
+          { "name": "windows-latest", "job_id": 113740051264, "conclusion": "success" },
+          { "name": "ubuntu-latest", "job_id": 113740051271, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "Rust migration inventory",
+        "run_id": 37906172368,
+        "attempt": 1,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37906172368",
+        "jobs": [
+          { "name": "inventory", "job_id": 113740050604, "conclusion": "success" }
+        ]
+      }
+    ],
+    "roundtrip_platforms": [
+      {
+        "os": "Linux",
+        "runner_image": "ubuntu24",
+        "runner_image_version": "20261004.327.1",
+        "native_picker_backend": "rfd XDG portal fallback displayed the zenity folder dialog; fixture path selected successfully.",
+        "openobsidian": "passed; selected vault visible",
+        "obsidian_reopen": "passed; same vault restored",
+        "vault_snapshot_entries": 22,
+        "non_workspace_paths_unchanged": true,
+        "workspace_state_changes": [],
+        "separate_app_data_outside_and_unchanged": true,
+        "obsidian_asset_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa"
+      },
+      {
+        "os": "macOS",
+        "runner_image": "macos26",
+        "runner_image_version": "20260907.0351.1",
+        "native_picker_backend": "Native macOS Open panel; fixture path selected successfully.",
+        "openobsidian": "passed; selected vault visible",
+        "obsidian_reopen": "passed; same vault restored",
+        "vault_snapshot_entries": 22,
+        "non_workspace_paths_unchanged": true,
+        "workspace_state_changes": [],
+        "separate_app_data_outside_and_unchanged": true,
+        "obsidian_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70"
+      },
+      {
+        "os": "Windows",
+        "runner_image": "win25-vs2026",
+        "runner_image_version": "20260925.250.1",
+        "native_picker_backend": "Native Windows folder dialog; visible Select Folder button clicked successfully.",
+        "openobsidian": "passed; selected vault visible",
+        "obsidian_reopen": "passed; same vault restored",
+        "vault_snapshot_entries": 22,
+        "non_workspace_paths_unchanged": true,
+        "workspace_state_changes": [],
+        "separate_app_data_outside_and_unchanged": true,
+        "obsidian_asset_sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00"
+      }
+    ],
+    "artifacts": [
+      { "purpose": "Linux native Rust preview", "id": 11604467737, "name": "openobsidian-rust-preview-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 9614950, "digest": "sha256:97ecf5de704878ac51e00142510f76141abec25c00d9911c234472bada221992" },
+      { "purpose": "Linux plugin feasibility report; feasibility-only", "id": 11604562518, "name": "rust-plugin-runtime-Linux-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 2695, "digest": "sha256:e1f430d41ba58ca838393e6636333af8011654d8fe6304299e112dc38368bd60" },
+      { "purpose": "macOS plugin feasibility report; feasibility-only", "id": 11604921344, "name": "rust-plugin-runtime-macOS-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 2698, "digest": "sha256:2d04654ae43e2968cc04eca49a26e77fcfe5110a83c16b080b5f79fd6b8eff84" },
+      { "purpose": "Windows plugin feasibility report; feasibility-only", "id": 11603734926, "name": "rust-plugin-runtime-Windows-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 2715, "digest": "sha256:5792995d8d08ab64c5840fe7802989e8453cec719d1a865424aa9d44251a16fd" },
+      { "purpose": "Linux desktop preview package", "id": 11604955230, "name": "openobsidian-Linux-preview-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 125946548, "digest": "sha256:a727136d1343bc1205f11f174ae740ee8ff4b5059da97c98f9dfa5b44a985ebb" },
+      { "purpose": "Windows desktop preview package", "id": 11604930907, "name": "openobsidian-Windows-preview-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 163005824, "digest": "sha256:e1ec57c272501e33d13f7a8857c70fc8d677ddfb5a9390b478670296d23b48d0" },
+      { "purpose": "macOS desktop preview package", "id": 11604407848, "name": "openobsidian-macOS-preview-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 397395487, "digest": "sha256:02f781c7a319f8e4a552c0485c25f4d579c68938964f1dbe0dba5882a3d58722" },
+      { "purpose": "Linux Obsidian round-trip report, screenshots and logs", "id": 11603994185, "name": "obsidian-vault-roundtrip-Linux-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 1798127, "digest": "sha256:ad21fe44223d61a93b336ce62dfcc8585d5a332d27d85f5d215f03aa6d16b77b" },
+      { "purpose": "Windows Obsidian round-trip report, screenshots and logs", "id": 11604886512, "name": "obsidian-vault-roundtrip-Windows-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 2142041, "digest": "sha256:c1c0688c82742412f00417139d23bf9dd43cc374ad1da038d6cdfd970bb274be" },
+      { "purpose": "macOS Obsidian round-trip report, screenshots and logs", "id": 11604915794, "name": "obsidian-vault-roundtrip-macOS-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 2153971, "digest": "sha256:b475fc7e1cbc407dd8a483ea4c02ca4bf6ea88dcdf88103c7a8507ad7a7bbafd" },
+      { "purpose": "Linux plugin renderer lifecycle report", "id": 11604331987, "name": "plugin-renderer-lifecycle-Linux-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 3221, "digest": "sha256:ee9a628522cd8dcfebd1e5c3ab689f6c20915f141c19ef898ebbc407f1709b27" },
+      { "purpose": "macOS plugin renderer lifecycle report", "id": 11604582334, "name": "plugin-renderer-lifecycle-macOS-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 3238, "digest": "sha256:582a74876bd7882309969e91c1d09b9af3149b7a92495726c6efdcbb19814d0c" },
+      { "purpose": "Windows plugin renderer lifecycle report", "id": 11604995201, "name": "plugin-renderer-lifecycle-Windows-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 3242, "digest": "sha256:a06a2a5db4cf8c91b11fbc2e3d52400bbe778b62371cf18ae6e85a9af31b615e" },
+      { "purpose": "Linux loaded plugin workflow report", "id": 11603998918, "name": "loaded-plugin-workflows-Linux-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 171484, "digest": "sha256:5bcd61d5afff5f303b941743ba7496918c9f092263482e086b0059d0b268f747" },
+      { "purpose": "Windows loaded plugin workflow report", "id": 11604138350, "name": "loaded-plugin-workflows-Windows-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 171506, "digest": "sha256:35c4c31bafdbca206b4f8e240582d49688a55e008dd1fc773e00a50d9e6b75fa" },
+      { "purpose": "macOS loaded plugin workflow report", "id": 11604348241, "name": "loaded-plugin-workflows-macOS-f1f49c4289984ef6d26437894fcca0cc53627576", "size_bytes": 171497, "digest": "sha256:bcf35a6c8d248ad33b694884afbb3d4b76e55b722de1c7ff191b59e9de9badad" }
+    ]
+  },
+  "prior_attempts": [
+    {
+      "source_sha": "adbe4668a2997702c53197b27be2733f9edfa068",
+      "roundtrip_run_id": 37904317455,
+      "conclusion": "macOS passed; Linux did not open the native picker; Windows first showed a missing Desktop location and consumed path entry in the error dialog.",
+      "correction": "Create the synthetic Desktop directory and change Linux activation from Tab/Return to Tab/Space."
+    },
+    {
+      "source_sha": "d23b14b30df8155a9cc70dac89bd0edd4cb4faf8",
+      "roundtrip_run_id": 37904773731,
+      "conclusion": "macOS passed; Linux remained on the Open vault button; Windows reached the fixture but UI Automation did not expose Select Folder.",
+      "correction": "Click the visible Linux button from X11 window geometry and use a Win32 picker-button click fallback."
+    },
+    {
+      "source_sha": "f37fff81e01d4c217786b0de1cb790e4fdcf35eb",
+      "roundtrip_run_id": 37905575264,
+      "conclusion": "macOS passed; Linux still had no visible picker; Windows entered the fixture but the exact-title Win32 lookup could not find the visible folder dialog.",
+      "correction": "Install zenity for the Linux rfd XDG portal fallback and measure/click the foreground Windows dialog."
+    }
+  ],
+  "limits": [
+    "This proves the native folder-picker, read-only open, and reference-app reopen flow for this synthetic fixture and the recorded runner images only; it does not complete the broader C01 or C01.2 requirements.",
+    "The Linux runner displayed rfd's zenity fallback; this run does not exercise an installed XDG desktop portal frontend.",
+    "The run does not certify OpenObsidian editing, general plugin/theme compatibility, or native screen-reader behavior."
+  ],
+  "local_executable_validation": "none"
+}

@@ -1221,3 +1221,17 @@ formatters, linters or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
+
+## CI readiness — GitHub Actions parallel steps
+
+Reviewed GitHub's [parallel steps announcement](https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/) and [workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax). The repository already uses native `parallel:` groups for independent setup and checks in Rust CI, quality, desktop builds, the Obsidian round-trip, compatibility pins, and the reference-runner workflow. The migration goal already requires using these groups when checks do not share mutable outputs. The existing setup and audit changes are documented in `evidence/parallel-ci-runner-setup-c479996.json` and `evidence/parallel-ci-quality-audits-f9d66e6.json`; the exact-SHA `f1f49c4` runs also executed the Rust and quality parallel groups successfully. No extra workflow change was needed. No local workflow validation or executable tests were run.
+
+## R2.6.63 — native folder picker and reference-app reopen
+
+Extended the Obsidian round-trip workflow to start OpenObsidian normally and use its native `rfd::FileDialog::pick_folder` flow for the synthetic space-containing fixture. Created the missing Windows Desktop directory, added `zenity` for Linux's rfd XDG portal fallback, and automated the visible native picker controls on Linux and Windows. macOS uses its native Open panel. The earlier CI attempts and their fixes are captured in the milestone evidence.
+
+On exact source SHA `f1f49c4289984ef6d26437894fcca0cc53627576`, OpenObsidian opened the selected fixture and Obsidian Desktop 1.14.4 reopened the same vault on Ubuntu, macOS, and Windows. Each report records 22 matching vault entries before/open/reopen, unchanged non-workspace paths, no workspace-state changes, and separate app data outside the vault and unchanged. All seven required workflows passed; the first quality attempt failed on Ubuntu's Electron retrieval audit, then all three quality jobs passed on a same-SHA rerun. Exact run/job IDs, runner images, report summaries, artifacts and digests are in [`evidence/r2.6.63-native-folder-picker-f1f49c4.json`](evidence/r2.6.63-native-folder-picker-f1f49c4.json).
+
+This proves the tested native-picker/open/reopen flow for the recorded CI images and synthetic fixture. Linux exercised the zenity fallback, not an installed XDG portal frontend. Broader C01/C01.2 read-only coverage remains pending; C01.1 remains passing, and edit/save is deferred to C02/C14. No local tests, builds, formatters, linters, or application launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes.
