@@ -1400,3 +1400,30 @@ to verify that the native Open panel is present and closed around Escape, with
 screenshot OCR retained as fallback. Exact-SHA CI validation is pending on
 `origin/main`. No local tests, builds, formatters, linters, or application
 launches were run.
+
+### R2.6.65 attempt 6 result and platform window-detection correction — SHA `35f0c7b`
+
+The sixth exact-SHA round-trip run
+[37916648305](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648305)
+did not pass the cancellation gate. Ubuntu stayed on the active vault screen
+after the click. Windows reported that UI Automation invoked the enabled Open
+vault button, but its screenshot gate did not recognize a native picker.
+macOS's screenshot clearly showed the native Open panel, while OCR and the
+accessibility title check failed to accept it. Artifact IDs, digests, full
+reports and screenshots are retained in `state.json` and the Actions artifacts.
+
+Rust CI [37916648441](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648441),
+quality [37916648314](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648314),
+desktop build [37916648299](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648299),
+plugin renderer [37916648316](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648316),
+loaded-plugin workflows [37916648389](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648389),
+and inventory [37916648326](https://github.com/ashutoshpw/open-obsidian/actions/runs/37916648326)
+passed on the same SHA. The native parallel setup groups passed.
+
+The next correction sends the Linux click directly to the intended X11 window,
+records window inventories before and after the click, detects and raises a new
+Linux picker window, enumerates Windows top-level UI Automation windows and
+focuses the newly detected native picker before Escape, and crops/enlarges the
+macOS panel for OCR while recording accessibility descriptions in failures.
+Exact-SHA validation is pending on `origin/main`. No local tests, builds,
+formatters, linters, or application launches were run.

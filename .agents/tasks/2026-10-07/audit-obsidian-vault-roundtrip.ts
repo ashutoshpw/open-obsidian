@@ -348,9 +348,30 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
   const windowHeight = readGeometry("HEIGHT");
   const clickX = Math.round(windowX + windowWidth * 0.045);
   const clickY = Math.round(windowY + windowHeight * 0.085);
-  xdotool("mousemove", "--sync", "--window", windowId, String(Math.round(windowWidth * 0.045)), String(Math.round(windowHeight * 0.085)));
-  xdotool("click", "1");
+  xdotool("mousemove", "--sync", String(clickX), String(clickY));
+  xdotool("click", "--window", windowId, "1");
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
+}
+
+type X11WindowDescription = {window_id: string; title: string; window_class: string; geometry: string};
+
+function x11WindowInventory(): X11WindowDescription[] {
+  const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "."], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  return output.split(/\r?\n/).filter((windowId) => /^\d+$/.test(windowId)).map((windowId) => {
+    const read = (args: string[]): string => {
+      try {
+        return execFileSync("xdotool", args, {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+      } catch {
+        return "";
+      }
+    };
+    const title = read(["getwindowname", windowId]);
+    const windowClass = read(["getwindowclassname", windowId]);
+    const geometry = read(["getwindowgeometry", "--shell", windowId]).split(/\r?\n/)
+      .filter((line) => /^(X|Y|WIDTH|HEIGHT)=/.test(line))
+      .join(",");
+    return {window_id: windowId, title, window_class: windowClass, geometry};
+  });
 }
 
 async function clickOpenVaultButtonMacOS(child: ChildProcess): Promise<string> {
@@ -442,6 +463,64 @@ function macOSApplicationWindowDescriptions(child: ChildProcess): string {
     end tell
   end run`;
   return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+}
+
+function macOSNativePickerVisibleInAccessibility(descriptions: string): boolean {
+  if (/AXSheet:/i.test(descriptions) || /open.{0,40}vault/i.test(descriptions)) return true;
+  const windows = descriptions.match(/(?:AXWindow|standard window|dialog):/gi) ?? [];
+  return windows.length > 1;
+}
+
+type WindowsTopLevelWindow = {
+  name: string;
+  class_name: string;
+  process_id: number;
+  native_window_handle: number;
+  is_offscreen: boolean;
+};
+
+function windowsTopLevelWindowInventory(): WindowsTopLevelWindow[] {
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    $elements = [System.Windows.Automation.AutomationElement]::RootElement.FindAll(
+      [System.Windows.Automation.TreeScope]::Children,
+      [System.Windows.Automation.Condition]::TrueCondition
+    )
+    $windows = @()
+    foreach ($element in $elements) {
+      try {
+        $current = $element.Current
+        $name = [string]$current.Name
+        $className = [string]$current.ClassName
+        $processId = [int]$current.ProcessId
+        $handle = [int]$current.NativeWindowHandle
+        $isOffscreen = [bool]$current.IsOffscreen
+        if ($name -or $className -or $handle -ne 0) {
+          $windows += [PSCustomObject]@{
+            name = $name
+            class_name = $className
+            process_id = $processId
+            native_window_handle = $handle
+            is_offscreen = $isOffscreen
+          }
+        }
+      } catch {}
+    }
+    ConvertTo-Json -InputObject @($windows) -Depth 3 -Compress
+  `;
+  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+  if (!output || output === "null") return [];
+  const value = JSON.parse(output) as WindowsTopLevelWindow | WindowsTopLevelWindow[];
+  return Array.isArray(value) ? value : [value];
+}
+
+function isNewWindowsNativePicker(windowDescription: WindowsTopLevelWindow, previousHandles: Set<number>, applicationPid: number): boolean {
+  if (windowDescription.is_offscreen || previousHandles.has(windowDescription.native_window_handle)) return false;
+  return windowDescription.process_id === applicationPid ||
+    /open|folder|browse|select|choose/i.test(`${windowDescription.name} ${windowDescription.class_name}`) ||
+    windowDescription.class_name === "#32770";
 }
 
 async function waitForRenderer(connection: DevToolsConnection, expression: string, predicate: (value: string) => boolean, label: string, timeoutMs = 120_000): Promise<string> {
@@ -601,6 +680,14 @@ async function readScreenshotOcr(imagePath: string): Promise<string> {
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" || process.platform === "win32" ? ["11", "6"] : ["6"];
   return pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrImagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
+}
+
+async function readNativeFolderPickerOcr(imagePath: string): Promise<string> {
+  if (process.platform !== "darwin") return await readScreenshotOcr(imagePath);
+  const ocrImagePath = join(reportDirectory, "openobsidian-vault-picker-cancel-open-ocr.png");
+  execFileSync("magick", [imagePath, "-gravity", "center", "-crop", "90%x75%+0+0", "+repage", "-colorspace", "Gray", "-level", "0%,35%", "-resize", "250%", ocrImagePath], {stdio: "ignore"});
+  const pageSegmentationModes = ["11", "6"];
+  return pageSegmentationModes.map((mode) => execFileSync("tesseract", [ocrImagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
 }
 
 function ocrTokenMatches(token: string, expected: string): boolean {
@@ -1141,9 +1228,10 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
     xdotool("windowfocus", "--sync", windowId);
     await delay(500);
     const clicked = clickOpenVaultButtonLinux(windowId);
+    await delay(500);
     const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
     (report.openobsidian_open as Record<string, unknown>).picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
-    return `Clicked the visible Open vault button using the X11 window geometry at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}.`;
+    return `Sent an X11 click directly to OpenObsidian at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}.`;
   }
   if (process.platform === "darwin") {
     const script = `on run argv
@@ -1354,9 +1442,15 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
 
 async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {window_id: string}): Promise<Record<string, unknown>> {
   const screenshots: string[] = [];
-  const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
+  const linuxWindowsBefore = process.platform === "linux" ? x11WindowInventory() : null;
+  const windowsBefore = process.platform === "win32" ? windowsTopLevelWindowInventory() : null;
   const openReport = report.openobsidian_open as Record<string, unknown>;
+  if (linuxWindowsBefore) openReport.picker_cancel_x11_windows_before = linuxWindowsBefore;
+  if (windowsBefore) openReport.picker_cancel_windows_before = windowsBefore;
+  const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
   openReport.picker_cancel_open_button_interaction = openButtonInteraction;
+  if (process.platform === "linux") openReport.picker_cancel_x11_windows_after_click = x11WindowInventory();
+  if (process.platform === "win32") openReport.picker_cancel_windows_after_click = windowsTopLevelWindowInventory();
   await saveReport();
   let pickerWindowId: string | null = null;
   let pickerWindowTitle = "native platform folder picker";
@@ -1364,51 +1458,80 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
   let pickerOpenOcr: string | null = null;
   let pickerAccessibilityWindows: string | null = null;
   let remainingMacAccessibilityWindows: string | null = null;
+  let windowsPicker: WindowsTopLevelWindow | null = null;
+  let remainingWindows: WindowsTopLevelWindow[] | null = null;
+  let linuxWindowsAfterEscape: X11WindowDescription[] | null = null;
   if (process.platform === "linux") {
-    const picker = await waitFor("OpenObsidian native folder picker for cancellation", async () => {
-      const windowId = activeWindowId();
-      return windowId && windowId !== window.window_id
-        ? {window_id: windowId, title: activeWindowTitle()}
-        : null;
+    const previousWindowIds = new Set((linuxWindowsBefore ?? []).map((candidate) => candidate.window_id));
+    const picker = await waitFor("new X11 native folder picker window", async () => {
+      const candidates = x11WindowInventory().filter((candidate) => candidate.window_id !== window.window_id && !previousWindowIds.has(candidate.window_id));
+      return candidates[0] ?? null;
     }, (candidate) => candidate !== null, 10_000);
-    if (!picker) throw new Error("OpenObsidian native folder picker did not become active for cancellation");
+    if (!picker) throw new Error(`OpenObsidian did not create a new X11 folder-picker window; before=${JSON.stringify(linuxWindowsBefore)}; after=${JSON.stringify(x11WindowInventory())}`);
+    xdotool("windowraise", picker.window_id);
+    xdotool("windowfocus", "--sync", picker.window_id);
+    await delay(300);
     pickerWindowId = picker.window_id;
     pickerWindowTitle = picker.title;
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png")));
     xdotool("key", "Escape");
-    await waitFor("OpenObsidian folder picker cancellation", async () => activeWindowId(), (windowId) => windowId === window.window_id, 10_000);
-    cancellationInteraction = "Sent Escape to the active Linux native folder picker.";
+    linuxWindowsAfterEscape = await waitFor("X11 native folder picker to close after Escape", async () => x11WindowInventory(), (windows) => !windows.some((candidate) => candidate.window_id === picker.window_id), 10_000);
+    cancellationInteraction = `Raised X11 picker window ${picker.window_id} (${picker.title}) and sent Escape.`;
+    openReport.picker_cancel_x11_windows_after_escape = linuxWindowsAfterEscape;
   } else if (process.platform === "darwin") {
     await delay(1_000);
     const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
     screenshots.push(relative(reportDirectory, pickerScreenshot));
-    pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
+    pickerOpenOcr = await readNativeFolderPickerOcr(pickerScreenshot);
     const accessibilityWindows = macOSApplicationWindowDescriptions(child);
     pickerAccessibilityWindows = accessibilityWindows;
     pickerWindowTitle = accessibilityWindows;
-    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr) && !/open.{0,40}vault/i.test(accessibilityWindows)) {
-      throw new Error(`The native macOS Open panel was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
+    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr) && !macOSNativePickerVisibleInAccessibility(accessibilityWindows)) {
+      throw new Error(`The native macOS Open panel was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}; accessibility windows=${JSON.stringify(accessibilityWindows)}`);
     }
     const script = `tell application "System Events" to key code 53`;
     execFileSync("osascript", ["-e", script], {stdio: "ignore"});
     cancellationInteraction = "Sent Escape to the native macOS Open panel.";
   } else if (process.platform === "win32") {
-    await delay(1_000);
+    const previousHandles = new Set((windowsBefore ?? []).map((candidate) => candidate.native_window_handle));
+    const applicationPid = child.pid ?? -1;
+    windowsPicker = await waitFor("new Windows native folder-picker window", async () => {
+      const candidates = windowsTopLevelWindowInventory().filter((candidate) => isNewWindowsNativePicker(candidate, previousHandles, applicationPid));
+      return candidates[0] ?? null;
+    }, (candidate) => candidate !== null, 15_000);
+    if (!windowsPicker) throw new Error(`OpenObsidian did not expose a new Windows native folder-picker window; before=${JSON.stringify(windowsBefore)}; after=${JSON.stringify(windowsTopLevelWindowInventory())}`);
+    pickerWindowId = String(windowsPicker.native_window_handle);
+    pickerWindowTitle = `${windowsPicker.name} (${windowsPicker.class_name})`;
+    const focusScript = `
+      $ErrorActionPreference = "Stop"
+      Add-Type -TypeDefinition @'
+        using System;
+        using System.Runtime.InteropServices;
+        public static class OpenObsidianPickerWindow {
+          [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+        }
+'@
+      $shell = New-Object -ComObject WScript.Shell
+      $activated = [OpenObsidianPickerWindow]::SetForegroundWindow([IntPtr]${windowsPicker.native_window_handle})
+      if (-not $activated) { $activated = $shell.AppActivate(${windowsPicker.process_id}) }
+      if (-not $activated) { throw "Could not focus the detected Windows folder picker" }
+      Start-Sleep -Milliseconds 300
+      Write-Output "Focused native picker by handle=${windowsPicker.native_window_handle}; process=${windowsPicker.process_id}"
+    `;
+    const focusedPicker = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", focusScript], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
     const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
     screenshots.push(relative(reportDirectory, pickerScreenshot));
-    pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
-    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr)) {
-      throw new Error(`The native Windows folder picker was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
-    }
+    pickerOpenOcr = await readNativeFolderPickerOcr(pickerScreenshot);
     const script = `
       $ErrorActionPreference = "Stop"
       $shell = New-Object -ComObject WScript.Shell
-      if (-not $shell.AppActivate(${child.pid ?? -1})) { throw "Could not focus OpenObsidian's native folder picker" }
+      if (-not $shell.AppActivate(${windowsPicker.process_id})) { throw "Could not focus the detected native folder picker" }
       Start-Sleep -Milliseconds 300
       $shell.SendKeys("{ESC}")
-      Write-Output "Sent Escape to the native Windows folder picker."
+      Write-Output "Sent Escape to the native Windows folder picker; focus=${JSON.stringify(focusedPicker)}"
     `;
     cancellationInteraction = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    remainingWindows = await waitFor("Windows native folder picker to close after Escape", async () => windowsTopLevelWindowInventory(), (windows) => !windows.some((candidate) => candidate.native_window_handle === windowsPicker?.native_window_handle), 10_000);
   } else {
     throw new Error(`Unsupported OpenObsidian folder picker platform ${process.platform}`);
   }
@@ -1418,8 +1541,11 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
   screenshots.push(relative(reportDirectory, cancelledScreenshot));
   const cancelledOcr = await readScreenshotOcr(cancelledScreenshot);
   if (process.platform === "darwin") remainingMacAccessibilityWindows = macOSApplicationWindowDescriptions(child);
-  if (process.platform !== "linux" && (nativeFolderPickerVisibleInOcr(cancelledOcr) || (remainingMacAccessibilityWindows !== null && /open.{0,40}vault/i.test(remainingMacAccessibilityWindows)))) {
+  if (process.platform === "darwin" && (nativeFolderPickerVisibleInOcr(cancelledOcr) || (remainingMacAccessibilityWindows !== null && macOSNativePickerVisibleInAccessibility(remainingMacAccessibilityWindows)))) {
     throw new Error(`The native folder picker remained visible after Escape; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}; accessibility windows=${remainingMacAccessibilityWindows ?? "unavailable"}`);
+  }
+  if (process.platform === "win32" && remainingWindows?.some((candidate) => candidate.native_window_handle === windowsPicker?.native_window_handle)) {
+    throw new Error(`The native Windows folder picker remained visible after Escape; windows=${JSON.stringify(remainingWindows)}`);
   }
   const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-after-picker-cancelled");
   const restoredVaultVisible = restoredWindow.ocrText.toLowerCase().includes("roundtrip fixture");
@@ -1439,6 +1565,9 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     picker_open_accessibility_windows: pickerAccessibilityWindows,
     picker_closed_verified: true,
     picker_closed_accessibility_windows: remainingMacAccessibilityWindows,
+    picker_open_windows: windowsPicker,
+    picker_closed_windows: remainingWindows,
+    picker_closed_x11_windows: linuxWindowsAfterEscape,
     cancelled_screen_ocr: process.platform === "linux" ? null : cancelledOcr.slice(0, 2_000),
     restored_vault_visible: restoredVaultVisible,
     expected_markdown_count_visible: expectedNoteCountVisible,
