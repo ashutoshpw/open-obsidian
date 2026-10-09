@@ -1310,10 +1310,35 @@ loaded-plugin workflows [37912392722](https://github.com/ashutoshpw/open-obsidia
 and inventory [37912392828](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392828)
 also passed. GitHub's native parallel groups completed in Rust CI and quality.
 
-The current correction, implementation SHA
-`e0b9cc9c726f3b73f7dc2f6877da6c4016ab9599`, moves picker cancellation into
-the same OpenObsidian process after the original folder selection. It waits
-for an enabled Windows `Open vault` control, searches nested macOS accessibility
-elements, and logs private-storage error details in the CI application log.
-The exact-SHA round-trip and companion workflows are pending on `origin/main`.
-No local tests, builds, formatters, linters, or application launches were run.
+The same-session correction, implementation SHA
+`e0b9cc9c726f3b73f7dc2f6877da6c4016ab9599`, moved picker cancellation into the
+OpenObsidian process after the original folder selection and added safe
+private-storage error details to the CI application log. Its exact-SHA attempt
+3 result and next correction are recorded below.
+
+### R2.6.65 attempt 3 result and screen-click correction — SHA `ab18bb1`
+
+The third exact-SHA run
+[37913554801](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554801)
+opened the generated vault on Ubuntu, macOS, and Windows, then failed to open
+the second native picker. Ubuntu's active window stayed on OpenObsidian;
+macOS's accessibility tree did not expose the button and Tab/Return did not
+open the panel; Windows UI Automation reported `Open vault` disabled after its
+ten-second wait. Round-trip jobs were 113764189187, 113764189121, and
+113764188684 respectively. Artifact IDs/digests are recorded in `state.json`.
+
+Rust CI [37913554889](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554889),
+quality [37913554842](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554842),
+desktop build [37913554814](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554814),
+plugin renderer [37913554766](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554766),
+loaded-plugin workflows [37913554794](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554794),
+and inventory [37913554824](https://github.com/ashutoshpw/open-obsidian/actions/runs/37913554824)
+passed. The Rust CI and quality native parallel groups passed.
+
+The screen-click correction, implementation SHA
+`42457db91045fd2cd6fb5481c61a1869a0f404af`, uses a CoreGraphics click on the
+visible macOS control, falls back from Windows UI Automation to its button
+screen bounds, retains Linux's geometry click, and captures the immediate
+post-click screen. Exact-SHA round-trip and companion workflow validation is
+pending on `origin/main`. No local tests, builds, formatters, linters, or
+application launches were run.
