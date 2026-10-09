@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T00:49:40Z",
+  "updated_at": "2026-10-09T01:28:01Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3b621dfe83ab96313b407651dbe354c29bd06e89",
-  "current_milestone": "R2.6.48",
-  "next_action": "Extend the Obsidian-authored fixture and same-vault reopen acceptance to macOS and Windows; continue the remaining C01 read-only flows while keeping C01 and C01.2 pending.",
+  "last_reconciled_head": "337857560332327cd13b9a797eaab76abf7afcf4",
+  "current_milestone": "R2.6.49",
+  "next_action": "Push the macOS window-capture/OCR and Windows temporary Desktop corrections as a focused R2.6.49 commit, then inspect the exact-SHA round-trip matrix and six companion project workflows in GitHub Actions. Keep C01 and C01.2 pending until all required platform and read-only flows pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -190,7 +190,8 @@
     "R2.6.48 runner correction on fabcc8a50f897520b8d1cf5d9962ca91cb76a551 passed all six required project workflows. The Obsidian-authored Untitled.md note was persisted and the pre-OpenObsidian vault snapshot was captured. OpenObsidian remained running, but its Xvfb screenshot was black and OCR found no text; only a DRI3 warning appeared in its log. Evidence: evidence/r2.6.48-roundtrip-ci-fabcc8a.json. The next slice forces software GL and waits for the visible app window and rendered vault text; no local executable validation was run.",
     "R2.6.48 runner correction on 74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd passed all six required project workflows. Pinned Obsidian authored Untitled.md; OpenObsidian rendered the selected vault and two-note count; vault and app-data snapshots remained unchanged through startup and close. The final reopen stage then failed before DOM polling because both reopen wait calls passed arguments in the wrong order. Evidence: evidence/r2.6.48-roundtrip-ci-74680fb.json. The next slice corrects both wait signatures; no local executable validation was run.",
     "R2.6.48 runner correction on 0d235e860743905004e549264b24ed3f9873f38e passed all six required project workflows. Obsidian authored Untitled.md with its embedded image, OpenObsidian displayed the selected vault and two-note count, and vault/app-data snapshots stayed unchanged through startup and close. The reopen check reached the authored note, but falsely expected Markdown embed syntax in live-preview innerText; the screenshot shows the image rendered. Evidence: evidence/r2.6.48-roundtrip-ci-0d235e8.json. The next slice checks the persisted Markdown source and expanded file tree; no local executable validation was run.",
-    "R2.6.48 is complete on exact source SHA 3b621dfe83ab96313b407651dbe354c29bd06e89. The pinned Obsidian 1.14.4 UI authored the synthetic note and attachment embed; OpenObsidian opened the same vault; reopening in Obsidian restored the note and exact attachment path. All 22 vault entries were byte-identical across snapshots before/after OpenObsidian and after Obsidian reopen; app data remained separate and unchanged, with no workspace changes. The round-trip and all six required project workflows passed. Linux-only C01.2 evidence does not close C01/C01.2; macOS/Windows reference-app execution and remaining product flows are pending. Evidence: evidence/r2.6.48-roundtrip-ci-3b621df.json."
+    "R2.6.48 is complete on exact source SHA 3b621dfe83ab96313b407651dbe354c29bd06e89. The pinned Obsidian 1.14.4 UI authored the synthetic note and attachment embed; OpenObsidian opened the same vault; reopening in Obsidian restored the note and exact attachment path. All 22 vault entries were byte-identical across snapshots before/after OpenObsidian and after Obsidian reopen; app data remained separate and unchanged, with no workspace changes. The round-trip and all six required project workflows passed. Linux-only C01.2 evidence does not close C01/C01.2; macOS/Windows reference-app execution and remaining product flows are pending. Evidence: evidence/r2.6.48-roundtrip-ci-3b621df.json.",
+    "R2.6.49 cross-platform round-trip attempt on 337857560332327cd13b9a797eaab76abf7afcf4: Linux passed the full Obsidian-authored no-op/reopen flow; macOS authored the fixture and rendered the selected vault but whole-desktop OCR missed the visible vault/count; Windows was blocked by a missing Desktop in its isolated Obsidian profile. All six companion workflows passed, including Rust CI on all three OSes. Evidence: evidence/r2.6.49-roundtrip-ci-3378575.json. Mac window capture/OCR and Windows profile Desktop corrections are pending fresh GitHub Actions validation; C01/C01.2 remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -9408,6 +9409,43 @@
         "Edit/save acceptance remains deferred to C02/C14; this Linux-only slice does not close parent C01 or C01.2."
       ],
       "next_action": "Extend the Obsidian-authored fixture and same-vault reopen acceptance to macOS and Windows; continue the remaining C01 read-only flows while keeping C01 and C01.2 pending."
+    },
+    "R2.6.49": {
+      "status": "in_progress",
+      "implementation_sha": "337857560332327cd13b9a797eaab76abf7afcf4",
+      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575"],
+      "scope": "Expand the pinned Obsidian-authored fixture, OpenObsidian no-op open, snapshot preservation and Obsidian reopen acceptance to Linux, macOS and Windows.",
+      "ci_attempts": [
+        {
+          "source_sha": "337857560332327cd13b9a797eaab76abf7afcf4",
+          "conclusion": "Linux round-trip passed; macOS and Windows round-trip jobs failed before snapshot/reopen acceptance; all six required project workflows passed.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37869136248,
+            "rust_ci": 37869136238,
+            "inventory": 37869136191,
+            "quality": 37869136198,
+            "desktop_build": 37869136616,
+            "plugin_renderer": 37869136176,
+            "loaded_plugin_workflows": 37869136189
+          },
+          "findings": [
+            "Linux: Obsidian 1.14.4 authored the note and attachment, OpenObsidian showed the selected vault and two-note count, app data stayed outside and unchanged, and the same vault/note reopened with all 22 entries unchanged.",
+            "macOS: Obsidian authored the fixture and the screenshot showed OpenObsidian with the expected selected vault/count. Whole-desktop OCR failed to recognize that UI, so snapshot and reopen acceptance did not execute.",
+            "Windows: the isolated Obsidian USERPROFILE had no Desktop directory. The native picker showed a blocking missing-location dialog and did not select the generated fixture."
+          ],
+          "correction": "Capture and OCR the macOS app-owned window using its CoreGraphics window ID with sparse-text and block segmentation. Create USERPROFILE\\Desktop before launching Obsidian on Windows.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-3378575.json"
+        }
+      ],
+      "accepted_slice": [
+        "The repeated Linux CI case passed on exact source SHA 337857560332327cd13b9a797eaab76abf7afcf4; macOS/Windows platform acceptance is not established by this attempt."
+      ],
+      "remaining": [
+        "Fresh exact-SHA GitHub Actions round-trip acceptance on macOS and Windows.",
+        "Remaining C01 read-only product flows; C01 and C01.2 stay pending.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Commit and push the current focused macOS screenshot/OCR and Windows isolated-profile corrections; inspect the round-trip matrix and required workflows on the exact new SHA."
     }
   },
   "ci_preparation": {

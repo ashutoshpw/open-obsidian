@@ -2321,7 +2321,7 @@
         "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
       ],
       "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
-      "blocker": "Partial evidence now also covers asynchronous note-list refresh after an external note appears, alongside bounded source preview and explicit close, with complete vault/app-data preservation. Remaining product-level read-only operations and the C01.2 Obsidian-authored fixture/reopen cases are pending; see c01.2-reference-roundtrip-matrix.md.",
+      "blocker": "The C01.2 matrix records Linux Obsidian-authored round-trip acceptance. The exact-SHA macOS/Windows attempt at 337857560332327cd13b9a797eaab76abf7afcf4 did not complete: macOS OCR missed visible UI text before snapshots/reopen, and Windows folder selection was blocked by a missing temporary profile Desktop. Runner corrections are pending fresh CI; remaining product-level read-only operations also remain pending.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2434,7 +2434,7 @@
         "evidence/r2.6.48-roundtrip-ci-3b621df.json"
       ],
       "tested_source_tree": "3b621dfe83ab96313b407651dbe354c29bd06e89",
-      "blocker": "The C01.2 reference-application matrix is defined in c01.2-reference-roundtrip-matrix.md. Linux GitHub Actions evidence now proves the pinned Obsidian-authored fixture, OpenObsidian no-op open, and same-vault Obsidian reopen. C01.2 remains pending macOS/Windows reference-app execution and remaining read-only product flows; edit/save acceptance is deferred to C02/C14.",
+      "blocker": "The C01.2 reference-application matrix and attempt evidence are in c01.2-reference-roundtrip-matrix.md and evidence/r2.6.49-roundtrip-ci-3378575.json. Linux passed on 3b621dfe83ab96313b407651dbe354c29bd06e89 and again on 337857560332327cd13b9a797eaab76abf7afcf4. The macOS screenshot showed the selected vault/count but automated OCR failed before snapshot/reopen; Windows was blocked by the missing temporary profile Desktop before the generated fixture was selected. macOS/Windows retries and remaining read-only flows are pending; edit/save remains deferred to C02/C14.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

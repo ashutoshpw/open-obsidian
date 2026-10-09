@@ -402,6 +402,30 @@ async function captureX11WindowScreenshot(windowId: string, filename: string): P
   return pngPath;
 }
 
+async function captureMacOSWindowScreenshot(processId: number, filename: string): Promise<string> {
+  const script = `
+    import CoreGraphics
+    import Foundation
+
+    let targetProcessId = ${processId}
+    let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+    let targetWindow = windows.first { window in
+      (window[kCGWindowOwnerPID as String] as? Int) == targetProcessId &&
+      (window[kCGWindowLayer as String] as? Int) == 0
+    }
+    guard let windowNumber = targetWindow?[kCGWindowNumber as String] else {
+      fputs("OpenObsidian did not expose an on-screen macOS window\\n", stderr)
+      exit(1)
+    }
+    print(windowNumber)
+  `;
+  const windowId = execFileSync("swift", ["-e", script], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim().split(/\s+/).at(-1);
+  if (!windowId || !/^\d+$/.test(windowId)) throw new Error("Could not identify OpenObsidian's macOS window for screenshot capture");
+  const pngPath = join(reportDirectory, filename);
+  execFileSync("screencapture", ["-x", `-l${windowId}`, pngPath], {stdio: "ignore"});
+  return pngPath;
+}
+
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
   const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
@@ -689,6 +713,9 @@ async function createObsidianProfile(profileDirectory: string, port: number): Pr
     env.USERPROFILE = homeRoot;
     env.APPDATA = join(profileDirectory, "appdata-roaming");
     env.LOCALAPPDATA = join(profileDirectory, "appdata-local");
+    // Windows folder pickers open the profile's Desktop by default; create it so
+    // the native picker does not block automation with a missing-location dialog.
+    await mkdir(join(homeRoot, "Desktop"), {recursive: true});
   }
   // Keep the GitHub-hosted macOS user's ephemeral login keychain available to Electron safeStorage.
   // Pointing HOME at a new temp directory produces a blocking "Keychain Not Found" native dialog.
@@ -846,9 +873,12 @@ async function captureOpenObsidianScreenshot(windowId: string, child: ChildProce
   const pngPath = await captureDesktopScreenshot("openobsidian-vault.png");
   const windowPngPath = process.platform === "linux"
     ? await captureX11WindowScreenshot(windowId, "openobsidian-vault-window.png")
-    : pngPath;
+    : process.platform === "darwin"
+      ? await captureMacOSWindowScreenshot(child.pid ?? -1, "openobsidian-vault-window.png")
+      : pngPath;
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
-  const ocrText = execFileSync(tesseract, [windowPngPath, "stdout", "--psm", "6"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  const pageSegmentationModes = process.platform === "darwin" ? ["11", "6"] : ["6"];
+  const ocrText = pageSegmentationModes.map((mode) => execFileSync(tesseract, [windowPngPath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
   return {pngPath, windowPngPath, ocrText};
 }
 

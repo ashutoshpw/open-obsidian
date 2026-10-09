@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
+  "source_sha": "337857560332327cd13b9a797eaab76abf7afcf4",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37869136248,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136248",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "job_id": 113622950443,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136248/job/113622950443",
+        "conclusion": "success",
+        "runner_image": "ubuntu24",
+        "artifact_id": 11589935094,
+        "artifact_name": "obsidian-vault-roundtrip-Linux-337857560332327cd13b9a797eaab76abf7afcf4",
+        "artifact_sha256": "cdc1f07f6532964acb36a343d12e3de970a5f2b7e9369dc558d656b6d56bdca8",
+        "report_sha256": "5a0899d8f13b5fec1d9cdd2daa3c0c535377b453c9e4cd9076d54375510a01b8",
+        "snapshot_sha256": "65b6d6a097c72e677789a57a109b226fc4785ef8a3209d96a1b7b9e0ae120d49",
+        "window_screenshot_sha256": "8e3f5dcae1cea4e40fdea77968a434ab9d3202004084568d16f9663e892fa78a",
+        "acceptance": {
+          "status": "passed",
+          "obsidian_authored_note": "Untitled.md",
+          "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+          "openobsidian_selected_vault_and_two_note_count_visible": true,
+          "vault_entries_unchanged": 22,
+          "obsidian_reopened_same_note_and_attachment": true,
+          "app_data_outside_vault_and_unchanged": true
+        }
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "job_id": 113622950725,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136248/job/113622950725",
+        "conclusion": "failure",
+        "runner_image": "macos26",
+        "artifact_id": 11589483502,
+        "artifact_name": "obsidian-vault-roundtrip-macOS-337857560332327cd13b9a797eaab76abf7afcf4",
+        "artifact_sha256": "f576f298cd8fb91f1dc7e9009bcc7c98bc9c78138531a7d1caccb25221603cdd",
+        "report_sha256": "d1b48ad0960c5a4d99fd111511b57479539815f854b28bbfb55562cf382111e0",
+        "before_vault_snapshot_sha256": "36551502fa2b73724f3c825eb9273290d6720902b72600738307e33beab67423",
+        "full_desktop_screenshot_sha256": "e24d3a7c4cec995f11913459bd89649587ab2b5e55d5a8f60ed2c311425ca958",
+        "runner_architecture": "arm64",
+        "reference_asset": "Obsidian-1.14.4.dmg",
+        "reference_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "finding": "Obsidian authored the fixture and OpenObsidian displayed the selected vault and two-note count in the screenshot, but full-desktop OCR returned garbled text and the automated acceptance timed out before snapshots/reopen. Capture and OCR the app-owned macOS window, and run sparse-text plus block OCR."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "job_id": 113622950631,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136248/job/113622950631",
+        "conclusion": "failure",
+        "runner_image": "win25-vs2026",
+        "artifact_id": 11590025288,
+        "artifact_name": "obsidian-vault-roundtrip-Windows-337857560332327cd13b9a797eaab76abf7afcf4",
+        "artifact_sha256": "591477fee27fa43422ceedc49b9a7a76cfa8ce381bf52d3c0e0470e9e0efc5b9",
+        "report_sha256": "ea88c4f2be2ee84d8d3408c7a8d85bb590274995831e8aa7e3628350449abb87",
+        "picker_initial_screenshot_sha256": "f23e0fad5894bba989938f2137de2f54ff465989348c4681d9be6f06135aa537",
+        "picker_after_path_screenshot_sha256": "15c9121e339e9f3ad992f51755979c64659e1bc305a7cd67c1d58c930946e651",
+        "runner_architecture": "x64",
+        "reference_asset": "Obsidian-1.14.4.exe",
+        "reference_asset_sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "finding": "The temporary Obsidian USERPROFILE lacked a Desktop directory. Windows opened a blocking \u201cLocation is not available\u201d dialog for that default folder; subsequent keystrokes selected the runner profile instead of the generated fixture. Create USERPROFILE\\Desktop before launching the reference app and retry."
+      }
+    ]
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37869136238,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136238",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113622879489,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113622879735,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113622879798,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37869136191,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136191",
+      "conclusion": "success",
+      "job_id": 113622879370
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37869136198,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136198",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113622879991,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113622880116,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113622880155,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37869136616,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136616",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113622881152,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113622881302,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113622881415,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37869136176,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136176",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113622879713,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113622879874,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113622880752,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37869136189,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869136189",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113622879750,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113622879759,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113622879765,
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "status": "partial",
+    "linux_roundtrip": "passed",
+    "macos_roundtrip": "not accepted; OCR detection failed after UI appeared to open the selected vault",
+    "windows_roundtrip": "not accepted; the reference folder picker was blocked by a missing temporary Desktop directory",
+    "all_six_required_project_workflows_passed_on_exact_sha": true,
+    "no_local_executable_validation": true,
+    "next_correction": "On Windows create the isolated profile Desktop before Obsidian launches. On macOS capture the OpenObsidian window by its CoreGraphics window ID and run sparse-text and block OCR against that window. Repeat the exact SHA matrix in GitHub Actions."
+  }
+}
