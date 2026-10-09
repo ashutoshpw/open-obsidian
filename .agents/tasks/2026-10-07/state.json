@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T18:26:13Z",
+  "updated_at": "2026-10-09T18:43:07Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "5670d5ae84a449a17359c975b676247d38564ad0",
-  "current_milestone": "R2.6.73",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "7e74b3be437cce9ee29d7782e04c7b6b2641535c",
+  "current_milestone": "R2.6.74",
+  "next_action": "Implement the uncovered transition from an active one-note vault to an externally emptied vault; push and inspect exact-SHA GitHub Actions results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13611,6 +13611,21 @@
       ],
       "evidence": "evidence/r2.6.73-attempt-2-5670d5a.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.74": {
+      "status": "in_progress",
+      "starting_sha": "7e74b3be437cce9ee29d7782e04c7b6b2641535c",
+      "scope": "Exercise external removal of the only Markdown note from an active existing vault; refresh and verify the UI reaches its empty-vault state while stale selection, link, embed, preview, and texture state clears without writing vault or app data.",
+      "accepted_slice": ["C01.2-25"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault with link/embed results and a source preview, then remove its only Markdown note externally.",
+        "After refresh, the session remains open with zero Markdown notes, no selected note, and no stale link/embed/preview state; the UI displays the empty-vault messages.",
+        "The full vault matches the snapshot immediately after the external removal, and separate app-data snapshots remain unchanged through refresh and teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit and push the focused test and matrix entry, then inspect every required exact-SHA GitHub Actions job."
     }
   },
   "ci_preparation": {

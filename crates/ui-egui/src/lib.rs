@@ -3879,6 +3879,141 @@ mod tests {
     }
 
     #[test]
+    fn egui_refresh_after_external_removal_of_last_note_clears_stale_state_without_writing() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Single Note Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(vault_path.join(".obsidian"))
+            .expect("create existing vault configuration directory");
+        std::fs::create_dir_all(vault_path.join("Attachments"))
+            .expect("create existing vault attachment directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        std::fs::write(app_data_path.join("private-state.bin"), [0x71, 0x00, 0xfe, 0x08])
+            .expect("seed separate app-data sentinel");
+        std::fs::write(
+            vault_path.join(".obsidian/app.json"),
+            b"{\"unknownOption\":{\"keep\":true}}\n",
+        )
+        .expect("seed opaque Obsidian configuration");
+        std::fs::write(
+            vault_path.join("Attachments/opaque.bin"),
+            [0x00, 0xff, 0x42, 0x80],
+        )
+        .expect("seed opaque attachment data");
+        let source_path = PathBuf::from("README.md");
+        let source = b"\xef\xbb\xbf# Single note\r\n[[README]]\r\n![[README]]\r\n";
+        std::fs::write(vault_path.join(&source_path), source)
+            .expect("seed the only Markdown note");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let canonical_vault = std::fs::canonicalize(&vault_path).expect("canonicalize vault");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open the single-note vault without conversion");
+        assert_eq!(session.entries().len(), 1);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(source_path.clone()),
+            rename_source_path: Some(source_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+        assert!(harness.state().link_error.is_none());
+        assert_eq!(harness.state().link_resolutions.len(), 2);
+        assert_eq!(
+            harness
+                .state()
+                .note_embed_report
+                .as_ref()
+                .expect("the self-embed report should be present")
+                .embeds
+                .len(),
+            1
+        );
+        assert!(harness.state().note_embed_error.is_none());
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the only note preview should be open");
+        assert_eq!(preview.relative_path, source_path);
+        assert_eq!(preview.text.as_bytes(), source);
+
+        std::fs::remove_file(vault_path.join(&source_path))
+            .expect("simulate an external removal of the only Markdown note");
+        let mut expected_after_external_removal = before_vault.clone();
+        expected_after_external_removal.retain(|(path, _, _)| path != &source_path);
+        let after_external_removal = existing_vault_tree_snapshot(&vault_path);
+        assert_eq!(after_external_removal, expected_after_external_removal);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the empty vault session should remain open");
+        assert_eq!(session.root_path(), canonical_vault);
+        assert!(session.entries().is_empty());
+        assert!(harness.state().link_source_path.is_none());
+        assert!(harness.state().rename_source_path.is_none());
+        assert!(harness.state().link_resolutions.is_empty());
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().link_status.is_none());
+        assert!(harness.state().link_receiver.is_none());
+        assert!(harness.state().note_embed_report.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        assert!(harness.state().inline_image_textures.is_empty());
+        assert!(harness.state().rename_preview.is_none());
+        assert!(harness.state().rename_error.is_none());
+        assert!(harness.state().rename_status.is_none());
+        harness.get_by_label("0 Markdown files found.");
+        harness.get_by_label("This vault has no Markdown notes to inspect.");
+        harness.get_by_label("This vault has no Markdown notes to rename.");
+        harness.get_by_label("Note list refreshed: 0 Markdown files found.");
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_refresh_after_external_note_rename_clears_stale_state_without_writing() {
         let mut fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
