@@ -1,0 +1,127 @@
+{
+  "milestone": "R2.6.66",
+  "attempt": 2,
+  "source_sha": "099ed0a3582442dae623cac82f7444a67ad74ae1",
+  "status_at_recording": "complete; focused Rust UI correction required",
+  "workflows": {
+    "rust_ci": {
+      "run_id": 37941225076,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941225076"
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 37941224899,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941224899"
+    },
+    "inventory": {
+      "run_id": 37941224995,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941224995"
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37941224998,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941224998"
+    },
+    "desktop_build": {
+      "run_id": 37941225012,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941225012"
+    },
+    "plugin_renderer": {
+      "run_id": 37941224980,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941224980"
+    },
+    "quality": {
+      "run_id": 37941224859,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37941224859"
+    }
+  },
+  "jobs": {
+    "rust_ci": {
+      "ubuntu": {
+        "job_id": 113855804713,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      },
+      "macos": {
+        "job_id": 113855804708,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      },
+      "windows": {
+        "job_id": 113855804369,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      }
+    },
+    "quality": {
+      "ubuntu": {
+        "job_id": 113855804583,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113855804503,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113855804167,
+        "conclusion": "success"
+      }
+    },
+    "roundtrip": {
+      "ubuntu": {
+        "job_id": 113855804535,
+        "conclusion": "failure",
+        "failed_step": "Author, open, snapshot, and reopen the same vault"
+      },
+      "macos": {
+        "job_id": 113855804749,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113855804882,
+        "conclusion": "success"
+      }
+    }
+  },
+  "findings": [
+    "The UI test compiled on all three OSes, and the Rust formatting step passed. Each workspace test failed because the accessibility label includes the original embed syntax after the Not rendered message; the test queried only the message prefix.",
+    "Quality, inventory, loaded-plugin workflows, desktop build, and plugin renderer passed on this source SHA.",
+    "The Obsidian authoring flow and OpenObsidian native folder selection/open both passed on Ubuntu. The failure occurred only when the final Obsidian reopen audit searched for a visible X11 window; obsidian_reopen remained pending. macOS and Windows round trips passed. All three round-trip artifacts are retained with exact IDs and digests."
+  ],
+  "next_correction": "Query the exact accessible Not rendered label including the original embed reference. Keep the Ubuntu xdotool round-trip failure recorded as a separate reference-app runner issue; obtain fresh exact-SHA CI.",
+  "artifacts": {
+    "ubuntu": {
+      "artifact_id": 11620689447,
+      "digest": "sha256:df2fe406370aab10348c563a849a3c1f2c11691bb17947e3c21e6f7446ebe698"
+    },
+    "macos": {
+      "artifact_id": 11621782926,
+      "digest": "sha256:383eb4d6a6062a9cd62f6ac73b7714e580ac706085e3dd1570b6b6e1ebb589a5"
+    },
+    "windows": {
+      "artifact_id": 11621719015,
+      "digest": "sha256:b3736604d9dbb1649e35ecf5109fced8682af8931a0be2b2e45af9b69491d6"
+    }
+  },
+  "roundtrip_failure_detail": {
+    "ubuntu_job_id": 113855804535,
+    "failed_step": "Author, open, snapshot, and reopen the same vault",
+    "error": "Command failed: xdotool search --onlyvisible --name .",
+    "report_observations": [
+      "obsidian_authoring.status=passed",
+      "openobsidian_open.status=passed",
+      "obsidian_reopen.status=pending"
+    ]
+  }
+}

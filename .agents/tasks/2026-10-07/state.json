@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T14:02:08Z",
+  "updated_at": "2026-10-09T14:07:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
+  "last_reconciled_head": "099ed0a3582442dae623cac82f7444a67ad74ae1",
   "current_milestone": "R2.6.66",
-  "next_action": "Push the CI correction for the C01.2-17 test, then inspect fresh exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
+  "next_action": "Push the C01.2-17 full-label assertion correction, then inspect fresh exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.66 attempt 1 source 7e3e8ca1d81f725c1644766c156e3ac7e5974325 is pushed. Rust CI failed on all three OSes because the new UI test queried a duplicate label; Ubuntu formatting also failed. Quality macOS failed in the unrelated Electron vault audit. Inventory, loaded-plugin workflows, desktop build, and plugin renderer passed; Obsidian round trips passed on all three OSes. A focused correction is prepared; no local executable validation was run.",
+  "push_status": "R2.6.66 attempt 2 source 099ed0a3582442dae623cac82f7444a67ad74ae1 is pushed. Rust workspace tests failed on all three OSes because the UI test queried only a prefix of the accessible Not rendered label; formatting passed. Quality and the other companion workflows passed. The Obsidian round trip passed on macOS and Windows; Ubuntu reached the final Obsidian reopen step, where xdotool found no visible window. The full-label correction is prepared; no local executable validation was run.",
   "ci_results": [
     {
       "name": "inventory",
@@ -12926,11 +12926,12 @@
     },
     "R2.6.66": {
       "status": "in_progress",
-      "implementation_sha": "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
+      "implementation_sha": "099ed0a3582442dae623cac82f7444a67ad74ae1",
       "implementation_commits": [
-        "7e3e8ca1d81f725c1644766c156e3ac7e5974325"
+        "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
+        "099ed0a3582442dae623cac82f7444a67ad74ae1"
       ],
-      "evidence": "evidence/r2.6.66-attempt-1-7e3e8ca.json",
+      "evidence": "evidence/r2.6.66-attempt-2-099ed0a.json",
       "scope": "Verify that read-only link resolution and note-embed preview do not expose Markdown files outside an opened vault.",
       "acceptance": [
         "A nested note’s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
@@ -12940,8 +12941,8 @@
       ],
       "accepted_slice": [],
       "remaining": [
-        "Attempt 1 failed the Rust UI matrix because the test expected a unique label; the formatter also requested a layout correction. Quality macOS needs a fresh result.",
-        "Keep broader C01/C01.2 acceptance pending."
+        "Attempts 1 and 2 failed the Rust UI matrix because the accessible Not rendered label includes the raw embed reference; the full-label assertion is pending exact-SHA CI.",
+        "Attempt 2 Ubuntu’s native round trip failed during final Obsidian reopen after OpenObsidian and Obsidian authoring passed; full-label Rust correction remains pending exact-SHA CI."
       ],
       "ci_attempts": [
         {
@@ -12968,9 +12969,36 @@
           },
           "evidence": "evidence/r2.6.66-attempt-1-7e3e8ca.json",
           "correction": "Remove the duplicate-label accessibility query, apply the formatter layout, then push a focused correction and inspect fresh exact-SHA CI."
+        },
+        {
+          "source_sha": "099ed0a3582442dae623cac82f7444a67ad74ae1",
+          "attempt": 2,
+          "conclusion": "Rust workspace tests failed on all three OSes because the accessible Not rendered label appends the raw embed reference; Ubuntu formatting passed. Quality, inventory, loaded-plugin workflows, desktop build, and plugin renderer passed. The Obsidian round trip passed on macOS and Windows. Ubuntu opened the vault and completed authoring, but the final Obsidian reopen step failed because xdotool found no visible window.",
+          "workflows": {
+            "rust_ci": 37941225076,
+            "obsidian_vault_roundtrip": 37941224899,
+            "inventory": 37941224995,
+            "loaded_plugin_workflows": 37941224998,
+            "desktop_build": 37941225012,
+            "plugin_renderer": 37941224980,
+            "quality": 37941224859
+          },
+          "jobs": {
+            "rust_ubuntu": 113855804713,
+            "rust_macos": 113855804708,
+            "rust_windows": 113855804369,
+            "roundtrip_ubuntu": 113855804535,
+            "roundtrip_macos": 113855804749,
+            "roundtrip_windows": 113855804882,
+            "quality_ubuntu": 113855804583,
+            "quality_macos": 113855804503,
+            "quality_windows": 113855804167
+          },
+          "evidence": "evidence/r2.6.66-attempt-2-099ed0a.json",
+          "correction": "Query the full accessible label including the raw embed syntax; retain the Ubuntu final-reopen xdotool failure separately and obtain fresh exact-SHA CI."
         }
       ],
-      "next_action": "Commit and push the duplicate-label and formatting correction, then inspect fresh exact-SHA CI. Keep C01/C01.2 pending."
+      "next_action": "Commit and push the full accessible-label correction, then inspect fresh exact-SHA CI. Keep broader C01/C01.2 pending."
     }
   },
   "ci_preparation": {

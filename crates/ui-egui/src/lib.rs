@@ -4209,8 +4209,9 @@ mod tests {
         }
 
         harness.get_by_label("Unresolved: 2");
-        harness
-            .get_by_label("Not rendered: no matching Markdown note or vault attachment was found.");
+        let not_rendered_label =
+            "Not rendered: no matching Markdown note or vault attachment was found. ![[../../Outside.md|outside note]]";
+        harness.get_by_label(not_rendered_label);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
