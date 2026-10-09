@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T17:44:09Z",
+  "updated_at": "2026-10-09T17:57:28Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -13453,8 +13453,8 @@
     "R2.6.72": {
       "status": "in_progress",
       "starting_sha": "73e4b8cab8ef5944951dfe3c5fb06d23b40318ce",
-      "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_sha": "26d82e079045718c5f7c88c65dfb6221bca987f9",
+      "implementation_commits": ["26d82e079045718c5f7c88c65dfb6221bca987f9"],
       "scope": "Exercise existing-vault scanning and link/embed resolution when a directory symlink points back into its own tree, proving scans terminate without traversal and the alias remains unresolved.",
       "accepted_slice": ["C01.2-23"],
       "remaining": ["Exact-SHA GitHub Actions acceptance is pending.", "Broader C01/C01.2 acceptance remains pending."],
@@ -13464,8 +13464,33 @@
         "Full vault and separate app-data snapshots remain byte-identical after open, resolution, and teardown.",
         "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Commit and push the focused cycle-avoidance acceptance test, then inspect every required exact-SHA GitHub Actions workflow."
+      "ci_attempts": [
+        {
+          "source_sha": "26d82e079045718c5f7c88c65dfb6221bca987f9",
+          "attempt": 1,
+          "conclusion": "The focused workspace test passed on Ubuntu, macOS, and Windows. Rust CI failed on Ubuntu formatting and on macOS/Windows Clippy for an owned PathBuf comparison. Inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer passed. Obsidian round-trip passed on macOS and Windows; its Ubuntu run failed during window discovery. The same-SHA Ubuntu retry remained in Linux dependency setup for more than seven minutes and was cancelled; that retry is not validation evidence.",
+          "workflows": {
+            "rust_ci": 37968436823,
+            "obsidian_vault_roundtrip": 37968436854,
+            "inventory": 37968436853,
+            "loaded_plugin_workflows": 37968436744,
+            "desktop_build": 37968436721,
+            "quality": 37968436719,
+            "plugin_renderer": 37968436828
+          },
+          "jobs": {
+            "rust_macos": 113948605655,
+            "rust_windows": 113948605895,
+            "rust_ubuntu": 113948606054,
+            "roundtrip_macos": 113948606199,
+            "roundtrip_windows": 113948606486,
+            "roundtrip_ubuntu": 113948606649,
+            "roundtrip_ubuntu_retry": 113950447731
+          },
+          "correction": "Apply the Ubuntu rustfmt diff and Clippy's borrowed-path comparison suggestion. Push the focused correction for fresh exact-SHA validation across all seven workflows."
+        }
+      ],
+      "next_action": "Push the CI-directed formatting and Clippy corrections, then inspect every required exact-SHA GitHub Actions workflow."
     }
   },
   "ci_preparation": {

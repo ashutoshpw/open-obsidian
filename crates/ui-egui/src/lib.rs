@@ -4733,8 +4733,7 @@ mod tests {
         let target_source = b"# Cycle target\nDIRECTORY_SYMLINK_CYCLE_TARGET_SENTINEL_R272\n";
         let app_data_sentinel = [0xa5, 0x00, 0x7e, 0xff];
         std::fs::write(&note_path, note_source).expect("seed source note before the baseline");
-        std::fs::write(&target_path, target_source)
-            .expect("seed cycle target before the baseline");
+        std::fs::write(&target_path, target_source).expect("seed cycle target before the baseline");
         std::fs::write(
             app_data_path.join("state/open-state.bin"),
             app_data_sentinel,
@@ -4773,7 +4772,7 @@ mod tests {
             session
                 .entries()
                 .iter()
-                .any(|entry| entry.relative_path == PathBuf::from("Notes/Secret.md"))
+                .any(|entry| entry.relative_path.as_path() == Path::new("Notes/Secret.md"))
         );
         assert!(matches!(
             session.read("Notes/loop/Secret.md"),
