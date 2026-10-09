@@ -2891,6 +2891,7 @@ mod tests {
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);
         let readme_path = PathBuf::from("README.md");
         let welcome_path = PathBuf::from("Notes/Welcome.md");
+        let welcome_label = welcome_path.display().to_string();
         let readme_source = fixture["files"]
             .as_array()
             .unwrap()
@@ -2936,7 +2937,7 @@ mod tests {
 
         harness.get_by_label("Note to inspect").click();
         harness.step();
-        harness.get_by_label("Notes/Welcome.md").click();
+        harness.get_by_label(&welcome_label).click();
         harness.step();
         assert_eq!(
             harness.state().link_source_path.as_ref(),
