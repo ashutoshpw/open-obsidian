@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T15:26:37Z",
+  "updated_at": "2026-10-09T15:45:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "1edccbf3978406f28e0569f3784d3be1e9fbe479",
-  "current_milestone": "R2.6.67",
-  "next_action": "R2.6.67 is accepted for C01.2-18 on Windows. Select the next uncovered read-only C01/C01.2 flow; keep broader parent acceptance pending.",
+  "last_reconciled_head": "4f3a5b49c95411c40e22942240ae6f098fdf8cad",
+  "current_milestone": "R2.6.68",
+  "next_action": "Apply the Ubuntu CI-reported formatting for the two app-data snapshot assertions, commit and push the correction, then inspect all seven required workflows on its exact SHA. C01.2-19 remains pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.67 attempt 1 on 2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53 passed Rust CI and all companion workflows except the Windows UIA acceptance, which found the ComboBox lacks the required ExpandCollapsePattern. Evidence: evidence/r2.6.67-uia-attempt-1-2f8d950.json. Replacing the selector with an invokable menu button and radio options; GitHub Actions remains the only test venue.",
+  "push_status": "R2.6.68 attempt 1 source 4f3a5b49c95411c40e22942240ae6f098fdf8cad is pushed and reconciled. Workspace tests passed on Ubuntu, macOS, and Windows; Ubuntu Rust CI failed only its formatting gate, and the other six workflows passed. Evidence: evidence/r2.6.68-attempt-1-4f3a5b4.json. The CI-reported format correction is prepared for the next push.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13119,6 +13119,58 @@
         }
       ],
       "next_action": "R2.6.67 is accepted for C01.2-18 on Windows. Select the next uncovered read-only C01/C01.2 flow; keep broader parent acceptance pending."
+    },
+    "R2.6.68": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": ["4f3a5b49c95411c40e22942240ae6f098fdf8cad"],
+      "scope": "Exercise valid nested Markdown note transclusions, heading/block selection, and cycle stopping through the existing-vault egui UI while preserving complete vault and separate app-data snapshots.",
+      "accepted_slice": [],
+      "acceptance": [
+        "The selected heading and block slices render through egui; a nested self-embed is reported as a cycle and is not expanded; an unsupported SVG embed remains explicit.",
+        "Full vault and separate app-data snapshots, including an app-data sentinel, remain byte-identical after open, resolution, and teardown.",
+        "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed SHA."
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "4f3a5b49c95411c40e22942240ae6f098fdf8cad",
+          "attempt": 1,
+          "conclusion": "The strengthened transclusion workspace test passed on all three OSes, but Rust CI failed Ubuntu cargo fmt --check on two app-data snapshot assertions. The other six required workflows passed.",
+          "workflows": {
+            "rust_ci": 37953262720,
+            "obsidian_vault_roundtrip": 37953262566,
+            "inventory": 37953262723,
+            "loaded_plugin_workflows": 37953262564,
+            "desktop_build": 37953262798,
+            "plugin_renderer": 37953262652,
+            "quality": 37953262727
+          },
+          "jobs": {
+            "rust_ubuntu": 113897225244,
+            "rust_macos": 113897225501,
+            "rust_windows": 113897225527,
+            "roundtrip_macos": 113897224630,
+            "roundtrip_windows": 113897224786,
+            "roundtrip_ubuntu": 113897224962,
+            "inventory": 113897224944,
+            "loaded_plugins_ubuntu": 113897223869,
+            "loaded_plugins_windows": 113897224185,
+            "loaded_plugins_macos": 113897224303,
+            "desktop_ubuntu": 113897225276,
+            "desktop_windows": 113897225705,
+            "desktop_macos": 113897225710,
+            "plugin_renderer_macos": 113897225485,
+            "plugin_renderer_ubuntu": 113897225901,
+            "plugin_renderer_windows": 113897225955,
+            "quality_ubuntu": 113897224989,
+            "quality_windows": 113897225243,
+            "quality_macos": 113897225348
+          },
+          "evidence": "evidence/r2.6.68-attempt-1-4f3a5b4.json",
+          "correction": "Apply the exact multiline formatting requested by the GitHub Actions rustfmt output and rerun the required workflows on a fresh exact SHA."
+        }
+      ],
+      "next_action": "Push the formatting correction and inspect all seven required workflows on the corrected exact SHA; keep C01.2-19 pending."
     }
   },
   "ci_preparation": {

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.68",
+  "attempt": 1,
+  "source_sha": "4f3a5b49c95411c40e22942240ae6f098fdf8cad",
+  "change": "Strengthen the existing egui note-link/transclusion case to compare complete vault and separate app-data snapshots through open, recursive rendering, and teardown.",
+  "conclusion": "The workspace tests passed on Ubuntu, macOS, and Windows, including the nested transclusion and cycle assertions. Rust CI failed on Ubuntu because cargo fmt --check requested multiline layout for two snapshot assertions. The other six required workflows passed on this exact SHA. C01.2-19 remains pending until corrected exact-SHA CI passes.",
+  "read_only_transclusion": {
+    "fixture": "fixture:c03-link-forms",
+    "test": "egui_existing_vault_nested_transclusions_preserve_full_snapshots",
+    "observed": [
+      "Selected heading and block transclusion source slices rendered through the egui UI.",
+      "Nested self-embed was reported as a cycle and not expanded.",
+      "Unsupported SVG embed remained explicitly not rendered.",
+      "Vault snapshot stayed unchanged after open, resolution, and UI teardown.",
+      "Separate app-data snapshot, including its binary sentinel, stayed unchanged after open, resolution, and UI teardown."
+    ]
+  },
+  "formatting_failure": {
+    "workflow_run_id": 37953262720,
+    "workflow_run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262720",
+    "job_id": 113897225244,
+    "job_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262720/job/113897225244",
+    "runner": "ubuntu-latest",
+    "step": "Check formatting",
+    "command": "cargo fmt --all -- --check",
+    "failure": "Rustfmt requested multiline formatting for the two app-data snapshot assertions at crates/ui-egui/src/lib.rs lines 4023 and 4142.",
+    "workspace_tests_conclusion": "success"
+  },
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37953262720,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262720",
+      "conclusion": "failure",
+      "jobs": [
+        { "id": 113897225244, "name": "rust (ubuntu-latest)", "conclusion": "failure", "failed_step": "Check formatting", "workspace_tests": "success" },
+        { "id": 113897225501, "name": "rust (macos-latest)", "conclusion": "success" },
+        { "id": 113897225527, "name": "rust (windows-latest)", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37953262566,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262566",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113897224630, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+        { "id": 113897224786, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" },
+        { "id": 113897224962, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37953262723,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262723",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113897224944, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37953262564,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262564",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113897223869, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113897224185, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113897224303, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37953262798,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262798",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113897225276, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113897225705, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113897225710, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37953262652,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262652",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113897225485, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113897225901, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113897225955, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37953262727,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37953262727",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113897224989, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113897225243, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113897225348, "name": "macos-latest", "conclusion": "success" }
+      ]
+    }
+  ],
+  "toolchain": {
+    "workflow_setup": "dtolnay/rust-toolchain@stable",
+    "test_command": "cargo test --workspace --locked",
+    "runner_matrix": ["ubuntu-latest", "macos-latest", "windows-latest"]
+  },
+  "artifacts": [],
+  "limitations": [
+    "This attempt does not accept C01.2-19 because the Ubuntu formatting gate failed.",
+    "The test uses a synthetic fixture and does not claim a separate Obsidian UI transclusion check."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, or application launches were run."
+}

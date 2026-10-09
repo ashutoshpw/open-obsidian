@@ -4023,7 +4023,10 @@ mod tests {
 
         let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             link_source_path: Some(current_path.clone()),
@@ -4142,7 +4145,10 @@ mod tests {
             before_vault,
             "nested note transclusion must not change any vault path or byte"
         );
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         drop(harness);
         assert_eq!(
