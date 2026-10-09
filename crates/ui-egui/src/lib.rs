@@ -5763,7 +5763,8 @@ mod tests {
     }
 
     #[test]
-    fn egui_refresh_after_external_duplicate_attachment_rename_resolves_remaining_embed_without_writing() {
+    fn egui_refresh_after_external_duplicate_attachment_rename_resolves_remaining_embed_without_writing()
+    {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("Image Vault");
         let app_data_path = temporary.0.join("App Data");
@@ -5878,11 +5879,7 @@ mod tests {
         .expect("simulate an external rename of one ambiguous attachment");
         let mut expected_after_rename = before_vault.clone();
         expected_after_rename.retain(|(path, _, _)| path != &duplicate_attachment_path);
-        expected_after_rename.push((
-            renamed_attachment_path.clone(),
-            1,
-            duplicate_image_source,
-        ));
+        expected_after_rename.push((renamed_attachment_path.clone(), 1, duplicate_image_source));
         expected_after_rename.sort_by(|left, right| left.0.cmp(&right.0));
         let after_external_rename = existing_vault_tree_snapshot(&vault_path);
         assert_eq!(after_external_rename, expected_after_rename);

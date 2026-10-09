@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T22:04:05Z",
+  "updated_at": "2026-10-09T22:11:38Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "1cb2fe699dc7eb4324acbdfc8db45b92bdc4304e",
+  "last_reconciled_head": "2c73106dd52e838895481e11780d81c7dbd2b658",
   "current_milestone": "R2.6.83",
-  "next_action": "Commit and push C01.2-34 for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
+  "next_action": "Commit and push the CI-reported formatting correction, then validate the corrected SHA in GitHub Actions; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14309,7 +14309,7 @@
       "implementation_sha": null,
       "scope": "Externally rename one of two same-basename attachments, refresh a basename-only embed, and verify it uniquely resolves and renders the remaining attachment while preserving the renamed file and avoiding vault/app-data writes.",
       "accepted_slice": ["C01.2-34"],
-      "remaining": ["Exact-SHA GitHub Actions validation is pending.", "Broader C01/C01.2 acceptance remains pending."],
+      "remaining": ["Formatting correction is applied; fresh exact-SHA GitHub Actions validation is pending.", "Broader C01/C01.2 acceptance remains pending."],
       "acceptance": [
         "On Ubuntu, macOS, and Windows, open a one-note vault whose ![[photo.png]] embed is initially ambiguous between Attachments/photo.png and Images/photo.png, with no target and no rendered texture.",
         "Open the note source preview, externally rename Images/photo.png to Images/renamed-photo.png, and capture the exact post-rename vault snapshot.",
@@ -14318,9 +14318,46 @@
         "The exact post-rename vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "2c73106dd52e838895481e11780d81c7dbd2b658",
+          "attempt": 1,
+          "conclusion": "Focused workspace tests passed on all three OSes. Ubuntu Rust CI failed because rustfmt requested two layout changes; the other six required workflows passed.",
+          "workflows": {
+            "rust_ci": 37997265353,
+            "obsidian_vault_roundtrip": 37997265322,
+            "inventory": 37997265343,
+            "loaded_plugin_workflows": 37997265351,
+            "desktop_build": 37997265349,
+            "quality": 37997265359,
+            "plugin_renderer": 37997265354
+          },
+          "jobs": {
+            "rust_macos": 114046377645,
+            "rust_ubuntu": 114046377984,
+            "rust_windows": 114046378036,
+            "roundtrip_windows": 114046377591,
+            "roundtrip_macos": 114046377671,
+            "roundtrip_ubuntu": 114046377805,
+            "inventory": 114046378412,
+            "loaded_windows": 114046378148,
+            "loaded_ubuntu": 114046378442,
+            "loaded_macos": 114046378487,
+            "desktop_ubuntu": 114046378097,
+            "desktop_windows": 114046378332,
+            "desktop_macos": 114046378355,
+            "quality_windows": 114046378039,
+            "quality_macos": 114046378301,
+            "quality_ubuntu": 114046378365,
+            "plugin_renderer_ubuntu": 114046378143,
+            "plugin_renderer_windows": 114046378201,
+            "plugin_renderer_macos": 114046378359
+          },
+          "evidence": "evidence/r2.6.83-attempt-1-2c73106.json"
+        }
+      ],
       "evidence": null,
-      "next_action": "Push the implementation slice to origin/main and inspect exact-SHA GitHub Actions results."
+      "next_action": "Push the formatting correction to origin/main and inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {
