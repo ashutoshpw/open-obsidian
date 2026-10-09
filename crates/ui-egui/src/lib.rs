@@ -4560,6 +4560,163 @@ mod tests {
     }
 
     #[test]
+    fn egui_does_not_follow_in_vault_symlink_targets() {
+        let fixture: serde_json::Value = serde_json::from_str(VAULT_SAFETY_FIXTURE)
+            .expect("vault-safety fixture must be valid JSON");
+        let symlink_profile = fixture["profiles"]
+            .as_array()
+            .expect("vault-safety fixture must contain profiles")
+            .iter()
+            .find(|profile| profile["id"] == "fixture:symlink-boundary")
+            .expect("vault-safety fixture must define the symlink boundary");
+        assert!(
+            symlink_profile["assertions"]
+                .as_array()
+                .expect("symlink profile must list assertions")
+                .iter()
+                .any(|assertion| assertion == "symlink metadata is recorded")
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        let note_relative_path = PathBuf::from("Notes/Containment.md");
+        let note_path = vault_path.join(&note_relative_path);
+        let file_symlink_path = vault_path.join("Notes/Alias.md");
+        let directory_symlink_path = vault_path.join("Notes/linked-dir");
+        let file_target_path = vault_path.join("Notes/Secret.md");
+        let directory_target_path = vault_path.join("Notes/Real Directory/Secret.md");
+        std::fs::create_dir_all(note_path.parent().unwrap())
+            .expect("create existing vault note directory");
+        std::fs::create_dir_all(directory_target_path.parent().unwrap())
+            .expect("create in-vault symlink target directory");
+        std::fs::create_dir_all(app_data_path.join("state"))
+            .expect("create separate app-data directory");
+
+        let note_source = b"# In-vault symlinks\n\n[File alias](Alias.md)\n\n![[Alias]]\n\n[Directory alias](linked-dir/Secret.md)\n\n![[linked-dir/Secret]]\n";
+        let target_source = b"# Private target\nIN_VAULT_SYMLINK_TARGET_SENTINEL_R271\n";
+        let app_data_sentinel = [0xa5, 0x00, 0x7e, 0xff];
+        std::fs::write(&note_path, note_source).expect("seed source note before the baseline");
+        std::fs::write(&file_target_path, target_source)
+            .expect("seed in-vault file target before the baseline");
+        std::fs::write(&directory_target_path, target_source)
+            .expect("seed in-vault directory target before the baseline");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            app_data_sentinel,
+        )
+        .expect("seed separate app-data sentinel");
+
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink("Secret.md", &file_symlink_path)
+                .expect("create in-vault file symlink");
+            std::os::unix::fs::symlink("Real Directory", &directory_symlink_path)
+                .expect("create in-vault directory symlink");
+        }
+        #[cfg(windows)]
+        {
+            std::os::windows::fs::symlink_file("Secret.md", &file_symlink_path)
+                .expect("create in-vault file symlink");
+            std::os::windows::fs::symlink_dir("Real Directory", &directory_symlink_path)
+                .expect("create in-vault directory symlink");
+        }
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        assert_eq!(
+            std::fs::read_link(&file_symlink_path).expect("read file symlink metadata"),
+            PathBuf::from("Secret.md")
+        );
+        assert_eq!(
+            std::fs::read_link(&directory_symlink_path)
+                .expect("read directory symlink metadata"),
+            PathBuf::from("Real Directory")
+        );
+        assert!(
+            before_vault
+                .iter()
+                .any(|(path, kind, _)| { path == Path::new("Notes/Alias.md") && *kind == 2 })
+        );
+        assert!(
+            before_vault
+                .iter()
+                .any(|(path, kind, _)| { path == Path::new("Notes/linked-dir") && *kind == 2 })
+        );
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault without following in-vault symlinks");
+        assert_eq!(session.entries().len(), 3);
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == note_relative_path)
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(PathBuf::from("Notes/Containment.md")),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+
+        {
+            let app = harness.state();
+            assert!(app.link_error.is_none());
+            assert_eq!(app.link_resolutions.len(), 4);
+            assert!(app.link_resolutions.iter().all(|resolution| {
+                resolution.resolution.status == LinkResolutionStatus::Unresolved
+                    && resolution.resolution.target.is_none()
+            }));
+
+            let report = app
+                .note_embed_report
+                .as_ref()
+                .expect("in-vault symlink embeds should produce a read-only report");
+            assert_eq!(report.embeds.len(), 2);
+            assert!(report.embeds.iter().all(|embed| {
+                embed.resolution.resolution.status == LinkResolutionStatus::Unresolved
+                    && embed.resolution.resolution.target.is_none()
+                    && embed.resolution.disposition == VaultNoteEmbedDisposition::NotRendered
+                    && embed.children.is_empty()
+            }));
+            let report_debug = format!("{report:?}");
+            assert!(!report_debug.contains("IN_VAULT_SYMLINK_TARGET_SENTINEL_R271"));
+        }
+
+        harness.get_by_label("Unresolved: 4");
+        harness.get_by_label("Note transclusions");
+        harness.get_by_label(
+            "Not rendered: no matching Markdown note or vault attachment was found. ![[Alias]]",
+        );
+        harness.get_by_label(
+            "Not rendered: no matching Markdown note or vault attachment was found. ![[linked-dir/Secret]]",
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_previews_existing_vault_attachment_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");

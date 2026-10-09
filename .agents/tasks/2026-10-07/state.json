@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T17:01:48Z",
+  "updated_at": "2026-10-09T17:08:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e924c2daf831428601ddb9ae3cdc8811f7171394",
-  "current_milestone": "R2.6.70",
-  "next_action": "Select the next uncovered C01 read-only acceptance flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "2c33dc1d699de9684f1fd8d7fffb6a1263b2d5af",
+  "current_milestone": "R2.6.71",
+  "next_action": "Commit and push the C01.2-22 in-vault symlink UI case on a small source SHA, then use only exact-SHA GitHub Actions to inspect formatting, workspace tests, and all required workflows; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13384,6 +13384,25 @@
         }
       ],
       "next_action": "Select the next uncovered C01 read-only acceptance flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending."
+    },
+    "R2.6.71": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Exercise existing-vault scanning, link resolution, and transclusion reporting for file and directory symlinks whose targets are real files inside that same vault, preserving full vault and separate app-data snapshots.",
+      "accepted_slice": ["C01.2-22"],
+      "remaining": [
+        "Exact-SHA GitHub Actions evidence is pending.",
+        "Broader C01/C01.2 acceptance remains pending."
+      ],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, scanning records in-vault symlink metadata without traversal and lists each real Markdown note once.",
+        "All four Markdown/wiki references through symlink aliases remain unresolved, both embeds remain unrendered, and target-note sentinel content is absent from reports.",
+        "Full vault and separate app-data snapshots remain byte-identical after open, resolution, and teardown.",
+        "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit and push the in-vault symlink UI case to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
     }
   },
   "ci_preparation": {
