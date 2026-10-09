@@ -1285,5 +1285,35 @@ and compares complete vault and separate app-data snapshots after
 cancellation and teardown. The corrected exact-SHA matrix is pending. No local
 tests, builds, formatters, linters, or application launches were run.
 
-Next: push the corrected runner and record to `origin/main`; inspect the
-three-OS native-picker cancellation round trip and required companion workflows.
+Next: the separate-process correction was checked on exact SHA
+`9e105b1184e6193a314ea35310d572076b5e4300`; see the attempt-2 result and
+same-session correction below.
+
+### R2.6.65 attempt 2 result and same-session correction — SHA `9e105b1`
+
+The second-process approach failed on exact SHA
+`9e105b1184e6193a314ea35310d572076b5e4300`. Ubuntu's first native folder
+selection reached the app but showed that private per-vault storage could not
+be prepared. macOS started the `--open-vault` session and displayed the active
+vault, but the attempted click left the native Open panel closed. Windows'
+`--open-vault` process exited because private application storage was
+unavailable. Round-trip run [37912392662](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392662)
+uploaded the per-platform screenshots and reports; job IDs are 113760392720,
+113760392958, and 113760393069 for Ubuntu, macOS, and Windows respectively.
+Artifact IDs and digests are recorded in `state.json` pending final evidence.
+
+Rust CI [37912392642](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392642)
+passed on Ubuntu, macOS, and Windows. Quality [37912392614](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392614),
+desktop build [37912392777](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392777),
+plugin renderer [37912392658](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392658),
+loaded-plugin workflows [37912392722](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392722),
+and inventory [37912392828](https://github.com/ashutoshpw/open-obsidian/actions/runs/37912392828)
+also passed. GitHub's native parallel groups completed in Rust CI and quality.
+
+The current correction, implementation SHA
+`e0b9cc9c726f3b73f7dc2f6877da6c4016ab9599`, moves picker cancellation into
+the same OpenObsidian process after the original folder selection. It waits
+for an enabled Windows `Open vault` control, searches nested macOS accessibility
+elements, and logs private-storage error details in the CI application log.
+The exact-SHA round-trip and companion workflows are pending on `origin/main`.
+No local tests, builds, formatters, linters, or application launches were run.
