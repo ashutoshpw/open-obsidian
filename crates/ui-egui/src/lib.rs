@@ -2828,7 +2828,10 @@ mod tests {
 
         harness.get_by_label("Next note").click();
         harness.step();
-        assert_eq!(harness.state().link_source_path.as_ref(), Some(&welcome_path));
+        assert_eq!(
+            harness.state().link_source_path.as_ref(),
+            Some(&welcome_path)
+        );
         assert!(harness.state().link_status.is_none());
         assert!(harness.state().link_resolutions.is_empty());
         assert!(harness.state().note_embed_report.is_none());
@@ -2838,7 +2841,10 @@ mod tests {
 
         harness.get_by_label("Previous note").click();
         harness.step();
-        assert_eq!(harness.state().link_source_path.as_ref(), Some(&readme_path));
+        assert_eq!(
+            harness.state().link_source_path.as_ref(),
+            Some(&readme_path)
+        );
         assert!(harness.state().link_status.is_none());
         assert!(harness.state().link_resolutions.is_empty());
         assert!(harness.state().note_embed_report.is_none());
