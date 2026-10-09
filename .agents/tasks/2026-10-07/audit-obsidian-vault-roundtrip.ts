@@ -431,6 +431,69 @@ async function captureMacOSWindowScreenshot(processId: number, filename: string)
   return pngPath;
 }
 
+async function captureWindowsWindowScreenshot(processId: number, filename: string): Promise<{
+  pngPath: string;
+  window_id: string;
+  title: string;
+  geometry: string;
+}> {
+  const pngPath = join(reportDirectory, filename);
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -TypeDefinition @'
+      using System;
+      using System.Runtime.InteropServices;
+      public struct OpenObsidianWindowRect {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+      }
+      public static class OpenObsidianWindowCapture {
+        [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr handle, out OpenObsidianWindowRect rect);
+      }
+'@
+    $application = Get-Process -Id $env:OPENOBSIDIAN_WINDOW_PROCESS_ID -ErrorAction SilentlyContinue
+    if ($null -eq $application -or $application.MainWindowHandle -eq 0) {
+      $application = Get-Process -Name "openobsidian" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+    }
+    if ($null -eq $application -or $application.MainWindowHandle -eq 0) {
+      throw "Could not find the OpenObsidian main window for process $env:OPENOBSIDIAN_WINDOW_PROCESS_ID"
+    }
+    $bounds = New-Object OpenObsidianWindowRect
+    if (-not [OpenObsidianWindowCapture]::GetWindowRect($application.MainWindowHandle, [ref]$bounds)) {
+      throw "Could not read the OpenObsidian main window bounds"
+    }
+    $width = $bounds.Right - $bounds.Left
+    $height = $bounds.Bottom - $bounds.Top
+    if ($width -le 0 -or $height -le 0) {
+      throw "OpenObsidian reported invalid window bounds: $($bounds.Left),$($bounds.Top),$width,$height"
+    }
+    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    try {
+      $graphics.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $bitmap.Size)
+      $bitmap.Save($env:OBSIDIAN_SCREENSHOT_PATH, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally {
+      $graphics.Dispose()
+      $bitmap.Dispose()
+    }
+    [ordered]@{
+      window_id = $application.MainWindowHandle.ToInt64().ToString()
+      title = $application.MainWindowTitle
+      geometry = "x=$($bounds.Left) y=$($bounds.Top) width=$width height=$height"
+    } | ConvertTo-Json -Compress
+  `;
+  const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    encoding: "utf8",
+    env: {...process.env, OBSIDIAN_SCREENSHOT_PATH: pngPath, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId)},
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+  const window = JSON.parse(output) as {window_id: string; title: string; geometry: string};
+  return {pngPath, ...window};
+}
+
 async function prepareScreenshotForOcr(imagePath: string): Promise<string> {
   if (process.platform !== "darwin") return imagePath;
   const ocrImagePath = join(reportDirectory, "openobsidian-vault-window-ocr.png");
@@ -941,11 +1004,21 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
 async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string}> {
   await focusOpenObsidian(child);
   const pngPath = await captureDesktopScreenshot("openobsidian-vault.png");
+  const windowsCapture = process.platform === "win32"
+    ? await captureWindowsWindowScreenshot(child.pid ?? -1, "openobsidian-vault-window.png")
+    : null;
   const windowPngPath = process.platform === "linux"
     ? await captureX11WindowScreenshot(windowId, "openobsidian-vault-window.png")
     : process.platform === "darwin"
       ? await captureMacOSWindowScreenshot(child.pid ?? -1, "openobsidian-vault-window.png")
-      : pngPath;
+      : windowsCapture?.pngPath ?? pngPath;
+  if (windowsCapture) {
+    (report.openobsidian_open as Record<string, unknown>).native_window = {
+      window_id: windowsCapture.window_id,
+      title: windowsCapture.title,
+      geometry: windowsCapture.geometry,
+    };
+  }
   const ocrPngPath = await prepareScreenshotForOcr(windowPngPath);
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" ? ["11", "6"] : ["6"];
@@ -1008,7 +1081,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
         // Direct per-window capture below still works if Xvfb has no window manager.
       }
     } else {
-      window = {window_id: String(child.pid ?? "unknown"), title: "platform desktop screenshot", geometry: "full virtual screen"};
+      window = {window_id: String(child.pid ?? "unknown"), title: "OpenObsidian main window", geometry: "native window bounds captured during screenshot"};
       (report.openobsidian_open as Record<string, unknown>).native_window = window;
     }
     const open = report.openobsidian_open as Record<string, unknown>;
