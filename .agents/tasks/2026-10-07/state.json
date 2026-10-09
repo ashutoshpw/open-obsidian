@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T14:15:52Z",
+  "updated_at": "2026-10-09T14:25:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
+  "last_reconciled_head": "9b08663fadc162c6843e1cd5df76589462522eca",
   "current_milestone": "R2.6.66",
-  "next_action": "Commit and push the Rustfmt one-line correction for the C01.2-17 accessible label, then inspect fresh exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only workflow for a bounded R2 milestone. Keep broader C01/C01.2 requirements pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.66 attempt 3 source 6c004218dbfeb8acc30d57fef8d209a87b36d4df is pushed. Rust workspace tests passed on Ubuntu, macOS, and Windows; Ubuntu formatting failed because the exact accessible-label assignment must be on one line. Quality, inventory, loaded-plugin workflows, desktop build, plugin renderer, and all three Obsidian round trips passed. The formatter-directed correction is prepared; no local executable validation was run.",
+  "push_status": "R2.6.66 attempt 4 source 9b08663fadc162c6843e1cd5df76589462522eca is pushed and accepted for C01.2-17. Rust CI, all six companion workflows, and every required job passed on all three operating systems. The initial macOS quality failure was in the Electron vault audit and passed on same-SHA rerun attempt 2. No local executable validation was run.",
   "ci_results": [
     {
       "name": "inventory",
@@ -12925,14 +12925,15 @@
       "next_action": "R2.6.65 is complete. Select the next uncovered C01/C01.2 read-only product flow for the next bounded R2 slice; keep broader C01/C01.2 acceptance pending."
     },
     "R2.6.66": {
-      "status": "in_progress",
-      "implementation_sha": "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
+      "status": "complete",
+      "implementation_sha": "9b08663fadc162c6843e1cd5df76589462522eca",
       "implementation_commits": [
         "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
         "099ed0a3582442dae623cac82f7444a67ad74ae1",
-        "6c004218dbfeb8acc30d57fef8d209a87b36d4df"
+        "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
+        "9b08663fadc162c6843e1cd5df76589462522eca"
       ],
-      "evidence": "evidence/r2.6.66-attempt-3-6c00421.json",
+      "evidence": "evidence/r2.6.66-attempt-4-9b08663.json",
       "scope": "Verify that read-only link resolution and note-embed preview do not expose Markdown files outside an opened vault.",
       "acceptance": [
         "A nested note’s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
@@ -12940,9 +12941,10 @@
         "Vault, app-data, and outside-target bytes remain unchanged after link resolution and UI teardown on Ubuntu, macOS, and Windows.",
         "The focused egui test and all required companion workflows pass on the exact implementation SHA in GitHub Actions; broader C01/C01.2 requirements remain pending."
       ],
-      "accepted_slice": [],
+      "accepted_slice": [
+        "C01.2-17"
+      ],
       "remaining": [
-        "Attempt 3 passed the focused workspace tests on all three OSes, but Ubuntu's Rustfmt check requires the exact accessible-label assignment on one line; the focused correction is pending exact-SHA CI.",
         "Keep broader C01/C01.2 acceptance pending."
       ],
       "ci_attempts": [
@@ -13025,9 +13027,38 @@
           },
           "evidence": "evidence/r2.6.66-attempt-3-6c00421.json",
           "correction": "Apply the exact one-line layout shown by the Ubuntu Rustfmt diff, commit and push the focused correction, and inspect fresh exact-SHA CI."
+        },
+        {
+          "source_sha": "9b08663fadc162c6843e1cd5df76589462522eca",
+          "attempt": 4,
+          "conclusion": "Rust CI, Obsidian vault round trip, inventory, loaded-plugin workflows, desktop build, and plugin renderer all passed on Ubuntu, macOS, and Windows. Quality initially failed on macOS in the Electron vault round-trip audit; rerun attempt 2 passed on all three platforms. C01.2-17 is accepted on this exact source SHA.",
+          "workflows": {
+            "rust_ci": 37943051080,
+            "obsidian_vault_roundtrip": 37943051122,
+            "inventory": 37943051060,
+            "loaded_plugin_workflows": 37943050981,
+            "desktop_build": 37943051089,
+            "plugin_renderer": 37943050989,
+            "quality": 37943051161
+          },
+          "jobs": {
+            "rust_ubuntu": 113862103324,
+            "rust_macos": 113862103743,
+            "rust_windows": 113862103744,
+            "roundtrip_ubuntu": 113862104151,
+            "roundtrip_macos": 113862104172,
+            "roundtrip_windows": 113862103770,
+            "quality_initial_macos": 113862104569,
+            "quality_rerun_ubuntu": 113864545526,
+            "quality_rerun_macos": 113864542558,
+            "quality_rerun_windows": 113864593450,
+            "inventory": 113862103234
+          },
+          "evidence": "evidence/r2.6.66-attempt-4-9b08663.json",
+          "correction": "No code correction remains for C01.2-17. Preserve the synthetic-egui-only limitation and select the next uncovered read-only C01/C01.2 workflow."
         }
       ],
-      "next_action": "Commit and push the Rustfmt one-line correction for the full accessible label, then inspect fresh exact-SHA CI. Keep broader C01/C01.2 pending."
+      "next_action": "R2.6.66 is accepted for C01.2-17. Select the next uncovered C01/C01.2 read-only workflow for a bounded R2 milestone; keep broader acceptance pending."
     }
   },
   "ci_preparation": {

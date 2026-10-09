@@ -1,0 +1,194 @@
+{
+  "milestone": "R2.6.66",
+  "attempt": 4,
+  "source_sha": "9b08663fadc162c6843e1cd5df76589462522eca",
+  "status_at_recording": "passed; C01.2-17 accepted",
+  "workflows": {
+    "rust_ci": {
+      "run_id": 37943051080,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943051080"
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 37943051122,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943051122"
+    },
+    "inventory": {
+      "run_id": 37943051060,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943051060"
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37943050981,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943050981"
+    },
+    "desktop_build": {
+      "run_id": 37943051089,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943051089"
+    },
+    "plugin_renderer": {
+      "run_id": 37943050989,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943050989"
+    },
+    "quality": {
+      "run_id": 37943051161,
+      "run_attempt": 2,
+      "initial_attempt_conclusion": "failure on macOS in the Electron vault round-trip report",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37943051161"
+    }
+  },
+  "jobs": {
+    "rust_ci": {
+      "ubuntu": {
+        "job_id": 113862103324,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113862103743,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113862103744,
+        "conclusion": "success"
+      }
+    },
+    "quality_initial_attempt": {
+      "ubuntu": {
+        "job_id": 113862103989,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113862104569,
+        "conclusion": "failure",
+        "failed_step": "Run Electron vault round-trip report",
+        "detail": "The Electron renderer did not reach the local retrieval boundary."
+      },
+      "windows": {
+        "job_id": 113862104632,
+        "conclusion": "success"
+      }
+    },
+    "quality_rerun": {
+      "ubuntu": {
+        "job_id": 113864545526,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113864542558,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113864593450,
+        "conclusion": "success"
+      }
+    },
+    "roundtrip": {
+      "ubuntu": {
+        "job_id": 113862104151,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113862104172,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113862103770,
+        "conclusion": "success"
+      }
+    },
+    "inventory": {
+      "job_id": 113862103234,
+      "conclusion": "success"
+    },
+    "loaded_plugin_workflows": {
+      "ubuntu": {
+        "job_id": 113862105928,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113862106232,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113862106478,
+        "conclusion": "success"
+      }
+    },
+    "desktop_build": {
+      "ubuntu": {
+        "job_id": 113862104050,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113862104163,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113862103748,
+        "conclusion": "success"
+      }
+    },
+    "plugin_renderer": {
+      "ubuntu": {
+        "job_id": 113862104089,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113862104440,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113862104607,
+        "conclusion": "success"
+      }
+    }
+  },
+  "findings": [
+    "Rust formatting, workspace tests, Clippy, crate layering, native preview builds, and plugin runtime probes passed on Ubuntu, macOS, and Windows.",
+    "The first quality attempt failed only on macOS because the Electron vault audit did not reach its local retrieval boundary; the same-SHA rerun passed on all three platforms.",
+    "Inventory, loaded-plugin workflows, desktop build, plugin renderer, and the Obsidian vault round trip passed on all required platforms."
+  ],
+  "accepted_slice": "C01.2-17",
+  "limitations": [
+    "The outside-vault link/embed behavior is covered by a synthetic egui test and is not a claim about Obsidian's own handling of these references."
+  ],
+  "artifacts": {
+    "roundtrip": {
+      "ubuntu": {
+        "artifact_id": 11623266459,
+        "digest": "sha256:28f0b67ee24c92a9d30f4a53285785b0305fa486ac0a9d762acbc4af68e545a1"
+      },
+      "macos": {
+        "artifact_id": 11622447188,
+        "digest": "sha256:eb3fb15de17807e574f4f8e4ad4de4af42cbd7f080165f196626584523c22829"
+      },
+      "windows": {
+        "artifact_id": 11622902107,
+        "digest": "sha256:47b1c029f7b9479bd40d58db3021855b4b6dd2a4cedb24503053e3e73ace3b76"
+      }
+    },
+    "rust_plugin_runtime": {
+      "ubuntu": {
+        "artifact_id": 11622137130,
+        "digest": "sha256:873db5494220edcf4bef0010468d7a48e5785a295b64e384f9b819534796a489"
+      },
+      "macos": {
+        "artifact_id": 11622876969,
+        "digest": "sha256:013a6bc87289cf66fc10a811d224bb30a86ae6339b94587f64489fa46c5efc89"
+      },
+      "windows": {
+        "artifact_id": 11622996979,
+        "digest": "sha256:cf380e26f1aa4554a20945267438b80a18b51323c8f98a09bec894fdde58874f"
+      }
+    },
+    "native_preview": {
+      "artifact_id": 11622246987,
+      "digest": "sha256:586deba8ec71193a680329f1acd18f84cf2708828f63a05f1edc846e12a17d09"
+    }
+  }
+}
