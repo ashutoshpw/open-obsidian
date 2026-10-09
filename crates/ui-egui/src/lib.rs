@@ -3879,6 +3879,183 @@ mod tests {
     }
 
     #[test]
+    fn egui_refresh_after_external_note_rename_clears_stale_state_without_writing() {
+        let mut fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let welcome_file = fixture["files"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|file| file["relative_path"] == "Notes/Welcome.md")
+            .expect("existing-vault fixture must include the welcome note");
+        let fixture_welcome_source = welcome_file["source"]
+            .as_str()
+            .expect("welcome note must have a text source");
+        let welcome_source = format!("{fixture_welcome_source}\r\n[[Notes/Welcome]]\r\n");
+        welcome_file["source"] = serde_json::Value::String(welcome_source.clone());
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let source_path = PathBuf::from("Notes/Welcome.md");
+        let renamed_path = PathBuf::from("Notes/Welcome-renamed.md");
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open selected existing vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(source_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+        assert!(harness.state().link_error.is_none());
+        assert_eq!(harness.state().link_resolutions.len(), 1);
+        assert!(harness.state().note_embed_report.is_some());
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the selected welcome note preview should be open");
+        assert_eq!(preview.relative_path, source_path);
+        assert_eq!(preview.text.as_bytes(), welcome_source.as_bytes());
+
+        std::fs::rename(vault_path.join(&source_path), vault_path.join(&renamed_path))
+            .expect("simulate an external editor renaming the selected note");
+        let mut expected_after_external_rename = before_vault.clone();
+        let renamed_entry = expected_after_external_rename
+            .iter_mut()
+            .find(|(path, _, _)| path == &source_path)
+            .expect("expected snapshot must contain the renamed note");
+        renamed_entry.0 = renamed_path.clone();
+        expected_after_external_rename.sort_by(|left, right| left.0.cmp(&right.0));
+        let after_external_rename = existing_vault_tree_snapshot(&vault_path);
+        assert_eq!(after_external_rename, expected_after_external_rename);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the refreshed vault session should remain open");
+        assert_eq!(session.entries().len(), 2);
+        assert!(session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == renamed_path));
+        assert!(!session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == source_path));
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(Path::new("README.md"))
+        );
+        assert!(harness.state().link_resolutions.is_empty());
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().link_status.is_none());
+        assert!(harness.state().note_embed_report.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        harness.get_by_label("2 Markdown files found.");
+        harness.get_by_label("Note list refreshed: 2 Markdown files found.");
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_rename
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let fallback_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the deterministic fallback note preview should be available");
+        assert_eq!(fallback_preview.relative_path, PathBuf::from("README.md"));
+        let readme_source = fixture["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|file| file["relative_path"] == "README.md")
+            .and_then(|file| file["source"].as_str())
+            .expect("fixture must include the README source");
+        assert_eq!(fallback_preview.text.as_bytes(), readme_source.as_bytes());
+
+        harness.get_by_label("Next note").click();
+        harness.step();
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(renamed_path.as_path())
+        );
+        assert!(harness.state().note_source_preview.is_none());
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let renamed_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the renamed note source should remain previewable");
+        assert_eq!(renamed_preview.relative_path, renamed_path);
+        assert_eq!(renamed_preview.text.as_bytes(), welcome_source.as_bytes());
+        assert_eq!(
+            renamed_preview.total_size_bytes,
+            welcome_source.len() as u64
+        );
+        assert!(!renamed_preview.truncated);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_rename
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Close source preview").click();
+        harness.step();
+        assert!(harness.state().note_source_preview.is_none());
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_rename
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_existing_vault_link_and_rename_previews_preserve_every_path_and_byte() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");

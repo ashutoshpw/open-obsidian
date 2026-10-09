@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T18:05:22Z",
+  "updated_at": "2026-10-09T18:14:52Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41",
-  "current_milestone": "R2.6.72",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "39bba59d67e4ba3f72104636951d587e295b48a5",
+  "current_milestone": "R2.6.73",
+  "next_action": "Commit and push C01.2-24 external note rename refresh coverage, then inspect exact-SHA GitHub Actions results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13528,6 +13528,22 @@
       ],
       "evidence": "evidence/r2.6.72-attempt-2-c0b5d28.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow; keep broader parent acceptance pending."
+    },
+    "R2.6.73": {
+      "status": "in_progress",
+      "starting_sha": "39bba59d67e4ba3f72104636951d587e295b48a5",
+      "implementation_sha": null,
+      "scope": "Exercise an external rename of the selected, previewed Markdown note followed by vault refresh; verify stale state clears, the renamed note remains available, and OpenObsidian performs no writes beyond the external rename.",
+      "planned_slice": ["C01.2-24"],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, refresh recognizes an externally renamed note and removes its previous path from the Markdown listing.",
+        "The stale source preview, link results, and embed report clear; the selection falls back deterministically to README.md.",
+        "The renamed note remains selectable and previews its exact BOM/CRLF source bytes.",
+        "Vault and separate app-data snapshots remain unchanged after the external rename through refresh, preview, close, and teardown.",
+        "The focused Rust workspace test passes on all three operating systems and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Push the implementation and tracker update to origin/main, then inspect all required GitHub Actions runs for the exact SHA."
     }
   },
   "ci_preparation": {
