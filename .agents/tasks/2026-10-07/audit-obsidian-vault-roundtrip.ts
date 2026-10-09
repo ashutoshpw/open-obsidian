@@ -1431,30 +1431,78 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     xdotool("key", "ctrl+l");
     xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
-    const clicked = clickWindowOpenButton(pickerWindowId);
-    folderSelectionInteraction = `Entered the exact fixture path with Ctrl+L and clicked the native dialog's lower-right Open button at (${clicked.click_x}, ${clicked.click_y}).`;
-    pathEntryInteraction = "Ctrl+L location entry with the full absolute fixture path.";
+    xdotool("key", "Return");
+    await delay(750);
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-opened.png")));
+    pathEntryInteraction = "Entered the full absolute fixture path with Ctrl+L and pressed Return to navigate to it.";
+    if (activeWindowId() === pickerWindowId) {
+      const clicked = clickWindowOpenButton(pickerWindowId);
+      folderSelectionInteraction = `Clicked the native dialog's lower-right Open button at (${clicked.click_x}, ${clicked.click_y}) after navigating to the fixture folder.`;
+    } else {
+      folderSelectionInteraction = "The native folder picker accepted the fixture path and closed after Return.";
+    }
     await delay(1_000);
     if (activeWindowId() === pickerWindowId) {
       xdotool("key", "Return");
       await delay(500);
     }
   } else if (process.platform === "darwin") {
+    const pickerAccessibility = await waitFor(
+      "native macOS folder picker to become visible",
+      async () => {
+        try {
+          return macOSApplicationWindowDescriptions(child);
+        } catch {
+          return null;
+        }
+      },
+      (descriptions) => descriptions !== null && macOSNativePickerVisibleInAccessibility(descriptions),
+      15_000,
+    );
+    if (!pickerAccessibility) throw new Error(`The native macOS folder picker did not appear before path entry; accessibility windows=${macOSApplicationWindowDescriptions(child)}`);
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-picker-ready.png")));
     const script = `on run argv
       tell application "System Events"
+        set targetProcess to first process whose unix id is (item 1 of argv as integer)
+        set frontmost of targetProcess to true
         keystroke "g" using {command down, shift down}
-        delay 0.5
-        keystroke (item 1 of argv)
-        delay 0.5
-        key code 36
+        delay 0.75
+        keystroke (item 2 of argv)
         delay 0.5
         key code 36
+        delay 1
+        set selectionConfirmed to false
+        repeat with currentWindow in windows of targetProcess
+          try
+            click button "Open" of currentWindow
+            set selectionConfirmed to true
+          on error
+            set selectionConfirmed to false
+          end try
+          if not selectionConfirmed then
+            try
+              repeat with currentSheet in sheets of currentWindow
+                try
+                  click button "Open" of currentSheet
+                  set selectionConfirmed to true
+                  exit repeat
+                on error
+                  set selectionConfirmed to false
+                end try
+              end repeat
+            on error
+              set selectionConfirmed to false
+            end try
+          end if
+          if selectionConfirmed then exit repeat
+        end repeat
+        if not selectionConfirmed then error "The native folder picker did not expose an Open button after navigating to the fixture folder"
+        return "Entered the fixture path with Command-Shift-G and clicked the native Open button."
       end tell
     end run`;
-    execFileSync("osascript", ["-e", script, vaultRoot], {stdio: "ignore"});
+    folderSelectionInteraction = execFileSync("osascript", ["-e", script, String(child.pid ?? -1), vaultRoot], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
-    pathEntryInteraction = "Command-Shift-G Go to Folder with the full absolute fixture path.";
-    folderSelectionInteraction = "Confirmed the selected folder through the native macOS Open panel.";
+    pathEntryInteraction = "Used Command-Shift-G with the full absolute fixture path, confirmed navigation, and clicked Open through macOS accessibility.";
   } else {
     const pathScript = `
       $ErrorActionPreference = "Stop"
@@ -1629,9 +1677,10 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
       if (-not $shell.AppActivate(${windowsPicker.process_id})) { throw "Could not focus the detected native folder picker" }
       Start-Sleep -Milliseconds 300
       $shell.SendKeys("{ESC}")
-      Write-Output "Sent Escape to the native Windows folder picker; focus=${JSON.stringify(focusedPicker)}"
+      Write-Output "Sent Escape to the native Windows folder picker."
     `;
-    cancellationInteraction = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    const escapeResult = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    cancellationInteraction = `${focusedPicker}; ${escapeResult}`;
     remainingWindows = await waitFor("Windows native folder picker to close after Escape", async () => windowsTopLevelWindowInventory(), (windows) => !windows.some((candidate) => candidate.native_window_handle === windowsPicker?.native_window_handle), 10_000);
   } else {
     throw new Error(`Unsupported OpenObsidian folder picker platform ${process.platform}`);

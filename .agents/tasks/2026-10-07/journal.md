@@ -1491,3 +1491,23 @@ control inventory, and waits for macOS startup persistence before establishing
 the cancellation baseline. The post-cancellation snapshot remains strict.
 Exact-SHA GitHub Actions validation is pending. No local executable
 validation was run.
+
+### R2.6.65 attempt 9 result and picker-selection correction — SHA `7c29a1a`
+
+All seven workflows ran on the exact source SHA. Rust CI, quality, desktop
+build, plugin renderer, loaded-plugin workflows, and inventory passed. The
+Obsidian round-trip failed on all three operating systems. Linux's new
+operation-stage message identified `canonicalize selected vault` as the
+failure, with `ENOENT`; the GTK location entry had not produced a path the app
+could resolve. On macOS, the native panel reached the fixture folder, but its
+Open button remained visible in the final screenshot, so selection had not
+completed. Windows opened the fixture, then its cancellation step stopped
+because a quoted focus diagnostic broke the PowerShell Escape script.
+
+The next slice presses Return to apply the GTK location entry before clicking
+Open, waits for the macOS panel and selects its Open button through
+accessibility, and moves the Windows diagnostic outside its PowerShell source
+string. Exact-SHA CI and artifact details are in
+[`evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json`](evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json).
+The required parallel setup groups passed. No local executable validation was
+run.
