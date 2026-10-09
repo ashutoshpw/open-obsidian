@@ -2322,10 +2322,12 @@
         "evidence/r2.6.49-roundtrip-ci-3378575.json",
         "evidence/r2.6.49-roundtrip-ci-9de7785.json",
         "evidence/r2.6.49-roundtrip-ci-3635245.json",
-        "evidence/r2.6.49-roundtrip-ci-eea9679.json"
+        "evidence/r2.6.49-roundtrip-ci-eea9679.json",
+        "evidence/r2.6.49-roundtrip-ci-followups.json",
+        "evidence/r2.6.49-roundtrip-ci-f396927.json"
       ],
-      "tested_source_tree": "eea967957281c34471ca9fcf985e2463e4757c48",
-      "blocker": "On exact source SHA eea967957281c34471ca9fcf985e2463e4757c48, Linux and macOS passed the Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows visibly reached the selected fixture, but UI Automation did not expose the Select Folder button and the folder was not confirmed. A desktop-wide search and focused Enter fallback are pending fresh CI. Remaining product-level read-only operations also remain pending. See evidence/r2.6.49-roundtrip-ci-eea9679.json.",
+      "tested_source_tree": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0; the 22-entry vault and separate app-data snapshots remained unchanged. The broader C01 read-only product flows remain pending, so C01 is not yet complete. See evidence/r2.6.49-roundtrip-ci-f396927.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2439,10 +2441,12 @@
         "evidence/r2.6.49-roundtrip-ci-3378575.json",
         "evidence/r2.6.49-roundtrip-ci-9de7785.json",
         "evidence/r2.6.49-roundtrip-ci-3635245.json",
-        "evidence/r2.6.49-roundtrip-ci-eea9679.json"
+        "evidence/r2.6.49-roundtrip-ci-eea9679.json",
+        "evidence/r2.6.49-roundtrip-ci-followups.json",
+        "evidence/r2.6.49-roundtrip-ci-f396927.json"
       ],
-      "tested_source_tree": "eea967957281c34471ca9fcf985e2463e4757c48",
-      "blocker": "The C01.2 reference-app matrix includes exact source SHA eea967957281c34471ca9fcf985e2463e4757c48: Linux and macOS completed the full round trip; Windows visibly showed the fixture and Select Folder button but UI Automation did not expose the button and folder selection failed. The desktop-wide UIA search, focused Enter fallback and remaining read-only flows are pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-eea9679.json.",
+      "tested_source_tree": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0, including reopening the authored note and exact attachment path with unchanged vault/app-data snapshots. Other cross-platform C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.49-cross-platform-roundtrip-follow-up-attempts",
+  "purpose": "Retain exact-SHA evidence for intermediate Windows picker/OCR and file-tree readiness corrections. Only the final f396927 attempt passes the full three-OS acceptance; earlier failures remain recorded as failures.",
+  "attempts": [
+    {
+      "source_sha": "41ac3ab7db498cde5dd23b3cbbf4380dbb565f4b",
+      "roundtrip_run_id": 37873101206,
+      "roundtrip_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37873101206",
+      "roundtrip_conclusion": "failure",
+      "jobs": [
+        {"os": "Linux", "job_id": 113635391104, "conclusion": "success", "artifact_id": 11591500309, "artifact_sha256": "cff559fa952d9e2bd4b0a200cad38098f1d18b5d41b1f97d3d6b155d52e20504", "report_sha256": "96b6304badc682838b9caddce04529cfd3061df574f390cf14844d234cd2630a"},
+        {"os": "macOS", "job_id": 113635390916, "conclusion": "success", "artifact_id": 11591470881, "artifact_sha256": "6a2d2a0e931e0acb616fe26b0c15f102cdef2d61cef9ed6c12cd84efda5c116b", "report_sha256": "c20f7ae08a28566892215cf6631f5f68cae2829f4ddb2ad85700c3fbce2dc28c"},
+        {"os": "Windows", "job_id": 113635391141, "conclusion": "failure", "artifact_id": 11591516167, "artifact_sha256": "9f5ab6014cfd264a948c332b064172eb1afb4c1ba045e19d4c9c884337994871", "report_sha256": "ab4f57ffb56839fc58cc49468ba5e0c84a15d4d334b4cdf73bf306f50eff33db", "finding": "UI Automation did not expose the Select Folder button; SetFocus on the picker failed because that target could not receive focus. No fixture authoring occurred."}
+      ],
+      "required_project_workflows": {"rust_ci": 37873101173, "inventory": 37873101191, "quality": 37873101146, "desktop_build": 37873101128, "plugin_renderer": 37873101139, "loaded_plugin_workflows": 37873101151, "all_passed": true},
+      "correction": "Activate the native picker window through the Windows shell and send Enter, while retaining picker diagnostics."
+    },
+    {
+      "source_sha": "d3dce2a2444f17c2f2cdbfeeb9f73fcc6c3e91ff",
+      "roundtrip_run_id": 37873857596,
+      "roundtrip_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37873857596",
+      "roundtrip_conclusion": "failure",
+      "jobs": [
+        {"os": "Linux", "job_id": 113637778679, "conclusion": "success", "artifact_id": 11591576993, "artifact_sha256": "3ac6dae256be41e06f83d1fd990023f88060936de0e9ac016c3098a1809049bf", "report_sha256": "87f65e0f414e2944632744cca01118cdd7a8e2536ca8e9566e9d59583326e778"},
+        {"os": "macOS", "job_id": 113637778436, "conclusion": "success", "artifact_id": 11592215176, "artifact_sha256": "3d282160cc28b9367d4c994330295102d8fac00dbc2e263905cdab9b7c587ce0", "report_sha256": "419341e231fded68f61aa735e3b4ec721f59ec45086a9f8a2def99fa45331912"},
+        {"os": "Windows", "job_id": 113637778598, "conclusion": "failure", "artifact_id": 11591512934, "artifact_sha256": "59119f43933c285fb8f2ad3aa9b4e3616431432c81a9e385c12e5ca602d15bc3", "report_sha256": "a6242eb2e368543d26851547e1c6a7dad160f55f081bb36e034fd74046c4a8c5", "finding": "AppActivate succeeded and Obsidian authored the fixture, but OpenObsidian OCR read the terminal behind the app instead of the visible application window. The displayed vault and note count were present in the screenshot."}
+      ],
+      "required_project_workflows": {"rust_ci": 37873857516, "inventory": 37873857450, "quality": 37873857453, "desktop_build": 37873857521, "plugin_renderer": 37873857589, "loaded_plugin_workflows": 37873857466, "all_passed": true},
+      "correction": "Capture the OpenObsidian native window bounds on Windows and use a cropped screenshot for OCR."
+    },
+    {
+      "source_sha": "6e9921278ec795792e73bf983f4d7b7e356774c7",
+      "roundtrip_run_id": 37874615755,
+      "roundtrip_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37874615755",
+      "roundtrip_conclusion": "failure",
+      "jobs": [
+        {"os": "Linux", "job_id": 113640218805, "conclusion": "success", "artifact_id": 11591098293, "artifact_sha256": "6420aef19e72a617aa544c52290208a6d7a50eedda70a7103771b1aba7e3b019", "report_sha256": "f475f12cfa0a1092f0115fc99014d34e7be24483f7da651dbd183582f59f852c"},
+        {"os": "macOS", "job_id": 113640219040, "conclusion": "failure", "artifact_id": 11591252769, "artifact_sha256": "932d106121b8bc06d1f186a9b866b64de95ed572483ded87c94ca444c47324d1", "report_sha256": "1a80ebdfa02391c28f17cc5799a5202bfa62f0a9b8bf8918e59f8bf6d4044089", "finding": "Obsidian reopened the authored note, but the file-tree query returned no data-path entries at the immediate assertion. The note marker was visible; path readiness was intermittent."},
+        {"os": "Windows", "job_id": 113640219026, "conclusion": "failure", "artifact_id": 11591244844, "artifact_sha256": "39bd4d502634b6c27c35ec77af800f178b3b960e60fb4341c068527a6cd8420c", "report_sha256": "2b9c577ee5e283e12dafe5503676568fb0daf08985fc2edaa301448edce17ba5", "finding": "The cropped OpenObsidian window was correct, but dim text was not reliably recognized by OCR."}
+      ],
+      "required_project_workflows": {"rust_ci": 37874615745, "inventory": 37874615836, "quality": 37874615750, "desktop_build": 37874615819, "plugin_renderer": 37874615743, "loaded_plugin_workflows": 37874615746, "all_passed": true},
+      "correction": "Preprocess Windows OCR screenshots for contrast and wait for the exact note path to appear in Obsidian's file tree."
+    },
+    {
+      "source_sha": "43c118df4e396f47b83e08dccf074037681c307d",
+      "roundtrip_run_id": 37875294191,
+      "roundtrip_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37875294191",
+      "roundtrip_conclusion": "failure",
+      "jobs": [
+        {"os": "Linux", "job_id": 113642380030, "conclusion": "success", "artifact_id": 11592360730, "artifact_sha256": "e9d35716069de4be7a91b67757cf8beb18df5ed261ca2ab6abf9cbaa33641094", "report_sha256": "1f3ef771ff85f26f44717b7d1aac53432f8a353e07621771b5b76dc21f6416bb"},
+        {"os": "macOS", "job_id": 113642380446, "conclusion": "success", "artifact_id": 11591739714, "artifact_sha256": "dd410432c06c7e12443ae5e4c3440b0d4a6e2afdfc1a8768d89566e0aaa2a99b", "report_sha256": "0b0589e250a3ff25a290d53037b2a741edcc77d48efe673d2c87f36f80c7472e"},
+        {"os": "Windows", "job_id": 113642379863, "conclusion": "failure", "artifact_id": 11591949351, "artifact_sha256": "fac0900f0a25db31d6536518da6588ede614ba96e9d12982fc9648dd3377cf6d", "report_sha256": "18966f2be1d95cb2e1beb83d1a7dd7077729af9f3f3e7f96a74a5b63b1dcc1cc", "finding": "Windows failed while compiling/executing the inline System.Drawing OCR transform before the OpenObsidian OCR result was produced; stderr had been suppressed."}
+      ],
+      "required_project_workflows": {"rust_ci": 37875294366, "inventory": 37875294048, "quality": 37875294196, "desktop_build": 37875294070, "plugin_renderer": 37875294045, "loaded_plugin_workflows": 37875294046, "all_passed": true},
+      "correction": "Replace the custom System.Drawing transform with ImageMagick preprocessing on Windows and macOS."
+    },
+    {
+      "source_sha": "0831d4a8ffc52b86c7fb1fa5e5c8cfac4c8c10fe",
+      "roundtrip_run_id": 37875853190,
+      "roundtrip_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37875853190",
+      "roundtrip_conclusion": "failure",
+      "jobs": [
+        {"os": "Linux", "job_id": 113644161961, "conclusion": "success", "artifact_id": 11592596106, "artifact_sha256": "642ce2f3e8c9316f3a664303fd96d25f06e1fc8c0cf92fbab1bd660e0c034c72", "report_sha256": "d5d8fac92728f4169523f88e271280b6bcf29acbe6a1fba6c941f0fb42a264b4"},
+        {"os": "macOS", "job_id": 113644161638, "conclusion": "failure", "artifact_id": 11591908437, "artifact_sha256": "aabdd0e3443ecfab05282baf4224f9e568e5416ca6d03cd5ca420002a6aba46a", "report_sha256": "1c7adf23ea21cbdcb285392691b6368d3c490529c16e8862e08a773b89a3213e", "finding": "The reopened note marker was visible, but Obsidian's file-tree data-path list was empty when checked."},
+        {"os": "Windows", "job_id": 113644161876, "conclusion": "success", "artifact_id": 11592406843, "artifact_sha256": "5d786e096877dec331e495898153bad8b9faba3991081631f46aad325dc9fab3", "report_sha256": "836d68f021379dbea16aa010fd14e602aaa31dbd103a5aace9053f585b73222d", "acceptance": "The ImageMagick-based OCR, vault open, reopen and attachment checks passed."}
+      ],
+      "required_project_workflows": {"rust_ci": 37875853307, "inventory": 37875853240, "quality": 37875853388, "desktop_build": 37875853248, "plugin_renderer": 37875853261, "loaded_plugin_workflows": 37875853262, "all_passed": true},
+      "correction": "Wait up to 20 seconds after the reopened note is visible for its exact data-path to appear; keep the exact path acceptance assertion."
+    }
+  ],
+  "no_local_executable_validation": true
+}

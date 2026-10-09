@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
+  "source_sha": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37876285630,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285630",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "job_id": 113645551452,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285630/job/113645551452",
+        "conclusion": "success",
+        "artifact_id": 11591943909,
+        "artifact_name": "obsidian-vault-roundtrip-Linux-f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+        "artifact_sha256": "6b88846ec59a4969ed3ec1246dd4b5d97974afab0a3d5ecf3e3f350434222a1f",
+        "report_sha256": "1ec3faa8e7fa6b4b97214c437b4fd3bcdf80a14b2356c4cf454008c9092c47f6",
+        "vault_snapshot_sha256": "baf7d4ec5b9863ca37f3e399b4e87471837c9b6443d078058f5edebdfedc1c54",
+        "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+        "reference_asset": "Obsidian-1.14.4.AppImage",
+        "reference_asset_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+        "acceptance": "Pinned Obsidian authored Untitled.md and its attachment link; OpenObsidian displayed the selected vault and note count; Obsidian reopened the same note and exact attachment path. All 22 vault entries remained unchanged and app data stayed separate and unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "job_id": 113645551127,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285630/job/113645551127",
+        "conclusion": "success",
+        "artifact_id": 11592472194,
+        "artifact_name": "obsidian-vault-roundtrip-macOS-f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+        "artifact_sha256": "75f561504214329c0333c6e0ce580f74f6dff02eda79915520bb78f171468d46",
+        "report_sha256": "0d5625ff94f88b9fb95ab097feb956d42ee119885ade1dbe46539b258d1af150",
+        "vault_snapshot_sha256": "22deb8578dd52e588f7339954e73e667afd8add5448c347d631107d29cda88e2",
+        "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+        "reference_asset": "Obsidian-1.14.4.dmg",
+        "reference_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "reopened_screenshot_sha256": "3a55722b6db10dd63fc9ff235788415869c6a7d977e8bf8a5a42bd527b159f46",
+        "acceptance": "Pinned Obsidian authored Untitled.md and its attachment link; OpenObsidian displayed the selected vault and note count; Obsidian reopened the same note and exact attachment path. All 22 vault entries remained unchanged and app data stayed separate and unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "job_id": 113645551240,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285630/job/113645551240",
+        "conclusion": "success",
+        "artifact_id": 11592337904,
+        "artifact_name": "obsidian-vault-roundtrip-Windows-f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+        "artifact_sha256": "0804f9131c1facaf343a0c1ac5e764a6a1f6f41458b4b9ef9714259dfa4c3fd9",
+        "report_sha256": "0b081eb05378efa538528bf84950e5c24a2caccae8bd5afec671cde177d2ec75",
+        "vault_snapshot_sha256": "095e0ab6a92bd9a3ea64dead016d3c917302bf01f0013e813cd0fb151bf5f794",
+        "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+        "reference_asset": "Obsidian-1.14.4.exe",
+        "reference_asset_sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "reopened_screenshot_sha256": "4c285d9924f2c084eae366cf88087179b9d61f2685d5b33bccc5fe3176b61646",
+        "acceptance": "Pinned Obsidian authored Untitled.md and its attachment link; OpenObsidian displayed the selected vault and note count; Obsidian reopened the same note and exact attachment path. All 22 vault entries remained unchanged and app data stayed separate and unchanged."
+      }
+    ]
+  },
+  "required_project_workflows": [
+    {"name": "OpenObsidian Rust CI", "run_id": 37876285684, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285684", "conclusion": "success", "jobs": [{"name": "rust (ubuntu-latest)", "job_id": 113645551009, "conclusion": "success"}, {"name": "rust (windows-latest)", "job_id": 113645551287, "conclusion": "success"}, {"name": "rust (macos-latest)", "job_id": 113645551311, "conclusion": "success"}]},
+    {"name": "Rust migration inventory", "run_id": 37876285600, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285600", "conclusion": "success", "job_id": 113645550867},
+    {"name": "OpenObsidian quality", "run_id": 37876285570, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285570", "conclusion": "success", "jobs": [{"name": "macos-latest", "job_id": 113645550940, "conclusion": "success"}, {"name": "ubuntu-latest", "job_id": 113645551176, "conclusion": "success"}, {"name": "windows-latest", "job_id": 113645551223, "conclusion": "success"}]},
+    {"name": "OpenObsidian desktop build", "run_id": 37876285589, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285589", "conclusion": "success", "jobs": [{"name": "ubuntu-latest", "job_id": 113645550341, "conclusion": "success"}, {"name": "macos-latest", "job_id": 113645550632, "conclusion": "success"}, {"name": "windows-latest", "job_id": 113645550661, "conclusion": "success"}]},
+    {"name": "OpenObsidian plugin renderer matrix", "run_id": 37876285559, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285559", "conclusion": "success", "jobs": [{"name": "ubuntu-latest", "job_id": 113645550262, "conclusion": "success"}, {"name": "windows-latest", "job_id": 113645550495, "conclusion": "success"}, {"name": "macos-latest", "job_id": 113645550562, "conclusion": "success"}]},
+    {"name": "OpenObsidian loaded plugin workflows", "run_id": 37876285473, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37876285473", "conclusion": "success", "jobs": [{"name": "windows-latest", "job_id": 113645551237, "conclusion": "success"}, {"name": "macos-latest", "job_id": 113645551418, "conclusion": "success"}, {"name": "ubuntu-latest", "job_id": 113645551222, "conclusion": "success"}]}
+  ],
+  "acceptance": {
+    "status": "passed",
+    "linux_roundtrip": "passed",
+    "macos_roundtrip": "passed",
+    "windows_roundtrip": "passed",
+    "authored_note_sha256_all_platforms": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+    "vault_entry_count": 22,
+    "vault_unchanged": true,
+    "app_data_outside_vault_and_unchanged": true,
+    "workspace_state_changes": [],
+    "remaining": "C01/C01.2 broader read-only product flows remain pending; edit/save is deferred to C02/C14.",
+    "no_local_executable_validation": true
+  }
+}

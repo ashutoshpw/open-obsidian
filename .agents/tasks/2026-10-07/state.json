@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T02:04:54Z",
+  "updated_at": "2026-10-09T02:55:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "eea967957281c34471ca9fcf985e2463e4757c48",
+  "last_reconciled_head": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
   "current_milestone": "R2.6.49",
-  "next_action": "Commit and push the state.json syntax correction and Windows desktop-wide UI Automation search with focused Enter fallback; inspect exact-SHA GitHub Actions and keep C01/C01.2 pending until Windows round-trip and remaining read-only flows pass.",
+  "next_action": "Start R2.6.50 by selecting the smallest remaining cross-platform C01 read-only product flow from the acceptance matrix. Keep C01/C01.2 pending until all required read-only rows pass; edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "fe1b9343e9b0ae969fc627fb06623f990f225c9d"
+      "implementation_sha": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0"
     },
     "R3": {
       "status": "pending",
@@ -195,6 +195,7 @@
     "R2.6.49 retry on 9de7785555c64fc5e08e15e668ce7dc47755d1ba: Linux passed again; macOS window capture succeeded but low-contrast OCR still missed visible vault/count text; Windows navigated to the fixture but SendKeys did not invoke Select Folder. All six companion workflows passed after a same-SHA macOS quality retry. Evidence: evidence/r2.6.49-roundtrip-ci-9de7785.json. macOS contrast preprocessing and Windows UI Automation selection are pending fresh CI; C01/C01.2 remain pending.",
     "R2.6.49 exact-SHA run on 3635245c4201e8ed613fdd74148da01d1485480e: Linux and macOS passed the complete Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows failed inside the UI Automation selection command before folder confirmation; stdio suppression hid the command diagnostics, and no fixture authoring began. All six companion project workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-3635245.json. The next correction captures PowerShell output and adds a focus/Enter fallback; Windows and C01/C01.2 remain pending.",
     "R2.6.49 exact-SHA run on eea967957281c34471ca9fcf985e2463e4757c48: Linux and macOS passed full fixture/open/snapshot/reopen acceptance; Windows' screenshot showed the fixture and visible Select Folder button, but UI Automation omitted the button from both picker descendants and stopped before folder confirmation. Rust CI, desktop build, renderer and loaded-workflow matrices passed. Inventory failed on an extra state.json trailing comma; the existing macOS quality retrieval audit failed once and passed on same-SHA retry. Evidence: evidence/r2.6.49-roundtrip-ci-eea9679.json. The next correction removes the comma, searches desktop-wide UIA, and sends Enter with the picker focused when the control remains inaccessible; C01/C01.2 remain pending."
+    "R2.6.49 cross-platform reference round-trip passed on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0 across Ubuntu, macOS and Windows. The authored note and attachment reopened on every platform; all 22 vault entries and separate app-data snapshots remained unchanged. Rust CI and all five companion workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-f396927.json; intermediate attempts are recorded in evidence/r2.6.49-roundtrip-ci-followups.json. Broader C01/C01.2 read-only flows remain pending; no local executable validation was run.",
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -9414,9 +9415,9 @@
       "next_action": "Extend the Obsidian-authored fixture and same-vault reopen acceptance to macOS and Windows; continue the remaining C01 read-only flows while keeping C01 and C01.2 pending."
     },
     "R2.6.49": {
-      "status": "in_progress",
-      "implementation_sha": "eea967957281c34471ca9fcf985e2463e4757c48",
-      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575", "9de7785", "3635245", "eea9679"],
+      "status": "complete",
+      "implementation_sha": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575", "9de7785", "3635245", "eea9679", "41ac3ab", "d3dce2a", "6e99212", "43c118d", "0831d4a", "f396927"],
       "scope": "Expand the pinned Obsidian-authored fixture, OpenObsidian no-op open, snapshot preservation and Obsidian reopen acceptance to Linux, macOS and Windows.",
       "ci_attempts": [
         {
@@ -9500,17 +9501,64 @@
           ],
           "correction": "Remove the progress-file trailing comma; search the desktop-wide UI Automation tree for Select Folder, and if it remains unavailable, focus the native picker and send Enter. Confirm picker closure and fixture authoring in CI.",
           "evidence": "evidence/r2.6.49-roundtrip-ci-eea9679.json"
+        },
+        {
+          "source_sha": "41ac3ab7db498cde5dd23b3cbbf4380dbb565f4b",
+          "conclusion": "Linux and macOS round-trip passed; Windows native picker activation failed; all six companion workflows passed.",
+          "workflows": {"obsidian_vault_roundtrip": 37873101206, "rust_ci": 37873101173, "inventory": 37873101191, "quality": 37873101146, "desktop_build": 37873101128, "plugin_renderer": 37873101139, "loaded_plugin_workflows": 37873101151},
+          "findings": ["Windows displayed the folder picker but UI Automation did not expose Select Folder, and SetFocus failed because the control rejected focus; fixture authoring did not start."],
+          "correction": "Activate the picker with the Windows shell and send Enter; preserve screenshot and command diagnostics.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-followups.json"
+        },
+        {
+          "source_sha": "d3dce2a2444f17c2f2cdbfeeb9f73fcc6c3e91ff",
+          "conclusion": "Linux and macOS round-trip passed; Windows authored the fixture but OpenObsidian OCR captured the terminal behind the app; all six companion workflows passed.",
+          "workflows": {"obsidian_vault_roundtrip": 37873857596, "rust_ci": 37873857516, "inventory": 37873857450, "quality": 37873857453, "desktop_build": 37873857521, "plugin_renderer": 37873857589, "loaded_plugin_workflows": 37873857466},
+          "findings": ["The Windows fallback activated the native picker and authored Untitled.md, but screenshot OCR read the full desktop and missed the visible OpenObsidian vault/count."],
+          "correction": "Crop the Windows screenshot to the OpenObsidian native window before OCR.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-followups.json"
+        },
+        {
+          "source_sha": "6e9921278ec795792e73bf983f4d7b7e356774c7",
+          "conclusion": "Linux round-trip passed; macOS path visibility was intermittent and Windows OCR failed on dim text; all six companion workflows passed.",
+          "workflows": {"obsidian_vault_roundtrip": 37874615755, "rust_ci": 37874615745, "inventory": 37874615836, "quality": 37874615750, "desktop_build": 37874615819, "plugin_renderer": 37874615743, "loaded_plugin_workflows": 37874615746},
+          "findings": ["macOS reopened the note marker but returned an empty file-tree data-path list at the immediate assertion.", "Windows captured the correct app window, but OCR did not recognize dim text."],
+          "correction": "Use cross-platform OCR contrast preprocessing and wait for the exact note path to mount in Obsidian's file tree.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-followups.json"
+        },
+        {
+          "source_sha": "43c118df4e396f47b83e08dccf074037681c307d",
+          "conclusion": "Linux and macOS round-trip passed; Windows failed before OCR because the inline System.Drawing transform command failed; all six companion workflows passed.",
+          "workflows": {"obsidian_vault_roundtrip": 37875294191, "rust_ci": 37875294366, "inventory": 37875294048, "quality": 37875294196, "desktop_build": 37875294070, "plugin_renderer": 37875294045, "loaded_plugin_workflows": 37875294046},
+          "findings": ["The failed Windows command suppressed stderr, so the transform error details were unavailable."],
+          "correction": "Replace the custom Windows transform with the ImageMagick preprocessing already used on macOS.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-followups.json"
+        },
+        {
+          "source_sha": "0831d4a8ffc52b86c7fb1fa5e5c8cfac4c8c10fe",
+          "conclusion": "Linux and Windows round-trip passed; macOS failed at an intermittent empty Obsidian data-path list; all six companion workflows passed.",
+          "workflows": {"obsidian_vault_roundtrip": 37875853190, "rust_ci": 37875853307, "inventory": 37875853240, "quality": 37875853388, "desktop_build": 37875853248, "plugin_renderer": 37875853261, "loaded_plugin_workflows": 37875853262},
+          "findings": ["macOS showed the authored note marker but the file-tree path list was empty when checked.", "Windows ImageMagick OCR and the complete vault open/reopen flow passed."],
+          "correction": "Wait up to 20 seconds for Obsidian's file tree to expose the exact authored path, while retaining the path assertion.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-followups.json"
+        },
+        {
+          "source_sha": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
+          "conclusion": "The full pinned Obsidian-authored no-op/open/reopen round trip passed on Linux, macOS and Windows; all six required companion workflows passed.",
+          "workflows": {"obsidian_vault_roundtrip": 37876285630, "rust_ci": 37876285684, "inventory": 37876285600, "quality": 37876285570, "desktop_build": 37876285589, "plugin_renderer": 37876285559, "loaded_plugin_workflows": 37876285473},
+          "findings": ["Each platform opened the same selected vault in OpenObsidian, displayed the vault/count, and reopened the Obsidian-authored note and exact attachment path.", "All 22 vault entries remained byte-identical across snapshots; app data remained outside the vault and unchanged; no workspace-state changes were recorded."],
+          "evidence": "evidence/r2.6.49-roundtrip-ci-f396927.json"
         }
       ],
       "accepted_slice": [
-        "Linux round-trip passed on exact source SHAs 337857560332327cd13b9a797eaab76abf7afcf4, 9de7785555c64fc5e08e15e668ce7dc47755d1ba, 3635245c4201e8ed613fdd74148da01d1485480e and eea967957281c34471ca9fcf985e2463e4757c48. The full macOS round trip passed on exact SHAs 3635245c4201e8ed613fdd74148da01d1485480e and eea967957281c34471ca9fcf985e2463e4757c48; Windows acceptance remains pending."
+        "On exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0, pinned Obsidian 1.14.4 authored Untitled.md and its attachment link on Linux, macOS and Windows; OpenObsidian opened the same vault and displayed its name/count; Obsidian reopened the note and exact attachment path on all three platforms.",
+        "The 22-entry synthetic vault remained byte-identical across before/open/reopen snapshots on each OS; app data stayed separate and unchanged; Obsidian workspace-state changes were empty. All six required project workflows and the three-OS round-trip matrix passed on this exact SHA. Evidence: evidence/r2.6.49-roundtrip-ci-f396927.json."
       ],
       "remaining": [
-        "Fresh exact-SHA GitHub Actions round-trip acceptance on Windows after the desktop-wide UI Automation search and focused Enter fallback correction.",
-        "Remaining C01 read-only product flows; C01 and C01.2 stay pending.",
+        "Remaining C01/C01.2 cross-platform read-only product flows; C01 and C01.2 stay pending.",
         "Edit/save acceptance remains deferred to C02/C14."
       ],
-      "next_action": "Commit and push the state syntax correction and Windows desktop-wide UI Automation search with focused Enter fallback; inspect exact-SHA round-trip and all six companion workflows in GitHub Actions."
+      "next_action": "Start R2.6.50 by selecting the smallest remaining cross-platform C01 read-only product flow from the acceptance matrix."
     }
   },
   "ci_preparation": {
