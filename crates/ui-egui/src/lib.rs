@@ -558,6 +558,7 @@ impl OpenObsidianApp {
                         node.set_value(selected_label.clone());
                         node.set_has_popup(eframe::egui::accesskit::HasPopup::Menu);
                         node.set_expanded(note_menu_open);
+                        node.add_action(eframe::egui::accesskit::Action::Click);
                     });
                 ui.label(&selected_label);
                 if next_path.is_some() {

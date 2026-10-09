@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T14:53:49Z",
+  "updated_at": "2026-10-09T15:04:02Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53",
+  "last_reconciled_head": "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11",
   "current_milestone": "R2.6.67",
-  "next_action": "Commit and push the accessible note-selector menu-button correction; inspect exact-SHA Windows UIA evidence and companion GitHub Actions results.",
+  "next_action": "Commit and push the explicit menu-button Click action and deterministic nested-note fixture; inspect exact-SHA Windows UIA evidence and companion GitHub Actions results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13062,19 +13062,20 @@
     },
     "R2.6.67": {
       "status": "in_progress",
-      "implementation_sha": "2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53",
-      "implementation_commits": ["2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53"],
+      "implementation_sha": "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11",
+      "implementation_commits": ["2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53", "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11"],
       "scope": "Verify native Windows accessibility of the Note to inspect menu button and radio options through Windows UI Automation.",
       "acceptance": [
         "On the Windows GitHub runner, the real OpenObsidian window exposes Note to inspect as an enabled, named Button with InvokePattern and ValuePattern showing README.md.",
-        "Invoking the button exposes README.md and Notes/Welcome.md as RadioButton options; README.md is initially selected and Notes/Welcome.md is selected through SelectionItemPattern, after which ValuePattern reports the nested note.",
+        "Invoking the button exposes README.md and Zed/Welcome.md as RadioButton options; README.md is initially selected and Zed/Welcome.md is selected through SelectionItemPattern, after which ValuePattern reports the nested note.",
         "Full vault and isolated APPDATA/LOCALAPPDATA snapshots remain unchanged through popup opening, selection, and application teardown.",
         "The exact-SHA Windows UI Automation report and required companion GitHub Actions results are retained; this Windows slice does not certify macOS VoiceOver or Linux AT-SPI behavior."
       ],
       "accepted_slice": [],
       "remaining": [
         "Attempt 1 on 2f8d950 exposed a named ComboBox but the pinned provider did not expose the required ExpandCollapsePattern.",
-        "The menu-button and radio-option correction requires exact-SHA Windows UIA evidence.",
+        "Attempt 2 on c5c8ef9 exposed a named Button and ValuePattern but no InvokePattern; the audit did not reach popup selection or application-data baselines.",
+        "The explicit Click action and deterministic fixture ordering require exact-SHA Windows UIA evidence.",
         "Broader C01/C01.2 acceptance remains pending."
       ],
       "ci_attempts": [
@@ -13087,9 +13088,19 @@
           "artifact": {"id": 11624646113, "digest": "sha256:b4666ecb9c253800f8b2da7a100f038e370309e7d9af6b4e6873c7a7a2bdb950", "report_sha256": "a20011c5f2d8c55aefc3f6cdc538faa2797d871099302261a13587edcad169ed"},
           "evidence": "evidence/r2.6.67-uia-attempt-1-2f8d950.json",
           "correction": "Replace the ComboBox with a named menu button that exposes InvokePattern and a value, plus radio options that expose SelectionItemPattern. Verify selected value and no-write snapshots on a fresh exact-SHA GitHub Actions run."
+        },
+        {
+          "source_sha": "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11",
+          "attempt": 2,
+          "conclusion": "Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows and inventory passed. Linux/macOS round-trip jobs passed; Windows UIA failed because the menu button had ValuePattern but no InvokePattern.",
+          "workflows": {"rust_ci": 37947952897, "obsidian_vault_roundtrip": 37947952858, "inventory": 37947952844, "loaded_plugin_workflows": 37947952888, "desktop_build": 37947952947, "plugin_renderer": 37947952651, "quality": 37947952967},
+          "jobs": {"roundtrip_windows": 113879024691, "roundtrip_linux": 113879022977, "roundtrip_macos": 113879023294},
+          "artifact": {"id": 11623444618, "digest": "sha256:3287072b0d2200e53e64ffa957b008a49c36cf9c7ae4f6e2e02119209422aed7", "report_sha256": "1127d6439cb31cd960bfc630981c43e33284c112503b74b1ddbe2f1323a5fd54"},
+          "evidence": "evidence/r2.6.67-uia-attempt-2-c5c8ef9.json",
+          "correction": "Add AccessKit Action::Click to the menu-button node so Windows UIA exposes InvokePattern, and use Zed/Welcome.md so README.md is the deterministic initial selection. Rerun the full popup selection and no-write audit on exact-SHA GitHub Actions."
         }
       ],
-      "next_action": "Commit and push the accessible note-selector menu-button correction; inspect exact-SHA Windows UIA evidence and companion GitHub Actions results."
+      "next_action": "Commit and push the explicit menu-button Click action and deterministic nested-note fixture; inspect exact-SHA Windows UIA evidence and companion GitHub Actions results."
     }
   },
   "ci_preparation": {

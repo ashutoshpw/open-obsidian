@@ -184,7 +184,7 @@ function Get-NoteOptions($elements) {
             $summary = Get-ElementSummary $element
             $normalizedName = $summary.name.Replace([string][char]92, "/")
             if ($summary.control_type -eq "ControlType.RadioButton" -and
-                $normalizedName -in @("README.md", "Notes/Welcome.md")) {
+                $normalizedName -in @("README.md", "Zed/Welcome.md")) {
                 $selected = $null
                 if ($summary.supports_selection_item) {
                     $selection = $element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
@@ -222,7 +222,7 @@ try {
     if (Test-Path -LiteralPath $workDirectory) {
         Remove-Item -LiteralPath $workDirectory -Recurse -Force
     }
-    $null = New-Item -ItemType Directory -Force -Path (Join-Path $vaultPath "Notes")
+    $null = New-Item -ItemType Directory -Force -Path (Join-Path $vaultPath "Zed")
     $null = New-Item -ItemType Directory -Force -Path (Join-Path $vaultPath ".obsidian")
     $null = New-Item -ItemType Directory -Force -Path $roamingPath
     $null = New-Item -ItemType Directory -Force -Path $localPath
@@ -233,7 +233,7 @@ try {
         [System.Text.UTF8Encoding]::new($false)
     )
     [System.IO.File]::WriteAllText(
-        (Join-Path $vaultPath "Notes/Welcome.md"),
+        (Join-Path $vaultPath "Zed/Welcome.md"),
         "# Welcome" + [Environment]::NewLine,
         [System.Text.UTF8Encoding]::new($false)
     )
@@ -334,7 +334,7 @@ try {
         $elements = @(Get-ProcessElements $root $process.Id)
         $expandedItems = @(Get-NoteOptions $elements)
         $names = @($expandedItems | ForEach-Object { $_.summary.name.Replace([string][char]92, "/") })
-        if ($names -contains "README.md" -and $names -contains "Notes/Welcome.md") {
+        if ($names -contains "README.md" -and $names -contains "Zed/Welcome.md") {
             break
         }
         Start-Sleep -Milliseconds 250
@@ -354,7 +354,7 @@ try {
     })
 
     $optionNames = @($expandedItems | ForEach-Object { $_.summary.name.Replace([string][char]92, "/") })
-    if ($optionNames -notcontains "README.md" -or $optionNames -notcontains "Notes/Welcome.md") {
+    if ($optionNames -notcontains "README.md" -or $optionNames -notcontains "Zed/Welcome.md") {
         throw "The Note to inspect menu did not expose both expected radio options through UI Automation"
     }
 
@@ -365,10 +365,10 @@ try {
     }
 
     $targetOption = $expandedItems |
-        Where-Object { $_.summary.name.Replace([string][char]92, "/") -eq "Notes/Welcome.md" } |
+        Where-Object { $_.summary.name.Replace([string][char]92, "/") -eq "Zed/Welcome.md" } |
         Select-Object -First 1
     if ($null -eq $targetOption -or -not $targetOption.summary.supports_selection_item) {
-        throw "The Notes/Welcome.md radio option does not expose UI Automation SelectionItemPattern"
+        throw "The Zed/Welcome.md radio option does not expose UI Automation SelectionItemPattern"
     }
 
     $selectionItem = $targetOption.element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
@@ -388,7 +388,7 @@ try {
         }
     }
     if (-not $selected) {
-        throw "UI Automation selection did not select Notes/Welcome.md"
+        throw "UI Automation selection did not select Zed/Welcome.md"
     }
 
     $report.accessibility.selected_option = [pscustomobject]@{
@@ -401,10 +401,10 @@ try {
     $report.accessibility.selected_value = $selectedValue
     if (-not $selectedSummary.supports_value -or
         -not $selectedValue.Replace([string][char]92, "/").EndsWith(
-            "Notes/Welcome.md",
+            "Zed/Welcome.md",
             [System.StringComparison]::OrdinalIgnoreCase
         )) {
-        throw "The Note to inspect menu button did not report Notes/Welcome.md as its selected value"
+        throw "The Note to inspect menu button did not report Zed/Welcome.md as its selected value"
     }
 
     $afterVault = Get-SnapshotJson $vaultPath

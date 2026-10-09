@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.67",
+  "attempt": 2,
+  "source_sha": "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11",
+  "change": "Replace the note selector ComboBox with a menu button and radio options.",
+  "conclusion": "The Windows UIA audit still failed: the menu button exposed a value but no InvokePattern, so the popup could not be opened. Companion workflows and Linux/macOS round-trip jobs passed.",
+  "windows_uia": {
+    "run_id": 37947952858,
+    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37947952858",
+    "job_id": 113879024691,
+    "job_conclusion": "failure",
+    "failure": "The Note to inspect menu button does not expose UI Automation InvokePattern",
+    "observed": {
+      "control_type": "ControlType.Button",
+      "name": "Note to inspect",
+      "enabled": true,
+      "offscreen": false,
+      "supports_invoke": false,
+      "supports_value": true,
+      "value": "Notes\\Welcome.md"
+    },
+    "snapshot_result": {
+      "vault_unchanged_after_teardown": true,
+      "application_data_baseline_captured": false
+    },
+    "artifact": {
+      "id": 11623444618,
+      "name": "obsidian-vault-roundtrip-Windows-c5c8ef991df02fd5ac2c3b8f1d77364a88575d11",
+      "digest": "sha256:3287072b0d2200e53e64ffa957b008a49c36cf9c7ae4f6e2e02119209422aed7",
+      "report": "windows-note-selector-accessibility.json",
+      "report_sha256": "1127d6439cb31cd960bfc630981c43e33284c112503b74b1ddbe2f1323a5fd54"
+    }
+  },
+  "companion_ci": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37947952897,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113879023136, "name": "rust (ubuntu-latest)", "conclusion": "success" },
+        { "id": 113879023578, "name": "rust (windows-latest)", "conclusion": "success" },
+        { "id": 113879023799, "name": "rust (macos-latest)", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37947952844,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113879022101, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37947952967,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113879023992, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113879024492, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113879024654, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37947952947,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113879024701, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113879024961, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113879025063, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37947952651,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113879021665, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113879022005, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113879022043, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37947952888,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113879023199, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113879023396, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113879023508, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    }
+  ],
+  "roundtrip_platform_jobs": [
+    { "id": 113879022977, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+    { "id": 113879023294, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+    { "id": 113879024691, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure" }
+  ],
+  "finding": "The initial UIA tree exposed Note to inspect as an enabled Button with ValuePattern, but without InvokePattern. The reported value was Notes\\Welcome.md because that path sorted before README.md. The audit stopped before opening the popup or capturing isolated application-data baselines.",
+  "correction": "Add AccessKit Action::Click to the menu-button node so UIA can invoke it, and use Zed/Welcome.md in the fixture so README.md is the deterministic initial selection. Then rerun the full UIA selection and no-write audit on exact-SHA GitHub Actions.",
+  "local_validation": "none; GitHub Actions was the only test venue."
+}
