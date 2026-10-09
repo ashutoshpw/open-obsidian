@@ -28,15 +28,16 @@ $report = [ordered]@{
     status = "in_progress"
     source_sha = $env:GITHUB_SHA
     operating_system = [System.Environment]::OSVersion.VersionString
-    flow = "Native Windows UI Automation for the Note to inspect ComboBox"
+    flow = "Native Windows UI Automation for the Note to inspect menu button"
     checks = [ordered]@{}
     accessibility = [ordered]@{
         initial_tree = @()
         expanded_tree = @()
-        combo_box = $null
+        selector_button = $null
+        popup_open_method = $null
         options = @()
         selected_option = $null
-        collapsed_after_selection = $null
+        selected_value = $null
     }
     snapshots = [ordered]@{}
     error = $null
@@ -120,6 +121,36 @@ function Get-ElementSummary([System.Windows.Automation.AutomationElement]$elemen
         $hasExpandCollapse = $false
     }
 
+    $hasInvoke = $false
+    try {
+        $null = $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+        $hasInvoke = $true
+    } catch {
+        $hasInvoke = $false
+    }
+
+    $hasValue = $false
+    $value = $null
+    try {
+        $valuePattern = $element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+        $hasValue = $true
+        $value = $valuePattern.Current.Value
+    } catch {
+        $hasValue = $false
+        $value = $null
+    }
+
+    $hasToggle = $false
+    $toggleState = $null
+    try {
+        $togglePattern = $element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+        $hasToggle = $true
+        $toggleState = $togglePattern.Current.ToggleState.ToString()
+    } catch {
+        $hasToggle = $false
+        $toggleState = $null
+    }
+
     $hasSelectionItem = $false
     try {
         $null = $element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
@@ -137,22 +168,29 @@ function Get-ElementSummary([System.Windows.Automation.AutomationElement]$elemen
         enabled = $current.IsEnabled
         offscreen = $current.IsOffscreen
         supports_expand_collapse = $hasExpandCollapse
+        supports_invoke = $hasInvoke
+        supports_value = $hasValue
+        value = $value
+        supports_toggle = $hasToggle
+        toggle_state = $toggleState
         supports_selection_item = $hasSelectionItem
     }
 }
 
-function Get-ListItems($elements) {
+function Get-NoteOptions($elements) {
     $items = [System.Collections.Generic.List[object]]::new()
     foreach ($element in $elements) {
         try {
-            if ($element.Current.ControlType.ProgrammaticName -eq "ControlType.ListItem") {
-                $summary = Get-ElementSummary $element
+            $summary = Get-ElementSummary $element
+            $normalizedName = $summary.name.Replace([string][char]92, "/")
+            if ($summary.control_type -eq "ControlType.RadioButton" -and
+                $normalizedName -in @("README.md", "Notes/Welcome.md")) {
                 $selected = $null
-                try {
+                if ($summary.supports_selection_item) {
                     $selection = $element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
                     $selected = $selection.Current.IsSelected
-                } catch {
-                    $selected = $null
+                } elseif ($summary.supports_toggle) {
+                    $selected = ($summary.toggle_state -eq "On")
                 }
                 $items.Add([pscustomobject]@{
                     element = $element
@@ -249,43 +287,52 @@ try {
         $elements | ForEach-Object { Get-ElementSummary $_ } | Select-Object -First 300
     )
 
-    $combo = $null
-    $comboSummary = $null
+    $selector = $null
+    $selectorSummary = $null
     foreach ($element in $elements) {
         try {
             $summary = Get-ElementSummary $element
-            if ($summary.control_type -eq "ControlType.ComboBox" -and
-                (($summary.name -like "*Note to inspect*") -or ($summary.labeled_by -like "*Note to inspect*"))) {
-                $combo = $element
-                $comboSummary = $summary
+            if ($summary.control_type -eq "ControlType.Button" -and
+                $summary.name -eq "Note to inspect") {
+                $selector = $element
+                $selectorSummary = $summary
                 break
             }
         } catch {
             continue
         }
     }
-    if ($null -eq $combo) {
-        throw "The native accessibility tree did not expose Note to inspect as a labeled ComboBox"
+    if ($null -eq $selector) {
+        throw "The native accessibility tree did not expose Note to inspect as a named Button"
     }
-    if (-not $comboSummary.enabled -or $comboSummary.offscreen) {
-        throw "The Note to inspect ComboBox is disabled or offscreen"
+    if (-not $selectorSummary.enabled -or $selectorSummary.offscreen) {
+        throw "The Note to inspect menu button is disabled or offscreen"
     }
-    if (-not $comboSummary.supports_expand_collapse) {
-        throw "The Note to inspect ComboBox does not expose UI Automation expand/collapse"
+    if (-not $selectorSummary.supports_invoke) {
+        throw "The Note to inspect menu button does not expose UI Automation InvokePattern"
     }
-    $report.accessibility.combo_box = $comboSummary
+    $initialValue = [string]$selectorSummary.value
+    if (-not $selectorSummary.supports_value -or
+        -not $initialValue.Replace([string][char]92, "/").EndsWith(
+            "README.md",
+            [System.StringComparison]::OrdinalIgnoreCase
+        )) {
+        throw "The Note to inspect menu button does not expose README.md as its current value"
+    }
+    $report.accessibility.selector_button = $selectorSummary
 
     $beforeRoaming = Get-SnapshotJson $roamingPath
     $beforeLocal = Get-SnapshotJson $localPath
 
-    $expandCollapse = $combo.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
-    $expandCollapse.Expand()
+    $invoke = $selector.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern)
+    $invoke.Invoke()
+    $report.accessibility.popup_open_method = "InvokePattern.Invoke"
 
     $expandedItems = @()
     $itemsDeadline = [DateTime]::UtcNow.AddSeconds(20)
     while ([DateTime]::UtcNow -lt $itemsDeadline) {
         $elements = @(Get-ProcessElements $root $process.Id)
-        $expandedItems = @(Get-ListItems $elements)
+        $expandedItems = @(Get-NoteOptions $elements)
         $names = @($expandedItems | ForEach-Object { $_.summary.name.Replace([string][char]92, "/") })
         if ($names -contains "README.md" -and $names -contains "Notes/Welcome.md") {
             break
@@ -300,30 +347,33 @@ try {
             name = $_.summary.name
             control_type = $_.summary.control_type
             selected = $_.selected
+            supports_invoke = $_.summary.supports_invoke
+            supports_toggle = $_.summary.supports_toggle
             supports_selection_item = $_.summary.supports_selection_item
         }
     })
 
     $optionNames = @($expandedItems | ForEach-Object { $_.summary.name.Replace([string][char]92, "/") })
     if ($optionNames -notcontains "README.md" -or $optionNames -notcontains "Notes/Welcome.md") {
-        throw "The expanded Note to inspect popup did not expose both expected note options through UI Automation"
+        throw "The Note to inspect menu did not expose both expected radio options through UI Automation"
     }
 
     $initiallySelected = @($expandedItems | Where-Object { $_.selected -eq $true })
     if ($initiallySelected.Count -ne 1 -or
         $initiallySelected[0].summary.name.Replace([string][char]92, "/") -ne "README.md") {
-        throw "The expanded note selector did not report README.md as its single selected option"
+        throw "The expanded note selector did not report README.md as its single selected radio option"
     }
 
     $targetOption = $expandedItems |
         Where-Object { $_.summary.name.Replace([string][char]92, "/") -eq "Notes/Welcome.md" } |
         Select-Object -First 1
     if ($null -eq $targetOption -or -not $targetOption.summary.supports_selection_item) {
-        throw "The Notes/Welcome.md option does not expose UI Automation selection"
+        throw "The Notes/Welcome.md radio option does not expose UI Automation SelectionItemPattern"
     }
 
     $selectionItem = $targetOption.element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern)
     $selectionItem.Select()
+    $report.accessibility.selection_method = "SelectionItemPattern.Select"
 
     $selected = $false
     $selectionDeadline = [DateTime]::UtcNow.AddSeconds(10)
@@ -346,11 +396,15 @@ try {
         control_type = $targetOption.summary.control_type
         selected = $true
     }
-    try {
-        $currentExpandState = $expandCollapse.Current.ExpandCollapseState.ToString()
-        $report.accessibility.collapsed_after_selection = ($currentExpandState -eq "Collapsed")
-    } catch {
-        $report.accessibility.collapsed_after_selection = $null
+    $selectedSummary = Get-ElementSummary $selector
+    $selectedValue = [string]$selectedSummary.value
+    $report.accessibility.selected_value = $selectedValue
+    if (-not $selectedSummary.supports_value -or
+        -not $selectedValue.Replace([string][char]92, "/").EndsWith(
+            "Notes/Welcome.md",
+            [System.StringComparison]::OrdinalIgnoreCase
+        )) {
+        throw "The Note to inspect menu button did not report Notes/Welcome.md as its selected value"
     }
 
     $afterVault = Get-SnapshotJson $vaultPath
@@ -440,9 +494,10 @@ try {
 
 if ($null -eq $failure) {
     $report.status = "passed"
-    $report.checks.note_inspector_combo_box_exposed = $true
-    $report.checks.popup_lists_both_notes = $true
+    $report.checks.note_inspector_menu_button_exposed = $true
+    $report.checks.popup_lists_both_notes_as_radio_options = $true
     $report.checks.ui_automation_selected_nested_note = $true
+    $report.checks.selected_value_reflects_nested_note = $true
 } else {
     $report.status = "failed"
     if ($null -eq $report.error) {

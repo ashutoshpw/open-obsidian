@@ -537,22 +537,29 @@ impl OpenObsidianApp {
                 if previous_path.is_some() {
                     previous_requested = ui.small_button("Previous note").clicked();
                 }
-                eframe::egui::ComboBox::from_label("Note to inspect")
-                    .selected_text(selected_label)
-                    .show_ui(ui, |ui| {
-                        for path in &note_paths {
-                            if ui
-                                .selectable_value(
-                                    &mut self.link_source_path,
-                                    Some(path.clone()),
-                                    path.display().to_string(),
-                                )
-                                .changed()
-                            {
-                                source_changed = true;
-                            }
+                let note_menu = ui.menu_button("Note to inspect", |ui| {
+                    for path in &note_paths {
+                        if ui
+                            .radio_value(
+                                &mut self.link_source_path,
+                                Some(path.clone()),
+                                path.display().to_string(),
+                            )
+                            .changed()
+                        {
+                            source_changed = true;
                         }
+                    }
+                });
+                let note_menu_open = note_menu.inner.is_some();
+                ui.ctx()
+                    .accesskit_node_builder(note_menu.response.id, |node| {
+                        node.set_label("Note to inspect");
+                        node.set_value(selected_label.clone());
+                        node.set_has_popup(eframe::egui::accesskit::HasPopup::Menu);
+                        node.set_expanded(note_menu_open);
                     });
+                ui.label(&selected_label);
                 if next_path.is_some() {
                     next_requested = ui.small_button("Next note").clicked();
                 }
