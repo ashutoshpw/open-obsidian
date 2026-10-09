@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:42:16Z",
+  "updated_at": "2026-10-09T19:51:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bada4da30965183333781eb41c79f5d203879857",
+  "last_reconciled_head": "3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d",
   "current_milestone": "R2.6.76",
-  "next_action": "Commit the focused C01.2-27 egui test and pending matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small R2 slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -223,9 +223,10 @@
     "R2.6.65 attempt 20 on exact SHA 2e8447c: Rust CI and all six companion workflows passed, as did applicable native parallel groups. Windows and macOS passed cancellation, snapshots and Obsidian reopen; Ubuntu displayed the selected fixture but egui did not receive the second Open vault click. Evidence: evidence/r2.6.65-cancellation-attempt-20-2e8447c.json.",
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json.",
-    "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json."
+    "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json.",
+    "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json."
   ],
-  "push_status": "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. R2.6.76 / C01.2-27 is in progress from starting SHA bada4da30965183333781eb41c79f5d203879857. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.76 / C01.2-27 is complete on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d, pushed to origin/main; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13840,8 +13841,12 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.76": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "bada4da30965183333781eb41c79f5d203879857",
+      "implementation_sha": "3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d",
+      "implementation_commits": [
+        "3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d"
+      ],
       "scope": "Exercise external creation of a PNG already referenced by an active note with an unresolved embed; refresh the vault, resolve and render the newly available image, and preserve vault and app-data snapshots.",
       "accepted_slice": ["C01.2-27"],
       "remaining": ["Broader C01/C01.2 acceptance remains pending."],
@@ -13853,8 +13858,46 @@
         "The post-creation vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Commit the focused C01.2-27 egui test and pending matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows."
+      "ci_attempts": [
+        {
+          "source_sha": "3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d",
+          "attempt": 1,
+          "conclusion": "C01.2-27 passed. The focused workspace test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on this exact source SHA.",
+          "workflows": {
+            "rust_ci": 37982139127,
+            "obsidian_vault_roundtrip": 37982139216,
+            "inventory": 37982139132,
+            "loaded_plugin_workflows": 37982139167,
+            "desktop_build": 37982139171,
+            "quality": 37982139140,
+            "plugin_renderer": 37982139270
+          },
+          "jobs": {
+            "rust_ubuntu": 113995036163,
+            "rust_macos": 113995036330,
+            "rust_windows": 113995036425,
+            "roundtrip_ubuntu": 113995037116,
+            "roundtrip_macos": 113995037261,
+            "roundtrip_windows": 113995036754,
+            "inventory": 113995037390,
+            "loaded_plugin_ubuntu": 113995039563,
+            "loaded_plugin_macos": 113995039422,
+            "loaded_plugin_windows": 113995039533,
+            "desktop_ubuntu": 113995037719,
+            "desktop_macos": 113995037869,
+            "desktop_windows": 113995037957,
+            "quality_ubuntu": 113995036724,
+            "quality_macos": 113995036553,
+            "quality_windows": 113995036744,
+            "plugin_renderer_ubuntu": 113995037054,
+            "plugin_renderer_macos": 113995036789,
+            "plugin_renderer_windows": 113995037509
+          },
+          "evidence": "evidence/r2.6.76-attempt-1-3d83472.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.76-attempt-1-3d83472.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
