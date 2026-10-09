@@ -2889,9 +2889,6 @@ mod tests {
 
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);
-        let readme_path = PathBuf::from("README.md");
-        let welcome_path = PathBuf::from("Notes/Welcome.md");
-        let welcome_label = welcome_path.display().to_string();
         let readme_source = fixture["files"]
             .as_array()
             .unwrap()
@@ -2908,6 +2905,23 @@ mod tests {
             .expect("fixture must include the welcome note source");
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open existing vault without conversion");
+        let note_path = |file_name: &str| {
+            session
+                .entries()
+                .iter()
+                .find(|entry| {
+                    entry
+                        .relative_path
+                        .file_name()
+                        .and_then(|name| name.to_str())
+                        == Some(file_name)
+                })
+                .map(|entry| entry.relative_path.clone())
+                .expect("existing-vault fixture must include the requested note")
+        };
+        let readme_path = note_path("README.md");
+        let welcome_path = note_path("Welcome.md");
+        let welcome_label = welcome_path.display().to_string();
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             link_source_path: Some(readme_path.clone()),
@@ -2935,7 +2949,9 @@ mod tests {
         assert_eq!(preview.relative_path, readme_path);
         assert_eq!(preview.text.as_bytes(), readme_source.as_bytes());
 
-        harness.get_by_label("Note to inspect").click();
+        harness
+            .get_by_label("Note to inspect")
+            .click_accesskit();
         harness.step();
         harness.get_by_label(&welcome_label).click();
         harness.step();
