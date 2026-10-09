@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T21:21:24Z",
+  "updated_at": "2026-10-09T21:30:51Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "445b4a2defcaa13a3811361900c52b752401cb82",
-  "current_milestone": "R2.6.80",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "current_milestone": "R2.6.81",
+  "next_action": "Commit and push C01.2-32 for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14182,6 +14182,25 @@
       ],
       "evidence": "evidence/r2.6.80-attempt-1-445b4a2.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.81": {
+      "status": "in_progress",
+      "starting_sha": "53a3106c45c9a5a662c0dfe34d42df7adab2cea2",
+      "implementation_sha": null,
+      "scope": "Externally add a same-basename attachment to a vault after a basename-only image embed resolves; refresh and verify the embed becomes ambiguous and is not rendered, with no stale UI state or vault/app-data writes.",
+      "accepted_slice": ["C01.2-32"],
+      "remaining": ["Exact-SHA GitHub Actions validation is pending.", "Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose ![[photo.png]] embed resolves to Attachments/photo.png and renders an image.",
+        "Open the note source preview, externally add Images/photo.png, and capture the exact post-creation vault snapshot.",
+        "Refresh keeps the vault and note active while clearing stale link/embed/preview/error/texture state.",
+        "Fresh resolution reports Ambiguous with exactly Attachments/photo.png and Images/photo.png candidates, no target, and a NotRendered disposition.",
+        "The post-creation vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Push the implementation slice to origin/main and inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {

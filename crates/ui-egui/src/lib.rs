@@ -5346,6 +5346,219 @@ mod tests {
     }
 
     #[test]
+    fn egui_refresh_after_external_duplicate_attachment_creation_marks_embed_ambiguous() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Image Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(vault_path.join(".obsidian"))
+            .expect("create existing vault configuration directory");
+        std::fs::create_dir_all(vault_path.join("Attachments"))
+            .expect("create existing vault attachment directory");
+        std::fs::create_dir_all(vault_path.join("Images"))
+            .expect("create existing vault image directory");
+        std::fs::create_dir_all(vault_path.join("Notes"))
+            .expect("create existing vault note directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        std::fs::write(
+            app_data_path.join("private-state.bin"),
+            [0x71, 0x00, 0xfe, 0x08],
+        )
+        .expect("seed separate app-data sentinel");
+        std::fs::write(
+            vault_path.join(".obsidian/app.json"),
+            b"{\"unknownOption\":{\"keep\":true}}\n",
+        )
+        .expect("seed opaque Obsidian configuration");
+        std::fs::write(
+            vault_path.join("Attachments/opaque.bin"),
+            [0x00, 0xff, 0x42, 0x80],
+        )
+        .expect("seed unrelated opaque attachment data");
+
+        let note_path = PathBuf::from("Notes/Image.md");
+        let attachment_path = PathBuf::from("Attachments/photo.png");
+        let duplicate_attachment_path = PathBuf::from("Images/photo.png");
+        let note_source = b"# Image note\n\n![[photo.png|Accessible ambiguous attachment]]\n";
+        std::fs::write(vault_path.join(&note_path), note_source)
+            .expect("seed Markdown note with a basename-only image embed");
+        let image_source = include_bytes!("../../../assets/openobsidian-icon.png");
+        std::fs::write(vault_path.join(&attachment_path), image_source)
+            .expect("seed the uniquely matching image attachment");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing image vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(note_path.clone()),
+            rename_source_path: Some(note_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        let initial_report = harness
+            .state()
+            .note_embed_report
+            .as_ref()
+            .expect("the initial unique image attachment should resolve");
+        assert_eq!(initial_report.embeds.len(), 1);
+        assert_eq!(
+            initial_report.embeds[0].resolution.resolution.status,
+            LinkResolutionStatus::Resolved
+        );
+        assert_eq!(
+            initial_report.embeds[0]
+                .resolution
+                .resolution
+                .target
+                .as_deref(),
+            Some("Attachments/photo.png")
+        );
+        assert!(matches!(
+            &initial_report.embeds[0].resolution.disposition,
+            VaultNoteEmbedDisposition::Attachment(image)
+                if image.width > 0
+                    && image.height > 0
+                    && image.rgba_bytes.len() == (image.width * image.height * 4) as usize
+        ));
+        harness.get_by_label("Accessible ambiguous attachment");
+        assert_eq!(harness.state().inline_image_textures.len(), 1);
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the image note source preview should be open");
+        assert_eq!(preview.relative_path, note_path);
+        assert_eq!(preview.text.as_bytes(), note_source);
+
+        let duplicate_image_source = {
+            use image::ImageEncoder as _;
+
+            let mut bytes = Vec::new();
+            image::codecs::png::PngEncoder::new(&mut bytes)
+                .write_image(&[0, 0, 255, 255], 1, 1, image::ExtendedColorType::Rgba8)
+                .expect("encode the externally added duplicate image");
+            bytes
+        };
+        std::fs::write(
+            vault_path.join(&duplicate_attachment_path),
+            &duplicate_image_source,
+        )
+        .expect("simulate an external duplicate-basename attachment creation");
+        let mut expected_after_creation = before_vault.clone();
+        expected_after_creation.push((
+            duplicate_attachment_path.clone(),
+            1,
+            duplicate_image_source,
+        ));
+        expected_after_creation.sort_by(|left, right| left.0.cmp(&right.0));
+        let after_external_creation = existing_vault_tree_snapshot(&vault_path);
+        assert_eq!(after_external_creation, expected_after_creation);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the vault session should remain open after duplicate attachment creation");
+        assert_eq!(session.entries().len(), 1);
+        assert_eq!(session.entries()[0].relative_path, note_path);
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
+        assert_eq!(
+            harness.state().rename_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
+        assert!(harness.state().link_resolutions.is_empty());
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().note_embed_report.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        assert!(harness.state().inline_image_textures.is_empty());
+        harness.get_by_label("1 Markdown files found.");
+        harness.get_by_label("Note list refreshed: 1 Markdown files found.");
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_creation
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        let report = harness
+            .state()
+            .note_embed_report
+            .as_ref()
+            .expect("the duplicate image basename should produce a fresh embed report");
+        assert_eq!(report.embeds.len(), 1);
+        let resolution = &report.embeds[0].resolution.resolution;
+        assert_eq!(resolution.status, LinkResolutionStatus::Ambiguous);
+        assert!(resolution.target.is_none());
+        assert_eq!(
+            resolution.candidates,
+            vec![
+                "Attachments/photo.png".to_owned(),
+                "Images/photo.png".to_owned()
+            ]
+        );
+        assert_eq!(
+            report.embeds[0].resolution.disposition,
+            VaultNoteEmbedDisposition::NotRendered
+        );
+        harness.get_by_label("Not rendered: multiple vault files match this embed. ![[photo.png|Accessible ambiguous attachment]]");
+        assert!(harness.state().inline_image_textures.is_empty());
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_creation
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_creation
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_existing_vault_link_and_rename_previews_preserve_every_path_and_byte() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
