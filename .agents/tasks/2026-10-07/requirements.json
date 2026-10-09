@@ -2326,10 +2326,11 @@
         "evidence/r2.6.49-roundtrip-ci-followups.json",
         "evidence/r2.6.49-roundtrip-ci-f396927.json",
         "evidence/r2.6.50-external-note-refresh-preview-a54e312.json",
-        "evidence/r2.6.51-accessible-note-navigation-d6b8b19.json"
+        "evidence/r2.6.51-accessible-note-navigation-d6b8b19.json",
+        "evidence/r2.6.52-external-deletion-refresh-bf5bc33.json"
       ],
-      "tested_source_tree": "d6b8b19691031d544cea34226244ab43d2e687a6",
-      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. On exact source SHA d6b8b19691031d544cea34226244ab43d2e687a6, the integrated existing-vault refresh, user-facing external-note selection, exact BOM/CRLF preview, close, and unchanged vault/app-data snapshot case passed on all three CI OSes with all seven required workflows green. Other C01 read-only product flows remain pending, so C01 is not complete. See evidence/r2.6.49-roundtrip-ci-f396927.json, evidence/r2.6.50-external-note-refresh-preview-a54e312.json, and evidence/r2.6.51-accessible-note-navigation-d6b8b19.json.",
+      "tested_source_tree": "bf5bc3349a73753d0ee236e2656a0c59de6f24be",
+      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. On exact source SHA bf5bc3349a73753d0ee236e2656a0c59de6f24be, cross-platform existing-vault UI cases cover external note addition, rendered note selection, exact BOM/CRLF source preview, external removal while previewed, stale-preview clearing, fallback selection, and unchanged vault/app-data snapshots after each deliberate external change. Other C01 read-only product flows remain pending, so C01 is not complete. See evidence/r2.6.49-roundtrip-ci-f396927.json, evidence/r2.6.51-accessible-note-navigation-d6b8b19.json, and evidence/r2.6.52-external-deletion-refresh-bf5bc33.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2447,10 +2448,11 @@
         "evidence/r2.6.49-roundtrip-ci-followups.json",
         "evidence/r2.6.49-roundtrip-ci-f396927.json",
         "evidence/r2.6.50-external-note-refresh-preview-a54e312.json",
-        "evidence/r2.6.51-accessible-note-navigation-d6b8b19.json"
+        "evidence/r2.6.51-accessible-note-navigation-d6b8b19.json",
+        "evidence/r2.6.52-external-deletion-refresh-bf5bc33.json"
       ],
-      "tested_source_tree": "d6b8b19691031d544cea34226244ab43d2e687a6",
-      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. The integrated existing-vault refresh, Previous note selection, source preview, close, and unchanged snapshots passed on all three OSes on exact source SHA d6b8b19691031d544cea34226244ab43d2e687a6. Other cross-platform C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.51-accessible-note-navigation-d6b8b19.json.",
+      "tested_source_tree": "bf5bc3349a73753d0ee236e2656a0c59de6f24be",
+      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. On exact source SHA bf5bc3349a73753d0ee236e2656a0c59de6f24be, the integrated external-addition/selection/preview case and external-removal/stale-preview-clearing/fallback case passed on Linux, macOS and Windows with unchanged snapshots after each intentional external change. Other cross-platform C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json, evidence/r2.6.51-accessible-note-navigation-d6b8b19.json, and evidence/r2.6.52-external-deletion-refresh-bf5bc33.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

@@ -911,3 +911,13 @@ The first exact-SHA attempt, `08fc27b64c0aac882215e9ce0e51d2425a6cf6a9`, passed 
 On corrected exact source SHA `d6b8b19691031d544cea34226244ab43d2e687a6`, all seven required GitHub Actions workflows passed: Rust CI, migration inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the pinned Obsidian 1.14.4 round trip. The focused refresh/selection/preview test passed on Ubuntu, macOS and Windows. The three-OS round trip passed; Rust CI passed formatting, workspace tests, Clippy, dependency layering, native preview builds and unchanged-plugin feasibility probes. Job IDs and artifact SHA-256 digests are recorded in the evidence file. C01/C01.2 remain pending for broader read-only product coverage; edit/save remains deferred to C02/C14. No local tests, builds, formatters, linters or application launches were run.
 
 Next: continue R2 with the next uncovered C01/C01.2 read-only product flow and keep both parent requirements pending until their full coverage is accepted.
+
+## R2.6.52 — external note removal and stale-preview invalidation
+
+Added a cross-platform native UI test that opens a source preview for `Notes/Welcome.md`, simulates an external writer removing that note, then refreshes the open vault. The refreshed listing selects the remaining `README.md`, clears the stale preview, and displays the fallback source. The fixture snapshot is compared with the expected tree after the intentional external removal; refresh, preview, close and UI teardown make no further vault or app-data changes.
+
+The first exact-SHA attempt, `7a9ab971d1e7577b925ce4678eb501e8af484416`, passed workspace tests on Ubuntu, macOS and Windows and passed six companion workflows including the Obsidian round trip. Ubuntu formatting failed with assertion-wrap differences. The exact formatter output was applied in `bf5bc3349a73753d0ee236e2656a0c59de6f24be`.
+
+On corrected exact source SHA `bf5bc3349a73753d0ee236e2656a0c59de6f24be`, the focused removal/refresh test passed on all three OSes and all seven required workflows passed: Rust CI, inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the pinned Obsidian 1.14.4 round trip. Exact job IDs and artifact SHA-256 digests are in [`evidence/r2.6.52-external-deletion-refresh-bf5bc33.json`](evidence/r2.6.52-external-deletion-refresh-bf5bc33.json). C01/C01.2 remain pending for broader read-only product coverage; edit/save remains deferred to C02/C14. No local executable validation was run.
+
+Next: continue R2 by selecting another uncovered C01/C01.2 read-only product flow; do not close either requirement until the full acceptance coverage passes.

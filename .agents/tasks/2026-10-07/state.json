@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T03:44:53Z",
+  "updated_at": "2026-10-09T04:02:23Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d6b8b19691031d544cea34226244ab43d2e687a6",
-  "current_milestone": "R2.6.51",
-  "next_action": "Continue R2 with the next uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes. Edit/save remains deferred to C02/C14.",
+  "last_reconciled_head": "bf5bc3349a73753d0ee236e2656a0c59de6f24be",
+  "current_milestone": "R2.6.52",
+  "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "d6b8b19691031d544cea34226244ab43d2e687a6"
+      "implementation_sha": "bf5bc3349a73753d0ee236e2656a0c59de6f24be"
     },
     "R3": {
       "status": "pending",
@@ -9659,6 +9659,53 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Continue R2 with the next uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes."
+    },
+    "R2.6.52": {
+      "status": "complete",
+      "implementation_sha": "bf5bc3349a73753d0ee236e2656a0c59de6f24be",
+      "implementation_commits": ["7a9ab97", "bf5bc33"],
+      "scope": "Cover an external writer removing the currently previewed note, refreshing the existing vault, clearing stale preview state, selecting a remaining note, and proving the UI's refresh/preview/close operations make no additional vault or app-data writes.",
+      "ci_attempts": [
+        {
+          "source_sha": "7a9ab971d1e7577b925ce4678eb501e8af484416",
+          "conclusion": "Rust CI failed only at Ubuntu formatting; workspace tests passed and all six companion workflows passed, including the Obsidian round trip.",
+          "workflows": {
+            "rust_ci": 37881139158,
+            "inventory": 37881139122,
+            "quality": 37881139126,
+            "desktop_build": 37881139070,
+            "plugin_renderer": 37881139107,
+            "loaded_plugin_workflows": 37881139061,
+            "obsidian_vault_roundtrip": 37881139137
+          },
+          "finding": "Ubuntu rustfmt requested five assertion line-wrap changes; the focused workspace test passed on all three platforms.",
+          "correction": "Apply the exact GitHub Actions formatting diff and rerun all required workflows on a new exact SHA."
+        },
+        {
+          "source_sha": "bf5bc3349a73753d0ee236e2656a0c59de6f24be",
+          "conclusion": "All seven required workflows and all jobs passed on Linux, macOS, and Windows.",
+          "workflows": {
+            "rust_ci": 37881584510,
+            "inventory": 37881584518,
+            "quality": 37881584660,
+            "desktop_build": 37881584715,
+            "plugin_renderer": 37881584505,
+            "loaded_plugin_workflows": 37881584541,
+            "obsidian_vault_roundtrip": 37881584594
+          },
+          "evidence": "evidence/r2.6.52-external-deletion-refresh-bf5bc33.json"
+        }
+      ],
+      "accepted_slice": [
+        "The integrated UI test deliberately removed Notes/Welcome.md while its source preview was open, refreshed the production vault session, verified the stale preview cleared and README.md became selected, then previewed and closed README.md.",
+        "On Linux, macOS, and Windows, the complete vault matched the expected snapshot after the external deletion throughout subsequent refresh/preview/close/teardown, and separate app data remained unchanged.",
+        "Rust CI, inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the Obsidian 1.14.4 reference round trip passed on exact SHA bf5bc3349a73753d0ee236e2656a0c59de6f24be. Job IDs and artifact digests are recorded in evidence/r2.6.52-external-deletion-refresh-bf5bc33.json."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader cross-platform read-only product coverage; the ComboBox popup itself remains unverified for Windows accessibility.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes."
     }
   },
   "ci_preparation": {
