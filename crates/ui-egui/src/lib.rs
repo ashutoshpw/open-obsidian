@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{
     Arc,
+    atomic::{AtomicU16, Ordering},
     mpsc::{self, Receiver, TryRecvError},
 };
 use std::time::{Duration, SystemTime};
@@ -210,6 +211,7 @@ impl eframe::App for OpenObsidianApp {
 
 impl OpenObsidianApp {
     fn show_ui(&mut self, ui: &mut eframe::egui::Ui) {
+        self.log_ci_open_vault_availability();
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
         let vault_operation_busy = self.history_receiver.is_some()
@@ -367,6 +369,55 @@ impl OpenObsidianApp {
         ui.small("This check covers only the reported system volume or root filesystem.");
         self.show_uninstall_cleanup(ui);
         ui.label("Editing and plugin compatibility are not available in this preview.");
+    }
+
+    fn log_ci_open_vault_availability(&self) {
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_none() {
+            return;
+        }
+
+        static LAST_STATE: AtomicU16 = AtomicU16::new(u16::MAX);
+        let state = [
+            self.session.is_some(),
+            self.vault_opening,
+            self.vault_open_receiver.is_some(),
+            self.history_receiver.is_some(),
+            self.link_receiver.is_some(),
+            self.note_preview_receiver.is_some(),
+            self.vault_refresh_receiver.is_some(),
+            self.rename_receiver.is_some(),
+        ]
+        .into_iter()
+        .enumerate()
+        .fold(0_u16, |state, (bit, enabled)| {
+            if enabled {
+                state | (1_u16 << bit)
+            } else {
+                state
+            }
+        });
+
+        if LAST_STATE.swap(state, Ordering::Relaxed) == state {
+            return;
+        }
+
+        let vault_operation_busy = self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
+            || self.rename_receiver.is_some();
+        eprintln!(
+            "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, vault_refresh_receiver={}, rename_receiver={}, open_vault_enabled={}",
+            self.session.is_some(),
+            self.vault_opening,
+            self.vault_open_receiver.is_some(),
+            self.history_receiver.is_some(),
+            self.link_receiver.is_some(),
+            self.note_preview_receiver.is_some(),
+            self.vault_refresh_receiver.is_some(),
+            self.rename_receiver.is_some(),
+            !self.vault_opening && !vault_operation_busy,
+        );
     }
 
     fn show_uninstall_cleanup(&mut self, ui: &mut eframe::egui::Ui) {

@@ -99,6 +99,7 @@ jobs:
         env:
           OBSIDIAN_REPORT_DIRECTORY: ${{ runner.temp }}/obsidian-vault-roundtrip-artifacts
           OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY: ${{ runner.temp }}/openobsidian-c01-roundtrip
+          OPENOBSIDIAN_CI_DIAGNOSTICS: "1"
         run: |
           mkdir -p "$OBSIDIAN_REPORT_DIRECTORY" "$OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"
           xvfb-run --auto-servernum --server-args='-screen 0 1440x1000x24' \
@@ -109,6 +110,7 @@ jobs:
         env:
           OBSIDIAN_REPORT_DIRECTORY: ${{ runner.temp }}/obsidian-vault-roundtrip-artifacts
           OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY: ${{ runner.temp }}/openobsidian-c01-roundtrip
+          OPENOBSIDIAN_CI_DIAGNOSTICS: "1"
         run: bun .agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts
 
       - name: Upload round-trip report, snapshots, screenshots, and logs

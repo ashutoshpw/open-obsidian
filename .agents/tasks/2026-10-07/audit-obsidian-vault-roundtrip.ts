@@ -348,7 +348,7 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
   const windowHeight = readGeometry("HEIGHT");
   const clickX = Math.round(windowX + windowWidth * 0.045);
   const clickY = Math.round(windowY + windowHeight * 0.085);
-  xdotool("mousemove", "--sync", String(clickX), String(clickY));
+  xdotool("mousemove", "--sync", "--window", windowId, String(Math.round(windowWidth * 0.045)), String(Math.round(windowHeight * 0.085)));
   xdotool("click", "1");
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
@@ -363,10 +363,10 @@ async function clickOpenVaultButtonMacOS(child: ChildProcess): Promise<string> {
     end tell
   end run`;
   const position = execFileSync("osascript", ["-e", positionScript, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
-  const match = position.match(/^(\d+),(\d+)$/);
-  if (!match) throw new Error(`Could not read the OpenObsidian window position for a native click: ${position}`);
-  const clickX = Number(match[1]) + 36;
-  const clickY = Number(match[2]) + 83;
+  const coordinates = position.match(/\d+/g)?.map(Number) ?? [];
+  if (coordinates.length < 2) throw new Error(`Could not read the OpenObsidian window position for a native click: ${position}`);
+  const clickX = coordinates[0] + 36;
+  const clickY = coordinates[1] + 83;
   const swiftPath = join(workDirectory, "openobsidian-click.swift");
   await writeFile(swiftPath, `import AppKit
 import CoreGraphics
@@ -563,6 +563,37 @@ async function readScreenshotOcr(imagePath: string): Promise<string> {
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" || process.platform === "win32" ? ["11", "6"] : ["6"];
   return pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrImagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
+}
+
+function ocrTokenMatches(token: string, expected: string): boolean {
+  if (token === expected) return true;
+  if (Math.abs(token.length - expected.length) > 1) return false;
+
+  let previous = Array.from({length: expected.length + 1}, (_, index) => index);
+  for (let tokenIndex = 1; tokenIndex <= token.length; tokenIndex += 1) {
+    const current = [tokenIndex];
+    for (let expectedIndex = 1; expectedIndex <= expected.length; expectedIndex += 1) {
+      current.push(Math.min(
+        (current[expectedIndex - 1] ?? 0) + 1,
+        (previous[expectedIndex] ?? 0) + 1,
+        (previous[expectedIndex - 1] ?? 0) + Number(token[tokenIndex - 1] !== expected[expectedIndex - 1]),
+      ));
+    }
+    previous = current;
+  }
+  return previous[expected.length] <= 1;
+}
+
+function nativeFolderPickerVisibleInOcr(text: string): boolean {
+  const compact = text.toLowerCase().replace(/[^a-z]/g, "");
+  if (compact.includes("openanexistingvault") || compact.includes("openexistingvault")) return true;
+
+  const tokens = text.toLowerCase().match(/[a-z]+/g) ?? [];
+  const hasCancel = tokens.some((token) => ocrTokenMatches(token, "cancel"));
+  const hasPickerAction = ["open", "select", "choose"].some((expected) =>
+    tokens.some((token) => ocrTokenMatches(token, expected))
+  );
+  return hasCancel && hasPickerAction;
 }
 
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
@@ -1308,7 +1339,7 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
     screenshots.push(relative(reportDirectory, pickerScreenshot));
     pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
-    if (!/open(?: an)? existing vault/i.test(pickerOpenOcr)) {
+    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr)) {
       throw new Error(`The native macOS Open panel was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
     }
     const script = `tell application "System Events" to key code 53`;
@@ -1319,7 +1350,7 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
     screenshots.push(relative(reportDirectory, pickerScreenshot));
     pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
-    if (!/open(?: an)? existing vault/i.test(pickerOpenOcr)) {
+    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr)) {
       throw new Error(`The native Windows folder picker was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
     }
     const script = `
@@ -1339,7 +1370,7 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
   const cancelledScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancelled.png");
   screenshots.push(relative(reportDirectory, cancelledScreenshot));
   const cancelledOcr = await readScreenshotOcr(cancelledScreenshot);
-  if (process.platform !== "linux" && /open(?: an)? existing vault/i.test(cancelledOcr)) {
+  if (process.platform !== "linux" && nativeFolderPickerVisibleInOcr(cancelledOcr)) {
     throw new Error(`The native folder picker remained visible after Escape; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}`);
   }
   const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-after-picker-cancelled");
