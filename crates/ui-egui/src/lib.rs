@@ -2993,6 +2993,138 @@ mod tests {
     }
 
     #[test]
+    fn egui_note_inspect_combobox_disambiguates_duplicate_basenames_without_writes() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(app_data_path.join("state"))
+            .expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let archive_welcome_path = vault_path.join("Archive/Welcome.md");
+        std::fs::create_dir_all(
+            archive_welcome_path
+                .parent()
+                .expect("duplicate-basename note must have a parent directory"),
+        )
+        .expect("create duplicate-basename note directory");
+        let archive_source =
+            "\u{feff}# Archived welcome\r\n\r\nSame basename, distinct path.\r\n";
+        std::fs::write(&archive_welcome_path, archive_source.as_bytes())
+            .expect("seed second Welcome.md before the no-op baseline");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            [0xa5, 0x00, 0x7e, 0xff],
+        )
+        .expect("seed separate app-data sentinel");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let readme_source = fixture["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|file| file["relative_path"] == "README.md")
+            .and_then(|file| file["source"].as_str())
+            .expect("fixture must include the README source");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault without conversion");
+        let note_path = |normalized_path: &str| {
+            session
+                .entries()
+                .iter()
+                .find(|entry| {
+                    entry
+                        .relative_path
+                        .to_string_lossy()
+                        .replace('\\', "/")
+                        == normalized_path
+                })
+                .map(|entry| entry.relative_path.clone())
+                .expect("existing-vault fixture must include the requested note");
+        };
+        let readme_path = note_path("README.md");
+        let notes_welcome_path = note_path("Notes/Welcome.md");
+        let archive_welcome_path = note_path("Archive/Welcome.md");
+        assert_ne!(notes_welcome_path, archive_welcome_path);
+        assert_eq!(notes_welcome_path.file_name(), archive_welcome_path.file_name());
+        let notes_welcome_label = notes_welcome_path.display().to_string();
+        let archive_welcome_label = archive_welcome_path.display().to_string();
+        assert_ne!(notes_welcome_label, archive_welcome_label);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(readme_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        wait_for_links(&mut harness);
+        assert_eq!(harness.state().link_resolutions.len(), 2);
+        assert!(harness.state().note_embed_report.is_some());
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the selected README source should be visible");
+        assert_eq!(preview.relative_path, readme_path);
+        assert_eq!(preview.text.as_bytes(), readme_source.as_bytes());
+
+        harness.get_by_label("Note to inspect").click_accesskit();
+        harness.step();
+        harness.get_by_label(&notes_welcome_label);
+        harness.get_by_label(&archive_welcome_label).click();
+        harness.step();
+        assert_eq!(
+            harness.state().link_source_path.as_ref(),
+            Some(&archive_welcome_path)
+        );
+        assert!(harness.state().link_status.is_none());
+        assert!(harness.state().link_resolutions.is_empty());
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().link_receiver.is_none());
+        assert!(harness.state().note_embed_report.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        assert!(harness.state().inline_image_textures.is_empty());
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the selected Archive/Welcome.md source should be visible");
+        assert_eq!(preview.relative_path, archive_welcome_path);
+        assert_eq!(preview.text.as_bytes(), archive_source.as_bytes());
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_refresh_after_external_note_edit_replaces_stale_preview_without_writing() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
