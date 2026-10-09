@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T20:47:43Z",
+  "updated_at": "2026-10-09T20:53:43Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "569ae4241b845937bca3fc30aec9335c11280c76",
-  "current_milestone": "R2.6.78",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "bb3b1a4568b43a0af9df3d4c3524456754adde36",
+  "current_milestone": "R2.6.79",
+  "next_action": "Implement the focused C01.2-30 external attachment-rename UI test, commit and push it with the start record, then inspect all seven required exact-SHA GitHub Actions workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -228,7 +228,7 @@
     "R2.6.77 / C01.2-28 passed on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427: the focused attachment-edit workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.77-attempt-2-9242b85.json.",
     "R2.6.78 / C01.2-29 passed on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76: the focused corrupted-attachment workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.78-attempt-3-569ae42.json."
   ],
-  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. R2.6.78 / C01.2-29 is complete on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76, pushed to origin/main through small implementation and CI-correction commits. Its focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Attempts 1 and 2 exposed the snapshot tuple type error and required rustfmt reflow; their results and the final artifacts are in the R2.6.78 evidence files. The prior progress-record commit 5a355d933ed696bd1a848154ae1931d176370396 passed its six triggered workflows after a same-SHA quality retry; the round-trip workflow was skipped by its docs-only path filter. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. R2.6.78 / C01.2-29 is complete on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76, pushed to origin/main through small implementation and CI-correction commits. Its focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Attempts 1 and 2 exposed the snapshot tuple type error and required rustfmt reflow; their results and the final artifacts are in the R2.6.78 evidence files. Evidence-record commit bb3b1a4568b43a0af9df3d4c3524456754adde36 passed its six triggered workflows; the round-trip workflow was skipped by its docs-only path filter. R2.6.79 / C01.2-30 is in progress from that starting SHA. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -14088,6 +14088,23 @@
       ],
       "evidence": "evidence/r2.6.78-attempt-3-569ae42.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.79": {
+      "status": "in_progress",
+      "starting_sha": "bb3b1a4568b43a0af9df3d4c3524456754adde36",
+      "scope": "Externally rename a rendered PNG attachment while a note source preview is open; refresh the active vault and verify the old embed remains unresolved rather than redirecting to the renamed attachment, without stale UI state or vault/app-data writes.",
+      "accepted_slice": ["C01.2-30"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose PNG embed resolves, decodes, and renders before external modification.",
+        "Open the note source preview, rename the attachment from Attachments/photo.png to Attachments/renamed-photo.png outside OpenObsidian, and capture the exact post-rename vault snapshot.",
+        "Refresh keeps the vault and note active while clearing stale link/embed/preview/error/texture state.",
+        "A fresh report marks the original attachment reference unresolved and NotRendered, without redirecting it to the renamed path.",
+        "The post-rename vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Implement the focused C01.2-30 UI test and matrix row, commit and push them with the start record, then inspect all seven required exact-SHA workflows."
     }
   },
   "ci_preparation": {
