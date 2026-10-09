@@ -406,6 +406,44 @@ function activeWindowId(): string {
   }
 }
 
+function macOSApplicationWindowDescriptions(child: ChildProcess): string {
+  const script = `on run argv
+    tell application "System Events"
+      set targetProcess to first process whose unix id is (item 1 of argv as integer)
+      set windowDescriptions to {}
+      try
+        repeat with candidateWindow in windows of targetProcess
+          try
+            set candidateRole to role of candidateWindow as text
+          on error
+            set candidateRole to "window"
+          end try
+          try
+            set candidateName to name of candidateWindow as text
+          on error
+            set candidateName to ""
+          end try
+          set end of windowDescriptions to candidateRole & ":" & candidateName
+          try
+            repeat with candidateSheet in sheets of candidateWindow
+              try
+                set candidateSheetName to name of candidateSheet as text
+              on error
+                set candidateSheetName to ""
+              end try
+              set end of windowDescriptions to "AXSheet:" & candidateSheetName
+            end repeat
+          end try
+        end repeat
+      on error errorMessage
+        set end of windowDescriptions to "accessibility error:" & errorMessage
+      end try
+      return windowDescriptions as text
+    end tell
+  end run`;
+  return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+}
+
 async function waitForRenderer(connection: DevToolsConnection, expression: string, predicate: (value: string) => boolean, label: string, timeoutMs = 120_000): Promise<string> {
   return await waitFor(label, async () => await connection.evaluateJson<string>(expression), predicate, timeoutMs);
 }
@@ -1099,6 +1137,7 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
 async function clickOpenVaultButton(child: ChildProcess, windowId: string): Promise<string> {
   await focusOpenObsidian(child);
   if (process.platform === "linux") {
+    xdotool("windowraise", windowId);
     xdotool("windowfocus", "--sync", windowId);
     await delay(500);
     const clicked = clickOpenVaultButtonLinux(windowId);
@@ -1316,10 +1355,15 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
 async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {window_id: string}): Promise<Record<string, unknown>> {
   const screenshots: string[] = [];
   const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
+  const openReport = report.openobsidian_open as Record<string, unknown>;
+  openReport.picker_cancel_open_button_interaction = openButtonInteraction;
+  await saveReport();
   let pickerWindowId: string | null = null;
   let pickerWindowTitle = "native platform folder picker";
   let cancellationInteraction: string;
   let pickerOpenOcr: string | null = null;
+  let pickerAccessibilityWindows: string | null = null;
+  let remainingMacAccessibilityWindows: string | null = null;
   if (process.platform === "linux") {
     const picker = await waitFor("OpenObsidian native folder picker for cancellation", async () => {
       const windowId = activeWindowId();
@@ -1339,7 +1383,10 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     const pickerScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-open.png");
     screenshots.push(relative(reportDirectory, pickerScreenshot));
     pickerOpenOcr = await readScreenshotOcr(pickerScreenshot);
-    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr)) {
+    const accessibilityWindows = macOSApplicationWindowDescriptions(child);
+    pickerAccessibilityWindows = accessibilityWindows;
+    pickerWindowTitle = accessibilityWindows;
+    if (!nativeFolderPickerVisibleInOcr(pickerOpenOcr) && !/open.{0,40}vault/i.test(accessibilityWindows)) {
       throw new Error(`The native macOS Open panel was not visible before Escape; OCR=${JSON.stringify(pickerOpenOcr.slice(0, 2_000))}`);
     }
     const script = `tell application "System Events" to key code 53`;
@@ -1370,8 +1417,9 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
   const cancelledScreenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancelled.png");
   screenshots.push(relative(reportDirectory, cancelledScreenshot));
   const cancelledOcr = await readScreenshotOcr(cancelledScreenshot);
-  if (process.platform !== "linux" && nativeFolderPickerVisibleInOcr(cancelledOcr)) {
-    throw new Error(`The native folder picker remained visible after Escape; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}`);
+  if (process.platform === "darwin") remainingMacAccessibilityWindows = macOSApplicationWindowDescriptions(child);
+  if (process.platform !== "linux" && (nativeFolderPickerVisibleInOcr(cancelledOcr) || (remainingMacAccessibilityWindows !== null && /open.{0,40}vault/i.test(remainingMacAccessibilityWindows)))) {
+    throw new Error(`The native folder picker remained visible after Escape; OCR=${JSON.stringify(cancelledOcr.slice(0, 2_000))}; accessibility windows=${remainingMacAccessibilityWindows ?? "unavailable"}`);
   }
   const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-after-picker-cancelled");
   const restoredVaultVisible = restoredWindow.ocrText.toLowerCase().includes("roundtrip fixture");
@@ -1388,7 +1436,9 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     screenshots,
     picker_open_verified: true,
     picker_open_screen_ocr: pickerOpenOcr,
+    picker_open_accessibility_windows: pickerAccessibilityWindows,
     picker_closed_verified: true,
+    picker_closed_accessibility_windows: remainingMacAccessibilityWindows,
     cancelled_screen_ocr: process.platform === "linux" ? null : cancelledOcr.slice(0, 2_000),
     restored_vault_visible: restoredVaultVisible,
     expected_markdown_count_visible: expectedNoteCountVisible,
