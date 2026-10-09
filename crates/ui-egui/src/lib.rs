@@ -427,13 +427,47 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
+        let selected_index = note_paths
+            .iter()
+            .position(|path| self.link_source_path.as_ref() == Some(path))
+            .unwrap_or_default();
+        let previous_path = (note_paths.len() > 1).then(|| {
+            note_paths[(selected_index + note_paths.len() - 1) % note_paths.len()].clone()
+        });
+        let next_path = (note_paths.len() > 1)
+            .then(|| note_paths[(selected_index + 1) % note_paths.len()].clone());
+        let selected_label = self.link_source_path.as_ref().map_or_else(
+            || "Choose a note".to_owned(),
+            |path| path.display().to_string(),
+        );
+        let mut previous_requested = false;
+        let mut next_requested = false;
         let mut source_changed = false;
         ui.horizontal(|ui| {
-            ui.label("Note to inspect:");
-            ui.label(self.link_source_path.as_ref().map_or_else(
-                || "Choose a note".to_owned(),
-                |path| path.display().to_string(),
-            ));
+            ui.add_enabled_ui(!operation_busy, |ui| {
+                if previous_path.is_some() {
+                    previous_requested = ui.small_button("Previous note").clicked();
+                }
+                eframe::egui::ComboBox::from_label("Note to inspect")
+                    .selected_text(selected_label)
+                    .show_ui(ui, |ui| {
+                        for path in &note_paths {
+                            if ui
+                                .selectable_value(
+                                    &mut self.link_source_path,
+                                    Some(path.clone()),
+                                    path.display().to_string(),
+                                )
+                                .changed()
+                            {
+                                source_changed = true;
+                            }
+                        }
+                    });
+                if next_path.is_some() {
+                    next_requested = ui.small_button("Next note").clicked();
+                }
+            });
             let can_resolve = !operation_busy && self.link_source_path.is_some();
             if ui
                 .add_enabled(
@@ -445,26 +479,13 @@ impl OpenObsidianApp {
                 self.start_link_resolution();
             }
         });
-        eframe::egui::CollapsingHeader::new("Choose note to inspect")
-            .id_salt("note-inspection-paths")
-            .show(ui, |ui| {
-                ui.add_enabled_ui(!operation_busy, |ui| {
-                    eframe::egui::ScrollArea::vertical()
-                        .max_height(120.0)
-                        .show(ui, |ui| {
-                            for path in &note_paths {
-                                let selected = self.link_source_path.as_ref() == Some(path);
-                                if ui
-                                    .selectable_label(selected, path.display().to_string())
-                                    .changed()
-                                {
-                                    self.link_source_path = Some(path.clone());
-                                    source_changed = true;
-                                }
-                            }
-                        });
-                });
-            });
+        if previous_requested {
+            self.link_source_path = previous_path;
+            source_changed = true;
+        } else if next_requested {
+            self.link_source_path = next_path;
+            source_changed = true;
+        }
         if source_changed {
             self.link_resolutions.clear();
             self.link_error = None;
@@ -2500,9 +2521,7 @@ mod tests {
             before_app_data
         );
 
-        harness.get_by_label("Choose note to inspect").click();
-        harness.step();
-        harness.get_by_label("Notes/External.md").click();
+        harness.get_by_label("Previous note").click();
         harness.step();
         assert_eq!(
             harness.state().link_source_path.as_deref(),
