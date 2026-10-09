@@ -2463,6 +2463,142 @@ mod tests {
     }
 
     #[test]
+    fn egui_refresh_after_external_note_edit_replaces_stale_preview_without_writing() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let source_path = PathBuf::from("Notes/Welcome.md");
+        let original_source = fixture["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|file| file["relative_path"] == "Notes/Welcome.md")
+            .and_then(|file| file["source"].as_str())
+            .expect("fixture must contain the original note source");
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open selected existing vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(source_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_error.is_none());
+        let initial_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the original note preview should be visible");
+        assert_eq!(initial_preview.relative_path, source_path);
+        assert_eq!(initial_preview.text.as_bytes(), original_source.as_bytes());
+
+        let external_source = concat!(
+            "\u{feff}# Updated externally\r\n",
+            "The same path changed outside the app. This external replacement is intentionally longer ",
+            "so the refreshed UI must read the new file contents.\r\n",
+        )
+        .as_bytes()
+        .to_vec();
+        let mut expected_after_external_edit = before_vault.clone();
+        let expected_note = expected_after_external_edit
+            .iter_mut()
+            .find(|(path, _, _)| path == &source_path)
+            .expect("expected snapshot must contain the edited note");
+        expected_note.2 = external_source.clone();
+        std::fs::write(vault_path.join(&source_path), &external_source)
+            .expect("simulate an external editor changing the note in place");
+        let after_external_edit = existing_vault_tree_snapshot(&vault_path);
+        assert_eq!(after_external_edit, expected_after_external_edit);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the refreshed vault session should remain open");
+        assert_eq!(session.entries().len(), 2);
+        assert!(session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path == source_path));
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(source_path.as_path())
+        );
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        harness.get_by_label("2 Markdown files found.");
+        harness.get_by_label("Note list refreshed: 2 Markdown files found.");
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_edit
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_error.is_none());
+        let updated_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the updated note source should be visible after refresh");
+        assert_eq!(updated_preview.relative_path, source_path);
+        assert_eq!(updated_preview.text.as_bytes(), external_source.as_slice());
+        assert_eq!(updated_preview.total_size_bytes, external_source.len() as u64);
+        assert!(!updated_preview.truncated);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_edit
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Close source preview").click();
+        harness.step();
+        assert!(harness.state().note_source_preview.is_none());
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_edit
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_bounds_oversized_note_preview_at_utf8_boundary_without_writing() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
