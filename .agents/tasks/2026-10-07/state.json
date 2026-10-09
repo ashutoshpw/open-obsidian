@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T09:56:54Z",
+  "updated_at": "2026-10-09T10:06:55Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "42457db91045fd2cd6fb5481c61a1869a0f404af",
+  "last_reconciled_head": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
   "current_milestone": "R2.6.65",
-  "next_action": "Push the screen-click R2.6.65 picker-cancellation correction and progress record to origin/main, then inspect exact-SHA GitHub Actions results and record the evidence.",
+  "next_action": "Push the R2.6.65 picker verification correction and attempt 4 record to origin/main, then inspect exact-SHA GitHub Actions output and reports.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -208,9 +208,10 @@
     "R2.6.62 Unicode and space-containing note selection passed its focused test on Ubuntu, macOS and Windows and all seven workflows on exact source SHA d77e8cb5720eaac92c835a25a962f986d965962b. Evidence: evidence/r2.6.62-unicode-spaced-note-path-d77e8cb.json. C01/C01.2 remain pending; C01.1 remains passing.",
     "R2.6.63 native folder-picker selection and Obsidian 1.14.4 reopen passed on Linux, macOS and Windows on exact source SHA f1f49c4289984ef6d26437894fcca0cc53627576; all seven workflows passed, with quality passing on same-SHA attempt 2. Evidence: evidence/r2.6.63-native-folder-picker-f1f49c4.json.",
     "R2.6.64 invalid-UTF-8 note preview fails closed without writes; focused UI test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on exact SHA 4f61672bd1eb09fc8ea912c4a9f07af2f1fa740a. Evidence: evidence/r2.6.64-invalid-utf8-preview-4f61672.json. Formatting and a Windows parallel setup collision were corrected from GitHub Actions output before acceptance; no local executable validation was used.",
-    "R2.6.65 attempts 1 and 2 did not achieve cross-platform cancellation; attempt 2 on 9e105b1184e6193a314ea35310d572076b5e4300 also exposed storage and native-picker automation failures, while Rust CI and six companion workflows passed. Attempt 3 on ab18bb1d412a44c4731a2fef1e869836c8dc295b opened the active vault on all platforms but the picker click did not open the dialog; Rust CI and all six companion workflows passed. The pending correction uses verified screen-level clicks and captures the post-click screen."
+    "R2.6.65 attempts 1 and 2 did not achieve cross-platform cancellation; attempt 2 on 9e105b1184e6193a314ea35310d572076b5e4300 also exposed storage and native-picker automation failures, while Rust CI and six companion workflows passed. Attempt 3 on ab18bb1d412a44c4731a2fef1e869836c8dc295b opened the active vault on all platforms but the picker click did not open the dialog; Rust CI and all six companion workflows passed. The pending correction uses verified screen-level clicks and captures the post-click screen.",
+    "R2.6.65 attempt 4 on exact SHA 937d2f2a3e63f28a0f14188d0c0d742aedd19e6b did not reach cancellation acceptance on Linux, macOS, or Windows. Linux timed out with the active screen still visible; macOS rejected AppleScript window coordinates before the click; Windows had a visible native picker that OCR failed to recognize. Rust CI and all six companion workflows passed, including native parallel groups. The next correction improves window-relative clicking, coordinate parsing, screenshot OCR tolerance, and CI-only UI availability diagnostics."
   ],
-  "push_status": "pending push of R2.6.65 screen-click cancellation correction and CI progress record",
+  "push_status": "Pending push of the R2.6.65 picker verification correction and attempt 4 progress record.",
   "ci_results": [
     {
       "name": "inventory",
@@ -7062,7 +7063,210 @@
     "R2.6.59 focused egui note-navigation wraparound and stale-state clearing passed with all seven required workflows on exact source SHA 1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. Run IDs: Rust CI 37894441118, inventory 37894441180, quality 37894441025, desktop 37894441042, renderer 37894441087, loaded plugins 37894441093, Obsidian round-trip 37894441022. Evidence: evidence/r2.6.59-note-navigation-wrap-1d15ea0.json.",
     "R2.6.60 passed all seven required workflows on exact source SHA f1d759ef94c92fa7d1af945b0697e36eb76c974f; the focused ComboBox test passed on Ubuntu, macOS and Windows. Run IDs: Rust CI 37898516857, inventory 37898516991, quality 37898516882, desktop 37898516941, renderer 37898516885, loaded plugins 37898516836, Obsidian round-trip 37898516884. Evidence: evidence/r2.6.60-note-inspector-combobox-f1d759e.json.",
     "Parallel runner setup commit c479996995d6774d8ab776f1f61b6d2261592b36 passed all seven push workflows (Rust CI 37899512988, inventory 37899512987, quality 37899512996, desktop 37899513010, renderer 37899512953, loaded plugins 37899513113, Obsidian round-trip 37899512999) and manual reference-runner workflow 37899725620. All relevant parallel groups succeeded. Evidence: evidence/parallel-ci-runner-setup-c479996.json.",
-    "R2.6.63 passed all seven required workflows on exact source SHA f1f49c4289984ef6d26437894fcca0cc53627576; native folder selection and Obsidian reopen passed on all three OSes. Run IDs: Rust CI 37906172356, round-trip 37906172449, quality 37906172378 (attempt 2), desktop 37906172306, renderer 37906172336, loaded plugins 37906172328, inventory 37906172368. Evidence: evidence/r2.6.63-native-folder-picker-f1f49c4.json."
+    "R2.6.63 passed all seven required workflows on exact source SHA f1f49c4289984ef6d26437894fcca0cc53627576; native folder selection and Obsidian reopen passed on all three OSes. Run IDs: Rust CI 37906172356, round-trip 37906172449, quality 37906172378 (attempt 2), desktop 37906172306, renderer 37906172336, loaded plugins 37906172328, inventory 37906172368. Evidence: evidence/r2.6.63-native-folder-picker-f1f49c4.json.",
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37914544755,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544755",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 113767431837,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544755/job/113767431837"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 113767431926,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544755/job/113767431926"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 113767431574,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544755/job/113767431574"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37914544561,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544561",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113767430477,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544561/job/113767430477"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113767430839,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544561/job/113767430839"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113767430994,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544561/job/113767430994"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37914544565,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544565",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113767430864,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544565/job/113767430864"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113767431061,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544565/job/113767431061"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113767431157,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544565/job/113767431157"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37914544735,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544735",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113767431198,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544735/job/113767431198"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113767431449,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544735/job/113767431449"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113767431683,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544735/job/113767431683"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37914544653,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544653",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 113767431051,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544653/job/113767431051"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37914544642,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544642",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113767430815,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544642/job/113767430815"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113767431213,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544642/job/113767431213"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113767431277,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544642/job/113767431277"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37914546088,
+      "head_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914546088",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113767436030,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914546088/job/113767436030"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113767436170,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914546088/job/113767436170"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113767436172,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37914546088/job/113767436172"
+        }
+      ]
+    }
   ],
   "milestones": {
     "R0.1": {
@@ -10341,15 +10545,16 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "42457db91045fd2cd6fb5481c61a1869a0f404af",
+      "implementation_sha": "bdd332ff9870f8c5797184755030c2103cc71f5d",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
         "91999f1737051bcc94741db1a7a2280643403029",
         "e0b9cc9c726f3b73f7dc2f6877da6c4016ab9599",
-        "42457db91045fd2cd6fb5481c61a1869a0f404af"
+        "42457db91045fd2cd6fb5481c61a1869a0f404af",
+        "bdd332ff9870f8c5797184755030c2103cc71f5d"
       ],
-      "push_status": "Pending push of the screen-click correction and exact-SHA CI validation on origin/main.",
+      "push_status": "Pending push of the picker verification correction and exact-SHA CI validation on origin/main.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -10439,6 +10644,40 @@
             }
           },
           "correction": "Use screen-level mouse clicks for the active-session Open vault control on macOS and Windows, retain Linux's geometry click, and capture an immediate post-click screenshot so dialog visibility and interaction can be diagnosed on exact-SHA CI."
+        },
+        {
+          "source_sha": "937d2f2a3e63f28a0f14188d0c0d742aedd19e6b",
+          "attempt": 4,
+          "conclusion": "The Obsidian round-trip did not reach cancellation acceptance on any platform. Linux stayed on the active OpenObsidian screen after the click and timed out waiting for a native picker. macOS stopped before clicking because AppleScript returned the window position as \"112, ,, 43\", which the coordinate parser rejected. Windows opened the native folder dialog, as the uploaded screenshot shows, but OCR misread its control labels and rejected it before Escape. Rust CI and all six companion workflows passed on all applicable runners, including their native parallel groups.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37914544755,
+            "rust_ci": 37914544561,
+            "quality": 37914544565,
+            "desktop_build": 37914544735,
+            "plugin_renderer": 37914544642,
+            "loaded_plugin_workflows": 37914546088,
+            "inventory": 37914544653
+          },
+          "roundtrip_jobs": {
+            "ubuntu": 113767431837,
+            "macos": 113767431926,
+            "windows": 113767431574
+          },
+          "artifacts": {
+            "ubuntu": {
+              "artifact_id": 11608722057,
+              "digest": "sha256:446e1c447c486ad265aa300a7a93cfc23f6997ac539d64325f9f1af77bda3176"
+            },
+            "macos": {
+              "artifact_id": 11609646053,
+              "digest": "sha256:abe83e848535c9f84531194cf41906e6d55155a9dc4418a2d0e2cdbba290ed9b"
+            },
+            "windows": {
+              "artifact_id": 11608632452,
+              "digest": "sha256:eb0c5d38f3731d6c4c1a79887ad02bcf16ed71e27daf4001ec862db8e6a5d2de"
+            }
+          },
+          "correction": "Move Linux pointer coordinates relative to the OpenObsidian window, parse numeric macOS window coordinates despite AppleScript punctuation, and verify macOS/Windows native picker screenshots using fuzzy matching for Cancel plus an Open/Select/Choose action. Gate concise UI availability diagnostics behind OPENOBSIDIAN_CI_DIAGNOSTICS so CI logs report why Open vault is enabled or disabled."
         }
       ],
       "accepted_slice": [],
@@ -10446,7 +10685,7 @@
         "Exact-SHA GitHub Actions round-trip validation is pending on Ubuntu, macOS, and Windows.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Push the screen-click cancellation correction and progress record to origin/main, inspect the exact-SHA native folder-picker cancellation round trip and companion workflows, then record the evidence."
+      "next_action": "Push the picker verification correction and attempt 4 progress record to origin/main, then review the exact-SHA three-platform cancellation reports and companion workflow results."
     }
   },
   "ci_preparation": {

@@ -1342,3 +1342,32 @@ screen bounds, retains Linux's geometry click, and captures the immediate
 post-click screen. Exact-SHA round-trip and companion workflow validation is
 pending on `origin/main`. No local tests, builds, formatters, linters, or
 application launches were run.
+
+### R2.6.65 attempt 4 result and picker-verification correction — SHA `937d2f2`
+
+The fourth exact-SHA round-trip run
+[37914544755](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544755)
+failed before cancellation acceptance on all three platforms. Ubuntu job
+113767431837 kept the active OpenObsidian screen after the click and timed out
+waiting for a native picker. macOS job 113767431926 stopped before clicking:
+AppleScript returned `112, ,, 43`, which the window-position parser rejected.
+Windows job 113767431574 opened the native folder dialog; its screenshot shows
+the visible picker, but OCR misread its control labels and the title check
+rejected it before Escape. Artifact IDs and digests are in `state.json`.
+
+Rust CI [37914544561](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544561),
+quality [37914544565](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544565),
+desktop build [37914544735](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544735),
+plugin renderer [37914544642](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544642),
+loaded-plugin workflows [37914546088](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914546088),
+and inventory [37914544653](https://github.com/ashutoshpw/open-obsidian/actions/runs/37914544653)
+passed on this SHA. Rust CI and quality native parallel groups passed.
+
+Correction implementation SHA `bdd332ff9870f8c5797184755030c2103cc71f5d`
+uses a window-relative Linux pointer move, extracts numeric macOS window
+coordinates even when AppleScript adds punctuation, and accepts fuzzy OCR for
+the native picker’s Cancel and Open/Select/Choose controls. A CI-only
+`OPENOBSIDIAN_CI_DIAGNOSTICS` flag logs state transitions that determine
+whether Open vault is enabled. The next exact-SHA Actions validation is pending
+on `origin/main`. No local tests, builds, formatters, linters, or application
+launches were run.
