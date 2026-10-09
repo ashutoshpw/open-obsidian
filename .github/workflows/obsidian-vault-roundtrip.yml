@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+      - ".agents/tasks/2026-10-07/audit-windows-note-selector-accessibility.ps1"
       - ".agents/tasks/2026-10-07/prepare-obsidian-reference.ts"
       - ".agents/tasks/2026-10-07/obsidian-reference-pin.json"
       - "apps/openobsidian/**"
@@ -93,6 +94,13 @@ jobs:
 
           - name: Build native OpenObsidian preview
             run: cargo build --package openobsidian --release --locked
+
+      - name: Audit native Windows note-selector accessibility
+        if: runner.os == 'Windows'
+        env:
+          OBSIDIAN_REPORT_DIRECTORY: ${{ runner.temp }}/obsidian-vault-roundtrip-artifacts
+        shell: pwsh
+        run: ./.agents/tasks/2026-10-07/audit-windows-note-selector-accessibility.ps1
 
       - name: Author, open, snapshot, and reopen the same vault
         if: runner.os == 'Linux'

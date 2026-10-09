@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T14:25:40Z",
+  "updated_at": "2026-10-09T14:39:56Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "9b08663fadc162c6843e1cd5df76589462522eca",
-  "current_milestone": "R2.6.66",
-  "next_action": "Select the next uncovered C01/C01.2 read-only workflow for a bounded R2 milestone. Keep broader C01/C01.2 requirements pending.",
+  "last_reconciled_head": "b14e3f67d59e5d7065c96eb0fcad5217bcf7fd85",
+  "current_milestone": "R2.6.67",
+  "next_action": "Push the native Windows UI Automation acceptance for C01.2-18 and inspect exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.66 attempt 4 source 9b08663fadc162c6843e1cd5df76589462522eca is pushed and accepted for C01.2-17. Rust CI, all six companion workflows, and every required job passed on all three operating systems. The initial macOS quality failure was in the Electron vault audit and passed on same-SHA rerun attempt 2. No local executable validation was run.",
+  "push_status": "R2.6.66 accepted C01.2-17 on source SHA 9b08663fadc162c6843e1cd5df76589462522eca; the acceptance record commit b14e3f67d59e5d7065c96eb0fcad5217bcf7fd85 passed its triggered CI. R2.6.67 is adding native Windows UI Automation coverage for the Note to inspect ComboBox. Validation remains GitHub Actions only.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13058,7 +13058,26 @@
           "correction": "No code correction remains for C01.2-17. Preserve the synthetic-egui-only limitation and select the next uncovered read-only C01/C01.2 workflow."
         }
       ],
-      "next_action": "R2.6.66 is accepted for C01.2-17. Select the next uncovered C01/C01.2 read-only workflow for a bounded R2 milestone; keep broader acceptance pending."
+      "next_action": "R2.6.66 is accepted for C01.2-17. Continue with the native Windows accessibility gap in C01.2-02; keep broader acceptance pending."
+    },
+    "R2.6.67": {
+      "status": "in_progress",
+      "implementation_sha": "b14e3f67d59e5d7065c96eb0fcad5217bcf7fd85",
+      "implementation_commits": [],
+      "scope": "Verify the native Windows accessibility semantics and selection behavior of the Note to inspect ComboBox using Windows UI Automation.",
+      "acceptance": [
+        "On the Windows GitHub runner, the real OpenObsidian window exposes Note to inspect as an enabled, labeled UI Automation ComboBox with expand/collapse support.",
+        "The expanded popup exposes README.md and Notes/Welcome.md, reports README.md as initially selected, and selects Notes/Welcome.md through SelectionItemPattern.",
+        "Full vault and isolated APPDATA/LOCALAPPDATA snapshots remain unchanged through popup expansion, selection, and application teardown.",
+        "The exact-SHA Windows UI Automation report and required companion GitHub Actions results are retained; this Windows slice does not certify macOS VoiceOver or Linux AT-SPI behavior."
+      ],
+      "accepted_slice": [],
+      "remaining": [
+        "C01.2-18 is pending exact-SHA Windows UI Automation evidence.",
+        "Broader C01/C01.2 acceptance remains pending."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit and push the Windows UI Automation audit and workflow integration, then inspect the exact-SHA accessibility report and companion CI."
     }
   },
   "ci_preparation": {
