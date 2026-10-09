@@ -4629,8 +4629,7 @@ mod tests {
             PathBuf::from("Secret.md")
         );
         assert_eq!(
-            std::fs::read_link(&directory_symlink_path)
-                .expect("read directory symlink metadata"),
+            std::fs::read_link(&directory_symlink_path).expect("read directory symlink metadata"),
             PathBuf::from("Real Directory")
         );
         assert!(
