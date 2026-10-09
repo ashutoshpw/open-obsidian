@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T12:51:05Z",
+  "updated_at": "2026-10-09T12:58:16Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b60c584785a3a67d40448cfcbf0160e563de9559",
+  "last_reconciled_head": "673cc8c61809e582e6775a4bd90da189ea16de77",
   "current_milestone": "R2.6.65",
-  "next_action": "Commit the xclip Knip allowlist and attempt 16 CI evidence as attempt 17, push to origin/main, then investigate why the Linux in-session cancellation picker does not appear.",
+  "next_action": "Investigate why the Linux in-session cancellation picker does not appear; use CI-only diagnostic changes and keep native cancellation unaccepted until Ubuntu passes.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8494,6 +8494,82 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991143/job/113821368719"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37933026853,
+      "head_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026853",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113828160472, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026853/job/113828160472"},
+        {"name": "rust (macos-latest)", "job_id": 113828160809, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026853/job/113828160809"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113828160973, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026853/job/113828160973"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37933026742,
+      "head_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026742",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113828161317, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026742/job/113828161317"},
+        {"name": "ubuntu-latest", "job_id": 113828161651, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026742/job/113828161651"},
+        {"name": "macos-latest", "job_id": 113828161695, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026742/job/113828161695"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37933027039,
+      "head_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027039",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113828162039, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027039/job/113828162039"},
+        {"name": "macos-latest", "job_id": 113828162257, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027039/job/113828162257"},
+        {"name": "ubuntu-latest", "job_id": 113828162582, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027039/job/113828162582"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37933026889,
+      "head_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026889",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113828161534, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026889/job/113828161534"},
+        {"name": "windows-latest", "job_id": 113828161806, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026889/job/113828161806"},
+        {"name": "macos-latest", "job_id": 113828161847, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026889/job/113828161847"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37933027026,
+      "head_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027026",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113828161711, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027026/job/113828161711"},
+        {"name": "ubuntu-latest", "job_id": 113828161930, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027026/job/113828161930"},
+        {"name": "macos-latest", "job_id": 113828161998, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933027026/job/113828161998"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37933026779,
+      "head_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026779",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113828160495, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026779/job/113828160495"}
+      ]
     }
   ],
   "milestones": {
@@ -11773,7 +11849,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "implementation_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -11792,9 +11868,10 @@
         "be878dc5836726c2eac6cc7e75bf533cc6a34018",
         "d7a666fe0e7a5879a0249d97d82e6b4ec34d0db5",
         "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
-        "b60c584785a3a67d40448cfcbf0160e563de9559"
+        "b60c584785a3a67d40448cfcbf0160e563de9559",
+        "673cc8c61809e582e6775a4bd90da189ea16de77"
       ],
-      "push_status": "Attempt 16 source b60c584785a3a67d40448cfcbf0160e563de9559 is pushed and reconciled. Rust CI, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; quality failed because Knip did not list xclip. The xclip clipboard paste selected the Linux fixture, but the in-session cancellation picker did not appear on either Ubuntu attempt. Same-SHA retries passed macOS and Windows. Attempt 17 adds xclip to Knip's ignored CI binaries.",
+      "push_status": "Attempt 17 source 673cc8c61809e582e6775a4bd90da189ea16de77 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; native parallel groups passed. Knip now accepts the xclip binary. No round-trip workflow was triggered for this config-and-ledger-only commit; attempt 16's Linux cancellation failure remains unresolved.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -12413,6 +12490,39 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-16-b60c584.json",
           "correction": "Keep the Linux xclip paste that fixed fixture-path selection and add xclip to Knip's ignoreBinaries. Continue diagnosing why a second native folder picker does not appear when Open vault is requested in the active Linux session."
+        },
+        {
+          "source_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+          "attempt": 17,
+          "conclusion": "Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed on the exact source SHA; native parallel groups passed. The xclip Knip allowlist correction passed on all three OSes. The path-filtered round-trip workflow was not triggered because this commit changed only Knip configuration and task tracking. Attempt 16 remains the latest native round-trip result: Linux selection passed but the in-session cancellation picker did not appear on two Ubuntu jobs.",
+          "workflows": {
+            "rust_ci": 37933026853,
+            "quality": 37933026742,
+            "desktop_build": 37933027039,
+            "plugin_renderer": 37933026889,
+            "loaded_plugin_workflows": 37933027026,
+            "inventory": 37933026779
+          },
+          "jobs": {
+            "rust_ci_windows": 113828160472,
+            "rust_ci_macos": 113828160809,
+            "rust_ci_ubuntu": 113828160973,
+            "quality_windows": 113828161317,
+            "quality_ubuntu": 113828161651,
+            "quality_macos": 113828161695,
+            "desktop_windows": 113828162039,
+            "desktop_macos": 113828162257,
+            "desktop_ubuntu": 113828162582,
+            "plugin_renderer_ubuntu": 113828161534,
+            "plugin_renderer_windows": 113828161806,
+            "plugin_renderer_macos": 113828161847,
+            "loaded_plugins_windows": 113828161711,
+            "loaded_plugins_ubuntu": 113828161930,
+            "loaded_plugins_macos": 113828161998,
+            "inventory": 113828160495
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-17-673cc8c.json",
+          "correction": "Knip now recognizes xclip as an ignored system binary. Continue diagnosing the Linux in-session cancellation picker with GitHub Actions only; do not treat cancellation as accepted until Ubuntu passes."
         }
       ],
       "accepted_slice": [],
@@ -12420,7 +12530,7 @@
         "Linux cancellation remains pending: attempt 16 clipboard paste opened the correct two-note fixture, but the second native picker did not appear on two Ubuntu jobs.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Commit the xclip Knip allowlist and attempt 16 CI evidence as attempt 17, push to origin/main, then investigate why the Linux in-session cancellation picker does not appear."
+      "next_action": "Investigate why the Linux in-session cancellation picker does not appear; use CI-only diagnostic changes and keep native cancellation unaccepted until Ubuntu passes."
     }
   },
   "ci_preparation": {

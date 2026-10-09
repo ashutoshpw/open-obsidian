@@ -1,0 +1,66 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 17,
+  "source_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "status": "not_triggered",
+      "reason": "This config-and-ledger-only commit did not trigger the path-filtered native vault round-trip workflow. Attempt 16 remains the latest round-trip result."
+    },
+    "rust_ci": {
+      "run_id": 37933026853,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113828160472,
+        "macos": 113828160809,
+        "ubuntu": 113828160973
+      }
+    },
+    "quality": {
+      "run_id": 37933026742,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113828161317,
+        "ubuntu": 113828161651,
+        "macos": 113828161695
+      },
+      "knip_xclip_allowlist": "passed"
+    },
+    "desktop_build": {
+      "run_id": 37933027039,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113828162039,
+        "macos": 113828162257,
+        "ubuntu": 113828162582
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37933026889,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113828161534,
+        "windows": 113828161806,
+        "macos": 113828161847
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37933027026,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113828161711,
+        "ubuntu": 113828161930,
+        "macos": 113828161998
+      }
+    },
+    "inventory": {
+      "run_id": 37933026779,
+      "conclusion": "success",
+      "job": 113828160495
+    }
+  },
+  "parallel_groups": "All native parallel setup, build, and check groups in applicable workflows completed successfully on this exact source SHA.",
+  "correction": "xclip is listed in Knip ignoreBinaries; the Linux clipboard paste remains in place for the native picker fixture selection.",
+  "open_issue": "Attempt 16's Ubuntu round-trip failed because the in-session second native folder picker did not appear, including on a same-SHA rerun. This commit changed no picker audit or application code.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
