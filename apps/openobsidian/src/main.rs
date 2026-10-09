@@ -49,9 +49,16 @@ fn main() -> ExitCode {
         }
     };
     let open_vault = || {
-        let root = FileDialog::new()
+        let selection = FileDialog::new()
             .set_title("Open an existing vault")
-            .pick_folder()?;
+            .pick_folder();
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+            eprintln!(
+                "OpenObsidian CI native picker: returned selection={}",
+                selection.is_some()
+            );
+        }
+        let root = selection?;
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let result = prepare_vault_app_data(&root)

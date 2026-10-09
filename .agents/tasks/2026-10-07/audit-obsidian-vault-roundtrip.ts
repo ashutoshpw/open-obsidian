@@ -374,6 +374,22 @@ function x11WindowInventory(): X11WindowDescription[] {
   });
 }
 
+function x11InteractionState(): {focused_window_id: string; focused_window_title: string; pointer: string} {
+  const read = (args: string[]): string => {
+    try {
+      return execFileSync("xdotool", args, {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    } catch {
+      return "unavailable";
+    }
+  };
+  const focusedWindowId = read(["getwindowfocus"]);
+  return {
+    focused_window_id: focusedWindowId,
+    focused_window_title: /^\d+$/.test(focusedWindowId) ? read(["getwindowname", focusedWindowId]) : "unavailable",
+    pointer: read(["getmouselocation", "--shell"]),
+  };
+}
+
 async function clickOpenVaultButtonMacOS(child: ChildProcess): Promise<string> {
   const positionScript = `on run argv
     tell application "System Events"
@@ -1669,6 +1685,7 @@ async function cancelOpenObsidianNativePicker(
   const windowsBefore = process.platform === "win32" ? windowsTopLevelWindowInventory() : null;
   const openReport = report.openobsidian_open as Record<string, unknown>;
   if (linuxWindowsBefore) openReport.picker_cancel_x11_windows_before = linuxWindowsBefore;
+  if (process.platform === "linux") openReport.picker_cancel_x11_input_before = x11InteractionState();
   if (windowsBefore) openReport.picker_cancel_windows_before = windowsBefore;
   const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
   openReport.picker_cancel_open_button_interaction = openButtonInteraction;
@@ -1676,7 +1693,10 @@ async function cancelOpenObsidianNativePicker(
     const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
     openReport.picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
   }
-  if (process.platform === "linux") openReport.picker_cancel_x11_windows_after_click = x11WindowInventory();
+  if (process.platform === "linux") {
+    openReport.picker_cancel_x11_windows_after_click = x11WindowInventory();
+    openReport.picker_cancel_x11_input_after_click = x11InteractionState();
+  }
   if (process.platform === "win32") openReport.picker_cancel_windows_after_click = windowsTopLevelWindowInventory();
   await saveReport();
   let pickerWindowId: string | null = null;

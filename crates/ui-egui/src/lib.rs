@@ -227,6 +227,12 @@ impl OpenObsidianApp {
             .clicked()
         });
         if open_vault_requested {
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                eprintln!(
+                    "OpenObsidian CI action: Open vault click received; session={}",
+                    self.session.is_some()
+                );
+            }
             self.vault_open_error = None;
             if let Some(receiver) = self.open_vault_action.as_ref().and_then(|action| action()) {
                 self.vault_open_receiver = Some(receiver);
