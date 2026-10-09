@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T09:24:04Z",
+  "updated_at": "2026-10-09T09:36:06Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
+  "last_reconciled_head": "91999f1737051bcc94741db1a7a2280643403029",
   "current_milestone": "R2.6.65",
-  "next_action": "Push R2.6.65 to origin/main, inspect exact-SHA GitHub Actions results for the native folder-picker cancellation round trip and companion workflows, then record the evidence.",
+  "next_action": "Push the corrected R2.6.65 cancellation harness to origin/main, inspect exact-SHA GitHub Actions results for the native folder-picker cancellation round trip and companion workflows, then record the evidence.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -208,7 +208,7 @@
     "R2.6.62 Unicode and space-containing note selection passed its focused test on Ubuntu, macOS and Windows and all seven workflows on exact source SHA d77e8cb5720eaac92c835a25a962f986d965962b. Evidence: evidence/r2.6.62-unicode-spaced-note-path-d77e8cb.json. C01/C01.2 remain pending; C01.1 remains passing.",
     "R2.6.63 native folder-picker selection and Obsidian 1.14.4 reopen passed on Linux, macOS and Windows on exact source SHA f1f49c4289984ef6d26437894fcca0cc53627576; all seven workflows passed, with quality passing on same-SHA attempt 2. Evidence: evidence/r2.6.63-native-folder-picker-f1f49c4.json.",
     "R2.6.64 invalid-UTF-8 note preview fails closed without writes; focused UI test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on exact SHA 4f61672bd1eb09fc8ea912c4a9f07af2f1fa740a. Evidence: evidence/r2.6.64-invalid-utf8-preview-4f61672.json. Formatting and a Windows parallel setup collision were corrected from GitHub Actions output before acceptance; no local executable validation was used.",
-    "R2.6.65 extends the three-OS native folder-picker round trip with cancellation while a vault is active; the exact-SHA round-trip and companion workflows are pending GitHub Actions."
+    "R2.6.65 attempt 1 on 14bdd060750bc526e38501ac8e35eeaa6a0d14e7 passed the cancellation case on macOS but did not open the second picker on Linux or Windows; all six companion workflows passed. The correction starts a separate --open-vault session before the cancellation test and requires visible dialog evidence; fresh exact-SHA CI is pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -10341,19 +10341,42 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
+      "implementation_sha": "91999f1737051bcc94741db1a7a2280643403029",
       "implementation_commits": [
-        "d88e694f410545af6d8bd96a2bea4910a7b84c5c"
+        "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
+        "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
+        "91999f1737051bcc94741db1a7a2280643403029"
       ],
-      "push_status": "Pending exact-SHA CI validation after push to origin/main.",
+      "push_status": "Pending push of the correction and exact-SHA CI validation on origin/main.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
+          "attempt": 1,
+          "conclusion": "Obsidian round-trip failed on Ubuntu and Windows at the cancellation step; the macOS native panel was visible, Escape cancelled it, and its vault/app-data snapshots remained unchanged. The six companion workflows passed.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37911081741,
+            "rust_ci": 37911081571,
+            "quality": 37911081655,
+            "desktop_build": 37911081682,
+            "plugin_renderer": 37911081582,
+            "loaded_plugin_workflows": 37911081646,
+            "inventory": 37911081623
+          },
+          "roundtrip_jobs": {
+            "windows": 113756106484,
+            "macos": 113756106772,
+            "ubuntu": 113756106859
+          },
+          "correction": "Run the cancellation case in a second OpenObsidian instance launched with --open-vault, verify the native dialog is visible before Escape, and verify it closes before comparing vault and app-data snapshots."
+        }
+      ],
       "accepted_slice": [],
       "remaining": [
         "Exact-SHA GitHub Actions round-trip validation is pending on Ubuntu, macOS, and Windows.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Push the implementation and progress record to origin/main, inspect the exact-SHA native folder-picker cancellation round trip and companion workflows, then record the evidence."
+      "next_action": "Push the correction and progress record to origin/main, inspect the exact-SHA native folder-picker cancellation round trip and companion workflows, then record the evidence."
     }
   },
   "ci_preparation": {
