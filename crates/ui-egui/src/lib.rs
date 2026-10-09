@@ -2494,6 +2494,85 @@ mod tests {
     }
 
     #[test]
+    fn egui_keeps_the_open_vault_unchanged_when_another_selection_cannot_open() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        let unopenable_path = temporary.0.join("Selected File");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+        std::fs::write(&unopenable_path, b"This selected path is a file, not a vault.")
+            .expect("seed unopenable selected path");
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault before attempting another selection");
+        let canonical_vault =
+            std::fs::canonicalize(&vault_path).expect("canonicalize current vault");
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let before_unopenable = std::fs::read(&unopenable_path)
+            .expect("read selected file before failed open");
+        let selected_path = unopenable_path.clone();
+        let selected_app_data = app_data_path.clone();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            open_vault_action: Some(Box::new(move || {
+                let (sender, receiver) = std::sync::mpsc::channel();
+                let result = VaultSession::open(&selected_path, &selected_app_data)
+                    .map_err(|_| "The selected vault could not be opened safely.".to_owned());
+                sender
+                    .send(result)
+                    .expect("UI must receive the failed vault-open result");
+                Some(receiver)
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Open vault").click();
+        harness.step();
+        assert!(!harness.state().vault_opening);
+        assert!(harness.state().vault_open_receiver.is_none());
+        assert_eq!(
+            harness.state().vault_open_error.as_deref(),
+            Some("The selected vault could not be opened safely.")
+        );
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the current vault remains open after the failed selection");
+        assert_eq!(session.root_path(), canonical_vault);
+        assert_eq!(session.entries().len(), 2);
+        harness.get_by_label("Vault: Existing Vault");
+        harness.get_by_label("2 Markdown files found.");
+        harness.get_by_label("The selected vault could not be opened safely.");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+        assert_eq!(
+            std::fs::read(&unopenable_path).expect("failed selection remains untouched"),
+            before_unopenable
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+        assert_eq!(
+            std::fs::read(&unopenable_path).expect("failed selection remains untouched"),
+            before_unopenable
+        );
+    }
+
+    #[test]
     fn egui_previews_existing_note_source_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
