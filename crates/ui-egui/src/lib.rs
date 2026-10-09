@@ -5764,7 +5764,7 @@ mod tests {
 
     #[test]
     fn egui_refresh_after_external_duplicate_attachment_rename_resolves_remaining_embed_without_writing()
-    {
+     {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("Image Vault");
         let app_data_path = temporary.0.join("App Data");
