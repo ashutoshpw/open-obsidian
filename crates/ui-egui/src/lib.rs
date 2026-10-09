@@ -2439,7 +2439,7 @@ mod tests {
     }
 
     #[test]
-    fn egui_refreshes_the_existing_vault_note_list_without_changing_its_tree() {
+    fn egui_refreshes_and_previews_an_external_note_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
         let temporary = UiTempDir::new();
@@ -2453,7 +2453,9 @@ mod tests {
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open selected existing vault without conversion");
         assert_eq!(session.entries().len(), 2);
-        std::fs::write(vault_path.join("Notes/External.md"), "# External note\r\n")
+        let mut external_source = b"\xEF\xBB\xBF# External note\r\nSecond line\r\n".to_vec();
+        external_source.resize(MAX_NOTE_SOURCE_PREVIEW_BYTES + 37, b'x');
+        std::fs::write(vault_path.join("Notes/External.md"), &external_source)
             .expect("simulate an external Obsidian note before refresh");
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let app = OpenObsidianApp {
@@ -2490,6 +2492,48 @@ mod tests {
         );
         harness.get_by_label("3 Markdown files found.");
         harness.get_by_label("Note list refreshed: 3 Markdown files found.");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Note to inspect").click();
+        harness.step();
+        harness.get_by_label("Notes/External.md").click();
+        harness.step();
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(Path::new("Notes/External.md"))
+        );
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_error.is_none());
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the refreshed external note source should be visible");
+        assert_eq!(preview.relative_path, PathBuf::from("Notes/External.md"));
+        assert_eq!(
+            preview.text.as_bytes(),
+            &external_source[..MAX_NOTE_SOURCE_PREVIEW_BYTES]
+        );
+        assert_eq!(preview.total_size_bytes, external_source.len() as u64);
+        assert!(preview.truncated);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Close source preview").click();
+        harness.step();
+        assert!(harness.state().note_source_preview.is_none());
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
