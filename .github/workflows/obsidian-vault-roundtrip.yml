@@ -66,22 +66,24 @@ jobs:
           print(f"sha256={pin['sha256']}")
           PY
 
-      - name: Download and verify the pinned AppImage
-        env:
-          OBSIDIAN_DOWNLOAD_URL: ${{ steps.pin.outputs.download_url }}
-          OBSIDIAN_RELEASE_SHA256: ${{ steps.pin.outputs.sha256 }}
-        run: |
-          curl --fail --location --retry 3 "$OBSIDIAN_DOWNLOAD_URL" --output "$RUNNER_TEMP/Obsidian.AppImage"
-          printf '%s  %s\n' "$OBSIDIAN_RELEASE_SHA256" "$RUNNER_TEMP/Obsidian.AppImage" | sha256sum --check
-          chmod u+x "$RUNNER_TEMP/Obsidian.AppImage"
-          mkdir -p "$RUNNER_TEMP/obsidian-appimage"
-          (
-            cd "$RUNNER_TEMP/obsidian-appimage"
-            "$RUNNER_TEMP/Obsidian.AppImage" --appimage-extract
-          )
+      # The pinned Obsidian extraction and Rust build write to separate directories.
+      - parallel:
+          - name: Download and verify the pinned AppImage
+            env:
+              OBSIDIAN_DOWNLOAD_URL: ${{ steps.pin.outputs.download_url }}
+              OBSIDIAN_RELEASE_SHA256: ${{ steps.pin.outputs.sha256 }}
+            run: |
+              curl --fail --location --retry 3 "$OBSIDIAN_DOWNLOAD_URL" --output "$RUNNER_TEMP/Obsidian.AppImage"
+              printf '%s  %s\n' "$OBSIDIAN_RELEASE_SHA256" "$RUNNER_TEMP/Obsidian.AppImage" | sha256sum --check
+              chmod u+x "$RUNNER_TEMP/Obsidian.AppImage"
+              mkdir -p "$RUNNER_TEMP/obsidian-appimage"
+              (
+                cd "$RUNNER_TEMP/obsidian-appimage"
+                "$RUNNER_TEMP/Obsidian.AppImage" --appimage-extract
+              )
 
-      - name: Build native OpenObsidian preview
-        run: cargo build --package openobsidian --release --locked
+          - name: Build native OpenObsidian preview
+            run: cargo build --package openobsidian --release --locked
 
       - name: Author, open, snapshot, and reopen the same vault
         env:
