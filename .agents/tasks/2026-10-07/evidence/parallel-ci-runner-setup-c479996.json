@@ -90,6 +90,19 @@
       }
     ]
   },
+  "follow_up": {
+    "observed_source_sha": "17cc77f5377db37e20c8fe9e17cbe040dddab521",
+    "rust_ci_run_id": 37900969762,
+    "failure": "The Windows Rust job reported that setup-bun could not access D:\\a\\_temp\\_github_workflow\\event.json while running inside the same parallel group as Rust setup. The Rust test attempt also exposed an unrelated closure return typo and rustfmt layout changes.",
+    "correction_source_sha": "646c3298e0f3146bc568f66997eed375fa2017d7",
+    "correction": "Move Bun setup after the parallel group in Rust CI and Obsidian vault round-trip, while retaining parallel Rust toolchain and platform dependency setup. The manually dispatched Linux reference workflow retains its Bun/dependency parallel group.",
+    "validation": {
+      "rust_ci_run_id": 37901327240,
+      "obsidian_vault_roundtrip_run_id": 37901327221,
+      "conclusion": "All seven push workflows passed on the corrected exact source SHA; Rust CI and Obsidian round-trip jobs passed on Linux, macOS and Windows.",
+      "evidence": "evidence/r2.6.61-duplicate-note-basename-646c329.json"
+    }
+  },
   "local_validation": "none",
   "limits": [
     "GitHub Actions confirmed the new parallel groups complete successfully on their supported runners.",

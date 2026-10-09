@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T07:40:42Z",
+  "updated_at": "2026-10-09T07:57:44Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "f1d759ef94c92fa7d1af945b0697e36eb76c974f",
-  "current_milestone": "R2.6.60",
+  "last_reconciled_head": "646c3298e0f3146bc568f66997eed375fa2017d7",
+  "current_milestone": "R2.6.61",
   "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "f1d759ef94c92fa7d1af945b0697e36eb76c974f"
+      "implementation_sha": "646c3298e0f3146bc568f66997eed375fa2017d7"
     },
     "R3": {
       "status": "pending",
@@ -203,7 +203,8 @@
     "R2.6.58 successful vault-switch UI coverage passed on all three CI operating systems and all seven workflows on exact source SHA b221d72eff3bcfbd1656212915c1acb4fe8b2134. Evidence: evidence/r2.6.58-existing-vault-switch-b221d72.json. No local executable validation was used.",
     "R2.6.59 verified cyclic Next/Previous note navigation with stale link/embed/preview clearing and byte-identical vault/app-data snapshots. The focused test and all seven required workflows passed on all three CI operating systems on exact source SHA 1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. Evidence: evidence/r2.6.59-note-navigation-wrap-1d15ea0.json. C01/C01.2 remain pending; no local executable validation was used.",
     "R2.6.60 added cross-platform synthetic egui coverage for AccessKit activation and selection through Note to inspect, stale result/preview clearing, byte-exact source preview, and unchanged vault/app-data snapshots. The focused test and all seven required workflows passed on exact source SHA f1d759ef94c92fa7d1af945b0697e36eb76c974f. Evidence: evidence/r2.6.60-note-inspector-combobox-f1d759e.json. C01/C01.2 remain pending; no local executable validation was used.",
-    "CI preparation commit c479996995d6774d8ab776f1f61b6d2261592b36 grouped independent runner setup steps using native GitHub Actions parallel groups. All seven push workflows and a manually dispatched reference-runner workflow passed; evidence: evidence/parallel-ci-runner-setup-c479996.json. No local validation was run."
+    "CI preparation commit c479996995d6774d8ab776f1f61b6d2261592b36 grouped independent runner setup steps using native GitHub Actions parallel groups. All seven push workflows and a manually dispatched reference-runner workflow passed; evidence: evidence/parallel-ci-runner-setup-c479996.json. A later Windows run exposed a setup-bun event.json collision; Bun setup now runs after the parallel group in Rust CI and Obsidian round-trip, and all seven workflows passed on 646c3298e0f3146bc568f66997eed375fa2017d7. No local validation was run.",
+    "R2.6.61 duplicate-basename note selection passed its focused test on Ubuntu, macOS and Windows and all seven workflows on exact source SHA 646c3298e0f3146bc568f66997eed375fa2017d7. Evidence: evidence/r2.6.61-duplicate-note-basename-646c329.json. C01/C01.2 remain pending; C01.1 remains passing."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -10126,6 +10127,49 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
+    },
+    "R2.6.61": {
+      "status": "complete",
+      "implementation_sha": "646c3298e0f3146bc568f66997eed375fa2017d7",
+      "implementation_commits": [
+        "17cc77f5377db37e20c8fe9e17cbe040dddab521",
+        "646c3298e0f3146bc568f66997eed375fa2017d7"
+      ],
+      "push_status": "Both source commits are reachable from origin/main.",
+      "scope": "Disambiguate same-basename notes through the Note to inspect ComboBox, clear stale link/embed/preview state, preview exact source bytes, and preserve full vault/app-data snapshots.",
+      "ci_attempts": [
+        {
+          "source_sha": "17cc77f5377db37e20c8fe9e17cbe040dddab521",
+          "rust_ci_run": 37900969762,
+          "conclusion": "The test did not compile on macOS/Ubuntu and Ubuntu rustfmt requested layout changes; Windows setup-bun collided on event.json before tests. All six companion workflows, including the three-platform Obsidian round-trip, passed.",
+          "correction": "Return the PathBuf from the helper, apply exact rustfmt layout, and move Bun setup after the parallel setup group in Rust CI and Obsidian round-trip."
+        },
+        {
+          "source_sha": "646c3298e0f3146bc568f66997eed375fa2017d7",
+          "attempt": 1,
+          "conclusion": "All seven required workflows and every job passed; focused test passed on Ubuntu, macOS and Windows.",
+          "workflows": {
+            "rust_ci": 37901327240,
+            "inventory": 37901327385,
+            "quality": 37901327436,
+            "desktop_build": 37901327421,
+            "plugin_renderer": 37901327418,
+            "loaded_plugin_workflows": 37901327367,
+            "obsidian_vault_roundtrip": 37901327221
+          },
+          "evidence": "evidence/r2.6.61-duplicate-note-basename-646c329.json"
+        }
+      ],
+      "accepted_slice": [
+        "The two Welcome.md options display distinct relative paths; selecting Archive/Welcome.md updates the canonical selected path on all three OSes.",
+        "Selection clears prior link/embed/preview/error/texture state and displays the archived source byte-for-byte, including its UTF-8 BOM and CRLF bytes.",
+        "Full vault and separate app-data snapshots remain unchanged through selection, preview, and UI teardown."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader read-only/reference-app coverage; synthetic AccessKit behavior does not certify native screen-reader or folder-picker behavior.",
+        "C01.1 remains passing. Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
     }
   },
   "ci_preparation": {
@@ -10157,7 +10201,15 @@
         "obsidian_vault_roundtrip": 37899512999,
         "reference_runner_workflow_dispatch": 37899725620
       },
-      "run_conclusion": "All seven push workflows and the manually dispatched reference-runner workflow passed; changed parallel groups passed on GitHub Actions. No local validation or timing claim."
+      "run_conclusion": "All seven push workflows and the manually dispatched reference-runner workflow passed; changed parallel groups passed on GitHub Actions. No local validation or timing claim.",
+      "follow_up": {
+        "observed_source_sha": "17cc77f5377db37e20c8fe9e17cbe040dddab521",
+        "rust_ci_run_id": 37900969762,
+        "correction_source_sha": "646c3298e0f3146bc568f66997eed375fa2017d7",
+        "corrected_rust_ci_run_id": 37901327240,
+        "corrected_roundtrip_run_id": 37901327221,
+        "conclusion": "Bun setup was moved out of the concurrent setup groups in Rust CI and Obsidian vault round-trip; all seven workflows passed on the corrected source SHA. The manual Linux reference workflow retains Bun parallel with platform dependency installation."
+      }
     }
   },
   "current_requirement_count": 212

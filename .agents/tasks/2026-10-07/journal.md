@@ -1147,15 +1147,52 @@ were run.
 
 Grouped independent setup work with GitHub Actions `parallel` in Rust CI, the
 cross-platform Obsidian vault round-trip, and its manually dispatched reference
-runner. Rust toolchain/Bun setup can now overlap with platform dependency
-installation; Cargo cache use remains after toolchain setup. On exact workflow
-commit `c479996995d6774d8ab776f1f61b6d2261592b36`, all seven push workflows
-passed, including the new setup groups on Linux, macOS, and Windows. The manual
-reference-runner workflow also passed. Run and job IDs are recorded in
-[`evidence/parallel-ci-runner-setup-c479996.json`](evidence/parallel-ci-runner-setup-c479996.json).
-No local workflow validation or executable testing was run; the CI result does
-not quantify a time reduction. This preparation does not close a product
+runner. On exact workflow commit `c479996995d6774d8ab776f1f61b6d2261592b36`,
+all seven push workflows and the manual reference-runner workflow passed.
+A later Windows Rust run on `17cc77f` exposed a shared `event.json` collision
+when `setup-bun` ran concurrently with Rust setup. The correction moves Bun
+setup after the parallel group in Rust CI and the vault round-trip workflow;
+Rust toolchain setup remains parallel with platform dependency installation.
+On corrected source SHA `646c3298e0f3146bc568f66997eed375fa2017d7`, all seven
+workflows passed, including the adjusted setup sequence on Windows. The manual
+Linux reference-runner workflow retains its Bun/dependency parallel group. Run
+and job IDs are recorded in
+[`evidence/parallel-ci-runner-setup-c479996.json`](evidence/parallel-ci-runner-setup-c479996.json)
+and [`evidence/r2.6.61-duplicate-note-basename-646c329.json`](evidence/r2.6.61-duplicate-note-basename-646c329.json).
+No local workflow validation or executable testing was run; CI results do not
+quantify a time reduction. This preparation does not close a product
 requirement or change the active R2 scope.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.
+
+## R2.6.61 — disambiguate duplicate note basenames
+
+Added an existing-vault UI case with both `Notes/Welcome.md` and
+`Archive/Welcome.md`. Starting from README.md with link/embed results and its
+source preview visible, the test opens `Note to inspect` using an AccessKit
+click, confirms both choices have distinct relative-path labels, and selects
+the archived note. It verifies the selected path, stale result/preview state
+clearing, and byte-exact BOM/CRLF preview. Full vault and separate app-data
+snapshots remain unchanged through selection, preview and UI teardown.
+
+The first source attempt, `17cc77f5377db37e20c8fe9e17cbe040dddab521`, failed
+to compile on macOS and Ubuntu because the path lookup closure returned unit;
+Ubuntu rustfmt also requested exact layout changes. Windows Rust CI failed
+before tests because concurrent Bun setup hit a shared `event.json` file. All
+six companion workflows passed, including the three-platform Obsidian
+round-trip. On corrected source SHA
+`646c3298e0f3146bc568f66997eed375fa2017d7`, the focused test passed on Ubuntu,
+macOS and Windows and all seven workflows passed. The Bun setup ordering fix
+was included in that same corrected revision. Run/job IDs, artifact digests,
+and the failure/correction trail are recorded in
+[`evidence/r2.6.61-duplicate-note-basename-646c329.json`](evidence/r2.6.61-duplicate-note-basename-646c329.json).
+
+This synthetic AccessKit interaction does not certify native OS screen-reader
+behavior, native folder-picker accessibility, or an Obsidian reference-app
+round trip. C01/C01.2 remain pending for broader read-only coverage; C01.1
+remains passing. Edit/save remains deferred to C02/C14. No local tests, builds,
+formatters, linters, or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
