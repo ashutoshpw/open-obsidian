@@ -2576,6 +2576,133 @@ mod tests {
     }
 
     #[test]
+    fn egui_switches_between_existing_vaults_without_changing_either_tree() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let first_vault_path = temporary.0.join("First Vault");
+        let second_vault_path = temporary.0.join("Second Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&first_vault_path).expect("create first vault directory");
+        std::fs::create_dir_all(&second_vault_path).expect("create second vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&first_vault_path, &fixture);
+        std::fs::create_dir_all(second_vault_path.join(".obsidian"))
+            .expect("create second vault configuration directory");
+        std::fs::write(
+            second_vault_path.join(".obsidian/app.json"),
+            b"{\"unknownSecondVaultOption\":{\"keep\":true}}\n",
+        )
+        .expect("seed opaque second-vault configuration");
+        std::fs::create_dir_all(second_vault_path.join("Assets"))
+            .expect("create second vault assets directory");
+        std::fs::write(
+            second_vault_path.join("Assets/opaque.bin"),
+            [0x00, 0xff, 0x42, 0x80],
+        )
+        .expect("seed second-vault binary asset");
+        let second_note_path = std::path::PathBuf::from("Only in Second.md");
+        std::fs::write(
+            second_vault_path.join(&second_note_path),
+            "\u{feff}# Second vault\r\n\r\nThis note belongs only to the second vault.\r\n",
+        )
+        .expect("seed second-vault note");
+        std::fs::write(app_data_path.join("open-state.bin"), [0xa5, 0x00, 0x7e, 0xff])
+            .expect("seed separate app-data sentinel");
+
+        let before_first_vault = existing_vault_tree_snapshot(&first_vault_path);
+        let before_second_vault = existing_vault_tree_snapshot(&second_vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let canonical_second_vault =
+            std::fs::canonicalize(&second_vault_path).expect("canonicalize second vault");
+        let first_session = VaultSession::open(&first_vault_path, &app_data_path)
+            .expect("open first vault before switching");
+        let old_preview_path = PathBuf::from(
+            fixture["expected"]["revision_path"]
+                .as_str()
+                .expect("fixture must identify a note for preview checking"),
+        );
+        let selected_vault = second_vault_path.clone();
+        let selected_app_data = app_data_path.clone();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(first_session)),
+            link_source_path: Some(old_preview_path.clone()),
+            rename_source_path: Some(old_preview_path),
+            open_vault_action: Some(Box::new(move || {
+                let (sender, receiver) = std::sync::mpsc::channel();
+                let result = VaultSession::open(&selected_vault, &selected_app_data)
+                    .map_err(|_| "The selected vault could not be opened safely.".to_owned());
+                sender
+                    .send(result)
+                    .expect("UI must receive the second vault session");
+                Some(receiver)
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Note source preview").click();
+        harness.get_by_label("Read note source preview").click();
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_source_preview.is_some());
+        harness.get_by_label("Open vault").click();
+        harness.step();
+
+        assert!(!harness.state().vault_opening);
+        assert!(harness.state().vault_open_receiver.is_none());
+        assert!(harness.state().vault_open_error.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("second vault remains open after switching");
+        assert_eq!(session.root_path(), canonical_second_vault);
+        assert_eq!(session.entries().len(), 1);
+        assert_eq!(
+            session.entries()[0].relative_path,
+            second_note_path,
+            "the active note list belongs to the newly selected vault"
+        );
+        assert_eq!(harness.state().link_source_path.as_ref(), Some(&second_note_path));
+        assert_eq!(
+            harness.state().rename_source_path.as_ref(),
+            Some(&second_note_path)
+        );
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        assert!(harness.state().link_resolutions.is_empty());
+        harness.get_by_label("Vault: Second Vault");
+        harness.get_by_label("1 Markdown files found.");
+        assert_eq!(
+            existing_vault_tree_snapshot(&first_vault_path),
+            before_first_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&second_vault_path),
+            before_second_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&first_vault_path),
+            before_first_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&second_vault_path),
+            before_second_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_previews_existing_note_source_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
