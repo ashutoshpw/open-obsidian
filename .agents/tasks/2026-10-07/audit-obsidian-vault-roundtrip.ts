@@ -1502,10 +1502,12 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     xdotool("key", "ctrl+l");
     await delay(500);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-location-entry.png")));
+    xdotool("key", "ctrl+a");
+    xdotool("key", "BackSpace");
     xdotool("type", "--clearmodifiers", "--delay", "20", vaultRoot);
     await delay(500);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
-    pathEntryInteraction = "Entered the full absolute fixture path in the focused Ctrl+L location entry.";
+    pathEntryInteraction = "Replaced the focused Ctrl+L location entry with the full absolute fixture path.";
     const clicked = clickWindowOpenButton(pickerWindowId);
     folderSelectionInteraction = `Clicked the native folder dialog confirmation at (${clicked.click_x}, ${clicked.click_y}) after entering the fixture path.`;
     await delay(750);

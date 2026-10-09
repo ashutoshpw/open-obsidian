@@ -1,0 +1,102 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 13,
+  "source_sha": "be878dc5836726c2eac6cc7e75bf533cc6a34018",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37926559925,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37926559925",
+      "conclusion": "failure",
+      "jobs": {
+        "macos": 113806792267,
+        "ubuntu": 113806792635,
+        "windows": 113806792711
+      },
+      "same_sha_reruns": [
+        {
+          "attempt": 2,
+          "conclusion": "Windows picker cancellation, snapshots, and Obsidian reopen passed",
+          "windows_job": 113808783449,
+          "artifact_id": 11614488379,
+          "digest": "sha256:8390cf821ba0ced085aa32182f75306de25acfabd946567198f880ededa73a2c"
+        }
+      ]
+    },
+    "rust_ci": {
+      "run_id": 37926559989,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113806792567,
+        "macos": 113806792367,
+        "windows": 113806792381
+      }
+    },
+    "quality": {
+      "run_id": 37926559894,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113806792319,
+        "windows": 113806792532,
+        "ubuntu": 113806792820
+      }
+    },
+    "desktop_build": {
+      "run_id": 37926560016,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113806792673,
+        "ubuntu": 113806792879,
+        "windows": 113806792966
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37926559927,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113806791915,
+        "macos": 113806792190,
+        "ubuntu": 113806792314
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37926560000,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113806792480,
+        "windows": 113806792542,
+        "macos": 113806792880
+      }
+    },
+    "inventory": {
+      "run_id": 37926559916,
+      "conclusion": "success",
+      "job": 113806791739
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu": {
+      "artifact_id": 11614372181,
+      "digest": "sha256:ef017e21abf505a52f0c2a5b764572a6a0749168e4dbcc1737786377278d8cfd"
+    },
+    "macos": {
+      "artifact_id": 11614337301,
+      "digest": "sha256:5ab602b844221dbea3f43d40bb47b8c2116e3d173b607765cdd14013baf54afa"
+    },
+    "windows_initial": {
+      "artifact_id": 11613489602,
+      "digest": "sha256:47d231a5fe58a025621c024b48f22df1c2211d6178f681cf93ba648515c62901"
+    },
+    "windows_same_sha_rerun": {
+      "artifact_id": 11614488379,
+      "digest": "sha256:8390cf821ba0ced085aa32182f75306de25acfabd946567198f880ededa73a2c"
+    }
+  },
+  "platform_findings": {
+    "ubuntu": "The focused Zenity Ctrl+L field showed the fixture path and the confirmation click landed on the visible OK button. OpenObsidian then reported private per-vault storage preparation failed during canonicalize selected vault with ENOENT. Clear the location entry before typing to prevent any residual text from altering the selected path.",
+    "macos": "The complete native folder selection, cancellation, vault/app-data snapshot, and Obsidian reopen flow passed. eframe app.ron appeared while the native picker opened; its captured contents contained window and egui UI state without vault or app-data paths, then remained unchanged through cancellation and close.",
+    "windows": "The initial fixture selection succeeded, but the cancellation picker did not appear while UI Automation reported Open vault disabled. The exact-SHA Windows rerun passed picker cancellation, vault/app-data snapshots, and Obsidian reopen."
+  },
+  "parallel_groups": "Native parallel setup groups passed in all applicable workflows and round-trip jobs.",
+  "correction": "Reset the focused Linux Ctrl+L location entry with Ctrl+A and Backspace before typing the fixture path. Keep Windows unchanged after the passing same-SHA rerun.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
