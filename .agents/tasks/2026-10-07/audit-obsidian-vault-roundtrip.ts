@@ -594,22 +594,33 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
       [System.Windows.Automation.ControlType]::Button
     )
     $buttons = $picker.FindAll([System.Windows.Automation.TreeScope]::Descendants, $buttonCondition)
-    $selectFolder = $null
-    foreach ($button in $buttons) {
-      if ($button.Current.Name -eq "Select Folder") { $selectFolder = $button; break }
+    $selectFolderNameCondition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::NameProperty,
+      "Select Folder"
+    )
+    $selectFolderCondition = [System.Windows.Automation.AndCondition]::new($buttonCondition, $selectFolderNameCondition)
+    $selectFolder = $picker.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $selectFolderCondition)
+    if ($null -eq $selectFolder) {
+      $selectFolder = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $selectFolderCondition)
     }
     if ($null -eq $selectFolder) {
       $labels = @($buttons | ForEach-Object { $_.Current.Name }) -join " | "
-      throw "Could not find Select Folder in the native picker; buttons=$labels"
-    }
-    try {
-      $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-      Write-Output "Invoked native button: $($selectFolder.Current.Name)"
-    } catch {
-      $selectFolder.SetFocus()
+      $picker.SetFocus()
       $shell = New-Object -ComObject WScript.Shell
+      $shell.AppActivate($picker.Current.Name) | Out-Null
+      Start-Sleep -Milliseconds 250
       $shell.SendKeys("{ENTER}")
-      Write-Output "Focused and pressed Enter on $($selectFolder.Current.Name); InvokePattern failed: $($_.Exception.Message)"
+      Write-Output "Select Folder was absent from the picker and desktop UIA trees; focused $($picker.Current.Name) and pressed Enter. Picker buttons=$labels"
+    } else {
+      try {
+        $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+        Write-Output "Invoked native button: $($selectFolder.Current.Name)"
+      } catch {
+        $selectFolder.SetFocus()
+        $shell = New-Object -ComObject WScript.Shell
+        $shell.SendKeys("{ENTER}")
+        Write-Output "Focused and pressed Enter on $($selectFolder.Current.Name); InvokePattern failed: $($_.Exception.Message)"
+      }
     }
   `;
   let selectionResult: string;
@@ -626,7 +637,7 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
   await delay(1_000);
   pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-select.png"));
   return await finishVaultDirectorySelection(connection, port, {
-    interaction: "Windows folder picker: navigate to the fixture path and invoke Select Folder through UI Automation",
+    interaction: "Windows folder picker: navigate to the fixture path and invoke Select Folder through UI Automation, with focused Enter fallback",
     selection_result: selectionResult,
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
   });

@@ -2321,10 +2321,11 @@
         "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json",
         "evidence/r2.6.49-roundtrip-ci-3378575.json",
         "evidence/r2.6.49-roundtrip-ci-9de7785.json",
-        "evidence/r2.6.49-roundtrip-ci-3635245.json"
+        "evidence/r2.6.49-roundtrip-ci-3635245.json",
+        "evidence/r2.6.49-roundtrip-ci-eea9679.json"
       ],
-      "tested_source_tree": "3635245c4201e8ed613fdd74148da01d1485480e",
-      "blocker": "On exact source SHA 3635245c4201e8ed613fdd74148da01d1485480e, Linux and macOS passed the Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows failed in the UI Automation folder-selection command before confirming the fixture; the runner discarded PowerShell diagnostics. A focused diagnostics/fallback correction is pending fresh CI. Remaining product-level read-only operations also remain pending. See evidence/r2.6.49-roundtrip-ci-3635245.json.",
+      "tested_source_tree": "eea967957281c34471ca9fcf985e2463e4757c48",
+      "blocker": "On exact source SHA eea967957281c34471ca9fcf985e2463e4757c48, Linux and macOS passed the Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows visibly reached the selected fixture, but UI Automation did not expose the Select Folder button and the folder was not confirmed. A desktop-wide search and focused Enter fallback are pending fresh CI. Remaining product-level read-only operations also remain pending. See evidence/r2.6.49-roundtrip-ci-eea9679.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2437,10 +2438,11 @@
         "evidence/r2.6.48-roundtrip-ci-3b621df.json",
         "evidence/r2.6.49-roundtrip-ci-3378575.json",
         "evidence/r2.6.49-roundtrip-ci-9de7785.json",
-        "evidence/r2.6.49-roundtrip-ci-3635245.json"
+        "evidence/r2.6.49-roundtrip-ci-3635245.json",
+        "evidence/r2.6.49-roundtrip-ci-eea9679.json"
       ],
-      "tested_source_tree": "3635245c4201e8ed613fdd74148da01d1485480e",
-      "blocker": "The C01.2 reference-app matrix includes exact source SHA 3635245c4201e8ed613fdd74148da01d1485480e: Linux and macOS completed the full round trip, while Windows failed before folder confirmation because the UI Automation command's diagnostics were suppressed. The Windows retry and remaining read-only flows are pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-3635245.json.",
+      "tested_source_tree": "eea967957281c34471ca9fcf985e2463e4757c48",
+      "blocker": "The C01.2 reference-app matrix includes exact source SHA eea967957281c34471ca9fcf985e2463e4757c48: Linux and macOS completed the full round trip; Windows visibly showed the fixture and Select Folder button but UI Automation did not expose the button and folder selection failed. The desktop-wide UIA search, focused Enter fallback and remaining read-only flows are pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-eea9679.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

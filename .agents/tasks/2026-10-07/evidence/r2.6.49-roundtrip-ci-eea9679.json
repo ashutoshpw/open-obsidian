@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
+  "source_sha": "eea967957281c34471ca9fcf985e2463e4757c48",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37872120778,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120778",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "job_id": 113632364827,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120778/job/113632364827",
+        "conclusion": "success",
+        "artifact_id": 11590442791,
+        "artifact_name": "obsidian-vault-roundtrip-Linux-eea967957281c34471ca9fcf985e2463e4757c48",
+        "artifact_sha256": "1f89dca2d3fc2c5cc76a3bcadbbba7150251efa54099887ff60b5cf72477b59d",
+        "report_sha256": "116170b800a126cce468dd974bcda0edc20a55ebf140aeb2b87bd80ee42e2f53",
+        "vault_snapshot_sha256": "5c9de650dd916fa9e2c4a1aeed54c0e534660428323167efc4272fa826860a95",
+        "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+        "reference_asset": "Obsidian-1.14.4.AppImage",
+        "reference_asset_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+        "acceptance": "Complete Obsidian-authored no-op round trip passed. OpenObsidian displayed the selected vault and note count; Obsidian reopened the authored note and attachment. The 22-entry vault and separate app-data snapshots remained unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "job_id": 113632364956,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120778/job/113632364956",
+        "conclusion": "success",
+        "artifact_id": 11591115090,
+        "artifact_name": "obsidian-vault-roundtrip-macOS-eea967957281c34471ca9fcf985e2463e4757c48",
+        "artifact_sha256": "650a249fb6bf909153b297702d8b7dc7d664d2600f3a1e4152d2b399cb3863a2",
+        "report_sha256": "d8936a392db3bf8d6b4a03dea8cc8399d7e85575f047ba7f7913ad6bd8d0ee0d",
+        "vault_snapshot_sha256": "c918842c3b365fa86d927cca204970993cc8265c1d56a21d6c90b74acfc75625",
+        "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+        "ocr_window_screenshot_sha256": "2c4e1900f6500ab1d97f2540c86ac9e15f1f9db14688d8947b25b9c7923d2ee9",
+        "reopened_screenshot_sha256": "3a55722b6db10dd63fc9ff235788415869c6a7d977e8bf8a5a42bd527b159f46",
+        "reference_asset": "Obsidian-1.14.4.dmg",
+        "reference_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "acceptance": "Complete round trip passed. Obsidian authored the note; OpenObsidian showed the selected vault and count; Obsidian reopened the note and exact attachment path. All 22 vault entries matched across snapshots, and app data remained separate and unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "job_id": 113632364682,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120778/job/113632364682",
+        "conclusion": "failure",
+        "artifact_id": 11590714123,
+        "artifact_name": "obsidian-vault-roundtrip-Windows-eea967957281c34471ca9fcf985e2463e4757c48",
+        "artifact_sha256": "be2d7ccc1e45f826c64b5870297f5726f07ce4185c4b7fb8bda1fc17bb3dd8bf",
+        "report_sha256": "bc9525ff96d1d726cf6a479f2320e67532b5b916e36f0ca61f878dd6f9f604c7",
+        "picker_initial_screenshot_sha256": "ce4da4c6fdb01254a6ee7563e7395586cd0b812d88504ce28f1a6fe9454dd1f3",
+        "picker_after_path_screenshot_sha256": "825436b7af38b6c3425a662e76e164cb11fd073b0d3856f865b7bd1f99fa4059",
+        "finding": "The picker visibly showed the selected fixture and a Select Folder button, but UI Automation did not expose that button beneath the picker window. Its accessible descendants included toolbar buttons such as Help, New folder and Search. The runner stopped before confirming the folder; no vault renderer appeared and fixture authoring did not begin."
+      }
+    ]
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37872120800,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120800",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 113632364217, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113632364237, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113632364365, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37872120756,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120756",
+      "conclusion": "failure",
+      "job_id": 113632364026,
+      "finding": "The validator reported a JSONDecodeError at state.json line 197 due to the trailing comma after the newly appended completed_actions entry. That comma is removed in the pending follow-up correction."
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37872120772,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120772",
+      "conclusion": "success after same-SHA failed-job retry",
+      "attempt_1": {
+        "conclusion": "failure",
+        "failed_job_id": 113632364316,
+        "finding": "The existing macOS Electron retrieval audit timed out after indexing completed; its local-retrieval probe did not reach the expected boundary."
+      },
+      "attempt_2": {
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 113633168609, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 113633170198, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113633170539, "conclusion": "success"}
+        ]
+      }
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37872120795,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120795",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113632364505, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113632364665, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113632364674, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37872120760,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120760",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113632364604, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113632364798, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113632364814, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37872120804,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37872120804",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113632364399, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113632364519, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113632364645, "conclusion": "success"}
+      ]
+    }
+  ],
+  "acceptance": {
+    "status": "partial",
+    "linux_roundtrip": "passed",
+    "macos_roundtrip": "passed",
+    "windows_roundtrip": "not accepted; UI Automation did not expose the visible Select Folder button and the folder was not confirmed",
+    "required_project_workflows": {
+      "rust_ci": "passed",
+      "desktop_build": "passed",
+      "plugin_renderer": "passed",
+      "loaded_plugin_workflows": "passed",
+      "inventory": "failed because state.json contained a trailing comma; correction is pending CI",
+      "quality": "passed after the failed macOS job was rerun at the same SHA"
+    },
+    "no_local_executable_validation": true,
+    "next_correction": "Remove the state.json trailing comma, search the desktop-wide UI Automation tree for Select Folder, then focus the native picker and send Enter if no accessible button exists. Capture the selection result and confirm the folder closes in GitHub Actions."
+  }
+}

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T01:53:42Z",
+  "updated_at": "2026-10-09T02:04:54Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3635245c4201e8ed613fdd74148da01d1485480e",
+  "last_reconciled_head": "eea967957281c34471ca9fcf985e2463e4757c48",
   "current_milestone": "R2.6.49",
-  "next_action": "Commit and push the Windows UI Automation diagnostics and focus/Enter fallback as a focused R2.6.49 correction, then inspect exact-SHA GitHub Actions. Keep C01 and C01.2 pending until Windows round-trip and remaining read-only flows pass.",
+  "next_action": "Commit and push the state.json syntax correction and Windows desktop-wide UI Automation search with focused Enter fallback; inspect exact-SHA GitHub Actions and keep C01/C01.2 pending until Windows round-trip and remaining read-only flows pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -194,6 +194,7 @@
     "R2.6.49 cross-platform round-trip attempt on 337857560332327cd13b9a797eaab76abf7afcf4: Linux passed the full Obsidian-authored no-op/reopen flow; macOS authored the fixture and rendered the selected vault but whole-desktop OCR missed the visible vault/count; Windows was blocked by a missing Desktop in its isolated Obsidian profile. All six companion workflows passed, including Rust CI on all three OSes. Evidence: evidence/r2.6.49-roundtrip-ci-3378575.json. Mac window capture/OCR and Windows profile Desktop corrections are pending fresh GitHub Actions validation; C01/C01.2 remain pending.",
     "R2.6.49 retry on 9de7785555c64fc5e08e15e668ce7dc47755d1ba: Linux passed again; macOS window capture succeeded but low-contrast OCR still missed visible vault/count text; Windows navigated to the fixture but SendKeys did not invoke Select Folder. All six companion workflows passed after a same-SHA macOS quality retry. Evidence: evidence/r2.6.49-roundtrip-ci-9de7785.json. macOS contrast preprocessing and Windows UI Automation selection are pending fresh CI; C01/C01.2 remain pending.",
     "R2.6.49 exact-SHA run on 3635245c4201e8ed613fdd74148da01d1485480e: Linux and macOS passed the complete Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows failed inside the UI Automation selection command before folder confirmation; stdio suppression hid the command diagnostics, and no fixture authoring began. All six companion project workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-3635245.json. The next correction captures PowerShell output and adds a focus/Enter fallback; Windows and C01/C01.2 remain pending.",
+    "R2.6.49 exact-SHA run on eea967957281c34471ca9fcf985e2463e4757c48: Linux and macOS passed full fixture/open/snapshot/reopen acceptance; Windows' screenshot showed the fixture and visible Select Folder button, but UI Automation omitted the button from both picker descendants and stopped before folder confirmation. Rust CI, desktop build, renderer and loaded-workflow matrices passed. Inventory failed on an extra state.json trailing comma; the existing macOS quality retrieval audit failed once and passed on same-SHA retry. Evidence: evidence/r2.6.49-roundtrip-ci-eea9679.json. The next correction removes the comma, searches desktop-wide UIA, and sends Enter with the picker focused when the control remains inaccessible; C01/C01.2 remain pending."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -9414,8 +9415,8 @@
     },
     "R2.6.49": {
       "status": "in_progress",
-      "implementation_sha": "3635245c4201e8ed613fdd74148da01d1485480e",
-      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575", "9de7785", "3635245"],
+      "implementation_sha": "eea967957281c34471ca9fcf985e2463e4757c48",
+      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575", "9de7785", "3635245", "eea9679"],
       "scope": "Expand the pinned Obsidian-authored fixture, OpenObsidian no-op open, snapshot preservation and Obsidian reopen acceptance to Linux, macOS and Windows.",
       "ci_attempts": [
         {
@@ -9478,17 +9479,38 @@
           ],
           "correction": "Capture and retain PowerShell stdout/stderr, report top-level window and accessible button names, invoke the native button and fall back to focusing it and pressing Enter; upload the after-selection screenshot.",
           "evidence": "evidence/r2.6.49-roundtrip-ci-3635245.json"
+        },
+        {
+          "source_sha": "eea967957281c34471ca9fcf985e2463e4757c48",
+          "conclusion": "Linux and macOS round-trip passed; Windows folder selection failed; Rust CI, desktop build, renderer and loaded-plugin workflows passed; inventory failed on a state.json trailing comma; quality passed after a same-SHA retry.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37872120778,
+            "rust_ci": 37872120800,
+            "inventory": 37872120756,
+            "quality": 37872120772,
+            "desktop_build": 37872120795,
+            "plugin_renderer": 37872120760,
+            "loaded_plugin_workflows": 37872120804
+          },
+          "findings": [
+            "Linux: complete Obsidian-authored round trip passed; the note and exact attachment reopened, selected vault/count were visible, all vault snapshots matched, and app data remained unchanged.",
+            "macOS: complete Obsidian-authored round trip passed with the same note/attachment and unchanged vault/app-data snapshots.",
+            "Windows: the visible native Select Folder button was not exposed under the picker or found by UI Automation; the report included the accessible toolbar buttons and no fixture authoring occurred.",
+            "Rust CI, desktop build, plugin renderer and loaded-plugin matrices passed. The inventory validator caught an extra trailing comma in state.json at line 197. The macOS Electron retrieval audit failed on attempt 1 and passed after rerunning the failed job at the same SHA."
+          ],
+          "correction": "Remove the progress-file trailing comma; search the desktop-wide UI Automation tree for Select Folder, and if it remains unavailable, focus the native picker and send Enter. Confirm picker closure and fixture authoring in CI.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-eea9679.json"
         }
       ],
       "accepted_slice": [
-        "Linux round-trip passed on exact source SHAs 337857560332327cd13b9a797eaab76abf7afcf4, 9de7785555c64fc5e08e15e668ce7dc47755d1ba and 3635245c4201e8ed613fdd74148da01d1485480e. The full macOS round trip passed on 3635245c4201e8ed613fdd74148da01d1485480e; Windows acceptance remains pending."
+        "Linux round-trip passed on exact source SHAs 337857560332327cd13b9a797eaab76abf7afcf4, 9de7785555c64fc5e08e15e668ce7dc47755d1ba, 3635245c4201e8ed613fdd74148da01d1485480e and eea967957281c34471ca9fcf985e2463e4757c48. The full macOS round trip passed on exact SHAs 3635245c4201e8ed613fdd74148da01d1485480e and eea967957281c34471ca9fcf985e2463e4757c48; Windows acceptance remains pending."
       ],
       "remaining": [
-        "Fresh exact-SHA GitHub Actions round-trip acceptance on Windows after the UI Automation diagnostics and focus/Enter fallback correction.",
+        "Fresh exact-SHA GitHub Actions round-trip acceptance on Windows after the desktop-wide UI Automation search and focused Enter fallback correction.",
         "Remaining C01 read-only product flows; C01 and C01.2 stay pending.",
         "Edit/save acceptance remains deferred to C02/C14."
       ],
-      "next_action": "Commit and push the Windows UI Automation diagnostics and focus/Enter fallback; inspect exact-SHA round-trip and all six companion workflows in GitHub Actions."
+      "next_action": "Commit and push the state syntax correction and Windows desktop-wide UI Automation search with focused Enter fallback; inspect exact-SHA round-trip and all six companion workflows in GitHub Actions."
     }
   },
   "ci_preparation": {
