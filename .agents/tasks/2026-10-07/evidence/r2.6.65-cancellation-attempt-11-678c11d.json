@@ -1,0 +1,100 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 11,
+  "source_sha": "678c11d87768c382fc9a1e871a56f637372cbc26",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37923157021,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37923157021",
+      "initial_attempt_conclusion": "failure",
+      "initial_jobs": {
+        "windows": { "job_id": 113795699233, "conclusion": "failure" },
+        "ubuntu": { "job_id": 113795699388, "conclusion": "failure" },
+        "macos": { "job_id": 113795699403, "conclusion": "failure" }
+      },
+      "same_sha_rerun": {
+        "attempt": 2,
+        "windows_job_id": 113798185833,
+        "conclusion": "success"
+      },
+      "overall_conclusion": "failure; Ubuntu and macOS failed in the initial attempt, while the Windows same-SHA rerun passed."
+    },
+    "rust_ci": {
+      "run_id": 37923156962,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113795696352,
+        "windows": 113795696643,
+        "macos": 113795696863
+      }
+    },
+    "quality": {
+      "run_id": 37923157087,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113795696958,
+        "ubuntu": 113795697143,
+        "macos": 113795697213
+      }
+    },
+    "desktop_build": {
+      "run_id": 37923157016,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113795695880,
+        "windows": 113795696232,
+        "ubuntu": 113795696262
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37923156991,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113795696336,
+        "windows": 113795696671,
+        "macos": 113795696762
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37923157035,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113795696254,
+        "ubuntu": 113795696447,
+        "macos": 113795696507
+      }
+    },
+    "inventory": {
+      "run_id": 37923156926,
+      "conclusion": "success",
+      "job_id": 113795695591
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu": {
+      "artifact_id": 11612324368,
+      "digest": "sha256:1254e122314e111a215f2d85a22a421c86e026c088ee13f68392e738b82dfcac"
+    },
+    "macos": {
+      "artifact_id": 11612129627,
+      "digest": "sha256:3e044f37230f6cbfe0a7301cc236d962f105d3e071e9b62ab7be6b6b0208fc1b"
+    },
+    "windows_initial_attempt": {
+      "artifact_id": 11613211267,
+      "digest": "sha256:9589d42313b5a5f2debcc988df8126e1678161175f722e7484590841a1bc4138"
+    },
+    "windows_same_sha_rerun": {
+      "artifact_id": 11613232672,
+      "digest": "sha256:54962743706a6f5cd84f94236349820b47fc91d8baab266607e63e5842fca7b3"
+    }
+  },
+  "platform_findings": {
+    "ubuntu": "The artifact screenshot shows the focused Ctrl+L location entry containing the full absolute fixture path. Pressing Return closed the dialog, but OpenObsidian remained on the no-vault screen and logged ENOENT while canonicalizing the selected vault.",
+    "macos": "The native Open panel appeared. Accessibility reported AXWindow:Open and AXWindow:OpenObsidian, but the nested AXButton lookup did not find the panel's visible Open control.",
+    "windows_initial_attempt": "The initial folder selection opened the fixture, but the second Open vault action stayed disabled in UI Automation and did not create a native picker window.",
+    "windows_same_sha_rerun": "The full round-trip and cancellation passed: the picker opened and closed with Escape, the original vault and two-note count returned, vault snapshots matched through close, and app-data snapshots were unchanged. Obsidian reopened the authored note and attachment path."
+  },
+  "parallel_setup_groups": "Passed on applicable runners.",
+  "correction": "For Linux, click the visible folder-dialog confirmation button after entering the focused absolute path instead of pressing Return. For macOS, use the accessibility-discovered Open panel window bounds to click its visible Open control and capture before/after screenshots. Keep Windows unchanged because the same-SHA rerun passed.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. All validation used GitHub Actions."
+}

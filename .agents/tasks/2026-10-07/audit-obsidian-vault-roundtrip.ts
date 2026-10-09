@@ -411,6 +411,45 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
   return `Sent a macOS mouse click to the visible Open vault control at (${clickX}, ${clickY}).`;
 }
 
+async function clickMacOSNativePickerOpenButton(child: ChildProcess): Promise<string> {
+  const boundsScript = `on run argv
+    tell application "System Events"
+      set targetProcess to first process whose unix id is (item 1 of argv as integer)
+      set pickerWindow to first window of targetProcess whose name is "Open"
+      set pickerPosition to position of pickerWindow
+      set pickerSize to size of pickerWindow
+      return (item 1 of pickerPosition as integer) & "," & (item 2 of pickerPosition as integer) & "," & (item 1 of pickerSize as integer) & "," & (item 2 of pickerSize as integer)
+    end tell
+  end run`;
+  const bounds = execFileSync("osascript", ["-e", boundsScript, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  const coordinates = bounds.match(/-?\d+/g)?.map(Number) ?? [];
+  if (coordinates.length < 4) throw new Error(`Could not read the native macOS Open panel bounds: ${bounds}; windows=${macOSApplicationWindowDescriptions(child)}`);
+  const [windowX, windowY, windowWidth, windowHeight] = coordinates;
+  const clickX = windowX + windowWidth - 57;
+  const clickY = windowY + windowHeight - 32;
+  const swiftPath = join(workDirectory, "openobsidian-picker-click.swift");
+  await writeFile(swiftPath, `import AppKit
+import CoreGraphics
+import Foundation
+
+guard CommandLine.arguments.count == 3,
+      let x = Double(CommandLine.arguments[1]),
+      let y = Double(CommandLine.arguments[2]) else {
+    fatalError("Expected screen x and y coordinates")
+}
+let point = CGPoint(x: x, y: y)
+for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
+        fatalError("Could not create a mouse event")
+    }
+    event.post(tap: .cghidEventTap)
+    if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
+}
+`);
+  execFileSync("swift", [swiftPath, String(clickX), String(clickY)], {stdio: "ignore"});
+  return `Clicked the native macOS Open button at (${clickX}, ${clickY}) using panel bounds ${bounds}.`;
+}
+
 function activeWindowTitle(): string {
   try {
     return execFileSync("xdotool", ["getwindowfocus", "getwindowname"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
@@ -1437,21 +1476,12 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     xdotool("type", "--clearmodifiers", "--delay", "20", vaultRoot);
     await delay(500);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
-    xdotool("key", "Return");
+    pathEntryInteraction = "Entered the full absolute fixture path in the focused Ctrl+L location entry.";
+    const clicked = clickWindowOpenButton(pickerWindowId);
+    folderSelectionInteraction = `Clicked the native folder dialog confirmation at (${clicked.click_x}, ${clicked.click_y}) after entering the fixture path.`;
     await delay(750);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-opened.png")));
-    pathEntryInteraction = "Entered the full absolute fixture path with Ctrl+L and pressed Return to navigate to it.";
-    if (activeWindowId() === pickerWindowId) {
-      const clicked = clickWindowOpenButton(pickerWindowId);
-      folderSelectionInteraction = `Clicked the native dialog's lower-right Open button at (${clicked.click_x}, ${clicked.click_y}) after navigating to the fixture folder.`;
-    } else {
-      folderSelectionInteraction = "The native folder picker accepted the fixture path and closed after Return.";
-    }
-    await delay(1_000);
-    if (activeWindowId() === pickerWindowId) {
-      xdotool("key", "Return");
-      await delay(500);
-    }
+    if (activeWindowId() === pickerWindowId) throw new Error(`The native Linux folder picker remained visible after its confirmation button click; window=${pickerWindowTitle}`);
   } else if (process.platform === "darwin") {
     const pickerAccessibility = await waitFor(
       "native macOS folder picker to become visible",
@@ -1469,7 +1499,7 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     (report.openobsidian_open as Record<string, unknown>).native_picker_accessibility_windows = pickerAccessibility;
     await saveReport();
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-picker-ready.png")));
-    const script = `on run argv
+    const pathScript = `on run argv
       tell application "System Events"
         set targetProcess to first process whose unix id is (item 1 of argv as integer)
         set frontmost of targetProcess to true
@@ -1479,47 +1509,19 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
         delay 0.5
         key code 36
         delay 1
-        set selectionConfirmed to false
-        repeat with currentWindow in windows of targetProcess
-          repeat with candidate in entire contents of currentWindow
-            try
-              if role of candidate is "AXButton" and name of candidate is "Open" then
-                click candidate
-                set selectionConfirmed to true
-                exit repeat
-              end if
-            on error
-              set selectionConfirmed to false
-            end try
-          end repeat
-          if selectionConfirmed then exit repeat
-          try
-            repeat with currentSheet in sheets of currentWindow
-              repeat with candidate in entire contents of currentSheet
-                try
-                  if role of candidate is "AXButton" and name of candidate is "Open" then
-                    click candidate
-                    set selectionConfirmed to true
-                    exit repeat
-                  end if
-                on error
-                  set selectionConfirmed to false
-                end try
-              end repeat
-              if selectionConfirmed then exit repeat
-            end repeat
-          on error
-            set selectionConfirmed to false
-          end try
-          if selectionConfirmed then exit repeat
-        end repeat
-        if not selectionConfirmed then error "The native folder picker did not expose an Open button after navigating to the fixture folder"
-        return "Entered the fixture path with Command-Shift-G and clicked the native Open button."
       end tell
     end run`;
-    folderSelectionInteraction = execFileSync("osascript", ["-e", script, String(child.pid ?? -1), vaultRoot], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    execFileSync("osascript", ["-e", pathScript, String(child.pid ?? -1), vaultRoot], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]});
+    await delay(500);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
-    pathEntryInteraction = "Used Command-Shift-G with the full absolute fixture path, confirmed navigation, and clicked Open through macOS accessibility.";
+    (report.openobsidian_open as Record<string, unknown>).native_picker_screenshots = screenshots.slice();
+    await saveReport();
+    folderSelectionInteraction = await clickMacOSNativePickerOpenButton(child);
+    await delay(500);
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-selected.png")));
+    (report.openobsidian_open as Record<string, unknown>).native_picker_screenshots = screenshots.slice();
+    await saveReport();
+    pathEntryInteraction = "Used Command-Shift-G with the full absolute fixture path; the native Open button was clicked using the Open panel's accessible bounds.";
   } else {
     const pathScript = `
       $ErrorActionPreference = "Stop"
