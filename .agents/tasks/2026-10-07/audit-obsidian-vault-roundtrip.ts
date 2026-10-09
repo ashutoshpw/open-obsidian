@@ -353,6 +353,43 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
+async function clickOpenVaultButtonMacOS(child: ChildProcess): Promise<string> {
+  const positionScript = `on run argv
+    tell application "System Events"
+      set targetProcess to first process whose unix id is (item 1 of argv as integer)
+      set frontmost of targetProcess to true
+      set windowPosition to position of window 1 of targetProcess
+      return (item 1 of windowPosition as integer) & "," & (item 2 of windowPosition as integer)
+    end tell
+  end run`;
+  const position = execFileSync("osascript", ["-e", positionScript, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  const match = position.match(/^(\d+),(\d+)$/);
+  if (!match) throw new Error(`Could not read the OpenObsidian window position for a native click: ${position}`);
+  const clickX = Number(match[1]) + 36;
+  const clickY = Number(match[2]) + 83;
+  const swiftPath = join(workDirectory, "openobsidian-click.swift");
+  await writeFile(swiftPath, `import AppKit
+import CoreGraphics
+import Foundation
+
+guard CommandLine.arguments.count == 3,
+      let x = Double(CommandLine.arguments[1]),
+      let y = Double(CommandLine.arguments[2]) else {
+    fatalError("Expected screen x and y coordinates")
+}
+let point = CGPoint(x: x, y: y)
+for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
+        fatalError("Could not create a mouse event")
+    }
+    event.post(tap: .cghidEventTap)
+    if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
+}
+`);
+  execFileSync("swift", [swiftPath, String(clickX), String(clickY)], {stdio: "ignore"});
+  return `Sent a macOS mouse click to the visible Open vault control at (${clickX}, ${clickY}).`;
+}
+
 function activeWindowTitle(): string {
   try {
     return execFileSync("xdotool", ["getwindowfocus", "getwindowname"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
@@ -1032,8 +1069,11 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
   await focusOpenObsidian(child);
   if (process.platform === "linux") {
     xdotool("windowfocus", "--sync", windowId);
+    await delay(500);
     const clicked = clickOpenVaultButtonLinux(windowId);
-    return `Clicked the visible Open vault button using the X11 window geometry at (${clicked.click_x}, ${clicked.click_y}).`;
+    const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
+    (report.openobsidian_open as Record<string, unknown>).picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
+    return `Clicked the visible Open vault button using the X11 window geometry at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}.`;
   }
   if (process.platform === "darwin") {
     const script = `on run argv
@@ -1054,17 +1094,14 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
             click openVaultButton
             return "Invoked the Open vault button from the window's nested accessibility tree."
           end if
-          keystroke tab
-          key code 36
-          return "The nested accessibility tree did not expose Open vault; focused the first button with Tab and Return."
+          return "The nested accessibility tree did not expose Open vault."
         on error errorMessage
-          keystroke tab
-          key code 36
-          return "Accessibility lookup failed; focused the first button with Tab and Return: " & errorMessage
+          return "Accessibility lookup failed: " & errorMessage
         end try
       end tell
     end run`;
-    return execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    const interaction = execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    return interaction.includes("Invoked the Open vault button") ? interaction : await clickOpenVaultButtonMacOS(child);
   }
   if (process.platform === "win32") {
     const script = `
@@ -1086,27 +1123,32 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
         "Open vault"
       )
       $button = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.AndCondition]::new($buttonType, $buttonName))
-      $deadline = [DateTime]::UtcNow.AddSeconds(10)
-      while ($null -ne $button -and -not $button.Current.IsEnabled -and [DateTime]::UtcNow -lt $deadline) {
-        Start-Sleep -Milliseconds 100
-        $button = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.AndCondition]::new($buttonType, $buttonName))
-      }
-      if ($null -ne $button -and $button.Current.IsEnabled) {
+      if ($null -ne $button) {
+        $isEnabled = $button.Current.IsEnabled
+        $bounds = $button.Current.BoundingRectangle
         try {
           $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-          Write-Output "Invoked the enabled Open vault accessibility button."
+          Write-Output "Invoked the Open vault accessibility button; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height)"
         } catch {
-          $button.SetFocus()
-          $shell = New-Object -ComObject WScript.Shell
-          $shell.SendKeys("{ENTER}")
-          Write-Output "Focused and pressed Enter on Open vault after InvokePattern failed: $($_.Exception.Message)"
+          Add-Type -TypeDefinition @'
+            using System;
+            using System.Runtime.InteropServices;
+            public static class OpenObsidianMouse {
+              [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+              [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extraInfo);
+            }
+'@
+          if ($bounds.Width -le 0 -or $bounds.Height -le 0) { throw "Open vault has no clickable UI Automation bounds; IsEnabled=$isEnabled; InvokePattern failed: $($_.Exception.Message)" }
+          $clickX = [int][Math]::Round($bounds.Left + ($bounds.Width / 2))
+          $clickY = [int][Math]::Round($bounds.Top + ($bounds.Height / 2))
+          [OpenObsidianMouse]::SetCursorPos($clickX, $clickY) | Out-Null
+          [OpenObsidianMouse]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
+          Start-Sleep -Milliseconds 80
+          [OpenObsidianMouse]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+          Write-Output "Sent a screen click to Open vault; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height); InvokePattern failed: $($_.Exception.Message)"
         }
-      } elseif ($null -ne $button) {
-        throw "Open vault remained disabled after waiting for up to ten seconds"
       } else {
-        $shell = New-Object -ComObject WScript.Shell
-        $shell.SendKeys("{TAB}{ENTER}")
-        Write-Output "Open vault was not exposed through UI Automation; used Tab and Enter."
+        throw "Open vault was not exposed through UI Automation; refusing an unverified keyboard click"
       }
     `;
     return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
@@ -1468,6 +1510,7 @@ async function runOpenObsidianPickerCancellation(
   appDataBeforeCancellation: SnapshotEntry[],
 ): Promise<void> {
   const open = report.openobsidian_open as Record<string, unknown>;
+  await delay(1_500);
   const startupScreen = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-before-picker-cancel");
   if (!startupScreen.ocrText.toLowerCase().includes("roundtrip fixture") || !/2\s+Markdown files found/i.test(startupScreen.ocrText)) {
     throw new Error(`OpenObsidian did not display the active vault before picker cancellation; OCR=${JSON.stringify(startupScreen.ocrText.slice(0, 2_000))}`);
