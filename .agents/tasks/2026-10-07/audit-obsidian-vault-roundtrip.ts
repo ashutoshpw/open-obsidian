@@ -1428,8 +1428,14 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
 
   if (process.platform === "linux") {
     if (!pickerWindowId || pickerWindowId === window.window_id) throw new Error(`OpenObsidian native folder picker did not become active; title=${pickerWindowTitle}`);
+    xdotool("windowraise", pickerWindowId);
+    xdotool("windowfocus", "--sync", pickerWindowId);
+    await delay(250);
     xdotool("key", "ctrl+l");
-    xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
+    await delay(500);
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-location-entry.png")));
+    xdotool("type", "--clearmodifiers", "--delay", "20", vaultRoot);
+    await delay(500);
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
     xdotool("key", "Return");
     await delay(750);
@@ -1460,6 +1466,8 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
       15_000,
     );
     if (!pickerAccessibility) throw new Error(`The native macOS folder picker did not appear before path entry; accessibility windows=${macOSApplicationWindowDescriptions(child)}`);
+    (report.openobsidian_open as Record<string, unknown>).native_picker_accessibility_windows = pickerAccessibility;
+    await saveReport();
     screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-picker-ready.png")));
     const script = `on run argv
       tell application "System Events"
@@ -1473,27 +1481,36 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
         delay 1
         set selectionConfirmed to false
         repeat with currentWindow in windows of targetProcess
-          try
-            click button "Open" of currentWindow
-            set selectionConfirmed to true
-          on error
-            set selectionConfirmed to false
-          end try
-          if not selectionConfirmed then
+          repeat with candidate in entire contents of currentWindow
             try
-              repeat with currentSheet in sheets of currentWindow
+              if role of candidate is "AXButton" and name of candidate is "Open" then
+                click candidate
+                set selectionConfirmed to true
+                exit repeat
+              end if
+            on error
+              set selectionConfirmed to false
+            end try
+          end repeat
+          if selectionConfirmed then exit repeat
+          try
+            repeat with currentSheet in sheets of currentWindow
+              repeat with candidate in entire contents of currentSheet
                 try
-                  click button "Open" of currentSheet
-                  set selectionConfirmed to true
-                  exit repeat
+                  if role of candidate is "AXButton" and name of candidate is "Open" then
+                    click candidate
+                    set selectionConfirmed to true
+                    exit repeat
+                  end if
                 on error
                   set selectionConfirmed to false
                 end try
               end repeat
-            on error
-              set selectionConfirmed to false
-            end try
-          end if
+              if selectionConfirmed then exit repeat
+            end repeat
+          on error
+            set selectionConfirmed to false
+          end try
           if selectionConfirmed then exit repeat
         end repeat
         if not selectionConfirmed then error "The native folder picker did not expose an Open button after navigating to the fixture folder"

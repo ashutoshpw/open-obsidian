@@ -1511,3 +1511,11 @@ string. Exact-SHA CI and artifact details are in
 [`evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json`](evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json).
 The required parallel setup groups passed. No local executable validation was
 run.
+
+### R2.6.65 attempt 10 result and focused diagnostics — SHA `f32dd3d`
+
+The exact-SHA round-trip run [37921995802](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995802) did not pass cancellation on all platforms. Windows job `113791877859` passed the complete native picker cancellation flow: the fixture opened, Escape closed the picker, the original two-note vault returned, and vault/app-data snapshots remained unchanged. Ubuntu job `113791878091` failed while canonicalizing the selected vault path (`ENOENT`); its screenshot OCR reported that private per-vault storage could not be prepared. macOS job `113791878385` showed the native panel and navigated to the fixture path, but the AppleScript lookup did not find its Open button.
+
+Rust CI [37921995806](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995806), quality [37921995793](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995793), desktop build [37921995780](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995780), plugin renderer [37921995766](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995766), loaded-plugin workflows [37921995761](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995761), and inventory [37921995810](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995810) passed. Native parallel setup groups passed on applicable runners. Job IDs, artifact IDs and digests are recorded in [`evidence/r2.6.65-cancellation-attempt-10-f32dd3d.json`](evidence/r2.6.65-cancellation-attempt-10-f32dd3d.json).
+
+The attempt 11 correction raises and focuses the Linux Zenity picker before opening its Ctrl+L location entry, then records a screenshot at that state before typing the fixture path. On macOS, it saves native picker accessibility-window descriptions and searches nested accessibility contents for an `AXButton` named `Open`. Windows selection/cancellation code remains unchanged because attempt 10 passed there. Exact-SHA validation is pending. No local tests, builds, formatters, linters, or application launches were run.

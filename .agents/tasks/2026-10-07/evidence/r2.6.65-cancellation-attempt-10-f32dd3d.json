@@ -1,0 +1,115 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 10,
+  "source_sha": "f32dd3db9d49d6b5151d67a42a84ae819f352375",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37921995802,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995802",
+      "conclusion": "failure",
+      "jobs": {
+        "windows": {
+          "job_id": 113791877859,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "success"
+        },
+        "ubuntu": {
+          "job_id": 113791878091,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "failure"
+        },
+        "macos": {
+          "job_id": 113791878385,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "failure"
+        }
+      }
+    },
+    "rust_ci": {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37921995806,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995806",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113791877866, "conclusion": "success" },
+        "macos": { "job_id": 113791878024, "conclusion": "success" },
+        "ubuntu": { "job_id": 113791878072, "conclusion": "success" }
+      }
+    },
+    "quality": {
+      "name": "OpenObsidian quality",
+      "run_id": 37921995793,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995793",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113791878448, "conclusion": "success" },
+        "macos": { "job_id": 113791878617, "conclusion": "success" },
+        "ubuntu": { "job_id": 113791878627, "conclusion": "success" }
+      }
+    },
+    "desktop_build": {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37921995780,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995780",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": { "job_id": 113791877634, "conclusion": "success" },
+        "macos": { "job_id": 113791877777, "conclusion": "success" },
+        "windows": { "job_id": 113791877883, "conclusion": "success" }
+      }
+    },
+    "plugin_renderer": {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37921995766,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995766",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": { "job_id": 113791878711, "conclusion": "success" },
+        "windows": { "job_id": 113791878844, "conclusion": "success" },
+        "macos": { "job_id": 113791879007, "conclusion": "success" }
+      }
+    },
+    "loaded_plugin_workflows": {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37921995761,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995761",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113791877707, "conclusion": "success" },
+        "ubuntu": { "job_id": 113791877896, "conclusion": "success" },
+        "macos": { "job_id": 113791877978, "conclusion": "success" }
+      }
+    },
+    "inventory": {
+      "name": "Rust migration inventory",
+      "run_id": 37921995810,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995810",
+      "conclusion": "success",
+      "job": { "job_id": 113791877401, "conclusion": "success" }
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu": {
+      "artifact_id": 11612750924,
+      "digest": "sha256:631d93de16ce730a3c7bca6546fe028274e2b3431efe7714de588ca1dc7e92e4"
+    },
+    "macos": {
+      "artifact_id": 11611664160,
+      "digest": "sha256:392af168a5647c8ea48d6a20a9a8ab807cd0562ba89047e31a4f28ef4ad6d029"
+    },
+    "windows": {
+      "artifact_id": 11612089345,
+      "digest": "sha256:a6224b77c4d70e81c13cfa7cdd71a3ea1817d7ff9091e0398879c7aa48f4aee3"
+    }
+  },
+  "parallel_setup_groups": "Passed on all applicable runners.",
+  "platform_findings": {
+    "ubuntu": "The folder picker closed after the path-entry Return, but OpenObsidian could not canonicalize the selected vault path; the path-free operation diagnostic again reported ENOENT at canonicalize selected vault.",
+    "macos": "The native Open panel became visible and the runner typed the fixture path, but the direct window/sheet button lookup did not find its Open control. The run stopped with an AppleScript accessibility error before the folder could open.",
+    "windows": "The complete round-trip passed. The fixture opened, the native picker was detected, Escape closed it, the original two-note vault was restored, and both vault and app-data snapshots remained unchanged after close.",
+    "companion_workflows": "Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed on all applicable operating systems."
+  },
+  "correction": "Search nested macOS accessibility elements for the native Open button and save the picker window inventory; on Linux, explicitly focus the Zenity window and allow its Ctrl+L location field to appear before typing the path, then capture the location-entry state.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run."
+}

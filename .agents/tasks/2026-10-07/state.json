@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T11:07:34Z",
+  "updated_at": "2026-10-09T11:18:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7c29a1aef13418cec23103ccbd1e33fbe93f4aec",
+  "last_reconciled_head": "f32dd3db9d49d6b5151d67a42a84ae819f352375",
   "current_milestone": "R2.6.65",
-  "next_action": "Commit the native picker selection and Windows Escape-script corrections as attempt 10, push to origin/main, then inspect exact-SHA GitHub Actions results.",
+  "next_action": "Review the attempt 11 native picker diagnostics change, commit it with attempt 10 evidence, push to origin/main, then inspect exact-SHA GitHub Actions results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -213,9 +213,10 @@
     "R2.6.65 attempt 5 on exact SHA 11ae4c56ebc466445fd353cdb15c502a6ed26c7d passed the complete active-session picker cancellation and snapshot checks on Windows. Linux stayed on the active screen despite CI logs showing the Open vault button was enabled; macOS opened the visible native panel but its OCR gate missed the controls. Rust CI and all six companion workflows passed on all three platforms. The next correction raises the Linux window and uses macOS accessibility window/sheet names to verify the panel before and after Escape.",
     "R2.6.65 attempt 7 on e982f11: Rust CI, desktop build, plugin renderer, loaded-plugin workflows and inventory passed; round-trip cancellation and quality failed. Evidence: evidence/r2.6.65-cancellation-attempt-7-e982f11.json. The next correction restores Linux click behavior, improves Windows picker diagnostics, records macOS app.ron changes, and resolves Knip before fresh exact-SHA CI.",
     "R2.6.65 attempt 8 on b1b48b6: all companion workflows passed, but native picker cancellation failed on Ubuntu, macOS and Windows. An Ubuntu-only same-run rerun reproduced the private app-data ENOENT. Evidence: evidence/r2.6.65-cancellation-attempt-8-b1b48b6.json. Next, log the path-free failing operation, preserve Windows timeout inventory, and compare cancellation against a settled macOS app.ron startup baseline.",
-    "R2.6.65 attempt 9 on 7c29a1a: Rust CI and all six companion workflows passed; native folder selection/cancellation failed on all platforms. CI identified an unresolved selected path on Ubuntu, an unconfirmed native-panel Open action on macOS, and PowerShell quoting failure on Windows. Evidence: evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json."
+    "R2.6.65 attempt 9 on 7c29a1a: Rust CI and all six companion workflows passed; native folder selection/cancellation failed on all platforms. CI identified an unresolved selected path on Ubuntu, an unconfirmed native-panel Open action on macOS, and PowerShell quoting failure on Windows. Evidence: evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json.",
+    "R2.6.65 attempt 10 on exact SHA f32dd3d: Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows and inventory passed. Windows passed native picker cancellation and vault/app-data snapshot checks; Ubuntu could not canonicalize the selected vault (ENOENT), and macOS did not expose the Open button to the current accessibility lookup. Evidence: evidence/r2.6.65-cancellation-attempt-10-f32dd3d.json."
   ],
-  "push_status": "Attempt 9 source 7c29a1a is pushed and reconciled. All companion workflows passed; native folder selection/cancellation failed on all three platforms.",
+  "push_status": "Attempt 10 source f32dd3db9d49d6b5151d67a42a84ae819f352375 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; Windows completed cancellation and snapshot checks, while Ubuntu and macOS native selection failed.",
   "ci_results": [
     {
       "name": "inventory",
@@ -10752,7 +10753,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "7c29a1aef13418cec23103ccbd1e33fbe93f4aec",
+      "implementation_sha": "f32dd3db9d49d6b5151d67a42a84ae819f352375",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -10764,9 +10765,10 @@
         "d4223370cd505629b1fb8f3bb94f1b7e258bdc42",
         "e982f11f38c64ebd702bce49d951f0005ccfe1d3",
         "b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1",
-        "7c29a1aef13418cec23103ccbd1e33fbe93f4aec"
+        "7c29a1aef13418cec23103ccbd1e33fbe93f4aec",
+        "f32dd3db9d49d6b5151d67a42a84ae819f352375"
       ],
-      "push_status": "Attempt 9 source 7c29a1aef13418cec23103ccbd1e33fbe93f4aec is pushed and reconciled. Companion workflows passed; native selection/cancellation failed on all three platforms.",
+      "push_status": "Attempt 10 source f32dd3db9d49d6b5151d67a42a84ae819f352375 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; Windows completed cancellation and snapshot checks, while Ubuntu and macOS native selection failed.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -11070,6 +11072,41 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-9-7c29a1a.json",
           "correction": "Press Return to apply Linux's Ctrl+L path entry before clicking Open; wait for the macOS native picker and click its Open button through accessibility; keep Windows focus output outside the PowerShell Escape script string."
+        },
+        {
+          "source_sha": "f32dd3db9d49d6b5151d67a42a84ae819f352375",
+          "attempt": 10,
+          "conclusion": "Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows and inventory passed. Windows passed the complete picker cancellation/snapshot checks; Ubuntu failed selected-vault canonicalization with ENOENT; macOS failed to find the native Open button.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37921995802,
+            "rust_ci": 37921995806,
+            "quality": 37921995793,
+            "desktop_build": 37921995780,
+            "plugin_renderer": 37921995766,
+            "loaded_plugin_workflows": 37921995761,
+            "inventory": 37921995810
+          },
+          "roundtrip_jobs": {
+            "windows": 113791877859,
+            "ubuntu": 113791878091,
+            "macos": 113791878385
+          },
+          "artifacts": {
+            "ubuntu": {
+              "artifact_id": 11612750924,
+              "digest": "sha256:631d93de16ce730a3c7bca6546fe028274e2b3431efe7714de588ca1dc7e92e4"
+            },
+            "macos": {
+              "artifact_id": 11611664160,
+              "digest": "sha256:392af168a5647c8ea48d6a20a9a8ab807cd0562ba89047e31a4f28ef4ad6d029"
+            },
+            "windows": {
+              "artifact_id": 11612089345,
+              "digest": "sha256:a6224b77c4d70e81c13cfa7cdd71a3ea1817d7ff9091e0398879c7aa48f4aee3"
+            }
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-10-f32dd3d.json",
+          "correction": "Focus and raise the Linux Zenity picker before opening its Ctrl+L location entry and capture the entry state before typing. On macOS, save native picker accessibility-window descriptions and search nested accessibility contents for the Open button. Windows passed and is unchanged."
         }
       ],
       "accepted_slice": [],
@@ -11077,7 +11114,7 @@
         "Exact-SHA GitHub Actions round-trip validation is pending on Ubuntu, macOS, and Windows.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Commit the native picker selection and Windows Escape-script corrections as attempt 10, push to origin/main, then inspect exact-SHA GitHub Actions results."
+      "next_action": "Review the attempt 11 native picker diagnostics change, commit it with attempt 10 evidence, push to origin/main, then inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {
