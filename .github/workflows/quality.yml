@@ -76,10 +76,12 @@ jobs:
         run: bun run audit:plugin-lifecycle
       - name: Reconcile catalog-required plugin combinations
         run: bun run audit:plugin-combinations
-      - name: Run Knip audit
-        run: bun run knip
-      - name: Run Fallow health audit
-        run: bunx fallow health --root . --format compact --report-only
+      # These source audits report to the job log and do not share build outputs.
+      - parallel:
+          - name: Run Knip audit
+            run: bun run knip
+          - name: Run Fallow health audit
+            run: bunx fallow health --root . --format compact --report-only
       - name: Review changed code with Fallow
         if: github.event_name == 'pull_request'
         run: bunx fallow audit --root . --base ${{ github.event.pull_request.base.sha }} --format compact --brief
