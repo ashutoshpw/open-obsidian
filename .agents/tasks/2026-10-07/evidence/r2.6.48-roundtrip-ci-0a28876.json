@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.48",
+  "source_sha": "0a288760b0c4c3ba3f76cf6c943886ab2292f92a",
+  "workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37863443370,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443370",
+    "job_id": 113604409307,
+    "job_conclusion": "failure",
+    "artifact_id": 11587646166,
+    "artifact_name": "obsidian-vault-roundtrip-0a288760b0c4c3ba3f76cf6c943886ab2292f92a",
+    "artifact_sha256": "4ef02f8c4b2a8e9fcda5814df54388bc4587a8153efd564f619030036538d173",
+    "artifact_files": {
+      "obsidian-vault-roundtrip-report.json": "ad52039abca5abce6a8cb3d00f86f98cbaa291b0f1a59142cafff37f93546f30",
+      "obsidian-first-run.png": "2785aecf7ac1dce69ee3d6b8b5712ec03808e21a2018c1115eb81054b2e3d28c",
+      "obsidian-vault-restricted-mode.png": "3bef238016e9fac461eae421197a6a2da64f5e007c356b848427128cca12a79d",
+      "obsidian-new-note-action.png": "dd2abad6606dbaeeed57fd08c58217fe7684684c61f625716ce1e54663237e3d",
+      "obsidian-author.log": "d4d25b24731c3a1e3810d35469ca3cffdf5455cb9ab3f8e1a8474252c65d8a3b"
+    }
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner": "ubuntu-24.04"
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37863443274,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443274",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 113604408924, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113604409283, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113604409341, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37863443244,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443244",
+      "conclusion": "success",
+      "job_id": 113604408540
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37863443328,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443328",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113604409360, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113604409456, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113604409535, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37863443283,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443283",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113604409194, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113604409418, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113604409556, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37863443235,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443235",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113604408602, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113604408688, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113604408695, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37863443243,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37863443243",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113604408623, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113604408810, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113604408918, "conclusion": "success"}
+      ]
+    }
+  ],
+  "finding": {
+    "stage": "Obsidian opened the fixture in Restricted Mode, created a new note, and exposed three contenteditable elements; one was active. The runner then sent the note text, but the generated vault contained no Markdown file with the seed marker.",
+    "editor_state": {"count": 3, "active": true},
+    "error": "Timed out waiting for Obsidian to persist the new Markdown note; last value=null",
+    "not_completed": [
+      "The seed note was not found in the vault after text insertion.",
+      "OpenObsidian was not launched against the fixture.",
+      "No vault/app-data snapshot or Obsidian reopen comparison occurred."
+    ],
+    "diagnostic": "The active contenteditable could be Obsidian's inline title instead of its Markdown body editor. The current report did not identify or focus the CodeMirror Markdown editor before Input.insertText."
+  },
+  "correction": "Capture editable-element descriptors, wait for the `.cm-content[contenteditable=true]` Markdown editor, click it at its measured viewport position through CDP mouse events, verify focus, and capture screenshots after focus and text insertion.",
+  "acceptance": "All six required project workflows passed on this SHA. The reference-app workflow failed before Markdown note persistence or OpenObsidian launch; R2.6.48, C01 and C01.2 remain open. No local executable validation was run."
+}

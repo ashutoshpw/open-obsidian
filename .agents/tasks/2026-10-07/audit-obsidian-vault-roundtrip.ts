@@ -604,16 +604,63 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   await delay(750);
   await captureObsidianScreenshot(connection, "obsidian-new-note-action.png");
 
-  const editor = await waitFor("Obsidian editor to become active", async () => await connection.evaluateJson<{count: number; active: boolean}>(`(() => {
+  const editor = await waitFor("Obsidian Markdown editor to become available", async () => await connection.evaluateJson<{
+    count: number;
+    active: boolean;
+    active_tag: string | null;
+    active_class: string;
+    editable_elements: Array<{tag: string; class_name: string; aria_label: string | null; text: string; active: boolean}>;
+    markdown_editor: {class_name: string; x: number; y: number; width: number; height: number} | null;
+  }>(`(() => {
     const editors = [...document.querySelectorAll('[contenteditable="true"]')];
-    return {count: editors.length, active: editors.some((element) => element === document.activeElement || element.contains(document.activeElement))};
+    const active = document.activeElement;
+    const markdownEditor = document.querySelector('.cm-content[contenteditable="true"]');
+    const rect = markdownEditor?.getBoundingClientRect();
+    return {
+      count: editors.length,
+      active: editors.some((element) => element === active || element.contains(active)),
+      active_tag: active?.tagName ?? null,
+      active_class: typeof active?.className === 'string' ? active.className : '',
+      editable_elements: editors.map((element) => ({
+        tag: element.tagName,
+        class_name: typeof element.className === 'string' ? element.className : '',
+        aria_label: element.getAttribute('aria-label'),
+        text: (element.textContent ?? '').slice(0, 100),
+        active: element === active || element.contains(active),
+      })),
+      markdown_editor: markdownEditor && rect ? {
+        class_name: typeof markdownEditor.className === 'string' ? markdownEditor.className : '',
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      } : null,
+    };
   })()`), (value) => {
     (report.obsidian_authoring as Record<string, unknown>).last_editor_state = value;
-    return value.count > 0 && value.active;
+    return value.markdown_editor !== null;
   }, 30_000);
   authoring.editor_after_new_note = editor;
+  const clickX = Math.max(1, editor.markdown_editor!.x + 12);
+  const clickY = Math.max(1, editor.markdown_editor!.y + 12);
+  await connection.request("Input.dispatchMouseEvent", {type: "mouseMoved", x: clickX, y: clickY});
+  await connection.request("Input.dispatchMouseEvent", {type: "mousePressed", x: clickX, y: clickY, button: "left", clickCount: 1});
+  await connection.request("Input.dispatchMouseEvent", {type: "mouseReleased", x: clickX, y: clickY, button: "left", clickCount: 1});
+  const editorFocus = await connection.evaluateJson<{markdown_editor_active: boolean; active_tag: string | null; active_class: string}>(`(() => {
+    const markdownEditor = document.querySelector('.cm-content[contenteditable="true"]');
+    const active = document.activeElement;
+    return {
+      markdown_editor_active: Boolean(markdownEditor && (markdownEditor === active || markdownEditor.contains(active))),
+      active_tag: active?.tagName ?? null,
+      active_class: typeof active?.className === 'string' ? active.className : '',
+    };
+  })()`);
+  authoring.editor_focus_after_click = editorFocus;
+  if (!editorFocus.markdown_editor_active) throw new Error(`Could not focus Obsidian's Markdown editor: ${JSON.stringify(editorFocus)}`);
+  await captureObsidianScreenshot(connection, "obsidian-markdown-editor-focused.png");
   const inserted = await connection.request("Input.insertText", {text: noteContents});
   if (inserted.error) throw new Error(`Could not insert synthetic note content into Obsidian: ${inserted.error.message ?? "unknown error"}`);
+  await captureObsidianScreenshot(connection, "obsidian-note-content-entered.png");
 
   const notePath = await waitFor("Obsidian to persist the new Markdown note", async () => {
     const entries = await snapshotTree(vaultRoot);
