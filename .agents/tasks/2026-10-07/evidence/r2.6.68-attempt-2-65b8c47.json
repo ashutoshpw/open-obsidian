@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.68",
+  "attempt": 2,
+  "source_sha": "65b8c4739032b9a44e9bae0b7c81437fae62f274",
+  "change": "Apply the exact GitHub Actions rustfmt layout for the two app-data snapshot assertions, then rerun the acceptance and companion workflows on the corrected exact SHA.",
+  "conclusion": "C01.2-19 passed. Rust workspace tests passed on Ubuntu, macOS, and Windows. All seven required workflows passed on the exact source SHA after same-SHA retries for a Windows Wry probe timeout and a macOS Obsidian app.ron persistence timeout.",
+  "accepted_slice": "C01.2-19",
+  "read_only_transclusion": {
+    "fixture": "fixture:c03-link-forms",
+    "test": "egui_existing_vault_nested_transclusions_preserve_full_snapshots",
+    "observed": [
+      "Selected heading and block transclusion source slices rendered through the egui UI.",
+      "The nested self-embed was reported as a cycle and not expanded.",
+      "The unsupported SVG embed remained explicitly not rendered.",
+      "The full vault snapshot stayed unchanged after session open, link resolution, rendering, and teardown.",
+      "The separate app-data snapshot, including its binary sentinel, stayed unchanged after session open, link resolution, rendering, and teardown."
+    ],
+    "workspace_test_results": {
+      "ubuntu-latest": "passed in Rust CI attempts 1 and 2",
+      "macos-latest": "passed in Rust CI attempts 1 and 2",
+      "windows-latest": "passed in Rust CI attempts 1 and 2"
+    },
+    "scope_limitations": [
+      "This is synthetic egui coverage; it does not claim that Obsidian Desktop renders these transclusions identically.",
+      "This test does not certify native OS screen-reader behavior."
+    ]
+  },
+  "same_sha_retries": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37954282572,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282572",
+      "initial_attempt": {
+        "attempt": 1,
+        "conclusion": "failure",
+        "jobs": [
+          { "id": 113900698767, "name": "rust (ubuntu-latest)", "conclusion": "success" },
+          { "id": 113900699189, "name": "rust (macos-latest)", "conclusion": "success" },
+          { "id": 113900699224, "name": "rust (windows-latest)", "conclusion": "failure", "failed_step": "Run unchanged plugin Wry feasibility probes" }
+        ],
+        "failure": "The Windows Wry feasibility probe timed out after formatting, workspace tests, Clippy, dependency-layer checks, and the native preview build passed. The full workspace tests passed on all three operating systems.",
+        "windows_artifact": {
+          "id": 11626993854,
+          "digest": "sha256:708b98cc967e9562b941008a659e40b060d6492874b70183c64a5d89ee802282"
+        }
+      },
+      "same_sha_retry": {
+        "attempt": 2,
+        "conclusion": "success",
+        "jobs": [
+          { "id": 113903818681, "name": "rust (windows-latest)", "conclusion": "success" },
+          { "id": 113903819712, "name": "rust (ubuntu-latest)", "conclusion": "success" },
+          { "id": 113903820051, "name": "rust (macos-latest)", "conclusion": "success" }
+        ],
+        "windows_artifact": {
+          "id": 11628126047,
+          "digest": "sha256:6161beb2e710b91ecf63821ca6d79be8f74519067cffabb5d07281195e20017c",
+          "probe_summary": "PC05 and PC08 passed; the Windows WebView engine was 153.0.4234.48 with Wry 0.57.0. The probe remains feasibility evidence only."
+        }
+      }
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37954282908,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282908",
+      "initial_attempt": {
+        "attempt": 1,
+        "conclusion": "failure",
+        "jobs": [
+          { "id": 113900700168, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+          { "id": 113900700434, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" },
+          { "id": 113900700940, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure", "failed_step": "Author, open, snapshot, and reopen the same vault" }
+        ],
+        "failure": "The macOS job timed out waiting for eframe app.ron state to persist before cancellation. The initial app-data baseline contained no eframe persistence files, and the failure occurred before the round-trip actions.",
+        "macos_artifact": {
+          "id": 11627506502,
+          "digest": "sha256:55bb8ffeddccb0b8e5113b863fa694d24efd9bc4ed7936537a42b6f7c8923f66"
+        }
+      },
+      "same_sha_retry": {
+        "attempt": 2,
+        "conclusion": "success",
+        "jobs": [
+          { "id": 113902765322, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+          { "id": 113902767284, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+          { "id": 113902767749, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+        ]
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37954282572,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282572",
+      "attempt": 2,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113903818681, "name": "rust (windows-latest)", "conclusion": "success" },
+        { "id": 113903819712, "name": "rust (ubuntu-latest)", "conclusion": "success" },
+        { "id": 113903820051, "name": "rust (macos-latest)", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37954282908,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282908",
+      "attempt": 2,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113902765322, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+        { "id": 113902767284, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+        { "id": 113902767749, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37954282754,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282754",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113900703988, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37954282727,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282727",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113900700106, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113900700315, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113900700504, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37954282581,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282581",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113900699201, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113900699379, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113900699422, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37954282772,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282772",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113900699592, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113900699917, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113900699987, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37954282558,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282558",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113900699298, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113900699511, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113900699543, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    }
+  ],
+  "artifacts": [
+    { "workflow": "OpenObsidian Rust CI", "attempt": 1, "platform": "ubuntu-latest Wry probe", "id": 11626459518, "digest": "sha256:56b1de0faf75b48b226a8f2ea369964c961df5c94cbe58da3391036991b69d3f" },
+    { "workflow": "OpenObsidian Rust CI", "attempt": 1, "platform": "macos-latest Wry probe", "id": 11626519532, "digest": "sha256:1f7d0b9bceebc819632c2f0e63a59b919e9315574f2eafb8e49b4b35c589aa67" },
+    { "workflow": "OpenObsidian Rust CI", "attempt": 1, "platform": "Linux preview executable", "id": 11626484883, "digest": "sha256:1f1169968ca3af5b32ecabad62c30b64933eb2441b0014fd076c18f46b03c1f5" },
+    { "workflow": "OpenObsidian Rust CI", "attempt": 1, "platform": "windows-latest Wry probe", "id": 11626993854, "digest": "sha256:708b98cc967e9562b941008a659e40b060d6492874b70183c64a5d89ee802282" },
+    { "workflow": "OpenObsidian Rust CI", "attempt": 2, "platform": "windows-latest Wry probe", "id": 11628126047, "digest": "sha256:6161beb2e710b91ecf63821ca6d79be8f74519067cffabb5d07281195e20017c" },
+    { "workflow": "Obsidian vault round-trip acceptance", "attempt": 1, "platform": "macos-latest", "id": 11627506502, "digest": "sha256:55bb8ffeddccb0b8e5113b863fa694d24efd9bc4ed7936537a42b6f7c8923f66" },
+    { "workflow": "Obsidian vault round-trip acceptance", "attempt": 1, "platform": "ubuntu-24.04", "id": 11626808850, "digest": "sha256:3fc875fb37d03b428839627104bcfeaef0f7e8b99c96fcfc15c8e8ce2905126b" },
+    { "workflow": "Obsidian vault round-trip acceptance", "attempt": 1, "platform": "windows-latest", "id": 11627253123, "digest": "sha256:f65b4f0b3a65d4dc495aca9a8163a50b3d34b00ad608ab992a8a2ce1560957f0" },
+    { "workflow": "Obsidian vault round-trip acceptance", "attempt": 2, "platform": "macos-latest", "id": 11628195348, "digest": "sha256:b3607554f71a84157fcfd5a4eb1ff80a572f7ffbb0f3d22b803ead58a2aa9cfb" }
+  ],
+  "parallel_step_groups": "The repo already uses GitHub Actions parallel groups in Rust CI, quality, desktop build, compatibility pins, round-trip acceptance, and reference feasibility workflows. The exact-SHA job logs show their parallel groups completed successfully; this milestone did not change workflow YAML.",
+  "local_validation": "No local tests, builds, formatters, linters, or application launches were run. Validation and acceptance evidence came from GitHub Actions on the exact pushed source SHA."
+}
