@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T14:07:40Z",
+  "updated_at": "2026-10-09T14:15:52Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "099ed0a3582442dae623cac82f7444a67ad74ae1",
+  "last_reconciled_head": "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
   "current_milestone": "R2.6.66",
-  "next_action": "Push the C01.2-17 full-label assertion correction, then inspect fresh exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
+  "next_action": "Commit and push the Rustfmt one-line correction for the C01.2-17 accessible label, then inspect fresh exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.66 attempt 2 source 099ed0a3582442dae623cac82f7444a67ad74ae1 is pushed. Rust workspace tests failed on all three OSes because the UI test queried only a prefix of the accessible Not rendered label; formatting passed. Quality and the other companion workflows passed. The Obsidian round trip passed on macOS and Windows; Ubuntu reached the final Obsidian reopen step, where xdotool found no visible window. The full-label correction is prepared; no local executable validation was run.",
+  "push_status": "R2.6.66 attempt 3 source 6c004218dbfeb8acc30d57fef8d209a87b36d4df is pushed. Rust workspace tests passed on Ubuntu, macOS, and Windows; Ubuntu formatting failed because the exact accessible-label assignment must be on one line. Quality, inventory, loaded-plugin workflows, desktop build, plugin renderer, and all three Obsidian round trips passed. The formatter-directed correction is prepared; no local executable validation was run.",
   "ci_results": [
     {
       "name": "inventory",
@@ -12926,12 +12926,13 @@
     },
     "R2.6.66": {
       "status": "in_progress",
-      "implementation_sha": "099ed0a3582442dae623cac82f7444a67ad74ae1",
+      "implementation_sha": "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
       "implementation_commits": [
         "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
-        "099ed0a3582442dae623cac82f7444a67ad74ae1"
+        "099ed0a3582442dae623cac82f7444a67ad74ae1",
+        "6c004218dbfeb8acc30d57fef8d209a87b36d4df"
       ],
-      "evidence": "evidence/r2.6.66-attempt-2-099ed0a.json",
+      "evidence": "evidence/r2.6.66-attempt-3-6c00421.json",
       "scope": "Verify that read-only link resolution and note-embed preview do not expose Markdown files outside an opened vault.",
       "acceptance": [
         "A nested note’s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
@@ -12941,8 +12942,8 @@
       ],
       "accepted_slice": [],
       "remaining": [
-        "Attempts 1 and 2 failed the Rust UI matrix because the accessible Not rendered label includes the raw embed reference; the full-label assertion is pending exact-SHA CI.",
-        "Attempt 2 Ubuntu’s native round trip failed during final Obsidian reopen after OpenObsidian and Obsidian authoring passed; full-label Rust correction remains pending exact-SHA CI."
+        "Attempt 3 passed the focused workspace tests on all three OSes, but Ubuntu's Rustfmt check requires the exact accessible-label assignment on one line; the focused correction is pending exact-SHA CI.",
+        "Keep broader C01/C01.2 acceptance pending."
       ],
       "ci_attempts": [
         {
@@ -12996,9 +12997,37 @@
           },
           "evidence": "evidence/r2.6.66-attempt-2-099ed0a.json",
           "correction": "Query the full accessible label including the raw embed syntax; retain the Ubuntu final-reopen xdotool failure separately and obtain fresh exact-SHA CI."
+        },
+        {
+          "source_sha": "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
+          "attempt": 3,
+          "conclusion": "Rust workspace tests passed on Ubuntu, macOS, and Windows. Ubuntu formatting alone failed because rustfmt expects the full accessible-label assignment on one line. Quality, inventory, loaded-plugin workflows, desktop build, plugin renderer, and all three Obsidian round trips passed.",
+          "workflows": {
+            "rust_ci": 37942056560,
+            "obsidian_vault_roundtrip": 37942056513,
+            "inventory": 37942056428,
+            "loaded_plugin_workflows": 37942056607,
+            "desktop_build": 37942056440,
+            "plugin_renderer": 37942056491,
+            "quality": 37942056596
+          },
+          "jobs": {
+            "rust_ubuntu": 113858672419,
+            "rust_macos": 113858673021,
+            "rust_windows": 113858672817,
+            "roundtrip_ubuntu": 113858669117,
+            "roundtrip_macos": 113858669460,
+            "roundtrip_windows": 113858669407,
+            "quality_ubuntu": 113858670061,
+            "quality_macos": 113858669725,
+            "quality_windows": 113858669916,
+            "inventory": 113858668444
+          },
+          "evidence": "evidence/r2.6.66-attempt-3-6c00421.json",
+          "correction": "Apply the exact one-line layout shown by the Ubuntu Rustfmt diff, commit and push the focused correction, and inspect fresh exact-SHA CI."
         }
       ],
-      "next_action": "Commit and push the full accessible-label correction, then inspect fresh exact-SHA CI. Keep broader C01/C01.2 pending."
+      "next_action": "Commit and push the Rustfmt one-line correction for the full accessible label, then inspect fresh exact-SHA CI. Keep broader C01/C01.2 pending."
     }
   },
   "ci_preparation": {

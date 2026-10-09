@@ -1,0 +1,169 @@
+{
+  "milestone": "R2.6.66",
+  "attempt": 3,
+  "source_sha": "6c004218dbfeb8acc30d57fef8d209a87b36d4df",
+  "status_at_recording": "complete; Rust formatting correction required",
+  "workflows": {
+    "rust_ci": {
+      "run_id": 37942056560,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056560"
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 37942056513,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056513"
+    },
+    "inventory": {
+      "run_id": 37942056428,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056428"
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37942056607,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056607"
+    },
+    "desktop_build": {
+      "run_id": 37942056440,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056440"
+    },
+    "plugin_renderer": {
+      "run_id": 37942056491,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056491"
+    },
+    "quality": {
+      "run_id": 37942056596,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37942056596"
+    }
+  },
+  "jobs": {
+    "rust_ci": {
+      "ubuntu": {
+        "job_id": 113858672419,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Check formatting"
+        ],
+        "workspace_tests": "success"
+      },
+      "macos": {
+        "job_id": 113858673021,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113858672817,
+        "conclusion": "success"
+      }
+    },
+    "quality": {
+      "ubuntu": {
+        "job_id": 113858670061,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113858669725,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113858669916,
+        "conclusion": "success"
+      }
+    },
+    "roundtrip": {
+      "ubuntu": {
+        "job_id": 113858669117,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113858669460,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113858669407,
+        "conclusion": "success"
+      }
+    },
+    "inventory": {
+      "job_id": 113858668444,
+      "conclusion": "success"
+    },
+    "loaded_plugin_workflows": {
+      "ubuntu": {
+        "job_id": 113858670224,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113858670473,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113858669885,
+        "conclusion": "success"
+      }
+    },
+    "desktop_build": {
+      "ubuntu": {
+        "job_id": 113858669098,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113858669231,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113858668799,
+        "conclusion": "success"
+      }
+    },
+    "plugin_renderer": {
+      "ubuntu": {
+        "job_id": 113858668630,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113858668957,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113858669053,
+        "conclusion": "success"
+      }
+    }
+  },
+  "findings": [
+    "Rust workspace tests passed on Ubuntu, macOS, and Windows, including the outside-vault UI assertions.",
+    "Ubuntu Rust CI failed only because rustfmt expects the exact accessible-label assignment on one line; the formatter diff was captured from the job log.",
+    "Quality, inventory, loaded-plugin workflows, desktop build, plugin renderer, and Obsidian vault round trips passed on all required platforms."
+  ],
+  "next_correction": "Keep the exact accessible label but place its assignment on the single line requested by rustfmt. Push the focused correction and inspect fresh exact-SHA GitHub Actions results.",
+  "artifacts": {
+    "roundtrip": {
+      "ubuntu": {
+        "artifact_id": 11622115626,
+        "digest": "sha256:ce6fe74fdd5d6538e2abe0853e0d44e8c25ffe5431bebfa6ea3108d85ca77228"
+      },
+      "macos": {
+        "artifact_id": 11623100292,
+        "digest": "sha256:13a34b3dbee8d57d4b1f8b0558030f70ddba34586a09d94b5ec55febb01bbf6b"
+      },
+      "windows": {
+        "artifact_id": 11623130341,
+        "digest": "sha256:d1497766f1f832b8009c54b07493dfe68759c6a6650480ad0cbe13644b966338"
+      }
+    },
+    "rust_plugin_runtime": {
+      "macos": {
+        "artifact_id": 11622210794,
+        "digest": "sha256:fc34e32c72d56840dc7f32afe5327cf49f985d8f8ef856d9fb9b8c37f3234838"
+      },
+      "windows": {
+        "artifact_id": 11622481116,
+        "digest": "sha256:ed87658cb71d5e81a8c1909eea8719f169e26c40bc83d36c4c7875a65dd02bb3"
+      }
+    }
+  }
+}
