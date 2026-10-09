@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T13:55:09Z",
+  "updated_at": "2026-10-09T14:02:08Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d2f0bb58a8e1e038bc375d9697cb53c959ee75fd",
+  "last_reconciled_head": "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
   "current_milestone": "R2.6.66",
-  "next_action": "Commit and push the C01.2-17 escaped-reference UI acceptance slice to origin/main, then inspect exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
+  "next_action": "Push the CI correction for the C01.2-17 test, then inspect fresh exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.66 is in progress. The focused C01.2-17 UI acceptance test and pending matrix row are prepared; no local executable validation has been run and exact-SHA GitHub CI is pending.",
+  "push_status": "R2.6.66 attempt 1 source 7e3e8ca1d81f725c1644766c156e3ac7e5974325 is pushed. Rust CI failed on all three OSes because the new UI test queried a duplicate label; Ubuntu formatting also failed. Quality macOS failed in the unrelated Electron vault audit. Inventory, loaded-plugin workflows, desktop build, and plugin renderer passed; Obsidian round trips passed on all three OSes. A focused correction is prepared; no local executable validation was run.",
   "ci_results": [
     {
       "name": "inventory",
@@ -12926,9 +12926,11 @@
     },
     "R2.6.66": {
       "status": "in_progress",
-      "implementation_sha": null,
-      "implementation_commits": [],
-      "evidence": null,
+      "implementation_sha": "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
+      "implementation_commits": [
+        "7e3e8ca1d81f725c1644766c156e3ac7e5974325"
+      ],
+      "evidence": "evidence/r2.6.66-attempt-1-7e3e8ca.json",
       "scope": "Verify that read-only link resolution and note-embed preview do not expose Markdown files outside an opened vault.",
       "acceptance": [
         "A nested note’s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
@@ -12938,10 +12940,37 @@
       ],
       "accepted_slice": [],
       "remaining": [
-        "Await exact-SHA GitHub Actions results; preserve broader C01/C01.2 pending status."
+        "Attempt 1 failed the Rust UI matrix because the test expected a unique label; the formatter also requested a layout correction. Quality macOS needs a fresh result.",
+        "Keep broader C01/C01.2 acceptance pending."
       ],
-      "ci_attempts": [],
-      "next_action": "Review and commit the focused Rust UI test plus pending C01.2-17 matrix row, push to origin/main, and inspect exact-SHA CI."
+      "ci_attempts": [
+        {
+          "source_sha": "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
+          "attempt": 1,
+          "conclusion": "Rust UI test failed on all three OSes at a duplicate accessibility-label query; Ubuntu formatting failed. Inventory, loaded-plugin workflows, desktop build, and plugin renderer passed. Quality failed on macOS in the unrelated Electron vault audit. Obsidian reference round trips passed on all three OSes.",
+          "workflows": {
+            "rust_ci": 37940517496,
+            "obsidian_vault_roundtrip": 37940517561,
+            "inventory": 37940517580,
+            "loaded_plugin_workflows": 37940517583,
+            "desktop_build": 37940517593,
+            "plugin_renderer": 37940517712,
+            "quality": 37940517742
+          },
+          "jobs": {
+            "rust_ubuntu": 113853396519,
+            "rust_macos": 113853396211,
+            "rust_windows": 113853396630,
+            "quality_macos": 113853399925,
+            "roundtrip_ubuntu": 113853397486,
+            "roundtrip_macos": 113853397001,
+            "roundtrip_windows": 113853397384
+          },
+          "evidence": "evidence/r2.6.66-attempt-1-7e3e8ca.json",
+          "correction": "Remove the duplicate-label accessibility query, apply the formatter layout, then push a focused correction and inspect fresh exact-SHA CI."
+        }
+      ],
+      "next_action": "Commit and push the duplicate-label and formatting correction, then inspect fresh exact-SHA CI. Keep C01/C01.2 pending."
     }
   },
   "ci_preparation": {

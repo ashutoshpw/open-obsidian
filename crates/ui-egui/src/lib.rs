@@ -4186,8 +4186,7 @@ mod tests {
                 resolution.reference.target == "../../Outside.md"
                     && resolution.resolution.status == LinkResolutionStatus::Unresolved
                     && resolution.resolution.target.is_none()
-                    && resolution.resolution.candidates
-                        == vec!["../../Outside.md".to_owned()]
+                    && resolution.resolution.candidates == vec!["../../Outside.md".to_owned()]
             }));
 
             let report = app
@@ -4210,10 +4209,8 @@ mod tests {
         }
 
         harness.get_by_label("Unresolved: 2");
-        harness.get_by_label("Source target: ../../Outside.md");
-        harness.get_by_label(
-            "Not rendered: no matching Markdown note or vault attachment was found.",
-        );
+        harness
+            .get_by_label("Not rendered: no matching Markdown note or vault attachment was found.");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),

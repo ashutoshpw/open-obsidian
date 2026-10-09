@@ -1,0 +1,121 @@
+{
+  "milestone": "R2.6.66",
+  "attempt": 1,
+  "source_sha": "7e3e8ca1d81f725c1644766c156e3ac7e5974325",
+  "status_at_recording": "complete; Rust UI correction required",
+  "workflows": {
+    "rust_ci": {
+      "run_id": 37940517496,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517496"
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 37940517561,
+      "status": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517561"
+    },
+    "inventory": {
+      "run_id": 37940517580,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517580"
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37940517583,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517583"
+    },
+    "desktop_build": {
+      "run_id": 37940517593,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517593"
+    },
+    "plugin_renderer": {
+      "run_id": 37940517712,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517712"
+    },
+    "quality": {
+      "run_id": 37940517742,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517742"
+    }
+  },
+  "jobs": {
+    "rust_ci": {
+      "ubuntu": {
+        "job_id": 113853396519,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Check formatting",
+          "Run workspace tests"
+        ]
+      },
+      "macos": {
+        "job_id": 113853396211,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      },
+      "windows": {
+        "job_id": 113853396630,
+        "conclusion": "failure",
+        "failed_steps": [
+          "Run workspace tests"
+        ]
+      }
+    },
+    "quality": {
+      "ubuntu": {
+        "job_id": 113853399310,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113853399925,
+        "conclusion": "failure",
+        "failed_step": "Run Electron vault round-trip report",
+        "detail": "The Electron renderer did not reach its local retrieval boundary; its observed status was Local index complete · 1/1 Markdown files visited · 1 passages indexed · 3 excluded."
+      },
+      "windows": {
+        "job_id": 113853399928,
+        "conclusion": "success"
+      }
+    },
+    "roundtrip": {
+      "ubuntu": {
+        "job_id": 113853397486,
+        "conclusion": "success"
+      },
+      "macos": {
+        "job_id": 113853397001,
+        "conclusion": "success"
+      },
+      "windows": {
+        "job_id": 113853397384,
+        "status": "in_progress",
+        "conclusion": "success"
+      }
+    }
+  },
+  "findings": [
+    "The focused test compiled on all three operating systems. Each Rust test job failed because the UI accessibility query expected a unique Source target label, but both the regular link and the embed expose the same label; the direct state assertions for both references had already passed.",
+    "Ubuntu cargo fmt --all -- --check requested two formatting-only changes in the new test. Both are applied in the next correction.",
+    "The quality macOS failure is in the Electron vault audit, unrelated to this Rust UI test. It requires a fresh exact-SHA result before deciding whether it is transient or a separate baseline issue.",
+    "Inventory, loaded-plugin workflows, desktop build, plugin renderer, and the Obsidian reference round trip passed on all three OSes. The round-trip artifacts are retained with their exact IDs and digests."
+  ],
+  "next_correction": "Remove the duplicate-label accessibility query and apply the formatter's requested line layout. Push the correction and obtain fresh exact-SHA GitHub Actions results; keep C01/C01.2 pending.",
+  "artifacts": {
+    "ubuntu": {
+      "artifact_id": 11621327814,
+      "digest": "sha256:600eba898ace987cd6bad500c02e3ab63082f184f64d2b6f50ed47978de08b1a"
+    },
+    "windows": {
+      "artifact_id": 11621303246,
+      "digest": "sha256:3a512fb7a929ef93af9bd8897ff357f22949cc2d0658fa730aee098a900c2645"
+    },
+    "macos": {
+      "artifact_id": 11620957964,
+      "digest": "sha256:b64dd521e603d8e245259ab697255a11d6455964967fba0124b30ed390e5ff59"
+    }
+  }
+}

@@ -1605,3 +1605,13 @@ Rust CI [37938888640](https://github.com/ashutoshpw/open-obsidian/actions/runs/3
 At starting SHA e14cdca7cff0b37137c26324678a13844d957edf, selected a read-only flow that checks relative Markdown links and embeds pointing from a nested note to a sibling file outside the selected vault. Added a focused egui acceptance test that requires unresolved targets, an unrendered embed, no outside content in the report, and unchanged vault, app-data, and outside-file bytes after resolution and teardown. Added the pending C01.2-17 row to the matrix. Exact-SHA GitHub Actions validation is pending; no local tests, builds, formatters, linters, or application launches were run.
 
 Next: review the source and task-tracking changes, commit and push to origin/main, then inspect all required exact-SHA CI workflows and platform jobs. Broader C01/C01.2 acceptance remains pending.
+
+### R2.6.66 attempt 1 result and correction — SHA 7e3e8ca
+
+Rust CI run [37940517496](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517496) compiled the new test on all three OSes, but it failed when the test queried the same accessible “Source target” label exposed by both references. The direct assertions for the two unresolved references had passed. Ubuntu also reported two formatting-only differences. Both issues are corrected in the next source change; no local formatter or tests were run.
+
+Inventory [37940517580](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517580), loaded-plugin workflows [37940517583](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517583), desktop build [37940517593](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517593), and plugin renderer [37940517712](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517712) passed. Quality [37940517742](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517742) failed only on macOS, where the unrelated Electron vault audit did not reach its local-retrieval check; this needs a fresh exact-SHA result. The round-trip run [37940517561](https://github.com/ashutoshpw/open-obsidian/actions/runs/37940517561) passed Ubuntu and macOS at first review; Windows was still running then and later passed. All three round-trip jobs succeeded, with artifact details in evidence/r2.6.66-attempt-1-7e3e8ca.json.
+
+The correction removes the duplicate-label UI query and applies the exact layout requested by Rust CI formatting. C01.2-17 and broader C01/C01.2 remain pending.
+
+The Windows job in round-trip run 37940517561 has now passed as well. All three Obsidian round-trip jobs passed; artifact IDs and SHA-256 digests are recorded in evidence/r2.6.66-attempt-1-7e3e8ca.json. This companion pass does not change the failed Rust UI test result.
