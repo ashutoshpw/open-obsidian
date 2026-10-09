@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T20:29:24Z",
+  "updated_at": "2026-10-09T20:47:43Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "5a355d933ed696bd1a848154ae1931d176370396",
+  "last_reconciled_head": "569ae4241b845937bca3fc30aec9335c11280c76",
   "current_milestone": "R2.6.78",
-  "next_action": "Push the focused C01.2-29 corrupted attachment refresh test and start record to origin/main, then inspect all seven required exact-SHA GitHub Actions workflows.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,9 +224,11 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json.",
     "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json.",
-    "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json."
+    "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json.",
+    "R2.6.77 / C01.2-28 passed on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427: the focused attachment-edit workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.77-attempt-2-9242b85.json.",
+    "R2.6.78 / C01.2-29 passed on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76: the focused corrupted-attachment workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.78-attempt-3-569ae42.json."
   ],
-  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. Its focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel barriers passed in Rust CI, quality, desktop build, and Obsidian round-trip. Progress-record commit 5a355d933ed696bd1a848154ae1931d176370396 passed its six triggered workflows after a same-SHA quality retry for a missing X display; the round-trip workflow was skipped by its docs-only path filter. R2.6.78 / C01.2-29 is in progress from that starting SHA. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. R2.6.78 / C01.2-29 is complete on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76, pushed to origin/main through small implementation and CI-correction commits. Its focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Attempts 1 and 2 exposed the snapshot tuple type error and required rustfmt reflow; their results and the final artifacts are in the R2.6.78 evidence files. The prior progress-record commit 5a355d933ed696bd1a848154ae1931d176370396 passed its six triggered workflows after a same-SHA quality retry; the round-trip workflow was skipped by its docs-only path filter. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13997,8 +13999,14 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.78": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "5a355d933ed696bd1a848154ae1931d176370396",
+      "implementation_sha": "569ae4241b845937bca3fc30aec9335c11280c76",
+      "implementation_commits": [
+        "a76bbc73d0c4f5ac62952d0defad3458e0444c6c",
+        "c5ee0573cfacbb03bb4455352310f7a3bebe7ce4",
+        "569ae4241b845937bca3fc30aec9335c11280c76"
+      ],
       "scope": "Exercise an external in-place replacement of a rendered PNG with a truncated PNG stream; refresh the active vault and verify the malformed image remains resolved as a path but fails closed without stale image rendering or vault/app-data writes.",
       "accepted_slice": ["C01.2-29"],
       "remaining": ["Broader C01/C01.2 acceptance remains pending."],
@@ -14010,8 +14018,76 @@
         "The post-corruption vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Push the focused C01.2-29 UI test and start record to origin/main, then inspect all seven required exact-SHA workflows."
+      "ci_attempts": [
+        {
+          "source_sha": "a76bbc73d0c4f5ac62952d0defad3458e0444c6c",
+          "attempt": 1,
+          "conclusion": "Rust CI could not compile the test because the expected snapshot tuple used u64 instead of the helper's u8 file-kind marker. Five companion workflows passed; the obsolete round-trip was cancelled while Ubuntu dependency installation remained in progress.",
+          "workflows": {
+            "rust_ci": 37987381026,
+            "obsidian_vault_roundtrip": 37987380916,
+            "inventory": 37987381051,
+            "loaded_plugin_workflows": 37987380812,
+            "desktop_build": 37987381084,
+            "quality": 37987380843,
+            "plugin_renderer": 37987380814
+          },
+          "jobs": {
+            "rust_ubuntu": 114012642188,
+            "rust_macos": 114012642494,
+            "rust_windows": 114012642572,
+            "roundtrip_ubuntu_cancelled": 114012642274,
+            "roundtrip_macos": 114012642491,
+            "roundtrip_windows": 114012642545
+          },
+          "evidence": "evidence/r2.6.78-attempt-1-a76bbc7.json"
+        },
+        {
+          "source_sha": "c5ee0573cfacbb03bb4455352310f7a3bebe7ce4",
+          "attempt": 2,
+          "conclusion": "The focused workspace tests passed on all three OSes. Rust CI failed only because Ubuntu rustfmt requested a one-line tuple insertion; five companion workflows passed and the pending round-trip was cancelled when this source was superseded.",
+          "workflows": {
+            "rust_ci": 37987798762,
+            "obsidian_vault_roundtrip": 37987798793,
+            "inventory": 37987798813,
+            "loaded_plugin_workflows": 37987798695,
+            "desktop_build": 37987798745,
+            "quality": 37987798841,
+            "plugin_renderer": 37987798806
+          },
+          "jobs": {
+            "rust_ubuntu": 114014030191,
+            "rust_macos": 114014029858,
+            "rust_windows": 114014030185
+          },
+          "evidence": "evidence/r2.6.78-attempt-2-c5ee057.json"
+        },
+        {
+          "source_sha": "569ae4241b845937bca3fc30aec9335c11280c76",
+          "attempt": 3,
+          "conclusion": "C01.2-29 passed. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed where configured.",
+          "workflows": {
+            "rust_ci": 37988331166,
+            "obsidian_vault_roundtrip": 37988331415,
+            "inventory": 37988331355,
+            "loaded_plugin_workflows": 37988331263,
+            "desktop_build": 37988331276,
+            "quality": 37988331168,
+            "plugin_renderer": 37988331434
+          },
+          "jobs": {
+            "rust_ubuntu": 114015831332,
+            "rust_macos": 114015830883,
+            "rust_windows": 114015831285,
+            "roundtrip_ubuntu": 114016565355,
+            "roundtrip_macos": 114016565015,
+            "roundtrip_windows": 114016564721
+          },
+          "evidence": "evidence/r2.6.78-attempt-3-569ae42.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.78-attempt-3-569ae42.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {

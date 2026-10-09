@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-09T20:45:26Z",
+  "source_commit": "[rust R2.6.78] Cover corrupted attachment refresh",
+  "source_sha": "a76bbc73d0c4f5ac62952d0defad3458e0444c6c",
+  "milestone": "R2.6.78",
+  "attempt": 1,
+  "accepted_slice": "C01.2-29",
+  "change": "Add cross-platform egui coverage for replacing an already rendered PNG with a truncated PNG stream, refreshing, and checking that malformed image data fails closed without vault or app-data writes.",
+  "external_attachment_corruption": {
+    "focused_test": "egui_refresh_after_external_attachment_corruption_stops_rendering_without_writing",
+    "focused_test_conclusion": "Not compiled: snapshot tuple used a u64 byte length where the snapshot helper expects a u8 file-kind marker.",
+    "workspace_test_conclusion": "The workspace test command could not compile on Ubuntu, macOS, or Windows."
+  },
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37987381026,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987381026",
+      "conclusion": "failure: compile-time E0308 at crates/ui-egui/src/lib.rs:4866; expected u8, found u64",
+      "jobs": [
+        { "id": 114012642188, "name": "rust (ubuntu-latest)", "conclusion": "failure: compile-time E0308" },
+        { "id": 114012642494, "name": "rust (macos-latest)", "conclusion": "failure: compile-time E0308" },
+        { "id": 114012642572, "name": "rust (windows-latest)", "conclusion": "failure: compile-time E0308" }
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37987380916,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987380916",
+      "conclusion": "cancelled after the source was superseded; Ubuntu dependency installation remained in progress, while macOS and Windows jobs passed",
+      "jobs": [
+        { "id": 114012642274, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "cancelled during dependency installation" },
+        { "id": 114012642491, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+        { "id": 114012642545, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37987381051,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987381051",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37987380812,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987380812",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37987381084,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987381084",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37987380843,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987380843",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37987380814,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987380814",
+      "conclusion": "success"
+    }
+  ],
+  "conclusion": "Attempt 1 exposed a snapshot tuple type error before the focused test could compile. Five companion workflows passed. The obsolete round-trip run was cancelled while Ubuntu dependencies remained in progress; this attempt is not accepted.",
+  "limitations": [
+    "No local tests, builds, formatters, linters, or application launches were run."
+  ]
+}

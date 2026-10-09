@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-09T20:45:26Z",
+  "source_commit": "[fix R2.6.78] Use snapshot file kind byte",
+  "source_sha": "c5ee0573cfacbb03bb4455352310f7a3bebe7ce4",
+  "milestone": "R2.6.78",
+  "attempt": 2,
+  "accepted_slice": "C01.2-29",
+  "change": "Correct the snapshot tuple marker to identify the replaced attachment as a regular file.",
+  "external_attachment_corruption": {
+    "focused_test": "egui_refresh_after_external_attachment_corruption_stops_rendering_without_writing",
+    "focused_test_conclusion": "The focused workspace tests passed on Ubuntu, macOS, and Windows.",
+    "workspace_test_conclusion": "passed on Ubuntu, macOS, and Windows"
+  },
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37987798762,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798762",
+      "conclusion": "failure: Ubuntu rustfmt check requested a one-line reflow of the snapshot tuple insertion; workspace tests passed on all three OSes"
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37987798793,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798793",
+      "conclusion": "cancelled while pending after the source was superseded"
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37987798813,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798813",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37987798695,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798695",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37987798745,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798745",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37987798841,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798841",
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37987798806,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37987798806",
+      "conclusion": "success"
+    }
+  ],
+  "conclusion": "Attempt 2 passed the focused workspace tests on all three OSes and five companion workflows. Rust CI failed only because Ubuntu rustfmt required the tuple insertion to be on one line. The round-trip workflow was cancelled while pending; this attempt is not accepted.",
+  "limitations": [
+    "The rustfmt correction is only covered by the following exact-SHA Rust CI run.",
+    "No local tests, builds, formatters, linters, or application launches were run."
+  ]
+}
