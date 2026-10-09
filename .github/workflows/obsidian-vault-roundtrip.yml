@@ -79,7 +79,11 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install tesseract --yes --no-progress
+          choco install imagemagick --yes --no-progress
           "$env:ProgramFiles\Tesseract-OCR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $imageMagick = Get-ChildItem -Path $env:ProgramFiles -Directory -Filter 'ImageMagick*' | ForEach-Object { Join-Path $_.FullName 'magick.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $imageMagick) { throw 'ImageMagick magick.exe was not installed under Program Files' }
+          (Split-Path $imageMagick) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       # The pinned Obsidian extraction and Rust build write to separate directories.
       - parallel:

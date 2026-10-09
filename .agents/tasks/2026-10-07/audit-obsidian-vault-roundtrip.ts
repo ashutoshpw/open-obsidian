@@ -496,45 +496,8 @@ async function captureWindowsWindowScreenshot(processId: number, filename: strin
 
 async function prepareScreenshotForOcr(imagePath: string): Promise<string> {
   const ocrImagePath = join(reportDirectory, "openobsidian-vault-window-ocr.png");
-  if (process.platform === "darwin") {
+  if (process.platform === "darwin" || process.platform === "win32") {
     execFileSync("magick", [imagePath, "-colorspace", "Gray", "-level", "0%,35%", "-resize", "200%", ocrImagePath], {stdio: "ignore"});
-    return ocrImagePath;
-  }
-  if (process.platform === "win32") {
-    const script = `
-      Add-Type -AssemblyName System.Drawing
-      Add-Type -TypeDefinition @'
-        using System.Drawing;
-        using System.Drawing.Drawing2D;
-        using System.Drawing.Imaging;
-        public static class OpenObsidianOcrImage {
-          public static void Prepare(string inputPath, string outputPath) {
-            using (var source = new Bitmap(inputPath))
-            using (var scaled = new Bitmap(source.Width * 2, source.Height * 2))
-            using (var graphics = Graphics.FromImage(scaled))
-            using (var attributes = new ImageAttributes()) {
-              graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-              graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-              var matrix = new ColorMatrix(new float[][] {
-                new float[] {2.86f, 0, 0, 0, 0},
-                new float[] {0, 2.86f, 0, 0, 0},
-                new float[] {0, 0, 2.86f, 0, 0},
-                new float[] {0, 0, 0, 1, 0},
-                new float[] {0, 0, 0, 0, 1}
-              });
-              attributes.SetColorMatrix(matrix);
-              graphics.DrawImage(source, new Rectangle(0, 0, scaled.Width, scaled.Height), 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
-              scaled.Save(outputPath, ImageFormat.Png);
-            }
-          }
-        }
-'@
-      [OpenObsidianOcrImage]::Prepare($env:OBSIDIAN_OCR_INPUT, $env:OBSIDIAN_OCR_OUTPUT)
-    `;
-    execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
-      env: {...process.env, OBSIDIAN_OCR_INPUT: imagePath, OBSIDIAN_OCR_OUTPUT: ocrImagePath},
-      stdio: "ignore",
-    });
     return ocrImagePath;
   }
   return imagePath;
