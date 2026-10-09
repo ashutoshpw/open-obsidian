@@ -1067,6 +1067,19 @@ linters or application launches were run.
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
 
+## R2.6.65 — cancel the native folder picker with an active vault
+
+Extended the cross-platform Obsidian round-trip runner to open OpenObsidian's
+native folder picker a second time after the fixture vault is active, then
+cancel it with Escape. The runner now requires the same vault name and note
+count to return and compares full vault and separate app-data snapshots across
+the cancellation. The case exercises Linux's zenity fallback, the macOS Open
+panel, and the Windows folder picker. The matrix row is pending exact-SHA CI;
+no local executable validation was run.
+
+Next: commit and push this runner/UI change, then inspect the reference
+round-trip and required workflows for that exact source SHA.
+
 ## R2.6.58 — switch between existing vaults
 
 Added an egui UI case that begins with the existing-vault fixture open and its
