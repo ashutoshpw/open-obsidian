@@ -4861,11 +4861,7 @@ mod tests {
             .expect("simulate an external in-place attachment corruption");
         let mut expected_after_corruption = before_vault.clone();
         expected_after_corruption.retain(|(path, _, _)| path != &attachment_path);
-        expected_after_corruption.push((
-            attachment_path.clone(),
-            1,
-            corrupted_source.clone(),
-        ));
+        expected_after_corruption.push((attachment_path.clone(), 1, corrupted_source.clone()));
         expected_after_corruption.sort_by(|left, right| left.0.cmp(&right.0));
         let after_external_corruption = existing_vault_tree_snapshot(&vault_path);
         assert_eq!(after_external_corruption, expected_after_corruption);
