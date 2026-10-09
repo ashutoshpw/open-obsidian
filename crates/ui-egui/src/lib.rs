@@ -2463,6 +2463,78 @@ mod tests {
     }
 
     #[test]
+    fn egui_bounds_oversized_note_preview_at_utf8_boundary_without_writing() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+
+        let source_path = PathBuf::from("Notes/Welcome.md");
+        let mut large_source = b"# Large note\n".to_vec();
+        large_source.resize(MAX_NOTE_SOURCE_PREVIEW_BYTES - 2, b'x');
+        large_source.extend_from_slice(
+            "\n😀\nThe remaining source is beyond the preview bound.\n".as_bytes(),
+        );
+        std::fs::write(vault_path.join(&source_path), &large_source)
+            .expect("write oversized fixture note before opening the vault");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(source_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_error.is_none());
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the bounded source preview should be visible");
+        assert_eq!(preview.relative_path, source_path);
+        assert_eq!(
+            preview.text.as_bytes(),
+            &large_source[..MAX_NOTE_SOURCE_PREVIEW_BYTES - 1]
+        );
+        assert_eq!(preview.total_size_bytes, large_source.len() as u64);
+        assert!(preview.truncated);
+        harness.get_by_label(&format!(
+            "Showing the first {} of {} source bytes.",
+            MAX_NOTE_SOURCE_PREVIEW_BYTES,
+            large_source.len()
+        ));
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Close source preview").click();
+        harness.step();
+        assert!(harness.state().note_source_preview.is_none());
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_refreshes_and_previews_an_external_note_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
