@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T21:03:19Z",
+  "updated_at": "2026-10-09T21:10:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "69f550253f23e47103b9eae1bd655890a6c9e266",
-  "current_milestone": "R2.6.79",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "current_milestone": "R2.6.80",
+  "next_action": "Implement the focused C01.2-31 UI test for moving an attachment to a different folder while preserving its basename, commit and push it with the start record, then inspect all seven required exact-SHA GitHub Actions workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -229,7 +229,7 @@
     "R2.6.78 / C01.2-29 passed on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76: the focused corrupted-attachment workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.78-attempt-3-569ae42.json.",
     "R2.6.79 / C01.2-30 passed on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266: external attachment rename leaves the original image embed unresolved and NotRendered after refresh, clears stale preview/texture state, and preserves vault/app-data snapshots through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.79-attempt-1-69f5502.json."
   ],
-  "push_status": "R2.6.79 / C01.2-30 is complete on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Run IDs, job IDs, artifact digests, and attempt details are in evidence/r2.6.79-attempt-1-69f5502.json. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.79 / C01.2-30 is complete on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Run IDs, job IDs, artifact digests, and attempt details are in evidence/r2.6.79-attempt-1-69f5502.json. Evidence-record commit c575b0f9ff9b8f7f23d2bb11b5fd905031313456 passed its six applicable workflows; the round-trip workflow was skipped by its docs-only path filter. R2.6.80 / C01.2-31 is in progress from that starting SHA. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -14135,6 +14135,23 @@
       ],
       "evidence": "evidence/r2.6.79-attempt-1-69f5502.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.80": {
+      "status": "in_progress",
+      "starting_sha": "c575b0f9ff9b8f7f23d2bb11b5fd905031313456",
+      "scope": "Move a rendered attachment to a different in-vault directory while keeping its basename; refresh and verify the path-qualified embed does not resolve to the relocated file, with no stale UI state or vault/app-data writes.",
+      "accepted_slice": ["C01.2-31"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose image embed references Attachments/photo.png and resolves to a rendered PNG.",
+        "Open the note source preview, move the attachment outside OpenObsidian to Images/photo.png, and capture the exact post-move vault snapshot with the same basename at the new directory path.",
+        "Refresh keeps the vault and note active while clearing stale link/embed/preview/error/texture state.",
+        "Fresh resolution leaves the path-qualified Attachments/photo.png reference unresolved and NotRendered; it does not match Images/photo.png by basename.",
+        "The post-move vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Implement the focused C01.2-31 UI test and matrix row, commit and push them with the start record, then inspect all seven required exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {
