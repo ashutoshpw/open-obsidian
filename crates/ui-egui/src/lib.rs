@@ -2540,10 +2540,12 @@ mod tests {
             .as_ref()
             .expect("the refreshed vault session should remain open");
         assert_eq!(session.entries().len(), 2);
-        assert!(session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == source_path));
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == source_path)
+        );
         assert_eq!(
             harness.state().link_source_path.as_deref(),
             Some(source_path.as_path())
@@ -2573,7 +2575,10 @@ mod tests {
             .expect("the updated note source should be visible after refresh");
         assert_eq!(updated_preview.relative_path, source_path);
         assert_eq!(updated_preview.text.as_bytes(), external_source.as_slice());
-        assert_eq!(updated_preview.total_size_bytes, external_source.len() as u64);
+        assert_eq!(
+            updated_preview.total_size_bytes,
+            external_source.len() as u64
+        );
         assert!(!updated_preview.truncated);
         assert_eq!(
             existing_vault_tree_snapshot(&vault_path),
