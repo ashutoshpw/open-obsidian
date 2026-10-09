@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:27:31Z",
+  "updated_at": "2026-10-09T19:36:14Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "ee92f4c1e8e2725264d4e3d0ac9a859d8c0306b5",
+  "last_reconciled_head": "688899c354e9257a282d549f3d2c5d68f7412c05",
   "current_milestone": "R2.6.75",
-  "next_action": "Commit the exact Ubuntu rustfmt correction and attempt-1 CI record, push to origin/main, and inspect all seven required workflows on the new exact source SHA.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -222,9 +222,10 @@
     "R2.6.65 attempt 15 on exact SHA 5a4ae4e: initial round-trip failed on all three platforms; same-SHA macOS attempt 2 and Windows attempt 3 passed native cancellation, snapshots and Obsidian reopen. Ubuntu failed path canonicalization after typed location text contained extra trailing characters. Rust CI and all six companion workflows passed. Evidence: evidence/r2.6.65-cancellation-attempt-15-5a4ae4e.json.",
     "R2.6.65 attempt 20 on exact SHA 2e8447c: Rust CI and all six companion workflows passed, as did applicable native parallel groups. Windows and macOS passed cancellation, snapshots and Obsidian reopen; Ubuntu displayed the selected fixture but egui did not receive the second Open vault click. Evidence: evidence/r2.6.65-cancellation-attempt-20-2e8447c.json.",
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
-    "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
+    "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json.",
+    "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json."
   ],
-  "push_status": "R2.6.74 / C01.2-25 passed on exact source SHA 898c2df7c14cd7cd315012e747f9232f77fa92b1. R2.6.75 / C01.2-26 was pushed as ee92f4c1e8e2725264d4e3d0ac9a859d8c0306b5. Its focused workspace test passed on Ubuntu, macOS, and Windows; six companion workflows passed, while Rust CI failed only Ubuntu rustfmt. The exact GitHub formatter diff is applied for the next attempt. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.75-attempt-2-688899c.json. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13744,8 +13745,13 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.75": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "396a50389d91041977dd67c22b9e75320c21f228",
+      "implementation_sha": "688899c354e9257a282d549f3d2c5d68f7412c05",
+      "implementation_commits": [
+        "ee92f4c1e8e2725264d4e3d0ac9a859d8c0306b5",
+        "688899c354e9257a282d549f3d2c5d68f7412c05"
+      ],
       "scope": "Exercise external removal of an embedded image from an active existing vault; refresh and confirm the note remains available while the stale attachment render is cleared and a fresh embed resolution reports the image missing, without writing vault or app data.",
       "accepted_slice": ["C01.2-26"],
       "remaining": ["Broader C01/C01.2 acceptance remains pending."],
@@ -13792,9 +13798,46 @@
             "plugin_renderer_windows": 113986712028
           },
           "correction": "Apply the exact Ubuntu rustfmt diff to wrap the link_source_path assertion, then push and rerun all seven required workflows on the new exact source SHA."
+        },
+        {
+          "source_sha": "688899c354e9257a282d549f3d2c5d68f7412c05",
+          "attempt": 2,
+          "conclusion": "C01.2-26 passed. The focused workspace test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on this exact source SHA.",
+          "workflows": {
+            "rust_ci": 37980471991,
+            "obsidian_vault_roundtrip": 37980472081,
+            "inventory": 37980472079,
+            "loaded_plugin_workflows": 37980472085,
+            "desktop_build": 37980472603,
+            "quality": 37980472482,
+            "plugin_renderer": 37980472433
+          },
+          "jobs": {
+            "rust_ubuntu": 113989388211,
+            "rust_macos": 113989388208,
+            "rust_windows": 113989388432,
+            "roundtrip_ubuntu": 113989388892,
+            "roundtrip_macos": 113989388854,
+            "roundtrip_windows": 113989388594,
+            "inventory": 113989387876,
+            "loaded_plugin_ubuntu": 113989388567,
+            "loaded_plugin_macos": 113989388635,
+            "loaded_plugin_windows": 113989388159,
+            "desktop_ubuntu": 113989391020,
+            "desktop_macos": 113989391392,
+            "desktop_windows": 113989391566,
+            "quality_ubuntu": 113989391279,
+            "quality_macos": 113989391307,
+            "quality_windows": 113989390947,
+            "plugin_renderer_ubuntu": 113989390090,
+            "plugin_renderer_macos": 113989389842,
+            "plugin_renderer_windows": 113989389460
+          },
+          "evidence": "evidence/r2.6.75-attempt-2-688899c.json"
         }
       ],
-      "next_action": "Push the exact Ubuntu rustfmt correction and attempt-1 record, then verify the focused test and all seven workflows on the corrected exact source SHA."
+      "evidence": "evidence/r2.6.75-attempt-2-688899c.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
