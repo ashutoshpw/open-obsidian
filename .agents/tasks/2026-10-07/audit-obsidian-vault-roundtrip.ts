@@ -790,7 +790,7 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   reopen.devtools_browser = browserVersion;
   reopen.first_target = {title: target.title ?? "", url: target.url ?? ""};
   const notePathJson = JSON.stringify(notePath);
-  let visible = await waitFor(connection, "Obsidian to reopen the authored vault note", async () => await connection.evaluateJson<{
+  let visible = await waitFor("Obsidian to reopen the authored vault note", async () => await connection.evaluateJson<{
     body: string;
     editor: string;
     title: string;
@@ -808,7 +808,7 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
       target?.click();
       return Boolean(target);
     })()`);
-    visible = await waitFor(connection, "Obsidian's file explorer to open the authored note", async () => await connection.evaluateJson<{
+    visible = await waitFor("Obsidian's file explorer to open the authored note", async () => await connection.evaluateJson<{
       body: string;
       editor: string;
       title: string;

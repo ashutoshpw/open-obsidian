@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T00:25:52Z",
+  "updated_at": "2026-10-09T00:32:20Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fabcc8a50f897520b8d1cf5d9962ca91cb76a551",
+  "last_reconciled_head": "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd",
   "current_milestone": "R2.6.48",
-  "next_action": "Commit and push software-rendering plus visible-window wait diagnostics; inspect the next exact-SHA round-trip artifact and all six required project workflow results. Keep C01 and C01.2 open.",
+  "next_action": "Commit and push the corrected Obsidian reopen waits; inspect the next exact-SHA report for reopen and snapshot acceptance. Keep C01 and C01.2 open.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -187,7 +187,8 @@
     "R2.6.48 runner correction on 543aa85e8cd81d801127faace10518e62a220c87 passed all six required project workflows. The runner detected folder closure, attached to the new vault renderer, and selected Restricted Mode; it then failed before reporting an active editor or authored note. The CI error came from the wait timeout's `JSON.stringify(last).slice` when the last value was undefined, so the editor state was not diagnosed. Evidence: evidence/r2.6.48-roundtrip-ci-543aa85.json. The next slice clicks Obsidian's visible New note action through the renderer and captures editor-state screenshots; no local executable validation was run.",
     "R2.6.48 runner correction on da0ab78b12c26c83f6205909811ccb34ac2a91b5 passed all six required project workflows. Obsidian opened the fixture in Restricted Mode and the visible New note action created an Untitled note, confirmed by its screenshot. The runner then failed before editor-state polling because its waitFor call passed the DevTools connection as the label argument. Evidence: evidence/r2.6.48-roundtrip-ci-da0ab78.json. The next slice corrects that argument order; no local executable validation was run.",
     "R2.6.48 runner correction on 0a288760b0c4c3ba3f76cf6c943886ab2292f92a passed all six required project workflows. The editor wait found three contenteditable elements and one active target, but the seed marker was not persisted. Evidence: evidence/r2.6.48-roundtrip-ci-0a28876.json. The next slice identifies and focuses the CodeMirror Markdown body editor through measured CDP mouse events before inserting text; no local executable validation was run.",
-    "R2.6.48 runner correction on fabcc8a50f897520b8d1cf5d9962ca91cb76a551 passed all six required project workflows. The Obsidian-authored Untitled.md note was persisted and the pre-OpenObsidian vault snapshot was captured. OpenObsidian remained running, but its Xvfb screenshot was black and OCR found no text; only a DRI3 warning appeared in its log. Evidence: evidence/r2.6.48-roundtrip-ci-fabcc8a.json. The next slice forces software GL and waits for the visible app window and rendered vault text; no local executable validation was run."
+    "R2.6.48 runner correction on fabcc8a50f897520b8d1cf5d9962ca91cb76a551 passed all six required project workflows. The Obsidian-authored Untitled.md note was persisted and the pre-OpenObsidian vault snapshot was captured. OpenObsidian remained running, but its Xvfb screenshot was black and OCR found no text; only a DRI3 warning appeared in its log. Evidence: evidence/r2.6.48-roundtrip-ci-fabcc8a.json. The next slice forces software GL and waits for the visible app window and rendered vault text; no local executable validation was run.",
+    "R2.6.48 runner correction on 74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd passed all six required project workflows. Pinned Obsidian authored Untitled.md; OpenObsidian rendered the selected vault and two-note count; vault and app-data snapshots remained unchanged through startup and close. The final reopen stage then failed before DOM polling because both reopen wait calls passed arguments in the wrong order. Evidence: evidence/r2.6.48-roundtrip-ci-74680fb.json. The next slice corrects both wait signatures; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -8895,7 +8896,8 @@
         "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
         "da0ab78b12c26c83f6205909811ccb34ac2a91b5",
         "0a288760b0c4c3ba3f76cf6c943886ab2292f92a",
-        "fabcc8a50f897520b8d1cf5d9962ca91cb76a551"
+        "fabcc8a50f897520b8d1cf5d9962ca91cb76a551",
+        "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd"
       ],
       "scope": "Add a Linux-only GitHub Actions workflow that creates a synthetic vault, has pinned Obsidian author a note, launches the native app with --open-vault, compares full vault and app-data snapshots, and reopens the exact vault in Obsidian.",
       "ci_attempts": [
@@ -8962,14 +8964,30 @@
           "finding": "Pinned Obsidian authored Untitled.md and the pre-launch vault snapshot passed. OpenObsidian stayed running, but the Xvfb screenshot was black and OCR returned no text; the process log contained only a DRI3 warning.",
           "correction": "Force software GL, wait for a visible OpenObsidian X11 window, record its properties, and poll window-specific screenshot OCR for the fixture name and note count.",
           "evidence": "evidence/r2.6.48-roundtrip-ci-fabcc8a.json"
+        },
+        {
+          "source_sha": "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd",
+          "conclusion": "round-trip workflow failed; all six required project workflows passed",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37864825078,
+            "rust_ci": 37864825197,
+            "inventory": 37864825057,
+            "quality": 37864825055,
+            "desktop_build": 37864825047,
+            "plugin_renderer": 37864825101,
+            "loaded_plugin_workflows": 37864825042
+          },
+          "finding": "Obsidian authored the note, OpenObsidian displayed the selected vault and note count, and both vault and app-data no-op snapshots passed. The final Obsidian reopen wait failed before its DOM read due to an argument-order defect present in both reopen wait calls.",
+          "correction": "Pass the wait label before the read callback for both the note-reopen and file-explorer fallback waits.",
+          "evidence": "evidence/r2.6.48-roundtrip-ci-74680fb.json"
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "A fresh exact-SHA run must pass the reference-app round-trip workflow; the fabcc8a attempt reached Obsidian-authored note creation but did not establish a visible OpenObsidian vault screen or run snapshot/reopen comparisons.",
+        "A fresh exact-SHA run must pass the reference-app round-trip workflow; the 74680fb attempt passed Obsidian authoring, OpenObsidian visible startup, and vault/app-data no-op checks, but did not complete Obsidian reopen verification.",
         "C01.2 acceptance on macOS and Windows, broader C01 product flows, and edit/save acceptance remain pending."
       ],
-      "next_action": "Push software-rendering plus visible-window wait diagnostics, inspect the new workflow and all six required project workflows on the exact SHA, then correct any remaining UI or vault-snapshot findings before recording acceptance."
+      "next_action": "Push the corrected Obsidian reopen waits, inspect the new workflow and all six required project workflows on the exact SHA, then correct any remaining UI or vault-snapshot findings before recording acceptance."
     }
   },
   "ci_preparation": {

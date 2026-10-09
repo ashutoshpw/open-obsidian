@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.48",
+  "source_sha": "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd",
+  "workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37864825078,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825078",
+    "job_id": 113608941107,
+    "job_conclusion": "failure",
+    "artifact_id": 11587911714,
+    "artifact_name": "obsidian-vault-roundtrip-74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd",
+    "artifact_sha256": "f49bf7372ad49af4523c5f61a5583d1f5ad4c073ba1ecd1d57f977de088dacbe",
+    "artifact_files": {
+      "obsidian-vault-roundtrip-report.json": "560afc457257861d2308f681b14d6094267864fa3cbb7a759a39540c3cea24b0",
+      "vault-before-openobsidian.json": "ed6b7718b5a39a3076b1ac69b6237ac9999663b75983c7f724c45bb7091d1c7b",
+      "vault-after-openobsidian.json": "ed6b7718b5a39a3076b1ac69b6237ac9999663b75983c7f724c45bb7091d1c7b",
+      "obsidian-authored-note.png": "8b04df8e1acb8a8dbae5389f64ea18bdd25f4b46a369e2d69a9e248c22c36bb9",
+      "openobsidian-vault.png": "03cd296cbf0e2052029ffea1913ff189aac631bb67d70842a8a159135dedb396",
+      "openobsidian-vault-window.png": "d3b4f9061f389893a7cb271412bb311e5b3837e796b75738c0a5767272f426c7",
+      "openobsidian.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "obsidian-reopen.log": "187b31efeb01a0ecf08c7600b98d65f2c2b4406f834c30b86f8634c57f6e5f6f"
+    }
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner": "ubuntu-24.04"
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37864825197,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825197",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 113608941077, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113608941270, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113608941364, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37864825057,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825057",
+      "conclusion": "success",
+      "job_id": 113608940877
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37864825055,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825055",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113608941109, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113608941277, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113608941359, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37864825047,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825047",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113608940859, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113608941178, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113608941184, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37864825101,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825101",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113608941031, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113608941188, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113608941202, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37864825042,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37864825042",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113608941055, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113608941229, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113608941346, "conclusion": "success"}
+      ]
+    }
+  ],
+  "finding": {
+    "obsidian_authoring": {
+      "status": "passed",
+      "note_path": "Untitled.md",
+      "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+      "note_bytes": 99
+    },
+    "openobsidian_open": {
+      "status": "passed",
+      "visible_window": {"id": "2097154", "title": "OpenObsidian", "width": 800, "height": 600},
+      "selected_vault_visible": true,
+      "expected_markdown_count_visible": true,
+      "screen_ocr_includes": ["OpenObsidian", "Vault: C01.2 Roundtrip Fixture", "2 Markdown files found"]
+    },
+    "vault_and_app_data": {
+      "before_after_openobsidian_snapshot_sha256": "ed6b7718b5a39a3076b1ac69b6237ac9999663b75983c7f724c45bb7091d1c7b",
+      "app_data_root_outside_vault": true,
+      "app_data_unchanged_after_startup_and_close": true
+    },
+    "obsidian_reopen": {
+      "status": "pending",
+      "first_target": "app://obsidian.md/index.html",
+      "failure": "The first reopen wait passed the DevTools connection as the label argument, causing an immediate timeout before its DOM read callback ran. The file-explorer fallback had the same argument-order defect."
+    },
+    "not_completed": [
+      "Obsidian did not verify that it reopened Untitled.md with the attachment link and unchanged non-workspace paths."
+    ]
+  },
+  "correction": "Pass the wait label before the asynchronous DOM read and predicate in both Obsidian reopen waits, then inspect the next exact-SHA report for reopened note content, attachment visibility, and permitted workspace-state changes.",
+  "acceptance": "All six required project workflows passed on this SHA. Obsidian authored the fixture note, OpenObsidian displayed the selected vault, and vault/app-data snapshots stayed unchanged through native startup/close. Final Obsidian reopen acceptance remains pending. No local executable validation was run."
+}
