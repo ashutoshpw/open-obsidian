@@ -3960,7 +3960,9 @@ mod tests {
         assert!(harness.state().vault_refresh_receiver.is_none());
         assert_eq!(
             harness.state().vault_refresh_error.as_deref(),
-            Some("The note list could not be refreshed safely. The existing listing remains available.")
+            Some(
+                "The note list could not be refreshed safely. The existing listing remains available."
+            )
         );
         assert!(harness.state().vault_refresh_status.is_none());
         let retained_session = harness
@@ -4000,11 +4002,8 @@ mod tests {
             before_app_data
         );
 
-        std::fs::write(
-            relocated_vault_path.join(&note_path),
-            recovered_source,
-        )
-        .expect("simulate an external note update while the vault root is relocated");
+        std::fs::write(relocated_vault_path.join(&note_path), recovered_source)
+            .expect("simulate an external note update while the vault root is relocated");
         let mut expected_recovered_vault = before_vault.clone();
         expected_recovered_vault
             .iter_mut()
@@ -4060,10 +4059,7 @@ mod tests {
             .expect("the restored note source preview should be visible");
         assert_eq!(recovered_preview.relative_path, note_path);
         assert_eq!(recovered_preview.text.as_bytes(), recovered_source);
-        assert_eq!(
-            existing_vault_tree_snapshot(&vault_path),
-            recovered_vault
-        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), recovered_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             before_app_data
