@@ -821,11 +821,14 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
     }))()`), (value) => value.editor.includes(noteMarker), 30_000);
   }
 
-  if (!visible.editor.includes(noteEmbed)) {
-    throw new Error(`Reopened Obsidian note does not display the expected attachment link ${attachmentPath}; editor=${JSON.stringify(visible.editor).slice(0, 2_000)}`);
-  }
   if (!visible.paths.includes(notePath)) {
     throw new Error(`Obsidian file explorer does not expose authored note path ${notePath}; paths=${JSON.stringify(visible.paths).slice(0, 2_000)}`);
+  }
+
+  const noteSource = await readFile(join(vaultRoot, notePath), "utf8");
+  const attachmentLinkPersistedInSource = noteSource.includes(noteEmbed);
+  if (!attachmentLinkPersistedInSource) {
+    throw new Error(`Reopened Obsidian note source does not retain the expected attachment link ${attachmentPath}`);
   }
 
   const attachmentFolderJson = JSON.stringify(attachmentPath.split("/")[0]);
@@ -838,8 +841,8 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   }
   const pathsAfterExpand = await connection.evaluateJson<string[]>(`[...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || '')`);
   const exactAttachmentListed = pathsAfterExpand.includes(attachmentPath);
-  const attachmentFoundInNote = visible.editor.includes(attachmentPath);
-  if (!exactAttachmentListed && !attachmentFoundInNote) {
+  const attachmentPathVisibleInRenderedNote = visible.editor.includes(attachmentPath);
+  if (!exactAttachmentListed && !attachmentPathVisibleInRenderedNote) {
     throw new Error(`Obsidian does not display attachment path ${attachmentPath} in either the file explorer or the reopened note; paths=${JSON.stringify(pathsAfterExpand).slice(0, 2_000)}`);
   }
 
@@ -853,8 +856,9 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   reopen.note_path = notePath;
   reopen.note_path_visible_in_file_explorer = true;
   reopen.attachment_path = attachmentPath;
+  reopen.attachment_link_persisted_in_note_source = attachmentLinkPersistedInSource;
   reopen.attachment_path_visible_in_file_explorer = exactAttachmentListed;
-  reopen.attachment_path_visible_in_note_source = attachmentFoundInNote;
+  reopen.attachment_path_visible_in_editor_text = attachmentPathVisibleInRenderedNote;
   reopen.editor_text = visible.editor.slice(0, 2_000);
   reopen.visible_vault_text = visible.body.slice(0, 4_000);
   reopen.final_file_tree_paths = pathsAfterExpand;

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T00:32:20Z",
+  "updated_at": "2026-10-09T00:40:16Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd",
+  "last_reconciled_head": "0d235e860743905004e549264b24ed3f9873f38e",
   "current_milestone": "R2.6.48",
-  "next_action": "Commit and push the corrected Obsidian reopen waits; inspect the next exact-SHA report for reopen and snapshot acceptance. Keep C01 and C01.2 open.",
+  "next_action": "Commit and push the corrected reopen assertion that checks persisted Markdown source and the exact attachment path in Obsidian’s expanded file tree; inspect the reopened screenshot and all exact-SHA workflow results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -188,7 +188,8 @@
     "R2.6.48 runner correction on da0ab78b12c26c83f6205909811ccb34ac2a91b5 passed all six required project workflows. Obsidian opened the fixture in Restricted Mode and the visible New note action created an Untitled note, confirmed by its screenshot. The runner then failed before editor-state polling because its waitFor call passed the DevTools connection as the label argument. Evidence: evidence/r2.6.48-roundtrip-ci-da0ab78.json. The next slice corrects that argument order; no local executable validation was run.",
     "R2.6.48 runner correction on 0a288760b0c4c3ba3f76cf6c943886ab2292f92a passed all six required project workflows. The editor wait found three contenteditable elements and one active target, but the seed marker was not persisted. Evidence: evidence/r2.6.48-roundtrip-ci-0a28876.json. The next slice identifies and focuses the CodeMirror Markdown body editor through measured CDP mouse events before inserting text; no local executable validation was run.",
     "R2.6.48 runner correction on fabcc8a50f897520b8d1cf5d9962ca91cb76a551 passed all six required project workflows. The Obsidian-authored Untitled.md note was persisted and the pre-OpenObsidian vault snapshot was captured. OpenObsidian remained running, but its Xvfb screenshot was black and OCR found no text; only a DRI3 warning appeared in its log. Evidence: evidence/r2.6.48-roundtrip-ci-fabcc8a.json. The next slice forces software GL and waits for the visible app window and rendered vault text; no local executable validation was run.",
-    "R2.6.48 runner correction on 74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd passed all six required project workflows. Pinned Obsidian authored Untitled.md; OpenObsidian rendered the selected vault and two-note count; vault and app-data snapshots remained unchanged through startup and close. The final reopen stage then failed before DOM polling because both reopen wait calls passed arguments in the wrong order. Evidence: evidence/r2.6.48-roundtrip-ci-74680fb.json. The next slice corrects both wait signatures; no local executable validation was run."
+    "R2.6.48 runner correction on 74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd passed all six required project workflows. Pinned Obsidian authored Untitled.md; OpenObsidian rendered the selected vault and two-note count; vault and app-data snapshots remained unchanged through startup and close. The final reopen stage then failed before DOM polling because both reopen wait calls passed arguments in the wrong order. Evidence: evidence/r2.6.48-roundtrip-ci-74680fb.json. The next slice corrects both wait signatures; no local executable validation was run.",
+    "R2.6.48 runner correction on 0d235e860743905004e549264b24ed3f9873f38e passed all six required project workflows. Obsidian authored Untitled.md with its embedded image, OpenObsidian displayed the selected vault and two-note count, and vault/app-data snapshots stayed unchanged through startup and close. The reopen check reached the authored note, but falsely expected Markdown embed syntax in live-preview innerText; the screenshot shows the image rendered. Evidence: evidence/r2.6.48-roundtrip-ci-0d235e8.json. The next slice checks the persisted Markdown source and expanded file tree; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -6656,6 +6657,195 @@
         {"name": "macos-latest", "job_id": 113550977128, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216069/job/113550977128"},
         {"name": "ubuntu-latest", "job_id": 113550977143, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37847216069/job/113550977143"}
       ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37865372961,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372961",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on Ubuntu",
+          "job_id": 113610712644,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372961/job/113610712644"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37865372996,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372996",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113610712551,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372996/job/113610712551"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113610712822,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372996/job/113610712822"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113610712837,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372996/job/113610712837"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37865372970,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372970",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 113610712605,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372970/job/113610712605"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37865373013,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373013",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113610712734,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373013/job/113610712734"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113610712967,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373013/job/113610712967"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113610713036,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373013/job/113610713036"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37865373037,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373037",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113610713227,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373037/job/113610713227"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113610713445,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373037/job/113610713445"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113610713497,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373037/job/113610713497"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37865372985,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372985",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113610712714,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372985/job/113610712714"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113610712975,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372985/job/113610712975"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113610713016,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865372985/job/113610713016"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37865373027,
+      "head_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373027",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113610713052,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373027/job/113610713052"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113610713112,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373027/job/113610713112"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113610713307,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37865373027/job/113610713307"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -8897,7 +9087,8 @@
         "da0ab78b12c26c83f6205909811ccb34ac2a91b5",
         "0a288760b0c4c3ba3f76cf6c943886ab2292f92a",
         "fabcc8a50f897520b8d1cf5d9962ca91cb76a551",
-        "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd"
+        "74680fbab2db368a5dbcd5accfbd8d3a1d18a1cd",
+        "0d235e860743905004e549264b24ed3f9873f38e"
       ],
       "scope": "Add a Linux-only GitHub Actions workflow that creates a synthetic vault, has pinned Obsidian author a note, launches the native app with --open-vault, compares full vault and app-data snapshots, and reopens the exact vault in Obsidian.",
       "ci_attempts": [
@@ -8980,14 +9171,30 @@
           "finding": "Obsidian authored the note, OpenObsidian displayed the selected vault and note count, and both vault and app-data no-op snapshots passed. The final Obsidian reopen wait failed before its DOM read due to an argument-order defect present in both reopen wait calls.",
           "correction": "Pass the wait label before the read callback for both the note-reopen and file-explorer fallback waits.",
           "evidence": "evidence/r2.6.48-roundtrip-ci-74680fb.json"
+        },
+        {
+          "source_sha": "0d235e860743905004e549264b24ed3f9873f38e",
+          "conclusion": "round-trip workflow failed; all six required project workflows passed",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37865372961,
+            "rust_ci": 37865372996,
+            "inventory": 37865372970,
+            "quality": 37865373013,
+            "desktop_build": 37865373037,
+            "plugin_renderer": 37865372985,
+            "loaded_plugin_workflows": 37865373027
+          },
+          "finding": "Obsidian authored Untitled.md with the attachment embed, OpenObsidian displayed the selected vault, and vault/app-data snapshots stayed unchanged. On reopen the note marker appeared in live-preview text and the screenshot showed the rendered image, but the runner incorrectly expected Markdown embed syntax in editor.innerText.",
+          "correction": "Verify the embed syntax from the reopened note file on disk, verify the exact attachment path in the expanded Obsidian file tree or rendered note text, and retain the reopened UI screenshot as evidence.",
+          "evidence": "evidence/r2.6.48-roundtrip-ci-0d235e8.json"
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "A fresh exact-SHA run must pass the reference-app round-trip workflow; the 74680fb attempt passed Obsidian authoring, OpenObsidian visible startup, and vault/app-data no-op checks, but did not complete Obsidian reopen verification.",
+        "A fresh exact-SHA run must pass the reference-app round-trip workflow; the 0d235e8 attempt passed authoring, visible OpenObsidian startup, and vault/app-data no-op checks, but failed a live-preview text assertion before final reopen snapshot acceptance.",
         "C01.2 acceptance on macOS and Windows, broader C01 product flows, and edit/save acceptance remain pending."
       ],
-      "next_action": "Push the corrected Obsidian reopen waits, inspect the new workflow and all six required project workflows on the exact SHA, then correct any remaining UI or vault-snapshot findings before recording acceptance."
+      "next_action": "Commit and push the corrected reopen assertion that checks persisted Markdown source and the exact attachment path in Obsidian’s expanded file tree; inspect the reopened screenshot and all exact-SHA workflow results."
     }
   },
   "ci_preparation": {
