@@ -931,3 +931,33 @@ The first exact-SHA attempt, `eb700dfe408d15c04846a094fed3be956e8b2a51`, failed 
 On corrected exact source SHA `7f77ad0f69d315db6514b04435c2fe9a0c8def6b`, all seven GitHub Actions workflows passed. The focused test passed on Linux, macOS and Windows, and the pinned Obsidian 1.14.4 round trip passed on all three platforms. Run/job IDs and artifact SHA-256 digests are in the evidence file. C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14. No local executable validation was run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parents pending until their full acceptance coverage passes.
+
+## R2.6.54 — refresh after an external in-place note edit
+
+Added a cross-platform native UI test for an in-place external edit to the
+currently previewed `Notes/Welcome.md`. The test simulates replacing the same
+path with a longer UTF-8 BOM/CRLF source, refreshes the open vault, verifies
+the selected path and note count remain stable while stale preview state clears,
+then previews the exact updated bytes and full size. The vault remains equal to
+the expected post-edit snapshot and separate app data remains unchanged through
+refresh, preview, close, and teardown.
+
+The first source SHA, `9c20b3388e8e88a24585d377eb313c46b2b55486`, passed the
+focused test and all other workspace tests on Ubuntu, macOS and Windows; all six
+companion workflows passed. Ubuntu rustfmt identified two assertion-wrap
+changes. Commit `882592960fe1c9e3ac54564276086fed753a6c3e` applies the exact CI
+layout. Its first Rust CI attempt had one Windows PC05 WebView timeout after the
+Windows workspace tests, Clippy, layering check, and native build passed. A
+same-SHA retry passed both PC05 and PC08 probes; it needed no source change.
+
+On exact source SHA `882592960fe1c9e3ac54564276086fed753a6c3e`, all seven
+required workflows passed and the focused UI test passed on Ubuntu, macOS and
+Windows. The Obsidian 1.14.4 reference round trip also passed on all three
+platforms. Exact jobs and artifact digests are in
+[`evidence/r2.6.54-external-note-edit-refresh-8825929.json`](evidence/r2.6.54-external-note-edit-refresh-8825929.json).
+C01/C01.2 remain pending for broader read-only product coverage; edit/save
+remains deferred to C02/C14. No local tests, builds, formatters, linters or
+application launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full acceptance coverage passes.

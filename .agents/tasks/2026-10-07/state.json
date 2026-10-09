@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T04:18:59Z",
+  "updated_at": "2026-10-09T04:40:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7f77ad0f69d315db6514b04435c2fe9a0c8def6b",
-  "current_milestone": "R2.6.53",
-  "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes. Edit/save remains deferred to C02/C14.",
+  "last_reconciled_head": "882592960fe1c9e3ac54564276086fed753a6c3e",
+  "current_milestone": "R2.6.54",
+  "next_action": "Continue R2 with the next uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "7f77ad0f69d315db6514b04435c2fe9a0c8def6b"
+      "implementation_sha": "882592960fe1c9e3ac54564276086fed753a6c3e"
     },
     "R3": {
       "status": "pending",
@@ -195,7 +195,8 @@
     "R2.6.49 retry on 9de7785555c64fc5e08e15e668ce7dc47755d1ba: Linux passed again; macOS window capture succeeded but low-contrast OCR still missed visible vault/count text; Windows navigated to the fixture but SendKeys did not invoke Select Folder. All six companion workflows passed after a same-SHA macOS quality retry. Evidence: evidence/r2.6.49-roundtrip-ci-9de7785.json. macOS contrast preprocessing and Windows UI Automation selection are pending fresh CI; C01/C01.2 remain pending.",
     "R2.6.49 exact-SHA run on 3635245c4201e8ed613fdd74148da01d1485480e: Linux and macOS passed the complete Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows failed inside the UI Automation selection command before folder confirmation; stdio suppression hid the command diagnostics, and no fixture authoring began. All six companion project workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-3635245.json. The next correction captures PowerShell output and adds a focus/Enter fallback; Windows and C01/C01.2 remain pending.",
     "R2.6.49 exact-SHA run on eea967957281c34471ca9fcf985e2463e4757c48: Linux and macOS passed full fixture/open/snapshot/reopen acceptance; Windows' screenshot showed the fixture and visible Select Folder button, but UI Automation omitted the button from both picker descendants and stopped before folder confirmation. Rust CI, desktop build, renderer and loaded-workflow matrices passed. Inventory failed on an extra state.json trailing comma; the existing macOS quality retrieval audit failed once and passed on same-SHA retry. Evidence: evidence/r2.6.49-roundtrip-ci-eea9679.json. The next correction removes the comma, searches desktop-wide UIA, and sends Enter with the picker focused when the control remains inaccessible; C01/C01.2 remain pending.",
-    "R2.6.49 cross-platform reference round-trip passed on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0 across Ubuntu, macOS and Windows. The authored note and attachment reopened on every platform; all 22 vault entries and separate app-data snapshots remained unchanged. Rust CI and all five companion workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-f396927.json; intermediate attempts are recorded in evidence/r2.6.49-roundtrip-ci-followups.json. Broader C01/C01.2 read-only flows remain pending; no local executable validation was run."
+    "R2.6.49 cross-platform reference round-trip passed on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0 across Ubuntu, macOS and Windows. The authored note and attachment reopened on every platform; all 22 vault entries and separate app-data snapshots remained unchanged. Rust CI and all five companion workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-f396927.json; intermediate attempts are recorded in evidence/r2.6.49-roundtrip-ci-followups.json. Broader C01/C01.2 read-only flows remain pending; no local executable validation was run.",
+    "R2.6.54 added cross-platform UI coverage for an in-place external edit to the currently previewed note, refresh, updated-source preview and no-write preservation. The focused test passed on all three OSes; all seven required workflows passed on exact source SHA 882592960fe1c9e3ac54564276086fed753a6c3e after a same-SHA Windows Rust CI retry. Evidence: evidence/r2.6.54-external-note-edit-refresh-8825929.json. C01/C01.2 remain pending; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -9747,6 +9748,68 @@
         "The UI preview returns the valid UTF-8 prefix capped at 16 KiB, reports the full source byte size and marks it truncated when the read limit splits an emoji.",
         "The close-preview control is placed before the large source field and was activated successfully on Ubuntu, macOS, and Windows.",
         "Vault and separate app-data snapshots remain unchanged through preview, close, and UI teardown."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader cross-platform read-only product coverage; the ComboBox popup itself remains unverified for Windows accessibility.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes."
+    },
+    "R2.6.54": {
+      "status": "complete",
+      "implementation_sha": "882592960fe1c9e3ac54564276086fed753a6c3e",
+      "implementation_commits": ["9c20b33", "8825929"],
+      "scope": "Refresh the existing vault after an in-place external edit to the currently previewed note, show the exact new BOM/CRLF source through the UI, and preserve the post-edit vault plus separate app-data snapshots.",
+      "ci_attempts": [
+        {
+          "source_sha": "9c20b3388e8e88a24585d377eb313c46b2b55486",
+          "conclusion": "Ubuntu rustfmt failed on two assertion layouts; the focused UI test and all other workspace tests passed on Ubuntu, macOS and Windows, and all six companion workflows passed.",
+          "workflows": {
+            "rust_ci": 37883680681,
+            "inventory": 37883680704,
+            "quality": 37883680721,
+            "desktop_build": 37883680657,
+            "plugin_renderer": 37883680728,
+            "loaded_plugin_workflows": 37883680636,
+            "obsidian_vault_roundtrip": 37883680771
+          },
+          "correction": "Applied the exact two rustfmt assertion-wrap changes from Ubuntu CI in 882592960fe1c9e3ac54564276086fed753a6c3e."
+        },
+        {
+          "source_sha": "882592960fe1c9e3ac54564276086fed753a6c3e",
+          "conclusion": "First attempt passed all six companion workflows and Ubuntu/macOS Rust jobs; Windows workspace tests, Clippy, layering and native build passed, but PC05 timed out before returning WebView results.",
+          "workflows": {
+            "rust_ci": 37883927130,
+            "inventory": 37883927116,
+            "quality": 37883927153,
+            "desktop_build": 37883927247,
+            "plugin_renderer": 37883927110,
+            "loaded_plugin_workflows": 37883927068,
+            "obsidian_vault_roundtrip": 37883927198
+          },
+          "finding": "The Windows PC05 probe report timed out before bundle identity or editor-workflow results were emitted; PC08 passed. No source change was needed.",
+          "correction": "Reran the failed Windows Rust CI job at the same SHA. Attempt 2 passed PC05 and PC08 and the complete Windows Rust job."
+        },
+        {
+          "source_sha": "882592960fe1c9e3ac54564276086fed753a6c3e",
+          "attempt": 2,
+          "conclusion": "All seven workflows and every required job passed; focused UI test passed on Ubuntu, macOS and Windows.",
+          "workflows": {
+            "rust_ci": 37883927130,
+            "inventory": 37883927116,
+            "quality": 37883927153,
+            "desktop_build": 37883927247,
+            "plugin_renderer": 37883927110,
+            "loaded_plugin_workflows": 37883927068,
+            "obsidian_vault_roundtrip": 37883927198
+          },
+          "evidence": "evidence/r2.6.54-external-note-edit-refresh-8825929.json"
+        }
+      ],
+      "accepted_slice": [
+        "The existing note preview first matched Notes/Welcome.md fixture bytes. The test then simulated an external in-place replacement with a longer BOM/CRLF source and confirmed that it was the only deliberate vault-tree change.",
+        "The production refresh preserved the selected note path and count, cleared stale preview state, and allowed the UI to preview the updated exact source bytes and full size.",
+        "The vault remained equal to the expected post-edit snapshot through refresh, preview, close, and UI teardown; separate app data remained unchanged on Ubuntu, macOS, and Windows. All seven GitHub Actions workflows passed on the exact source SHA."
       ],
       "remaining": [
         "C01 and C01.2 remain pending for broader cross-platform read-only product coverage; the ComboBox popup itself remains unverified for Windows accessibility.",
