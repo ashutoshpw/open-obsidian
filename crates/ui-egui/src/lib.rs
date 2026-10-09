@@ -3680,9 +3680,11 @@ mod tests {
         assert!(harness.state().note_preview_receiver.is_some());
         wait_for_note_preview(&mut harness);
         assert!(harness.state().note_source_preview.is_none());
-        assert!(harness.state().note_preview_error.as_deref().is_some_and(
-            |error| error.starts_with("The selected note preview contains invalid UTF-8;")
-        ));
+        assert!(
+            harness.state().note_preview_error.as_deref().is_some_and(
+                |error| error.starts_with("The selected note preview contains invalid UTF-8;")
+            )
+        );
         assert_eq!(
             std::fs::read(&note_file_path).expect("read invalid note after failed preview"),
             invalid_source

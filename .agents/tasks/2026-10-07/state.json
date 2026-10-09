@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T23:04:41Z",
+  "updated_at": "2026-10-09T23:10:59Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "746809778e8aa49dd7a3e47a159986a8435a532c",
+  "last_reconciled_head": "14f883f31726684fd0218927f135f54c657c8af8",
   "current_milestone": "R2.6.84",
-  "next_action": "Push the C01.2-35 external invalid-UTF-8 refresh test on an exact source SHA and inspect all seven required GitHub Actions workflows; run no local executable validation.",
+  "next_action": "Apply the Ubuntu CI-reported assertion wrapping, push a fresh source SHA, and inspect all seven required GitHub Actions workflows; run no local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14455,9 +14455,46 @@
         "The exact post-edit vault snapshot and separate app-data snapshot remain unchanged through refresh, failed re-preview, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
+      "ci_attempts": [
+        {
+          "source_sha": "14f883f31726684fd0218927f135f54c657c8af8",
+          "attempt": 1,
+          "conclusion": "The focused workspace tests passed on all three OSes and six companion workflows passed. Ubuntu Rust CI failed cargo fmt --all -- --check on the invalid-UTF-8 error assertion wrapping; the CI-reported reflow is applied in a follow-up source commit.",
+          "workflows": {
+            "rust_ci": 38002656105,
+            "obsidian_vault_roundtrip": 38002656074,
+            "inventory": 38002656103,
+            "loaded_plugin_workflows": 38002656076,
+            "desktop_build": 38002656137,
+            "quality": 38002656080,
+            "plugin_renderer": 38002656147
+          },
+          "jobs": {
+            "rust_ubuntu": 114064147729,
+            "rust_macos": 114064147506,
+            "rust_windows": 114064147777,
+            "roundtrip_ubuntu": 114064147993,
+            "roundtrip_macos": 114064148065,
+            "roundtrip_windows": 114064148094,
+            "inventory": 114064148409,
+            "loaded_windows": 114064147804,
+            "loaded_ubuntu": 114064147955,
+            "loaded_macos": 114064147962,
+            "desktop_macos": 114064147863,
+            "desktop_windows": 114064148119,
+            "desktop_ubuntu": 114064148131,
+            "quality_windows": 114064147697,
+            "quality_ubuntu": 114064147818,
+            "quality_macos": 114064147820,
+            "plugin_renderer_ubuntu": 114064147851,
+            "plugin_renderer_macos": 114064147969,
+            "plugin_renderer_windows": 114064148096
+          },
+          "evidence": "evidence/r2.6.84-attempt-1-14f883f.json"
+        }
+      ],
       "evidence": null,
-      "next_action": "Commit and push the focused C01.2-35 test, then inspect exact-SHA GitHub Actions results."
+      "next_action": "Commit and push the exact CI-reported formatting correction, then inspect fresh exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {
