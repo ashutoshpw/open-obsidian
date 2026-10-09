@@ -1042,3 +1042,27 @@ launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full acceptance coverage passes.
+
+## R2.6.57 — preserve active vault after another open fails
+
+Added an egui UI case that leaves a two-note existing vault active while a
+second selected path points to a regular file. The production
+VaultSession::open call rejects that path; the UI clears its opening state,
+shows the safe error, and retains the canonical root, both notes and the
+existing-vault labels. Full path/kind/byte snapshots of the active vault and
+separate app-data tree, plus the selected file bytes, remain unchanged through
+the failure and UI teardown.
+
+The first source push, d2034768d3b6e00c6e9922d6944bac69ce28f6db, passed the
+focused/workspace tests and six companion workflows; Ubuntu rustfmt reported
+two layout changes. The exact CI layout was applied in
+e803f6c0f2f620c171b63d2ba01b22b837214371. On that exact source SHA, the focused
+test passed on Linux, macOS and Windows and all seven required GitHub Actions
+workflows passed. Run/job IDs, toolchain, artifacts and limitations are in
+[evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json](evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json).
+C01/C01.2 remain pending for broader read-only coverage; C01.1 remains passing.
+Edit/save remains deferred to C02/C14. No local tests, builds, formatters,
+linters or application launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.

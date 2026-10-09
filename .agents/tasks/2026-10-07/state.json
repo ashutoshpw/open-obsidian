@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T05:40:47Z",
+  "updated_at": "2026-10-09T05:59:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9",
-  "current_milestone": "R2.6.56",
+  "last_reconciled_head": "e803f6c0f2f620c171b63d2ba01b22b837214371",
+  "current_milestone": "R2.6.57",
   "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "c339a19b4d64ba9abea25794d7eae895acc91bfa"
+      "implementation_sha": "e803f6c0f2f620c171b63d2ba01b22b837214371"
     },
     "R3": {
       "status": "pending",
@@ -198,7 +198,8 @@
     "R2.6.49 cross-platform reference round-trip passed on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0 across Ubuntu, macOS and Windows. The authored note and attachment reopened on every platform; all 22 vault entries and separate app-data snapshots remained unchanged. Rust CI and all five companion workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-f396927.json; intermediate attempts are recorded in evidence/r2.6.49-roundtrip-ci-followups.json. Broader C01/C01.2 read-only flows remain pending; no local executable validation was run.",
     "R2.6.54 added cross-platform UI coverage for an in-place external edit to the currently previewed note, refresh, updated-source preview and no-write preservation. The focused test passed on all three OSes; all seven required workflows passed on exact source SHA 882592960fe1c9e3ac54564276086fed753a6c3e after a same-SHA Windows Rust CI retry. Evidence: evidence/r2.6.54-external-note-edit-refresh-8825929.json. C01/C01.2 remain pending; no local executable validation was run.",
     "R2.6.55 exercises existing-vault attachment preview through the egui Resolve link status action, with the existing-vault fixture's full path/byte snapshot and separate app-data snapshot unchanged after open, image rendering, and UI teardown. The focused test and all seven workflows passed on Ubuntu, macOS, and Windows on exact source SHA a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e. Evidence: evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json. C01/C01.2 remain pending for broader read-only product coverage; no local executable validation was run.",
-    "Extended .github/workflows/quality.yml with a native parallel group for Knip and report-only Fallow health. The first push's inventory run identified a stale workflow hash; after inventory reconciliation, all six required workflows passed on exact SHA f9d66e6f45e09fe108347db543a7d325b70d48c2. The two grouped audits passed on Ubuntu, macOS, and Windows. Evidence: evidence/parallel-ci-quality-audits-f9d66e6.json. No local checks were run."
+    "Extended .github/workflows/quality.yml with a native parallel group for Knip and report-only Fallow health. The first push's inventory run identified a stale workflow hash; after inventory reconciliation, all six required workflows passed on exact SHA f9d66e6f45e09fe108347db543a7d325b70d48c2. The two grouped audits passed on Ubuntu, macOS, and Windows. Evidence: evidence/parallel-ci-quality-audits-f9d66e6.json. No local checks were run.",
+    "R2.6.57 failed-open UI preservation passed on all three CI operating systems and all seven workflows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371; no local executable validation was used. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -7046,7 +7047,8 @@
       ]
     },
     "R2.6.56 opened and refreshed a zero-Markdown existing vault through the egui UI. The full vault and separate app-data snapshots stayed unchanged after open, refresh, and teardown on Ubuntu, macOS, and Windows. All seven required workflows passed on c339a19b4d64ba9abea25794d7eae895acc91bfa. Evidence: evidence/r2.6.56-existing-empty-vault-ui-c339a19.json. C01/C01.2 remain pending; no local executable validation was run.",
-    "Extended the quality workflow's native parallel preflight group to include read-only progress-state validation. After reconciling the workflow inventory hash, all six triggered workflows passed on exact SHA 01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9. Evidence: evidence/parallel-ci-quality-state-preflight-01fdec9.json. No local executable validation was run."
+    "Extended the quality workflow's native parallel preflight group to include read-only progress-state validation. After reconciling the workflow inventory hash, all six triggered workflows passed on exact SHA 01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9. Evidence: evidence/parallel-ci-quality-state-preflight-01fdec9.json. No local executable validation was run.",
+    "R2.6.57 verified that a failed attempt to open a selected regular file leaves the current existing-vault session and vault/app-data/file bytes unchanged. The focused test and all seven required workflows passed on Ubuntu, macOS, and Windows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json. C01/C01.2 remain pending; no local executable validation was used."
   ],
   "milestones": {
     "R0.1": {
@@ -9904,6 +9906,56 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes."
+    },
+    "R2.6.57": {
+      "status": "complete",
+      "implementation_sha": "e803f6c0f2f620c171b63d2ba01b22b837214371",
+      "implementation_commits": [
+        "d2034768d3b6e00c6e9922d6944bac69ce28f6db",
+        "e803f6c0f2f620c171b63d2ba01b22b837214371"
+      ],
+      "push_status": "Both source commits are reachable from origin/main.",
+      "scope": "Attempt to open a regular file as another vault while a two-note existing vault is active; retain the active session, UI labels, and unchanged full vault/app-data/selected-file snapshots after failure and teardown.",
+      "ci_attempts": [
+        {
+          "source_sha": "d2034768d3b6e00c6e9922d6944bac69ce28f6db",
+          "conclusion": "Ubuntu rustfmt failed on two layout differences; Ubuntu workspace tests and the focused test passed. macOS and Windows Rust jobs and all six companion workflows passed.",
+          "workflows": {
+            "rust_ci": 37890238671,
+            "inventory": 37890238478,
+            "quality": 37890238564,
+            "desktop_build": 37890238541,
+            "plugin_renderer": 37890238466,
+            "loaded_plugin_workflows": 37890238508,
+            "obsidian_vault_roundtrip": 37890238485
+          },
+          "correction": "Applied the exact Ubuntu rustfmt output in e803f6c0f2f620c171b63d2ba01b22b837214371."
+        },
+        {
+          "source_sha": "e803f6c0f2f620c171b63d2ba01b22b837214371",
+          "attempt": 1,
+          "conclusion": "All seven required workflows and all jobs passed; the focused test passed on Ubuntu, macOS, and Windows.",
+          "workflows": {
+            "rust_ci": 37890512693,
+            "inventory": 37890512782,
+            "quality": 37890512674,
+            "desktop_build": 37890512698,
+            "plugin_renderer": 37890512716,
+            "loaded_plugin_workflows": 37890512796,
+            "obsidian_vault_roundtrip": 37890512766
+          },
+          "evidence": "evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json"
+        }
+      ],
+      "accepted_slice": [
+        "The failed selected-path open displays the safe error, clears opening/receiver state, and preserves the current canonical vault session with both notes and the existing-vault labels.",
+        "Complete path/kind/byte snapshots of the active vault and separate app-data tree, plus bytes of the selected regular file, remain unchanged after the failure and UI teardown on all three operating systems."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader read-only product coverage; this synthetic egui harness does not cover native folder-picker interaction or claim reference-app evidence for failed selection.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
     }
   },
   "ci_preparation": {
