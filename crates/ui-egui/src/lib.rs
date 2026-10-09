@@ -2504,8 +2504,11 @@ mod tests {
         std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
         std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
         materialize_existing_vault_fixture(&vault_path, &fixture);
-        std::fs::write(&unopenable_path, b"This selected path is a file, not a vault.")
-            .expect("seed unopenable selected path");
+        std::fs::write(
+            &unopenable_path,
+            b"This selected path is a file, not a vault.",
+        )
+        .expect("seed unopenable selected path");
 
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open existing vault before attempting another selection");
@@ -2513,8 +2516,8 @@ mod tests {
             std::fs::canonicalize(&vault_path).expect("canonicalize current vault");
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);
-        let before_unopenable = std::fs::read(&unopenable_path)
-            .expect("read selected file before failed open");
+        let before_unopenable =
+            std::fs::read(&unopenable_path).expect("read selected file before failed open");
         let selected_path = unopenable_path.clone();
         let selected_app_data = app_data_path.clone();
         let app = OpenObsidianApp {
