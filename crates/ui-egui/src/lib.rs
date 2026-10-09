@@ -3905,8 +3905,7 @@ mod tests {
         .expect("seed opaque attachment data");
         let source_path = PathBuf::from("README.md");
         let source = b"\xef\xbb\xbf# Single note\r\n[[README]]\r\n![[README]]\r\n";
-        std::fs::write(vault_path.join(&source_path), source)
-            .expect("seed the only Markdown note");
+        std::fs::write(vault_path.join(&source_path), source).expect("seed the only Markdown note");
 
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);

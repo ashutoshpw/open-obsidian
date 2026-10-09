@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T18:50:34Z",
+  "updated_at": "2026-10-09T19:03:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7e74b3be437cce9ee29d7782e04c7b6b2641535c",
+  "last_reconciled_head": "03d3cf2d74f6f5a1947d948c5485ceb993b4104e",
   "current_milestone": "R2.6.74",
-  "next_action": "Push the applied Ubuntu rustfmt correction for fresh exact-SHA GitHub Actions validation.",
+  "next_action": "Commit the exact Ubuntu formatter correction, push it to origin/main, and inspect all seven required workflows on its exact SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.72 passed on exact source SHA c0b5d28e9e87ae869acf6ef585bb1b3c42dafc41. The C01.2-23 workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. The first attempt's formatter/Clippy feedback was corrected; its same-SHA Ubuntu round-trip retry stalled in dependency setup and was cancelled, while the fresh exact-SHA round-trip passed all platforms. Evidence: evidence/r2.6.72-attempt-2-c0b5d28.json.",
+  "push_status": "R2.6.74 attempt 2 on source SHA 03d3cf2d74f6f5a1947d948c5485ceb993b4104e passed the focused workspace test on all three OSes and all six companion workflows; Rust CI failed only Ubuntu formatting for a one-line write layout. The exact diff is applied locally and needs a fresh exact-SHA run. The GitHub Actions parallel-step prerequisite is complete on c479996995d6774d8ab776f1f61b6d2261592b36, with all seven workflows and the manual reference workflow passing; evidence: evidence/parallel-ci-runner-setup-c479996.json.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13660,9 +13660,45 @@
             "plugin_renderer_windows": 113972406777
           },
           "correction": "Apply the Ubuntu GitHub Actions rustfmt diff to the app-data sentinel write, then push and rerun the full required exact-SHA matrix."
+        },
+        {
+          "source_sha": "03d3cf2d74f6f5a1947d948c5485ceb993b4104e",
+          "attempt": 2,
+          "conclusion": "The focused workspace test passed on Ubuntu, macOS, and Windows. Rust CI failed only the Ubuntu formatting gate, which requested a one-line layout for the only-note write; macOS and Windows Rust CI passed. Obsidian round-trip passed on all three operating systems, and inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer passed.",
+          "workflows": {
+            "rust_ci": 37976135550,
+            "obsidian_vault_roundtrip": 37976135529,
+            "inventory": 37976135530,
+            "loaded_plugin_workflows": 37976135577,
+            "desktop_build": 37976135549,
+            "quality": 37976135714,
+            "plugin_renderer": 37976135621
+          },
+          "jobs": {
+            "rust_ubuntu": 113974792724,
+            "rust_macos": 113974792928,
+            "rust_windows": 113974793094,
+            "roundtrip_ubuntu": 113974792642,
+            "roundtrip_macos": 113974793085,
+            "roundtrip_windows": 113974793118,
+            "inventory": 113974792557,
+            "loaded_plugin_macos": 113974794547,
+            "loaded_plugin_ubuntu": 113974794728,
+            "loaded_plugin_windows": 113974794734,
+            "desktop_ubuntu": 113974793269,
+            "desktop_windows": 113974793645,
+            "desktop_macos": 113974793705,
+            "quality_ubuntu": 113974793562,
+            "quality_macos": 113974793848,
+            "quality_windows": 113974793924,
+            "plugin_renderer_ubuntu": 113974793904,
+            "plugin_renderer_windows": 113974794016,
+            "plugin_renderer_macos": 113974794168
+          },
+          "correction": "Apply the exact Ubuntu rustfmt diff to put the only-note std::fs::write statement on one line, then push and rerun all seven required workflows on the new exact source SHA."
         }
       ],
-      "next_action": "Push the applied formatter correction and inspect all seven required exact-SHA GitHub Actions workflows."
+      "next_action": "Commit the exact Ubuntu formatter correction, push it to origin/main, and inspect all seven required workflows on its exact SHA."
     }
   },
   "ci_preparation": {

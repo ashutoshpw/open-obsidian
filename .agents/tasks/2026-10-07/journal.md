@@ -1767,3 +1767,9 @@ C01.2-02 covers external removal while another Markdown note remains, and C01.2-
 ### R2.6.74 attempt 1 — source SHA `632b64c`
 
 The focused workspace test `egui_refresh_after_external_removal_of_last_note_clears_stale_state_without_writing` passed on Ubuntu, macOS and Windows. Rust CI failed only the Ubuntu formatting gate: rustfmt requested a multiline layout for the app-data sentinel write. The same test passed in all three matrix jobs. Obsidian vault round-trip passed on Ubuntu, macOS and Windows; inventory, loaded-plugin workflows, desktop build, quality and plugin renderer also passed. Run/job IDs are in the R2.6.74 entry in `state.json`. The exact GitHub rustfmt diff is applied locally for attempt 2. No local checks were run.
+
+### R2.6.74 attempt 2 — source SHA `03d3cf2`
+
+The focused workspace test passed on Ubuntu, macOS and Windows. Rust CI failed only the Ubuntu formatting gate, where GitHub Actions rustfmt requested a single-line layout for the only-note write; macOS and Windows Rust CI passed. Obsidian vault round-trip passed on all three operating systems, as did inventory, loaded-plugin workflows, desktop build, quality and plugin renderer. Exact run/job IDs are in the R2.6.74 entry in `state.json`; the second exact formatter diff is applied locally for attempt 3. No local checks were run.
+
+The Actions parallel-step request was already satisfied before this slice: commit `c479996995d6774d8ab776f1f61b6d2261592b36` groups independent setup steps in Rust CI, Obsidian round-trip and the reference-runner workflow. The exact-SHA evidence records all seven push workflows plus the manual reference workflow passing, with parallel groups succeeding. Current Rust CI, quality, desktop-build and round-trip workflows also exercise the feature. See `evidence/parallel-ci-runner-setup-c479996.json`; no extra workflow changes are needed.
