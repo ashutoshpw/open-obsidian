@@ -3980,7 +3980,7 @@ mod tests {
     }
 
     #[test]
-    fn egui_link_status_displays_fixture_resolution_without_changing_vault_bytes() {
+    fn egui_existing_vault_nested_transclusions_preserve_full_snapshots() {
         let fixture: serde_json::Value = serde_json::from_str(C03_LINK_RESOLUTION_FIXTURE)
             .expect("C03 link-resolution fixture must be valid");
         assert_eq!(fixture["id"], "fixture:c03-link-forms");
@@ -4000,7 +4000,6 @@ mod tests {
         let app_data_path = temporary.0.join("app-data");
         std::fs::create_dir_all(&vault_path).unwrap();
         std::fs::create_dir_all(&app_data_path).unwrap();
-        let mut original_files = Vec::new();
         for file in case["files"]
             .as_array()
             .expect("C03 fixture must list the vault files")
@@ -4014,10 +4013,17 @@ mod tests {
             let path = vault_path.join(&relative_path);
             std::fs::create_dir_all(path.parent().unwrap()).unwrap();
             std::fs::write(&path, &source).unwrap();
-            original_files.push((relative_path, source));
         }
+        let app_data_sentinel = [0xa5, 0x00, 0x7e, 0xff];
+        let app_data_sentinel_path = app_data_path.join("state/open-state.bin");
+        std::fs::create_dir_all(app_data_sentinel_path.parent().unwrap()).unwrap();
+        std::fs::write(&app_data_sentinel_path, app_data_sentinel).unwrap();
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
 
         let session = VaultSession::open(&vault_path, &app_data_path).unwrap();
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
         let app = OpenObsidianApp {
             session: Some(Arc::new(session)),
             link_source_path: Some(current_path.clone()),
@@ -4131,14 +4137,24 @@ mod tests {
         harness.get_by_label(
             "Not rendered: this attachment type or size is outside the safe image preview limits. ![[Assets/plot.svg]]",
         );
-        for (relative_path, original) in &original_files {
-            assert_eq!(
-                std::fs::read(vault_path.join(relative_path)).unwrap(),
-                *original,
-                "link resolution must not change {}",
-                relative_path.display()
-            );
-        }
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            before_vault,
+            "nested note transclusion must not change any vault path or byte"
+        );
+        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            before_vault,
+            "nested note transclusion teardown must preserve the full vault snapshot"
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data,
+            "nested note transclusion teardown must preserve separate app data"
+        );
     }
 
     #[test]
