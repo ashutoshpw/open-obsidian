@@ -1,0 +1,55 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 21,
+  "source_sha": "76f31954f0f479411c39817d5d1ed714c3079eef",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37938102365,
+      "conclusion": "failure",
+      "jobs": {
+        "windows": {"job_id": 113845183227, "conclusion": "success"},
+        "ubuntu": {"job_id": 113845183517, "conclusion": "failure"},
+        "macos": {"job_id": 113845183549, "conclusion": "success"}
+      },
+      "artifacts": {
+        "ubuntu": {"artifact_id": 11618917782, "digest": "sha256:db0946fd57171aecd520b3afb5eb8afe66fb56794425254204d22631dc7d5c3f"},
+        "windows": {"artifact_id": 11619576197, "digest": "sha256:362c8aef2a008550c9d2479798326d033dd5e94b95f29df038e7059f98df35dc"},
+        "macos": {"artifact_id": 11619626111, "digest": "sha256:ba8cda055f68b960c1024a4b81a1735220557808a9c36ca29846b9bb64a3f58d"}
+      },
+      "platform_findings": {
+        "ubuntu": "The audit crashed after the first egui click successfully opened the native picker: egui_hover_event was referenced instead of the declared eguiHoverEvent. The cancellation step did not run, so Linux remains unaccepted.",
+        "windows": "Native picker selection, cancellation, unchanged vault/app-data snapshots, and Obsidian reopen passed.",
+        "macos": "Native picker selection, cancellation, unchanged vault/app-data snapshots, and Obsidian reopen passed."
+      }
+    },
+    "rust_ci": {
+      "run_id": 37938102688,
+      "conclusion": "success",
+      "jobs": {"macos": 113845185143, "windows": 113845185464, "ubuntu": 113845185567}
+    },
+    "quality": {
+      "run_id": 37938102536,
+      "conclusion": "success",
+      "jobs": {"macos": 113845186243, "ubuntu": 113845186687, "windows": 113845186730}
+    },
+    "desktop_build": {
+      "run_id": 37938102370,
+      "conclusion": "success",
+      "jobs": {"windows": 113845183687, "ubuntu": 113845183978, "macos": 113845184003}
+    },
+    "plugin_renderer": {
+      "run_id": 37938102483,
+      "conclusion": "success",
+      "jobs": {"macos": 113845184508, "ubuntu": 113845184536, "windows": 113845184710}
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37938102484,
+      "conclusion": "success",
+      "jobs": {"ubuntu": 113845184667, "macos": 113845185028, "windows": 113845185066}
+    },
+    "inventory": {"run_id": 37938102362, "conclusion": "success", "job": 113845182686}
+  },
+  "parallel_groups": "All applicable native setup, build, and Rust check parallel groups passed on this exact source SHA.",
+  "correction": "Fix the CI-reported egui_hover_event property mapping, then rerun the three-OS native cancellation matrix on a new exact SHA. Keep the Linux result pending until cancellation, snapshots, and reopen complete.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}

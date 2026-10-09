@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T13:32:51Z",
+  "updated_at": "2026-10-09T13:42:08Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "2e8447cf822909478f6c41c91c8bd8fcf32fcac0",
+  "last_reconciled_head": "76f31954f0f479411c39817d5d1ed714c3079eef",
   "current_milestone": "R2.6.65",
-  "next_action": "Run attempt 21 exact-SHA GitHub Actions; on Linux explicitly activate OpenObsidian, require an egui-confirmed hover before clicking, and fall back to keyboard focus/Enter if pointer motion is not delivered. Keep native cancellation pending until all three OSes pass.",
+  "next_action": "Run attempt 22 exact-SHA GitHub Actions after fixing the CI-reported egui_hover_event property typo; keep Linux cancellation pending until the native picker, unchanged snapshots, and Obsidian reopen all pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -220,9 +220,10 @@
     "R2.6.65 attempt 13 on exact SHA be878dc: Rust CI and all six companion workflows passed. Native cancellation/reopen passed on macOS and on the same-SHA Windows rerun; Ubuntu clicked Zenity’s visible OK button but selected-vault canonicalization failed (ENOENT). Evidence: evidence/r2.6.65-cancellation-attempt-13-be878dc.json.",
     "R2.6.65 attempt 14 on exact SHA d7a666f: Rust CI and all six companion workflows passed. Native selection/cancellation/snapshots/reopen passed on macOS and Windows; Ubuntu still failed selected-vault canonicalization (ENOENT) after clearing the Ctrl+L location entry. Evidence: evidence/r2.6.65-cancellation-attempt-14-d7a666f.json.",
     "R2.6.65 attempt 15 on exact SHA 5a4ae4e: initial round-trip failed on all three platforms; same-SHA macOS attempt 2 and Windows attempt 3 passed native cancellation, snapshots and Obsidian reopen. Ubuntu failed path canonicalization after typed location text contained extra trailing characters. Rust CI and all six companion workflows passed. Evidence: evidence/r2.6.65-cancellation-attempt-15-5a4ae4e.json.",
-    "R2.6.65 attempt 20 on exact SHA 2e8447c: Rust CI and all six companion workflows passed, as did applicable native parallel groups. Windows and macOS passed cancellation, snapshots and Obsidian reopen; Ubuntu displayed the selected fixture but egui did not receive the second Open vault click. Evidence: evidence/r2.6.65-cancellation-attempt-20-2e8447c.json."
+    "R2.6.65 attempt 20 on exact SHA 2e8447c: Rust CI and all six companion workflows passed, as did applicable native parallel groups. Windows and macOS passed cancellation, snapshots and Obsidian reopen; Ubuntu displayed the selected fixture but egui did not receive the second Open vault click. Evidence: evidence/r2.6.65-cancellation-attempt-20-2e8447c.json.",
+    "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json."
   ],
-  "push_status": "Attempt 20 source 2e8447cf822909478f6c41c91c8bd8fcf32fcac0 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable parallel groups passed. Windows and macOS passed native cancellation, unchanged snapshots, and Obsidian reopen. Ubuntu displayed the selected fixture, but egui retained the prior Zenity pointer position after X11 moved over Open vault, so cancellation and reopen remain unaccepted on Linux. Attempt 21 explicitly activates the app window, waits for egui-confirmed hover, and falls back to keyboard focus/Enter if needed.",
+  "push_status": "Attempt 21 source 76f31954f0f479411c39817d5d1ed714c3079eef is pushed and reconciled. Rust CI and the six non-round-trip workflows passed, with all applicable parallel groups passing. Windows and macOS passed native cancellation, unchanged snapshots, and Obsidian reopen. Ubuntu stopped before cancellation because the audit referenced an undefined egui_hover_event property after successfully opening the first picker. The property mapping is corrected for attempt 22.",
   "ci_results": [
     {
       "name": "inventory",
@@ -12030,7 +12031,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "2e8447cf822909478f6c41c91c8bd8fcf32fcac0",
+      "implementation_sha": "76f31954f0f479411c39817d5d1ed714c3079eef",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -12053,9 +12054,10 @@
         "673cc8c61809e582e6775a4bd90da189ea16de77",
         "5127065bd08937244f4f1eab347a4f6389ffd471",
         "2701df1e87be759a016ddd1f129663e6bacde52f",
-        "2e8447cf822909478f6c41c91c8bd8fcf32fcac0"
+        "2e8447cf822909478f6c41c91c8bd8fcf32fcac0",
+        "76f31954f0f479411c39817d5d1ed714c3079eef"
       ],
-      "push_status": "Attempt 20 source 2e8447cf822909478f6c41c91c8bd8fcf32fcac0 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable parallel groups passed. Windows and macOS passed native cancellation, unchanged snapshots, and Obsidian reopen. Ubuntu selected and displayed the fixture, but egui continued to report the prior Zenity pointer position after X11 moved over Open vault, so cancellation and reopen remain unaccepted on Linux. Attempt 21 explicitly activates the window, waits for egui-confirmed hover, and uses keyboard focus/Enter if the pointer event is still absent.",
+      "push_status": "Attempt 21 source 76f31954f0f479411c39817d5d1ed714c3079eef is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable parallel groups passed. Windows and macOS passed cancellation, snapshots, and Obsidian reopen. Ubuntu did not reach cancellation because the audit used the undefined egui_hover_event identifier after the first picker successfully opened. Attempt 22 corrects the property mapping.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -12826,14 +12828,56 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-20-2e8447c.json",
           "correction": "Attempt 21 explicitly reactivates the OpenObsidian window, waits for egui-confirmed pointer hover before clicking, and falls back to keyboard focus/Enter if X11 motion is not delivered to egui."
+        },
+        {
+          "source_sha": "76f31954f0f479411c39817d5d1ed714c3079eef",
+          "attempt": 21,
+          "conclusion": "Rust CI and six companion workflows passed; all applicable parallel groups passed. Windows and macOS passed native cancellation, snapshots, and Obsidian reopen. Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent, so Linux cancellation remains pending.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37938102365,
+            "rust_ci": 37938102688,
+            "quality": 37938102536,
+            "desktop_build": 37938102370,
+            "plugin_renderer": 37938102483,
+            "loaded_plugin_workflows": 37938102484,
+            "inventory": 37938102362
+          },
+          "jobs": {
+            "roundtrip_windows": 113845183227,
+            "roundtrip_ubuntu": 113845183517,
+            "roundtrip_macos": 113845183549,
+            "rust_macos": 113845185143,
+            "rust_windows": 113845185464,
+            "rust_ubuntu": 113845185567,
+            "quality_macos": 113845186243,
+            "quality_ubuntu": 113845186687,
+            "quality_windows": 113845186730,
+            "desktop_windows": 113845183687,
+            "desktop_ubuntu": 113845183978,
+            "desktop_macos": 113845184003,
+            "plugin_renderer_macos": 113845184508,
+            "plugin_renderer_ubuntu": 113845184536,
+            "plugin_renderer_windows": 113845184710,
+            "loaded_plugins_ubuntu": 113845184667,
+            "loaded_plugins_macos": 113845185028,
+            "loaded_plugins_windows": 113845185066,
+            "inventory": 113845182686
+          },
+          "artifacts": {
+            "ubuntu": {"artifact_id": 11618917782, "digest": "sha256:db0946fd57171aecd520b3afb5eb8afe66fb56794425254204d22631dc7d5c3f"},
+            "windows": {"artifact_id": 11619576197, "digest": "sha256:362c8aef2a008550c9d2479798326d033dd5e94b95f29df038e7059f98df35dc"},
+            "macos": {"artifact_id": 11619626111, "digest": "sha256:ba8cda055f68b960c1024a4b81a1735220557808a9c36ca29846b9bb64a3f58d"}
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-21-76f3195.json",
+          "correction": "Fix the egui_hover_event property mapping and rerun exact-SHA GitHub Actions."
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "Linux cancellation remains pending: attempt 20 shows X11 at Open vault while egui retains the previous picker pointer position and does not register a click; Windows and macOS passed cancellation, snapshots, and reopen on attempt 20.",
+        "Linux cancellation remains pending: attempt 21 stopped before cancellation due to the audit's undefined egui_hover_event identifier; Windows and macOS passed cancellation, snapshots, and reopen on attempt 21.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Run attempt 21 exact-SHA GitHub Actions; explicitly activate the Linux OpenObsidian window, wait for egui-confirmed hover before the pointer press, and fall back to keyboard focus/Enter if X11 motion is not delivered. Keep cancellation unaccepted until all three OSes pass."
+      "next_action": "Run attempt 22 exact-SHA GitHub Actions after fixing the egui_hover_event property typo; keep cancellation unaccepted until Linux completes native picker cancellation, unchanged snapshots, and Obsidian reopen."
     }
   },
   "ci_preparation": {

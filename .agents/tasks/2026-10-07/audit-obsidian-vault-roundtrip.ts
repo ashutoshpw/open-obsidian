@@ -406,7 +406,7 @@ async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: s
     focused_window_before_activation: focusedWindowBeforeActivation,
     focused_window_after_activation: focusedWindowAfterActivation,
     pointer_before_click: pointerBeforeClick,
-    egui_hover_event,
+    egui_hover_event: eguiHoverEvent,
     keyboard_fallback: keyboardFallback,
   };
 }
