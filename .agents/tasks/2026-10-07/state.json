@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T12:33:54Z",
+  "updated_at": "2026-10-09T12:51:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
+  "last_reconciled_head": "b60c584785a3a67d40448cfcbf0160e563de9559",
   "current_milestone": "R2.6.65",
-  "next_action": "Commit and push the Linux xclip clipboard-paste correction as attempt 16, then inspect its exact-SHA GitHub Actions results.",
+  "next_action": "Commit the xclip Knip allowlist and attempt 16 CI evidence as attempt 17, push to origin/main, then investigate why the Linux in-session cancellation picker does not appear.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8291,6 +8291,209 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37928627493/job/113813563151"
         }
       ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37930991168,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991168",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "ubuntu-24.04",
+          "job_id": 113821369270,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991168/job/113821369270"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113821368875,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991168/job/113821368875"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113821369209,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991168/job/113821369209"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37930991097,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991097",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113821368783,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991097/job/113821368783"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113821369024,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991097/job/113821369024"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113821369163,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991097/job/113821369163"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37930991184,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991184",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113821368634,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991184/job/113821368634"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113821368828,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991184/job/113821368828"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113821369737,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991184/job/113821369737"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37930991094,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991094",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113821368637,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991094/job/113821368637"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113821369001,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991094/job/113821369001"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113821369139,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991094/job/113821369139"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37930991195,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991195",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113821369343,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991195/job/113821369343"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113821369742,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991195/job/113821369742"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113821369856,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991195/job/113821369856"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37930991139,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991139",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113821368715,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991139/job/113821368715"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113821368949,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991139/job/113821368949"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113821369046,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991139/job/113821369046"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37930991143,
+      "head_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991143",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 113821368719,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991143/job/113821368719"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -11570,7 +11773,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
+      "implementation_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -11588,9 +11791,10 @@
         "790f36544b29731d48478d43948214d92af32106",
         "be878dc5836726c2eac6cc7e75bf533cc6a34018",
         "d7a666fe0e7a5879a0249d97d82e6b4ec34d0db5",
-        "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417"
+        "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
+        "b60c584785a3a67d40448cfcbf0160e563de9559"
       ],
-      "push_status": "Attempt 15 source 5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417 is pushed and reconciled. Rust CI and all six companion workflows passed on all applicable runners; native parallel groups passed. The initial round-trip attempt failed on all three platforms, but same-SHA retries passed the complete flow on macOS and Windows. Ubuntu still fails selected-path canonicalization because typed location text contains extra trailing characters. Attempt 16 uses CI clipboard paste for Linux path entry.",
+      "push_status": "Attempt 16 source b60c584785a3a67d40448cfcbf0160e563de9559 is pushed and reconciled. Rust CI, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; quality failed because Knip did not list xclip. The xclip clipboard paste selected the Linux fixture, but the in-session cancellation picker did not appear on either Ubuntu attempt. Same-SHA retries passed macOS and Windows. Attempt 17 adds xclip to Knip's ignored CI binaries.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -12140,14 +12344,83 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-15-5a4ae4e.json",
           "correction": "Replace xdotool character-by-character entry with an xclip clipboard paste of the exact fixture path in Linux CI; retain macOS and Windows interactions because same-SHA reruns passed."
+        },
+        {
+          "source_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+          "attempt": 16,
+          "conclusion": "The Linux clipboard paste selected the generated fixture and OpenObsidian displayed the expected two-note vault, but the in-session cancellation picker did not appear on either Ubuntu attempt. Initial macOS and Windows jobs also failed the cancellation step; same-SHA reruns passed macOS on attempt 2 and Windows on attempt 3. Rust CI, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed. Quality failed on all three OSes because Knip reported xclip as an unlisted binary. Native parallel groups passed.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37930991168,
+            "rust_ci": 37930991097,
+            "quality": 37930991184,
+            "desktop_build": 37930991094,
+            "plugin_renderer": 37930991195,
+            "loaded_plugin_workflows": 37930991139,
+            "inventory": 37930991143
+          },
+          "roundtrip_jobs": {
+            "ubuntu_initial": 113821369270,
+            "macos_initial": 113821368875,
+            "windows_initial": 113821369209,
+            "ubuntu_same_sha_attempt_2": 113823345806,
+            "macos_same_sha_attempt_2": 113823345779,
+            "windows_same_sha_attempt_2": 113823345646,
+            "windows_same_sha_attempt_3": 113825415660
+          },
+          "same_sha_reruns": {
+            "macos": {
+              "attempt": 2,
+              "job_id": 113823345779,
+              "conclusion": "success",
+              "artifact_id": 11617060942,
+              "digest": "sha256:f178a2fdd53a0afd960d2173a7120449a4a4c986728521fef82f2f2616cdbde4"
+            },
+            "windows_attempt_2": {
+              "attempt": 2,
+              "job_id": 113823345646,
+              "conclusion": "failure",
+              "artifact_id": 11617160952,
+              "digest": "sha256:56e6822de111f9f14bf998c135b1f765fcbf2acbe41a77366c956f6ede158220"
+            },
+            "windows_attempt_3": {
+              "attempt": 3,
+              "job_id": 113825415660,
+              "conclusion": "success",
+              "artifact_id": 11616257852,
+              "digest": "sha256:20fc96c0f810dd38944a0367232802f5e148db6b484ca82d2f023ee49f3482cc"
+            },
+            "ubuntu_attempt_2": {
+              "attempt": 2,
+              "job_id": 113823345806,
+              "conclusion": "failure",
+              "artifact_id": 11616516923,
+              "digest": "sha256:c548c99dcd66877ac989e60ec7675273bcfa35d2f0b5c552175cde939fcf7b8d"
+            }
+          },
+          "artifacts": {
+            "ubuntu_initial": {
+              "artifact_id": 11616246163,
+              "digest": "sha256:bcf93147f7761f84dc95c7a3ffabd923c71b187799e90ab6c6456d5eb91b2157"
+            },
+            "macos_initial": {
+              "artifact_id": 11616795891,
+              "digest": "sha256:d75ae3af483a87c49e5a7b89701481c532336330bcfca1c83dd1f06dc62e05a9"
+            },
+            "windows_initial": {
+              "artifact_id": 11616761037,
+              "digest": "sha256:63ac2818623dcae31a354eb87fdbc1cc23b8dd34865a5f10007dc557bf320e04"
+            }
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-16-b60c584.json",
+          "correction": "Keep the Linux xclip paste that fixed fixture-path selection and add xclip to Knip's ignoreBinaries. Continue diagnosing why a second native folder picker does not appear when Open vault is requested in the active Linux session."
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "Linux native folder selection remains pending: attempt 15 failed path canonicalization after typed text gained extra trailing characters; attempt 16 clipboard paste awaits exact-SHA CI.",
+        "Linux cancellation remains pending: attempt 16 clipboard paste opened the correct two-note fixture, but the second native picker did not appear on two Ubuntu jobs.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Commit and push the Linux xclip clipboard-paste correction as attempt 16, then inspect its exact-SHA GitHub Actions results."
+      "next_action": "Commit the xclip Knip allowlist and attempt 16 CI evidence as attempt 17, push to origin/main, then investigate why the Linux in-session cancellation picker does not appear."
     }
   },
   "ci_preparation": {

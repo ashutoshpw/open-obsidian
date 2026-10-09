@@ -1,0 +1,120 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 16,
+  "source_sha": "b60c584785a3a67d40448cfcbf0160e563de9559",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37930991168,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37930991168",
+      "initial_attempt_conclusion": "failure",
+      "same_sha_reruns": {
+        "attempt_2": {
+          "ubuntu_job": 113823345806,
+          "ubuntu_conclusion": "failure",
+          "macos_job": 113823345779,
+          "macos_conclusion": "success",
+          "windows_job": 113823345646,
+          "windows_conclusion": "failure"
+        },
+        "attempt_3": {
+          "windows_job": 113825415660,
+          "windows_conclusion": "success"
+        }
+      },
+      "initial_jobs": {
+        "ubuntu": 113821369270,
+        "macos": 113821368875,
+        "windows": 113821369209
+      }
+    },
+    "rust_ci": {
+      "run_id": 37930991097,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113821368783,
+        "macos": 113821369024,
+        "windows": 113821369163
+      }
+    },
+    "quality": {
+      "run_id": 37930991184,
+      "conclusion": "failure",
+      "cause": "Knip reported xclip as an unlisted binary on all three operating systems.",
+      "jobs": {
+        "ubuntu": 113821368634,
+        "windows": 113821368828,
+        "macos": 113821369737
+      }
+    },
+    "desktop_build": {
+      "run_id": 37930991094,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113821368637,
+        "windows": 113821369001,
+        "ubuntu": 113821369139
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37930991195,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113821369343,
+        "macos": 113821369742,
+        "ubuntu": 113821369856
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37930991139,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113821368715,
+        "windows": 113821368949,
+        "macos": 113821369046
+      }
+    },
+    "inventory": {
+      "run_id": 37930991143,
+      "conclusion": "success",
+      "job": 113821368719
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu_initial": {
+      "artifact_id": 11616246163,
+      "digest": "sha256:bcf93147f7761f84dc95c7a3ffabd923c71b187799e90ab6c6456d5eb91b2157"
+    },
+    "ubuntu_same_sha_attempt_2": {
+      "artifact_id": 11616516923,
+      "digest": "sha256:c548c99dcd66877ac989e60ec7675273bcfa35d2f0b5c552175cde939fcf7b8d"
+    },
+    "macos_initial": {
+      "artifact_id": 11616795891,
+      "digest": "sha256:d75ae3af483a87c49e5a7b89701481c532336330bcfca1c83dd1f06dc62e05a9"
+    },
+    "macos_same_sha_attempt_2": {
+      "artifact_id": 11617060942,
+      "digest": "sha256:f178a2fdd53a0afd960d2173a7120449a4a4c986728521fef82f2f2616cdbde4"
+    },
+    "windows_initial": {
+      "artifact_id": 11616761037,
+      "digest": "sha256:63ac2818623dcae31a354eb87fdbc1cc23b8dd34865a5f10007dc557bf320e04"
+    },
+    "windows_same_sha_attempt_2": {
+      "artifact_id": 11617160952,
+      "digest": "sha256:56e6822de111f9f14bf998c135b1f765fcbf2acbe41a77366c956f6ede158220"
+    },
+    "windows_same_sha_attempt_3": {
+      "artifact_id": 11616257852,
+      "digest": "sha256:20fc96c0f810dd38944a0367232802f5e148db6b484ca82d2f023ee49f3482cc"
+    }
+  },
+  "platform_findings": {
+    "ubuntu": "The xclip paste selected the generated fixture and OpenObsidian displayed the expected two-note vault. The in-session Open vault action did not expose a new X11 folder-picker window on either the initial job or same-SHA attempt 2.",
+    "macos": "The initial job timed out waiting for app.ron state persistence after picker open. Same-SHA attempt 2 passed cancellation, snapshots, and Obsidian reopen.",
+    "windows": "The initial job and same-SHA attempt 2 did not expose a new native picker window. Same-SHA attempt 3 passed cancellation, snapshots, and Obsidian reopen."
+  },
+  "parallel_groups": "All applicable native parallel setup, build, and check groups completed successfully.",
+  "correction": "Keep the Linux clipboard path paste and declare xclip in Knip's ignored CI binaries. Continue diagnosing the Linux in-session cancellation picker, which did not appear on two attempts.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
