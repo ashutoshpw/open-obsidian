@@ -363,6 +363,14 @@ async function captureX11Screenshot(filename: string): Promise<string> {
   return pngPath;
 }
 
+async function captureX11WindowScreenshot(windowId: string, filename: string): Promise<string> {
+  const xwdPath = join(reportDirectory, filename.replace(/\.png$/i, ".xwd"));
+  const pngPath = join(reportDirectory, filename);
+  execFileSync("xwd", ["-id", windowId, "-silent", "-out", xwdPath], {stdio: "ignore"});
+  execFileSync("convert", [xwdPath, pngPath], {stdio: "ignore"});
+  return pngPath;
+}
+
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
   const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
@@ -687,10 +695,11 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   return {connection, browserVersion, notePath};
 }
 
-async function captureOpenObsidianScreenshot(): Promise<{pngPath: string; ocrText: string}> {
+async function captureOpenObsidianScreenshot(windowId: string): Promise<{pngPath: string; windowPngPath: string; ocrText: string}> {
   const pngPath = await captureX11Screenshot("openobsidian-vault.png");
-  const ocrText = execFileSync("tesseract", [pngPath, "stdout", "--psm", "6"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
-  return {pngPath, ocrText};
+  const windowPngPath = await captureX11WindowScreenshot(windowId, "openobsidian-vault-window.png");
+  const ocrText = execFileSync("tesseract", [windowPngPath, "stdout", "--psm", "6"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  return {pngPath, windowPngPath, ocrText};
 }
 
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
@@ -702,21 +711,48 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     XDG_CONFIG_HOME: userConfigRoot,
     XDG_CACHE_HOME: join(workDirectory, "openobsidian-cache"),
     XDG_DATA_HOME: join(workDirectory, "openobsidian-data"),
+    LIBGL_ALWAYS_SOFTWARE: "1",
+    WGPU_BACKEND: "gl",
   };
   await mkdir(appEnv.HOME, {recursive: true});
   const child = launchLogged(openObsidianBinary, ["--open-vault", vaultRoot], join(reportDirectory, "openobsidian.log"), appEnv);
   (report.openobsidian_open as Record<string, unknown>).pid = child.pid ?? null;
   try {
-    await delay(1_500);
+    await delay(1_000);
     if (child.exitCode !== null || child.signalCode !== null) {
       throw new Error(`OpenObsidian exited before rendering the selected vault (code=${child.exitCode}, signal=${child.signalCode})`);
     }
-    const screenshot = await captureOpenObsidianScreenshot();
-    (report.openobsidian_open as Record<string, unknown>).screenshot = "openobsidian-vault.png";
-    (report.openobsidian_open as Record<string, unknown>).screen_ocr = screenshot.ocrText;
-    if (!screenshot.ocrText.toLowerCase().includes("roundtrip fixture") || !/2\s+Markdown files found/i.test(screenshot.ocrText)) {
-      throw new Error(`OpenObsidian did not visibly show the selected fixture and two-note listing; screen OCR=${JSON.stringify(screenshot.ocrText)}`);
+    const window = await waitFor("OpenObsidian window to become visible", async () => {
+      try {
+        const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+        const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
+        if (!windowId) return null;
+        const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+        const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+        return {window_id: windowId, title, geometry};
+      } catch {
+        return null;
+      }
+    }, (value) => value !== null, 30_000);
+    if (!window) throw new Error("OpenObsidian did not expose a visible X11 window");
+    (report.openobsidian_open as Record<string, unknown>).x11_window = window;
+    try {
+      xdotool("windowfocus", "--sync", window.window_id);
+    } catch {
+      // Direct per-window capture below still works if Xvfb has no window manager.
     }
+    const open = report.openobsidian_open as Record<string, unknown>;
+    let renderAttempt = 0;
+    await waitFor("OpenObsidian to render the selected vault and note count", async () => {
+      await delay(1_000);
+      const captured = await captureOpenObsidianScreenshot(window.window_id);
+      renderAttempt += 1;
+      open.screenshot = "openobsidian-vault.png";
+      open.window_screenshot = "openobsidian-vault-window.png";
+      open.screen_ocr = captured.ocrText;
+      open.render_attempts = renderAttempt;
+      return captured;
+    }, (candidate) => candidate.ocrText.toLowerCase().includes("roundtrip fixture") && /2\s+Markdown files found/i.test(candidate.ocrText), 30_000);
     const initialAppData = await snapshotTree(appDataRoot);
     const canonicalVault = await realpath(vaultRoot);
     const canonicalAppData = await realpath(appDataRoot);
