@@ -51,7 +51,7 @@ const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
+  milestone: "R2.6.63-C01.2-01/03/14-cross-platform-native-picker-roundtrip",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -85,7 +85,7 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves the read-only startup and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves the read-only startup, native folder-picker selection, and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
     "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -321,7 +321,7 @@ function clickWindowOpenButton(windowId: string): {window_x: number; window_y: n
   const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
   const readGeometry = (key: string): number => {
     const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
-    if (!match) throw new Error(`Could not read ${key} from Obsidian folder picker geometry`);
+    if (!match) throw new Error(`Could not read ${key} from native folder picker geometry`);
     return Number(match[1]);
   };
   const windowX = readGeometry("X");
@@ -1003,6 +1003,163 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
   execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {stdio: "ignore"});
 }
 
+async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, window: {window_id: string}): Promise<Record<string, unknown>> {
+  const screenshots: string[] = [];
+  await focusOpenObsidian(child);
+  if (process.platform === "linux") xdotool("windowfocus", "--sync", window.window_id);
+  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-home.png")));
+
+  let openButtonInteraction: string;
+  if (process.platform === "linux") {
+    xdotool("key", "--clearmodifiers", "Tab");
+    xdotool("key", "--clearmodifiers", "Return");
+    openButtonInteraction = "Focused the first accessible Open vault button with Tab and activated it with Return.";
+  } else if (process.platform === "darwin") {
+    const script = `on run argv
+      tell application "System Events"
+        set targetProcess to first process whose unix id is (item 1 of argv as integer)
+        set frontmost of targetProcess to true
+        try
+          click button "Open vault" of window 1 of targetProcess
+          return "Invoked the Open vault accessibility button."
+        on error errorMessage
+          keystroke tab
+          key code 36
+          return "Accessibility button lookup failed; focused the first button with Tab and Return: " & errorMessage
+        end try
+      end tell
+    end run`;
+    openButtonInteraction = execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  } else if (process.platform === "win32") {
+    const script = `
+      $ErrorActionPreference = "Stop"
+      Add-Type -AssemblyName UIAutomationClient
+      Add-Type -AssemblyName UIAutomationTypes
+      $application = Get-Process -Id ${child.pid ?? -1} -ErrorAction SilentlyContinue
+      if ($null -eq $application -or $application.MainWindowHandle -eq 0) {
+        $application = Get-Process -Name "openobsidian" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+      }
+      if ($null -eq $application -or $application.MainWindowHandle -eq 0) { throw "OpenObsidian did not expose its main window handle" }
+      $root = [System.Windows.Automation.AutomationElement]::FromHandle($application.MainWindowHandle)
+      $buttonType = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+        [System.Windows.Automation.ControlType]::Button
+      )
+      $buttonName = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::NameProperty,
+        "Open vault"
+      )
+      $button = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.AndCondition]::new($buttonType, $buttonName))
+      if ($null -ne $button) {
+        $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+        Write-Output "Invoked the Open vault accessibility button."
+      } else {
+        $shell = New-Object -ComObject WScript.Shell
+        $shell.SendKeys("{TAB}{ENTER}")
+        Write-Output "Open vault was not exposed through UI Automation; used Tab and Enter."
+      }
+    `;
+    openButtonInteraction = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+  } else {
+    throw new Error(`Unsupported OpenObsidian folder picker platform ${process.platform}`);
+  }
+
+  await delay(750);
+  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-picker.png")));
+  const pickerWindowId = process.platform === "linux" ? activeWindowId() : null;
+  const pickerWindowTitle = process.platform === "linux" ? activeWindowTitle() : "native platform folder picker";
+  let pathEntryInteraction: string;
+  let folderSelectionInteraction: string;
+
+  if (process.platform === "linux") {
+    if (!pickerWindowId || pickerWindowId === window.window_id) throw new Error(`OpenObsidian native folder picker did not become active; title=${pickerWindowTitle}`);
+    xdotool("key", "ctrl+l");
+    xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
+    const clicked = clickWindowOpenButton(pickerWindowId);
+    folderSelectionInteraction = `Entered the exact fixture path with Ctrl+L and clicked the native dialog's lower-right Open button at (${clicked.click_x}, ${clicked.click_y}).`;
+    pathEntryInteraction = "Ctrl+L location entry with the full absolute fixture path.";
+    await delay(1_000);
+    if (activeWindowId() === pickerWindowId) {
+      xdotool("key", "Return");
+      await delay(500);
+    }
+  } else if (process.platform === "darwin") {
+    const script = `on run argv
+      tell application "System Events"
+        keystroke "g" using {command down, shift down}
+        delay 0.5
+        keystroke (item 1 of argv)
+        delay 0.5
+        key code 36
+        delay 0.5
+        key code 36
+      end tell
+    end run`;
+    execFileSync("osascript", ["-e", script, vaultRoot], {stdio: "ignore"});
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
+    pathEntryInteraction = "Command-Shift-G Go to Folder with the full absolute fixture path.";
+    folderSelectionInteraction = "Confirmed the selected folder through the native macOS Open panel.";
+  } else {
+    const pathScript = `
+      $ErrorActionPreference = "Stop"
+      $shell = New-Object -ComObject WScript.Shell
+      $shell.SendKeys("^l")
+      Start-Sleep -Milliseconds 300
+      $shell.SendKeys($env:OPENOBSIDIAN_PICKER_VAULT_PATH)
+      Start-Sleep -Milliseconds 300
+      $shell.SendKeys("{ENTER}")
+    `;
+    execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", pathScript], {
+      env: {...process.env, OPENOBSIDIAN_PICKER_VAULT_PATH: vaultRoot},
+      stdio: "ignore",
+    });
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
+    const selectScript = `
+      $ErrorActionPreference = "Stop"
+      Add-Type -AssemblyName UIAutomationClient
+      Add-Type -AssemblyName UIAutomationTypes
+      $root = [System.Windows.Automation.AutomationElement]::RootElement
+      $buttonType = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+        [System.Windows.Automation.ControlType]::Button
+      )
+      $buttonNames = @("Select Folder", "Select", "Open")
+      $selected = $null
+      foreach ($name in $buttonNames) {
+        $nameCondition = [System.Windows.Automation.PropertyCondition]::new(
+          [System.Windows.Automation.AutomationElement]::NameProperty,
+          $name
+        )
+        $selected = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.AndCondition]::new($buttonType, $nameCondition))
+        if ($null -ne $selected) { break }
+      }
+      if ($null -ne $selected) {
+        $selected.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+        Write-Output "Invoked native folder selection button: $($selected.Current.Name)"
+      } else {
+        $shell = New-Object -ComObject WScript.Shell
+        $shell.SendKeys("{ENTER}")
+        Write-Output "No Select Folder, Select, or Open button was exposed; pressed Enter in the native picker."
+      }
+    `;
+    folderSelectionInteraction = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", selectScript], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    pathEntryInteraction = "Ctrl+L location entry with the full absolute fixture path.";
+  }
+
+  await delay(1_000);
+  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-selected.png")));
+  return {
+    open_button_interaction: openButtonInteraction,
+    picker_window_id: pickerWindowId,
+    picker_window_title: pickerWindowTitle,
+    path_entry_interaction: pathEntryInteraction,
+    folder_selection_interaction: folderSelectionInteraction,
+    screenshots,
+    selected_path: "$RUNNER_TEMP/openobsidian-c01-roundtrip/C01.2 Roundtrip Fixture",
+  };
+}
+
 async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string}> {
   await focusOpenObsidian(child);
   const pngPath = await captureDesktopScreenshot("openobsidian-vault.png");
@@ -1053,7 +1210,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     appDataRoot = join(userConfigRoot, "OpenObsidian");
   }
   await mkdir(homeRoot, {recursive: true});
-  const child = launchLogged(openObsidianBinary, ["--open-vault", vaultRoot], join(reportDirectory, "openobsidian.log"), appEnv);
+  const child = launchLogged(openObsidianBinary, [], join(reportDirectory, "openobsidian.log"), appEnv);
   (report.openobsidian_open as Record<string, unknown>).pid = child.pid ?? null;
   try {
     await delay(1_000);
@@ -1087,6 +1244,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
       (report.openobsidian_open as Record<string, unknown>).native_window = window;
     }
     const open = report.openobsidian_open as Record<string, unknown>;
+    open.folder_picker = await selectOpenObsidianVaultFromNativePicker(child, window);
     let renderAttempt = 0;
     await waitFor("OpenObsidian to render the selected vault and note count", async () => {
       await delay(1_000);
