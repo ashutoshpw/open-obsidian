@@ -1235,3 +1235,33 @@ On exact source SHA `f1f49c4289984ef6d26437894fcca0cc53627576`, OpenObsidian ope
 This proves the tested native-picker/open/reopen flow for the recorded CI images and synthetic fixture. Linux exercised the zenity fallback, not an installed XDG portal frontend. Broader C01/C01.2 read-only coverage remains pending; C01.1 remains passing, and edit/save is deferred to C02/C14. No local tests, builds, formatters, linters, or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes.
+
+## R2.6.64 — fail closed on invalid UTF-8 note preview
+
+Added a cross-platform UI case with a BOM/CRLF Markdown note containing an
+invalid UTF-8 byte. The test selects the path through `Note to inspect`, asks
+for the source preview, and verifies the explicit invalid-UTF-8 error is shown
+without creating a replacement-text preview. Exact file bytes and full vault
+and separate app-data snapshots remain unchanged through the error and UI
+teardown.
+
+The first implementation SHA `9baa4bdc92ae17b7545c9540f07f92c801fda027`
+passed workspace tests on all three OSes but Ubuntu rustfmt requested two
+layout changes. After applying GitHub's exact diff, SHA
+`533de08f2340f28523e35d3ec1b2eef6d7437612` passed Rust CI and the focused test
+on all three OSes; its Windows Obsidian round-trip job exposed a collision
+between Rust toolchain setup and the parallel setup group (`event.json` was
+already in use). Moved Rust setup before that group. On exact SHA
+`4f61672bd1eb09fc8ea912c4a9f07af2f1fa740a`, the focused test passed on Ubuntu,
+macOS, and Windows and all seven required workflows passed. Exact run/job IDs,
+artifact hashes, failures, and corrections are in
+[`evidence/r2.6.64-invalid-utf8-preview-4f61672.json`](evidence/r2.6.64-invalid-utf8-preview-4f61672.json).
+
+The AccessKit egui harness does not certify native OS screen-reader behavior
+or Obsidian's handling of invalid-UTF-8 Markdown. C01.1 remains passing; C01 and
+C01.2 remain pending for broader read-only coverage; edit/save remains deferred
+to C02/C14. No local tests, builds, formatters, linters, or application
+launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.
