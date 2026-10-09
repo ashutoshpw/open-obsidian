@@ -1158,21 +1158,24 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
         Add-Type -TypeDefinition @'
           using System;
           using System.Runtime.InteropServices;
-          public struct OpenObsidianPickerRect { public int Left; public int Top; public int Right; public int Bottom; }
+          [StructLayout(LayoutKind.Sequential)] public struct OpenObsidianPickerRect { public int Left; public int Top; public int Right; public int Bottom; }
           public static class OpenObsidianPickerNative {
-            [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string className, string windowName);
+            [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
             [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr handle, out OpenObsidianPickerRect rectangle);
             [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
             [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint x, uint y, uint data, UIntPtr extraInfo);
           }
 '@
-        $dialog = [OpenObsidianPickerNative]::FindWindow($null, "Open an existing vault")
-        if ($dialog -eq [IntPtr]::Zero) { throw "Could not find the OpenObsidian native folder picker window" }
+        $dialog = [OpenObsidianPickerNative]::GetForegroundWindow()
+        if ($dialog -eq [IntPtr]::Zero) { throw "Could not find the foreground native folder picker window" }
         $rectangle = New-Object OpenObsidianPickerRect
         if (-not [OpenObsidianPickerNative]::GetWindowRect($dialog, [ref]$rectangle)) { throw "Could not read the native folder picker window bounds" }
-        $clickX = $rectangle.Left + [int](($rectangle.Right - $rectangle.Left) * 0.72)
-        $clickY = $rectangle.Top + [int](($rectangle.Bottom - $rectangle.Top) * 0.936)
-        [OpenObsidianPickerNative]::SetCursorPos($clickX, $clickY) | Out-Null
+        $dialogWidth = $rectangle.Right - $rectangle.Left
+        $dialogHeight = $rectangle.Bottom - $rectangle.Top
+        if ($dialogWidth -lt 500 -or $dialogHeight -lt 400) { throw "Foreground window is not the native folder picker: $($dialogWidth)x$($dialogHeight)" }
+        $clickX = $rectangle.Left + [int]($dialogWidth * 0.72)
+        $clickY = $rectangle.Top + [int]($dialogHeight * 0.936)
+        if (-not [OpenObsidianPickerNative]::SetCursorPos($clickX, $clickY)) { throw "Could not move the pointer to the native folder picker button" }
         [OpenObsidianPickerNative]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
         Start-Sleep -Milliseconds 100
         [OpenObsidianPickerNative]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
