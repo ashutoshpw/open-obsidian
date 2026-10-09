@@ -3710,6 +3710,189 @@ mod tests {
     }
 
     #[test]
+    fn egui_refresh_after_external_invalid_utf8_note_repair_recovers_preview_without_writing() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        let note_path = PathBuf::from("Notes/Welcome.md");
+        let note_file_path = vault_path.join(&note_path);
+        let original_source = b"\xef\xbb\xbf# Initial valid note\r\n";
+        let invalid_source = b"\xef\xbb\xbf# Invalid byte: \xff\r\n";
+        let repaired_source = b"\xef\xbb\xbf# Repaired externally\r\nRecovered.\r\n";
+        std::fs::create_dir_all(
+            note_file_path
+                .parent()
+                .expect("note must have a parent directory"),
+        )
+        .expect("create existing vault note directory");
+        std::fs::create_dir_all(app_data_path.join("state"))
+            .expect("create separate app-data directory");
+        std::fs::write(&note_file_path, original_source).expect("seed valid note source");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            [0xa5, 0x00, 0x7e, 0xff],
+        )
+        .expect("seed separate app-data sentinel");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open the existing vault without conversion");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(note_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_receiver.is_none());
+        let initial_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the initial valid source preview should be visible");
+        assert_eq!(initial_preview.relative_path, note_path);
+        assert_eq!(initial_preview.text.as_bytes(), original_source);
+
+        std::fs::write(&note_file_path, invalid_source)
+            .expect("simulate an external editor writing invalid UTF-8");
+        let after_invalid_edit = existing_vault_tree_snapshot(&vault_path);
+        let mut expected_after_invalid_edit = before_vault.clone();
+        expected_after_invalid_edit
+            .iter_mut()
+            .find(|(path, _, _)| path == &note_path)
+            .expect("vault snapshot must contain the note")
+            .2 = invalid_source.to_vec();
+        assert_eq!(after_invalid_edit, expected_after_invalid_edit);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        let refreshed_session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the refreshed vault session should remain open");
+        assert_eq!(refreshed_session.entries().len(), 1);
+        assert_eq!(refreshed_session.entries()[0].relative_path, note_path);
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_invalid_edit
+        );
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(
+            harness.state().note_preview_error.as_deref().is_some_and(
+                |error| error.starts_with("The selected note preview contains invalid UTF-8;")
+            )
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_invalid_edit
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        std::fs::write(&note_file_path, repaired_source)
+            .expect("simulate an external editor repairing the note source");
+        let after_external_repair = existing_vault_tree_snapshot(&vault_path);
+        let mut expected_after_external_repair = expected_after_invalid_edit;
+        expected_after_external_repair
+            .iter_mut()
+            .find(|(path, _, _)| path == &note_path)
+            .expect("repaired vault snapshot must contain the note")
+            .2 = repaired_source.to_vec();
+        assert_eq!(after_external_repair, expected_after_external_repair);
+        assert!(harness.state().note_preview_error.is_some());
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        let repaired_session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the repaired vault session should remain open");
+        assert_eq!(repaired_session.entries().len(), 1);
+        assert_eq!(repaired_session.entries()[0].relative_path, note_path);
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        let repaired_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the repaired source preview should be visible");
+        assert_eq!(repaired_preview.relative_path, note_path);
+        assert_eq!(repaired_preview.text.as_bytes(), repaired_source);
+        assert_eq!(
+            repaired_preview.total_size_bytes,
+            repaired_source.len() as u64
+        );
+        assert!(!repaired_preview.truncated);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_repair
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_repair
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_bounds_oversized_note_preview_at_utf8_boundary_without_writing() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");

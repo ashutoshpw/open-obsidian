@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T23:19:34Z",
+  "updated_at": "2026-10-09T23:30:11Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bd8d536187cbb46084dc14b9d879f9610d8b727c",
-  "current_milestone": "R2.6.84",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "189c8b30b8c1e6a1eee20acec8b3badd156d15c0",
+  "current_milestone": "R2.6.85",
+  "next_action": "Commit and push the C01.2-36 recovery-preview scenario, then inspect all seven required GitHub Actions workflows; run no local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14536,6 +14536,30 @@
         "14f883f31726684fd0218927f135f54c657c8af8",
         "bd8d536187cbb46084dc14b9d879f9610d8b727c"
       ]
+    },
+    "R2.6.85": {
+      "status": "in_progress",
+      "starting_sha": "189c8b30b8c1e6a1eee20acec8b3badd156d15c0",
+      "implementation_sha": null,
+      "scope": "After a selected note preview fails closed on invalid UTF-8, externally repair the same note to valid UTF-8, refresh, and verify that the prior error clears and the repaired source previews exactly without vault or app-data writes.",
+      "accepted_slice": [
+        "C01.2-36"
+      ],
+      "remaining": [
+        "Exact-SHA GitHub Actions validation is pending.",
+        "Broader C01/C01.2 acceptance remains pending."
+      ],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note existing vault and display its valid BOM/CRLF source preview.",
+        "Externally replace the selected note with invalid UTF-8, refresh, and verify that the vault and selected note stay active while the stale preview clears; a fresh preview fails closed with the explicit invalid-UTF-8 error.",
+        "Externally repair the same selected note to new valid BOM/CRLF UTF-8 bytes and capture the exact post-repair vault snapshot while separate app data remains unchanged.",
+        "Refresh clears the prior preview error and receiver while retaining the active vault and selected path; a fresh preview displays the exact repaired source bytes.",
+        "The exact post-repair vault snapshot and separate app-data snapshot remain unchanged through refresh, failed preview, repair, second refresh, successful preview, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Commit and push the C01.2-36 recovery-preview scenario, then inspect all seven required GitHub Actions workflows; run no local executable validation."
     }
   },
   "ci_preparation": {
