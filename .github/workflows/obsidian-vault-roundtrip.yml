@@ -45,10 +45,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - parallel:
-          - name: Set up Rust
-            uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
 
+      - parallel:
           - name: Install Linux desktop and UI evidence dependencies
             if: runner.os == 'Linux'
             run: |
