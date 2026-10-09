@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T20:12:18Z",
+  "updated_at": "2026-10-09T20:20:17Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "85f3a101b05966a4e08f71d8ff7457462285eb7c",
+  "last_reconciled_head": "9242b850106480d7c8e5ee37f0fc3b7aca1dc427",
   "current_milestone": "R2.6.77",
-  "next_action": "Commit the two rustfmt corrections and R2.6.77 attempt 1 record, push to origin/main, then inspect all seven required workflows for the correction SHA.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -226,7 +226,7 @@
     "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json.",
     "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json."
   ],
-  "push_status": "R2.6.76 / C01.2-27 is complete on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d, pushed to origin/main; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. R2.6.77 / C01.2-28 implementation SHA 85f3a101b05966a4e08f71d8ff7457462285eb7c is pushed. Its focused workspace test passed on all three OSes; all companion workflows passed, Rust CI reported only two Ubuntu rustfmt reflows, and the Ubuntu Obsidian round-trip passed after a same-SHA retry for window discovery. Formatting correction is pending a fresh exact-SHA CI attempt. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.77 / C01.2-28 is complete on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel barriers passed in Rust CI, quality, desktop build, and Obsidian round-trip. The preceding 85f3a10 attempt and its Ubuntu formatting/window-discovery failures plus same-SHA round-trip retry are retained in evidence. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13900,8 +13900,13 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.77": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "1bdb32932ab909245607e19991eeec8f8b049ee0",
+      "implementation_sha": "9242b850106480d7c8e5ee37f0fc3b7aca1dc427",
+      "implementation_commits": [
+        "85f3a101b05966a4e08f71d8ff7457462285eb7c",
+        "9242b850106480d7c8e5ee37f0fc3b7aca1dc427"
+      ],
       "scope": "Exercise an external in-place edit of a PNG attachment already rendered by the active note; refresh, clear stale decoded image and texture state, and verify fresh decoding of the updated pixels without vault or app-data writes.",
       "accepted_slice": ["C01.2-28"],
       "remaining": ["Broader C01/C01.2 acceptance remains pending."],
@@ -13950,9 +13955,46 @@
             "plugin_renderer_windows": 114002191094
           },
           "evidence": "evidence/r2.6.77-attempt-1-85f3a10.json"
+        },
+        {
+          "source_sha": "9242b850106480d7c8e5ee37f0fc3b7aca1dc427",
+          "attempt": 2,
+          "conclusion": "C01.2-28 passed. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows; applicable native parallel groups also passed.",
+          "workflows": {
+            "rust_ci": 37985505208,
+            "obsidian_vault_roundtrip": 37985505288,
+            "inventory": 37985505297,
+            "loaded_plugin_workflows": 37985505281,
+            "desktop_build": 37985505230,
+            "quality": 37985505242,
+            "plugin_renderer": 37985505325
+          },
+          "jobs": {
+            "rust_ubuntu": 114006369230,
+            "rust_windows": 114006369950,
+            "rust_macos": 114006370121,
+            "roundtrip_ubuntu": 114006368991,
+            "roundtrip_windows": 114006369318,
+            "roundtrip_macos": 114006369324,
+            "inventory": 114006368816,
+            "loaded_plugin_ubuntu": 114006369020,
+            "loaded_plugin_macos": 114006368760,
+            "loaded_plugin_windows": 114006369112,
+            "desktop_ubuntu": 114006368740,
+            "desktop_macos": 114006369055,
+            "desktop_windows": 114006369092,
+            "quality_ubuntu": 114006369149,
+            "quality_macos": 114006369114,
+            "quality_windows": 114006368789,
+            "plugin_renderer_ubuntu": 114006369304,
+            "plugin_renderer_macos": 114006369486,
+            "plugin_renderer_windows": 114006369625
+          },
+          "evidence": "evidence/r2.6.77-attempt-2-9242b85.json"
         }
       ],
-      "next_action": "Commit the two rustfmt corrections and R2.6.77 attempt 1 evidence, push to origin/main, and inspect all seven required exact-SHA workflows on the correction SHA."
+      "evidence": "evidence/r2.6.77-attempt-2-9242b85.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
