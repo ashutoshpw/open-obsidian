@@ -1090,3 +1090,27 @@ linters or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
+
+## R2.6.59 — note navigation wraps and clears stale previews
+
+Added a synthetic egui case starting at the final sorted note, README.md, with
+link/embed results and its exact source preview open. Next note wraps to
+Notes/Welcome.md; Previous note wraps back to README.md. Both selection changes
+clear the old link status/resolutions, embed report and source preview state.
+The README can then be previewed byte-for-byte again, while complete vault and
+separate app-data snapshots remain unchanged after navigation and UI teardown.
+
+The first source SHA, 1624da996b79ea46a2c152a2af8f19c5f36fa464, passed the
+focused test on all three OSes and all six companion workflows, but Ubuntu
+rustfmt requested two assert_eq! wraps. Those exact layouts were applied in
+1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. The focused test and all seven
+required workflows passed on the corrected SHA across Linux, macOS and
+Windows. Run/job IDs, artifacts, toolchain and limits are recorded in
+[evidence/r2.6.59-note-navigation-wrap-1d15ea0.json](evidence/r2.6.59-note-navigation-wrap-1d15ea0.json).
+C01/C01.2 remain pending for broader read-only coverage; the test does not
+certify the Note to inspect ComboBox popup or native picker accessibility.
+C01.1 remains passing; edit/save remains deferred to C02/C14. No local tests,
+builds, formatters, linters or application launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.
