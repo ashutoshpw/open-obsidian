@@ -335,7 +335,7 @@ function clickWindowOpenButton(windowId: string): {window_x: number; window_y: n
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
-function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_click: string} {
+async function clickOpenVaultButtonLinux(windowId: string): Promise<{window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_click: string; pointer_before_click: string}> {
   const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
   const readGeometry = (key: string): number => {
     const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
@@ -349,10 +349,12 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
   const clickX = Math.round(windowX + windowWidth * 0.045);
   const clickY = Math.round(windowY + windowHeight * 0.085);
   const focusedWindowBeforeClick = execFileSync("xdotool", ["getwindowfocus"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
-  xdotool(
-    "mousemove", "--sync", String(clickX), String(clickY),
-    "mousedown", "1", "sleep", "0.12", "mouseup", "1",
-  );
+  xdotool("mousemove", "--sync", String(clickX), String(clickY));
+  await delay(250);
+  const pointerBeforeClick = x11InteractionState().pointer;
+  xdotool("mousedown", "1");
+  await delay(120);
+  xdotool("mouseup", "1");
   return {
     window_x: windowX,
     window_y: windowY,
@@ -361,6 +363,7 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
     click_x: clickX,
     click_y: clickY,
     focused_window_before_click: focusedWindowBeforeClick,
+    pointer_before_click: pointerBeforeClick,
   };
 }
 
@@ -1384,11 +1387,11 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
     xdotool("windowraise", windowId);
     xdotool("windowfocus", "--sync", windowId);
     await delay(500);
-    const clicked = clickOpenVaultButtonLinux(windowId);
+    const clicked = await clickOpenVaultButtonLinux(windowId);
     await delay(500);
     const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
     (report.openobsidian_open as Record<string, unknown>).picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
-    return `Held an X11 primary click on OpenObsidian at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; focused_window_before_click=${clicked.focused_window_before_click}.`;
+    return `Moved the X11 pointer to OpenObsidian, waited 250 ms, then held a primary click at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; focused_window_before_click=${clicked.focused_window_before_click}; pointer_before_click=${clicked.pointer_before_click}.`;
   }
   if (process.platform === "darwin") {
     const script = `on run argv
@@ -1495,10 +1498,11 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
           $clickX = [int][Math]::Round($bounds.Left + ($bounds.Width / 2))
           $clickY = [int][Math]::Round($bounds.Top + ($bounds.Height / 2))
           [OpenObsidianMouse]::SetCursorPos($clickX, $clickY) | Out-Null
+          Start-Sleep -Milliseconds 250
           [OpenObsidianMouse]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
-          Start-Sleep -Milliseconds 80
+          Start-Sleep -Milliseconds 120
           [OpenObsidianMouse]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
-          Write-Output "Sent a screen click to Open vault after UI Automation polling; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height); state_transitions=$($stateTransitions -join ' | '); InvokePattern result: $invokeFailure"
+          Write-Output "Moved the pointer to Open vault, waited 250 ms, and held a screen click; IsEnabled=$isEnabled; bounds=$($bounds.Left),$($bounds.Top),$($bounds.Width),$($bounds.Height); state_transitions=$($stateTransitions -join ' | '); InvokePattern result: $invokeFailure"
       }
     `;
     return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();

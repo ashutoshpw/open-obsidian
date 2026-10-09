@@ -233,7 +233,13 @@ impl OpenObsidianApp {
                 input
                     .events
                     .iter()
-                    .filter(|event| matches!(event, eframe::egui::Event::PointerButton { .. }))
+                    .filter(|event| {
+                        matches!(
+                            event,
+                            eframe::egui::Event::PointerButton { .. }
+                                | eframe::egui::Event::PointerMoved(_)
+                        )
+                    })
                     .map(|event| format!("{event:?}"))
                     .collect::<Vec<_>>()
             });

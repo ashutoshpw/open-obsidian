@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T13:11:08Z",
+  "updated_at": "2026-10-09T13:24:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "5127065bd08937244f4f1eab347a4f6389ffd471",
+  "last_reconciled_head": "2701df1e87be759a016ddd1f129663e6bacde52f",
   "current_milestone": "R2.6.65",
-  "next_action": "Run attempt 19 exact-SHA GitHub Actions with egui pointer-event diagnostics and a 120 ms Linux click; use the CI artifact to distinguish an input-delivery failure from a hit-test failure.",
+  "next_action": "Run attempt 20 exact-SHA GitHub Actions with pointer motion separated from button press and a 250 ms settle interval on Linux and Windows; inspect captured egui motion/button events.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8659,6 +8659,97 @@
       "jobs": [
         {"name": "inventory", "job_id": 113831612606, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068548/job/113831612606"}
       ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37935119692,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119692",
+      "status": "completed",
+      "conclusion": "failure",
+      "attempt": 2,
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 113837347497, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119692/job/113837347497"},
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 113837349107, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119692/job/113837349107"},
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 113837350282, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119692/job/113837350282"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37935119846,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119846",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113835125491, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119846/job/113835125491"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113835125774, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119846/job/113835125774"},
+        {"name": "rust (macos-latest)", "job_id": 113835125933, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119846/job/113835125933"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37935119661,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119661",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113835125024, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119661/job/113835125024"},
+        {"name": "ubuntu-latest", "job_id": 113835125276, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119661/job/113835125276"},
+        {"name": "windows-latest", "job_id": 113835125314, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119661/job/113835125314"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37935119765,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119765",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113835125188, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119765/job/113835125188"},
+        {"name": "ubuntu-latest", "job_id": 113835125318, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119765/job/113835125318"},
+        {"name": "windows-latest", "job_id": 113835125492, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119765/job/113835125492"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37935119568,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119568",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113835124206, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119568/job/113835124206"},
+        {"name": "ubuntu-latest", "job_id": 113835124511, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119568/job/113835124511"},
+        {"name": "macos-latest", "job_id": 113835124812, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119568/job/113835124812"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37935119746,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119746",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 2,
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113835767695, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119746/job/113835767695"},
+        {"name": "ubuntu-latest", "job_id": 113835770262, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119746/job/113835770262"},
+        {"name": "windows-latest", "job_id": 113835830791, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119746/job/113835830791"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37935119601,
+      "head_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119601",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113835123891, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37935119601/job/113835123891"}
+      ]
     }
   ],
   "milestones": {
@@ -11938,7 +12029,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "implementation_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -11959,9 +12050,10 @@
         "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
         "b60c584785a3a67d40448cfcbf0160e563de9559",
         "673cc8c61809e582e6775a4bd90da189ea16de77",
-        "5127065bd08937244f4f1eab347a4f6389ffd471"
+        "5127065bd08937244f4f1eab347a4f6389ffd471",
+        "2701df1e87be759a016ddd1f129663e6bacde52f"
       ],
-      "push_status": "Attempt 18 source 5127065bd08937244f4f1eab347a4f6389ffd471 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable parallel groups passed. Windows native cancellation passed. Ubuntu still did not open the second picker, and macOS timed out waiting for app.ron persistence. The CI artifact confirms the Linux pointer reached OpenObsidian but egui logged no button click; attempt 19 adds pointer-event diagnostics and a longer click.",
+      "push_status": "Attempt 19 source 2701df1e87be759a016ddd1f129663e6bacde52f is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable parallel groups passed. macOS passed native cancellation and Obsidian reopen. Ubuntu's egui click landed at the prior pointer position; Windows received its press outside the button hover state and release inside it. Same-SHA round-trip reruns reproduced both failures. Attempt 20 separates pointer movement from the press and waits 250 ms on Linux and the Windows screen-click fallback.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -12650,15 +12742,54 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-18-5127065.json",
           "correction": "Log egui pointer-button events and the Open vault button response rectangle on CI, and hold the Linux pointer click for 120 ms. Continue using GitHub Actions only; keep cancellation pending until Ubuntu passes."
+        },
+        {
+          "source_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+          "attempt": 19,
+          "conclusion": "Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; native parallel groups passed. macOS passed the full native cancellation, snapshot, and Obsidian reopen flow. Ubuntu's egui log shows pointer-button events at the stale position 786,309 even though X11 reports the pointer at the Open vault button at 36,51. Windows received a press with hovered=false and release with hovered=true, so egui did not accept the click. Same-SHA attempt 2 reproduced both round-trip failures. The loaded-plugin macOS CSS download failed on attempt 1 and passed after same-SHA rerun.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37935119692,
+            "rust_ci": 37935119846,
+            "quality": 37935119661,
+            "desktop_build": 37935119765,
+            "plugin_renderer": 37935119568,
+            "loaded_plugin_workflows": 37935119746,
+            "inventory": 37935119601
+          },
+          "jobs": {
+            "roundtrip_windows_attempt_1": 113835126633,
+            "roundtrip_ubuntu_attempt_1": 113835127157,
+            "roundtrip_macos_attempt_1": 113835127400,
+            "roundtrip_windows_attempt_2": 113837347497,
+            "roundtrip_ubuntu_attempt_2": 113837349107,
+            "roundtrip_macos_attempt_2": 113837350282,
+            "rust_windows": 113835125491,
+            "rust_ubuntu": 113835125774,
+            "rust_macos": 113835125933,
+            "quality_macos": 113835125024,
+            "quality_ubuntu": 113835125276,
+            "quality_windows": 113835125314,
+            "desktop_macos": 113835125188,
+            "desktop_ubuntu": 113835125318,
+            "desktop_windows": 113835125492,
+            "plugin_renderer_windows": 113835124206,
+            "plugin_renderer_ubuntu": 113835124511,
+            "plugin_renderer_macos": 113835124812,
+            "loaded_plugins_macos_attempt_2": 113835767695,
+            "loaded_plugins_ubuntu_attempt_2": 113835770262,
+            "loaded_plugins_windows_attempt_2": 113835830791,
+            "inventory": 113835123891
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-19-2701df1.json",
+          "correction": "On Linux, move the pointer, allow 250 ms for egui to receive PointerMoved, then press and hold for 120 ms. On Windows, wait 250 ms after SetCursorPos before pressing and hold for 120 ms. Log PointerMoved alongside PointerButton events to verify the event position on CI."
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "Linux cancellation remains pending: attempt 18 recorded focus and pointer over OpenObsidian after the click, but egui logged no second button activation and no native picker appeared.",
-        "macOS cancellation remains pending for attempt 18 because app.ron did not persist before the cancellation snapshot; Windows passed attempt 18.",
+        "Linux and Windows cancellation remain pending: attempt 19 shows egui received the pointer press at a stale/non-hovered position on both platforms; macOS passed attempt 19.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Run attempt 19 exact-SHA GitHub Actions with egui pointer-event diagnostics and a 120 ms Linux click; use the CI artifact to distinguish an input-delivery failure from a hit-test failure, and keep cancellation unaccepted until all three OSes pass."
+      "next_action": "Run attempt 20 exact-SHA GitHub Actions after separating pointer motion from press and adding a 250 ms settle interval on Linux and the Windows screen-click fallback; verify egui pointer events and keep cancellation unaccepted until all three OSes pass."
     }
   },
   "ci_preparation": {

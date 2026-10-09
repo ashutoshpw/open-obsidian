@@ -1,0 +1,73 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 19,
+  "source_sha": "2701df1e87be759a016ddd1f129663e6bacde52f",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37935119692,
+      "attempt_1": {
+        "conclusion": "failure",
+        "jobs": {
+          "windows": {"job_id": 113835126633, "conclusion": "failure"},
+          "ubuntu": {"job_id": 113835127157, "conclusion": "failure"},
+          "macos": {"job_id": 113835127400, "conclusion": "success"}
+        }
+      },
+      "attempt_2_same_sha": {
+        "conclusion": "failure",
+        "jobs": {
+          "windows": {"job_id": 113837347497, "conclusion": "failure"},
+          "ubuntu": {"job_id": 113837349107, "conclusion": "failure"},
+          "macos": {"job_id": 113837350282, "conclusion": "success"}
+        }
+      },
+      "artifacts": {
+        "ubuntu_attempt_1": {"artifact_id": 11618276401, "digest": "sha256:ff5804623d3286557b38956ca3244e0cfb2418b56c6a653b39d635b7b3ecfbbc"},
+        "windows_attempt_1": {"artifact_id": 11618396988, "digest": "sha256:ab54cdb27a88cc8f46b7adc063fb3bc8e1076c4fcd7f545693333ef98b0766b4"},
+        "macos": {"artifact_id": 11618567707, "digest": "sha256:d4f80a5ac0749c38545185255fa4896586f4c3e0cd12a4cfc351497b2cff1298"},
+        "windows_attempt_2": {"artifact_id": 11618846048, "digest": "sha256:7103c39d3f8f51ce52cf07017e6d44239be736cf4f5a6ec7ad0d8b85c5de0b33"}
+      },
+      "platform_findings": {
+        "ubuntu": "Native fixture selection passed and OpenObsidian showed the expected two-note vault. The cancellation click did not open a second picker on either same-SHA attempt. egui logged pointer-button events at [786,309], the prior Zenity button position, while xdotool reported the pointer at [36,51] over Open vault.",
+        "windows": "Native fixture selection passed, but the cancellation click did not open a second picker on either same-SHA attempt. egui logged the press with hovered=false and release with hovered=true, so the button response did not report a click. UI Automation reported IsEnabled=false during polling while the final control inventory and app state reported the button enabled.",
+        "macos": "Native folder-picker cancellation, vault/app-data snapshot checks, and Obsidian reopen passed on both attempts."
+      }
+    },
+    "rust_ci": {
+      "run_id": 37935119846,
+      "conclusion": "success",
+      "jobs": {"windows": 113835125491, "ubuntu": 113835125774, "macos": 113835125933}
+    },
+    "quality": {
+      "run_id": 37935119661,
+      "conclusion": "success",
+      "jobs": {"macos": 113835125024, "ubuntu": 113835125276, "windows": 113835125314}
+    },
+    "desktop_build": {
+      "run_id": 37935119765,
+      "conclusion": "success",
+      "jobs": {"macos": 113835125188, "ubuntu": 113835125318, "windows": 113835125492}
+    },
+    "plugin_renderer": {
+      "run_id": 37935119568,
+      "conclusion": "success",
+      "jobs": {"windows": 113835124206, "ubuntu": 113835124511, "macos": 113835124812}
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37935119746,
+      "attempt_1": {"conclusion": "failure", "cause": "PC-DEP-MINIMAL theme.css download failed"},
+      "attempt_2_same_sha": {
+        "conclusion": "success",
+        "jobs": {"macos": 113835767695, "ubuntu": 113835770262, "windows": 113835830791}
+      }
+    },
+    "inventory": {
+      "run_id": 37935119601,
+      "conclusion": "success",
+      "job": 113835123891
+    }
+  },
+  "parallel_groups": "All applicable native setup, build, and check groups passed on the exact source SHA.",
+  "correction": "Attempt 20 separates pointer motion from the press, waits 250 ms before the press on Linux and the Windows screen-click fallback, and logs PointerMoved with PointerButton events.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
