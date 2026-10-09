@@ -2607,8 +2607,11 @@ mod tests {
             "\u{feff}# Second vault\r\n\r\nThis note belongs only to the second vault.\r\n",
         )
         .expect("seed second-vault note");
-        std::fs::write(app_data_path.join("open-state.bin"), [0xa5, 0x00, 0x7e, 0xff])
-            .expect("seed separate app-data sentinel");
+        std::fs::write(
+            app_data_path.join("open-state.bin"),
+            [0xa5, 0x00, 0x7e, 0xff],
+        )
+        .expect("seed separate app-data sentinel");
 
         let before_first_vault = existing_vault_tree_snapshot(&first_vault_path);
         let before_second_vault = existing_vault_tree_snapshot(&second_vault_path);
@@ -2642,7 +2645,9 @@ mod tests {
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
         harness.get_by_label("Note source preview").click();
+        harness.step();
         harness.get_by_label("Read note source preview").click();
+        harness.step();
         wait_for_note_preview(&mut harness);
         assert!(harness.state().note_source_preview.is_some());
         harness.get_by_label("Open vault").click();
@@ -2663,7 +2668,10 @@ mod tests {
             second_note_path,
             "the active note list belongs to the newly selected vault"
         );
-        assert_eq!(harness.state().link_source_path.as_ref(), Some(&second_note_path));
+        assert_eq!(
+            harness.state().link_source_path.as_ref(),
+            Some(&second_note_path)
+        );
         assert_eq!(
             harness.state().rename_source_path.as_ref(),
             Some(&second_note_path)
