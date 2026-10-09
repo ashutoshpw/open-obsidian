@@ -1,0 +1,89 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 14,
+  "source_sha": "d7a666fe0e7a5879a0249d97d82e6b4ec34d0db5",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37927972374,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37927972374",
+      "conclusion": "failure",
+      "jobs": {
+        "windows": 113811413321,
+        "macos": 113811413627,
+        "ubuntu": 113811413742
+      }
+    },
+    "rust_ci": {
+      "run_id": 37927972402,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113811413894,
+        "ubuntu": 113811414054,
+        "windows": 113811414070
+      }
+    },
+    "quality": {
+      "run_id": 37927972393,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113811414179,
+        "ubuntu": 113811414385,
+        "windows": 113811414438
+      }
+    },
+    "desktop_build": {
+      "run_id": 37927972377,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113811414567,
+        "macos": 113811414632,
+        "windows": 113811414818
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37927972347,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113811413999,
+        "macos": 113811414084,
+        "ubuntu": 113811414218
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37927972398,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113811414068,
+        "ubuntu": 113811414364,
+        "macos": 113811414420
+      }
+    },
+    "inventory": {
+      "run_id": 37927972345,
+      "conclusion": "success",
+      "job": 113811413238
+    }
+  },
+  "roundtrip_artifacts": {
+    "windows": {
+      "artifact_id": 11615510795,
+      "digest": "sha256:d10d947f1e1e031400c5d49a17b39dabb12423630f8db9128834567f1a2e8e92"
+    },
+    "macos": {
+      "artifact_id": 11615221201,
+      "digest": "sha256:8c69e2b1280c8399459a213c61ed309687e9e5899445eca02cf71538a34678ea"
+    },
+    "ubuntu": {
+      "artifact_id": 11614812571,
+      "digest": "sha256:3f131af8241643109151dac590499834feaffca0f870fb427bfe621805ca2631"
+    }
+  },
+  "platform_findings": {
+    "ubuntu": "Clearing the Ctrl+L location entry before typing did not change the result. The focused Zenity location entry showed the fixture path, the visible OK button was clicked at (786, 309), and OpenObsidian again reported canonicalize selected vault: No such file or directory. Attempt 15 focuses the entry explicitly, captures it after clearing, and records CI OCR of the entered path.",
+    "macos": "Native selection, cancellation, exact vault/app-data snapshots, and Obsidian reopen passed.",
+    "windows": "Native selection, cancellation, exact vault/app-data snapshots, and Obsidian reopen passed without a rerun."
+  },
+  "parallel_groups": "Native parallel setup groups passed in all applicable workflows and round-trip jobs.",
+  "correction": "On Linux, click inside the Ctrl+L location field before clearing it, capture the cleared and entered states, and record OCR text for both to distinguish a stale entry from path-selection semantics.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
