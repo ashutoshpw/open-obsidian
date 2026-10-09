@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T16:41:39Z",
+  "updated_at": "2026-10-09T16:49:51Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6ed9058de819829284eb03b3ee2a0e3f29863d8a",
-  "current_milestone": "R2.6.69",
-  "next_action": "Select and implement the next uncovered C01.2 read-only flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "df60c1e118cc4677538dcaa6f497e5d812ae568e",
+  "current_milestone": "R2.6.70",
+  "next_action": "Commit and push the C01.2-21 dangling-symlink UI case on a small source SHA, then use only exact-SHA GitHub Actions to inspect formatting, workspace tests, and all required workflows; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13335,6 +13335,25 @@
         }
       ],
       "next_action": "Select and implement the next uncovered C01.2 read-only flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending."
+    },
+    "R2.6.70": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Exercise existing-vault scanning, link resolution, and transclusion reporting for dangling file and directory symlinks that point outside the vault, preserving complete vault, separate app-data, and outside-target snapshots.",
+      "accepted_slice": ["C01.2-21"],
+      "remaining": [
+        "Exact-SHA GitHub Actions evidence is pending.",
+        "Broader C01/C01.2 acceptance remains pending."
+      ],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, the scan records dangling symlink metadata without following either target and lists only the real Markdown note.",
+        "All four Markdown/wiki references remain unresolved without a scan or link error, both embeds remain unrendered, and outside sentinel content is absent from the report.",
+        "Full vault, separate app-data, and outside-target snapshots remain byte-identical after open, resolution, and teardown.",
+        "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit and push the dangling-symlink UI case to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
     }
   },
   "ci_preparation": {
