@@ -238,6 +238,7 @@ impl OpenObsidianApp {
                             event,
                             eframe::egui::Event::PointerButton { .. }
                                 | eframe::egui::Event::PointerMoved(_)
+                                | eframe::egui::Event::Key { .. }
                         )
                     })
                     .map(|event| format!("{event:?}"))
@@ -249,8 +250,11 @@ impl OpenObsidianApp {
                 let hovered = open_vault_button
                     .as_ref()
                     .is_some_and(eframe::egui::Response::hovered);
+                let focused = open_vault_button
+                    .as_ref()
+                    .is_some_and(|response| response.has_focus());
                 eprintln!(
-                    "OpenObsidian CI pointer input: response_rect={response_rect:?}, pointer={pointer_position:?}, hovered={hovered}, clicked={open_vault_requested}, events={pointer_button_events:?}"
+                    "OpenObsidian CI pointer input: response_rect={response_rect:?}, pointer={pointer_position:?}, hovered={hovered}, focused={focused}, clicked={open_vault_requested}, events={pointer_button_events:?}"
                 );
             }
         }

@@ -335,7 +335,7 @@ function clickWindowOpenButton(windowId: string): {window_x: number; window_y: n
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
-async function clickOpenVaultButtonLinux(windowId: string): Promise<{window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_click: string; pointer_before_click: string}> {
+async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: string): Promise<{window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_activation: string; focused_window_after_activation: string; pointer_before_click: string; egui_hover_event: string | null; keyboard_fallback: boolean}> {
   const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
   const readGeometry = (key: string): number => {
     const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
@@ -348,13 +348,54 @@ async function clickOpenVaultButtonLinux(windowId: string): Promise<{window_x: n
   const windowHeight = readGeometry("HEIGHT");
   const clickX = Math.round(windowX + windowWidth * 0.045);
   const clickY = Math.round(windowY + windowHeight * 0.085);
-  const focusedWindowBeforeClick = execFileSync("xdotool", ["getwindowfocus"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  const focusedWindowBeforeActivation = x11InteractionState().focused_window_id;
+  xdotool("windowraise", windowId);
+  xdotool("windowfocus", "--sync", windowId);
+  await delay(250);
+  const focusedWindowAfterActivation = x11InteractionState().focused_window_id;
+  const logOffsetBeforeMotion = (await readFile(applicationLogPath, "utf8")).length;
   xdotool("mousemove", "--sync", String(clickX), String(clickY));
   await delay(250);
   const pointerBeforeClick = x11InteractionState().pointer;
-  xdotool("mousedown", "1");
-  await delay(120);
-  xdotool("mouseup", "1");
+  const localX = Math.round(windowWidth * 0.045);
+  const localY = Math.round(windowHeight * 0.085);
+  const expectedPointer = `pointer=Some([${localX.toFixed(1)} ${localY.toFixed(1)}])`;
+  const eguiHoverEvent = await waitFor(
+    "egui to report the Linux pointer over Open vault",
+    async () => {
+      const newLog = (await readFile(applicationLogPath, "utf8")).slice(logOffsetBeforeMotion);
+      return newLog.split(/\r?\n/).findLast((line) => line.includes(expectedPointer) && line.includes("hovered=true")) ?? null;
+    },
+    (line) => line !== null,
+    2_000,
+  ).catch(() => null);
+  let keyboardFallback = false;
+  if (eguiHoverEvent) {
+    xdotool("mousedown", "1");
+    await delay(120);
+    xdotool("mouseup", "1");
+  } else {
+    keyboardFallback = true;
+    let openVaultFocused = false;
+    let lastDiagnostic = "No new egui hover event followed the X11 pointer move.";
+    for (let attempt = 0; attempt < 24 && !openVaultFocused; attempt += 1) {
+      const logOffsetBeforeTab = (await readFile(applicationLogPath, "utf8")).length;
+      xdotool("key", "--clearmodifiers", "Tab");
+      await delay(100);
+      const newLog = (await readFile(applicationLogPath, "utf8")).slice(logOffsetBeforeTab);
+      const diagnosticLines = newLog.split(/\r?\n/).filter((line) => line.includes("OpenObsidian CI pointer input:"));
+      const diagnostic = diagnosticLines.at(-1);
+      if (diagnostic) {
+        lastDiagnostic = diagnostic;
+        openVaultFocused = diagnostic.includes("focused=true");
+      }
+    }
+    if (!openVaultFocused) {
+      throw new Error(`Linux keyboard fallback could not focus Open vault after 24 Tab presses; X11 focus=${focusedWindowAfterActivation}; last diagnostic=${lastDiagnostic}`);
+    }
+    xdotool("key", "--clearmodifiers", "Return");
+    await delay(120);
+  }
   return {
     window_x: windowX,
     window_y: windowY,
@@ -362,8 +403,11 @@ async function clickOpenVaultButtonLinux(windowId: string): Promise<{window_x: n
     window_height: windowHeight,
     click_x: clickX,
     click_y: clickY,
-    focused_window_before_click: focusedWindowBeforeClick,
+    focused_window_before_activation: focusedWindowBeforeActivation,
+    focused_window_after_activation: focusedWindowAfterActivation,
     pointer_before_click: pointerBeforeClick,
+    egui_hover_event,
+    keyboard_fallback: keyboardFallback,
   };
 }
 
@@ -1384,14 +1428,11 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
 async function clickOpenVaultButton(child: ChildProcess, windowId: string): Promise<string> {
   await focusOpenObsidian(child);
   if (process.platform === "linux") {
-    xdotool("windowraise", windowId);
-    xdotool("windowfocus", "--sync", windowId);
-    await delay(500);
-    const clicked = await clickOpenVaultButtonLinux(windowId);
+    const clicked = await clickOpenVaultButtonLinux(windowId, join(reportDirectory, "openobsidian.log"));
     await delay(500);
     const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
     (report.openobsidian_open as Record<string, unknown>).picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
-    return `Moved the X11 pointer to OpenObsidian, waited 250 ms, then held a primary click at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; focused_window_before_click=${clicked.focused_window_before_click}; pointer_before_click=${clicked.pointer_before_click}.`;
+    return `Activated OpenObsidian (focus ${clicked.focused_window_before_activation} -> ${clicked.focused_window_after_activation}), moved to (${clicked.click_x}, ${clicked.click_y}), and waited for egui hover before clicking; window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; pointer_before_click=${clicked.pointer_before_click}; egui_hover_event=${clicked.egui_hover_event ?? "unobserved"}; keyboard_fallback=${clicked.keyboard_fallback}.`;
   }
   if (process.platform === "darwin") {
     const script = `on run argv

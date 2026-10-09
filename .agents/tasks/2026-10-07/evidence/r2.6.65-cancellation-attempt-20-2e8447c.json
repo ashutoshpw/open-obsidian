@@ -1,0 +1,55 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 20,
+  "source_sha": "2e8447cf822909478f6c41c91c8bd8fcf32fcac0",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37936679421,
+      "conclusion": "failure",
+      "jobs": {
+        "ubuntu": {"job_id": 113840366998, "conclusion": "failure"},
+        "windows": {"job_id": 113840367453, "conclusion": "success"},
+        "macos": {"job_id": 113840367630, "conclusion": "success"}
+      },
+      "artifacts": {
+        "ubuntu": {"artifact_id": 11618493303, "digest": "sha256:824cac67301a17382bf7bf584fa397c524bb9569abe67f1e4c4ee928b71fa2ad"},
+        "windows": {"artifact_id": 11618518589, "digest": "sha256:ea9184211a57d73273668b747ea88ebd4825d42112de517f88b3556f294a65da"},
+        "macos": {"artifact_id": 11619370291, "digest": "sha256:72321b68889c5321bdb2b05f94886ee2a21db83d733fb068b4f8a964ba0f7003"}
+      },
+      "platform_findings": {
+        "ubuntu": "Obsidian-authored fixture selection and OpenObsidian vault display passed. The second native picker did not open: X11 reported the pointer at (36,51), but egui continued to report the prior picker position (786,309), hovered=false, and no click receipt. Cancellation and reopen remain pending.",
+        "windows": "Native picker selection, in-session cancellation, unchanged vault/app-data snapshots, and Obsidian reopen passed.",
+        "macos": "Native picker selection, in-session cancellation, unchanged vault/app-data snapshots, and Obsidian reopen passed."
+      }
+    },
+    "rust_ci": {
+      "run_id": 37936679514,
+      "conclusion": "success",
+      "jobs": {"ubuntu": 113840361605, "macos": 113840361810, "windows": 113840361963}
+    },
+    "quality": {
+      "run_id": 37936679541,
+      "conclusion": "success",
+      "jobs": {"macos": 113840361909, "ubuntu": 113840362132, "windows": 113840362161}
+    },
+    "desktop_build": {
+      "run_id": 37936679608,
+      "conclusion": "success",
+      "jobs": {"macos": 113840362490, "ubuntu": 113840362678, "windows": 113840362837}
+    },
+    "plugin_renderer": {
+      "run_id": 37936679633,
+      "conclusion": "success",
+      "jobs": {"windows": 113840362315, "ubuntu": 113840362488, "macos": 113840362554}
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37936679845,
+      "conclusion": "success",
+      "jobs": {"macos": 113840362938, "windows": 113840363419, "ubuntu": 113840363456}
+    },
+    "inventory": {"run_id": 37936679400, "conclusion": "success", "job": 113840360959}
+  },
+  "parallel_groups": "All applicable native setup, build, round-trip preparation, and Rust check parallel groups passed on this exact source SHA.",
+  "correction": "Attempt 21 explicitly reactivates the Linux OpenObsidian window, waits for egui to confirm pointer hover before clicking, and uses keyboard focus/Enter as a fallback if X11 motion is still not delivered to egui.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
