@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T16:49:51Z",
+  "updated_at": "2026-10-09T16:55:45Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "df60c1e118cc4677538dcaa6f497e5d812ae568e",
+  "last_reconciled_head": "c580968fc0df3ea1ca1300696095f37ed0b49019",
   "current_milestone": "R2.6.70",
-  "next_action": "Commit and push the C01.2-21 dangling-symlink UI case on a small source SHA, then use only exact-SHA GitHub Actions to inspect formatting, workspace tests, and all required workflows; keep broader C01/C01.2 acceptance pending.",
+  "next_action": "Commit and push the exact Ubuntu rustfmt correction for C01.2-21, then inspect all required exact-SHA GitHub Actions workflows; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.69 passed on exact source SHA 6ed9058de819829284eb03b3ee2a0e3f29863d8a. The cross-platform symlink-boundary workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.69-attempt-2-6ed9058.json.",
+  "push_status": "R2.6.70 attempt 1 on c580968fc0df3ea1ca1300696095f37ed0b49019: the new cross-platform dangling-symlink test passed; only Ubuntu rustfmt failed. The other six workflows and all non-format Rust gates passed. Exact run details are in journal.md pending the corrected rerun.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13339,7 +13339,7 @@
     "R2.6.70": {
       "status": "in_progress",
       "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_commits": ["c580968fc0df3ea1ca1300696095f37ed0b49019"],
       "scope": "Exercise existing-vault scanning, link resolution, and transclusion reporting for dangling file and directory symlinks that point outside the vault, preserving complete vault, separate app-data, and outside-target snapshots.",
       "accepted_slice": ["C01.2-21"],
       "remaining": [
@@ -13352,8 +13352,24 @@
         "Full vault, separate app-data, and outside-target snapshots remain byte-identical after open, resolution, and teardown.",
         "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Commit and push the dangling-symlink UI case to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
+      "ci_attempts": [
+        {
+          "source_sha": "c580968fc0df3ea1ca1300696095f37ed0b49019",
+          "attempt": 1,
+          "conclusion": "The dangling-symlink workspace test passed on Ubuntu, macOS, and Windows. Rust CI failed only Ubuntu formatting; all other Rust checks and all six companion workflows passed.",
+          "workflows": {
+            "rust_ci": 37962018748,
+            "obsidian_vault_roundtrip": 37962018635,
+            "inventory": 37962018644,
+            "loaded_plugin_workflows": 37962018617,
+            "desktop_build": 37962018609,
+            "quality": 37962018716,
+            "plugin_renderer": 37962018641
+          },
+          "correction": "Apply the exact Ubuntu rustfmt layout for the missing-directory symlink metadata assertion, then validate all seven required workflows on a fresh exact SHA."
+        }
+      ],
+      "next_action": "Commit and push the exact CI-requested formatting correction to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
     }
   },
   "ci_preparation": {

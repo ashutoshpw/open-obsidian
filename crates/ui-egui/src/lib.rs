@@ -4483,9 +4483,11 @@ mod tests {
                 .iter()
                 .any(|(path, kind, _)| { path == Path::new("Notes/Missing.md") && *kind == 2 })
         );
-        assert!(before_vault.iter().any(|(path, kind, _)| {
-            path == Path::new("Notes/missing-dir") && *kind == 2
-        }));
+        assert!(
+            before_vault
+                .iter()
+                .any(|(path, kind, _)| { path == Path::new("Notes/missing-dir") && *kind == 2 })
+        );
 
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open existing vault without following dangling symlinks");
