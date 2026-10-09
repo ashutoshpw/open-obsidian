@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T17:13:59Z",
+  "updated_at": "2026-10-09T17:35:14Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "58ed756173ebc56d41d455d15dca48d7c5ab900a",
+  "last_reconciled_head": "e6f47c7a6d39950d20f1922022fa39e28d075b63",
   "current_milestone": "R2.6.71",
-  "next_action": "Commit and push the exact Ubuntu rustfmt correction for C01.2-22, then inspect all required exact-SHA GitHub Actions workflows; keep broader C01/C01.2 acceptance pending.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.71 attempt 1 on 58ed756173ebc56d41d455d15dca48d7c5ab900a: the in-vault symlink workspace test passed on all three OSes; only Ubuntu rustfmt failed. The other six workflows and all non-format Rust gates passed. Exact run details are recorded in journal.md pending the corrected rerun.",
+  "push_status": "R2.6.71 passed on exact source SHA e6f47c7a6d39950d20f1922022fa39e28d075b63. Rust CI, all seven required workflows, and C01.2-22 workspace tests passed on Ubuntu, macOS, and Windows. Ubuntu round-trip attempt 1 failed before cancellation assertions because xdotool found no visible window; the same-SHA retry passed. Evidence: evidence/r2.6.71-attempt-3-e6f47c7.json.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13386,13 +13386,12 @@
       "next_action": "Select the next uncovered C01 read-only acceptance flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending."
     },
     "R2.6.71": {
-      "status": "in_progress",
-      "implementation_sha": null,
-      "implementation_commits": ["58ed756173ebc56d41d455d15dca48d7c5ab900a", "0108ca716b93bc7b6be23368593116eb84b5ee90"],
+      "status": "complete",
+      "implementation_sha": "e6f47c7a6d39950d20f1922022fa39e28d075b63",
+      "implementation_commits": ["58ed756173ebc56d41d455d15dca48d7c5ab900a", "0108ca716b93bc7b6be23368593116eb84b5ee90", "e6f47c7a6d39950d20f1922022fa39e28d075b63"],
       "scope": "Exercise existing-vault scanning, link resolution, and transclusion reporting for file and directory symlinks whose targets are real files inside that same vault, preserving full vault and separate app-data snapshots.",
       "accepted_slice": ["C01.2-22"],
       "remaining": [
-        "Exact-SHA GitHub Actions evidence is pending.",
         "Broader C01/C01.2 acceptance remains pending."
       ],
       "acceptance": [
@@ -13431,9 +13430,25 @@
             "plugin_renderer": 37964860411
           },
           "correction": "Apply the existing narrow macOS eframe app.ron validation to app-data changes after picker cancellation and close, while retaining exact vault snapshots; then validate all seven workflows on a fresh exact SHA."
+        },
+        {
+          "source_sha": "e6f47c7a6d39950d20f1922022fa39e28d075b63",
+          "attempt": 3,
+          "conclusion": "C01.2-22 passed. Rust CI and all seven required workflows passed on this exact source SHA. The first Ubuntu round-trip job failed before cancellation assertions because xdotool found no visible window; the same-SHA Ubuntu retry passed, as did macOS and Windows.",
+          "workflows": {
+            "rust_ci": 37965884311,
+            "obsidian_vault_roundtrip": 37965884264,
+            "inventory": 37965884302,
+            "loaded_plugin_workflows": 37965884314,
+            "desktop_build": 37965884268,
+            "quality": 37965884310,
+            "plugin_renderer": 37965884270
+          },
+          "roundtrip_retry_job": 113941926864,
+          "evidence": "evidence/r2.6.71-attempt-3-e6f47c7.json"
         }
       ],
-      "next_action": "Commit and push the macOS app.ron audit correction to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending."
     }
   },
   "ci_preparation": {
