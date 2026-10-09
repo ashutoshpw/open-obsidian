@@ -55,7 +55,10 @@ fn main() -> ExitCode {
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let result = prepare_vault_app_data(&root)
-                .map_err(|_| "Private per-vault storage could not be prepared.".to_owned())
+                .map_err(|error| {
+                    eprintln!("OpenObsidian could not prepare private per-vault storage: {error}");
+                    "Private per-vault storage could not be prepared.".to_owned()
+                })
                 .and_then(|app_data_root| {
                     VaultSession::open(&root, app_data_root)
                         .map_err(|_| "The selected vault could not be opened safely.".to_owned())
@@ -137,8 +140,10 @@ fn open_selected_vault(root: PathBuf) -> Result<VaultSession, &'static str> {
     if !root.is_dir() {
         return Err("the selected path is not an existing folder");
     }
-    let app_data_root =
-        prepare_vault_app_data(&root).map_err(|_| "private application storage is unavailable")?;
+    let app_data_root = prepare_vault_app_data(&root).map_err(|error| {
+        eprintln!("OpenObsidian could not prepare private application storage: {error}");
+        "private application storage is unavailable"
+    })?;
     VaultSession::open(&root, app_data_root).map_err(|_| "the selected folder is not a safe vault")
 }
 
