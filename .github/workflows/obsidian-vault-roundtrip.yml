@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts"
+      - ".agents/tasks/2026-10-07/prepare-obsidian-reference.ts"
       - ".agents/tasks/2026-10-07/obsidian-reference-pin.json"
       - "apps/openobsidian/**"
       - "assets/openobsidian-icon.png"
@@ -22,13 +23,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  linux-roundtrip:
-    name: Obsidian 1.14.4 vault round-trip on Ubuntu
-    runs-on: ubuntu-24.04
+  roundtrip:
+    name: Obsidian 1.14.4 vault round-trip on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
     env:
       CARGO_TERM_COLOR: always
       RUST_BACKTRACE: 1
+      OPENOBSIDIAN_BINARY: ${{ format('{0}/target/release/openobsidian{1}', github.workspace, runner.os == 'Windows' && '.exe' || '') }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -45,6 +51,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Linux desktop and UI evidence dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -53,44 +60,30 @@ jobs:
             libgl1-mesa-dev libgtk-3-dev libgtk-3-0 libwebkit2gtk-4.1-dev libwebkit2gtk-4.1-0 \
             libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
 
-      - name: Read pinned official Obsidian release
-        id: pin
+      - name: Install macOS screenshot OCR dependency
+        if: runner.os == 'macOS'
         run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          from pathlib import Path
+          if ! brew list --versions tesseract >/dev/null 2>&1; then
+            brew install tesseract
+          fi
 
-          pin = json.loads(Path(".agents/tasks/2026-10-07/obsidian-reference-pin.json").read_text())
-          print(f"version={pin['version']}")
-          print(f"download_url={pin['download_url']}")
-          print(f"sha256={pin['sha256']}")
-          PY
+      - name: Install Windows screenshot OCR dependency
+        if: runner.os == 'Windows'
+        run: |
+          choco install tesseract --yes --no-progress
+          "$env:ProgramFiles\Tesseract-OCR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       # The pinned Obsidian extraction and Rust build write to separate directories.
       - parallel:
-          - name: Download and verify the pinned AppImage
-            env:
-              OBSIDIAN_DOWNLOAD_URL: ${{ steps.pin.outputs.download_url }}
-              OBSIDIAN_RELEASE_SHA256: ${{ steps.pin.outputs.sha256 }}
-            run: |
-              curl --fail --location --retry 3 "$OBSIDIAN_DOWNLOAD_URL" --output "$RUNNER_TEMP/Obsidian.AppImage"
-              printf '%s  %s\n' "$OBSIDIAN_RELEASE_SHA256" "$RUNNER_TEMP/Obsidian.AppImage" | sha256sum --check
-              chmod u+x "$RUNNER_TEMP/Obsidian.AppImage"
-              mkdir -p "$RUNNER_TEMP/obsidian-appimage"
-              (
-                cd "$RUNNER_TEMP/obsidian-appimage"
-                "$RUNNER_TEMP/Obsidian.AppImage" --appimage-extract
-              )
+          - name: Download, verify, and install the pinned Obsidian desktop
+            run: bun .agents/tasks/2026-10-07/prepare-obsidian-reference.ts
 
           - name: Build native OpenObsidian preview
             run: cargo build --package openobsidian --release --locked
 
       - name: Author, open, snapshot, and reopen the same vault
+        if: runner.os == 'Linux'
         env:
-          OBSIDIAN_RELEASE_VERSION: ${{ steps.pin.outputs.version }}
-          OBSIDIAN_RELEASE_SHA256: ${{ steps.pin.outputs.sha256 }}
-          OBSIDIAN_BINARY: ${{ runner.temp }}/obsidian-appimage/squashfs-root/obsidian
-          OPENOBSIDIAN_BINARY: ${{ github.workspace }}/target/release/openobsidian
           OBSIDIAN_REPORT_DIRECTORY: ${{ runner.temp }}/obsidian-vault-roundtrip-artifacts
           OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY: ${{ runner.temp }}/openobsidian-c01-roundtrip
         run: |
@@ -98,11 +91,18 @@ jobs:
           xvfb-run --auto-servernum --server-args='-screen 0 1440x1000x24' \
             bun .agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts
 
+      - name: Author, open, snapshot, and reopen the same vault
+        if: runner.os != 'Linux'
+        env:
+          OBSIDIAN_REPORT_DIRECTORY: ${{ runner.temp }}/obsidian-vault-roundtrip-artifacts
+          OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY: ${{ runner.temp }}/openobsidian-c01-roundtrip
+        run: bun .agents/tasks/2026-10-07/audit-obsidian-vault-roundtrip.ts
+
       - name: Upload round-trip report, snapshots, screenshots, and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: obsidian-vault-roundtrip-${{ github.sha }}
+          name: obsidian-vault-roundtrip-${{ runner.os }}-${{ github.sha }}
           path: ${{ runner.temp }}/obsidian-vault-roundtrip-artifacts/
           if-no-files-found: warn
           retention-days: 30

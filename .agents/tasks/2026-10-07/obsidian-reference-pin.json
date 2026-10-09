@@ -9,10 +9,32 @@
   "asset": "Obsidian-1.14.4.AppImage",
   "download_url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.4/Obsidian-1.14.4.AppImage",
   "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
-  "current_probe_scope": "Verify that the pinned official Obsidian desktop renderer starts under Xvfb on GitHub Actions and preserve its DOM text, screenshot and process log as feasibility evidence.",
+  "platforms": {
+    "linux": {
+      "asset": "Obsidian-1.14.4.AppImage",
+      "download_url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.4/Obsidian-1.14.4.AppImage",
+      "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+      "source_platform": "Linux x86_64",
+      "format": "AppImage"
+    },
+    "macos": {
+      "asset": "Obsidian-1.14.4.dmg",
+      "download_url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.4/Obsidian-1.14.4.dmg",
+      "sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+      "source_platform": "official macOS desktop build",
+      "format": "DMG"
+    },
+    "windows": {
+      "asset": "Obsidian-1.14.4.exe",
+      "download_url": "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.14.4/Obsidian-1.14.4.exe",
+      "sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+      "source_platform": "Windows x86_64",
+      "format": "NSIS installer"
+    }
+  },
+  "current_probe_scope": "The runner feasibility probe remains Linux-only. The C01.2 acceptance workflow uses the checksum-pinned official desktop asset for Linux, macOS and Windows.",
   "acceptance_limitations": [
-    "The runner probe does not create or reopen a vault.",
-    "The runner probe does not satisfy C01.2-01 or C01.2-03.",
-    "A later workflow must use a privacy-safe fixture, launch OpenObsidian against the same vault, reopen that vault in Obsidian, and compare source bytes and allowed workspace-state changes."
+    "The Linux feasibility probe does not create or reopen a vault and does not satisfy C01.2-01 or C01.2-03.",
+    "C01.2 acceptance still requires the same privacy-safe fixture, OpenObsidian no-op open, Obsidian reopen, source-byte snapshots and separately attributed workspace-state changes on each supported platform."
   ]
 }

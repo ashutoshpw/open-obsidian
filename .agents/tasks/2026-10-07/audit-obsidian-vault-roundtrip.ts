@@ -41,6 +41,8 @@ const attachmentPath = "Assets/roundtrip image.png";
 const noteMarker = "Authored by pinned Obsidian through its editor on GitHub Actions.";
 const noteEmbed = "![[Assets/roundtrip image.png]]";
 const noteContents = `${noteMarker}\n\n${noteEmbed}\n`;
+const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
+const obsidianSourcePlatform = requiredEnv("OBSIDIAN_SOURCE_PLATFORM");
 const seedMarkdownPath = "Nested Ω/space note.md";
 const seedMarkdown = "\uFEFF---\r\ntitle: Original CRLF note\r\nunknown_nested:\r\n  keep: [true, 7, 'opaque']\r\n---\r\n\r\nOriginal bytes stay untouched.\r\n";
 const workspaceStateAllowlist = [".obsidian/workspace.json", ".obsidian/workspace-mobile.json"];
@@ -48,20 +50,24 @@ const startedAt = new Date().toISOString();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.6.48-C01.2-01/03-Linux-first-slice",
+  milestone: "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
   runner_os: process.env.RUNNER_OS ?? "unknown",
-  runner_image: "ubuntu-24.04",
+  runner_image: process.env.ImageOS ?? process.env.OBSIDIAN_RUNNER_IMAGE ?? "unknown",
+  runner_image_version: process.env.ImageVersion ?? "unknown",
   workflow_run_id: runId,
   workflow_run_attempt: runAttempt,
   reference_application: {
     product: "Obsidian Desktop",
     version: obsidianVersion,
-    appimage_sha256: obsidianSha256,
-    source_platform: "Linux x86_64",
-    fixture_authoring: "Open the generated vault in the pinned desktop app, create a new note with its editor shortcut, and insert the seed text through the renderer keyboard input protocol.",
+    asset: obsidianAsset,
+    sha256: obsidianSha256,
+    ...(process.platform === "linux" ? {appimage_sha256: obsidianSha256} : {}),
+    source_platform: obsidianSourcePlatform,
+    runner_architecture: process.arch,
+    fixture_authoring: "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol.",
   },
   fixture: {
     privacy: "Generated synthetic data only; no personal vault content or credentials.",
@@ -78,8 +84,8 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "This first slice runs on Linux only; C01.2 all-platform acceptance remains pending.",
-    "The run proves the read-only startup and reopen workflow only; it does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
+    "The run proves the read-only startup and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
 
@@ -363,6 +369,31 @@ async function captureX11Screenshot(filename: string): Promise<string> {
   return pngPath;
 }
 
+async function captureDesktopScreenshot(filename: string): Promise<string> {
+  if (process.platform === "linux") return await captureX11Screenshot(filename);
+  const pngPath = join(reportDirectory, filename);
+  if (process.platform === "darwin") {
+    execFileSync("screencapture", ["-x", pngPath], {stdio: "ignore"});
+    return pngPath;
+  }
+  const script = `
+    Add-Type -AssemblyName System.Drawing
+    Add-Type -AssemblyName System.Windows.Forms
+    $bounds = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    $bitmap = [System.Drawing.Bitmap]::new($bounds.Width, $bounds.Height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.CopyFromScreen($bounds.Location, [System.Drawing.Point]::Empty, $bounds.Size)
+    $bitmap.Save($env:OBSIDIAN_SCREENSHOT_PATH, [System.Drawing.Imaging.ImageFormat]::Png)
+    $graphics.Dispose()
+    $bitmap.Dispose()
+  `;
+  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    env: {...process.env, OBSIDIAN_SCREENSHOT_PATH: pngPath},
+    stdio: "ignore",
+  });
+  return pngPath;
+}
+
 async function captureX11WindowScreenshot(windowId: string, filename: string): Promise<string> {
   const xwdPath = join(reportDirectory, filename.replace(/\.png$/i, ".xwd"));
   const pngPath = join(reportDirectory, filename);
@@ -389,7 +420,30 @@ async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<
   });
 }
 
-async function chooseVaultDirectory(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
+async function finishVaultDirectorySelection(connection: DevToolsConnection, port: number, pickerEvidence: Record<string, unknown>): Promise<DevToolsConnection> {
+  const vaultTarget = await waitForPageTarget(
+    port,
+    (candidate) => typeof candidate.url === "string" && candidate.url.startsWith("app://obsidian.md/") && !candidate.url.includes("/starter.html"),
+    "Obsidian vault renderer after folder selection",
+  );
+  const pageTargets = await readPageTargets(port);
+  const authoring = report.obsidian_authoring as Record<string, unknown>;
+  authoring.folder_picker = {
+    ...pickerEvidence,
+    page_targets_after_folder_selection: pageTargets.map(({id, title, url, type}) => ({id, title, url, type})),
+    vault_renderer_target: {id: vaultTarget.id ?? null, title: vaultTarget.title ?? "", url: vaultTarget.url ?? ""},
+  };
+  connection.close();
+  connection = await connectTarget(vaultTarget);
+
+  const isVaultLoaded = (body: string) => body.includes("C01.2 Roundtrip Fixture") && !body.includes("Open folder as vault") && !body.includes("Create new vault");
+  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
+  authoring.selected_vault_text = body.slice(0, 2_000);
+  authoring.selected_vault_in_ui = true;
+  return connection;
+}
+
+async function chooseVaultDirectoryLinux(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
   const initialWindowId = activeWindowId();
   const initialTitle = activeWindowTitle();
   await clickFirstRunOpenButton(connection);
@@ -403,17 +457,15 @@ async function chooseVaultDirectory(connection: DevToolsConnection, port: number
     picker_window_id: pickerWindow.windowId,
     picker_window_title: pickerWindow.title,
   };
-  const pickerScreenshots = [await captureX11Screenshot("obsidian-folder-picker-initial.png")];
-  (report.obsidian_authoring as Record<string, unknown>).folder_picker_screenshots = pickerScreenshots;
+  const pickerScreenshots = [await captureDesktopScreenshot("obsidian-folder-picker-initial.png")];
 
   xdotool("key", "ctrl+l");
   xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
-  pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-path-entered.png"));
+  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-path-entered.png"));
   const pickerStillActive = () => activeWindowId() === pickerWindow.windowId;
   const openButtonClick = clickWindowOpenButton(pickerWindow.windowId);
-  (report.obsidian_authoring as Record<string, unknown>).folder_picker_open_button_click = openButtonClick;
   await delay(1_000);
-  pickerScreenshots.push(await captureX11Screenshot("obsidian-folder-picker-after-open-click.png"));
+  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-open-click.png"));
   if (pickerStillActive()) {
     xdotool("key", "Return");
     await delay(1_000);
@@ -431,23 +483,76 @@ async function chooseVaultDirectory(connection: DevToolsConnection, port: number
   }
   (report.obsidian_authoring as Record<string, unknown>).folder_picker_closed = true;
 
-  const vaultTarget = await waitForPageTarget(
-    port,
-    (candidate) => typeof candidate.url === "string" && candidate.url.startsWith("app://obsidian.md/") && !candidate.url.includes("/starter.html"),
-    "Obsidian vault renderer after folder selection",
-  );
-  const pageTargets = await readPageTargets(port);
-  const authoring = report.obsidian_authoring as Record<string, unknown>;
-  authoring.page_targets_after_folder_selection = pageTargets.map(({id, title, url, type}) => ({id, title, url, type}));
-  authoring.vault_renderer_target = {id: vaultTarget.id ?? null, title: vaultTarget.title ?? "", url: vaultTarget.url ?? ""};
-  connection.close();
-  connection = await connectTarget(vaultTarget);
+  return await finishVaultDirectorySelection(connection, port, {
+    initial_window_id: initialWindowId,
+    initial_window_title: initialTitle,
+    picker_window_id: pickerWindow.windowId,
+    picker_window_title: pickerWindow.title,
+    open_button_click: openButtonClick,
+    picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
+    picker_closed: true,
+  });
+}
 
-  const isVaultLoaded = (body: string) => body.includes("C01.2 Roundtrip Fixture") && !body.includes("Open folder as vault") && !body.includes("Create new vault");
-  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
-  authoring.selected_vault_text = body.slice(0, 2_000);
-  authoring.selected_vault_in_ui = true;
-  return connection;
+async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
+  await clickFirstRunOpenButton(connection);
+  await delay(1_000);
+  const pickerScreenshots = [await captureDesktopScreenshot("obsidian-folder-picker-initial.png")];
+  const script = `on run argv
+    tell application "System Events"
+      keystroke "g" using {command down, shift down}
+      delay 0.5
+      keystroke (item 1 of argv)
+      delay 0.5
+      key code 36
+      delay 1
+      key code 36
+    end tell
+  end run`;
+  execFileSync("osascript", ["-e", script, vaultRoot], {stdio: "ignore"});
+  await delay(1_000);
+  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-path.png"));
+  return await finishVaultDirectorySelection(connection, port, {
+    interaction: "macOS Open panel: Go to Folder (Command-Shift-G), enter the fixture path, and confirm folder selection",
+    picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
+  });
+}
+
+async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
+  await clickFirstRunOpenButton(connection);
+  await delay(1_000);
+  const pickerScreenshots = [await captureDesktopScreenshot("obsidian-folder-picker-initial.png")];
+  const script = `
+    $ErrorActionPreference = "Stop"
+    $shell = New-Object -ComObject WScript.Shell
+    Start-Sleep -Milliseconds 500
+    $shell.SendKeys("^l")
+    Start-Sleep -Milliseconds 300
+    $shell.SendKeys($env:OBSIDIAN_PICKER_VAULT_PATH)
+    Start-Sleep -Milliseconds 300
+    $shell.SendKeys("{ENTER}")
+    Start-Sleep -Milliseconds 750
+    $shell.SendKeys("%s")
+    Start-Sleep -Milliseconds 500
+    $shell.SendKeys("{ENTER}")
+  `;
+  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    env: {...process.env, OBSIDIAN_PICKER_VAULT_PATH: vaultRoot},
+    stdio: "ignore",
+  });
+  await delay(1_000);
+  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-path.png"));
+  return await finishVaultDirectorySelection(connection, port, {
+    interaction: "Windows folder picker: navigate to the fixture path and confirm Select Folder",
+    picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
+  });
+}
+
+async function chooseVaultDirectory(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
+  if (process.platform === "linux") return await chooseVaultDirectoryLinux(connection, port);
+  if (process.platform === "darwin") return await chooseVaultDirectoryMacOS(connection, port);
+  if (process.platform === "win32") return await chooseVaultDirectoryWindows(connection, port);
+  throw new Error(`Unsupported Obsidian folder picker platform ${process.platform}`);
 }
 
 async function chooseRestrictedMode(connection: DevToolsConnection): Promise<void> {
@@ -509,8 +614,10 @@ async function createFixture(): Promise<void> {
     authored_by: "GitHub Actions fixture generator plus pinned Obsidian Desktop UI",
     generator_source_sha: sourceSha,
     reference_app_version: obsidianVersion,
-    reference_appimage_sha256: obsidianSha256,
-    source_platform: "Linux x86_64",
+    reference_asset: obsidianAsset,
+    reference_asset_sha256: obsidianSha256,
+    ...(process.platform === "linux" ? {reference_appimage_sha256: obsidianSha256} : {}),
+    source_platform: obsidianSourcePlatform,
     contains_personal_data: false,
     execution_policy: "No local application launch or local validation was used.",
   };
@@ -566,21 +673,29 @@ function ensureExactSnapshot(before: SnapshotEntry[], after: SnapshotEntry[], la
 
 async function createObsidianProfile(profileDirectory: string, port: number): Promise<ChildProcess> {
   await mkdir(profileDirectory, {recursive: true});
-  const env = {
+  const homeRoot = join(profileDirectory, "home");
+  const env: NodeJS.ProcessEnv = {
     ...process.env,
-    XDG_CONFIG_HOME: join(profileDirectory, "config"),
-    XDG_CACHE_HOME: join(profileDirectory, "cache"),
-    XDG_DATA_HOME: join(profileDirectory, "data"),
+    HOME: homeRoot,
   };
-  return launchLogged(obsidianBinary, [
-    "--no-sandbox",
-    "--disable-gpu",
-    "--disable-dev-shm-usage",
+  const args: string[] = [];
+  if (process.platform === "linux") {
+    env.XDG_CONFIG_HOME = join(profileDirectory, "config");
+    env.XDG_CACHE_HOME = join(profileDirectory, "cache");
+    env.XDG_DATA_HOME = join(profileDirectory, "data");
+    args.push("--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage");
+  } else if (process.platform === "win32") {
+    env.USERPROFILE = homeRoot;
+    env.APPDATA = join(profileDirectory, "appdata-roaming");
+    env.LOCALAPPDATA = join(profileDirectory, "appdata-local");
+  }
+  args.push(
     "--remote-allow-origins=*",
     "--remote-debugging-address=127.0.0.1",
     `--remote-debugging-port=${port}`,
     `--user-data-dir=${join(profileDirectory, "user-data")}`,
-  ], join(reportDirectory, port === 9222 ? "obsidian-author.log" : "obsidian-reopen.log"), env);
+  );
+  return launchLogged(obsidianBinary, args, join(reportDirectory, port === 9222 ? "obsidian-author.log" : "obsidian-reopen.log"), env);
 }
 
 async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{connection: DevToolsConnection; browserVersion: string; notePath: string}> {
@@ -695,26 +810,70 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   return {connection, browserVersion, notePath};
 }
 
-async function captureOpenObsidianScreenshot(windowId: string): Promise<{pngPath: string; windowPngPath: string; ocrText: string}> {
-  const pngPath = await captureX11Screenshot("openobsidian-vault.png");
-  const windowPngPath = await captureX11WindowScreenshot(windowId, "openobsidian-vault-window.png");
-  const ocrText = execFileSync("tesseract", [windowPngPath, "stdout", "--psm", "6"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+async function focusOpenObsidian(child: ChildProcess): Promise<void> {
+  if (process.platform === "linux") return;
+  if (process.platform === "darwin") {
+    const script = `tell application "System Events" to set frontmost of first process whose unix id is ${child.pid ?? -1} to true`;
+    execFileSync("osascript", ["-e", script], {stdio: "ignore"});
+    return;
+  }
+  const script = `
+    Add-Type -TypeDefinition @'
+      using System;
+      using System.Runtime.InteropServices;
+      public static class OpenObsidianWindow {
+        [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr handle, int command);
+        [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr handle);
+      }
+'@
+    $application = Get-Process -Id ${child.pid ?? -1} -ErrorAction SilentlyContinue
+    if ($null -eq $application -or $application.MainWindowHandle -eq 0) {
+      $application = Get-Process -Name "openobsidian" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+    }
+    if ($null -ne $application -and $application.MainWindowHandle -ne 0) {
+      [OpenObsidianWindow]::ShowWindow($application.MainWindowHandle, 9) | Out-Null
+      [OpenObsidianWindow]::SetForegroundWindow($application.MainWindowHandle) | Out-Null
+    }
+  `;
+  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {stdio: "ignore"});
+}
+
+async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess): Promise<{pngPath: string; windowPngPath: string; ocrText: string}> {
+  await focusOpenObsidian(child);
+  const pngPath = await captureDesktopScreenshot("openobsidian-vault.png");
+  const windowPngPath = process.platform === "linux"
+    ? await captureX11WindowScreenshot(windowId, "openobsidian-vault-window.png")
+    : pngPath;
+  const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
+  const ocrText = execFileSync(tesseract, [windowPngPath, "stdout", "--psm", "6"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
   return {pngPath, windowPngPath, ocrText};
 }
 
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
   const userConfigRoot = join(workDirectory, "openobsidian-user-config");
-  const appDataRoot = join(userConfigRoot, "OpenObsidian");
-  const appEnv = {
+  const homeRoot = join(workDirectory, "openobsidian-home");
+  const localDataRoot = join(workDirectory, "openobsidian-local-data");
+  const appEnv: NodeJS.ProcessEnv = {
     ...process.env,
-    HOME: join(workDirectory, "openobsidian-home"),
-    XDG_CONFIG_HOME: userConfigRoot,
-    XDG_CACHE_HOME: join(workDirectory, "openobsidian-cache"),
-    XDG_DATA_HOME: join(workDirectory, "openobsidian-data"),
-    LIBGL_ALWAYS_SOFTWARE: "1",
-    WGPU_BACKEND: "gl",
+    HOME: homeRoot,
   };
-  await mkdir(appEnv.HOME, {recursive: true});
+  let appDataRoot: string;
+  if (process.platform === "win32") {
+    appEnv.APPDATA = userConfigRoot;
+    appEnv.LOCALAPPDATA = localDataRoot;
+    appEnv.USERPROFILE = homeRoot;
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  } else if (process.platform === "darwin") {
+    appDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
+  } else {
+    appEnv.XDG_CONFIG_HOME = userConfigRoot;
+    appEnv.XDG_CACHE_HOME = join(workDirectory, "openobsidian-cache");
+    appEnv.XDG_DATA_HOME = join(workDirectory, "openobsidian-data");
+    appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
+    appEnv.WGPU_BACKEND = "gl";
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  }
+  await mkdir(homeRoot, {recursive: true});
   const child = launchLogged(openObsidianBinary, ["--open-vault", vaultRoot], join(reportDirectory, "openobsidian.log"), appEnv);
   (report.openobsidian_open as Record<string, unknown>).pid = child.pid ?? null;
   try {
@@ -722,30 +881,37 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     if (child.exitCode !== null || child.signalCode !== null) {
       throw new Error(`OpenObsidian exited before rendering the selected vault (code=${child.exitCode}, signal=${child.signalCode})`);
     }
-    const window = await waitFor("OpenObsidian window to become visible", async () => {
+    let window: {window_id: string; title: string; geometry: string};
+    if (process.platform === "linux") {
+      const x11Window = await waitFor("OpenObsidian window to become visible", async () => {
+        try {
+          const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
+          if (!windowId) return null;
+          const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+          const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          return {window_id: windowId, title, geometry};
+        } catch {
+          return null;
+        }
+      }, (value) => value !== null, 30_000);
+      if (!x11Window) throw new Error("OpenObsidian did not expose a visible X11 window");
+      window = x11Window;
+      (report.openobsidian_open as Record<string, unknown>).x11_window = x11Window;
       try {
-        const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
-        const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
-        if (!windowId) return null;
-        const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
-        const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
-        return {window_id: windowId, title, geometry};
+        xdotool("windowfocus", "--sync", window.window_id);
       } catch {
-        return null;
+        // Direct per-window capture below still works if Xvfb has no window manager.
       }
-    }, (value) => value !== null, 30_000);
-    if (!window) throw new Error("OpenObsidian did not expose a visible X11 window");
-    (report.openobsidian_open as Record<string, unknown>).x11_window = window;
-    try {
-      xdotool("windowfocus", "--sync", window.window_id);
-    } catch {
-      // Direct per-window capture below still works if Xvfb has no window manager.
+    } else {
+      window = {window_id: String(child.pid ?? "unknown"), title: "platform desktop screenshot", geometry: "full virtual screen"};
+      (report.openobsidian_open as Record<string, unknown>).native_window = window;
     }
     const open = report.openobsidian_open as Record<string, unknown>;
     let renderAttempt = 0;
     await waitFor("OpenObsidian to render the selected vault and note count", async () => {
       await delay(1_000);
-      const captured = await captureOpenObsidianScreenshot(window.window_id);
+      const captured = await captureOpenObsidianScreenshot(window.window_id, child);
       renderAttempt += 1;
       open.screenshot = "openobsidian-vault.png";
       open.window_screenshot = "openobsidian-vault-window.png";
@@ -763,7 +929,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     (report.openobsidian_open as Record<string, unknown>).status = "passed";
     (report.openobsidian_open as Record<string, unknown>).selected_vault_visible = true;
     (report.openobsidian_open as Record<string, unknown>).expected_markdown_count_visible = true;
-    (report.openobsidian_app_data as Record<string, unknown>).root = "$RUNNER_TEMP/openobsidian-c01-roundtrip/openobsidian-user-config/OpenObsidian";
+    (report.openobsidian_app_data as Record<string, unknown>).root = `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, appDataRoot).split(sep).join("/")}`;
     (report.openobsidian_app_data as Record<string, unknown>).canonical_root_is_outside_vault = true;
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_startup = initialAppData;
     await saveReport();
