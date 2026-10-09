@@ -1,0 +1,89 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 12,
+  "source_sha": "790f36544b29731d48478d43948214d92af32106",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37924569487,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37924569487",
+      "conclusion": "failure",
+      "jobs": {
+        "windows": 113800307497,
+        "ubuntu": 113800307786,
+        "macos": 113800308069
+      }
+    },
+    "rust_ci": {
+      "run_id": 37924569448,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113800307080,
+        "macos": 113800307499,
+        "windows": 113800307600
+      }
+    },
+    "quality": {
+      "run_id": 37924569593,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113800307996,
+        "ubuntu": 113800308425,
+        "windows": 113800308604
+      }
+    },
+    "desktop_build": {
+      "run_id": 37924569462,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113800307796,
+        "windows": 113800308076,
+        "macos": 113800308137
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37924569510,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113800307491,
+        "windows": 113800307919,
+        "macos": 113800308056
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37924569340,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113800307108,
+        "ubuntu": 113800307152,
+        "windows": 113800307344
+      }
+    },
+    "inventory": {
+      "run_id": 37924569489,
+      "conclusion": "success",
+      "job": 113800307487
+    }
+  },
+  "roundtrip_artifacts": {
+    "windows": {
+      "artifact_id": 11614001598,
+      "digest": "sha256:2af8bf8fe87b8c045114c3d27e721a3a7ec8a3afccef536c659acbdd1b724601"
+    },
+    "ubuntu": {
+      "artifact_id": 11613621429,
+      "digest": "sha256:c219fdf2218556235df9d08c4477b675b5c89a8f4e06b078765784e29f804796"
+    },
+    "macos": {
+      "artifact_id": 11613451844,
+      "digest": "sha256:b45aa55993d6848e6839df0d79a88fa41401c7ccce101ec28d78cc1fe1d2d88e"
+    }
+  },
+  "platform_findings": {
+    "ubuntu": "The picker accepted the full fixture path in its focused Ctrl+L location field, but remained open after the confirmation click. The screenshot places the visible OK button above the original click target.",
+    "macos": "The accessible native Open panel bounds were used to click its Open button, and OpenObsidian displayed the selected fixture. The run then timed out waiting for app.ron before opening the second picker; prior CI artifacts show app.ron appears after the native picker opens, so this baseline was taken too early.",
+    "windows": "The fixture selection succeeded. During the later cancellation step UI Automation reported the visible Open vault control as disabled for ten seconds, and no new native picker window appeared after the fallback click. A previous same-SHA attempt on Windows passed, so the failure remains intermittent."
+  },
+  "parallel_groups": "Native parallel setup groups completed successfully in the applicable workflows and on all round-trip jobs.",
+  "correction": "Move the macOS eframe-state baseline to after the native picker is visible and before Escape, then keep exact app-data snapshots through cancellation and close. Move Linux's click into the visible OK button. Keep Windows selection/cancellation unchanged pending a fresh exact-SHA result.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
