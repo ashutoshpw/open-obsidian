@@ -1,0 +1,126 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 8,
+  "source_sha": "b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37919573887,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573887",
+      "attempt_1_jobs": {
+        "macos": {
+          "job_id": 113783976053,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "failure"
+        },
+        "ubuntu": {
+          "job_id": 113783976502,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "failure"
+        },
+        "windows": {
+          "job_id": 113783976505,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "failure"
+        }
+      },
+      "attempt_2_rerun": {
+        "rerun_scope": "Ubuntu job only",
+        "ubuntu": {
+          "job_id": 113786226521,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "failure"
+        }
+      }
+    },
+    "rust_ci": {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37919573793,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573793",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113783976105, "conclusion": "success" },
+        "macos": { "job_id": 113783976224, "conclusion": "success" },
+        "ubuntu": { "job_id": 113783976303, "conclusion": "success" }
+      }
+    },
+    "quality": {
+      "name": "OpenObsidian quality",
+      "run_id": 37919573889,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573889",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": { "job_id": 113783976345, "conclusion": "success" },
+        "macos": { "job_id": 113783976580, "conclusion": "success" },
+        "windows": { "job_id": 113783976602, "conclusion": "success" }
+      }
+    },
+    "desktop_build": {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37919573816,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573816",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113783975515, "conclusion": "success" },
+        "ubuntu": { "job_id": 113783975702, "conclusion": "success" },
+        "macos": { "job_id": 113783975967, "conclusion": "success" }
+      }
+    },
+    "plugin_renderer": {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37919573831,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573831",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113783975895, "conclusion": "success" },
+        "macos": { "job_id": 113783976235, "conclusion": "success" },
+        "ubuntu": { "job_id": 113783976343, "conclusion": "success" }
+      }
+    },
+    "loaded_plugin_workflows": {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37919573791,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573791",
+      "conclusion": "success",
+      "jobs": {
+        "windows": { "job_id": 113783975472, "conclusion": "success" },
+        "ubuntu": { "job_id": 113783975923, "conclusion": "success" },
+        "macos": { "job_id": 113783976183, "conclusion": "success" }
+      }
+    },
+    "inventory": {
+      "name": "Rust migration inventory",
+      "run_id": 37919573804,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573804",
+      "conclusion": "success",
+      "job": { "job_id": 113783975354, "conclusion": "success" }
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu_attempt_1": {
+      "artifact_id": 11611169951,
+      "digest": "sha256:80db4f29e7f1cd7179a6b88a47c452aedecdc3a0a208e924f8a957b153004830"
+    },
+    "ubuntu_attempt_2": {
+      "artifact_id": 11612445359,
+      "digest": "sha256:746cce04202947d7ea40ff0702125a5cc7b6c5e1aa5dbb30308d96af593f26e8"
+    },
+    "macos_attempt_1": {
+      "artifact_id": 11611029970,
+      "digest": "sha256:1df72eaf920428428cba9d3330f6e19d9da97b35aa5c7833d6c8fe04a5f7490d"
+    },
+    "windows_attempt_1": {
+      "artifact_id": 11610024777,
+      "digest": "sha256:fa635fdafe4f522cf524158c41e2b95739ce2805da6ab31282a317ca37448432"
+    }
+  },
+  "parallel_setup_groups": "Passed on all applicable runners.",
+  "platform_findings": {
+    "ubuntu": "The native vault-selection screen opened, but preparing private per-vault app data failed with ENOENT and the app returned to No vault is open. The same failure reproduced in the Ubuntu-only rerun; this SHA did not yet log which preparation operation failed.",
+    "windows": "Open vault remained IsEnabled=false throughout the 10-second UI Automation poll. A physical screen click did not produce a new picker window, although the foreground screenshot showed the button. The timeout threw before the new control-inventory diagnostic could be included in the report.",
+    "macos": "The native panel appeared and Escape returned to the active vault. The strict app-data snapshot differed because eframe's app.ron file appeared after startup. The report captured its raw contents; it stores window position/size and egui state. The observed timing is consistent with normal eframe persistence, but does not by itself establish cancellation as the cause.",
+    "quality": "The shared tesseract invocation helper resolved the prior Knip failure; quality passed on all three operating systems."
+  },
+  "correction": "Add path-free operation-stage context to per-vault app-data preparation errors; let Windows picker polling time out into the diagnostic report; establish the macOS startup-persistence baseline before cancellation and continue requiring an unchanged snapshot after cancellation and close.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run."
+}

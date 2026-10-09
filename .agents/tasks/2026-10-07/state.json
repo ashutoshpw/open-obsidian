@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T10:45:25Z",
+  "updated_at": "2026-10-09T10:58:52Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e982f11f38c64ebd702bce49d951f0005ccfe1d3",
+  "last_reconciled_head": "b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1",
   "current_milestone": "R2.6.65",
-  "next_action": "Push the committed attempt 7 correction to origin/main, then inspect exact-SHA GitHub Actions results for the round-trip and companion workflows.",
+  "next_action": "Commit the focused app-data stage diagnostic and cancellation-baseline corrections as attempt 9, push to origin/main, then inspect exact-SHA GitHub Actions results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -211,9 +211,10 @@
     "R2.6.65 attempts 1 and 2 did not achieve cross-platform cancellation; attempt 2 on 9e105b1184e6193a314ea35310d572076b5e4300 also exposed storage and native-picker automation failures, while Rust CI and six companion workflows passed. Attempt 3 on ab18bb1d412a44c4731a2fef1e869836c8dc295b opened the active vault on all platforms but the picker click did not open the dialog; Rust CI and all six companion workflows passed. The pending correction uses verified screen-level clicks and captures the post-click screen.",
     "R2.6.65 attempt 4 on exact SHA 937d2f2a3e63f28a0f14188d0c0d742aedd19e6b did not reach cancellation acceptance on Linux, macOS, or Windows. Linux timed out with the active screen still visible; macOS rejected AppleScript window coordinates before the click; Windows had a visible native picker that OCR failed to recognize. Rust CI and all six companion workflows passed, including native parallel groups. The next correction improves window-relative clicking, coordinate parsing, screenshot OCR tolerance, and CI-only UI availability diagnostics.",
     "R2.6.65 attempt 5 on exact SHA 11ae4c56ebc466445fd353cdb15c502a6ed26c7d passed the complete active-session picker cancellation and snapshot checks on Windows. Linux stayed on the active screen despite CI logs showing the Open vault button was enabled; macOS opened the visible native panel but its OCR gate missed the controls. Rust CI and all six companion workflows passed on all three platforms. The next correction raises the Linux window and uses macOS accessibility window/sheet names to verify the panel before and after Escape.",
-    "R2.6.65 attempt 7 on e982f11: Rust CI, desktop build, plugin renderer, loaded-plugin workflows and inventory passed; round-trip cancellation and quality failed. Evidence: evidence/r2.6.65-cancellation-attempt-7-e982f11.json. The next correction restores Linux click behavior, improves Windows picker diagnostics, records macOS app.ron changes, and resolves Knip before fresh exact-SHA CI."
+    "R2.6.65 attempt 7 on e982f11: Rust CI, desktop build, plugin renderer, loaded-plugin workflows and inventory passed; round-trip cancellation and quality failed. Evidence: evidence/r2.6.65-cancellation-attempt-7-e982f11.json. The next correction restores Linux click behavior, improves Windows picker diagnostics, records macOS app.ron changes, and resolves Knip before fresh exact-SHA CI.",
+    "R2.6.65 attempt 8 on b1b48b6: all companion workflows passed, but native picker cancellation failed on Ubuntu, macOS and Windows. An Ubuntu-only same-run rerun reproduced the private app-data ENOENT. Evidence: evidence/r2.6.65-cancellation-attempt-8-b1b48b6.json. Next, log the path-free failing operation, preserve Windows timeout inventory, and compare cancellation against a settled macOS app.ron startup baseline."
   ],
-  "push_status": "Attempt 7 exact-SHA CI on e982f11 is reconciled; the focused correction and progress record are committed and pending push to origin/main.",
+  "push_status": "Attempt 8 source b1b48b6 is pushed and reconciled. Companion workflows passed; picker cancellation failed on all three platforms, with Ubuntu reproducing ENOENT on its targeted same-run rerun.",
   "ci_results": [
     {
       "name": "inventory",
@@ -10750,7 +10751,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "d4223370cd505629b1fb8f3bb94f1b7e258bdc42",
+      "implementation_sha": "b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -10759,9 +10760,11 @@
         "42457db91045fd2cd6fb5481c61a1869a0f404af",
         "bdd332ff9870f8c5797184755030c2103cc71f5d",
         "56442b0eda2719c8a565d40dc38e9799cab2e18a",
-        "d4223370cd505629b1fb8f3bb94f1b7e258bdc42"
+        "d4223370cd505629b1fb8f3bb94f1b7e258bdc42",
+        "e982f11f38c64ebd702bce49d951f0005ccfe1d3",
+        "b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1"
       ],
-      "push_status": "Attempt 7 on exact SHA e982f11f38c64ebd702bce49d951f0005ccfe1d3 completed; the focused cancellation and quality corrections are committed and pending push to origin/main.",
+      "push_status": "Attempt 8 source b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1 is pushed and reconciled. Companion workflows passed; cancellation failed on all three platforms, with private app-data ENOENT reproduced by the Ubuntu-only same-run rerun.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -10988,6 +10991,48 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-7-e982f11.json",
           "correction": "Share one tesseract invocation helper, restore Linux relative pointer motion plus a normal click, poll Windows UI Automation for Open vault to become enabled before invocation/click and attach the final control inventory if no picker appears, and save app-data changes plus raw .ron contents before snapshot assertions."
+        },
+        {
+          "source_sha": "b1b48b6cd5ab82bb66f9a6280d915e3ec8e73da1",
+          "attempt": 8,
+          "conclusion": "The Obsidian round-trip failed cancellation on Ubuntu, macOS, and Windows. The Ubuntu job was rerun alone as same-run attempt 2 and again failed private app-data preparation with ENOENT. Windows UI Automation reported Open vault IsEnabled=false for ten seconds; the timeout occurred before the control inventory could be recorded. macOS cancelled the visible native panel, but the app-data comparison found startup app.ron persistence. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, inventory, and parallel setup groups passed.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37919573887,
+            "rust_ci": 37919573793,
+            "quality": 37919573889,
+            "desktop_build": 37919573816,
+            "plugin_renderer": 37919573831,
+            "loaded_plugin_workflows": 37919573791,
+            "inventory": 37919573804
+          },
+          "roundtrip_jobs": {
+            "macos": 113783976053,
+            "ubuntu": 113783976502,
+            "windows": 113783976505
+          },
+          "roundtrip_rerun_jobs": {
+            "ubuntu": 113786226521
+          },
+          "artifacts": {
+            "ubuntu_attempt_1": {
+              "artifact_id": 11611169951,
+              "digest": "sha256:80db4f29e7f1cd7179a6b88a47c452aedecdc3a0a208e924f8a957b153004830"
+            },
+            "ubuntu_attempt_2": {
+              "artifact_id": 11612445359,
+              "digest": "sha256:746cce04202947d7ea40ff0702125a5cc7b6c5e1aa5dbb30308d96af593f26e8"
+            },
+            "macos": {
+              "artifact_id": 11611029970,
+              "digest": "sha256:1df72eaf920428428cba9d3330f6e19d9da97b35aa5c7833d6c8fe04a5f7490d"
+            },
+            "windows": {
+              "artifact_id": 11610024777,
+              "digest": "sha256:fa635fdafe4f522cf524158c41e2b95739ce2805da6ab31282a317ca37448432"
+            }
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-8-b1b48b6.json",
+          "correction": "Add path-free operation-stage context to private app-data preparation; let Windows picker timeout reach its control-inventory report; establish a settled macOS startup-persistence baseline and continue requiring the app-data snapshot to remain unchanged after cancellation and close."
         }
       ],
       "accepted_slice": [],
@@ -10995,7 +11040,7 @@
         "Exact-SHA GitHub Actions round-trip validation is pending on Ubuntu, macOS, and Windows.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Push the committed attempt 7 correction to origin/main, then inspect exact-SHA GitHub Actions results for cancellation on Ubuntu, macOS, and Windows and all companion workflows."
+      "next_action": "Commit the focused app-data operation-stage diagnostic and cancellation-baseline corrections as attempt 9, push to origin/main, and inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {

@@ -37,6 +37,12 @@ pub enum UserDataError {
     UnsafeCleanupPath,
     #[error("application data filesystem operation failed: {0}")]
     Io(#[from] std::io::Error),
+    #[error("application data preparation failed during {operation}: {source}")]
+    OperationFailed {
+        operation: &'static str,
+        #[source]
+        source: Box<UserDataError>,
+    },
 }
 
 /// Explicit categories an OS uninstaller may pass after its cleanup choices are confirmed.
@@ -146,46 +152,103 @@ pub fn vault_app_data_directory_under(
 
 /// Prepare the matching per-vault user-data directory and restrict it to the current user.
 pub fn prepare_vault_app_data(vault_root: &Path) -> Result<PathBuf, UserDataError> {
-    let resolved_root = resolve_legacy_path(vault_root)?;
-    let canonical_vault = fs::canonicalize(vault_root)?;
-    let user_data_root = app_user_data_directory()?;
+    let resolved_root = with_preparation_operation(
+        "resolve selected vault path",
+        resolve_legacy_path(vault_root),
+    )?;
+    let canonical_vault = with_preparation_operation(
+        "canonicalize selected vault",
+        fs::canonicalize(vault_root).map_err(UserDataError::from),
+    )?;
+    let user_data_root = with_preparation_operation(
+        "resolve current user's app-data directory",
+        app_user_data_directory(),
+    )?;
 
     // Check the future location before creating any of its directories so selecting a
     // broad parent such as the home directory cannot put recovery data inside the vault.
-    let prospective_user_data_root = canonicalize_prospective_path(&user_data_root)?;
-    let prospective_app_data =
-        vault_app_data_directory_under(&prospective_user_data_root, &resolved_root)?;
+    let prospective_user_data_root = with_preparation_operation(
+        "resolve future app-data path",
+        canonicalize_prospective_path(&user_data_root),
+    )?;
+    let prospective_app_data = with_preparation_operation(
+        "compute future per-vault app-data path",
+        vault_app_data_directory_under(&prospective_user_data_root, &resolved_root),
+    )?;
     if prospective_app_data.starts_with(&canonical_vault) {
         return Err(UserDataError::DataDirectoryInsideVault);
     }
 
-    ensure_real_directory(&user_data_root)?;
-    restrict_directory_to_current_user(&user_data_root)?;
-    let canonical_user_data_root = fs::canonicalize(&user_data_root)?;
-    let app_data = vault_app_data_directory_under(&canonical_user_data_root, &resolved_root)?;
+    with_preparation_operation(
+        "create current user's app-data directory",
+        ensure_real_directory(&user_data_root),
+    )?;
+    with_preparation_operation(
+        "restrict current user's app-data access",
+        restrict_directory_to_current_user(&user_data_root),
+    )?;
+    let canonical_user_data_root = with_preparation_operation(
+        "canonicalize current user's app-data directory",
+        fs::canonicalize(&user_data_root).map_err(UserDataError::from),
+    )?;
+    let app_data = with_preparation_operation(
+        "compute per-vault app-data path",
+        vault_app_data_directory_under(&canonical_user_data_root, &resolved_root),
+    )?;
     if app_data.starts_with(&canonical_vault) {
         return Err(UserDataError::DataDirectoryInsideVault);
     }
-    ensure_app_data_root_marker(&canonical_user_data_root)?;
+    with_preparation_operation(
+        "write app-data ownership marker",
+        ensure_app_data_root_marker(&canonical_user_data_root),
+    )?;
 
     let vaults_directory = canonical_user_data_root.join("vaults");
-    ensure_real_directory(&vaults_directory)?;
-    restrict_vault_data_access(&vaults_directory)?;
+    with_preparation_operation(
+        "create per-vault app-data container",
+        ensure_real_directory(&vaults_directory),
+    )?;
+    with_preparation_operation(
+        "restrict per-vault app-data container access",
+        restrict_vault_data_access(&vaults_directory),
+    )?;
 
-    ensure_real_directory(&app_data)?;
-    restrict_vault_data_access(&app_data)?;
+    with_preparation_operation(
+        "create per-vault app-data directory",
+        ensure_real_directory(&app_data),
+    )?;
+    with_preparation_operation(
+        "restrict per-vault app-data access",
+        restrict_vault_data_access(&app_data),
+    )?;
 
     // Resolve after creation and check again so a redirected data directory fails closed.
-    let canonical_app_data = fs::canonicalize(&app_data)?;
+    let canonical_app_data = with_preparation_operation(
+        "canonicalize per-vault app-data directory",
+        fs::canonicalize(&app_data).map_err(UserDataError::from),
+    )?;
     if canonical_app_data.starts_with(&canonical_vault) {
         return Err(UserDataError::DataDirectoryInsideVault);
     }
-    ensure_owned_data_marker(
-        &canonical_app_data,
-        VAULT_DATA_MARKER,
-        VAULT_DATA_MARKER_CONTENT,
+    with_preparation_operation(
+        "write per-vault ownership marker",
+        ensure_owned_data_marker(
+            &canonical_app_data,
+            VAULT_DATA_MARKER,
+            VAULT_DATA_MARKER_CONTENT,
+        ),
     )?;
     Ok(canonical_app_data)
+}
+
+fn with_preparation_operation<T>(
+    operation: &'static str,
+    result: Result<T, UserDataError>,
+) -> Result<T, UserDataError> {
+    result.map_err(|source| UserDataError::OperationFailed {
+        operation,
+        source: Box::new(source),
+    })
 }
 
 /// Apply explicit cleanup choices to OpenObsidian-owned data in the current user's data root.

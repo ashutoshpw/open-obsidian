@@ -1458,3 +1458,36 @@ before/after app-data snapshots plus raw `.ron` contents before asserting
 unchanged state. Exact-SHA GitHub Actions validation is pending on
 `origin/main`. No local tests, builds, formatters, linters, or application
 launches were run.
+
+### R2.6.65 attempt 8 result and focused diagnostics — SHA `b1b48b6`
+
+The attempt 8 source commit was pushed to `origin/main`. The first exact-SHA
+round-trip run
+[37919573887](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573887)
+failed cancellation on all three operating systems. Its Ubuntu job was rerun
+alone as run attempt 2; it failed again with the same private app-data
+preparation error. The macOS and Windows jobs were not rerun. Ubuntu's report
+still lacked the exact filesystem operation that returned `ENOENT`. On
+Windows, UI Automation reported `Open vault IsEnabled=false` for the full poll,
+and the timeout prevented the new control inventory from being written. On
+macOS, Escape returned to the active vault, but `app.ron` appeared in app data
+after startup; the report now preserves the raw file contents. Its contents
+match eframe's persisted window and UI state, though the timing alone does not
+prove that cancellation created it.
+
+Rust CI [37919573793](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573793),
+quality [37919573889](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573889),
+desktop build [37919573816](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573816),
+plugin renderer [37919573831](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573831),
+loaded-plugin workflows [37919573791](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573791),
+and inventory [37919573804](https://github.com/ashutoshpw/open-obsidian/actions/runs/37919573804)
+passed on the exact SHA. The parallel setup groups passed. Per-platform job
+IDs and artifact digests are recorded in
+[`evidence/r2.6.65-cancellation-attempt-8-b1b48b6.json`](evidence/r2.6.65-cancellation-attempt-8-b1b48b6.json).
+
+The next focused correction adds path-free operation-stage context to private
+app-data failures, lets a Windows UI Automation timeout flow into the complete
+control inventory, and waits for macOS startup persistence before establishing
+the cancellation baseline. The post-cancellation snapshot remains strict.
+Exact-SHA GitHub Actions validation is pending. No local executable
+validation was run.

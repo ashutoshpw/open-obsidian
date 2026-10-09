@@ -1599,7 +1599,7 @@ async function cancelOpenObsidianNativePicker(child: ChildProcess, window: {wind
     windowsPicker = await waitFor("new Windows native folder-picker window", async () => {
       const candidates = windowsTopLevelWindowInventory().filter((candidate) => isNewWindowsNativePicker(candidate, previousHandles, applicationPid));
       return candidates[0] ?? null;
-    }, (candidate) => candidate !== null, 15_000);
+    }, (candidate) => candidate !== null, 15_000).catch(() => null);
     if (!windowsPicker) throw new Error(`OpenObsidian did not expose a new Windows native folder-picker window; before=${JSON.stringify(windowsBefore)}; after=${JSON.stringify(windowsTopLevelWindowInventory())}; OpenObsidian UI Automation controls=${JSON.stringify(windowsOpenVaultControlInventory(applicationPid))}`);
     pickerWindowId = String(windowsPicker.native_window_handle);
     pickerWindowTitle = `${windowsPicker.name} (${windowsPicker.class_name})`;
@@ -1789,18 +1789,21 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_startup = initialAppData;
     await saveReport();
 
-    await runOpenObsidianPickerCancellation(child, window, appDataRoot, noOpBaseline, initialAppData);
+    const appDataBaselineAfterStartup = await runOpenObsidianPickerCancellation(child, window, appDataRoot, noOpBaseline, initialAppData);
     await delay(2_000);
     await stopProcess(child);
     const afterVault = await snapshotTree(vaultRoot);
     ensureExactSnapshot(noOpBaseline, afterVault, "OpenObsidian no-op open, picker cancellation, and close");
     const afterAppData = await snapshotTree(appDataRoot);
-    ensureExactSnapshot(initialAppData, afterAppData, "OpenObsidian app data after picker cancellation and close");
+    ensureExactSnapshot(appDataBaselineAfterStartup, afterAppData, "OpenObsidian app data after picker cancellation and close");
     (report.vault_snapshots as Record<string, unknown>).after_openobsidian = afterVault;
     (report.vault_snapshots as Record<string, unknown>).after_picker_cancellation_close = afterVault;
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_close = afterAppData;
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation_close = afterAppData;
-    (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_initial_startup = true;
+    const startupAppDataChanges = changedPaths(initialAppData, appDataBaselineAfterStartup);
+    (report.openobsidian_app_data as Record<string, unknown>).startup_persistence_changes = startupAppDataChanges;
+    (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_initial_startup = startupAppDataChanges.length === 0;
+    (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_picker_baseline_and_close = true;
     const cancellation = open.folder_picker_cancel as Record<string, unknown>;
     cancellation.vault_snapshot_unchanged_after_close = true;
     cancellation.app_data_snapshot_unchanged_after_close = true;
@@ -1819,7 +1822,7 @@ async function runOpenObsidianPickerCancellation(
   appDataRoot: string,
   vaultBeforeCancellation: SnapshotEntry[],
   appDataBeforeCancellation: SnapshotEntry[],
-): Promise<void> {
+): Promise<SnapshotEntry[]> {
   const open = report.openobsidian_open as Record<string, unknown>;
   await delay(1_500);
   const startupScreen = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-before-picker-cancel");
@@ -1834,10 +1837,30 @@ async function runOpenObsidianPickerCancellation(
     throw new Error("OpenObsidian's managed application data directory is inside the selected vault");
   }
   const vaultSnapshotBeforeCancel = await snapshotTree(vaultRoot);
-  const appDataSnapshotBeforeCancel = await snapshotTree(appDataRoot);
+  let appDataSnapshotBeforeCancel = await snapshotTree(appDataRoot);
+  if (process.platform === "darwin") {
+    const appDataReport = report.openobsidian_app_data as Record<string, unknown>;
+    appDataReport.eframe_persistence_settling_started = true;
+    await saveReport();
+    appDataSnapshotBeforeCancel = await waitFor(
+      "eframe app.ron state to persist before picker cancellation",
+      async () => await snapshotTree(appDataRoot),
+      (snapshot) => snapshot.some((entry) => entry.kind === "file" && entry.path === "app.ron"),
+      60_000,
+    );
+  }
   const appRonFilesBeforeCancel = await readSnapshotTextFiles(appDataRoot, appDataSnapshotBeforeCancel, (path) => path.toLowerCase().endsWith(".ron"));
+  const appDataStartupChanges = changedPaths(appDataBeforeCancellation, appDataSnapshotBeforeCancel);
+  const unexpectedAppDataStartupChanges = appDataStartupChanges.filter((change) => change.path !== "app.ron");
+  const appDataReport = report.openobsidian_app_data as Record<string, unknown>;
+  appDataReport.snapshot_before_picker_cancellation = appDataSnapshotBeforeCancel;
+  appDataReport.startup_persistence_changes = appDataStartupChanges;
+  appDataReport.eframe_persistence_files_before_cancellation = appRonFilesBeforeCancel;
+  await saveReport();
   ensureExactSnapshot(vaultBeforeCancellation, vaultSnapshotBeforeCancel, "OpenObsidian vault before picker cancellation");
-  ensureExactSnapshot(appDataBeforeCancellation, appDataSnapshotBeforeCancel, "OpenObsidian app data before picker cancellation");
+  if (unexpectedAppDataStartupChanges.length > 0) {
+    throw new Error(`OpenObsidian app data changed before picker cancellation outside eframe app.ron persistence: ${JSON.stringify(unexpectedAppDataStartupChanges).slice(0, 6_000)}`);
+  }
 
   const pickerCancellation = await cancelOpenObsidianNativePicker(child, window);
   const vaultAfterCancellation = await snapshotTree(vaultRoot);
@@ -1868,6 +1891,7 @@ async function runOpenObsidianPickerCancellation(
   await saveReport();
   ensureExactSnapshot(vaultSnapshotBeforeCancel, vaultAfterCancellation, "OpenObsidian native picker cancellation");
   ensureExactSnapshot(appDataSnapshotBeforeCancel, appDataAfterCancellation, "OpenObsidian app data after native picker cancellation");
+  return appDataSnapshotBeforeCancel;
 }
 
 async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<DevToolsConnection> {
