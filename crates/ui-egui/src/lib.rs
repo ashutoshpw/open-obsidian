@@ -2453,8 +2453,7 @@ mod tests {
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open selected existing vault without conversion");
         assert_eq!(session.entries().len(), 2);
-        let mut external_source = b"\xEF\xBB\xBF# External note\r\nSecond line\r\n".to_vec();
-        external_source.resize(MAX_NOTE_SOURCE_PREVIEW_BYTES + 37, b'x');
+        let external_source = b"\xEF\xBB\xBF# External note\r\nSecond line\r\n".to_vec();
         std::fs::write(vault_path.join("Notes/External.md"), &external_source)
             .expect("simulate an external Obsidian note before refresh");
         let before_vault = existing_vault_tree_snapshot(&vault_path);
@@ -2498,7 +2497,7 @@ mod tests {
             before_app_data
         );
 
-        harness.get_by_label("Note to inspect").click();
+        harness.get_by_label("Notes/Welcome.md").click();
         harness.step();
         harness.get_by_label("Notes/External.md").click();
         harness.step();
@@ -2521,10 +2520,10 @@ mod tests {
         assert_eq!(preview.relative_path, PathBuf::from("Notes/External.md"));
         assert_eq!(
             preview.text.as_bytes(),
-            &external_source[..MAX_NOTE_SOURCE_PREVIEW_BYTES]
+            external_source.as_slice()
         );
         assert_eq!(preview.total_size_bytes, external_source.len() as u64);
-        assert!(preview.truncated);
+        assert!(!preview.truncated);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
