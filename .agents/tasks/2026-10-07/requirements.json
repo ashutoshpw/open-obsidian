@@ -2429,10 +2429,12 @@
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
         "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
         "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
-        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
+        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json",
+        "evidence/r2.6.48-roundtrip-ci-0d235e8.json",
+        "evidence/r2.6.48-roundtrip-ci-3b621df.json"
       ],
-      "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
-      "blocker": "The C01.2 reference-application matrix is defined in c01.2-reference-roundtrip-matrix.md. Synthetic-fixture evidence now includes explicit note-list refresh, but still needs an Obsidian-authored fixture with recorded provenance and an Obsidian desktop reopen case executed through GitHub Actions, plus the remaining read-only product flows.",
+      "tested_source_tree": "3b621dfe83ab96313b407651dbe354c29bd06e89",
+      "blocker": "The C01.2 reference-application matrix is defined in c01.2-reference-roundtrip-matrix.md. Linux GitHub Actions evidence now proves the pinned Obsidian-authored fixture, OpenObsidian no-op open, and same-vault Obsidian reopen. C01.2 remains pending macOS/Windows reference-app execution and remaining read-only product flows; edit/save acceptance is deferred to C02/C14.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

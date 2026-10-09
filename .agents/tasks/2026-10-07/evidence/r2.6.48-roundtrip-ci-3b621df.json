@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.48",
+  "source_sha": "3b621dfe83ab96313b407651dbe354c29bd06e89",
+  "workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37866205538,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205538",
+    "job_id": 113613415323,
+    "job_conclusion": "success",
+    "artifact_id": 11588627001,
+    "artifact_name": "obsidian-vault-roundtrip-3b621dfe83ab96313b407651dbe354c29bd06e89",
+    "artifact_sha256": "1501300e70585fe380837be39ea00c3691b2843601a30f7300016d76b6c0453f",
+    "artifact_files": {
+      "obsidian-vault-roundtrip-report.json": "e833615bbd9b06c71e46b3b9c876115de22037aae8538fc84540749c1a934035",
+      "vault-before-openobsidian.json": "cf19fcb84fbf1cacfe2fb38ffd1eb21fbf080063bc9d82751910b5078e312973",
+      "vault-after-openobsidian.json": "cf19fcb84fbf1cacfe2fb38ffd1eb21fbf080063bc9d82751910b5078e312973",
+      "vault-after-obsidian-reopen.json": "cf19fcb84fbf1cacfe2fb38ffd1eb21fbf080063bc9d82751910b5078e312973",
+      "vault-reopen-workspace-changes.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "obsidian-authored-note.png": "8b04df8e1acb8a8dbae5389f64ea18bdd25f4b46a369e2d69a9e248c22c36bb9",
+      "obsidian-reopened-vault.png": "d4f0489d96fbffe6f2cf13fd818872d490241e1ba8d74d75b62a43b9fe10ce25",
+      "openobsidian-vault.png": "200525a29f3323ab6c09b3cd67b1d8caccbe70ae7a9f8d22d62e6dd09c878187",
+      "openobsidian-vault-window.png": "9e2fc83523be5d22a29bdcb1a3226df40b6f45985263afd5510a578970eea1be",
+      "obsidian-author.log": "83cc4bd6399bdf50fa79ac05fd70a311af1ac52605e3f2991e7a8691a1a077af",
+      "obsidian-reopen.log": "de15615274fea62984edf7b09c408fa90874597b576d53208a32f12bdf71b079",
+      "openobsidian.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "reference_application": {
+    "product": "Obsidian Desktop",
+    "version": "1.14.4",
+    "asset": "Obsidian-1.14.4.AppImage",
+    "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+    "runner": "ubuntu-24.04"
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37866205528,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205528",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113613414899, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113613415246, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113613415255, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37866205614,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205614",
+      "conclusion": "success",
+      "job_id": 113613415858
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37866205561,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205561",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113613415823, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113613416012, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113613416110, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37866205558,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205558",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113613415076, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113613415262, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113613415620, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37866205807,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205807",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113613416304, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113613416591, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113613416636, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37866205571,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37866205571",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113613415550, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 113613415681, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113613415741, "conclusion": "success"}
+      ]
+    }
+  ],
+  "acceptance": {
+    "status": "passed",
+    "obsidian_authoring": {
+      "status": "passed",
+      "note_path": "Untitled.md",
+      "note_sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+      "note_bytes": 99,
+      "attachment_link_persisted": true
+    },
+    "openobsidian_open": {
+      "status": "passed",
+      "selected_vault_visible": true,
+      "expected_markdown_count_visible": true,
+      "managed_app_data_outside_vault": true,
+      "managed_app_data_unchanged_after_startup_and_close": true
+    },
+    "obsidian_reopen": {
+      "status": "passed",
+      "selected_vault_name_visible": true,
+      "same_note_restored": true,
+      "attachment_link_persisted_in_note_source": true,
+      "exact_attachment_path_visible_in_file_explorer": true,
+      "note_and_attachment_visible_in_screenshot": true,
+      "reopened_screenshot": "obsidian-reopened-vault.png",
+      "first_open_trust_prompt_visible": true,
+      "plugins_remained_untrusted": true
+    },
+    "vault_snapshots": {
+      "entry_count": 22,
+      "before_openobsidian_sha256": "cf19fcb84fbf1cacfe2fb38ffd1eb21fbf080063bc9d82751910b5078e312973",
+      "after_openobsidian_sha256": "cf19fcb84fbf1cacfe2fb38ffd1eb21fbf080063bc9d82751910b5078e312973",
+      "after_obsidian_reopen_sha256": "cf19fcb84fbf1cacfe2fb38ffd1eb21fbf080063bc9d82751910b5078e312973",
+      "non_workspace_paths_unchanged_after_reopen": true,
+      "reference_workspace_state_changes": 0
+    },
+    "scope_limits": [
+      "The reference-app round-trip execution is Linux-only; C01.2 acceptance on macOS and Windows remains pending.",
+      "This slice proves the read-only open/reopen workflow, not edit/save acceptance or all C01 product flows.",
+      "Obsidian displayed its first-open trust prompt on reopen; the note and rendered attachment are visible behind it, and plugins remained untrusted."
+    ],
+    "all_six_required_project_workflows_passed_on_exact_sha": true,
+    "no_local_executable_validation": true
+  }
+}
