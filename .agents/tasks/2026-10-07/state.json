@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T10:29:38Z",
+  "updated_at": "2026-10-09T10:31:43Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -10749,7 +10749,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "56442b0eda2719c8a565d40dc38e9799cab2e18a",
+      "implementation_sha": "d4223370cd505629b1fb8f3bb94f1b7e258bdc42",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -10757,9 +10757,10 @@
         "e0b9cc9c726f3b73f7dc2f6877da6c4016ab9599",
         "42457db91045fd2cd6fb5481c61a1869a0f404af",
         "bdd332ff9870f8c5797184755030c2103cc71f5d",
-        "56442b0eda2719c8a565d40dc38e9799cab2e18a"
+        "56442b0eda2719c8a565d40dc38e9799cab2e18a",
+        "d4223370cd505629b1fb8f3bb94f1b7e258bdc42"
       ],
-      "push_status": "Pending push of the direct X11 click, Linux/Windows native-window inventories, macOS cropped picker OCR, and attempt 6 progress record; exact-SHA CI is next.",
+      "push_status": "Implementation commit d4223370cd505629b1fb8f3bb94f1b7e258bdc42 is committed locally with the attempt 6 record; push to origin/main and exact-SHA CI are pending.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
