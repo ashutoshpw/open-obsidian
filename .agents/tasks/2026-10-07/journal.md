@@ -961,3 +961,27 @@ application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full acceptance coverage passes.
+
+## R2.6.55 — existing-vault attachment preview and full-tree no-op check
+
+Expanded the image-preview UI case to materialize the existing-vault fixture,
+seed an embedded-image note and repository image before taking the baseline,
+then open the vault and resolve/render the image through the egui action. The
+test compares the complete vault path/byte snapshot and separate app-data tree
+after open, preview, and UI teardown; it verifies decoded pixels and accessible
+alt text. The seeded setup writes are included in the initial snapshot.
+
+On exact source SHA `a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e`, the focused test
+passed on Ubuntu, macOS and Windows. Rust formatting, workspace tests, Clippy,
+layering, native preview builds, unchanged-plugin feasibility probes, inventory,
+quality, desktop build, plugin renderer, loaded-plugin workflows and the pinned
+Obsidian 1.14.4 round trip passed in all seven required GitHub Actions
+workflows. Exact run/job IDs and artifact digests are in
+[`evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json`](evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json).
+The PC05/PC08 reports remain feasibility-only and do not certify isolation.
+C01/C01.2 remain pending for broader read-only product coverage; edit/save is
+deferred to C02/C14. No local tests, builds, formatters, linters or application
+launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full acceptance coverage passes.
