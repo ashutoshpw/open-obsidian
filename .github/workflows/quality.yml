@@ -35,10 +35,10 @@ jobs:
           bun-version-file: package.json
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
-      - name: Validate progress state
-        run: bun run validate:state
-      # These checks only read source/contracts; wait for all before runtime tests.
+      # These checks only read source/contracts and Git history; wait for all before runtime tests.
       - parallel:
+          - name: Validate progress state
+            run: bun run validate:state
           - name: Validate frozen contracts
             run: bun run validate:contracts
           - name: Validate architecture manifest
