@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T21:10:39Z",
+  "updated_at": "2026-10-09T21:21:24Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "69f550253f23e47103b9eae1bd655890a6c9e266",
+  "last_reconciled_head": "445b4a2defcaa13a3811361900c52b752401cb82",
   "current_milestone": "R2.6.80",
-  "next_action": "Implement the focused C01.2-31 UI test for moving an attachment to a different folder while preserving its basename, commit and push it with the start record, then inspect all seven required exact-SHA GitHub Actions workflows.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -227,9 +227,10 @@
     "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json.",
     "R2.6.77 / C01.2-28 passed on exact implementation SHA 9242b850106480d7c8e5ee37f0fc3b7aca1dc427: the focused attachment-edit workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.77-attempt-2-9242b85.json.",
     "R2.6.78 / C01.2-29 passed on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76: the focused corrupted-attachment workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.78-attempt-3-569ae42.json.",
-    "R2.6.79 / C01.2-30 passed on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266: external attachment rename leaves the original image embed unresolved and NotRendered after refresh, clears stale preview/texture state, and preserves vault/app-data snapshots through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.79-attempt-1-69f5502.json."
+    "R2.6.79 / C01.2-30 passed on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266: external attachment rename leaves the original image embed unresolved and NotRendered after refresh, clears stale preview/texture state, and preserves vault/app-data snapshots through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.79-attempt-1-69f5502.json.",
+    "R2.6.80 / C01.2-31 passed on exact implementation SHA 445b4a2defcaa13a3811361900c52b752401cb82: moving an attachment to another directory while preserving its basename left the original path-qualified embed unresolved and NotRendered after refresh, cleared stale UI state, and preserved vault/app-data snapshots through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.80-attempt-1-445b4a2.json."
   ],
-  "push_status": "R2.6.79 / C01.2-30 is complete on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Run IDs, job IDs, artifact digests, and attempt details are in evidence/r2.6.79-attempt-1-69f5502.json. Evidence-record commit c575b0f9ff9b8f7f23d2bb11b5fd905031313456 passed its six applicable workflows; the round-trip workflow was skipped by its docs-only path filter. R2.6.80 / C01.2-31 is in progress from that starting SHA. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.80 / C01.2-31 is complete on exact implementation SHA 445b4a2defcaa13a3811361900c52b752401cb82, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed in Rust CI, quality, desktop build, and Obsidian round-trip. Run IDs, job IDs, artifact digests, and attempt details are in evidence/r2.6.80-attempt-1-445b4a2.json. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -14137,8 +14138,12 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.80": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "c575b0f9ff9b8f7f23d2bb11b5fd905031313456",
+      "implementation_sha": "445b4a2defcaa13a3811361900c52b752401cb82",
+      "implementation_commits": [
+        "445b4a2defcaa13a3811361900c52b752401cb82"
+      ],
       "scope": "Move a rendered attachment to a different in-vault directory while keeping its basename; refresh and verify the path-qualified embed does not resolve to the relocated file, with no stale UI state or vault/app-data writes.",
       "accepted_slice": ["C01.2-31"],
       "remaining": ["Broader C01/C01.2 acceptance remains pending."],
@@ -14150,8 +14155,33 @@
         "The post-move vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Implement the focused C01.2-31 UI test and matrix row, commit and push them with the start record, then inspect all seven required exact-SHA GitHub Actions workflows."
+      "ci_attempts": [
+        {
+          "source_sha": "445b4a2defcaa13a3811361900c52b752401cb82",
+          "attempt": 1,
+          "conclusion": "C01.2-31 passed. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed where configured.",
+          "workflows": {
+            "rust_ci": 37991910574,
+            "obsidian_vault_roundtrip": 37991910596,
+            "inventory": 37991910462,
+            "loaded_plugin_workflows": 37991910545,
+            "desktop_build": 37991910590,
+            "quality": 37991910633,
+            "plugin_renderer": 37991910491
+          },
+          "jobs": {
+            "rust_ubuntu": 114027974770,
+            "rust_macos": 114027974389,
+            "rust_windows": 114027974689,
+            "roundtrip_ubuntu": 114027975044,
+            "roundtrip_macos": 114027975025,
+            "roundtrip_windows": 114027974652
+          },
+          "evidence": "evidence/r2.6.80-attempt-1-445b4a2.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.80-attempt-1-445b4a2.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
