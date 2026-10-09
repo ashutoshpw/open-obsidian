@@ -4279,11 +4279,13 @@ mod tests {
             .iter()
             .find(|profile| profile["id"] == "fixture:symlink-boundary")
             .expect("vault-safety fixture must define the symlink boundary");
-        assert!(symlink_profile["assertions"]
-            .as_array()
-            .expect("symlink profile must list assertions")
-            .iter()
-            .any(|assertion| assertion == "symlink metadata is recorded"));
+        assert!(
+            symlink_profile["assertions"]
+                .as_array()
+                .expect("symlink profile must list assertions")
+                .iter()
+                .any(|assertion| assertion == "symlink metadata is recorded")
+        );
 
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("Existing Vault");
@@ -4306,8 +4308,11 @@ mod tests {
         std::fs::write(&note_path, note_source).expect("seed vault note before the baseline");
         std::fs::write(&outside_note_path, outside_source)
             .expect("seed outside target before the baseline");
-        std::fs::write(app_data_path.join("state/open-state.bin"), app_data_sentinel)
-            .expect("seed separate app-data sentinel");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            app_data_sentinel,
+        )
+        .expect("seed separate app-data sentinel");
 
         #[cfg(unix)]
         {
@@ -4327,12 +4332,16 @@ mod tests {
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);
         let before_outside = existing_vault_tree_snapshot(&outside_path);
-        assert!(before_vault.iter().any(|(path, kind, _)| {
-            path == Path::new("Notes/Alias.md") && *kind == 2
-        }));
-        assert!(before_vault.iter().any(|(path, kind, _)| {
-            path == Path::new("Notes/linked-dir") && *kind == 2
-        }));
+        assert!(
+            before_vault
+                .iter()
+                .any(|(path, kind, _)| { path == Path::new("Notes/Alias.md") && *kind == 2 })
+        );
+        assert!(
+            before_vault
+                .iter()
+                .any(|(path, kind, _)| { path == Path::new("Notes/linked-dir") && *kind == 2 })
+        );
 
         let session = VaultSession::open(&vault_path, &app_data_path)
             .expect("open existing vault without following symlinks");

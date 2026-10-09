@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T16:18:40Z",
+  "updated_at": "2026-10-09T16:34:04Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "0df9d02daea9c0d42b2eeb2803ef527814c18682",
+  "last_reconciled_head": "4f60ad384a6055dfd7e52348a1945c8cd8fcd4f5",
   "current_milestone": "R2.6.69",
-  "next_action": "Push the C01.2-20 source and tracking changes to origin/main, then use the exact-SHA GitHub Actions results to validate symlink containment on Ubuntu, macOS, and Windows.",
+  "next_action": "Push the CI-requested Rust formatting and macOS app-data audit correction to origin/main, then validate C01.2-20 and all seven required workflows through GitHub Actions on the exact SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13290,7 +13290,7 @@
     "R2.6.69": {
       "status": "in_progress",
       "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_commits": ["4f60ad384a6055dfd7e52348a1945c8cd8fcd4f5"],
       "scope": "Exercise egui link and transclusion resolution for file and directory symlinks that point outside an existing vault, preserving complete vault, separate app-data, and outside-target snapshots.",
       "accepted_slice": ["C01.2-20"],
       "remaining": [
@@ -13302,8 +13302,25 @@
         "Full vault, separate app-data, and outside-target snapshots remain byte-identical after open, resolution, and teardown.",
         "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Commit and push the source and traceability updates to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
+      "ci_attempts": [
+        {
+          "source_sha": "4f60ad384a6055dfd7e52348a1945c8cd8fcd4f5",
+          "attempt": 1,
+          "conclusion": "Workspace tests passed on Ubuntu, macOS, and Windows. Ubuntu formatting failed on three layout differences. The push-triggered Ubuntu job stalled during system dependency installation and was canceled; a manual same-SHA Rust CI run confirmed the formatting-only failure. The Obsidian round-trip passed Ubuntu and Windows, while macOS failed its app.ron persistence wait on three attempts. The five companion workflows passed.",
+          "workflows": {
+            "rust_ci_push": 37958217192,
+            "rust_ci_manual": 37959348056,
+            "obsidian_vault_roundtrip": 37958217184,
+            "inventory": 37958217250,
+            "loaded_plugin_workflows": 37958217209,
+            "desktop_build": 37958217394,
+            "plugin_renderer": 37958217313,
+            "quality": 37958217328
+          },
+          "correction": "Apply the exact Ubuntu rustfmt diff. Do not require eframe to create app.ron before cancellation; snapshot the existing app-data state and keep the strict unchanged comparison after cancellation and teardown. Validate all seven workflows on a fresh exact SHA."
+        }
+      ],
+      "next_action": "Commit and push the CI corrections to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
     }
   },
   "ci_preparation": {

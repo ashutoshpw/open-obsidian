@@ -1768,18 +1768,7 @@ async function cancelOpenObsidianNativePicker(
   let appDataChangesOnPickerOpen: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}> = [];
   let eframePersistenceFilesBeforeCancel: Array<{path: string; bytes: number; sha256: string; content: string}> = [];
   const captureAppDataBaselineBeforeCancel = async (): Promise<void> => {
-    let snapshot = await snapshotTree(appDataRoot);
-    if (process.platform === "darwin" && !snapshot.some((entry) => entry.kind === "file" && entry.path === "app.ron")) {
-      const appDataReport = report.openobsidian_app_data as Record<string, unknown>;
-      appDataReport.eframe_persistence_settling_started_after_picker_open = true;
-      await saveReport();
-      snapshot = await waitFor(
-        "eframe app.ron state to persist after native picker open and before cancellation",
-        async () => await snapshotTree(appDataRoot),
-        (candidate) => candidate.some((entry) => entry.kind === "file" && entry.path === "app.ron"),
-        60_000,
-      );
-    }
+    const snapshot = await snapshotTree(appDataRoot);
     const eframeFiles = await readSnapshotTextFiles(appDataRoot, snapshot, (path) => path.toLowerCase().endsWith(".ron"));
     const changes = changedPaths(appDataSnapshotBeforePickerOpen, snapshot);
     ensureAppDataChangesAreMacEframeUiStateOnly(
@@ -1795,6 +1784,9 @@ async function cancelOpenObsidianNativePicker(
     appDataReport.snapshot_before_picker_cancellation = snapshot;
     appDataReport.changes_on_picker_open = changes;
     appDataReport.eframe_persistence_files_before_cancellation = eframeFiles;
+    appDataReport.eframe_app_ron_present_before_cancellation = snapshot.some(
+      (entry) => entry.kind === "file" && entry.path === "app.ron",
+    );
     await saveReport();
   };
   if (process.platform === "linux") {
