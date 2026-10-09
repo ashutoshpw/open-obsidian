@@ -2612,7 +2612,10 @@ mod tests {
             .expect("simulate an external removal while the vault is open");
         let after_external_removal = existing_vault_tree_snapshot(&vault_path);
         assert_eq!(after_external_removal, expected_after_external_removal);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         harness.get_by_label("Refresh note list").click();
         harness.step();
@@ -2625,7 +2628,10 @@ mod tests {
             .as_ref()
             .expect("the refreshed vault session should remain open");
         assert_eq!(session.entries().len(), 1);
-        assert_eq!(session.entries()[0].relative_path, PathBuf::from("README.md"));
+        assert_eq!(
+            session.entries()[0].relative_path,
+            PathBuf::from("README.md")
+        );
         assert_eq!(
             harness.state().link_source_path.as_deref(),
             Some(Path::new("README.md"))
@@ -2634,8 +2640,14 @@ mod tests {
         assert!(harness.state().note_preview_error.is_none());
         harness.get_by_label("1 Markdown files found.");
         harness.get_by_label("Note list refreshed: 1 Markdown files found.");
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), after_external_removal);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         harness.get_by_label("Read note source preview").click();
         harness.step();
@@ -2661,8 +2673,14 @@ mod tests {
         harness.step();
         assert!(harness.state().note_source_preview.is_none());
         drop(harness);
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), after_external_removal);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
     }
 
     #[test]
