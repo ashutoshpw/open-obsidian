@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T13:49:13Z",
+  "updated_at": "2026-10-09T13:55:09Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "d2f0bb58a8e1e038bc375d9697cb53c959ee75fd",
-  "current_milestone": "R2.6.65",
-  "next_action": "R2.6.65 native picker cancellation is accepted on Ubuntu, macOS, and Windows. Continue R2 by selecting the next uncovered C01/C01.2 read-only product flow; keep broader C01/C01.2 acceptance pending.",
+  "current_milestone": "R2.6.66",
+  "next_action": "Commit and push the C01.2-17 escaped-reference UI acceptance slice to origin/main, then inspect exact-SHA GitHub Actions results. Keep broader C01/C01.2 requirements pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "Attempt 22 source d2f0bb58a8e1e038bc375d9697cb53c959ee75fd is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, inventory, and native round-trip acceptance passed; all applicable parallel groups passed. Ubuntu, macOS, and Windows passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. R2.6.65 is complete; broader C01/C01.2 read-only coverage remains pending.",
+  "push_status": "R2.6.66 is in progress. The focused C01.2-17 UI acceptance test and pending matrix row are prepared; no local executable validation has been run and exact-SHA GitHub CI is pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -12923,6 +12923,25 @@
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
       "next_action": "R2.6.65 is complete. Select the next uncovered C01/C01.2 read-only product flow for the next bounded R2 slice; keep broader C01/C01.2 acceptance pending."
+    },
+    "R2.6.66": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "evidence": null,
+      "scope": "Verify that read-only link resolution and note-embed preview do not expose Markdown files outside an opened vault.",
+      "acceptance": [
+        "A nested note’s relative Markdown link and embed to a sibling outside-vault file remain unresolved with no resolved target.",
+        "The embed is not rendered, and outside-target contents do not appear in the UI report.",
+        "Vault, app-data, and outside-target bytes remain unchanged after link resolution and UI teardown on Ubuntu, macOS, and Windows.",
+        "The focused egui test and all required companion workflows pass on the exact implementation SHA in GitHub Actions; broader C01/C01.2 requirements remain pending."
+      ],
+      "accepted_slice": [],
+      "remaining": [
+        "Await exact-SHA GitHub Actions results; preserve broader C01/C01.2 pending status."
+      ],
+      "ci_attempts": [],
+      "next_action": "Review and commit the focused Rust UI test plus pending C01.2-17 matrix row, push to origin/main, and inspect exact-SHA CI."
     }
   },
   "ci_preparation": {

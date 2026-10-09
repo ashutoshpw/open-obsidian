@@ -4130,6 +4130,113 @@ mod tests {
     }
 
     #[test]
+    fn egui_does_not_render_note_embeds_that_escape_the_vault() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        let outside_path = temporary.0.join("Outside.md");
+        let note_path = vault_path.join("Notes/Containment.md");
+        std::fs::create_dir_all(
+            note_path
+                .parent()
+                .expect("containment note must have a parent directory"),
+        )
+        .expect("create existing vault directory");
+        std::fs::create_dir_all(app_data_path.join("state"))
+            .expect("create separate app-data directory");
+
+        let note_source = b"# Containment\n\n[Outside note](../../Outside.md)\n\n![[../../Outside.md|outside note]]\n";
+        let outside_source = b"# Private outside note\nThis content must not be rendered.\n";
+        let app_data_sentinel = [0xa5, 0x00, 0x7e, 0xff];
+        std::fs::write(&note_path, note_source).expect("seed vault note before the baseline");
+        std::fs::write(&outside_path, outside_source)
+            .expect("seed outside target before the baseline");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            app_data_sentinel,
+        )
+        .expect("seed separate app-data sentinel");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let before_outside = std::fs::read(&outside_path).expect("read outside target baseline");
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault without conversion");
+        assert_eq!(session.entries().len(), 1);
+        assert_eq!(
+            session.entries()[0].relative_path,
+            PathBuf::from("Notes/Containment.md")
+        );
+
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(PathBuf::from("Notes/Containment.md")),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        wait_for_links(&mut harness);
+
+        {
+            let app = harness.state();
+            assert!(app.link_error.is_none());
+            assert_eq!(app.link_resolutions.len(), 2);
+            assert!(app.link_resolutions.iter().all(|resolution| {
+                resolution.reference.target == "../../Outside.md"
+                    && resolution.resolution.status == LinkResolutionStatus::Unresolved
+                    && resolution.resolution.target.is_none()
+                    && resolution.resolution.candidates
+                        == vec!["../../Outside.md".to_owned()]
+            }));
+
+            let report = app
+                .note_embed_report
+                .as_ref()
+                .expect("outside-vault embed should produce a read-only report");
+            assert_eq!(report.embeds.len(), 1);
+            let embed = &report.embeds[0];
+            assert_eq!(
+                embed.resolution.resolution.status,
+                LinkResolutionStatus::Unresolved
+            );
+            assert!(embed.resolution.resolution.target.is_none());
+            assert_eq!(
+                embed.resolution.disposition,
+                VaultNoteEmbedDisposition::NotRendered
+            );
+            assert!(embed.children.is_empty());
+            assert!(!format!("{report:?}").contains("This content must not be rendered."));
+        }
+
+        harness.get_by_label("Unresolved: 2");
+        harness.get_by_label("Source target: ../../Outside.md");
+        harness.get_by_label(
+            "Not rendered: no matching Markdown note or vault attachment was found.",
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+        assert_eq!(
+            std::fs::read(&outside_path).expect("read outside target after preview"),
+            before_outside
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+        assert_eq!(
+            std::fs::read(&outside_path).expect("read outside target after teardown"),
+            before_outside
+        );
+    }
+
+    #[test]
     fn egui_previews_existing_vault_attachment_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
