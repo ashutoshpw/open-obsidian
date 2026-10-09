@@ -2324,10 +2324,11 @@
         "evidence/r2.6.49-roundtrip-ci-3635245.json",
         "evidence/r2.6.49-roundtrip-ci-eea9679.json",
         "evidence/r2.6.49-roundtrip-ci-followups.json",
-        "evidence/r2.6.49-roundtrip-ci-f396927.json"
+        "evidence/r2.6.49-roundtrip-ci-f396927.json",
+        "evidence/r2.6.50-external-note-refresh-preview-a54e312.json"
       ],
-      "tested_source_tree": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
-      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0; the 22-entry vault and separate app-data snapshots remained unchanged. The broader C01 read-only product flows remain pending, so C01 is not yet complete. See evidence/r2.6.49-roundtrip-ci-f396927.json.",
+      "tested_source_tree": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
+      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. On exact source SHA a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b, the integrated existing-vault refresh/preview case passed on all three CI OSes with exact BOM/CRLF preview bytes and unchanged vault/app-data snapshots. Other C01 read-only product flows remain pending, so C01 is not complete. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.50-external-note-refresh-preview-a54e312.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2443,10 +2444,11 @@
         "evidence/r2.6.49-roundtrip-ci-3635245.json",
         "evidence/r2.6.49-roundtrip-ci-eea9679.json",
         "evidence/r2.6.49-roundtrip-ci-followups.json",
-        "evidence/r2.6.49-roundtrip-ci-f396927.json"
+        "evidence/r2.6.49-roundtrip-ci-f396927.json",
+        "evidence/r2.6.50-external-note-refresh-preview-a54e312.json"
       ],
-      "tested_source_tree": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
-      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0, including reopening the authored note and exact attachment path with unchanged vault/app-data snapshots. Other cross-platform C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json.",
+      "tested_source_tree": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
+      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. The integrated existing-vault external-note refresh/preview UI case and bounded-preview vault test passed on all three OSes on exact source SHA a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b. Other cross-platform C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.50-external-note-refresh-preview-a54e312.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

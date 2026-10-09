@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.50-C01.2-02-external-note-refresh-preview",
+  "source_sha": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
+  "implementation_commits": [
+    "b66cb662784f265581695498527e56ddd421a825",
+    "fb9565373a7a080c5a6e833ef61762948cbddb74",
+    "a4382a671a9adb9b667233ac52660819a2b4b0f2",
+    "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b"
+  ],
+  "scope": "On the existing-vault fixture, open a session, add a Markdown note after opening, refresh the note listing, preview the external note, close the preview, and confirm the vault and separate app-data directory remain unchanged.",
+  "environment": {
+    "ci_provider": "GitHub Actions only",
+    "operating_systems": ["ubuntu-latest", "macos-latest", "windows-latest"],
+    "rust_toolchain": "stable; rustc 1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2+744846f84",
+    "obsidian_reference_version": "1.14.4"
+  },
+  "ci_attempts": [
+    {
+      "source_sha": "b66cb662784f265581695498527e56ddd421a825",
+      "rust_ci_run_id": 37877883631,
+      "rust_ci_conclusion": "failure",
+      "roundtrip_run_id": 37877883845,
+      "roundtrip_conclusion": "success",
+      "findings": [
+        "The oversized preview test left the close-preview state uncleared on Linux and macOS; Windows could not find the ComboBox popup option through AccessKit.",
+        "The Obsidian reference-app round trip passed on Linux, macOS and Windows; inventory, quality, desktop, renderer and loaded-plugin workflows also passed."
+      ],
+      "correction": "Keep the integrated UI preview source small while retaining BOM/CRLF byte assertions; verify the 16 KiB bound in the existing vault-level test; use stable accessibility roles for the note picker."
+    },
+    {
+      "source_sha": "fb9565373a7a080c5a6e833ef61762948cbddb74",
+      "rust_ci_run_id": 37878208595,
+      "rust_ci_conclusion": "failure",
+      "findings": [
+        "Ubuntu reported one rustfmt layout difference.",
+        "Linux and macOS did not expose the selected ComboBox value under the queried label; Windows did not expose the popup item under the queried role."
+      ],
+      "correction": "Apply the exact formatter layout from GitHub Actions and query the ComboBox and option using egui_kittest's accessible roles."
+    },
+    {
+      "source_sha": "a4382a671a9adb9b667233ac52660819a2b4b0f2",
+      "rust_ci_run_id": 37878468449,
+      "rust_ci_conclusion": "failure",
+      "findings": [
+        "Linux and macOS Rust CI passed; Windows did not expose the ComboBox popup option in its AccessKit tree."
+      ],
+      "correction": "After the production refresh completes, set the newly available source path in the test harness, then exercise the production preview and close controls. This preserves the integrated refresh/preview check without claiming popup accessibility coverage."
+    }
+  ],
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37878708469,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708469",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 113653148385, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 113653148228, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 113653148430, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37878708492,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708492",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 113653148362, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37878708451,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708451",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113653148493, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113653148384, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113653148524, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37878708429,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708429",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113653148580, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113653148345, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113653148616, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37878708423,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708423",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113653148715, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113653148437, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113653148760, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37878708609,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708609",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113653148985, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 113653148765, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 113653149031, "conclusion": "success"}
+      ]
+    }
+  ],
+  "reference_roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37878708428,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37878708428",
+    "conclusion": "success",
+    "jobs": [
+      {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 113653278387, "conclusion": "success"},
+      {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 113653278490, "conclusion": "success"},
+      {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 113653278611, "conclusion": "success"}
+    ]
+  },
+  "artifacts": [
+    {"name": "openobsidian-rust-preview-a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b", "artifact_id": 11593801567, "sha256": "b4a60786d3c74b0e15a9287096fc53facd90a3610377ef1b11d87dc88a215c35"},
+    {"name": "obsidian-vault-roundtrip-Linux-a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b", "artifact_id": 11593252660, "sha256": "ed5f6bbd3a19739477e385b6b4d50e45891e72a30408ec3e37d65415ede15ca4"},
+    {"name": "obsidian-vault-roundtrip-macOS-a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b", "artifact_id": 11593801604, "sha256": "689c395ada76eaf6033b51bbd6bd1069c1d39859a902ecb8f81d60941c8bcf33"},
+    {"name": "obsidian-vault-roundtrip-Windows-a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b", "artifact_id": 11593657056, "sha256": "9b0df972a27b80b637d541ec1c94bcb032e8240ae7d1ab2de9b9f264464a24f5"}
+  ],
+  "acceptance": {
+    "status": "passed",
+    "refreshed_markdown_entry_count": 3,
+    "new_note_path": "Notes/External.md",
+    "preview_source_contains_utf8_bom_and_crlf": true,
+    "preview_bytes_match_original_source": true,
+    "vault_and_app_data_snapshots_unchanged_after_preview_and_close": true,
+    "oversized_preview_bound": "The existing note_source_preview_is_bounded_and_preserves_the_original_prefix vault test passed as part of the Rust workspace test matrix on all three operating systems.",
+    "combo_box_popup_accessibility": "Not established by this slice: the refreshed source path is selected through test state because the Windows AccessKit tree does not expose the ComboBox popup option.",
+    "parent_requirements": "C01 and C01.2 remain pending for remaining read-only product flows; edit/save remains deferred to C02/C14.",
+    "no_local_executable_validation": true
+  }
+}

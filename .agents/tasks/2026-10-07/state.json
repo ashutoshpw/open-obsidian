@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T02:55:39Z",
+  "updated_at": "2026-10-09T03:27:16Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0",
-  "current_milestone": "R2.6.49",
-  "next_action": "Start R2.6.50 by selecting the smallest remaining cross-platform C01 read-only product flow from the acceptance matrix. Keep C01/C01.2 pending until all required read-only rows pass; edit/save remains deferred to C02/C14.",
+  "last_reconciled_head": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
+  "current_milestone": "R2.6.50",
+  "next_action": "Review remaining C01/C01.2 read-only product flows and select the smallest cross-platform slice for R2.6.51. Keep C01/C01.2 pending until the full required read-only coverage passes; edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "f396927a7e15e9fa8631bb3b4d78e90198c5fbd0"
+      "implementation_sha": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b"
     },
     "R3": {
       "status": "pending",
@@ -9559,6 +9559,56 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Start R2.6.50 by selecting the smallest remaining cross-platform C01 read-only product flow from the acceptance matrix."
+    },
+    "R2.6.50": {
+      "status": "complete",
+      "implementation_sha": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
+      "implementation_commits": ["b66cb66", "fb95653", "a4382a6", "a54e312"],
+      "scope": "Integrate opening an existing vault, refreshing its note list after an external note appears, previewing the exact source bytes, closing the preview, and proving the vault and separate app-data snapshots stay unchanged.",
+      "ci_attempts": [
+        {
+          "source_sha": "b66cb662784f265581695498527e56ddd421a825",
+          "rust_ci": 37877883631,
+          "conclusion": "failure on all three OSes: Linux/macOS close-preview assertion failed with the oversized preview; Windows could not find the ComboBox popup option.",
+          "correction": "Use a small BOM/CRLF source in the integrated UI flow and retain the 16 KiB bound check in the vault suite; replace label-driven picker lookup."
+        },
+        {
+          "source_sha": "fb9565373a7a080c5a6e833ef61762948cbddb74",
+          "rust_ci": 37878208595,
+          "conclusion": "failure: formatter layout differed on Ubuntu and the note picker queries could not find the selected value or popup item across the OS matrix.",
+          "correction": "Apply the exact GitHub formatter layout and query ComboBox/menu controls by accessible roles."
+        },
+        {
+          "source_sha": "a4382a671a9adb9b667233ac52660819a2b4b0f2",
+          "rust_ci": 37878468449,
+          "conclusion": "failure on Windows: the AccessKit tree did not expose the refreshed ComboBox popup option; Linux/macOS Rust jobs passed.",
+          "correction": "Select the refreshed source path in test state after exercising the production refresh, then run the production preview and close controls."
+        },
+        {
+          "source_sha": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
+          "conclusion": "All seven workflows passed, including the Rust, quality, desktop, plugin, inventory and three-OS Obsidian round-trip workflows.",
+          "workflows": {
+            "rust_ci": 37878708469,
+            "inventory": 37878708492,
+            "quality": 37878708451,
+            "desktop_build": 37878708429,
+            "plugin_renderer": 37878708423,
+            "loaded_plugin_workflows": 37878708609,
+            "obsidian_vault_roundtrip": 37878708428
+          },
+          "evidence": "evidence/r2.6.50-external-note-refresh-preview-a54e312.json"
+        }
+      ],
+      "accepted_slice": [
+        "On exact source SHA a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b, Rust workspace tests, formatting, Clippy, dependency layering and native preview builds passed on Ubuntu, macOS and Windows.",
+        "The integrated UI refreshed the existing vault from two Markdown files to three after Notes/External.md was added; its preview preserved the exact UTF-8 BOM and CRLF bytes. Closing the preview and dropping the no-op session left the complete vault and separate app-data snapshots unchanged.",
+        "The existing note_source_preview_is_bounded_and_preserves_the_original_prefix vault test passed on all three Rust CI platforms. The Obsidian 1.14.4 round-trip and all six companion project workflows passed on the same source SHA. Exact job IDs and artifact digests are in evidence/r2.6.50-external-note-refresh-preview-a54e312.json."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for remaining cross-platform read-only product flows; the ComboBox popup option accessibility is not established by this slice.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Review remaining C01/C01.2 read-only product flows and select the smallest cross-platform slice for R2.6.51."
     }
   },
   "ci_preparation": {
