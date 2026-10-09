@@ -1196,3 +1196,28 @@ formatters, linters, or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
+
+## R2.6.62 — preserve Unicode and spaced note paths
+
+Added an existing-vault UI case for `Guides/日本語 intro.md`. The test starts
+with README.md selected, link/embed results resolved and its exact source
+preview open, then selects the Unicode and space-containing note path through
+the Note to inspect ComboBox. It verifies stale state clears, previews the
+selected BOM/CRLF source byte-for-byte, and compares full vault and separate
+app-data snapshots through UI teardown.
+
+On exact source SHA `d77e8cb5720eaac92c835a25a962f986d965962b`, the focused test
+passed on Ubuntu, macOS and Windows. All seven GitHub Actions workflows and
+every job passed on that SHA, including the Obsidian 1.14.4 round trip on all
+three operating systems. Run/job IDs, artifact digests and the test boundary
+are recorded in
+[`evidence/r2.6.62-unicode-spaced-note-path-d77e8cb.json`](evidence/r2.6.62-unicode-spaced-note-path-d77e8cb.json).
+
+This synthetic AccessKit interaction does not certify native screen-reader or
+folder-picker behavior, or a reference-app round trip for this specific
+selection. C01 and C01.2 remain pending for broader read-only coverage; C01.1
+remains passing. Edit/save remains deferred to C02/C14. No local tests, builds,
+formatters, linters or application launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.
