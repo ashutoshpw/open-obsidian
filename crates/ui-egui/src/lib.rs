@@ -3280,8 +3280,7 @@ mod tests {
             .entries()
             .iter()
             .find(|entry| {
-                entry.relative_path.to_string_lossy().replace('\\', "/")
-                    == "Notes/Invalid UTF-8.md"
+                entry.relative_path.to_string_lossy().replace('\\', "/") == "Notes/Invalid UTF-8.md"
             })
             .map(|entry| entry.relative_path.clone())
             .expect("invalid UTF-8 Markdown path remains available for inspection");
@@ -3315,13 +3314,15 @@ mod tests {
 
         assert!(harness.state().note_source_preview.is_none());
         assert!(harness.state().note_preview_receiver.is_none());
-        assert!(harness
-            .state()
-            .note_preview_error
-            .as_deref()
-            .is_some_and(|error| {
-                error.starts_with("The selected note preview contains invalid UTF-8;")
-            }));
+        assert!(
+            harness
+                .state()
+                .note_preview_error
+                .as_deref()
+                .is_some_and(|error| {
+                    error.starts_with("The selected note preview contains invalid UTF-8;")
+                })
+        );
         assert_eq!(
             std::fs::read(&invalid_note_path).expect("read original invalid note bytes"),
             invalid_source
