@@ -3902,7 +3902,7 @@ mod tests {
         materialize_existing_vault_fixture(&vault_path, &fixture);
 
         let source_path = PathBuf::from("Notes/Welcome.md");
-        let renamed_path = PathBuf::from("Notes/Welcome-renamed.md");
+        let renamed_path = PathBuf::from("Zzz-Welcome-renamed.md");
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);
         let session = VaultSession::open(&vault_path, &app_data_path)
@@ -3935,8 +3935,11 @@ mod tests {
         assert_eq!(preview.relative_path, source_path);
         assert_eq!(preview.text.as_bytes(), welcome_source.as_bytes());
 
-        std::fs::rename(vault_path.join(&source_path), vault_path.join(&renamed_path))
-            .expect("simulate an external editor renaming the selected note");
+        std::fs::rename(
+            vault_path.join(&source_path),
+            vault_path.join(&renamed_path),
+        )
+        .expect("simulate an external editor renaming the selected note");
         let mut expected_after_external_rename = before_vault.clone();
         let renamed_entry = expected_after_external_rename
             .iter_mut()
@@ -3962,14 +3965,18 @@ mod tests {
             .as_ref()
             .expect("the refreshed vault session should remain open");
         assert_eq!(session.entries().len(), 2);
-        assert!(session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == renamed_path));
-        assert!(!session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == source_path));
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == renamed_path)
+        );
+        assert!(
+            !session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == source_path)
+        );
         assert_eq!(
             harness.state().link_source_path.as_deref(),
             Some(Path::new("README.md"))
