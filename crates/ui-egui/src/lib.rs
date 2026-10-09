@@ -4624,11 +4624,9 @@ mod tests {
         assert_eq!(report.embeds.len(), 1);
         let (initial_width, initial_height, initial_rgba) =
             match &report.embeds[0].resolution.disposition {
-                VaultNoteEmbedDisposition::Attachment(image) => (
-                    image.width,
-                    image.height,
-                    image.rgba_bytes.clone(),
-                ),
+                VaultNoteEmbedDisposition::Attachment(image) => {
+                    (image.width, image.height, image.rgba_bytes.clone())
+                }
                 other => panic!("expected decoded initial image, got {other:?}"),
             };
         assert!(initial_width > 0 && initial_height > 0);
@@ -4658,7 +4656,10 @@ mod tests {
         image::codecs::png::PngEncoder::new(&mut replacement_source)
             .write_image(&replacement_rgba, 2, 1, image::ExtendedColorType::Rgba8)
             .expect("encode replacement image fixture");
-        assert_ne!(replacement_source.as_slice(), initial_image_source.as_slice());
+        assert_ne!(
+            replacement_source.as_slice(),
+            initial_image_source.as_slice()
+        );
         std::fs::write(vault_path.join(&attachment_path), &replacement_source)
             .expect("simulate an external in-place image edit");
         let mut expected_after_edit = before_vault.clone();
