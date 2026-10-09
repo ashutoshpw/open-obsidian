@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
+  "source_sha": "9de7785555c64fc5e08e15e668ce7dc47755d1ba",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37869994391,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994391",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "job_id": 113625629075,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994391/job/113625629075",
+        "conclusion": "success",
+        "runner_image": "ubuntu24",
+        "artifact_id": 11589718759,
+        "artifact_name": "obsidian-vault-roundtrip-Linux-9de7785555c64fc5e08e15e668ce7dc47755d1ba",
+        "artifact_sha256": "81460dd8a2dcb6b14e3b9c1bfd71c419d207be7c7e64038321496fa6a278820b",
+        "report_sha256": "7351403834f0f3bbce323cfb48c869ae27d48e5ed7e68fc557dfc35f701df878",
+        "vault_snapshot_sha256": "370f99fdb9ce7ece1a95d1e263484a482bb53b3e6eea4d6e182c54d6ea7ba5e2",
+        "acceptance": "Full round-trip passed; same note and attachment reopened, all 22 vault entries matched before/after OpenObsidian and after Obsidian reopen, with app data separate and unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "job_id": 113625628803,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994391/job/113625628803",
+        "conclusion": "failure",
+        "runner_image": "macos26",
+        "artifact_id": 11589956284,
+        "artifact_name": "obsidian-vault-roundtrip-macOS-9de7785555c64fc5e08e15e668ce7dc47755d1ba",
+        "artifact_sha256": "c62e97f2e9126c7c7adeab8f17f4251034b7bfee055bbbd4557777d78c6d7896",
+        "report_sha256": "bad9ee47f5c1f3576c37006506bf2ab5b348b7d5a554079e3fa3c05af6b696cf",
+        "full_desktop_screenshot_sha256": "2ef98d43210899c7b62f4b86a4919e56395d7a27ee05cd288cf01e2900459289",
+        "raw_app_window_screenshot_sha256": "27b434b41d7305a48b2cbc9c33f8c80b506a226230a189fc86ae3c2f497faeb0",
+        "reference_asset": "Obsidian-1.14.4.dmg",
+        "reference_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "finding": "Obsidian authored the fixture and OpenObsidian window capture showed the selected vault/count, but OCR still failed because the dark text/background contrast was too low. The runner timed out before snapshots/reopen. Next: contrast-stretch and upscale the captured window for OCR while retaining the raw screenshot."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "job_id": 113625628963,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994391/job/113625628963",
+        "conclusion": "failure",
+        "runner_image": "win25-vs2026",
+        "artifact_id": 11590975115,
+        "artifact_name": "obsidian-vault-roundtrip-Windows-9de7785555c64fc5e08e15e668ce7dc47755d1ba",
+        "artifact_sha256": "54cf16fe8d5d537ae9bef252843e719f01f03da820fd227f35ce6d895aee1bd7",
+        "report_sha256": "d7ad9932f106ac9e1775a6da3029e43b325cb0dd8908fe73294270457bda43bb",
+        "picker_initial_screenshot_sha256": "38d55f89e8e7416ce8b9f28ddc25148cc7d445cdb379693940c0c5dfd949fee2",
+        "picker_at_fixture_screenshot_sha256": "cd7cff2e203af39758d60c84f913de86586760df7ed0cfddd442af71d89e2dc1",
+        "reference_asset": "Obsidian-1.14.4.exe",
+        "reference_asset_sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "finding": "The temporary Desktop fixed the missing-location blocker and the picker navigated to the generated fixture, as shown in its screenshot. SendKeys did not activate the native Select Folder button, so no vault renderer appeared and authoring did not begin. Next: invoke that button through Windows UI Automation and capture the picker before/after selection."
+      }
+    ]
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37869994377,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994377",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113625628721,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113625628854,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113625628870,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37869994411,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994411",
+      "conclusion": "success",
+      "job_id": 113625628729
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37869994424,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994424",
+      "attempt_1": {
+        "conclusion": "failure",
+        "job_id": 113625629246,
+        "finding": "The existing macOS Electron retrieval audit did not reach its retrieval boundary."
+      },
+      "attempt_2": {
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "macos-latest",
+            "job_id": 113626512197,
+            "conclusion": "success"
+          },
+          {
+            "name": "ubuntu-latest",
+            "job_id": 113626513128,
+            "conclusion": "success"
+          },
+          {
+            "name": "windows-latest",
+            "job_id": 113626513186,
+            "conclusion": "success"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37869994386,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994386",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113625628599,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113625628760,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113625628806,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37869994402,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994402",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113625629012,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113625629094,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113625629135,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37869994396,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37869994396",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113625628772,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113625628929,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113625628952,
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "status": "partial",
+    "linux_roundtrip": "passed",
+    "macos_roundtrip": "not accepted; Obsidian authored the fixture and the OpenObsidian window was captured, but OCR could not detect the rendered vault/count",
+    "windows_roundtrip": "not accepted; picker navigated to the fixture but did not activate Select Folder, so authoring/reopen did not run",
+    "all_six_required_project_workflows_passed_on_exact_sha": true,
+    "quality_first_attempt_failed_then_same_sha_failed_job_rerun_passed": true,
+    "no_local_executable_validation": true,
+    "next_correction": "For macOS install ImageMagick in GitHub Actions and contrast-stretch/upscale only the OCR copy of the captured app window. For Windows use UI Automation to invoke Select Folder after confirming the fixture path, with before/after picker screenshots. Retry all exact-SHA workflows in GitHub Actions."
+  }
+}

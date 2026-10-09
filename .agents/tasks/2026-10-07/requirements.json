@@ -2321,7 +2321,7 @@
         "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
       ],
       "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
-      "blocker": "The C01.2 matrix records Linux Obsidian-authored round-trip acceptance. The exact-SHA macOS/Windows attempt at 337857560332327cd13b9a797eaab76abf7afcf4 did not complete: macOS OCR missed visible UI text before snapshots/reopen, and Windows folder selection was blocked by a missing temporary profile Desktop. Runner corrections are pending fresh CI; remaining product-level read-only operations also remain pending.",
+      "blocker": "The C01.2 matrix records Linux Obsidian-authored round-trip acceptance on 3b621dfe83ab96313b407651dbe354c29bd06e89, 337857560332327cd13b9a797eaab76abf7afcf4 and 9de7785555c64fc5e08e15e668ce7dc47755d1ba. macOS authored the fixture and its app-window screenshot shows the selected vault/count, but low-contrast OCR failed before snapshot/reopen checks. Windows now navigates to the fixture but has not activated Select Folder. Contrast preprocessing and UI Automation selection are pending fresh CI; remaining product-level read-only operations also remain pending. See evidence/r2.6.49-roundtrip-ci-9de7785.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2434,7 +2434,7 @@
         "evidence/r2.6.48-roundtrip-ci-3b621df.json"
       ],
       "tested_source_tree": "3b621dfe83ab96313b407651dbe354c29bd06e89",
-      "blocker": "The C01.2 reference-application matrix and attempt evidence are in c01.2-reference-roundtrip-matrix.md and evidence/r2.6.49-roundtrip-ci-3378575.json. Linux passed on 3b621dfe83ab96313b407651dbe354c29bd06e89 and again on 337857560332327cd13b9a797eaab76abf7afcf4. The macOS screenshot showed the selected vault/count but automated OCR failed before snapshot/reopen; Windows was blocked by the missing temporary profile Desktop before the generated fixture was selected. macOS/Windows retries and remaining read-only flows are pending; edit/save remains deferred to C02/C14.",
+      "blocker": "The C01.2 reference-application matrix and attempt evidence are in c01.2-reference-roundtrip-matrix.md, evidence/r2.6.49-roundtrip-ci-3378575.json and evidence/r2.6.49-roundtrip-ci-9de7785.json. Linux passed on three exact SHAs. The macOS screenshot shows the selected vault/count, but OCR failed before snapshot/reopen; Windows navigated to the fixture, but the native Select Folder button was not invoked. macOS/Windows retries and remaining read-only flows are pending; edit/save remains deferred to C02/C14.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

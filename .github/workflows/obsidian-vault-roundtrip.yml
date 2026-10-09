@@ -66,12 +66,14 @@ jobs:
             libgl1-mesa-dev libgtk-3-dev libgtk-3-0 libwebkit2gtk-4.1-dev libwebkit2gtk-4.1-0 \
             libnss3 libxss1 libasound2t64 libgbm1 libxkbcommon0
 
-      - name: Install macOS screenshot OCR dependency
+      - name: Install macOS screenshot OCR dependencies
         if: runner.os == 'macOS'
         run: |
-          if ! brew list --versions tesseract >/dev/null 2>&1; then
-            brew install tesseract
-          fi
+          for package in imagemagick tesseract; do
+            if ! brew list --versions "$package" >/dev/null 2>&1; then
+              brew install "$package"
+            fi
+          done
 
       - name: Install Windows screenshot OCR dependency
         if: runner.os == 'Windows'

@@ -47,6 +47,7 @@ const seedMarkdownPath = "Nested Ω/space note.md";
 const seedMarkdown = "\uFEFF---\r\ntitle: Original CRLF note\r\nunknown_nested:\r\n  keep: [true, 7, 'opaque']\r\n---\r\n\r\nOriginal bytes stay untouched.\r\n";
 const workspaceStateAllowlist = [".obsidian/workspace.json", ".obsidian/workspace-mobile.json"];
 const startedAt = new Date().toISOString();
+const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
@@ -403,27 +404,38 @@ async function captureX11WindowScreenshot(windowId: string, filename: string): P
 }
 
 async function captureMacOSWindowScreenshot(processId: number, filename: string): Promise<string> {
-  const script = `
-    import CoreGraphics
-    import Foundation
+  let windowId = macOSWindowIds.get(processId);
+  if (!windowId) {
+    const script = `
+      import CoreGraphics
+      import Foundation
 
-    let targetProcessId = ${processId}
-    let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
-    let targetWindow = windows.first { window in
-      (window[kCGWindowOwnerPID as String] as? Int) == targetProcessId &&
-      (window[kCGWindowLayer as String] as? Int) == 0
-    }
-    guard let windowNumber = targetWindow?[kCGWindowNumber as String] else {
-      fputs("OpenObsidian did not expose an on-screen macOS window\\n", stderr)
-      exit(1)
-    }
-    print(windowNumber)
-  `;
-  const windowId = execFileSync("swift", ["-e", script], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim().split(/\s+/).at(-1);
-  if (!windowId || !/^\d+$/.test(windowId)) throw new Error("Could not identify OpenObsidian's macOS window for screenshot capture");
+      let targetProcessId = ${processId}
+      let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+      let targetWindow = windows.first { window in
+        (window[kCGWindowOwnerPID as String] as? Int) == targetProcessId &&
+        (window[kCGWindowLayer as String] as? Int) == 0
+      }
+      guard let windowNumber = targetWindow?[kCGWindowNumber as String] else {
+        fputs("OpenObsidian did not expose an on-screen macOS window\\n", stderr)
+        exit(1)
+      }
+      print(windowNumber)
+    `;
+    windowId = execFileSync("swift", ["-e", script], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim().split(/\s+/).at(-1);
+    if (!windowId || !/^\d+$/.test(windowId)) throw new Error("Could not identify OpenObsidian's macOS window for screenshot capture");
+    macOSWindowIds.set(processId, windowId);
+  }
   const pngPath = join(reportDirectory, filename);
   execFileSync("screencapture", ["-x", `-l${windowId}`, pngPath], {stdio: "ignore"});
   return pngPath;
+}
+
+async function prepareScreenshotForOcr(imagePath: string): Promise<string> {
+  if (process.platform !== "darwin") return imagePath;
+  const ocrImagePath = join(reportDirectory, "openobsidian-vault-window-ocr.png");
+  execFileSync("magick", [imagePath, "-colorspace", "Gray", "-level", "0%,35%", "-resize", "200%", ocrImagePath], {stdio: "ignore"});
+  return ocrImagePath;
 }
 
 async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
@@ -555,19 +567,44 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
     $shell.SendKeys($env:OBSIDIAN_PICKER_VAULT_PATH)
     Start-Sleep -Milliseconds 300
     $shell.SendKeys("{ENTER}")
-    Start-Sleep -Milliseconds 750
-    $shell.SendKeys("%s")
-    Start-Sleep -Milliseconds 500
-    $shell.SendKeys("{ENTER}")
   `;
   execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
     env: {...process.env, OBSIDIAN_PICKER_VAULT_PATH: vaultRoot},
     stdio: "ignore",
   });
-  await delay(1_000);
+  await delay(750);
   pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-path.png"));
+  const selectionScript = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    $root = [System.Windows.Automation.AutomationElement]::RootElement
+    $pickerCondition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::NameProperty,
+      "Open folder as vault"
+    )
+    $picker = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $pickerCondition)
+    if ($null -eq $picker) { throw "Could not find the Obsidian folder picker window" }
+    $buttonCondition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+      [System.Windows.Automation.ControlType]::Button
+    )
+    $buttons = $picker.FindAll([System.Windows.Automation.TreeScope]::Descendants, $buttonCondition)
+    $selectFolder = $null
+    foreach ($button in $buttons) {
+      if ($button.Current.Name -eq "Select Folder") { $selectFolder = $button; break }
+    }
+    if ($null -eq $selectFolder) {
+      $labels = @($buttons | ForEach-Object { $_.Current.Name }) -join " | "
+      throw "Could not find Select Folder in the native picker; buttons=$labels"
+    }
+    $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+  `;
+  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", selectionScript], {stdio: "ignore"});
+  await delay(1_000);
+  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-select.png"));
   return await finishVaultDirectorySelection(connection, port, {
-    interaction: "Windows folder picker: navigate to the fixture path and confirm Select Folder",
+    interaction: "Windows folder picker: navigate to the fixture path and invoke Select Folder through UI Automation",
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
   });
 }
@@ -868,7 +905,7 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
   execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {stdio: "ignore"});
 }
 
-async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess): Promise<{pngPath: string; windowPngPath: string; ocrText: string}> {
+async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string}> {
   await focusOpenObsidian(child);
   const pngPath = await captureDesktopScreenshot("openobsidian-vault.png");
   const windowPngPath = process.platform === "linux"
@@ -876,10 +913,11 @@ async function captureOpenObsidianScreenshot(windowId: string, child: ChildProce
     : process.platform === "darwin"
       ? await captureMacOSWindowScreenshot(child.pid ?? -1, "openobsidian-vault-window.png")
       : pngPath;
+  const ocrPngPath = await prepareScreenshotForOcr(windowPngPath);
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" ? ["11", "6"] : ["6"];
-  const ocrText = pageSegmentationModes.map((mode) => execFileSync(tesseract, [windowPngPath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
-  return {pngPath, windowPngPath, ocrText};
+  const ocrText = pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrPngPath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
+  return {pngPath, windowPngPath, ocrPngPath, ocrText};
 }
 
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
@@ -948,6 +986,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
       renderAttempt += 1;
       open.screenshot = "openobsidian-vault.png";
       open.window_screenshot = "openobsidian-vault-window.png";
+      open.ocr_screenshot = relative(reportDirectory, captured.ocrPngPath).split(sep).join("/");
       open.screen_ocr = captured.ocrText;
       open.render_attempts = renderAttempt;
       return captured;
