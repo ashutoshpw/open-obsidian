@@ -2413,10 +2413,16 @@ mod tests {
             b"{\"unknownEmptyVaultOption\":{\"keep\":true}}\n",
         )
         .expect("seed opaque Obsidian configuration");
-        std::fs::write(vault_path.join("Assets/opaque.bin"), [0x00, 0xff, 0x42, 0x80])
-            .expect("seed arbitrary binary content");
-        std::fs::write(vault_path.join("README.txt"), b"This is not a Markdown note.\n")
-            .expect("seed a non-Markdown text file");
+        std::fs::write(
+            vault_path.join("Assets/opaque.bin"),
+            [0x00, 0xff, 0x42, 0x80],
+        )
+        .expect("seed arbitrary binary content");
+        std::fs::write(
+            vault_path.join("README.txt"),
+            b"This is not a Markdown note.\n",
+        )
+        .expect("seed a non-Markdown text file");
 
         let before_vault = existing_vault_tree_snapshot(&vault_path);
         let before_app_data = existing_vault_tree_snapshot(&app_data_path);
@@ -2442,7 +2448,11 @@ mod tests {
         assert!(harness.state().session.is_some());
         assert!(!harness.state().vault_opening);
         assert!(harness.state().vault_open_error.is_none());
-        let session = harness.state().session.as_ref().expect("vault session is open");
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("vault session is open");
         assert_eq!(session.root_path(), canonical_vault);
         assert!(session.entries().is_empty());
         harness.get_by_label("Vault: Existing Empty Vault");
@@ -2450,26 +2460,37 @@ mod tests {
         harness.get_by_label("This vault has no Markdown notes to inspect.");
         harness.get_by_label("This vault has no Markdown notes to rename.");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         harness.get_by_label("Refresh note list").click();
         harness.step();
         assert!(harness.state().vault_refresh_receiver.is_some());
         wait_for_vault_refresh(&mut harness);
         harness.get_by_label("Note list refreshed: 0 Markdown files found.");
-        assert!(harness
-            .state()
-            .session
-            .as_ref()
-            .expect("empty vault remains open after refresh")
-            .entries()
-            .is_empty());
+        assert!(
+            harness
+                .state()
+                .session
+                .as_ref()
+                .expect("empty vault remains open after refresh")
+                .entries()
+                .is_empty()
+        );
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
 
         drop(harness);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
-        assert_eq!(existing_vault_tree_snapshot(&app_data_path), before_app_data);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
     }
 
     #[test]
