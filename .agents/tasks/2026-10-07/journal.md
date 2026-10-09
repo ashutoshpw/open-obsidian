@@ -1763,3 +1763,7 @@ The documentation commit `0b2a9d3853203bdf5c6ce173311180333ac36939` passed quali
 ### R2.6.74 started — C01.2-25 external removal of the final note
 
 C01.2-02 covers external removal while another Markdown note remains, and C01.2-07 covers opening an empty vault. The transition between those states is uncovered: remove the only Markdown note from an active vault that already has link/embed and source-preview state, refresh, and verify that the UI reaches the empty state without retaining stale selection or writing vault/app data. The focused test and matrix row are being added as R2.6.74. Starting source SHA: `7e74b3be437cce9ee29d7782e04c7b6b2641535c`. Broader C01/C01.2 acceptance remains pending. All executable validation will run through GitHub Actions only.
+
+### R2.6.74 attempt 1 — source SHA `632b64c`
+
+The focused workspace test `egui_refresh_after_external_removal_of_last_note_clears_stale_state_without_writing` passed on Ubuntu, macOS and Windows. Rust CI failed only the Ubuntu formatting gate: rustfmt requested a multiline layout for the app-data sentinel write. The same test passed in all three matrix jobs. Obsidian vault round-trip passed on Ubuntu, macOS and Windows; inventory, loaded-plugin workflows, desktop build, quality and plugin renderer also passed. Run/job IDs are in the R2.6.74 entry in `state.json`. The exact GitHub rustfmt diff is applied locally for attempt 2. No local checks were run.

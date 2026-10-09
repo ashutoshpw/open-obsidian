@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T18:43:07Z",
+  "updated_at": "2026-10-09T18:50:34Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "7e74b3be437cce9ee29d7782e04c7b6b2641535c",
   "current_milestone": "R2.6.74",
-  "next_action": "Implement the uncovered transition from an active one-note vault to an externally emptied vault; push and inspect exact-SHA GitHub Actions results.",
+  "next_action": "Push the applied Ubuntu rustfmt correction for fresh exact-SHA GitHub Actions validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13624,8 +13624,45 @@
         "The full vault matches the snapshot immediately after the external removal, and separate app-data snapshots remain unchanged through refresh and teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Commit and push the focused test and matrix entry, then inspect every required exact-SHA GitHub Actions job."
+      "ci_attempts": [
+        {
+          "source_sha": "632b64c65cc083c468440456ef1b34720661317a",
+          "attempt": 1,
+          "conclusion": "The focused workspace test passed on Ubuntu, macOS, and Windows. Rust CI passed on macOS and Windows but failed Ubuntu formatting for the app-data sentinel write layout. Obsidian round-trip and the other five workflows passed on this exact SHA.",
+          "workflows": {
+            "rust_ci": 37975427428,
+            "obsidian_vault_roundtrip": 37975427261,
+            "inventory": 37975427239,
+            "loaded_plugin_workflows": 37975427254,
+            "desktop_build": 37975427294,
+            "quality": 37975427215,
+            "plugin_renderer": 37975427317
+          },
+          "jobs": {
+            "rust_macos": 113972406911,
+            "rust_ubuntu": 113972407141,
+            "rust_windows": 113972407164,
+            "roundtrip_macos": 113972406156,
+            "roundtrip_ubuntu": 113972406371,
+            "roundtrip_windows": 113972406435,
+            "inventory": 113972405691,
+            "loaded_plugin_macos": 113972407659,
+            "loaded_plugin_windows": 113972407949,
+            "loaded_plugin_ubuntu": 113972408096,
+            "desktop_macos": 113972406458,
+            "desktop_ubuntu": 113972406731,
+            "desktop_windows": 113972406816,
+            "quality_ubuntu": 113972411672,
+            "quality_windows": 113972412030,
+            "quality_macos": 113972412037,
+            "plugin_renderer_ubuntu": 113972406238,
+            "plugin_renderer_macos": 113972406591,
+            "plugin_renderer_windows": 113972406777
+          },
+          "correction": "Apply the Ubuntu GitHub Actions rustfmt diff to the app-data sentinel write, then push and rerun the full required exact-SHA matrix."
+        }
+      ],
+      "next_action": "Push the applied formatter correction and inspect all seven required exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {

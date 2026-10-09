@@ -3888,8 +3888,11 @@ mod tests {
         std::fs::create_dir_all(vault_path.join("Attachments"))
             .expect("create existing vault attachment directory");
         std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
-        std::fs::write(app_data_path.join("private-state.bin"), [0x71, 0x00, 0xfe, 0x08])
-            .expect("seed separate app-data sentinel");
+        std::fs::write(
+            app_data_path.join("private-state.bin"),
+            [0x71, 0x00, 0xfe, 0x08],
+        )
+        .expect("seed separate app-data sentinel");
         std::fs::write(
             vault_path.join(".obsidian/app.json"),
             b"{\"unknownOption\":{\"keep\":true}}\n",
