@@ -1,0 +1,54 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 22,
+  "source_sha": "d2f0bb58a8e1e038bc375d9697cb53c959ee75fd",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37938888438,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 113847857939, "conclusion": "success"},
+        "macos": {"job_id": 113847857489, "conclusion": "success"},
+        "windows": {"job_id": 113847858001, "conclusion": "success"}
+      },
+      "artifacts": {
+        "ubuntu": {"artifact_id": 11620985357, "digest": "sha256:585145a8205b3287325b404d9dfa11bf51c04082664f350ee463037128375521"},
+        "macos": {"artifact_id": 11620766671, "digest": "sha256:62fbad6035c9d1d6fbed92a3fda580f74b902ee8042a3942908f85a2c2014faa"},
+        "windows": {"artifact_id": 11621790255, "digest": "sha256:9a276252f2cbbd1e01557551bdf3b2b289c63ef4e24c1b85a72c99d7066705bf"}
+      },
+      "platform_findings": {
+        "ubuntu": "Passed native selection, in-session cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. X11 moved over Open vault but egui did not receive the pointer motion; the audit tab-focused the button and pressed Enter, verified the native picker, sent Escape, and confirmed all snapshots unchanged.",
+        "macos": "Passed native selection, in-session cancellation, unchanged vault/app-data snapshots, and Obsidian reopen.",
+        "windows": "Passed native selection, in-session cancellation, unchanged vault/app-data snapshots, and Obsidian reopen."
+      }
+    },
+    "rust_ci": {
+      "run_id": 37938888640,
+      "conclusion": "success",
+      "jobs": {"macos": 113847859429, "windows": 113847859752, "ubuntu": 113847859797}
+    },
+    "quality": {
+      "run_id": 37938888421,
+      "conclusion": "success",
+      "jobs": {"ubuntu": 113847857758, "macos": 113847857959, "windows": 113847858079}
+    },
+    "desktop_build": {
+      "run_id": 37938888460,
+      "conclusion": "success",
+      "jobs": {"windows": 113847858228, "macos": 113847858307, "ubuntu": 113847890631}
+    },
+    "plugin_renderer": {
+      "run_id": 37938888486,
+      "conclusion": "success",
+      "jobs": {"ubuntu": 113847864069, "macos": 113847864389, "windows": 113847864460}
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37938888492,
+      "conclusion": "success",
+      "jobs": {"macos": 113847857458, "ubuntu": 113847857895, "windows": 113847857957}
+    },
+    "inventory": {"run_id": 37938888513, "conclusion": "success", "job": 113847857648}
+  },
+  "parallel_groups": "All applicable native setup, build, round-trip preparation, and Rust check parallel groups passed on this exact source SHA.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
