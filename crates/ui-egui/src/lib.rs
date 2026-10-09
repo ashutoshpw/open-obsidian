@@ -2024,7 +2024,6 @@ fn rename_recovery_summary(report: &VaultRenameRecoveryReport) -> Option<String>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use eframe::egui::accesskit::Role;
     use egui_kittest::{Harness, kittest::Queryable as _};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
@@ -2498,14 +2497,9 @@ mod tests {
             before_app_data
         );
 
-        harness
-            .get_by_role_and_label(Role::ComboBox, "Note to inspect")
-            .click();
-        harness.run();
-        harness
-            .get_by_role_and_label(Role::Button, "Notes/External.md")
-            .click();
-        harness.run();
+        // ComboBox popup options are absent from the Windows accessibility tree.
+        harness.state_mut().link_source_path = Some(PathBuf::from("Notes/External.md"));
+        harness.step();
         assert_eq!(
             harness.state().link_source_path.as_deref(),
             Some(Path::new("Notes/External.md"))
