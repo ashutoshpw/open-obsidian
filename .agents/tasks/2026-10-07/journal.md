@@ -962,6 +962,20 @@ application launches were run.
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full acceptance coverage passes.
 
+## CI preparation — parallel quality source audits
+
+Extended `.github/workflows/quality.yml` with a native GitHub Actions `parallel`
+group for the independent Knip and report-only Fallow health audits. The
+following pull-request-only Fallow review remains behind the group barrier. The
+first push's inventory check found a stale workflow hash; `inventory.json` was
+reconciled without changing its original baseline hash. On exact SHA
+`f9d66e6f45e09fe108347db543a7d325b70d48c2`, inventory, Rust CI, quality, desktop
+build, plugin renderer and loaded-plugin workflows passed. Both grouped audits
+passed on Ubuntu, Windows and macOS. Run/job IDs are recorded in
+[`evidence/parallel-ci-quality-audits-f9d66e6.json`](evidence/parallel-ci-quality-audits-f9d66e6.json).
+No local checks were run. This CI preparation does not change the active Rust
+milestone or close any product requirement.
+
 ## R2.6.55 — existing-vault attachment preview and full-tree no-op check
 
 Expanded the image-preview UI case to materialize the existing-vault fixture,

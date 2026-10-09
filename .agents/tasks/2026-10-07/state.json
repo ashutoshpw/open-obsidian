@@ -2,11 +2,11 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T04:54:16Z",
+  "updated_at": "2026-10-09T05:10:20Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e",
+  "last_reconciled_head": "f9d66e6f45e09fe108347db543a7d325b70d48c2",
   "current_milestone": "R2.6.55",
   "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
@@ -197,7 +197,8 @@
     "R2.6.49 exact-SHA run on eea967957281c34471ca9fcf985e2463e4757c48: Linux and macOS passed full fixture/open/snapshot/reopen acceptance; Windows' screenshot showed the fixture and visible Select Folder button, but UI Automation omitted the button from both picker descendants and stopped before folder confirmation. Rust CI, desktop build, renderer and loaded-workflow matrices passed. Inventory failed on an extra state.json trailing comma; the existing macOS quality retrieval audit failed once and passed on same-SHA retry. Evidence: evidence/r2.6.49-roundtrip-ci-eea9679.json. The next correction removes the comma, searches desktop-wide UIA, and sends Enter with the picker focused when the control remains inaccessible; C01/C01.2 remain pending.",
     "R2.6.49 cross-platform reference round-trip passed on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0 across Ubuntu, macOS and Windows. The authored note and attachment reopened on every platform; all 22 vault entries and separate app-data snapshots remained unchanged. Rust CI and all five companion workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-f396927.json; intermediate attempts are recorded in evidence/r2.6.49-roundtrip-ci-followups.json. Broader C01/C01.2 read-only flows remain pending; no local executable validation was run.",
     "R2.6.54 added cross-platform UI coverage for an in-place external edit to the currently previewed note, refresh, updated-source preview and no-write preservation. The focused test passed on all three OSes; all seven required workflows passed on exact source SHA 882592960fe1c9e3ac54564276086fed753a6c3e after a same-SHA Windows Rust CI retry. Evidence: evidence/r2.6.54-external-note-edit-refresh-8825929.json. C01/C01.2 remain pending; no local executable validation was run.",
-    "R2.6.55 exercises existing-vault attachment preview through the egui Resolve link status action, with the existing-vault fixture's full path/byte snapshot and separate app-data snapshot unchanged after open, image rendering, and UI teardown. The focused test and all seven workflows passed on Ubuntu, macOS, and Windows on exact source SHA a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e. Evidence: evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json. C01/C01.2 remain pending for broader read-only product coverage; no local executable validation was run."
+    "R2.6.55 exercises existing-vault attachment preview through the egui Resolve link status action, with the existing-vault fixture's full path/byte snapshot and separate app-data snapshot unchanged after open, image rendering, and UI teardown. The focused test and all seven workflows passed on Ubuntu, macOS, and Windows on exact source SHA a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e. Evidence: evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json. C01/C01.2 remain pending for broader read-only product coverage; no local executable validation was run.",
+    "Extended .github/workflows/quality.yml with a native parallel group for Knip and report-only Fallow health. The first push's inventory run identified a stale workflow hash; after inventory reconciliation, all six required workflows passed on exact SHA f9d66e6f45e09fe108347db543a7d325b70d48c2. The two grouped audits passed on Ubuntu, macOS, and Windows. Evidence: evidence/parallel-ci-quality-audits-f9d66e6.json. No local checks were run."
   ],
   "push_status": "pushed",
   "ci_results": [

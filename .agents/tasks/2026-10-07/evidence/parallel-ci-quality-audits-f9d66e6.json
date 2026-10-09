@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "feature_reference": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/",
+  "change_commit": "1eb61fc45a139869edc38fb0389ce07d3605fe19",
+  "validated_sha": "f9d66e6f45e09fe108347db543a7d325b70d48c2",
+  "inventory_reconciliation_commit": "f9d66e6f45e09fe108347db543a7d325b70d48c2",
+  "workflow": ".github/workflows/quality.yml",
+  "parallel_group": [
+    {
+      "name": "Run Knip audit",
+      "command": "bun run knip",
+      "inputs": "Repository source and package metadata."
+    },
+    {
+      "name": "Run Fallow health audit",
+      "command": "bunx fallow health --root . --format compact --report-only",
+      "inputs": "Repository source and package metadata; report-only mode."
+    }
+  ],
+  "barrier": "Both independent source audits run concurrently; the implicit wait completes before the following pull-request-only Fallow audit.",
+  "first_attempt": {
+    "sha": "1eb61fc45a139869edc38fb0389ce07d3605fe19",
+    "inventory_run_id": 37886751332,
+    "inventory_conclusion": "failure",
+    "finding": "The quality workflow's recorded inventory hash was stale after the workflow change. The workflow hash and reconciliation reason were updated in inventory.json before final validation."
+  },
+  "validation": {
+    "conclusion": "All six required workflows passed on the exact validated SHA.",
+    "workflows": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 37886863462,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37886863462",
+        "jobs": [
+          {"name": "inventory", "job_id": 113678702107, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 37886863529,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37886863529",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 113678700677, "conclusion": "success"},
+          {"name": "rust (macos-latest)", "job_id": 113678702062, "conclusion": "success"},
+          {"name": "rust (windows-latest)", "job_id": 113678702094, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 37886863499,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37886863499",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113678721440, "conclusion": "success", "parallel_audits": "Knip and Fallow health passed"},
+          {"name": "windows-latest", "job_id": 113678723166, "conclusion": "success", "parallel_audits": "Knip and Fallow health passed"},
+          {"name": "macos-latest", "job_id": 113678727716, "conclusion": "success", "parallel_audits": "Knip and Fallow health passed"}
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 37886863503,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37886863503",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 113678700538, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113678700662, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 113678702458, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 37886863512,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37886863512",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 113678700564, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113678700774, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 113678706197, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 37886863494,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37886863494",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 113678705149, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 113678705285, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 113678705305, "conclusion": "success"}
+        ]
+      }
+    ]
+  },
+  "local_validation": "None. Workflow and executable validation ran through GitHub Actions only.",
+  "limitations": [
+    "The CI result establishes that GitHub accepted and executed the native parallel step group and that both audits passed on each platform.",
+    "No runtime-duration benchmark or elapsed-time improvement claim was measured."
+  ]
+}
