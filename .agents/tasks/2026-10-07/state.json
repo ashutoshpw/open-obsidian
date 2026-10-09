@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T18:14:52Z",
+  "updated_at": "2026-10-09T18:26:13Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "39bba59d67e4ba3f72104636951d587e295b48a5",
+  "last_reconciled_head": "5670d5ae84a449a17359c975b676247d38564ad0",
   "current_milestone": "R2.6.73",
-  "next_action": "Commit and push C01.2-24 external note rename refresh coverage, then inspect exact-SHA GitHub Actions results.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8844,7 +8844,8 @@
         {"name": "macos-latest", "job_id": 113900699511, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282558/job/113900699511"},
         {"name": "ubuntu-latest", "job_id": 113900699543, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282558/job/113900699543"}
       ]
-    }
+    },
+    "R2.6.73 C01.2-24 passed on exact source SHA 5670d5ae84a449a17359c975b676247d38564ad0: external rename refresh cleared stale preview/link/embed state, selected README.md, kept the renamed note previewable with exact BOM/CRLF bytes, and preserved vault/app-data snapshots through teardown; the focused test and all seven required GitHub Actions workflows passed across Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.73-attempt-2-5670d5a.json."
   ],
   "milestones": {
     "R0.1": {
@@ -13530,11 +13531,16 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow; keep broader parent acceptance pending."
     },
     "R2.6.73": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "39bba59d67e4ba3f72104636951d587e295b48a5",
-      "implementation_sha": null,
+      "implementation_sha": "5670d5ae84a449a17359c975b676247d38564ad0",
+      "implementation_commits": [
+        "3b361e255179d79980c25e09aca62b938e61e1ca",
+        "5670d5ae84a449a17359c975b676247d38564ad0"
+      ],
       "scope": "Exercise an external rename of the selected, previewed Markdown note followed by vault refresh; verify stale state clears, the renamed note remains available, and OpenObsidian performs no writes beyond the external rename.",
-      "planned_slice": ["C01.2-24"],
+      "accepted_slice": ["C01.2-24"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
       "acceptance": [
         "On Ubuntu, macOS, and Windows, refresh recognizes an externally renamed note and removes its previous path from the Markdown listing.",
         "The stale source preview, link results, and embed report clear; the selection falls back deterministically to README.md.",
@@ -13546,7 +13552,7 @@
         {
           "source_sha": "3b361e255179d79980c25e09aca62b938e61e1ca",
           "attempt": 1,
-          "conclusion": "The focused workspace test failed on Ubuntu, macOS, and Windows because the scanner's deterministic ordering selected Notes/Welcome-renamed.md rather than README.md. Ubuntu also reported rustfmt differences. Inventory, quality, desktop build, loaded-plugin workflows, and plugin renderer passed. The Obsidian round-trip passed Linux and macOS; Windows was still running when the correction was prepared.",
+          "conclusion": "The focused workspace test failed on Ubuntu, macOS, and Windows because the scanner's deterministic ordering selected Notes/Welcome-renamed.md rather than README.md. Ubuntu also reported rustfmt differences. Inventory, quality, desktop build, loaded-plugin workflows, and plugin renderer passed. The Obsidian round-trip was still running on Windows when the correction was prepared, then passed on all three operating systems.",
           "workflows": {
             "rust_ci": 37972083301,
             "obsidian_vault_roundtrip": 37972081722,
@@ -13565,9 +13571,46 @@
             "roundtrip_windows": 113960968776
           },
           "correction": "Apply the exact rustfmt layout from the Ubuntu CI diff and rename the note to a root-level Zzz-Welcome-renamed.md path so the defined README.md fallback follows the vault scanner's path ordering."
+        },
+        {
+          "source_sha": "5670d5ae84a449a17359c975b676247d38564ad0",
+          "attempt": 2,
+          "conclusion": "C01.2-24 passed. The focused workspace test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on this exact source SHA.",
+          "workflows": {
+            "rust_ci": 37972566928,
+            "obsidian_vault_roundtrip": 37972566943,
+            "inventory": 37972567036,
+            "loaded_plugin_workflows": 37972566912,
+            "desktop_build": 37972567058,
+            "quality": 37972566921,
+            "plugin_renderer": 37972567030
+          },
+          "jobs": {
+            "rust_ubuntu": 113962642530,
+            "rust_macos": 113962642633,
+            "rust_windows": 113962642858,
+            "roundtrip_ubuntu": 113962669298,
+            "roundtrip_macos": 113962668895,
+            "roundtrip_windows": 113962669375,
+            "inventory": 113962643365,
+            "loaded_plugin_macos": 113962642896,
+            "loaded_plugin_ubuntu": 113962643118,
+            "loaded_plugin_windows": 113962643208,
+            "desktop_ubuntu": 113962643762,
+            "desktop_macos": 113962643942,
+            "desktop_windows": 113962643987,
+            "quality_windows": 113962642893,
+            "quality_ubuntu": 113962643163,
+            "quality_macos": 113962643230,
+            "plugin_renderer_windows": 113962644198,
+            "plugin_renderer_macos": 113962644571,
+            "plugin_renderer_ubuntu": 113962644680
+          },
+          "evidence": "evidence/r2.6.73-attempt-2-5670d5a.json"
         }
       ],
-      "next_action": "Commit and push the CI-driven formatting and ordering correction, then inspect fresh exact-SHA results while retaining the first attempt's pending Windows round-trip status."
+      "evidence": "evidence/r2.6.73-attempt-2-5670d5a.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {

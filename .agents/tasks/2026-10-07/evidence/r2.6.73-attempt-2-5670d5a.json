@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.73",
+  "attempt": 2,
+  "source_sha": "5670d5ae84a449a17359c975b676247d38564ad0",
+  "source_commit": "[rust R2.6.73] Match rename fallback ordering",
+  "recorded_at": "2026-10-09T18:26:13Z",
+  "change": "Add cross-platform egui coverage for externally renaming the selected and previewed Markdown note, refreshing the vault listing, clearing stale state, using the deterministic README fallback, and previewing the renamed note without additional writes.",
+  "conclusion": "C01.2-24 passed on exact source SHA 5670d5ae84a449a17359c975b676247d38564ad0. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows.",
+  "accepted_slice": "C01.2-24",
+  "environment": {
+    "roundtrip_reference_app": "Obsidian Desktop 1.14.4",
+    "runner_matrix": ["ubuntu-latest", "macos-latest", "windows-latest"],
+    "rust_toolchain": "stable; rustc 1.99.0 (b940084d7 2026-09-28)",
+    "cargo_lock_sha256": "1615ec5db0006b5ef1eecf30c21aac05850b0fc96f26341e34d917c8048257c5"
+  },
+  "external_note_rename_refresh": {
+    "test": "egui_refresh_after_external_note_rename_clears_stale_state_without_writing",
+    "workspace_test_results": {
+      "ubuntu-latest": "passed",
+      "macos-latest": "passed",
+      "windows-latest": "passed"
+    },
+    "observed": [
+      "The fixture note with a resolvable self-link was previewed before an external rename from Notes/Welcome.md to Zzz-Welcome-renamed.md.",
+      "Refresh removed the old path, listed the renamed note, cleared the stale source preview, link resolutions, and embed report, and selected README.md as the first sorted entry.",
+      "The renamed note remained selectable and its preview matched the original UTF-8 BOM and CRLF source bytes.",
+      "Full vault and separate app-data snapshots remained byte-identical to the post-rename baseline through refresh, fallback preview, renamed-note preview, close, and teardown."
+    ]
+  },
+  "first_attempt": {
+    "source_sha": "3b361e255179d79980c25e09aca62b938e61e1ca",
+    "rust_ci_run_id": 37972083301,
+    "rust_ci_conclusion": "The focused test failed on all three operating systems because Notes/Welcome-renamed.md sorted before README.md; Ubuntu also reported rustfmt layout differences. The exact fallback expectation was corrected by moving the external rename destination to Zzz-Welcome-renamed.md, and the formatter layout was applied from the CI diff.",
+    "roundtrip_run_id": 37972081722,
+    "roundtrip_conclusion": "Passed on Ubuntu, macOS, and Windows.",
+    "companion_workflows": {
+      "inventory": {"run_id": 37972081606, "conclusion": "success"},
+      "loaded_plugin_workflows": {"run_id": 37972081475, "conclusion": "success"},
+      "desktop_build": {"run_id": 37972081451, "conclusion": "success"},
+      "quality": {"run_id": 37972081615, "conclusion": "success"},
+      "plugin_renderer": {"run_id": 37972081592, "conclusion": "success"}
+    }
+  },
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37972566928,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972566928",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 113962642530, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 113962642633, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 113962642858, "name": "rust (windows-latest)", "conclusion": "success"}
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37972566943,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972566943",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 113962668895, "name": "macos-latest", "conclusion": "success"},
+        {"id": 113962669298, "name": "ubuntu-24.04", "conclusion": "success"},
+        {"id": 113962669375, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37972567036,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972567036",
+      "conclusion": "success",
+      "jobs": [{"id": 113962643365, "name": "inventory", "conclusion": "success"}]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37972566912,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972566912",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 113962642896, "name": "macos-latest", "conclusion": "success"},
+        {"id": 113962643118, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 113962643208, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37972567058,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972567058",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 113962643762, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 113962643942, "name": "macos-latest", "conclusion": "success"},
+        {"id": 113962643987, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37972566921,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972566921",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 113962642893, "name": "windows-latest", "conclusion": "success"},
+        {"id": 113962643163, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 113962643230, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37972567030,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37972567030",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 113962644198, "name": "windows-latest", "conclusion": "success"},
+        {"id": 113962644571, "name": "macos-latest", "conclusion": "success"},
+        {"id": 113962644680, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    }
+  ],
+  "artifacts": [
+    {"id": 11638240973, "name": "rust-plugin-runtime-Linux-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 2695, "digest": "sha256:7dfcbe768f61069d8909f3e06e629a107c61b679a8fad19dbe09f90f8874fdae"},
+    {"id": 11638146016, "name": "rust-plugin-runtime-macOS-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 2698, "digest": "sha256:bf6ddf2d871f495ff5712ae5dc638ebb25b38b9634019ccc3d05d478cf4e7785"},
+    {"id": 11637801461, "name": "rust-plugin-runtime-Windows-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 2715, "digest": "sha256:8eb6577b3e5070538be4d4a0a6f43f8e07f248bb1bcde10517e2f6f4a2d58e65"},
+    {"id": 11637406246, "name": "openobsidian-rust-preview-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 9649883, "digest": "sha256:f301cfa2cdea29262ecb2ed659b2f3ae7fa41a10515c879de706df5479b0aaf4"},
+    {"id": 11637616488, "name": "obsidian-vault-roundtrip-macOS-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 3516693, "digest": "sha256:7713c6c496803df364060d6e564a235304517a4d4b97fc553fd62ff95be2020c"},
+    {"id": 11637431398, "name": "obsidian-vault-roundtrip-Windows-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 3575636, "digest": "sha256:12d0cbfe8b9667703b8be3b22c12bd036b32df1bed8b8ad8f08491ec6be180f2"},
+    {"id": 11637431215, "name": "obsidian-vault-roundtrip-Linux-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 2701519, "digest": "sha256:8c4f87a36447a9a6ea5836879aadde093cc429c37d32678320147a57dff07aa3"},
+    {"id": 11638205713, "name": "openobsidian-macOS-preview-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 397395487, "digest": "sha256:89cb5f1459b6a3e8b8dedfcff446ced4dbeb2729f7450181ffacfc880cd3731b"},
+    {"id": 11637755866, "name": "openobsidian-Windows-preview-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 163005824, "digest": "sha256:6d707555a23ccd25c2360b190f02a144dc43a055702cbe789de71093b074601a"},
+    {"id": 11637325927, "name": "openobsidian-Linux-preview-5670d5ae84a449a17359c975b676247d38564ad0", "size_in_bytes": 125946548, "digest": "sha256:3f647153e18777ed9028fd611dd7fd7f8fd4dce007afb04b7e45d59198831514"}
+  ],
+  "limitations": [
+    "This is synthetic egui coverage and does not establish identical Obsidian external-rename behavior.",
+    "Broader C01/C01.2 acceptance remains pending; edit/save remains deferred to C02/C14.",
+    "No local tests, builds, formatters, linters, or application launches were run."
+  ],
+  "parallel_step_groups": "GitHub Actions parallel groups and their barriers completed successfully in Rust CI, quality, desktop build, and the Obsidian round-trip workflow."
+}
