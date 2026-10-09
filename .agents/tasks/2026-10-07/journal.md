@@ -1371,3 +1371,32 @@ the native picker’s Cancel and Open/Select/Choose controls. A CI-only
 whether Open vault is enabled. The next exact-SHA Actions validation is pending
 on `origin/main`. No local tests, builds, formatters, linters, or application
 launches were run.
+
+### R2.6.65 attempt 5 result and X11/accessibility correction — SHA `11ae4c5`
+
+The fifth exact-SHA round-trip run
+[37915827809](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827809)
+passed the cancellation and full vault/app-data snapshot checks on Windows.
+Job 113771634842 opened the picker, sent Escape, restored the original vault
+and two-note count, and reopened the unchanged vault in Obsidian. Ubuntu job
+113771634822 timed out on the active screen even though the UI-state log showed
+`session=true`, all busy receivers clear, and `open_vault_enabled=true`. macOS
+job 113771634392 opened the native panel, visible in the artifact screenshot,
+but OCR failed to recognize its controls before Escape. Artifact IDs and digests
+are recorded in `state.json`.
+
+Rust CI [37915827731](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827731),
+quality [37915827713](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827713),
+desktop build [37915827688](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827688),
+plugin renderer [37915827589](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827589),
+loaded-plugin workflows [37915827698](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827698),
+and inventory [37915827756](https://github.com/ashutoshpw/open-obsidian/actions/runs/37915827756)
+passed on this SHA; the Rust matrix passed on all three operating systems.
+
+Correction implementation SHA `56442b0eda2719c8a565d40dc38e9799cab2e18a`
+raises the X11 window before the Linux click and saves its click result to the
+failure report. The macOS gate now reads System Events window and sheet names
+to verify that the native Open panel is present and closed around Escape, with
+screenshot OCR retained as fallback. Exact-SHA CI validation is pending on
+`origin/main`. No local tests, builds, formatters, linters, or application
+launches were run.
