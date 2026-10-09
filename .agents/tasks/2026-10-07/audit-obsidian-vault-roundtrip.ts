@@ -1012,8 +1012,8 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
   let openButtonInteraction: string;
   if (process.platform === "linux") {
     xdotool("key", "--clearmodifiers", "Tab");
-    xdotool("key", "--clearmodifiers", "Return");
-    openButtonInteraction = "Focused the first accessible Open vault button with Tab and activated it with Return.";
+    xdotool("key", "--clearmodifiers", "space");
+    openButtonInteraction = "Focused the first accessible Open vault button with Tab and activated it with Space.";
   } else if (process.platform === "darwin") {
     const script = `on run argv
       tell application "System Events"
@@ -1210,6 +1210,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     appDataRoot = join(userConfigRoot, "OpenObsidian");
   }
   await mkdir(homeRoot, {recursive: true});
+  await mkdir(join(homeRoot, "Desktop"), {recursive: true});
   const child = launchLogged(openObsidianBinary, [], join(reportDirectory, "openobsidian.log"), appEnv);
   (report.openobsidian_open as Record<string, unknown>).pid = child.pid ?? null;
   try {
