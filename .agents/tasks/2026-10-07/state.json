@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T09:14:18Z",
+  "updated_at": "2026-10-09T09:24:04Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "4f61672bd1eb09fc8ea912c4a9f07af2f1fa740a",
-  "current_milestone": "R2.6.64",
-  "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until broader cross-platform coverage passes. Edit/save remains deferred to C02/C14.",
+  "last_reconciled_head": "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
+  "current_milestone": "R2.6.65",
+  "next_action": "Push R2.6.65 to origin/main, inspect exact-SHA GitHub Actions results for the native folder-picker cancellation round trip and companion workflows, then record the evidence.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -207,7 +207,8 @@
     "R2.6.61 duplicate-basename note selection passed its focused test on Ubuntu, macOS and Windows and all seven workflows on exact source SHA 646c3298e0f3146bc568f66997eed375fa2017d7. Evidence: evidence/r2.6.61-duplicate-note-basename-646c329.json. C01/C01.2 remain pending; C01.1 remains passing.",
     "R2.6.62 Unicode and space-containing note selection passed its focused test on Ubuntu, macOS and Windows and all seven workflows on exact source SHA d77e8cb5720eaac92c835a25a962f986d965962b. Evidence: evidence/r2.6.62-unicode-spaced-note-path-d77e8cb.json. C01/C01.2 remain pending; C01.1 remains passing.",
     "R2.6.63 native folder-picker selection and Obsidian 1.14.4 reopen passed on Linux, macOS and Windows on exact source SHA f1f49c4289984ef6d26437894fcca0cc53627576; all seven workflows passed, with quality passing on same-SHA attempt 2. Evidence: evidence/r2.6.63-native-folder-picker-f1f49c4.json.",
-    "R2.6.64 invalid-UTF-8 note preview fails closed without writes; focused UI test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on exact SHA 4f61672bd1eb09fc8ea912c4a9f07af2f1fa740a. Evidence: evidence/r2.6.64-invalid-utf8-preview-4f61672.json. Formatting and a Windows parallel setup collision were corrected from GitHub Actions output before acceptance; no local executable validation was used."
+    "R2.6.64 invalid-UTF-8 note preview fails closed without writes; focused UI test passed on Ubuntu, macOS, and Windows, and all seven required workflows passed on exact SHA 4f61672bd1eb09fc8ea912c4a9f07af2f1fa740a. Evidence: evidence/r2.6.64-invalid-utf8-preview-4f61672.json. Formatting and a Windows parallel setup collision were corrected from GitHub Actions output before acceptance; no local executable validation was used.",
+    "R2.6.65 extends the three-OS native folder-picker round trip with cancellation while a vault is active; the exact-SHA round-trip and companion workflows are pending GitHub Actions."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -10337,6 +10338,22 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until broader cross-platform coverage passes. Edit/save remains deferred to C02/C14."
+    },
+    "R2.6.65": {
+      "status": "in_progress",
+      "implementation_sha": "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
+      "implementation_commits": [
+        "d88e694f410545af6d8bd96a2bea4910a7b84c5c"
+      ],
+      "push_status": "Pending exact-SHA CI validation after push to origin/main.",
+      "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
+      "ci_attempts": [],
+      "accepted_slice": [],
+      "remaining": [
+        "Exact-SHA GitHub Actions round-trip validation is pending on Ubuntu, macOS, and Windows.",
+        "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
+      ],
+      "next_action": "Push the implementation and progress record to origin/main, inspect the exact-SHA native folder-picker cancellation round trip and companion workflows, then record the evidence."
     }
   },
   "ci_preparation": {
