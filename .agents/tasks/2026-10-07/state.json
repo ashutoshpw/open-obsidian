@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T00:02:16Z",
+  "updated_at": "2026-10-09T00:09:20Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "543aa85e8cd81d801127faace10518e62a220c87",
+  "last_reconciled_head": "da0ab78b12c26c83f6205909811ccb34ac2a91b5",
   "current_milestone": "R2.6.48",
-  "next_action": "Push the visible New note button interaction and clearer editor-state evidence; inspect the next exact-SHA round-trip artifact and all six required project workflow results. Keep C01 and C01.2 open.",
+  "next_action": "Commit and push the corrected editor wait helper; inspect the new exact-SHA round-trip artifact and all six required project workflow results. Keep C01 and C01.2 open.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -184,7 +184,8 @@
     "R2.6.48 runner correction on 0a0440a0d7bfecf1385db43a7807cba4cc7bc6bf passed all six required project workflows, but the Obsidian round-trip workflow failed because the native folder picker remained open after the path-entry and Return keystrokes. The report confirms no fixture authoring, OpenObsidian launch, or reopen acceptance occurred. Evidence and exact run/job IDs: evidence/r2.6.48-roundtrip-ci-0a0440a.json. Added X11 screenshots around picker input and a GTK Open mnemonic attempt for the next CI run; no local executable validation was run.",
     "R2.6.48 runner correction on c027e0ed1b4a2fac179be30c30e84385052f9cbe passed all six required project workflows after rerunning the failed macOS quality job on the same SHA. The Obsidian round-trip job still failed at the native picker; screenshots show the full vault path in the location entry and the visible bottom-right Open button, while Return and GTK Alt+O left the picker active. No fixture authoring, OpenObsidian launch, or reopen acceptance occurred. Evidence: evidence/r2.6.48-roundtrip-ci-c027e0e.json. The next correction clicks Open at a location derived from the picker's measured window geometry; no local executable validation was run.",
     "R2.6.48 runner correction on c7267cc2c996e9264c92be6a1564840c92526fd6 passed all six required project workflows. The geometry-based click selected the fixture vault and Obsidian displayed its workspace plus the first-open trust prompt, but the runner incorrectly waited for focus to return to the original window ID instead of detecting that the picker window ID had closed. It therefore did not author a note or launch OpenObsidian. Evidence: evidence/r2.6.48-roundtrip-ci-c7267cc.json. The next correction waits for focus to leave the picker, attaches DevTools to the vault renderer, and selects Browse vault in Restricted Mode; no local executable validation was run.",
-    "R2.6.48 runner correction on 543aa85e8cd81d801127faace10518e62a220c87 passed all six required project workflows. The runner detected folder closure, attached to the new vault renderer, and selected Restricted Mode; it then failed before reporting an active editor or authored note. The CI error came from the wait timeout's `JSON.stringify(last).slice` when the last value was undefined, so the editor state was not diagnosed. Evidence: evidence/r2.6.48-roundtrip-ci-543aa85.json. The next slice clicks Obsidian's visible New note action through the renderer and captures editor-state screenshots; no local executable validation was run."
+    "R2.6.48 runner correction on 543aa85e8cd81d801127faace10518e62a220c87 passed all six required project workflows. The runner detected folder closure, attached to the new vault renderer, and selected Restricted Mode; it then failed before reporting an active editor or authored note. The CI error came from the wait timeout's `JSON.stringify(last).slice` when the last value was undefined, so the editor state was not diagnosed. Evidence: evidence/r2.6.48-roundtrip-ci-543aa85.json. The next slice clicks Obsidian's visible New note action through the renderer and captures editor-state screenshots; no local executable validation was run.",
+    "R2.6.48 runner correction on da0ab78b12c26c83f6205909811ccb34ac2a91b5 passed all six required project workflows. Obsidian opened the fixture in Restricted Mode and the visible New note action created an Untitled note, confirmed by its screenshot. The runner then failed before editor-state polling because its waitFor call passed the DevTools connection as the label argument. Evidence: evidence/r2.6.48-roundtrip-ci-da0ab78.json. The next slice corrects that argument order; no local executable validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -8889,7 +8890,8 @@
       "status": "in_progress",
       "implementation_sha": null,
       "implementation_commits": [
-        "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93"
+        "e5b6d21fa4fc0c73b3d4ae70513cd364baea6e93",
+        "da0ab78b12c26c83f6205909811ccb34ac2a91b5"
       ],
       "scope": "Add a Linux-only GitHub Actions workflow that creates a synthetic vault, has pinned Obsidian author a note, launches the native app with --open-vault, compares full vault and app-data snapshots, and reopens the exact vault in Obsidian.",
       "ci_attempts": [
@@ -8908,14 +8910,30 @@
           "finding": "The native release build and pinned AppImage checksum passed. Clicking Open opened a blocking native folder picker; the script awaited DevTools Runtime.evaluate before interacting with the picker and timed out.",
           "correction": "Dispatch the renderer click without awaiting its result and use X11 focus/window identity to wait for the picker to close before resuming DevTools calls.",
           "evidence": "evidence/r2.6.48-roundtrip-ci-e5b6d21.json"
+        },
+        {
+          "source_sha": "da0ab78b12c26c83f6205909811ccb34ac2a91b5",
+          "conclusion": "round-trip workflow failed; all six required project workflows passed",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37862739946,
+            "rust_ci": 37862740021,
+            "inventory": 37862739950,
+            "quality": 37862740051,
+            "desktop_build": 37862739981,
+            "plugin_renderer": 37862739879,
+            "loaded_plugin_workflows": 37862739906
+          },
+          "finding": "Pinned Obsidian opened the synthetic fixture in Restricted Mode and the New note click created an Untitled note. A misordered waitFor argument prevented editor-state polling before note authoring.",
+          "correction": "Pass the wait label before the editor-state read callback, then inspect the next exact-SHA report and screenshots.",
+          "evidence": "evidence/r2.6.48-roundtrip-ci-da0ab78.json"
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "A fresh exact-SHA run must pass the reference-app round-trip workflow; the first attempt failed before any vault round-trip actions.",
+        "A fresh exact-SHA run must pass the reference-app round-trip workflow; attempts through da0ab78 failed before note authorship or the OpenObsidian vault round-trip.",
         "C01.2 acceptance on macOS and Windows, broader C01 product flows, and edit/save acceptance remain pending."
       ],
-      "next_action": "Push the native file-picker automation correction, inspect the new workflow and all six required project workflows on the exact SHA, then correct any remaining UI or vault-snapshot findings before recording acceptance."
+      "next_action": "Push the corrected editor wait helper, inspect the new workflow and all six required project workflows on the exact SHA, then correct any remaining UI or vault-snapshot findings before recording acceptance."
     }
   },
   "ci_preparation": {

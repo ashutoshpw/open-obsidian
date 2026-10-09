@@ -604,7 +604,7 @@ async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{conne
   await delay(750);
   await captureObsidianScreenshot(connection, "obsidian-new-note-action.png");
 
-  const editor = await waitFor(connection, "Obsidian editor to become active", async () => await connection.evaluateJson<{count: number; active: boolean}>(`(() => {
+  const editor = await waitFor("Obsidian editor to become active", async () => await connection.evaluateJson<{count: number; active: boolean}>(`(() => {
     const editors = [...document.querySelectorAll('[contenteditable="true"]')];
     return {count: editors.length, active: editors.some((element) => element === document.activeElement || element.contains(document.activeElement))};
   })()`), (value) => {
