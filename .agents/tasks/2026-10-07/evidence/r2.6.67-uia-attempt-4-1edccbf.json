@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.67",
+  "attempt": 4,
+  "source_sha": "1edccbf3978406f28e0569f3784d3be1e9fbe479",
+  "change": "Keep the menu-button Click action and clear expanded state while closed; set expanded=true only while the popup is open.",
+  "conclusion": "C01.2-18 passed on the Windows GitHub runner. All seven required workflows passed on this exact SHA after the initial macOS round-trip failure passed on same-SHA rerun.",
+  "windows_uia": {
+    "run_id": 37950261158,
+    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37950261158",
+    "initial_job_id": 113886913851,
+    "final_job_id": 113889366200,
+    "job_conclusion": "success",
+    "artifact": {
+      "id": 11625946596,
+      "name": "obsidian-vault-roundtrip-Windows-1edccbf3978406f28e0569f3784d3be1e9fbe479",
+      "digest": "sha256:b2587a3e1ecf68dbdbc966f335e007595563c95d48f26af10e272c5b1604ad56",
+      "report": "windows-note-selector-accessibility.json",
+      "report_sha256": "327ac0e5299862c7b3eecbebe5c1285a6f31def493862cb658dea3c7e769a195"
+    },
+    "observed": {
+      "selector_button": {
+        "name": "Note to inspect",
+        "control_type": "ControlType.Button",
+        "enabled": true,
+        "offscreen": false,
+        "supports_invoke": true,
+        "supports_value": true,
+        "value": "README.md"
+      },
+      "popup_open_method": "InvokePattern.Invoke",
+      "options": [
+        {
+          "name": "README.md",
+          "control_type": "ControlType.RadioButton",
+          "selected": true,
+          "supports_selection_item": true
+        },
+        {
+          "name": "Zed\\Welcome.md",
+          "control_type": "ControlType.RadioButton",
+          "selected": false,
+          "supports_selection_item": true
+        }
+      ],
+      "selection_method": "SelectionItemPattern.Select",
+      "selected_option": "Zed\\Welcome.md",
+      "selected_value": "Zed\\Welcome.md"
+    },
+    "checks": {
+      "vault_and_app_data_unchanged_during_accessibility_actions": true,
+      "note_inspector_menu_button_exposed": true,
+      "popup_lists_both_notes_as_radio_options": true,
+      "ui_automation_selected_nested_note": true,
+      "selected_value_reflects_nested_note": true
+    },
+    "snapshots": {
+      "vault_sha256": "e715a2a5873a43d5e68b09e12eb11c4e712905e539e9a780a4c52fe92846ede6",
+      "roaming_app_data_sha256": "ed1f47195fdee7b985c709f3b82ddc3311e16f4106ad49d674e361db8f62c00c",
+      "local_app_data_sha256": "fd9aca9864326f4be122d6fc202501db67bd2490f1c3d5b37f658c3406be9d48",
+      "all_unchanged_during_actions_and_after_teardown": true
+    }
+  },
+  "workflows": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37950261226,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113886912762, "name": "rust (macos-latest)", "conclusion": "success" },
+        { "id": 113886912793, "name": "rust (windows-latest)", "conclusion": "success" },
+        { "id": 113886913040, "name": "rust (ubuntu-latest)", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "Obsidian vault round-trip acceptance",
+      "run_id": 37950261158,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113889364266, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+        { "id": 113889362802, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success", "rerun": 2 },
+        { "id": 113889366200, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+      ],
+      "macos_initial_failure": {
+        "job_id": 113886913675,
+        "error": "Timed out waiting for eframe app.ron state to persist after native picker open and before cancellation",
+        "artifact": {
+          "id": 11625063438,
+          "digest": "sha256:f798d4486fc9a283f2fc276607bf508d96ef58d6d448a3b46a2079b586f643da",
+          "report_sha256": "21aaccf3f87f99e674f785d1184511f32501346b2ff1b734bd9631de064ba4d1"
+        }
+      },
+      "macos_rerun_artifact": {
+        "id": 11625114123,
+        "digest": "sha256:7a9300fa3f7a881015c2c9043c191465b698882e5b4b87c272af2ee3caa5bd0a"
+      }
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37950261193,
+      "conclusion": "success",
+      "jobs": [{ "id": 113886912052, "name": "inventory", "conclusion": "success" }]
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37950261198,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113886913361, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113886913532, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113886913575, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37950261239,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113886913296, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113886913567, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113886913627, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37950261324,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113886914190, "name": "windows-latest", "conclusion": "success" },
+        { "id": 113886914559, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113886914748, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37950261146,
+      "conclusion": "success",
+      "jobs": [
+        { "id": 113886912782, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 113886912824, "name": "macos-latest", "conclusion": "success" },
+        { "id": 113886913045, "name": "windows-latest", "conclusion": "success" }
+      ]
+    }
+  ],
+  "accepted_slice": "C01.2-18 on the Windows GitHub runner. This does not certify macOS VoiceOver or Linux AT-SPI behavior.",
+  "local_validation": "none; GitHub Actions was the only test venue."
+}

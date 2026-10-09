@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T15:13:40Z",
+  "updated_at": "2026-10-09T15:26:37Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d54fb8cd7eab8b043e37ea6146b68681a01fe0a4",
+  "last_reconciled_head": "1edccbf3978406f28e0569f3784d3be1e9fbe479",
   "current_milestone": "R2.6.67",
-  "next_action": "Commit and push the correction that clears expanded state while the selector menu is closed; inspect exact-SHA Windows UIA evidence and companion GitHub Actions results.",
+  "next_action": "R2.6.67 is accepted for C01.2-18 on Windows. Select the next uncovered read-only C01/C01.2 flow; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13061,9 +13061,9 @@
       "next_action": "R2.6.66 is accepted for C01.2-17. Continue with the native Windows accessibility gap in C01.2-02; keep broader acceptance pending."
     },
     "R2.6.67": {
-     "status": "in_progress",
-      "implementation_sha": "d54fb8cd7eab8b043e37ea6146b68681a01fe0a4",
-      "implementation_commits": ["2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53", "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11", "d54fb8cd7eab8b043e37ea6146b68681a01fe0a4"],
+      "status": "complete",
+      "implementation_sha": "1edccbf3978406f28e0569f3784d3be1e9fbe479",
+      "implementation_commits": ["2f8d950cd2a4fc9bb16c886fb0f8a3288bfdec53", "c5c8ef991df02fd5ac2c3b8f1d77364a88575d11", "d54fb8cd7eab8b043e37ea6146b68681a01fe0a4", "1edccbf3978406f28e0569f3784d3be1e9fbe479"],
       "scope": "Verify native Windows accessibility of the Note to inspect menu button and radio options through Windows UI Automation.",
       "acceptance": [
         "On the Windows GitHub runner, the real OpenObsidian window exposes Note to inspect as an enabled, named Button with InvokePattern and ValuePattern showing README.md.",
@@ -13071,12 +13071,8 @@
         "Full vault and isolated APPDATA/LOCALAPPDATA snapshots remain unchanged through popup opening, selection, and application teardown.",
         "The exact-SHA Windows UI Automation report and required companion GitHub Actions results are retained; this Windows slice does not certify macOS VoiceOver or Linux AT-SPI behavior."
       ],
-      "accepted_slice": [],
+      "accepted_slice": ["C01.2-18"],
       "remaining": [
-        "Attempt 1 on 2f8d950 exposed a named ComboBox but the pinned provider did not expose the required ExpandCollapsePattern.",
-       "Attempt 2 on c5c8ef9 exposed a named Button and ValuePattern but no InvokePattern; the audit did not reach popup selection or application-data baselines.",
-        "Attempt 3 on d54fb8c still lacked InvokePattern after adding Click because the closed selector exposed expanded=false.",
-        "The conditional expanded-state correction requires exact-SHA Windows UIA evidence.",
         "Broader C01/C01.2 acceptance remains pending."
       ],
       "ci_attempts": [
@@ -13108,10 +13104,21 @@
           "jobs": {"rust_macos": 113882568416, "rust_windows": 113882568771, "rust_ubuntu": 113882568834, "roundtrip_windows": 113882568596, "roundtrip_linux": 113882568933, "roundtrip_macos": 113882568885},
           "artifact": {"id": 11625036245, "digest": "sha256:6779e734bda96f974a7ae6f11850e0a1686b24d6addf398b37c0adcfa673597c", "report_sha256": "9e9fc4e9e0256151b64d8a188279097dc60fdd492a1281c511c7aab26ac12697"},
           "evidence": "evidence/r2.6.67-uia-attempt-3-d54fb8c.json",
-          "correction": "Keep Action::Click and HasPopup::Menu. Clear expanded state while the menu is closed so UIA can expose InvokePattern; set expanded=true only while the popup is open. Verify on exact-SHA GitHub Actions."
+         "correction": "Keep Action::Click and HasPopup::Menu. Clear expanded state while the menu is closed so UIA can expose InvokePattern; set expanded=true only while the popup is open. Verify on exact-SHA GitHub Actions."
+        },
+        {
+          "source_sha": "1edccbf3978406f28e0569f3784d3be1e9fbe479",
+          "attempt": 4,
+          "conclusion": "C01.2-18 passed on Windows UIA. All seven required workflows passed on this SHA after the initial macOS round-trip app.ron persistence timeout passed on same-SHA rerun.",
+          "workflows": {"rust_ci": 37950261226, "obsidian_vault_roundtrip": 37950261158, "inventory": 37950261193, "loaded_plugin_workflows": 37950261146, "desktop_build": 37950261239, "plugin_renderer": 37950261324, "quality": 37950261198},
+          "jobs": {"rust_macos": 113886912762, "rust_windows": 113886912793, "rust_ubuntu": 113886913040, "roundtrip_macos_initial": 113886913675, "roundtrip_macos_rerun": 113889362802, "roundtrip_linux": 113889364266, "roundtrip_windows": 113889366200, "inventory": 113886912052, "quality_ubuntu": 113886913361, "quality_windows": 113886913532, "quality_macos": 113886913575, "desktop_ubuntu": 113886913296, "desktop_windows": 113886913567, "desktop_macos": 113886913627, "plugin_renderer_windows": 113886914190, "plugin_renderer_macos": 113886914559, "plugin_renderer_ubuntu": 113886914748, "loaded_plugins_ubuntu": 113886912782, "loaded_plugins_macos": 113886912824, "loaded_plugins_windows": 113886913045},
+          "artifact": {"id": 11625946596, "digest": "sha256:b2587a3e1ecf68dbdbc966f335e007595563c95d48f26af10e272c5b1604ad56", "report_sha256": "327ac0e5299862c7b3eecbebe5c1285a6f31def493862cb658dea3c7e769a195"},
+          "macos_rerun_artifact": {"id": 11625114123, "digest": "sha256:7a9300fa3f7a881015c2c9043c191465b698882e5b4b87c272af2ee3caa5bd0a"},
+          "evidence": "evidence/r2.6.67-uia-attempt-4-1edccbf.json",
+          "correction": "No code correction remains for C01.2-18. Keep the Windows-only accessibility scope and broader C01/C01.2 pending; select the next uncovered read-only flow."
         }
       ],
-      "next_action": "Commit and push the correction that clears expanded state while the selector menu is closed; inspect exact-SHA Windows UIA evidence and companion GitHub Actions results."
+      "next_action": "R2.6.67 is accepted for C01.2-18 on Windows. Select the next uncovered read-only C01/C01.2 flow; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
