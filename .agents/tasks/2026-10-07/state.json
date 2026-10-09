@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T01:43:03Z",
+  "updated_at": "2026-10-09T01:53:42Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "9de7785555c64fc5e08e15e668ce7dc47755d1ba",
+  "last_reconciled_head": "3635245c4201e8ed613fdd74148da01d1485480e",
   "current_milestone": "R2.6.49",
-  "next_action": "Push the macOS OCR contrast preprocessing and Windows UI Automation folder-selection correction as a focused R2.6.49 commit, then inspect the exact-SHA round-trip matrix and six companion project workflows in GitHub Actions. Keep C01 and C01.2 pending until all required platform and read-only flows pass.",
+  "next_action": "Commit and push the Windows UI Automation diagnostics and focus/Enter fallback as a focused R2.6.49 correction, then inspect exact-SHA GitHub Actions. Keep C01 and C01.2 pending until Windows round-trip and remaining read-only flows pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -192,7 +192,8 @@
     "R2.6.48 runner correction on 0d235e860743905004e549264b24ed3f9873f38e passed all six required project workflows. Obsidian authored Untitled.md with its embedded image, OpenObsidian displayed the selected vault and two-note count, and vault/app-data snapshots stayed unchanged through startup and close. The reopen check reached the authored note, but falsely expected Markdown embed syntax in live-preview innerText; the screenshot shows the image rendered. Evidence: evidence/r2.6.48-roundtrip-ci-0d235e8.json. The next slice checks the persisted Markdown source and expanded file tree; no local executable validation was run.",
     "R2.6.48 is complete on exact source SHA 3b621dfe83ab96313b407651dbe354c29bd06e89. The pinned Obsidian 1.14.4 UI authored the synthetic note and attachment embed; OpenObsidian opened the same vault; reopening in Obsidian restored the note and exact attachment path. All 22 vault entries were byte-identical across snapshots before/after OpenObsidian and after Obsidian reopen; app data remained separate and unchanged, with no workspace changes. The round-trip and all six required project workflows passed. Linux-only C01.2 evidence does not close C01/C01.2; macOS/Windows reference-app execution and remaining product flows are pending. Evidence: evidence/r2.6.48-roundtrip-ci-3b621df.json.",
     "R2.6.49 cross-platform round-trip attempt on 337857560332327cd13b9a797eaab76abf7afcf4: Linux passed the full Obsidian-authored no-op/reopen flow; macOS authored the fixture and rendered the selected vault but whole-desktop OCR missed the visible vault/count; Windows was blocked by a missing Desktop in its isolated Obsidian profile. All six companion workflows passed, including Rust CI on all three OSes. Evidence: evidence/r2.6.49-roundtrip-ci-3378575.json. Mac window capture/OCR and Windows profile Desktop corrections are pending fresh GitHub Actions validation; C01/C01.2 remain pending.",
-    "R2.6.49 retry on 9de7785555c64fc5e08e15e668ce7dc47755d1ba: Linux passed again; macOS window capture succeeded but low-contrast OCR still missed visible vault/count text; Windows navigated to the fixture but SendKeys did not invoke Select Folder. All six companion workflows passed after a same-SHA macOS quality retry. Evidence: evidence/r2.6.49-roundtrip-ci-9de7785.json. macOS contrast preprocessing and Windows UI Automation selection are pending fresh CI; C01/C01.2 remain pending."
+    "R2.6.49 retry on 9de7785555c64fc5e08e15e668ce7dc47755d1ba: Linux passed again; macOS window capture succeeded but low-contrast OCR still missed visible vault/count text; Windows navigated to the fixture but SendKeys did not invoke Select Folder. All six companion workflows passed after a same-SHA macOS quality retry. Evidence: evidence/r2.6.49-roundtrip-ci-9de7785.json. macOS contrast preprocessing and Windows UI Automation selection are pending fresh CI; C01/C01.2 remain pending.",
+    "R2.6.49 exact-SHA run on 3635245c4201e8ed613fdd74148da01d1485480e: Linux and macOS passed the complete Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows failed inside the UI Automation selection command before folder confirmation; stdio suppression hid the command diagnostics, and no fixture authoring began. All six companion project workflows passed. Evidence: evidence/r2.6.49-roundtrip-ci-3635245.json. The next correction captures PowerShell output and adds a focus/Enter fallback; Windows and C01/C01.2 remain pending.",
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -9413,8 +9414,8 @@
     },
     "R2.6.49": {
       "status": "in_progress",
-      "implementation_sha": "9de7785555c64fc5e08e15e668ce7dc47755d1ba",
-      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575", "9de7785"],
+      "implementation_sha": "3635245c4201e8ed613fdd74148da01d1485480e",
+      "implementation_commits": ["3ce6246", "31155da", "7e50d6a", "3378575", "9de7785", "3635245"],
       "scope": "Expand the pinned Obsidian-authored fixture, OpenObsidian no-op open, snapshot preservation and Obsidian reopen acceptance to Linux, macOS and Windows.",
       "ci_attempts": [
         {
@@ -9457,17 +9458,37 @@
           ],
           "correction": "Contrast-stretch and upscale a macOS OCR-only screenshot copy while preserving the raw capture. Use Windows UI Automation to invoke Select Folder after navigating to the fixture and capture before/after screenshots.",
           "evidence": "evidence/r2.6.49-roundtrip-ci-9de7785.json"
+        },
+        {
+          "source_sha": "3635245c4201e8ed613fdd74148da01d1485480e",
+          "conclusion": "Linux and macOS round-trip passed; Windows UI Automation selection failed before folder confirmation; all six required project workflows passed.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37871215767,
+            "rust_ci": 37871215751,
+            "inventory": 37871215781,
+            "quality": 37871215753,
+            "desktop_build": 37871215768,
+            "plugin_renderer": 37871215783,
+            "loaded_plugin_workflows": 37871215752
+          },
+          "findings": [
+            "Linux: Obsidian authored and reopened the fixture; all 22 vault entries and separate app-data snapshots remained unchanged.",
+            "macOS: the full round trip passed after OCR contrast preprocessing; the authored note and exact attachment reopened, all 22 vault entries matched, and app data remained separate and unchanged.",
+            "Windows: the UI Automation command failed before confirming Select Folder. PowerShell stdout/stderr were discarded, so the precise failure was not retained; no vault renderer appeared and fixture authoring did not start."
+          ],
+          "correction": "Capture and retain PowerShell stdout/stderr, report top-level window and accessible button names, invoke the native button and fall back to focusing it and pressing Enter; upload the after-selection screenshot.",
+          "evidence": "evidence/r2.6.49-roundtrip-ci-3635245.json"
         }
       ],
       "accepted_slice": [
-        "The Linux CI round-trip passed on exact source SHAs 337857560332327cd13b9a797eaab76abf7afcf4 and 9de7785555c64fc5e08e15e668ce7dc47755d1ba; macOS/Windows platform acceptance is not established by these attempts."
+        "Linux round-trip passed on exact source SHAs 337857560332327cd13b9a797eaab76abf7afcf4, 9de7785555c64fc5e08e15e668ce7dc47755d1ba and 3635245c4201e8ed613fdd74148da01d1485480e. The full macOS round trip passed on 3635245c4201e8ed613fdd74148da01d1485480e; Windows acceptance remains pending."
       ],
       "remaining": [
-        "Fresh exact-SHA GitHub Actions round-trip acceptance on macOS and Windows after OCR contrast and native folder selection corrections.",
+        "Fresh exact-SHA GitHub Actions round-trip acceptance on Windows after the UI Automation diagnostics and focus/Enter fallback correction.",
         "Remaining C01 read-only product flows; C01 and C01.2 stay pending.",
         "Edit/save acceptance remains deferred to C02/C14."
       ],
-      "next_action": "Commit and push the current focused macOS OCR contrast and Windows UI Automation folder-selection corrections; inspect the round-trip matrix and required workflows on the exact new SHA."
+      "next_action": "Commit and push the Windows UI Automation diagnostics and focus/Enter fallback; inspect exact-SHA round-trip and all six companion workflows in GitHub Actions."
     }
   },
   "ci_preparation": {

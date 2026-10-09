@@ -2318,10 +2318,13 @@
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
         "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
         "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
-        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
+        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json",
+        "evidence/r2.6.49-roundtrip-ci-3378575.json",
+        "evidence/r2.6.49-roundtrip-ci-9de7785.json",
+        "evidence/r2.6.49-roundtrip-ci-3635245.json"
       ],
-      "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
-      "blocker": "The C01.2 matrix records Linux Obsidian-authored round-trip acceptance on 3b621dfe83ab96313b407651dbe354c29bd06e89, 337857560332327cd13b9a797eaab76abf7afcf4 and 9de7785555c64fc5e08e15e668ce7dc47755d1ba. macOS authored the fixture and its app-window screenshot shows the selected vault/count, but low-contrast OCR failed before snapshot/reopen checks. Windows now navigates to the fixture but has not activated Select Folder. Contrast preprocessing and UI Automation selection are pending fresh CI; remaining product-level read-only operations also remain pending. See evidence/r2.6.49-roundtrip-ci-9de7785.json.",
+      "tested_source_tree": "3635245c4201e8ed613fdd74148da01d1485480e",
+      "blocker": "On exact source SHA 3635245c4201e8ed613fdd74148da01d1485480e, Linux and macOS passed the Obsidian-authored no-op round trip, including reopen and unchanged vault/app-data snapshots. Windows failed in the UI Automation folder-selection command before confirming the fixture; the runner discarded PowerShell diagnostics. A focused diagnostics/fallback correction is pending fresh CI. Remaining product-level read-only operations also remain pending. See evidence/r2.6.49-roundtrip-ci-3635245.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2431,10 +2434,13 @@
         "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
         "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json",
         "evidence/r2.6.48-roundtrip-ci-0d235e8.json",
-        "evidence/r2.6.48-roundtrip-ci-3b621df.json"
+        "evidence/r2.6.48-roundtrip-ci-3b621df.json",
+        "evidence/r2.6.49-roundtrip-ci-3378575.json",
+        "evidence/r2.6.49-roundtrip-ci-9de7785.json",
+        "evidence/r2.6.49-roundtrip-ci-3635245.json"
       ],
-      "tested_source_tree": "3b621dfe83ab96313b407651dbe354c29bd06e89",
-      "blocker": "The C01.2 reference-application matrix and attempt evidence are in c01.2-reference-roundtrip-matrix.md, evidence/r2.6.49-roundtrip-ci-3378575.json and evidence/r2.6.49-roundtrip-ci-9de7785.json. Linux passed on three exact SHAs. The macOS screenshot shows the selected vault/count, but OCR failed before snapshot/reopen; Windows navigated to the fixture, but the native Select Folder button was not invoked. macOS/Windows retries and remaining read-only flows are pending; edit/save remains deferred to C02/C14.",
+      "tested_source_tree": "3635245c4201e8ed613fdd74148da01d1485480e",
+      "blocker": "The C01.2 reference-app matrix includes exact source SHA 3635245c4201e8ed613fdd74148da01d1485480e: Linux and macOS completed the full round trip, while Windows failed before folder confirmation because the UI Automation command's diagnostics were suppressed. The Windows retry and remaining read-only flows are pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-3635245.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",

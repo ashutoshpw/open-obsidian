@@ -584,7 +584,11 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
       "Open folder as vault"
     )
     $picker = $root.FindFirst([System.Windows.Automation.TreeScope]::Children, $pickerCondition)
-    if ($null -eq $picker) { throw "Could not find the Obsidian folder picker window" }
+    if ($null -eq $picker) {
+      $topLevel = $root.FindAll([System.Windows.Automation.TreeScope]::Children, [System.Windows.Automation.Condition]::TrueCondition)
+      $names = @($topLevel | ForEach-Object { $_.Current.Name }) -join " | "
+      throw "Could not find the Obsidian folder picker window; top-level windows=$names"
+    }
     $buttonCondition = [System.Windows.Automation.PropertyCondition]::new(
       [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
       [System.Windows.Automation.ControlType]::Button
@@ -598,13 +602,32 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
       $labels = @($buttons | ForEach-Object { $_.Current.Name }) -join " | "
       throw "Could not find Select Folder in the native picker; buttons=$labels"
     }
-    $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    try {
+      $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+      Write-Output "Invoked native button: $($selectFolder.Current.Name)"
+    } catch {
+      $selectFolder.SetFocus()
+      $shell = New-Object -ComObject WScript.Shell
+      $shell.SendKeys("{ENTER}")
+      Write-Output "Focused and pressed Enter on $($selectFolder.Current.Name); InvokePattern failed: $($_.Exception.Message)"
+    }
   `;
-  execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", selectionScript], {stdio: "ignore"});
+  let selectionResult: string;
+  try {
+    selectionResult = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", selectionScript], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+    throw new Error(`Windows native folder selection failed: ${output || failure.message}`);
+  }
   await delay(1_000);
   pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-select.png"));
   return await finishVaultDirectorySelection(connection, port, {
     interaction: "Windows folder picker: navigate to the fixture path and invoke Select Folder through UI Automation",
+    selection_result: selectionResult,
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
   });
 }

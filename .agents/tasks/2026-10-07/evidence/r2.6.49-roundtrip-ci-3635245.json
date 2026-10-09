@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.49-C01.2-01/03-cross-platform-reference-roundtrip",
+  "source_sha": "3635245c4201e8ed613fdd74148da01d1485480e",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 37871215767,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215767",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "job_id": 113629523305,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215767/job/113629523305",
+        "conclusion": "success",
+        "artifact_id": 11590706904,
+        "artifact_name": "obsidian-vault-roundtrip-Linux-3635245c4201e8ed613fdd74148da01d1485480e",
+        "artifact_sha256": "cda73e71ef557b8cec18985ef6991d1660ab77c947ccad7df7a7adcd4805436c",
+        "report_sha256": "148d1db79dce443fe6f5ee0c75f8ee3a70f1816cdad742b4c25aafdcc75c3389",
+        "vault_snapshot_sha256": "233998906a619795078fb43eb3f7191861fadb4fc5286b645fa37b339007b087",
+        "acceptance": "Complete Obsidian-authored no-op round trip passed; the same note and attachment reopened, the 22-entry vault and separate app data remained unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "job_id": 113629523275,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215767/job/113629523275",
+        "conclusion": "success",
+        "artifact_id": 11590113882,
+        "artifact_name": "obsidian-vault-roundtrip-macOS-3635245c4201e8ed613fdd74148da01d1485480e",
+        "artifact_sha256": "108b3b10b84e9120dd57b84185c2a7d60c206f4d6daa52144cd25ed7eacf028d",
+        "report_sha256": "a7daa9bfe599ff7266fa6816b1d79c5d9f5c7a8ba4d2c5445169ad19c1662c67",
+        "vault_snapshot_sha256": "c34cbb69543e84ee1978080def7b9f507b3060ee5650dd9c625e5ab5363998de",
+        "ocr_window_screenshot_sha256": "274083913e927b90921aa0b63fc1139a3976fda19e17d1de47810068e3841ca3",
+        "reopened_screenshot_sha256": "3a55722b6db10dd63fc9ff235788415869c6a7d977e8bf8a5a42bd527b159f46",
+        "reference_asset": "Obsidian-1.14.4.dmg",
+        "reference_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "acceptance": "Complete round trip passed. Obsidian authored Untitled.md, OpenObsidian displayed the selected vault and two-note count, Obsidian reopened the note and exact attachment path, all 22 vault entries matched across snapshots, and app data stayed outside and unchanged."
+      },
+      {
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "job_id": 113629522984,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215767/job/113629522984",
+        "conclusion": "failure",
+        "artifact_id": 11590013217,
+        "artifact_name": "obsidian-vault-roundtrip-Windows-3635245c4201e8ed613fdd74148da01d1485480e",
+        "artifact_sha256": "1519b331842d1234a627c68c91763cb8455620f7f1a9284da8ff81dc56861ef3",
+        "report_sha256": "9890c467b20c39d75162c17368b3349c3642fd1ba0972dcf24ed2613f588e7af",
+        "picker_initial_screenshot_sha256": "e5bd9902b6ce430c488aa79283c213d17e1e38e3895749d94e675a48d8d2c21a",
+        "picker_after_path_screenshot_sha256": "b2ad188cdd2f0ed4f2ae9a7fa4ffb5ff2da967080186a6c030cf44f493f9659c",
+        "reference_asset": "Obsidian-1.14.4.exe",
+        "reference_asset_sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "finding": "The new UI Automation PowerShell command exited before it confirmed the native Select Folder button; the outer process error did not retain stderr, so the exact command failure was not recorded. No vault renderer appeared and fixture authoring did not begin. The runner now captures stdout/stderr, includes the picker window/button labels in errors, and falls back to focusing the accessible button and pressing Enter."
+      }
+    ]
+  },
+  "required_project_workflows": [
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37871215751,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215751",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 113629522839,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 113629522942,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 113629522966,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37871215781,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215781",
+      "conclusion": "success",
+      "job_id": 113629522836
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37871215753,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215753",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113629522846,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113629522987,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113629522998,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37871215768,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215768",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113629523110,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113629523273,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113629523325,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37871215783,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215783",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 113629522994,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113629523215,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 113629523272,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37871215752,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37871215752",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 113629523006,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 113629523229,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 113629523280,
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "status": "partial",
+    "linux_roundtrip": "passed",
+    "macos_roundtrip": "passed",
+    "windows_roundtrip": "not accepted; the UI Automation command failed before folder confirmation and fixture authoring",
+    "all_six_required_project_workflows_passed_on_exact_sha": true,
+    "no_local_executable_validation": true,
+    "next_correction": "Retain PowerShell stdout/stderr in the failure report, include top-level window/button diagnostics, and retry button invocation via UI Automation with a focus-and-Enter fallback. Repeat the exact-SHA matrix in GitHub Actions."
+  }
+}
