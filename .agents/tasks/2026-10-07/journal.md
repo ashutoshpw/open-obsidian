@@ -1066,3 +1066,27 @@ linters or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
+
+## R2.6.58 — switch between existing vaults
+
+Added an egui UI case that begins with the existing-vault fixture open and its
+note source preview visible, then opens a second valid vault containing a
+different note, an unrecognized Obsidian option and an opaque binary asset.
+The second vault becomes the canonical active session; the note list and link
+and rename source paths point to its sole note, and the first vault's preview
+state is cleared. Full path/kind/byte snapshots of both vaults and a separate
+app-data sentinel remain unchanged after the switch and UI teardown.
+
+The first source push, 3e4a4c10d25b3ea6b934d4dfbf1d21319e64fb5d, exposed a
+missing harness frame advance before querying the expanded preview button and
+three rustfmt layout differences. The focused test and all seven workflows
+passed on the corrected exact source SHA
+b221d72eff3bcfbd1656212915c1acb4fe8b2134. The test passed on Linux, macOS and
+Windows. Exact run/job IDs, artifacts, toolchain and limitations are recorded
+in [evidence/r2.6.58-existing-vault-switch-b221d72.json](evidence/r2.6.58-existing-vault-switch-b221d72.json).
+C01/C01.2 remain pending for broader read-only coverage; C01.1 remains passing.
+Edit/save remains deferred to C02/C14. No local tests, builds, formatters,
+linters or application launches were run.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.

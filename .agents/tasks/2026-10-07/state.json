@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T05:59:03Z",
+  "updated_at": "2026-10-09T06:16:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e803f6c0f2f620c171b63d2ba01b22b837214371",
-  "current_milestone": "R2.6.57",
+  "last_reconciled_head": "b221d72eff3bcfbd1656212915c1acb4fe8b2134",
+  "current_milestone": "R2.6.58",
   "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "e803f6c0f2f620c171b63d2ba01b22b837214371"
+      "implementation_sha": "b221d72eff3bcfbd1656212915c1acb4fe8b2134"
     },
     "R3": {
       "status": "pending",
@@ -199,7 +199,8 @@
     "R2.6.54 added cross-platform UI coverage for an in-place external edit to the currently previewed note, refresh, updated-source preview and no-write preservation. The focused test passed on all three OSes; all seven required workflows passed on exact source SHA 882592960fe1c9e3ac54564276086fed753a6c3e after a same-SHA Windows Rust CI retry. Evidence: evidence/r2.6.54-external-note-edit-refresh-8825929.json. C01/C01.2 remain pending; no local executable validation was run.",
     "R2.6.55 exercises existing-vault attachment preview through the egui Resolve link status action, with the existing-vault fixture's full path/byte snapshot and separate app-data snapshot unchanged after open, image rendering, and UI teardown. The focused test and all seven workflows passed on Ubuntu, macOS, and Windows on exact source SHA a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e. Evidence: evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json. C01/C01.2 remain pending for broader read-only product coverage; no local executable validation was run.",
     "Extended .github/workflows/quality.yml with a native parallel group for Knip and report-only Fallow health. The first push's inventory run identified a stale workflow hash; after inventory reconciliation, all six required workflows passed on exact SHA f9d66e6f45e09fe108347db543a7d325b70d48c2. The two grouped audits passed on Ubuntu, macOS, and Windows. Evidence: evidence/parallel-ci-quality-audits-f9d66e6.json. No local checks were run.",
-    "R2.6.57 failed-open UI preservation passed on all three CI operating systems and all seven workflows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371; no local executable validation was used. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json."
+    "R2.6.57 failed-open UI preservation passed on all three CI operating systems and all seven workflows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371; no local executable validation was used. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json.",
+    "R2.6.58 successful vault-switch UI coverage passed on all three CI operating systems and all seven workflows on exact source SHA b221d72eff3bcfbd1656212915c1acb4fe8b2134. Evidence: evidence/r2.6.58-existing-vault-switch-b221d72.json. No local executable validation was used."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -7048,7 +7049,8 @@
     },
     "R2.6.56 opened and refreshed a zero-Markdown existing vault through the egui UI. The full vault and separate app-data snapshots stayed unchanged after open, refresh, and teardown on Ubuntu, macOS, and Windows. All seven required workflows passed on c339a19b4d64ba9abea25794d7eae895acc91bfa. Evidence: evidence/r2.6.56-existing-empty-vault-ui-c339a19.json. C01/C01.2 remain pending; no local executable validation was run.",
     "Extended the quality workflow's native parallel preflight group to include read-only progress-state validation. After reconciling the workflow inventory hash, all six triggered workflows passed on exact SHA 01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9. Evidence: evidence/parallel-ci-quality-state-preflight-01fdec9.json. No local executable validation was run.",
-    "R2.6.57 verified that a failed attempt to open a selected regular file leaves the current existing-vault session and vault/app-data/file bytes unchanged. The focused test and all seven required workflows passed on Ubuntu, macOS, and Windows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json. C01/C01.2 remain pending; no local executable validation was used."
+    "R2.6.57 verified that a failed attempt to open a selected regular file leaves the current existing-vault session and vault/app-data/file bytes unchanged. The focused test and all seven required workflows passed on Ubuntu, macOS, and Windows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json. C01/C01.2 remain pending; no local executable validation was used.",
+    "R2.6.58 switched from a first active existing vault with an open note preview to a second valid vault, cleared the old preview, selected the second vault's note, and preserved both full vault trees and separate app data. The focused test and all seven required workflows passed on Ubuntu, macOS, and Windows on exact source SHA b221d72eff3bcfbd1656212915c1acb4fe8b2134. Evidence: evidence/r2.6.58-existing-vault-switch-b221d72.json. C01/C01.2 remain pending; no local executable validation was used."
   ],
   "milestones": {
     "R0.1": {
@@ -9953,6 +9955,57 @@
       ],
       "remaining": [
         "C01 and C01.2 remain pending for broader read-only product coverage; this synthetic egui harness does not cover native folder-picker interaction or claim reference-app evidence for failed selection.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
+    },
+    "R2.6.58": {
+      "status": "complete",
+      "implementation_sha": "b221d72eff3bcfbd1656212915c1acb4fe8b2134",
+      "implementation_commits": [
+        "3e4a4c10d25b3ea6b934d4dfbf1d21319e64fb5d",
+        "b221d72eff3bcfbd1656212915c1acb4fe8b2134"
+      ],
+      "push_status": "Both source commits are reachable from origin/main.",
+      "scope": "Switch from a first active existing vault with its note preview open to a distinct second valid vault; clear the first vault's preview state and prove both vault trees and separate app data remain byte-identical.",
+      "ci_attempts": [
+        {
+          "source_sha": "3e4a4c10d25b3ea6b934d4dfbf1d21319e64fb5d",
+          "conclusion": "Workspace tests failed on all three OSes because the preview section needed a harness frame advance before its child button was queried. Ubuntu rustfmt reported three layout changes. All six companion workflows and the independent round-trip passed.",
+          "workflows": {
+            "rust_ci": 37891898871,
+            "inventory": 37891898852,
+            "quality": 37891898834,
+            "desktop_build": 37891898863,
+            "plugin_renderer": 37891898855,
+            "loaded_plugin_workflows": 37891899021,
+            "obsidian_vault_roundtrip": 37891899080
+          },
+          "correction": "Applied the exact Ubuntu rustfmt suggestions and advanced the UI harness between preview interactions."
+        },
+        {
+          "source_sha": "b221d72eff3bcfbd1656212915c1acb4fe8b2134",
+          "attempt": 1,
+          "conclusion": "All seven workflows and all jobs passed; the focused test passed on Ubuntu, macOS, and Windows.",
+          "workflows": {
+            "rust_ci": 37892120185,
+            "inventory": 37892120191,
+            "quality": 37892120315,
+            "desktop_build": 37892120214,
+            "plugin_renderer": 37892120305,
+            "loaded_plugin_workflows": 37892120163,
+            "obsidian_vault_roundtrip": 37892120227
+          },
+          "evidence": "evidence/r2.6.58-existing-vault-switch-b221d72.json"
+        }
+      ],
+      "accepted_slice": [
+        "Switching replaces the canonical session with the selected second vault and updates the UI to its only Markdown note.",
+        "The old source preview, preview receiver/error, and link resolutions are cleared; source selections point to the second vault's note.",
+        "Full path/kind/byte snapshots of both vaults and a separate app-data tree remain unchanged after switching and after UI teardown on all three OSes."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader read-only product coverage; the synthetic egui harness does not cover native picker interaction or claim reference-app evidence for switching.",
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
