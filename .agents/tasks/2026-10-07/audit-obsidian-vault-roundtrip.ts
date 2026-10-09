@@ -335,6 +335,24 @@ function clickWindowOpenButton(windowId: string): {window_x: number; window_y: n
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
+function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number} {
+  const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+  const readGeometry = (key: string): number => {
+    const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
+    if (!match) throw new Error(`Could not read ${key} from OpenObsidian window geometry`);
+    return Number(match[1]);
+  };
+  const windowX = readGeometry("X");
+  const windowY = readGeometry("Y");
+  const windowWidth = readGeometry("WIDTH");
+  const windowHeight = readGeometry("HEIGHT");
+  const clickX = Math.round(windowX + windowWidth * 0.045);
+  const clickY = Math.round(windowY + windowHeight * 0.085);
+  xdotool("mousemove", "--sync", String(clickX), String(clickY));
+  xdotool("click", "1");
+  return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
+}
+
 function activeWindowTitle(): string {
   try {
     return execFileSync("xdotool", ["getwindowfocus", "getwindowname"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
@@ -1011,9 +1029,8 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
 
   let openButtonInteraction: string;
   if (process.platform === "linux") {
-    xdotool("key", "--clearmodifiers", "Tab");
-    xdotool("key", "--clearmodifiers", "space");
-    openButtonInteraction = "Focused the first accessible Open vault button with Tab and activated it with Space.";
+    const clicked = clickOpenVaultButtonLinux(window.window_id);
+    openButtonInteraction = `Clicked the visible Open vault button using the X11 window geometry at (${clicked.click_x}, ${clicked.click_y}).`;
   } else if (process.platform === "darwin") {
     const script = `on run argv
       tell application "System Events"
@@ -1138,9 +1155,28 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
         $selected.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
         Write-Output "Invoked native folder selection button: $($selected.Current.Name)"
       } else {
-        $shell = New-Object -ComObject WScript.Shell
-        $shell.SendKeys("{ENTER}")
-        Write-Output "No Select Folder, Select, or Open button was exposed; pressed Enter in the native picker."
+        Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          public struct OpenObsidianPickerRect { public int Left; public int Top; public int Right; public int Bottom; }
+          public static class OpenObsidianPickerNative {
+            [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string className, string windowName);
+            [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr handle, out OpenObsidianPickerRect rectangle);
+            [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+            [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint x, uint y, uint data, UIntPtr extraInfo);
+          }
+'@
+        $dialog = [OpenObsidianPickerNative]::FindWindow($null, "Open an existing vault")
+        if ($dialog -eq [IntPtr]::Zero) { throw "Could not find the OpenObsidian native folder picker window" }
+        $rectangle = New-Object OpenObsidianPickerRect
+        if (-not [OpenObsidianPickerNative]::GetWindowRect($dialog, [ref]$rectangle)) { throw "Could not read the native folder picker window bounds" }
+        $clickX = $rectangle.Left + [int](($rectangle.Right - $rectangle.Left) * 0.72)
+        $clickY = $rectangle.Top + [int](($rectangle.Bottom - $rectangle.Top) * 0.936)
+        [OpenObsidianPickerNative]::SetCursorPos($clickX, $clickY) | Out-Null
+        [OpenObsidianPickerNative]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
+        Start-Sleep -Milliseconds 100
+        [OpenObsidianPickerNative]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+        Write-Output "The picker did not expose its Select Folder button; clicked the visible button at ($clickX, $clickY)."
       }
     `;
     folderSelectionInteraction = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", selectScript], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
