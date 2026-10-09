@@ -219,13 +219,35 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
-        let open_vault_requested = self.open_vault_action.as_ref().is_some_and(|_| {
+        let open_vault_button = self.open_vault_action.as_ref().map(|_| {
             ui.add_enabled(
                 !self.vault_opening && !vault_operation_busy,
                 eframe::egui::Button::new("Open vault"),
             )
-            .clicked()
         });
+        let open_vault_requested = open_vault_button
+            .as_ref()
+            .is_some_and(eframe::egui::Response::clicked);
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+            let pointer_button_events = ui.input(|input| {
+                input
+                    .events
+                    .iter()
+                    .filter(|event| matches!(event, eframe::egui::Event::PointerButton { .. }))
+                    .map(|event| format!("{event:?}"))
+                    .collect::<Vec<_>>()
+            });
+            if !pointer_button_events.is_empty() {
+                let pointer_position = ui.input(|input| input.pointer.interact_pos());
+                let response_rect = open_vault_button.as_ref().map(|response| response.rect);
+                let hovered = open_vault_button
+                    .as_ref()
+                    .is_some_and(eframe::egui::Response::hovered);
+                eprintln!(
+                    "OpenObsidian CI pointer input: response_rect={response_rect:?}, pointer={pointer_position:?}, hovered={hovered}, clicked={open_vault_requested}, events={pointer_button_events:?}"
+                );
+            }
+        }
         if open_vault_requested {
             if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
                 eprintln!(

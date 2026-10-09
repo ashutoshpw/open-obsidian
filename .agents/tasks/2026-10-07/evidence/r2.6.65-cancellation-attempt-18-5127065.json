@@ -1,0 +1,59 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 18,
+  "source_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37934068527,
+      "conclusion": "failure",
+      "jobs": {
+        "windows": {"job_id": 113831612460, "conclusion": "success"},
+        "ubuntu": {"job_id": 113831612736, "conclusion": "failure"},
+        "macos": {"job_id": 113831612904, "conclusion": "failure"}
+      },
+      "artifacts": {
+        "ubuntu": {"artifact_id": 11618585610, "digest": "sha256:1106d40387752d0409fe17109dd2c186d803d18fc92c3771e6bb3b9478d052f1"},
+        "windows": {"artifact_id": 11617299735, "digest": "sha256:34e56c919b7fffbd9c4d98b8e123de00da18a278f2ca09ebe6815006b282d1c0"},
+        "macos": {"artifact_id": 11616789988, "digest": "sha256:fdda1757181fe7cde8fb29a20e2c912090560388eb9198bbd5bbbc3e41f0c1bc"}
+      },
+      "platform_findings": {
+        "ubuntu": "Initial native fixture selection passed and OpenObsidian displayed the expected two-note vault. The in-session second picker did not appear. The artifact shows the pointer over the Open vault control at (36, 51), focus on OpenObsidian after the click, and no second Open vault click receipt or rfd selection-result log.",
+        "windows": "Native fixture selection, in-session picker cancellation, vault/app-data snapshots, and Obsidian reopen passed.",
+        "macos": "Initial native fixture selection passed, but the audit timed out waiting for eframe app.ron persistence after picker open and before the cancellation snapshot."
+      }
+    },
+    "rust_ci": {
+      "run_id": 37934068644,
+      "conclusion": "success",
+      "jobs": {"windows": 113831612556, "ubuntu": 113831612822, "macos": 113831612920}
+    },
+    "quality": {
+      "run_id": 37934068584,
+      "conclusion": "success",
+      "jobs": {"windows": 113831612525, "macos": 113831613051, "ubuntu": 113831613191}
+    },
+    "desktop_build": {
+      "run_id": 37934068552,
+      "conclusion": "success",
+      "jobs": {"windows": 113831613240, "ubuntu": 113831613490, "macos": 113831613546}
+    },
+    "plugin_renderer": {
+      "run_id": 37934068588,
+      "conclusion": "success",
+      "jobs": {"ubuntu": 113831613721, "windows": 113831614139, "macos": 113831614184}
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37934068615,
+      "conclusion": "success",
+      "jobs": {"macos": 113831612800, "ubuntu": 113831613038, "windows": 113831613041}
+    },
+    "inventory": {
+      "run_id": 37934068548,
+      "conclusion": "success",
+      "job": 113831612606
+    }
+  },
+  "parallel_groups": "All applicable native setup, build, and check groups passed on the exact source SHA.",
+  "correction": "Attempt 19 adds CI-only egui pointer-button event and response-rectangle diagnostics and holds the Linux primary click for 120 ms.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}

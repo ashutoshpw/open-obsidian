@@ -335,7 +335,7 @@ function clickWindowOpenButton(windowId: string): {window_x: number; window_y: n
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
-function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number} {
+function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_click: string} {
   const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
   const readGeometry = (key: string): number => {
     const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
@@ -348,9 +348,20 @@ function clickOpenVaultButtonLinux(windowId: string): {window_x: number; window_
   const windowHeight = readGeometry("HEIGHT");
   const clickX = Math.round(windowX + windowWidth * 0.045);
   const clickY = Math.round(windowY + windowHeight * 0.085);
-  xdotool("mousemove", "--sync", String(clickX), String(clickY));
-  xdotool("click", "1");
-  return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
+  const focusedWindowBeforeClick = execFileSync("xdotool", ["getwindowfocus"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  xdotool(
+    "mousemove", "--sync", String(clickX), String(clickY),
+    "mousedown", "1", "sleep", "0.12", "mouseup", "1",
+  );
+  return {
+    window_x: windowX,
+    window_y: windowY,
+    window_width: windowWidth,
+    window_height: windowHeight,
+    click_x: clickX,
+    click_y: clickY,
+    focused_window_before_click: focusedWindowBeforeClick,
+  };
 }
 
 type X11WindowDescription = {window_id: string; title: string; window_class: string; geometry: string};
@@ -1377,7 +1388,7 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
     await delay(500);
     const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
     (report.openobsidian_open as Record<string, unknown>).picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
-    return `Sent an X11 click directly to OpenObsidian at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}.`;
+    return `Held an X11 primary click on OpenObsidian at (${clicked.click_x}, ${clicked.click_y}); window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; focused_window_before_click=${clicked.focused_window_before_click}.`;
   }
   if (process.platform === "darwin") {
     const script = `on run argv

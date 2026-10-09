@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T12:58:16Z",
+  "updated_at": "2026-10-09T13:11:08Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "673cc8c61809e582e6775a4bd90da189ea16de77",
+  "last_reconciled_head": "5127065bd08937244f4f1eab347a4f6389ffd471",
   "current_milestone": "R2.6.65",
-  "next_action": "Investigate why the Linux in-session cancellation picker does not appear; use CI-only diagnostic changes and keep native cancellation unaccepted until Ubuntu passes.",
+  "next_action": "Run attempt 19 exact-SHA GitHub Actions with egui pointer-event diagnostics and a 120 ms Linux click; use the CI artifact to distinguish an input-delivery failure from a hit-test failure.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -8570,6 +8570,95 @@
       "jobs": [
         {"name": "inventory", "job_id": 113828160495, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37933026779/job/113828160495"}
       ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 37934068527,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068527",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 113831612460, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068527/job/113831612460"},
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 113831612736, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068527/job/113831612736"},
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 113831612904, "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068527/job/113831612904"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 37934068644,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068644",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 113831612556, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068644/job/113831612556"},
+        {"name": "rust (ubuntu-latest)", "job_id": 113831612822, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068644/job/113831612822"},
+        {"name": "rust (macos-latest)", "job_id": 113831612920, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068644/job/113831612920"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 37934068584,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068584",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113831612525, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068584/job/113831612525"},
+        {"name": "macos-latest", "job_id": 113831613051, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068584/job/113831613051"},
+        {"name": "ubuntu-latest", "job_id": 113831613191, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068584/job/113831613191"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 37934068552,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068552",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 113831613240, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068552/job/113831613240"},
+        {"name": "ubuntu-latest", "job_id": 113831613490, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068552/job/113831613490"},
+        {"name": "macos-latest", "job_id": 113831613546, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068552/job/113831613546"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 37934068588,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068588",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 113831613721, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068588/job/113831613721"},
+        {"name": "windows-latest", "job_id": 113831614139, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068588/job/113831614139"},
+        {"name": "macos-latest", "job_id": 113831614184, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068588/job/113831614184"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 37934068615,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068615",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 113831612800, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068615/job/113831612800"},
+        {"name": "ubuntu-latest", "job_id": 113831613038, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068615/job/113831613038"},
+        {"name": "windows-latest", "job_id": 113831613041, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068615/job/113831613041"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 37934068548,
+      "head_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068548",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 113831612606, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37934068548/job/113831612606"}
+      ]
     }
   ],
   "milestones": {
@@ -11849,7 +11938,7 @@
     },
     "R2.6.65": {
       "status": "in_progress",
-      "implementation_sha": "673cc8c61809e582e6775a4bd90da189ea16de77",
+      "implementation_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
       "implementation_commits": [
         "d88e694f410545af6d8bd96a2bea4910a7b84c5c",
         "14bdd060750bc526e38501ac8e35eeaa6a0d14e7",
@@ -11869,9 +11958,10 @@
         "d7a666fe0e7a5879a0249d97d82e6b4ec34d0db5",
         "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
         "b60c584785a3a67d40448cfcbf0160e563de9559",
-        "673cc8c61809e582e6775a4bd90da189ea16de77"
+        "673cc8c61809e582e6775a4bd90da189ea16de77",
+        "5127065bd08937244f4f1eab347a4f6389ffd471"
       ],
-      "push_status": "Attempt 17 source 673cc8c61809e582e6775a4bd90da189ea16de77 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; native parallel groups passed. Knip now accepts the xclip binary. No round-trip workflow was triggered for this config-and-ledger-only commit; attempt 16's Linux cancellation failure remains unresolved.",
+      "push_status": "Attempt 18 source 5127065bd08937244f4f1eab347a4f6389ffd471 is pushed and reconciled. Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable parallel groups passed. Windows native cancellation passed. Ubuntu still did not open the second picker, and macOS timed out waiting for app.ron persistence. The CI artifact confirms the Linux pointer reached OpenObsidian but egui logged no button click; attempt 19 adds pointer-event diagnostics and a longer click.",
       "scope": "Cancel OpenObsidian's native folder picker after a vault is open; verify the active vault and full vault/app-data snapshots are preserved.",
       "ci_attempts": [
         {
@@ -12523,14 +12613,52 @@
           },
           "evidence": "evidence/r2.6.65-cancellation-attempt-17-673cc8c.json",
           "correction": "Knip now recognizes xclip as an ignored system binary. Continue diagnosing the Linux in-session cancellation picker with GitHub Actions only; do not treat cancellation as accepted until Ubuntu passes."
+        },
+        {
+          "source_sha": "5127065bd08937244f4f1eab347a4f6389ffd471",
+          "attempt": 18,
+          "conclusion": "Rust CI, quality, desktop build, plugin renderer, loaded-plugin workflows, and inventory passed; all applicable native parallel groups passed. Windows passed picker cancellation, vault/app-data snapshots, and Obsidian reopen. Ubuntu did not create a second X11 picker. The artifact records the pointer over the Open vault button and focus on OpenObsidian after the click, but the app log contains no second click receipt or rfd result. macOS timed out waiting for app.ron persistence after the picker opened.",
+          "workflows": {
+            "obsidian_vault_roundtrip": 37934068527,
+            "rust_ci": 37934068644,
+            "quality": 37934068584,
+            "desktop_build": 37934068552,
+            "plugin_renderer": 37934068588,
+            "loaded_plugin_workflows": 37934068615,
+            "inventory": 37934068548
+          },
+          "jobs": {
+            "roundtrip_windows": 113831612460,
+            "roundtrip_ubuntu": 113831612736,
+            "roundtrip_macos": 113831612904,
+            "rust_windows": 113831612556,
+            "rust_ubuntu": 113831612822,
+            "rust_macos": 113831612920,
+            "quality_windows": 113831612525,
+            "quality_macos": 113831613051,
+            "quality_ubuntu": 113831613191,
+            "desktop_windows": 113831613240,
+            "desktop_ubuntu": 113831613490,
+            "desktop_macos": 113831613546,
+            "plugin_renderer_ubuntu": 113831613721,
+            "plugin_renderer_windows": 113831614139,
+            "plugin_renderer_macos": 113831614184,
+            "loaded_plugins_macos": 113831612800,
+            "loaded_plugins_ubuntu": 113831613038,
+            "loaded_plugins_windows": 113831613041,
+            "inventory": 113831612606
+          },
+          "evidence": "evidence/r2.6.65-cancellation-attempt-18-5127065.json",
+          "correction": "Log egui pointer-button events and the Open vault button response rectangle on CI, and hold the Linux pointer click for 120 ms. Continue using GitHub Actions only; keep cancellation pending until Ubuntu passes."
         }
       ],
       "accepted_slice": [],
       "remaining": [
-        "Linux cancellation remains pending: attempt 16 clipboard paste opened the correct two-note fixture, but the second native picker did not appear on two Ubuntu jobs.",
+        "Linux cancellation remains pending: attempt 18 recorded focus and pointer over OpenObsidian after the click, but egui logged no second button activation and no native picker appeared.",
+        "macOS cancellation remains pending for attempt 18 because app.ron did not persist before the cancellation snapshot; Windows passed attempt 18.",
         "C01/C01.2 remain pending for broader read-only coverage; edit/save remains deferred to C02/C14."
       ],
-      "next_action": "Investigate why the Linux in-session cancellation picker does not appear; use CI-only diagnostic changes and keep native cancellation unaccepted until Ubuntu passes."
+      "next_action": "Run attempt 19 exact-SHA GitHub Actions with egui pointer-event diagnostics and a 120 ms Linux click; use the CI artifact to distinguish an input-delivery failure from a hit-test failure, and keep cancellation unaccepted until all three OSes pass."
     }
   },
   "ci_preparation": {
