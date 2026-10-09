@@ -3162,19 +3162,50 @@ mod tests {
     }
 
     #[test]
-    fn egui_renders_bounded_vault_image_with_accessible_alt_text() {
-        let vault_path = UiTempDir::new();
+    fn egui_previews_existing_vault_attachment_without_changing_its_tree() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
         let app_data_path = UiTempDir::new();
-        std::fs::create_dir_all(vault_path.0.join("Images")).unwrap();
+        std::fs::create_dir_all(&vault_path).unwrap();
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+        std::fs::create_dir_all(vault_path.join("Attachments")).unwrap();
+        std::fs::create_dir_all(vault_path.join("Notes")).unwrap();
         std::fs::write(
-            vault_path.0.join("Index.md"),
-            b"![[Images/photo.png|Accessible red dot]]\n",
+            vault_path.join("Notes/Image Preview.md"),
+            b"![[Attachments/photo.png|Accessible red dot]]\n",
         )
         .unwrap();
         let source_image = include_bytes!("../../../assets/openobsidian-icon.png");
-        std::fs::write(vault_path.0.join("Images/photo.png"), source_image).unwrap();
-        let session = VaultSession::open(&vault_path.0, &app_data_path.0).unwrap();
-        let report = session.resolve_note_embeds_for_note("Index.md").unwrap();
+        std::fs::write(vault_path.join("Attachments/photo.png"), source_image).unwrap();
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path.0);
+        let session = VaultSession::open(&vault_path, &app_data_path.0).unwrap();
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path.0),
+            before_app_data
+        );
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(Path::new("Notes/Image Preview.md").to_path_buf()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        harness.step();
+        assert!(harness.state().link_receiver.is_some());
+        wait_for_links(&mut harness);
+        assert!(harness.state().link_error.is_none());
+        assert!(harness.state().note_embed_error.is_none());
+        let report = harness
+            .state()
+            .note_embed_report
+            .as_ref()
+            .expect("the existing-vault attachment should be previewed");
+        assert_eq!(report.embeds.len(), 1);
         assert!(matches!(
             &report.embeds[0].resolution.disposition,
             VaultNoteEmbedDisposition::Attachment(image)
@@ -3182,22 +3213,24 @@ mod tests {
                     && image.height > 0
                     && image.rgba_bytes.len() == (image.width * image.height * 4) as usize
         ));
-        let app = OpenObsidianApp {
-            session: Some(Arc::new(session)),
-            link_source_path: Some(Path::new("Index.md").to_path_buf()),
-            link_status: Some("fixture links resolved".to_owned()),
-            note_embed_report: Some(report),
-            ..OpenObsidianApp::default()
-        };
-        let harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
-
         harness.get_by_label("Accessible red dot");
         assert_eq!(harness.state().inline_image_textures.len(), 1);
+        assert_eq!(harness.state().link_resolutions.len(), 1);
         assert_eq!(
-            std::fs::read(vault_path.0.join("Images/photo.png"))
-                .unwrap()
-                .as_slice(),
-            source_image.as_slice()
+            existing_vault_tree_snapshot(&vault_path),
+            before_vault,
+            "opening and rendering an embedded attachment must not change any existing-vault path or byte"
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path.0),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path.0),
+            before_app_data
         );
     }
 
