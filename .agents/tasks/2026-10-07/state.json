@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:36:14Z",
+  "updated_at": "2026-10-09T19:42:16Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "688899c354e9257a282d549f3d2c5d68f7412c05",
-  "current_milestone": "R2.6.75",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "bada4da30965183333781eb41c79f5d203879857",
+  "current_milestone": "R2.6.76",
+  "next_action": "Commit the focused C01.2-27 egui test and pending matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -225,7 +225,7 @@
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json.",
     "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json."
   ],
-  "push_status": "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.75-attempt-2-688899c.json. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. R2.6.76 / C01.2-27 is in progress from starting SHA bada4da30965183333781eb41c79f5d203879857. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13838,6 +13838,23 @@
       ],
       "evidence": "evidence/r2.6.75-attempt-2-688899c.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.76": {
+      "status": "in_progress",
+      "starting_sha": "bada4da30965183333781eb41c79f5d203879857",
+      "scope": "Exercise external creation of a PNG already referenced by an active note with an unresolved embed; refresh the vault, resolve and render the newly available image, and preserve vault and app-data snapshots.",
+      "accepted_slice": ["C01.2-27"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose PNG embed is initially missing and verify the initial unresolved, not-rendered report.",
+        "Open the note source preview, create the referenced PNG externally, and record the exact post-creation vault snapshot while app data remains unchanged.",
+        "Refresh keeps the vault and note active while clearing stale embed, preview, error, and texture state.",
+        "A fresh resolution finds and renders the new PNG with its accessible alt text.",
+        "The post-creation vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit the focused C01.2-27 egui test and pending matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {
