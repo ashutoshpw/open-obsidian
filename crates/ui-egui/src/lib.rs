@@ -3244,6 +3244,103 @@ mod tests {
     }
 
     #[test]
+    fn egui_invalid_utf8_note_preview_fails_closed_without_changing_vault_or_app_data() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(app_data_path.join("state"))
+            .expect("create separate app-data directory");
+        std::fs::write(
+            vault_path.join("README.md"),
+            b"\xef\xbb\xbf# Valid note\r\n",
+        )
+        .expect("seed valid note");
+        let invalid_source = b"\xef\xbb\xbf# Invalid byte: \xff\r\n";
+        let invalid_note_path = vault_path.join("Notes/Invalid UTF-8.md");
+        std::fs::create_dir_all(
+            invalid_note_path
+                .parent()
+                .expect("invalid note must have a parent directory"),
+        )
+        .expect("create invalid note directory");
+        std::fs::write(&invalid_note_path, invalid_source)
+            .expect("seed invalid UTF-8 note before the no-op baseline");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            [0xa5, 0x00, 0x7e, 0xff],
+        )
+        .expect("seed separate app-data sentinel");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open existing vault containing arbitrary Markdown bytes");
+        let selected_note_path = session
+            .entries()
+            .iter()
+            .find(|entry| {
+                entry.relative_path.to_string_lossy().replace('\\', "/")
+                    == "Notes/Invalid UTF-8.md"
+            })
+            .map(|entry| entry.relative_path.clone())
+            .expect("invalid UTF-8 Markdown path remains available for inspection");
+        let selected_note_label = selected_note_path.display().to_string();
+        let readme_path = session
+            .entries()
+            .iter()
+            .find(|entry| entry.relative_path == Path::new("README.md"))
+            .map(|entry| entry.relative_path.clone())
+            .expect("valid README note remains available for inspection");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(readme_path),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Note to inspect").click_accesskit();
+        harness.step();
+        harness.get_by_label(&selected_note_label).click();
+        harness.step();
+        assert_eq!(
+            harness.state().link_source_path.as_ref(),
+            Some(&selected_note_path)
+        );
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        wait_for_note_preview(&mut harness);
+
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness
+            .state()
+            .note_preview_error
+            .as_deref()
+            .is_some_and(|error| {
+                error.starts_with("The selected note preview contains invalid UTF-8;")
+            }));
+        assert_eq!(
+            std::fs::read(&invalid_note_path).expect("read original invalid note bytes"),
+            invalid_source
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_refresh_after_external_note_edit_replaces_stale_preview_without_writing() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
