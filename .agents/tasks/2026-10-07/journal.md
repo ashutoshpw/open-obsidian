@@ -962,6 +962,49 @@ application launches were run.
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full acceptance coverage passes.
 
+## R2.6.56 — empty existing-vault open and refresh
+
+Added an egui test for opening an existing vault with zero Markdown notes but
+with an unrecognized Obsidian setting, opaque binary asset, and non-Markdown
+README. The test checks the canonical open path, zero-note count, empty inspect
+and rename states, and refresh. Complete vault and separate app-data
+path/kind/byte snapshots remain unchanged after open, refresh, and UI teardown.
+
+The first source SHA `d92ec40162590159fb4981c0e10300360dfb7d2b` passed the
+focused test and workspace tests; Ubuntu rustfmt requested exact layout changes.
+The six companion workflows passed. Applied the GitHub rustfmt output in
+`c339a19b4d64ba9abea25794d7eae895acc91bfa`.
+
+On exact source SHA `c339a19b4d64ba9abea25794d7eae895acc91bfa`, the focused test
+passed on Ubuntu, macOS and Windows, and all seven required workflows passed.
+Rust CI covered formatting, workspace tests, Clippy, layering, native preview
+builds, and feasibility-only PC05/PC08 probes. The independent Obsidian 1.14.4
+round-trip workflow also passed on all three OSes; it is regression evidence,
+not empty-vault reference-app evidence. Run/job IDs, toolchain, artifact hashes
+and limitations are recorded in
+[`evidence/r2.6.56-existing-empty-vault-ui-c339a19.json`](evidence/r2.6.56-existing-empty-vault-ui-c339a19.json).
+C01.1 remains passing with this additional arbitrary-content preservation
+coverage. C01 and C01.2 remain pending for broader read-only coverage. Edit/save
+remains deferred to C02/C14. No local tests, builds, formatters, linters or
+application launches were run.
+
+## CI preparation — parallel quality state preflight
+
+Moved the read-only progress-state validation into the existing native
+`parallel:` group in `.github/workflows/quality.yml`, alongside independent
+source and contract checks. Runtime tests remain after the group barrier. The
+first push, `d59a43a2706156b0f5659a0584fa839573c9d244`, passed quality on all
+three OSes but inventory flagged the changed workflow's stale recorded hash.
+Reconciled `inventory.json` and pushed `01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9`;
+all six workflows triggered on that SHA passed. The new grouped check and both
+parallel barriers passed on Ubuntu, macOS and Windows. Evidence:
+[`evidence/parallel-ci-quality-state-preflight-01fdec9.json`](evidence/parallel-ci-quality-state-preflight-01fdec9.json).
+No local executable validation was run. This preparation does not close any
+product requirement or change the R2 scope.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform read-only coverage passes.
+
 ## CI preparation — parallel quality source audits
 
 Extended `.github/workflows/quality.yml` with a native GitHub Actions `parallel`

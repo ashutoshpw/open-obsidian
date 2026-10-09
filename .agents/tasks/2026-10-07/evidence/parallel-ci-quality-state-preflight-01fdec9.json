@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "source_sha": "01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9",
+  "implementation_commits": [
+    "d59a43a2706156b0f5659a0584fa839573c9d244",
+    "01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9"
+  ],
+  "workflow": ".github/workflows/quality.yml",
+  "change": "Run the read-only progress-state validation in the existing native parallel group with the independent source and contract preflight checks. The group completes before runtime checks begin.",
+  "attempts": [
+    {
+      "source_sha": "d59a43a2706156b0f5659a0584fa839573c9d244",
+      "quality_run_id": 37888898377,
+      "quality_conclusion": "success",
+      "inventory_run_id": 37888898515,
+      "inventory_conclusion": "failure",
+      "finding": "The inventory guard found that quality.yml changed without updating its recorded baseline hash."
+    },
+    {
+      "source_sha": "01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9",
+      "conclusion": "All six workflows triggered on this commit passed.",
+      "workflows": {
+        "rust_ci": 37889045672,
+        "inventory": 37889045678,
+        "quality": 37889045644,
+        "desktop_build": 37889045680,
+        "plugin_renderer": 37889045608,
+        "loaded_plugin_workflows": 37889045757
+      },
+      "quality_jobs": {
+        "windows-latest": "passed; progress-state validation and both parallel-group barriers passed",
+        "macos-latest": "passed; progress-state validation and both parallel-group barriers passed",
+        "ubuntu-latest": "passed; progress-state validation and both parallel-group barriers passed"
+      },
+      "inventory_job": "passed"
+    }
+  ],
+  "limits": [
+    "The pinned Obsidian reference round-trip workflow was not triggered by this workflow and inventory documentation change.",
+    "No local executable validation was run."
+  ]
+}

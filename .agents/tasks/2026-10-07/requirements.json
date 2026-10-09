@@ -2330,10 +2330,11 @@
         "evidence/r2.6.52-external-deletion-refresh-bf5bc33.json",
         "evidence/r2.6.53-bounded-note-preview-7f77ad0.json",
         "evidence/r2.6.54-external-note-edit-refresh-8825929.json",
-        "evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json"
+        "evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json",
+        "evidence/r2.6.56-existing-empty-vault-ui-c339a19.json"
       ],
-      "tested_source_tree": "a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e",
-      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. Cross-platform existing-vault UI cases now cover external note addition, removal and in-place edit; rendered note selection; exact BOM/CRLF source preview; stale-preview clearing; fallback selection; oversized preview truncation at a valid UTF-8 boundary; and embedded image preview. Full vault and separate app-data snapshots remain unchanged through these UI flows on exact source SHAs d6b8b19691031d544cea34226244ab43d2e687a6, bf5bc3349a73753d0ee236e2656a0c59de6f24be, 882592960fe1c9e3ac54564276086fed753a6c3e and a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e. Other C01 read-only product flows remain pending, so C01 is not complete. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.51-accessible-note-navigation-d6b8b19.json through evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json.",
+      "tested_source_tree": "c339a19b4d64ba9abea25794d7eae895acc91bfa",
+      "blocker": "The pinned Obsidian 1.14.4-authored no-op/open/reopen round trip passed on Linux, macOS and Windows on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. Cross-platform existing-vault UI cases cover external note addition, removal and in-place edit; rendered note selection; exact BOM/CRLF source preview; stale-preview clearing; fallback selection; oversized preview truncation at a valid UTF-8 boundary; embedded image preview; and zero-Markdown vault open/refresh. Full vault and separate app-data snapshots remain unchanged through these UI flows on exact source SHAs d6b8b19691031d544cea34226244ab43d2e687a6, bf5bc3349a73753d0ee236e2656a0c59de6f24be, 882592960fe1c9e3ac54564276086fed753a6c3e, a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e and c339a19b4d64ba9abea25794d7eae895acc91bfa. Other C01 read-only product flows remain pending, so C01 is not complete. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.51-accessible-note-navigation-d6b8b19.json through evidence/r2.6.56-existing-empty-vault-ui-c339a19.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
@@ -2386,9 +2387,10 @@
         "evidence/r2.6.42-existing-vault-uninstall-preview-3b0e251.json",
         "evidence/r2.6.43-existing-vault-conflict-inspection-e9a0afe.json",
         "evidence/r2.6.44-existing-vault-source-preview-37a1f7c.json",
-        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json"
+        "evidence/r2.6.45-existing-vault-note-list-refresh-b6153f9.json",
+        "evidence/r2.6.56-existing-empty-vault-ui-c339a19.json"
       ],
-      "tested_source_tree": "b6153f9ea900ef64baf66a65054c0835652b6687",
+      "tested_source_tree": "c339a19b4d64ba9abea25794d7eae895acc91bfa",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D02",
@@ -2455,10 +2457,11 @@
         "evidence/r2.6.52-external-deletion-refresh-bf5bc33.json",
         "evidence/r2.6.53-bounded-note-preview-7f77ad0.json",
         "evidence/r2.6.54-external-note-edit-refresh-8825929.json",
-        "evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json"
+        "evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json",
+        "evidence/r2.6.56-existing-empty-vault-ui-c339a19.json"
       ],
-      "tested_source_tree": "a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e",
-      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. Cross-platform existing-vault UI cases cover external note addition/removal/edit, rendered note selection, exact BOM/CRLF source preview, a large note preview truncated at a valid UTF-8 boundary, embedded image preview, stale-preview clearing, fallback selection, and unchanged vault/app-data snapshots after refresh/preview/close/teardown. Attachment-preview coverage and all seven workflows passed on exact source SHA a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e. Other C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.51-accessible-note-navigation-d6b8b19.json through evidence/r2.6.55-existing-vault-attachment-preview-a3fbc6a.json.",
+      "tested_source_tree": "c339a19b4d64ba9abea25794d7eae895acc91bfa",
+      "blocker": "The full Obsidian 1.14.4 reference-app round trip passed on all three OSes on exact source SHA f396927a7e15e9fa8631bb3b4d78e90198c5fbd0. Cross-platform existing-vault UI cases cover external note addition/removal/edit, rendered note selection, exact BOM/CRLF source preview, a large note preview truncated at a valid UTF-8 boundary, embedded image preview, zero-Markdown open/refresh, stale-preview clearing, fallback selection, and unchanged vault/app-data snapshots after refresh/preview/close/teardown. Attachment and empty-vault UI tests and all seven workflows passed on exact source SHAs a3fbc6a5522ddc422f4d1f74d53c4199ff50ef4e and c339a19b4d64ba9abea25794d7eae895acc91bfa. Other C01.2 read-only flows remain pending; edit/save remains deferred to C02/C14. See evidence/r2.6.49-roundtrip-ci-f396927.json and evidence/r2.6.51-accessible-note-navigation-d6b8b19.json through evidence/r2.6.56-existing-empty-vault-ui-c339a19.json.",
       "gate_class": "implementation",
       "decision_id": "D02",
       "legacy_status": "implemented",
