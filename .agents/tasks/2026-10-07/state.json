@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T03:27:16Z",
+  "updated_at": "2026-10-09T03:44:53Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b",
-  "current_milestone": "R2.6.50",
-  "next_action": "Review remaining C01/C01.2 read-only product flows and select the smallest cross-platform slice for R2.6.51. Keep C01/C01.2 pending until the full required read-only coverage passes; edit/save remains deferred to C02/C14.",
+  "last_reconciled_head": "d6b8b19691031d544cea34226244ab43d2e687a6",
+  "current_milestone": "R2.6.51",
+  "next_action": "Continue R2 with the next uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "a54e3126aa9ed3f0479ad615cb296ffa09cbaf7b"
+      "implementation_sha": "d6b8b19691031d544cea34226244ab43d2e687a6"
     },
     "R3": {
       "status": "pending",
@@ -9609,6 +9609,56 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Review remaining C01/C01.2 read-only product flows and select the smallest cross-platform slice for R2.6.51."
+    },
+    "R2.6.51": {
+      "status": "complete",
+      "implementation_sha": "d6b8b19691031d544cea34226244ab43d2e687a6",
+      "implementation_commits": ["08fc27b", "d6b8b19"],
+      "scope": "Keep the existing-vault note picker compact and add accessible Previous note/Next note navigation; select a refreshed external note through the native UI, preview its exact bytes, close the preview, and preserve the vault and separate app-data snapshots.",
+      "ci_attempts": [
+        {
+          "source_sha": "08fc27b64c0aac882215e9ce0e51d2425a6cf6a9",
+          "conclusion": "Rust CI failed on all three OSes; six companion workflows, including the Obsidian round trip, passed.",
+          "workflows": {
+            "rust_ci": 37879871059,
+            "inventory": 37879871023,
+            "quality": 37879871028,
+            "desktop_build": 37879871046,
+            "plugin_renderer": 37879871039,
+            "loaded_plugin_workflows": 37879871061,
+            "obsidian_vault_roundtrip": 37879871090
+          },
+          "findings": [
+            "The expanded note list displaced the existing link/rename preview test control on all three OSes.",
+            "The external-note UI selection did not change the selected path on Ubuntu/macOS; Windows did not expose the rendered list item to the UI harness."
+          ],
+          "correction": "Retain the existing ComboBox and add Previous note/Next note buttons beside it on the same row; select the external note through Previous note."
+        },
+        {
+          "source_sha": "d6b8b19691031d544cea34226244ab43d2e687a6",
+          "conclusion": "All seven required workflows and all jobs passed on Linux, macOS, and Windows.",
+          "workflows": {
+            "rust_ci": 37880194188,
+            "inventory": 37880194186,
+            "quality": 37880194167,
+            "desktop_build": 37880194286,
+            "plugin_renderer": 37880194209,
+            "loaded_plugin_workflows": 37880194257,
+            "obsidian_vault_roundtrip": 37880194226
+          },
+          "evidence": "evidence/r2.6.51-accessible-note-navigation-d6b8b19.json"
+        }
+      ],
+      "accepted_slice": [
+        "The integrated UI test selected Notes/External.md from the refreshed note listing using the rendered Previous note control and passed on Ubuntu, macOS, and Windows.",
+        "The preview preserved the external source's UTF-8 BOM and CRLF bytes; complete vault and separate app-data snapshots remained unchanged through preview, close, and no-op teardown.",
+        "Rust CI, inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the Obsidian 1.14.4 round-trip passed on exact SHA d6b8b19691031d544cea34226244ab43d2e687a6. Job IDs and artifact digests are recorded in evidence/r2.6.51-accessible-note-navigation-d6b8b19.json."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader cross-platform read-only product coverage; this slice does not establish Windows AccessKit exposure for the ComboBox popup itself.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with the next uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform read-only coverage passes."
     }
   },
   "ci_preparation": {
