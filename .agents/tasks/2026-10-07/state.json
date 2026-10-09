@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T16:02:16Z",
+  "updated_at": "2026-10-09T16:18:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "65b8c4739032b9a44e9bae0b7c81437fae62f274",
-  "current_milestone": "R2.6.68",
-  "next_action": "Select the next uncovered read-only C01/C01.2 flow for the next Rust milestone; keep broader parent acceptance pending.",
+  "last_reconciled_head": "0df9d02daea9c0d42b2eeb2803ef527814c18682",
+  "current_milestone": "R2.6.69",
+  "next_action": "Push the C01.2-20 source and tracking changes to origin/main, then use the exact-SHA GitHub Actions results to validate symlink containment on Ubuntu, macOS, and Windows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -13286,6 +13286,24 @@
         }
       ],
       "next_action": "Select the next uncovered read-only C01/C01.2 flow; keep broader parent acceptance pending."
+    },
+    "R2.6.69": {
+      "status": "in_progress",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Exercise egui link and transclusion resolution for file and directory symlinks that point outside an existing vault, preserving complete vault, separate app-data, and outside-target snapshots.",
+      "accepted_slice": ["C01.2-20"],
+      "remaining": [
+        "Exact-SHA GitHub Actions evidence is pending.",
+        "Broader C01/C01.2 acceptance remains pending."
+      ],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, symlink paths and targets are recorded without traversal, four Markdown/wiki references remain unresolved, and both embeds remain unrendered with no outside sentinel in the report.",
+        "Full vault, separate app-data, and outside-target snapshots remain byte-identical after open, resolution, and teardown.",
+        "Rust CI workspace tests pass on Ubuntu, macOS, and Windows and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit and push the source and traceability updates to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
     }
   },
   "ci_preparation": {

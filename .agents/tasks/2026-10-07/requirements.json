@@ -2436,7 +2436,8 @@
       "acceptance_criteria": "Filesystem snapshots are byte-identical before and after each read-only operation on all available platforms.",
       "fixture_ids": [
         "fixture:c01-no-op",
-        "fixture:existing-vault"
+        "fixture:existing-vault",
+        "fixture:symlink-boundary"
       ],
       "reference_versions": [
         {
