@@ -3053,6 +3053,7 @@ dependencies = [
  "eframe",
  "egui_commonmark",
  "egui_kittest",
+ "image",
  "openobsidian-engine",
  "rayon",
  "serde_json",

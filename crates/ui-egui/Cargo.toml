@@ -16,4 +16,5 @@ rayon = { workspace = true }
 
 [dev-dependencies]
 egui_kittest = { workspace = true }
+image = { workspace = true }
 serde_json = { workspace = true }

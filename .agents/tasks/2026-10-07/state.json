@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:51:22Z",
+  "updated_at": "2026-10-09T20:01:56Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d",
-  "current_milestone": "R2.6.76",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small R2 slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "1bdb32932ab909245607e19991eeec8f8b049ee0",
+  "current_milestone": "R2.6.77",
+  "next_action": "Commit the focused C01.2-28 external attachment-edit test and pending matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -226,7 +226,7 @@
     "R2.6.75 / C01.2-26 passed on exact source SHA 688899c354e9257a282d549f3d2c5d68f7412c05: the focused attachment-removal workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.75-attempt-2-688899c.json.",
     "R2.6.76 / C01.2-27 passed on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d: the focused external-attachment-creation workspace test passed on Ubuntu, macOS, and Windows; all seven required workflows passed. Evidence: evidence/r2.6.76-attempt-1-3d83472.json."
   ],
-  "push_status": "R2.6.76 / C01.2-27 is complete on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d, pushed to origin/main; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.76 / C01.2-27 is complete on exact source SHA 3d83472a9ca7e9bd8c064b6c345849f1d2f3a40d, pushed to origin/main; its focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. R2.6.77 / C01.2-28 is in progress from starting SHA 1bdb32932ab909245607e19991eeec8f8b049ee0. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13898,6 +13898,23 @@
       ],
       "evidence": "evidence/r2.6.76-attempt-1-3d83472.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.77": {
+      "status": "in_progress",
+      "starting_sha": "1bdb32932ab909245607e19991eeec8f8b049ee0",
+      "scope": "Exercise an external in-place edit of a PNG attachment already rendered by the active note; refresh, clear stale decoded image and texture state, and verify fresh decoding of the updated pixels without vault or app-data writes.",
+      "accepted_slice": ["C01.2-28"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose existing PNG embed resolves, decodes, and renders before external modification.",
+        "Open the note source preview, replace the PNG bytes in place outside OpenObsidian with a distinct deterministic image, and record the exact post-edit vault snapshot.",
+        "Refresh keeps the vault and note active while clearing link/embed/preview/error/texture state.",
+        "A fresh resolution still finds the same attachment path and decodes the new dimensions and exact RGBA pixels with the note's accessible alt text.",
+        "The post-edit vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit the focused C01.2-28 external attachment-edit test and pending matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {
