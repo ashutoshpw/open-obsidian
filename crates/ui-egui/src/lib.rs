@@ -2024,6 +2024,7 @@ fn rename_recovery_summary(report: &VaultRenameRecoveryReport) -> Option<String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use eframe::egui::accesskit::Role;
     use egui_kittest::{Harness, kittest::Queryable as _};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
@@ -2497,10 +2498,14 @@ mod tests {
             before_app_data
         );
 
-        harness.get_by_label("Notes/Welcome.md").click();
-        harness.step();
-        harness.get_by_label("Notes/External.md").click();
-        harness.step();
+        harness
+            .get_by_role_and_label(Role::ComboBox, "Note to inspect")
+            .click();
+        harness.run();
+        harness
+            .get_by_role_and_label(Role::Button, "Notes/External.md")
+            .click();
+        harness.run();
         assert_eq!(
             harness.state().link_source_path.as_deref(),
             Some(Path::new("Notes/External.md"))
@@ -2518,10 +2523,7 @@ mod tests {
             .as_ref()
             .expect("the refreshed external note source should be visible");
         assert_eq!(preview.relative_path, PathBuf::from("Notes/External.md"));
-        assert_eq!(
-            preview.text.as_bytes(),
-            external_source.as_slice()
-        );
+        assert_eq!(preview.text.as_bytes(), external_source.as_slice());
         assert_eq!(preview.total_size_bytes, external_source.len() as u64);
         assert!(!preview.truncated);
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
