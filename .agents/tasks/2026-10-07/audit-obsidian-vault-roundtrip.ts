@@ -1136,7 +1136,7 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   reopen.devtools_browser = browserVersion;
   reopen.first_target = {title: target.title ?? "", url: target.url ?? ""};
   const notePathJson = JSON.stringify(notePath);
-  let visible = await waitFor("Obsidian to reopen the authored vault note", async () => await connection.evaluateJson<{
+  const readVisible = async () => await connection.evaluateJson<{
     body: string;
     editor: string;
     title: string;
@@ -1146,7 +1146,8 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
     editor: [...document.querySelectorAll('[contenteditable="true"]')].map((element) => element.innerText ?? '').join('\\n'),
     title: document.title,
     paths: [...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || '')
-  }))()`), (value) => value.editor.includes(noteMarker), 45_000).catch(() => null);
+  }))()`);
+  let visible = await waitFor("Obsidian to reopen the authored vault note", readVisible, (value) => value.editor.includes(noteMarker), 45_000).catch(() => null);
 
   if (!visible) {
     await connection.evaluate(`(() => {
@@ -1154,21 +1155,16 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
       target?.click();
       return Boolean(target);
     })()`);
-    visible = await waitFor("Obsidian's file explorer to open the authored note", async () => await connection.evaluateJson<{
-      body: string;
-      editor: string;
-      title: string;
-      paths: string[];
-    }>(`(() => ({
-      body: document.body?.innerText ?? '',
-      editor: [...document.querySelectorAll('[contenteditable="true"]')].map((element) => element.innerText ?? '').join('\\n'),
-      title: document.title,
-      paths: [...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || '')
-    }))()`), (value) => value.editor.includes(noteMarker), 30_000);
+    visible = await waitFor("Obsidian's file explorer to open the authored note", readVisible, (value) => value.editor.includes(noteMarker), 30_000);
   }
 
   if (!visible.paths.includes(notePath)) {
-    throw new Error(`Obsidian file explorer does not expose authored note path ${notePath}; paths=${JSON.stringify(visible.paths).slice(0, 2_000)}`);
+    visible = await waitFor(
+      "Obsidian's file explorer to expose the authored note path",
+      readVisible,
+      (value) => value.paths.includes(notePath),
+      20_000,
+    );
   }
 
   const noteSource = await readFile(join(vaultRoot, notePath), "utf8");
