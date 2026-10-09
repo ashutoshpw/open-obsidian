@@ -1783,3 +1783,7 @@ Rust CI [37977661266](https://github.com/ashutoshpw/open-obsidian/actions/runs/3
 ### R2.6.75 started — C01.2-26 external removal of a rendered attachment
 
 The previous C01.2 cases cover image rendering and external Markdown note removal separately. This slice keeps the Markdown note active while its embedded image is removed externally, then refreshes and resolves it again. The expected UI clears the old report and texture, reports the missing image as unresolved, and preserves the post-removal vault plus separate app-data snapshots through teardown. Starting source SHA: `396a50389d91041977dd67c22b9e75320c21f228`. Exact-SHA GitHub Actions validation is pending; no local tests, builds, formatters, linters, or application launches were run.
+
+### R2.6.75 attempt 1 — source SHA `ee92f4c`
+
+The focused workspace test passed on Ubuntu, macOS, and Windows. Rust CI passed on macOS and Windows but failed Ubuntu's formatting gate for one `assert_eq!` line wrap; Ubuntu workspace tests also passed. Obsidian vault round-trip passed on all three operating systems, as did inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer. The exact Ubuntu rustfmt diff is applied for attempt 2. Run/job IDs are recorded under R2.6.75 in `state.json`. No local tests, builds, formatters, linters, or application launches were run.

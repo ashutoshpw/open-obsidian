@@ -4305,7 +4305,10 @@ mod tests {
             .expect("the vault session should remain open after attachment removal");
         assert_eq!(session.entries().len(), 1);
         assert_eq!(session.entries()[0].relative_path, note_path);
-        assert_eq!(harness.state().link_source_path.as_deref(), Some(note_path.as_path()));
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
         assert_eq!(
             harness.state().rename_source_path.as_deref(),
             Some(note_path.as_path())

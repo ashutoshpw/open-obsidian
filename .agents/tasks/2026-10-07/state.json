@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:21:19Z",
+  "updated_at": "2026-10-09T19:27:31Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "396a50389d91041977dd67c22b9e75320c21f228",
+  "last_reconciled_head": "ee92f4c1e8e2725264d4e3d0ac9a859d8c0306b5",
   "current_milestone": "R2.6.75",
-  "next_action": "Commit the focused C01.2-26 egui test and pending matrix row, push to origin/main, and inspect all seven exact-SHA GitHub Actions workflows.",
+  "next_action": "Commit the exact Ubuntu rustfmt correction and attempt-1 CI record, push to origin/main, and inspect all seven required workflows on the new exact source SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.74 / C01.2-25 passed on exact source SHA 898c2df7c14cd7cd315012e747f9232f77fa92b1. All seven required workflows passed on Ubuntu, macOS, and Windows; evidence: evidence/r2.6.74-attempt-3-898c2df.json. R2.6.75 / C01.2-26 is in progress at starting SHA 396a50389d91041977dd67c22b9e75320c21f228. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.74 / C01.2-25 passed on exact source SHA 898c2df7c14cd7cd315012e747f9232f77fa92b1. R2.6.75 / C01.2-26 was pushed as ee92f4c1e8e2725264d4e3d0ac9a859d8c0306b5. Its focused workspace test passed on Ubuntu, macOS, and Windows; six companion workflows passed, while Rust CI failed only Ubuntu rustfmt. The exact GitHub formatter diff is applied for the next attempt. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13756,8 +13756,45 @@
         "The post-removal vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "next_action": "Commit the focused C01.2-26 egui test and matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows."
+      "ci_attempts": [
+        {
+          "source_sha": "ee92f4c1e8e2725264d4e3d0ac9a859d8c0306b5",
+          "attempt": 1,
+          "conclusion": "The focused workspace test passed on Ubuntu, macOS, and Windows. Rust CI passed on macOS and Windows but failed the Ubuntu formatting gate for one assert_eq! line wrap. The other six required workflows passed, including the Obsidian vault round-trip on all three operating systems.",
+          "workflows": {
+            "rust_ci": 37979681323,
+            "obsidian_vault_roundtrip": 37979681338,
+            "inventory": 37979681080,
+            "loaded_plugin_workflows": 37979681280,
+            "desktop_build": 37979681104,
+            "quality": 37979681281,
+            "plugin_renderer": 37979681346
+          },
+          "jobs": {
+            "rust_macos": 113986711929,
+            "rust_windows": 113986712058,
+            "rust_ubuntu": 113986712126,
+            "roundtrip_ubuntu": 113986712413,
+            "roundtrip_windows": 113986712767,
+            "roundtrip_macos": 113986712863,
+            "inventory": 113986710572,
+            "loaded_plugin_windows": 113986711927,
+            "loaded_plugin_ubuntu": 113986712182,
+            "loaded_plugin_macos": 113986712297,
+            "desktop_macos": 113986711418,
+            "desktop_ubuntu": 113986711756,
+            "desktop_windows": 113986711774,
+            "quality_windows": 113986711503,
+            "quality_macos": 113986711790,
+            "quality_ubuntu": 113986711951,
+            "plugin_renderer_ubuntu": 113986711674,
+            "plugin_renderer_macos": 113986711872,
+            "plugin_renderer_windows": 113986712028
+          },
+          "correction": "Apply the exact Ubuntu rustfmt diff to wrap the link_source_path assertion, then push and rerun all seven required workflows on the new exact source SHA."
+        }
+      ],
+      "next_action": "Push the exact Ubuntu rustfmt correction and attempt-1 record, then verify the focused test and all seven workflows on the corrected exact source SHA."
     }
   },
   "ci_preparation": {
