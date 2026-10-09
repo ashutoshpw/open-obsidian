@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T21:51:00Z",
+  "updated_at": "2026-10-09T21:57:38Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "4c87ed15e8b18e9aecb697ff40d768e7a0da2e44",
+  "last_reconciled_head": "f6a75a6f76555dc91f38f138e0f3b0fd28501a9a",
   "current_milestone": "R2.6.82",
-  "next_action": "Commit and push C01.2-33 for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -229,9 +229,10 @@
     "R2.6.78 / C01.2-29 passed on exact implementation SHA 569ae4241b845937bca3fc30aec9335c11280c76: the focused corrupted-attachment workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.78-attempt-3-569ae42.json.",
     "R2.6.79 / C01.2-30 passed on exact implementation SHA 69f550253f23e47103b9eae1bd655890a6c9e266: external attachment rename leaves the original image embed unresolved and NotRendered after refresh, clears stale preview/texture state, and preserves vault/app-data snapshots through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.79-attempt-1-69f5502.json.",
     "R2.6.80 / C01.2-31 passed on exact implementation SHA 445b4a2defcaa13a3811361900c52b752401cb82: moving an attachment to another directory while preserving its basename left the original path-qualified embed unresolved and NotRendered after refresh, cleared stale UI state, and preserved vault/app-data snapshots through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.80-attempt-1-445b4a2.json.",
-    "R2.6.81 / C01.2-32 passed on exact implementation SHA 6ce07476f4266161b49df79e1e55ad032e52c9b1: external creation of a same-basename attachment made the basename-only image embed Ambiguous with exactly two candidates, no target, and NotRendered; stale UI state cleared and vault/app-data snapshots remained unchanged through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.81-attempt-1-6ce0747.json."
+    "R2.6.81 / C01.2-32 passed on exact implementation SHA 6ce07476f4266161b49df79e1e55ad032e52c9b1: external creation of a same-basename attachment made the basename-only image embed Ambiguous with exactly two candidates, no target, and NotRendered; stale UI state cleared and vault/app-data snapshots remained unchanged through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.81-attempt-1-6ce0747.json.",
+    "R2.6.82 / C01.2-33 passed on exact implementation SHA f6a75a6f76555dc91f38f138e0f3b0fd28501a9a: external removal of one same-basename attachment cleared stale ambiguous state, then uniquely resolved and rendered the remaining attachment with exact decoded pixels and alt text; vault/app-data snapshots remained unchanged through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.82-attempt-1-f6a75a6.json."
   ],
-  "push_status": "R2.6.81 / C01.2-32 is complete on exact implementation SHA 6ce07476f4266161b49df79e1e55ad032e52c9b1, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed where configured. Run IDs, job IDs, artifact digests, and limitations are in evidence/r2.6.81-attempt-1-6ce0747.json. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.82 / C01.2-33 is complete on exact implementation SHA f6a75a6f76555dc91f38f138e0f3b0fd28501a9a, pushed to origin/main. The focused workspace test and all seven required GitHub Actions workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed where configured. Run IDs, job IDs, artifact digests, and limitations are in evidence/r2.6.82-attempt-1-f6a75a6.json. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -14244,12 +14245,15 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.82": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "4c87ed15e8b18e9aecb697ff40d768e7a0da2e44",
-      "implementation_sha": null,
+      "implementation_sha": "f6a75a6f76555dc91f38f138e0f3b0fd28501a9a",
+      "implementation_commits": [
+        "f6a75a6f76555dc91f38f138e0f3b0fd28501a9a"
+      ],
       "scope": "Remove one of two same-basename attachments externally, refresh a basename-only embed, and verify it becomes uniquely resolved and rendered without stale UI state or vault/app-data writes.",
       "accepted_slice": ["C01.2-33"],
-      "remaining": ["Exact-SHA GitHub Actions validation is pending.", "Broader C01/C01.2 acceptance remains pending."],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
       "acceptance": [
         "On Ubuntu, macOS, and Windows, open a one-note vault whose ![[photo.png]] embed is initially ambiguous between Attachments/photo.png and Images/photo.png, with no target and no rendered texture.",
         "Open the note source preview, externally remove Images/photo.png, and capture the exact post-removal vault snapshot while separate app data remains unchanged.",
@@ -14258,9 +14262,46 @@
         "The exact post-removal vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
         "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
       ],
-      "ci_attempts": [],
-      "evidence": null,
-      "next_action": "Push the implementation slice to origin/main and inspect exact-SHA GitHub Actions results."
+      "ci_attempts": [
+        {
+          "source_sha": "f6a75a6f76555dc91f38f138e0f3b0fd28501a9a",
+          "attempt": 1,
+          "conclusion": "C01.2-33 passed. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows; native parallel groups passed where configured.",
+          "workflows": {
+            "rust_ci": 37995942213,
+            "obsidian_vault_roundtrip": 37995942267,
+            "inventory": 37995942281,
+            "loaded_plugin_workflows": 37995942190,
+            "desktop_build": 37995942327,
+            "quality": 37995942170,
+            "plugin_renderer": 37995942228
+          },
+          "jobs": {
+            "rust_ubuntu": 114041931186,
+            "rust_macos": 114041931431,
+            "rust_windows": 114041931597,
+            "roundtrip_macos": 114041932123,
+            "roundtrip_ubuntu": 114041932314,
+            "roundtrip_windows": 114041932607,
+            "inventory": 114041931631,
+            "loaded_windows": 114041931264,
+            "loaded_ubuntu": 114041931542,
+            "loaded_macos": 114041931686,
+            "desktop_windows": 114041932220,
+            "desktop_macos": 114041932399,
+            "desktop_ubuntu": 114041932504,
+            "quality_windows": 114041931295,
+            "quality_ubuntu": 114041931664,
+            "quality_macos": 114041931703,
+            "plugin_renderer_windows": 114041931547,
+            "plugin_renderer_ubuntu": 114041931706,
+            "plugin_renderer_macos": 114041931833
+          },
+          "evidence": "evidence/r2.6.82-attempt-1-f6a75a6.json"
+        }
+      ],
+      "evidence": "evidence/r2.6.82-attempt-1-f6a75a6.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
