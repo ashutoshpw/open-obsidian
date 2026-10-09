@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T16:34:04Z",
+  "updated_at": "2026-10-09T16:41:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "4f60ad384a6055dfd7e52348a1945c8cd8fcd4f5",
+  "last_reconciled_head": "6ed9058de819829284eb03b3ee2a0e3f29863d8a",
   "current_milestone": "R2.6.69",
-  "next_action": "Push the CI-requested Rust formatting and macOS app-data audit correction to origin/main, then validate C01.2-20 and all seven required workflows through GitHub Actions on the exact SHA.",
+  "next_action": "Select and implement the next uncovered C01.2 read-only flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.68 passed on exact source SHA 65b8c4739032b9a44e9bae0b7c81437fae62f274. All seven required workflows and the three-OS transclusion test passed after two same-SHA runner retries. Detailed results and artifact digests are in evidence/r2.6.68-attempt-2-65b8c47.json.",
+  "push_status": "R2.6.69 passed on exact source SHA 6ed9058de819829284eb03b3ee2a0e3f29863d8a. The cross-platform symlink-boundary workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.69-attempt-2-6ed9058.json.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13288,13 +13288,12 @@
       "next_action": "Select the next uncovered read-only C01/C01.2 flow; keep broader parent acceptance pending."
     },
     "R2.6.69": {
-      "status": "in_progress",
-      "implementation_sha": null,
-      "implementation_commits": ["4f60ad384a6055dfd7e52348a1945c8cd8fcd4f5"],
+      "status": "complete",
+      "implementation_sha": "6ed9058de819829284eb03b3ee2a0e3f29863d8a",
+      "implementation_commits": ["4f60ad384a6055dfd7e52348a1945c8cd8fcd4f5", "6ed9058de819829284eb03b3ee2a0e3f29863d8a"],
       "scope": "Exercise egui link and transclusion resolution for file and directory symlinks that point outside an existing vault, preserving complete vault, separate app-data, and outside-target snapshots.",
       "accepted_slice": ["C01.2-20"],
       "remaining": [
-        "Exact-SHA GitHub Actions evidence is pending.",
         "Broader C01/C01.2 acceptance remains pending."
       ],
       "acceptance": [
@@ -13318,9 +13317,24 @@
             "quality": 37958217328
           },
           "correction": "Apply the exact Ubuntu rustfmt diff. Do not require eframe to create app.ron before cancellation; snapshot the existing app-data state and keep the strict unchanged comparison after cancellation and teardown. Validate all seven workflows on a fresh exact SHA."
+        },
+        {
+          "source_sha": "6ed9058de819829284eb03b3ee2a0e3f29863d8a",
+          "attempt": 2,
+          "conclusion": "The symlink-boundary workspace test passed on Ubuntu, macOS, and Windows. All seven required workflows passed on the exact source SHA.",
+          "workflows": {
+            "rust_ci": 37960074849,
+            "obsidian_vault_roundtrip": 37960074884,
+            "inventory": 37960074908,
+            "loaded_plugin_workflows": 37960074861,
+            "desktop_build": 37960074873,
+            "quality": 37960074863,
+            "plugin_renderer": 37960074993
+          },
+          "evidence": "evidence/r2.6.69-attempt-2-6ed9058.json"
         }
       ],
-      "next_action": "Commit and push the CI corrections to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
+      "next_action": "Select and implement the next uncovered C01.2 read-only flow as a small slice, then commit and push it for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending."
     }
   },
   "ci_preparation": {
