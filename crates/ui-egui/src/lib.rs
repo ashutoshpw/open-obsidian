@@ -427,30 +427,13 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
-        let selected_label = self.link_source_path.as_ref().map_or_else(
-            || "Choose a note".to_owned(),
-            |path| path.display().to_string(),
-        );
         let mut source_changed = false;
         ui.horizontal(|ui| {
-            ui.add_enabled_ui(!operation_busy, |ui| {
-                eframe::egui::ComboBox::from_label("Note to inspect")
-                    .selected_text(selected_label)
-                    .show_ui(ui, |ui| {
-                        for path in &note_paths {
-                            if ui
-                                .selectable_value(
-                                    &mut self.link_source_path,
-                                    Some(path.clone()),
-                                    path.display().to_string(),
-                                )
-                                .changed()
-                            {
-                                source_changed = true;
-                            }
-                        }
-                    });
-            });
+            ui.label("Note to inspect:");
+            ui.label(self.link_source_path.as_ref().map_or_else(
+                || "Choose a note".to_owned(),
+                |path| path.display().to_string(),
+            ));
             let can_resolve = !operation_busy && self.link_source_path.is_some();
             if ui
                 .add_enabled(
@@ -462,6 +445,26 @@ impl OpenObsidianApp {
                 self.start_link_resolution();
             }
         });
+        eframe::egui::CollapsingHeader::new("Choose note to inspect")
+            .id_salt("note-inspection-paths")
+            .show(ui, |ui| {
+                ui.add_enabled_ui(!operation_busy, |ui| {
+                    eframe::egui::ScrollArea::vertical()
+                        .max_height(120.0)
+                        .show(ui, |ui| {
+                            for path in &note_paths {
+                                let selected = self.link_source_path.as_ref() == Some(path);
+                                if ui
+                                    .selectable_label(selected, path.display().to_string())
+                                    .changed()
+                                {
+                                    self.link_source_path = Some(path.clone());
+                                    source_changed = true;
+                                }
+                            }
+                        });
+                });
+            });
         if source_changed {
             self.link_resolutions.clear();
             self.link_error = None;
@@ -2497,8 +2500,9 @@ mod tests {
             before_app_data
         );
 
-        // ComboBox popup options are absent from the Windows accessibility tree.
-        harness.state_mut().link_source_path = Some(PathBuf::from("Notes/External.md"));
+        harness.get_by_label("Choose note to inspect").click();
+        harness.step();
+        harness.get_by_label("Notes/External.md").click();
         harness.step();
         assert_eq!(
             harness.state().link_source_path.as_deref(),
