@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.6.67",
+  "attempt": 3,
+  "source_sha": "d54fb8cd7eab8b043e37ea6146b68681a01fe0a4",
+  "change": "Add AccessKit Action::Click to the menu button and order the synthetic notes deterministically.",
+  "conclusion": "The Windows UIA audit still failed because the note selector exposed no InvokePattern. Its value was now README.md. Rust CI was still running on Ubuntu when this evidence was collected; the other companion workflows passed, and Linux/macOS round-trip jobs passed.",
+  "windows_uia": {
+    "run_id": 37948991762,
+    "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37948991762",
+    "job_id": 113882568596,
+    "job_conclusion": "failure",
+    "failure": "The Note to inspect menu button does not expose UI Automation InvokePattern",
+    "observed": {
+      "control_type": "ControlType.Button",
+      "name": "Note to inspect",
+      "enabled": true,
+      "offscreen": false,
+      "supports_expand_collapse": false,
+      "supports_invoke": false,
+      "supports_value": true,
+      "value": "README.md"
+    },
+    "snapshot_result": {
+      "vault_unchanged_after_teardown": true,
+      "application_data_baseline_captured": false
+    },
+    "artifact": {
+      "id": 11625036245,
+      "name": "obsidian-vault-roundtrip-Windows-d54fb8cd7eab8b043e37ea6146b68681a01fe0a4",
+      "digest": "sha256:6779e734bda96f974a7ae6f11850e0a1686b24d6addf398b37c0adcfa673597c",
+      "report": "windows-note-selector-accessibility.json",
+      "report_sha256": "9e9fc4e9e0256151b64d8a188279097dc60fdd492a1281c511c7aab26ac12697"
+    }
+  },
+  "companion_ci": [
+    {
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 37948991759,
+      "status_at_collection": "in_progress",
+      "jobs_at_collection": [
+        { "id": 113882568416, "name": "rust (macos-latest)", "conclusion": "success" },
+        { "id": 113882568771, "name": "rust (windows-latest)", "conclusion": "success" },
+        { "id": 113882568834, "name": "rust (ubuntu-latest)", "status": "in_progress" }
+      ]
+    },
+    {
+      "workflow": "Rust migration inventory",
+      "run_id": 37948991771,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian quality",
+      "run_id": 37948991837,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian desktop build",
+      "run_id": 37948991773,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian plugin renderer matrix",
+      "run_id": 37948991844,
+      "conclusion": "success"
+    },
+    {
+      "workflow": "OpenObsidian loaded plugin workflows",
+      "run_id": 37948991770,
+      "conclusion": "success"
+    }
+  ],
+  "roundtrip_platform_jobs": [
+    { "id": 113882568933, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+    { "id": 113882568885, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+    { "id": 113882568596, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure" }
+  ],
+  "finding": "The added Click action and corrected fixture value were present, but UIA still reported supports_invoke=false. The pinned AccessKit Consumer defines a node as invocable only when clickable and with no expanded, toggle, or selected state; set_expanded(false) supplies an expanded state. The pinned Windows adapter derives InvokePattern from this invocable predicate and does not provide ExpandCollapsePattern.",
+  "correction": "Keep Action::Click and HasPopup::Menu. Clear the expanded attribute while the menu is closed so UIA can expose InvokePattern; set expanded=true only while the popup is open. Verify the action and full selection flow on exact-SHA GitHub Actions.",
+  "references": [
+    "https://github.com/AccessKit/accesskit/blob/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/consumer/src/node.rs#L638-L652",
+    "https://github.com/AccessKit/accesskit/blob/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/platforms/windows/src/node.rs#L571-L573"
+  ],
+  "local_validation": "none; GitHub Actions was the only test venue."
+}

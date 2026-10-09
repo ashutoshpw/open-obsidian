@@ -557,7 +557,11 @@ impl OpenObsidianApp {
                         node.set_label("Note to inspect");
                         node.set_value(selected_label.clone());
                         node.set_has_popup(eframe::egui::accesskit::HasPopup::Menu);
-                        node.set_expanded(note_menu_open);
+                        if note_menu_open {
+                            node.set_expanded(true);
+                        } else {
+                            node.clear_expanded();
+                        }
                         node.add_action(eframe::egui::accesskit::Action::Click);
                     });
                 ui.label(&selected_label);
