@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:03:00Z",
+  "updated_at": "2026-10-09T19:12:21Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "03d3cf2d74f6f5a1947d948c5485ceb993b4104e",
+  "last_reconciled_head": "898c2df7c14cd7cd315012e747f9232f77fa92b1",
   "current_milestone": "R2.6.74",
-  "next_action": "Commit the exact Ubuntu formatter correction, push it to origin/main, and inspect all seven required workflows on its exact SHA.",
+  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.74 attempt 2 on source SHA 03d3cf2d74f6f5a1947d948c5485ceb993b4104e passed the focused workspace test on all three OSes and all six companion workflows; Rust CI failed only Ubuntu formatting for a one-line write layout. The exact diff is applied locally and needs a fresh exact-SHA run. The GitHub Actions parallel-step prerequisite is complete on c479996995d6774d8ab776f1f61b6d2261592b36, with all seven workflows and the manual reference workflow passing; evidence: evidence/parallel-ci-runner-setup-c479996.json.",
+  "push_status": "R2.6.74 / C01.2-25 passed on exact source SHA 898c2df7c14cd7cd315012e747f9232f77fa92b1. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.74-attempt-3-898c2df.json. The GitHub Actions parallel-step prerequisite is complete on c479996995d6774d8ab776f1f61b6d2261592b36, with all seven workflows and the manual reference workflow passing; evidence: evidence/parallel-ci-runner-setup-c479996.json. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13613,8 +13613,14 @@
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     },
     "R2.6.74": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "7e74b3be437cce9ee29d7782e04c7b6b2641535c",
+      "implementation_sha": "898c2df7c14cd7cd315012e747f9232f77fa92b1",
+      "implementation_commits": [
+        "632b64c65cc083c468440456ef1b34720661317a",
+        "03d3cf2d74f6f5a1947d948c5485ceb993b4104e",
+        "898c2df7c14cd7cd315012e747f9232f77fa92b1"
+      ],
       "scope": "Exercise external removal of the only Markdown note from an active existing vault; refresh and verify the UI reaches its empty-vault state while stale selection, link, embed, preview, and texture state clears without writing vault or app data.",
       "accepted_slice": ["C01.2-25"],
       "remaining": ["Broader C01/C01.2 acceptance remains pending."],
@@ -13696,9 +13702,46 @@
             "plugin_renderer_macos": 113974794168
           },
           "correction": "Apply the exact Ubuntu rustfmt diff to put the only-note std::fs::write statement on one line, then push and rerun all seven required workflows on the new exact source SHA."
+        },
+        {
+          "source_sha": "898c2df7c14cd7cd315012e747f9232f77fa92b1",
+          "attempt": 3,
+          "conclusion": "C01.2-25 passed. The focused workspace test passed on Ubuntu, macOS, and Windows; Rust CI and all six companion workflows passed on this exact source SHA.",
+          "workflows": {
+            "rust_ci": 37977661266,
+            "obsidian_vault_roundtrip": 37977661288,
+            "inventory": 37977661297,
+            "loaded_plugin_workflows": 37977661109,
+            "desktop_build": 37977661237,
+            "quality": 37977661186,
+            "plugin_renderer": 37977661286
+          },
+          "jobs": {
+            "rust_ubuntu": 113979902756,
+            "rust_macos": 113979902242,
+            "rust_windows": 113979902551,
+            "roundtrip_ubuntu": 113979901200,
+            "roundtrip_macos": 113979901087,
+            "roundtrip_windows": 113979900638,
+            "inventory": 113979904692,
+            "loaded_plugin_macos": 113979900815,
+            "loaded_plugin_windows": 113979901022,
+            "loaded_plugin_ubuntu": 113979901124,
+            "desktop_ubuntu": 113979900845,
+            "desktop_macos": 113979901329,
+            "desktop_windows": 113979901645,
+            "quality_ubuntu": 113979901583,
+            "quality_windows": 113979901621,
+            "quality_macos": 113979901660,
+            "plugin_renderer_macos": 113979902042,
+            "plugin_renderer_ubuntu": 113979902431,
+            "plugin_renderer_windows": 113979902530
+          },
+          "evidence": "evidence/r2.6.74-attempt-3-898c2df.json"
         }
       ],
-      "next_action": "Commit the exact Ubuntu formatter correction, push it to origin/main, and inspect all seven required workflows on its exact SHA."
+      "evidence": "evidence/r2.6.74-attempt-3-898c2df.json",
+      "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
     }
   },
   "ci_preparation": {
