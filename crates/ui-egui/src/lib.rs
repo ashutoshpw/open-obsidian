@@ -3893,6 +3893,191 @@ mod tests {
     }
 
     #[test]
+    fn egui_failed_vault_refresh_retains_listing_and_recovers_after_root_returns_without_writing() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let relocated_vault_path = temporary.0.join("Temporarily Relocated Vault");
+        let app_data_path = temporary.0.join("App Data");
+        let note_path = PathBuf::from("Notes/Welcome.md");
+        let note_file_path = vault_path.join(&note_path);
+        let initial_source = b"\xef\xbb\xbf# Original note\r\n";
+        let recovered_source = b"\xef\xbb\xbf# Restored externally\r\nThe vault is back.\r\n";
+        std::fs::create_dir_all(
+            note_file_path
+                .parent()
+                .expect("note must have a parent directory"),
+        )
+        .expect("create existing vault note directory");
+        std::fs::create_dir_all(app_data_path.join("state"))
+            .expect("create separate app-data directory");
+        std::fs::write(&note_file_path, initial_source).expect("seed existing note source");
+        std::fs::write(
+            app_data_path.join("state/open-state.bin"),
+            [0xa5, 0x00, 0x7e, 0xff],
+        )
+        .expect("seed separate app-data sentinel");
+
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open the existing vault without conversion");
+        let canonical_vault = session.root_path().to_path_buf();
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(note_path.clone()),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        let initial_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the initial valid source preview should be visible");
+        assert_eq!(initial_preview.relative_path, note_path);
+        assert_eq!(initial_preview.text.as_bytes(), initial_source);
+
+        std::fs::rename(&vault_path, &relocated_vault_path)
+            .expect("simulate the selected vault root becoming unavailable");
+        let relocated_vault = existing_vault_tree_snapshot(&relocated_vault_path);
+        assert_eq!(relocated_vault, before_vault);
+        assert!(!vault_path.exists());
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert_eq!(
+            harness.state().vault_refresh_error.as_deref(),
+            Some("The note list could not be refreshed safely. The existing listing remains available.")
+        );
+        assert!(harness.state().vault_refresh_status.is_none());
+        let retained_session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("a failed refresh should retain the existing session");
+        assert_eq!(retained_session.root_path(), canonical_vault);
+        assert_eq!(retained_session.entries().len(), 1);
+        assert_eq!(retained_session.entries()[0].relative_path, note_path);
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&relocated_vault_path),
+            relocated_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_some());
+        assert_eq!(
+            existing_vault_tree_snapshot(&relocated_vault_path),
+            relocated_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        std::fs::write(
+            relocated_vault_path.join(&note_path),
+            recovered_source,
+        )
+        .expect("simulate an external note update while the vault root is relocated");
+        let mut expected_recovered_vault = before_vault.clone();
+        expected_recovered_vault
+            .iter_mut()
+            .find(|(path, _, _)| path == &note_path)
+            .expect("vault snapshot must contain the note")
+            .2 = recovered_source.to_vec();
+        let recovered_vault = existing_vault_tree_snapshot(&relocated_vault_path);
+        assert_eq!(recovered_vault, expected_recovered_vault);
+        std::fs::rename(&relocated_vault_path, &vault_path)
+            .expect("restore the selected vault root at its original path");
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), recovered_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        harness.get_by_label("Refresh note list").click();
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_receiver.is_none());
+        assert!(harness.state().vault_refresh_error.is_none());
+        assert_eq!(
+            harness.state().vault_refresh_status.as_deref(),
+            Some("Note list refreshed: 1 Markdown files found.")
+        );
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_source_preview.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        let recovered_session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("the restored vault session should remain open");
+        assert_eq!(recovered_session.root_path(), canonical_vault);
+        assert_eq!(recovered_session.entries().len(), 1);
+        assert_eq!(recovered_session.entries()[0].relative_path, note_path);
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(note_path.as_path())
+        );
+
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        assert!(harness.state().note_preview_receiver.is_none());
+        assert!(harness.state().note_preview_error.is_none());
+        let recovered_preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the restored note source preview should be visible");
+        assert_eq!(recovered_preview.relative_path, note_path);
+        assert_eq!(recovered_preview.text.as_bytes(), recovered_source);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            recovered_vault
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), recovered_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
     fn egui_bounds_oversized_note_preview_at_utf8_boundary_without_writing() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");

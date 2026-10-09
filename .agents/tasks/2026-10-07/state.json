@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T23:37:47Z",
+  "updated_at": "2026-10-09T23:46:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "814881e69db735c2fd253e34a8a890425e10f6c5",
-  "current_milestone": "R2.6.85",
-  "next_action": "Inspect remaining C01/C01.2 read-only acceptance criteria and select the next uncovered cross-platform flow as a small milestone; keep parent acceptance pending.",
+  "last_reconciled_head": "e371aeaba091e2048d85f28e6a9dd8a7baf0ec77",
+  "current_milestone": "R2.6.86",
+  "next_action": "Push the C01.2-37 failed-refresh recovery implementation commit to origin/main and inspect all seven required workflows on its exact source SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14595,10 +14595,35 @@
         }
       ],
       "evidence": "evidence/r2.6.85-attempt-1-814881e.json",
-      "next_action": "Inspect remaining C01/C01.2 read-only acceptance criteria and select the next uncovered cross-platform flow as a small milestone; keep parent acceptance pending.",
+      "next_action": "R2.6.85 is accepted. C01.2-37 is the next uncovered flow: retain the active listing on a failed refresh when the vault root is unavailable, then recover after the root returns.",
       "implementation_commits": [
         "814881e69db735c2fd253e34a8a890425e10f6c5"
       ]
+    },
+    "R2.6.86": {
+      "status": "in_progress",
+      "starting_sha": "e371aeaba091e2048d85f28e6a9dd8a7baf0ec77",
+      "implementation_sha": null,
+      "scope": "When the active vault root temporarily becomes unavailable, a refresh reports the failure while retaining the selected vault listing; after the same root returns, a later refresh clears the error and displays the current source without vault or app-data writes.",
+      "accepted_slice": [
+        "C01.2-37"
+      ],
+      "remaining": [
+        "Exact-SHA GitHub Actions validation is pending.",
+        "Broader C01/C01.2 read-only acceptance remains pending; edit/save is deferred to C02/C14."
+      ],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open an existing one-note vault and display its valid BOM/CRLF source preview.",
+        "Externally relocate the selected vault root, refresh, and verify that the explicit refresh error appears while the original session, one-note listing, and selected relative path remain available.",
+        "Requesting the selected note preview while its root is unavailable fails closed with no source preview and an explicit preview error; vault contents at the relocated path and separate app data remain unchanged.",
+        "Externally update the note under the relocated root and restore that root at its original path; capture the exact resulting vault and app-data snapshots.",
+        "A successful refresh clears the prior refresh/preview errors, retains the selected path, and a fresh preview displays the exact updated bytes.",
+        "The exact recovered vault snapshot and separate app-data snapshot remain unchanged through failed refresh, failed preview, root restoration, successful refresh, successful preview, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Push the C01.2-37 failed-refresh recovery implementation commit to origin/main; inspect all seven required workflows on its exact source SHA."
     }
   },
   "ci_preparation": {
