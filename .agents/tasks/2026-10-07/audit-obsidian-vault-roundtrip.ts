@@ -676,19 +676,22 @@ async function createObsidianProfile(profileDirectory: string, port: number): Pr
   const homeRoot = join(profileDirectory, "home");
   const env: NodeJS.ProcessEnv = {
     ...process.env,
-    HOME: homeRoot,
   };
   const args: string[] = [];
   if (process.platform === "linux") {
+    env.HOME = homeRoot;
     env.XDG_CONFIG_HOME = join(profileDirectory, "config");
     env.XDG_CACHE_HOME = join(profileDirectory, "cache");
     env.XDG_DATA_HOME = join(profileDirectory, "data");
     args.push("--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage");
   } else if (process.platform === "win32") {
+    env.HOME = homeRoot;
     env.USERPROFILE = homeRoot;
     env.APPDATA = join(profileDirectory, "appdata-roaming");
     env.LOCALAPPDATA = join(profileDirectory, "appdata-local");
   }
+  // Keep the GitHub-hosted macOS user's ephemeral login keychain available to Electron safeStorage.
+  // Pointing HOME at a new temp directory produces a blocking "Keychain Not Found" native dialog.
   args.push(
     "--remote-allow-origins=*",
     "--remote-debugging-address=127.0.0.1",
