@@ -37,10 +37,11 @@ jobs:
             uses: dtolnay/rust-toolchain@stable
             with:
               components: clippy, rustfmt
-          - name: Set up Bun for pinned compatibility fixtures
-            uses: oven-sh/setup-bun@v2
-            with:
-              bun-version-file: package.json
+
+      - name: Set up Bun for pinned compatibility fixtures
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
 
       - name: Cache Cargo outputs
         uses: Swatinem/rust-cache@v2

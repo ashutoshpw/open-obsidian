@@ -3011,8 +3011,7 @@ mod tests {
                 .expect("duplicate-basename note must have a parent directory"),
         )
         .expect("create duplicate-basename note directory");
-        let archive_source =
-            "\u{feff}# Archived welcome\r\n\r\nSame basename, distinct path.\r\n";
+        let archive_source = "\u{feff}# Archived welcome\r\n\r\nSame basename, distinct path.\r\n";
         std::fs::write(&archive_welcome_path, archive_source.as_bytes())
             .expect("seed second Welcome.md before the no-op baseline");
         std::fs::write(
@@ -3037,20 +3036,19 @@ mod tests {
                 .entries()
                 .iter()
                 .find(|entry| {
-                    entry
-                        .relative_path
-                        .to_string_lossy()
-                        .replace('\\', "/")
-                        == normalized_path
+                    entry.relative_path.to_string_lossy().replace('\\', "/") == normalized_path
                 })
                 .map(|entry| entry.relative_path.clone())
-                .expect("existing-vault fixture must include the requested note");
+                .expect("existing-vault fixture must include the requested note")
         };
         let readme_path = note_path("README.md");
         let notes_welcome_path = note_path("Notes/Welcome.md");
         let archive_welcome_path = note_path("Archive/Welcome.md");
         assert_ne!(notes_welcome_path, archive_welcome_path);
-        assert_eq!(notes_welcome_path.file_name(), archive_welcome_path.file_name());
+        assert_eq!(
+            notes_welcome_path.file_name(),
+            archive_welcome_path.file_name()
+        );
         let notes_welcome_label = notes_welcome_path.display().to_string();
         let archive_welcome_label = archive_welcome_path.display().to_string();
         assert_ne!(notes_welcome_label, archive_welcome_label);

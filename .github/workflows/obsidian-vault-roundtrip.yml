@@ -46,11 +46,6 @@ jobs:
         uses: actions/checkout@v4
 
       - parallel:
-          - name: Set up Bun
-            uses: oven-sh/setup-bun@v2
-            with:
-              bun-version-file: package.json
-
           - name: Set up Rust
             uses: dtolnay/rust-toolchain@stable
 
@@ -82,6 +77,11 @@ jobs:
               $imageMagick = Get-ChildItem -Path $env:ProgramFiles -Directory -Filter 'ImageMagick*' | ForEach-Object { Join-Path $_.FullName 'magick.exe' } | Where-Object { Test-Path $_ } | Select-Object -First 1
               if (-not $imageMagick) { throw 'ImageMagick magick.exe was not installed under Program Files' }
               (Split-Path $imageMagick) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
 
       - name: Cache Cargo outputs
         uses: Swatinem/rust-cache@v2
