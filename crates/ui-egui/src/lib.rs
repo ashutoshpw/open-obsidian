@@ -2949,9 +2949,7 @@ mod tests {
         assert_eq!(preview.relative_path, readme_path);
         assert_eq!(preview.text.as_bytes(), readme_source.as_bytes());
 
-        harness
-            .get_by_label("Note to inspect")
-            .click_accesskit();
+        harness.get_by_label("Note to inspect").click_accesskit();
         harness.step();
         harness.get_by_label(&welcome_label).click();
         harness.step();
