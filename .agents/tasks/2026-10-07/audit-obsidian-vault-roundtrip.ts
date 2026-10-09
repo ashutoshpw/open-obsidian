@@ -1510,7 +1510,8 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     const clearedLocationScreenshot = await captureDesktopScreenshot("openobsidian-native-folder-location-entry-cleared.png");
     screenshots.push(relative(reportDirectory, clearedLocationScreenshot));
     const clearedLocationOcr = await readScreenshotOcr(clearedLocationScreenshot);
-    xdotool("type", "--clearmodifiers", "--delay", "20", vaultRoot);
+    execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {input: vaultRoot, stdio: ["pipe", "ignore", "ignore"]});
+    xdotool("key", "ctrl+v");
     await delay(500);
     const enteredPathScreenshot = await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png");
     screenshots.push(relative(reportDirectory, enteredPathScreenshot));
@@ -1520,7 +1521,7 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     openReport.linux_folder_selection_location_entry_ocr = enteredPathOcr.slice(0, 2_000);
     openReport.linux_folder_selection_location_entry_contains_fixture_path = enteredPathOcr.includes(vaultRoot);
     await saveReport();
-    pathEntryInteraction = "Focused and cleared the Ctrl+L location entry, then typed the full absolute fixture path.";
+    pathEntryInteraction = "Focused and cleared the Ctrl+L location entry, then pasted the full absolute fixture path from the CI clipboard.";
     const clicked = clickWindowOpenButton(pickerWindowId);
     folderSelectionInteraction = `Clicked the native folder dialog confirmation at (${clicked.click_x}, ${clicked.click_y}) after entering the fixture path.`;
     await delay(750);

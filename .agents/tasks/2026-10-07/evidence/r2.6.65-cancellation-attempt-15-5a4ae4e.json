@@ -1,0 +1,107 @@
+{
+  "milestone": "R2.6.65",
+  "attempt": 15,
+  "source_sha": "5a4ae4e4791f4f6ccc2a19e642f8f18fe0292417",
+  "workflow_results": {
+    "obsidian_vault_roundtrip": {
+      "run_id": 37928627417,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37928627417",
+      "initial_attempt_conclusion": "failure",
+      "same_sha_reruns": {
+        "attempt_2": {
+          "macos_job": 113816075619,
+          "conclusion": "success"
+        },
+        "attempt_3": {
+          "windows_job": 113817385236,
+          "conclusion": "success"
+        }
+      },
+      "jobs": {
+        "ubuntu": 113813562429,
+        "macos_initial": 113813562787,
+        "windows_initial": 113813562837
+      }
+    },
+    "rust_ci": {
+      "run_id": 37928627420,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113813563466,
+        "ubuntu": 113813563526,
+        "windows": 113813563645
+      }
+    },
+    "quality": {
+      "run_id": 37928627398,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113813562864,
+        "macos": 113813563256,
+        "ubuntu": 113813563352
+      }
+    },
+    "desktop_build": {
+      "run_id": 37928627644,
+      "conclusion": "success",
+      "jobs": {
+        "windows": 113813564171,
+        "ubuntu": 113813564456,
+        "macos": 113813564461
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 37928627683,
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 113813564349,
+        "macos": 113813564559,
+        "windows": 113813564634
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 37928627442,
+      "conclusion": "success",
+      "jobs": {
+        "macos": 113813563253,
+        "windows": 113813563460,
+        "ubuntu": 113813563496
+      }
+    },
+    "inventory": {
+      "run_id": 37928627493,
+      "conclusion": "success",
+      "job": 113813563151
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu_initial": {
+      "artifact_id": 11614763582,
+      "digest": "sha256:3ad9676bf79bf49a7e097bbba79459cba4f49e8c214ca773de6e68e83338d1d5"
+    },
+    "macos_initial": {
+      "artifact_id": 11615950196,
+      "digest": "sha256:f3635980912d15dc1dc74dda182621284cda0c0778750aeff90589880757876d"
+    },
+    "macos_same_sha_rerun": {
+      "artifact_id": 11615553047,
+      "digest": "sha256:e404509952b2538750b9efc976bfeab8736be56df18110a8824c28e538429aad"
+    },
+    "windows_initial": {
+      "artifact_id": 11615541913,
+      "digest": "sha256:e5950c0692f7b2c56d7b57bf27c4a06593b4cd065524fa145f6daf2416bc7a08"
+    },
+    "windows_same_sha_rerun": {
+      "artifact_id": 11615014163,
+      "digest": "sha256:d5d1c506c1a8169e6a28601ae29216aec98a626617b5574d4d7bb113652527ac"
+    }
+  },
+  "platform_findings": {
+    "ubuntu": "The cleared Zenity location entry was empty. The entered-path screenshot and OCR show extra trailing characters after the fixture basename, so the selected path did not resolve and OpenObsidian reported canonicalize selected vault: No such file or directory (ENOENT).",
+    "macos": "The initial active-session cancellation click did not expose an Open panel. The same-SHA attempt 2 rerun passed native cancellation, vault/app-data snapshots, and Obsidian reopen.",
+    "windows": "The initial active-session cancellation click did not expose a folder-picker window. The same-SHA attempt 3 rerun passed native cancellation, vault/app-data snapshots, and Obsidian reopen."
+  },
+  "parallel_groups": "All applicable native parallel setup/build/check groups completed successfully on this source SHA; the parallel runner-setup implementation is already on origin/main.",
+  "correction": "Use xclip on the Linux CI runner to paste the full fixture path into Zenity’s cleared Ctrl+L entry rather than synthesizing characters with xdotool. Keep macOS and Windows interaction unchanged after passing same-SHA reruns.",
+  "execution_policy": "No local tests, builds, formatters, linters, application launches, or executable validation were run. Validation evidence came from GitHub Actions."
+}
