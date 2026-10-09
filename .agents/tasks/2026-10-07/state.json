@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T19:12:21Z",
+  "updated_at": "2026-10-09T19:21:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "898c2df7c14cd7cd315012e747f9232f77fa92b1",
-  "current_milestone": "R2.6.74",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "396a50389d91041977dd67c22b9e75320c21f228",
+  "current_milestone": "R2.6.75",
+  "next_action": "Commit the focused C01.2-26 egui test and pending matrix row, push to origin/main, and inspect all seven exact-SHA GitHub Actions workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -224,7 +224,7 @@
     "R2.6.65 attempt 21 on exact SHA 76f3195: Rust CI and six companion workflows passed. Windows and macOS passed native cancellation, snapshots and Obsidian reopen; Ubuntu's audit stopped after the first picker click because it referenced egui_hover_event instead of eguiHoverEvent. Evidence: evidence/r2.6.65-cancellation-attempt-21-76f3195.json.",
     "R2.6.65 attempt 22 on exact SHA d2f0bb5: Rust CI and all six companion workflows passed. Ubuntu, macOS, and Windows all passed native picker cancellation, unchanged vault/app-data snapshots, and Obsidian reopen. Ubuntu used egui keyboard focus/Enter after CI confirmed X11 pointer motion was not delivered. Evidence: evidence/r2.6.65-cancellation-attempt-22-d2f0bb5.json."
   ],
-  "push_status": "R2.6.74 / C01.2-25 passed on exact source SHA 898c2df7c14cd7cd315012e747f9232f77fa92b1. The focused workspace test and all seven required workflows passed on Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.74-attempt-3-898c2df.json. The GitHub Actions parallel-step prerequisite is complete on c479996995d6774d8ab776f1f61b6d2261592b36, with all seven workflows and the manual reference workflow passing; evidence: evidence/parallel-ci-runner-setup-c479996.json. Broader C01/C01.2 acceptance remains pending.",
+  "push_status": "R2.6.74 / C01.2-25 passed on exact source SHA 898c2df7c14cd7cd315012e747f9232f77fa92b1. All seven required workflows passed on Ubuntu, macOS, and Windows; evidence: evidence/r2.6.74-attempt-3-898c2df.json. R2.6.75 / C01.2-26 is in progress at starting SHA 396a50389d91041977dd67c22b9e75320c21f228. Broader C01/C01.2 acceptance remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -13742,6 +13742,22 @@
       ],
       "evidence": "evidence/r2.6.74-attempt-3-898c2df.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.75": {
+      "status": "in_progress",
+      "starting_sha": "396a50389d91041977dd67c22b9e75320c21f228",
+      "scope": "Exercise external removal of an embedded image from an active existing vault; refresh and confirm the note remains available while the stale attachment render is cleared and a fresh embed resolution reports the image missing, without writing vault or app data.",
+      "accepted_slice": ["C01.2-26"],
+      "remaining": ["Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault with a resolvable PNG embed; render the image and open the note source preview.",
+        "Remove the image externally, record the post-removal vault snapshot, and refresh while keeping the active vault and Markdown note selected.",
+        "Refresh clears link/embed/preview/error/texture state. A fresh link/embed resolution reports the attachment as unresolved and not rendered.",
+        "The post-removal vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "next_action": "Commit the focused C01.2-26 egui test and matrix row, push to origin/main, and inspect all seven required exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {
