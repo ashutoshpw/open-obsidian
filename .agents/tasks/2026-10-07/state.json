@@ -2,12 +2,12 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T06:43:02Z",
+  "updated_at": "2026-10-09T07:40:42Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7",
-  "current_milestone": "R2.6.59",
+  "last_reconciled_head": "f1d759ef94c92fa7d1af945b0697e36eb76c974f",
+  "current_milestone": "R2.6.60",
   "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14.",
   "blockers": [],
   "phases": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7"
+      "implementation_sha": "f1d759ef94c92fa7d1af945b0697e36eb76c974f"
     },
     "R3": {
       "status": "pending",
@@ -201,7 +201,9 @@
     "Extended .github/workflows/quality.yml with a native parallel group for Knip and report-only Fallow health. The first push's inventory run identified a stale workflow hash; after inventory reconciliation, all six required workflows passed on exact SHA f9d66e6f45e09fe108347db543a7d325b70d48c2. The two grouped audits passed on Ubuntu, macOS, and Windows. Evidence: evidence/parallel-ci-quality-audits-f9d66e6.json. No local checks were run.",
     "R2.6.57 failed-open UI preservation passed on all three CI operating systems and all seven workflows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371; no local executable validation was used. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json.",
     "R2.6.58 successful vault-switch UI coverage passed on all three CI operating systems and all seven workflows on exact source SHA b221d72eff3bcfbd1656212915c1acb4fe8b2134. Evidence: evidence/r2.6.58-existing-vault-switch-b221d72.json. No local executable validation was used.",
-    "R2.6.59 verified cyclic Next/Previous note navigation with stale link/embed/preview clearing and byte-identical vault/app-data snapshots. The focused test and all seven required workflows passed on all three CI operating systems on exact source SHA 1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. Evidence: evidence/r2.6.59-note-navigation-wrap-1d15ea0.json. C01/C01.2 remain pending; no local executable validation was used."
+    "R2.6.59 verified cyclic Next/Previous note navigation with stale link/embed/preview clearing and byte-identical vault/app-data snapshots. The focused test and all seven required workflows passed on all three CI operating systems on exact source SHA 1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. Evidence: evidence/r2.6.59-note-navigation-wrap-1d15ea0.json. C01/C01.2 remain pending; no local executable validation was used.",
+    "R2.6.60 added cross-platform synthetic egui coverage for AccessKit activation and selection through Note to inspect, stale result/preview clearing, byte-exact source preview, and unchanged vault/app-data snapshots. The focused test and all seven required workflows passed on exact source SHA f1d759ef94c92fa7d1af945b0697e36eb76c974f. Evidence: evidence/r2.6.60-note-inspector-combobox-f1d759e.json. C01/C01.2 remain pending; no local executable validation was used.",
+    "CI preparation commit c479996995d6774d8ab776f1f61b6d2261592b36 grouped independent runner setup steps using native GitHub Actions parallel groups. All seven push workflows and a manually dispatched reference-runner workflow passed; evidence: evidence/parallel-ci-runner-setup-c479996.json. No local validation was run."
   ],
   "push_status": "pushed",
   "ci_results": [
@@ -7052,7 +7054,9 @@
     "Extended the quality workflow's native parallel preflight group to include read-only progress-state validation. After reconciling the workflow inventory hash, all six triggered workflows passed on exact SHA 01fdec963c5abb6d4eb97e9adb1ef5e431e7f2e9. Evidence: evidence/parallel-ci-quality-state-preflight-01fdec9.json. No local executable validation was run.",
     "R2.6.57 verified that a failed attempt to open a selected regular file leaves the current existing-vault session and vault/app-data/file bytes unchanged. The focused test and all seven required workflows passed on Ubuntu, macOS, and Windows on exact source SHA e803f6c0f2f620c171b63d2ba01b22b837214371. Evidence: evidence/r2.6.57-failed-vault-open-preservation-e803f6c.json. C01/C01.2 remain pending; no local executable validation was used.",
     "R2.6.58 switched from a first active existing vault with an open note preview to a second valid vault, cleared the old preview, selected the second vault's note, and preserved both full vault trees and separate app data. The focused test and all seven required workflows passed on Ubuntu, macOS, and Windows on exact source SHA b221d72eff3bcfbd1656212915c1acb4fe8b2134. Evidence: evidence/r2.6.58-existing-vault-switch-b221d72.json. C01/C01.2 remain pending; no local executable validation was used.",
-    "R2.6.59 focused egui note-navigation wraparound and stale-state clearing passed with all seven required workflows on exact source SHA 1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. Run IDs: Rust CI 37894441118, inventory 37894441180, quality 37894441025, desktop 37894441042, renderer 37894441087, loaded plugins 37894441093, Obsidian round-trip 37894441022. Evidence: evidence/r2.6.59-note-navigation-wrap-1d15ea0.json."
+    "R2.6.59 focused egui note-navigation wraparound and stale-state clearing passed with all seven required workflows on exact source SHA 1d15ea0a0f49b5b8f31c1e8603868ef5b9968cc7. Run IDs: Rust CI 37894441118, inventory 37894441180, quality 37894441025, desktop 37894441042, renderer 37894441087, loaded plugins 37894441093, Obsidian round-trip 37894441022. Evidence: evidence/r2.6.59-note-navigation-wrap-1d15ea0.json.",
+    "R2.6.60 passed all seven required workflows on exact source SHA f1d759ef94c92fa7d1af945b0697e36eb76c974f; the focused ComboBox test passed on Ubuntu, macOS and Windows. Run IDs: Rust CI 37898516857, inventory 37898516991, quality 37898516882, desktop 37898516941, renderer 37898516885, loaded plugins 37898516836, Obsidian round-trip 37898516884. Evidence: evidence/r2.6.60-note-inspector-combobox-f1d759e.json.",
+    "Parallel runner setup commit c479996995d6774d8ab776f1f61b6d2261592b36 passed all seven push workflows (Rust CI 37899512988, inventory 37899512987, quality 37899512996, desktop 37899513010, renderer 37899512953, loaded plugins 37899513113, Obsidian round-trip 37899512999) and manual reference-runner workflow 37899725620. All relevant parallel groups succeeded. Evidence: evidence/parallel-ci-runner-setup-c479996.json."
   ],
   "milestones": {
     "R0.1": {
@@ -10062,6 +10066,66 @@
         "Edit/save acceptance remains deferred to C02/C14."
       ],
       "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
+    },
+    "R2.6.60": {
+      "status": "complete",
+      "implementation_sha": "f1d759ef94c92fa7d1af945b0697e36eb76c974f",
+      "implementation_commits": [
+        "fe96e16ba4e06dfc1febe5a5a63d787c9eb744de",
+        "5fa9f888244ab233965f8a789faa1f73f20d288f",
+        "7e85a9e20088d39b6305ce13579020d2f6171e2d",
+        "f1d759ef94c92fa7d1af945b0697e36eb76c974f"
+      ],
+      "push_status": "All four source commits are reachable from origin/main.",
+      "scope": "Select Notes/Welcome.md directly through the Note to inspect ComboBox with AccessKit activation, clear stale link/embed/preview state, preview the new note exactly, and preserve complete vault/app-data snapshots.",
+      "ci_attempts": [
+        {
+          "source_sha": "fe96e16ba4e06dfc1febe5a5a63d787c9eb744de",
+          "rust_ci_run": 37896367106,
+          "conclusion": "Focused test passed on Ubuntu and macOS; Windows failed because the AccessKit note option label used native backslashes. All six companion workflows passed.",
+          "windows_job": 113708520949,
+          "correction": "Adjusted the expected note label for native path display; the next CI run showed fixture PathBuf separators were still slash-preserving on Windows."
+        },
+        {
+          "source_sha": "5fa9f888244ab233965f8a789faa1f73f20d288f",
+          "rust_ci_run": 37896806092,
+          "conclusion": "Focused test passed on Ubuntu and macOS; Windows still could not find the option because the ComboBox stayed closed after pointer-center activation and the fixture path label remained slash-preserving. All six companion workflows passed.",
+          "windows_job": 113709906197,
+          "correction": "Activate the ComboBox through AccessKit Action::Click and derive the relative option path from VaultSession entries."
+        },
+        {
+          "source_sha": "7e85a9e20088d39b6305ce13579020d2f6171e2d",
+          "rust_ci_run": 37897381598,
+          "conclusion": "Focused test passed on Ubuntu, macOS and Windows; Ubuntu rustfmt requested a one-line chained AccessKit click. All six companion workflows passed.",
+          "ubuntu_job": 113711723819,
+          "correction": "Applied the exact Ubuntu rustfmt layout."
+        },
+        {
+          "source_sha": "f1d759ef94c92fa7d1af945b0697e36eb76c974f",
+          "attempt": 1,
+          "conclusion": "All seven workflows and every job passed; focused test passed on Ubuntu, macOS and Windows.",
+          "workflows": {
+            "rust_ci": 37898516857,
+            "inventory": 37898516991,
+            "quality": 37898516882,
+            "desktop_build": 37898516941,
+            "plugin_renderer": 37898516885,
+            "loaded_plugin_workflows": 37898516836,
+            "obsidian_vault_roundtrip": 37898516884
+          },
+          "evidence": "evidence/r2.6.60-note-inspector-combobox-f1d759e.json"
+        }
+      ],
+      "accepted_slice": [
+        "AccessKit activation opens the Note to inspect ComboBox and selects Notes/Welcome.md across Ubuntu, macOS and Windows.",
+        "Changing the selected note clears stale link status/resolutions/errors, embed report/error, source preview/receiver/error and inline image textures.",
+        "The selected note can be previewed byte-for-byte; complete vault and separate app-data snapshots remain unchanged after operations and UI teardown."
+      ],
+      "remaining": [
+        "C01 and C01.2 remain pending for broader read-only product coverage; this synthetic AccessKit harness does not certify OS screen-reader behavior, native folder-picker accessibility, or an Obsidian reference-app round trip.",
+        "Edit/save acceptance remains deferred to C02/C14."
+      ],
+      "next_action": "Continue R2 with another uncovered C01/C01.2 read-only product flow; keep both parent requirements pending until their full cross-platform coverage passes. Edit/save remains deferred to C02/C14."
     }
   },
   "ci_preparation": {
@@ -10074,6 +10138,26 @@
       "evidence": "evidence/parallel-ci-compatibility-pins-8d4d44b.json",
       "run_id": 37715418139,
       "run_conclusion": "failure due to upstream selection snapshot drift; parallel group behavior passed"
+    },
+    "parallel_runner_setup": {
+      "implementation_sha": "c479996995d6774d8ab776f1f61b6d2261592b36",
+      "workflows": [
+        ".github/workflows/rust.yml",
+        ".github/workflows/obsidian-vault-roundtrip.yml",
+        ".github/workflows/obsidian-reference-feasibility.yml"
+      ],
+      "evidence": "evidence/parallel-ci-runner-setup-c479996.json",
+      "run_ids": {
+        "rust_ci": 37899512988,
+        "inventory": 37899512987,
+        "quality": 37899512996,
+        "desktop_build": 37899513010,
+        "plugin_renderer": 37899512953,
+        "loaded_plugin_workflows": 37899513113,
+        "obsidian_vault_roundtrip": 37899512999,
+        "reference_runner_workflow_dispatch": 37899725620
+      },
+      "run_conclusion": "All seven push workflows and the manually dispatched reference-runner workflow passed; changed parallel groups passed on GitHub Actions. No local validation or timing claim."
     }
   },
   "current_requirement_count": 212

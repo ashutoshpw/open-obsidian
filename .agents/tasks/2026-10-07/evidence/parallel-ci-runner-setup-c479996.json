@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "change_commit": "c479996995d6774d8ab776f1f61b6d2261592b36",
+  "change": "Use GitHub Actions native parallel groups for independent runner setup steps in Rust CI, the Obsidian vault round-trip workflow, and the manual Obsidian reference-runner workflow.",
+  "workflows": [
+    ".github/workflows/rust.yml",
+    ".github/workflows/obsidian-vault-roundtrip.yml",
+    ".github/workflows/obsidian-reference-feasibility.yml"
+  ],
+  "ci": {
+    "head_sha": "c479996995d6774d8ab776f1f61b6d2261592b36",
+    "conclusion": "All seven push workflows and the manually dispatched reference-runner workflow passed.",
+    "runs": [
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "run_id": 37899512988,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899512988",
+        "jobs": [
+          { "name": "rust (windows-latest)", "job_id": 113718521773, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "rust (macos-latest)", "job_id": 113718521963, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "rust (ubuntu-latest)", "job_id": 113718522096, "conclusion": "success", "parallel_groups": ["success", "success"] }
+        ]
+      },
+      {
+        "workflow": "Rust migration inventory",
+        "run_id": 37899512987,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899512987",
+        "jobs": [
+          { "name": "inventory", "job_id": 113718522229, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "run_id": 37899512996,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899512996",
+        "jobs": [
+          { "name": "macos-latest", "job_id": 113718522390, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "ubuntu-latest", "job_id": 113718522598, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "windows-latest", "job_id": 113718522607, "conclusion": "success", "parallel_groups": ["success", "success"] }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "run_id": 37899513010,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899513010",
+        "jobs": [
+          { "name": "windows-latest", "job_id": 113718522164, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "macos-latest", "job_id": 113718522403, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "ubuntu-latest", "job_id": 113718522430, "conclusion": "success", "parallel_groups": ["success", "success"] }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "run_id": 37899512953,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899512953",
+        "jobs": [
+          { "name": "windows-latest", "job_id": 113718522214, "conclusion": "success" },
+          { "name": "ubuntu-latest", "job_id": 113718522337, "conclusion": "success" },
+          { "name": "macos-latest", "job_id": 113718522499, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "run_id": 37899513113,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899513113",
+        "jobs": [
+          { "name": "macos-latest", "job_id": 113718522216, "conclusion": "success" },
+          { "name": "windows-latest", "job_id": 113718522299, "conclusion": "success" },
+          { "name": "ubuntu-latest", "job_id": 113718522437, "conclusion": "success" }
+        ]
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "run_id": 37899512999,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899512999",
+        "jobs": [
+          { "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 113718522045, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 113718522248, "conclusion": "success", "parallel_groups": ["success", "success"] },
+          { "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 113718522291, "conclusion": "success", "parallel_groups": ["success", "success"] }
+        ]
+      },
+      {
+        "workflow": "Obsidian reference runner feasibility",
+        "event": "workflow_dispatch",
+        "run_id": 37899725620,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37899725620",
+        "jobs": [
+          { "name": "Pinned Obsidian renderer on Ubuntu", "job_id": 113719202200, "conclusion": "success", "parallel_groups": ["success"] }
+        ]
+      }
+    ]
+  },
+  "local_validation": "none",
+  "limits": [
+    "GitHub Actions confirmed the new parallel groups complete successfully on their supported runners.",
+    "No local workflow validation or executable testing was run.",
+    "The runs do not measure or claim a specific time reduction."
+  ],
+  "reference": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/"
+}

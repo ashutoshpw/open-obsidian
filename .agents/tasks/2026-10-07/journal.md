@@ -1114,3 +1114,48 @@ builds, formatters, linters or application launches were run.
 
 Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
 both parent requirements pending until their full cross-platform coverage passes.
+
+## R2.6.60 — select a note through the inspect ComboBox
+
+Added a synthetic egui UI case that starts with README.md selected, its links
+and embeds resolved, and its exact source preview visible. The test activates
+the `Note to inspect` ComboBox through an AccessKit click action, selects
+Notes/Welcome.md, confirms that stale link/embed/preview/error/texture state is
+cleared, and previews the selected note byte-for-byte. Full vault and separate
+app-data snapshots remain unchanged through selection, preview, and UI teardown.
+
+The first source attempt, `fe96e16ba4e06dfc1febe5a5a63d787c9eb744de`, passed
+the focused test on Ubuntu and macOS but failed Windows because its AccessKit
+option label used native backslashes. The `5fa9f888244ab233965f8a789faa1f73f20d288f`
+attempt still failed Windows: the ComboBox stayed closed after a pointer click
+and the fixture path retained slash separators. The `7e85a9e20088d39b6305ce13579020d2f6171e2d`
+attempt passed the focused test on all three OSes but Ubuntu rustfmt required
+one exact layout adjustment. On corrected source SHA
+`f1d759ef94c92fa7d1af945b0697e36eb76c974f`, all seven workflows and every job
+passed; the focused test passed on Ubuntu, macOS, and Windows. Details and
+artifact digests are in
+[`evidence/r2.6.60-note-inspector-combobox-f1d759e.json`](evidence/r2.6.60-note-inspector-combobox-f1d759e.json).
+
+The AccessKit action verifies semantic activation in the synthetic egui test
+harness. It does not certify OS screen-reader behavior, the native folder
+picker, or an Obsidian reference-app round trip. C01/C01.2 remain pending for
+broader read-only coverage; C01.1 remains passing. Edit/save is deferred to
+C02/C14. No local tests, builds, formatters, linters, or application launches
+were run.
+
+## CI preparation — parallel runner setup
+
+Grouped independent setup work with GitHub Actions `parallel` in Rust CI, the
+cross-platform Obsidian vault round-trip, and its manually dispatched reference
+runner. Rust toolchain/Bun setup can now overlap with platform dependency
+installation; Cargo cache use remains after toolchain setup. On exact workflow
+commit `c479996995d6774d8ab776f1f61b6d2261592b36`, all seven push workflows
+passed, including the new setup groups on Linux, macOS, and Windows. The manual
+reference-runner workflow also passed. Run and job IDs are recorded in
+[`evidence/parallel-ci-runner-setup-c479996.json`](evidence/parallel-ci-runner-setup-c479996.json).
+No local workflow validation or executable testing was run; the CI result does
+not quantify a time reduction. This preparation does not close a product
+requirement or change the active R2 scope.
+
+Next: continue R2 with another uncovered C01/C01.2 read-only product flow; keep
+both parent requirements pending until their full cross-platform coverage passes.
