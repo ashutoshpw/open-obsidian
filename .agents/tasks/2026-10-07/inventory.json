@@ -2228,12 +2228,12 @@
     },
     {
       "path": ".github/workflows/quality.yml",
-      "sha256": "a21df7b7f0eaf70ad6e62dbef167bc6e035417ca0ead1751f8cfe6b87c09c1ef",
+      "sha256": "42d474c1e13b61e9e476c8ffd715fdd5663bde85518ff2dc45cef28ff2b3a195",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
       "baseline_sha256": "87197aaf1cfee74e304872cde7352f6a5e4371fb0997ceab7025cfb2788cb55d",
-      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers. Added an independent Knip/Fallow health group, which waits for both source audits.",
+      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers. Added an independent Knip/Fallow health group, which waits for both source audits, and grouped the read-only progress-state check with the other parallel preflight checks.",
       "migration_phase": "R0",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
