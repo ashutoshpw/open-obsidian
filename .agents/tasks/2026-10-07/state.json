@@ -13388,7 +13388,7 @@
     "R2.6.71": {
       "status": "in_progress",
       "implementation_sha": null,
-      "implementation_commits": ["58ed756173ebc56d41d455d15dca48d7c5ab900a"],
+      "implementation_commits": ["58ed756173ebc56d41d455d15dca48d7c5ab900a", "0108ca716b93bc7b6be23368593116eb84b5ee90"],
       "scope": "Exercise existing-vault scanning, link resolution, and transclusion reporting for file and directory symlinks whose targets are real files inside that same vault, preserving full vault and separate app-data snapshots.",
       "accepted_slice": ["C01.2-22"],
       "remaining": [
@@ -13416,9 +13416,24 @@
             "plugin_renderer": 37964197150
           },
           "correction": "Apply the exact Ubuntu rustfmt layout for the directory symlink read_link assertion, then validate all seven required workflows on a fresh exact SHA."
+        },
+        {
+          "source_sha": "0108ca716b93bc7b6be23368593116eb84b5ee90",
+          "attempt": 2,
+          "conclusion": "Rust CI, inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer passed. The native round-trip passed on Ubuntu and Windows but macOS failed because closing the cancelled picker persisted eframe app.ron UI state; the vault snapshot remained strict.",
+          "workflows": {
+            "rust_ci": 37964860456,
+            "obsidian_vault_roundtrip": 37964861008,
+            "inventory": 37964860398,
+            "loaded_plugin_workflows": 37964860416,
+            "desktop_build": 37964860433,
+            "quality": 37964860575,
+            "plugin_renderer": 37964860411
+          },
+          "correction": "Apply the existing narrow macOS eframe app.ron validation to app-data changes after picker cancellation and close, while retaining exact vault snapshots; then validate all seven workflows on a fresh exact SHA."
         }
       ],
-      "next_action": "Commit and push the exact CI-requested formatting correction to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
+      "next_action": "Commit and push the macOS app.ron audit correction to origin/main, then inspect exact-SHA GitHub Actions only; do not run local tests or formatters."
     }
   },
   "ci_preparation": {

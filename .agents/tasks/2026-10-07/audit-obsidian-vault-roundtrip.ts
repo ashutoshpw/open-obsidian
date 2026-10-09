@@ -2029,18 +2029,30 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     const afterVault = await snapshotTree(vaultRoot);
     ensureExactSnapshot(noOpBaseline, afterVault, "OpenObsidian no-op open, picker cancellation, and close");
     const afterAppData = await snapshotTree(appDataRoot);
-    ensureExactSnapshot(appDataBaselineAfterPickerCancellation, afterAppData, "OpenObsidian app data after picker cancellation and close");
+    const appDataChangesAfterClose = changedPaths(appDataBaselineAfterPickerCancellation, afterAppData);
+    const eframePersistenceFilesAfterClose = await readSnapshotTextFiles(appDataRoot, afterAppData, (path) => path.toLowerCase().endsWith(".ron"));
+    ensureAppDataChangesAreMacEframeUiStateOnly(
+      appDataChangesAfterClose,
+      eframePersistenceFilesAfterClose,
+      "OpenObsidian app data after picker cancellation and close",
+      [vaultRoot, canonicalVault, appDataRoot],
+    );
     (report.vault_snapshots as Record<string, unknown>).after_openobsidian = afterVault;
     (report.vault_snapshots as Record<string, unknown>).after_picker_cancellation_close = afterVault;
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_close = afterAppData;
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation_close = afterAppData;
+    (report.openobsidian_app_data as Record<string, unknown>).changes_after_picker_baseline_and_close = appDataChangesAfterClose;
+    (report.openobsidian_app_data as Record<string, unknown>).eframe_persistence_files_after_picker_baseline_and_close = eframePersistenceFilesAfterClose;
     const appDataChangesFromStartupThroughCancellation = changedPaths(initialAppData, appDataBaselineAfterPickerCancellation);
     (report.openobsidian_app_data as Record<string, unknown>).changes_from_startup_through_picker_cancellation = appDataChangesFromStartupThroughCancellation;
     (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_initial_startup = appDataChangesFromStartupThroughCancellation.length === 0;
-    (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_picker_baseline_and_close = true;
+    (report.openobsidian_app_data as Record<string, unknown>).unchanged_after_picker_baseline_and_close = appDataChangesAfterClose.length === 0;
     const cancellation = open.folder_picker_cancel as Record<string, unknown>;
     cancellation.vault_snapshot_unchanged_after_close = true;
-    cancellation.app_data_snapshot_unchanged_after_close = true;
+    cancellation.app_data_snapshot_unchanged_after_close = appDataChangesAfterClose.length === 0;
+    cancellation.app_data_changes_after_close = appDataChangesAfterClose;
+    cancellation.eframe_persistence_files_after_close = eframePersistenceFilesAfterClose;
+    cancellation.app_data_changes_after_close_only_eframe_ui_state = true;
     cancellation.vault_snapshot_after_close = afterVault;
     cancellation.app_data_snapshot_after_close = afterAppData;
     await saveReport();
@@ -2106,6 +2118,12 @@ async function runOpenObsidianPickerCancellation(
   const appRonFilesAfterCancel = await readSnapshotTextFiles(appDataRoot, appDataAfterCancellation, (path) => path.toLowerCase().endsWith(".ron"));
   const vaultChangesAfterCancel = changedPaths(vaultSnapshotBeforeCancel, vaultAfterCancellation);
   const appDataChangesAfterCancel = changedPaths(appDataSnapshotBeforeCancel, appDataAfterCancellation);
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterCancel,
+    appRonFilesAfterCancel,
+    "OpenObsidian app data after native picker cancellation",
+    [vaultRoot, canonicalVault, appDataRoot],
+  );
 
   open.folder_picker_cancel = {
     active_session: true,
@@ -2115,6 +2133,7 @@ async function runOpenObsidianPickerCancellation(
     ...pickerCancellation,
     vault_snapshot_unchanged_after_cancel: vaultChangesAfterCancel.length === 0,
     app_data_snapshot_unchanged_after_cancel: appDataChangesAfterCancel.length === 0,
+    app_data_changes_after_cancel_only_eframe_ui_state: true,
     app_data_changes_on_picker_open: appDataChangesOnPickerOpen,
     vault_changes_after_cancel: vaultChangesAfterCancel,
     app_data_changes_after_cancel: appDataChangesAfterCancel,
@@ -2129,7 +2148,6 @@ async function runOpenObsidianPickerCancellation(
   (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_picker_cancellation = appDataAfterCancellation;
   await saveReport();
   ensureExactSnapshot(vaultSnapshotBeforeCancel, vaultAfterCancellation, "OpenObsidian native picker cancellation");
-  ensureExactSnapshot(appDataSnapshotBeforeCancel, appDataAfterCancellation, "OpenObsidian app data after native picker cancellation");
   return appDataAfterCancellation;
 }
 
