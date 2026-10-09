@@ -605,12 +605,11 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
     }
     if ($null -eq $selectFolder) {
       $labels = @($buttons | ForEach-Object { $_.Current.Name }) -join " | "
-      $picker.SetFocus()
       $shell = New-Object -ComObject WScript.Shell
-      $shell.AppActivate($picker.Current.Name) | Out-Null
+      $activated = $shell.AppActivate($picker.Current.Name)
       Start-Sleep -Milliseconds 250
       $shell.SendKeys("{ENTER}")
-      Write-Output "Select Folder was absent from the picker and desktop UIA trees; focused $($picker.Current.Name) and pressed Enter. Picker buttons=$labels"
+      Write-Output "Select Folder was absent from the picker and desktop UIA trees; AppActivate=$activated for $($picker.Current.Name), then pressed Enter. Picker buttons=$labels"
     } else {
       try {
         $selectFolder.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
