@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-09T21:42:42Z",
+  "updated_at": "2026-10-09T21:51:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6ce07476f4266161b49df79e1e55ad032e52c9b1",
-  "current_milestone": "R2.6.81",
-  "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending.",
+  "last_reconciled_head": "4c87ed15e8b18e9aecb697ff40d768e7a0da2e44",
+  "current_milestone": "R2.6.82",
+  "next_action": "Commit and push C01.2-33 for exact-SHA GitHub Actions validation; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -14242,6 +14242,25 @@
       ],
       "evidence": "evidence/r2.6.81-attempt-1-6ce0747.json",
       "next_action": "Select the next uncovered C01/C01.2 read-only product flow as a small slice; keep broader parent acceptance pending."
+    },
+    "R2.6.82": {
+      "status": "in_progress",
+      "starting_sha": "4c87ed15e8b18e9aecb697ff40d768e7a0da2e44",
+      "implementation_sha": null,
+      "scope": "Remove one of two same-basename attachments externally, refresh a basename-only embed, and verify it becomes uniquely resolved and rendered without stale UI state or vault/app-data writes.",
+      "accepted_slice": ["C01.2-33"],
+      "remaining": ["Exact-SHA GitHub Actions validation is pending.", "Broader C01/C01.2 acceptance remains pending."],
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, open a one-note vault whose ![[photo.png]] embed is initially ambiguous between Attachments/photo.png and Images/photo.png, with no target and no rendered texture.",
+        "Open the note source preview, externally remove Images/photo.png, and capture the exact post-removal vault snapshot while separate app data remains unchanged.",
+        "Refresh keeps the vault and note active while clearing stale ambiguity, link, embed, preview, error, and texture state.",
+        "Fresh resolution uniquely targets Attachments/photo.png and renders its exact decoded pixels with accessible alt text.",
+        "The exact post-removal vault snapshot and separate app-data snapshot remain unchanged through refresh, re-resolution, and UI teardown.",
+        "The focused Rust workspace test and all seven required workflows pass on the exact pushed source SHA."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Push the implementation slice to origin/main and inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {
