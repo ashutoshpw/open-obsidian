@@ -3380,9 +3380,7 @@ mod tests {
         );
 
         harness.step();
-        harness.get_by_label(
-            "Unsupported Markdown (wiki links); showing the source as written.",
-        );
+        harness.get_by_label("Unsupported Markdown (wiki links); showing the source as written.");
         harness.get_by_label(source);
         assert_eq!(source.as_bytes(), original.as_slice());
     }
