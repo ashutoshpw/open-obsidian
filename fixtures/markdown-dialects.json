@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "fixture:c02-dialects",
   "name": "safe-markdown-preview-dialects",
-  "target_supported_blocks": [
+  "supported_blocks": [
     "headings",
     "setext-headings",
     "tasks",
@@ -20,9 +20,7 @@
     "footnotes",
     "math",
     "diagrams",
-    "raw-html",
-    "wiki-links",
-    "highlights"
+    "raw-html"
   ],
   "invariants": {
     "source_bytes_remain_authoritative": true,
@@ -110,7 +108,13 @@
       },
       {
         "id": "literal-markers-inside-code",
-        "source": "Inline \u0060[[page]] ==mark== <script>[^one] $x$\u0060.\n\n~~~text\n[[page]] ==mark== <script>[^one] $x$\n~~~",
+        "source": "Inline \u0060[[page]] ==mark== <script>[^one] $x$ \\(y\\)\u0060.\n\n~~~text\n[[page]] ==mark== <script>[^one] $x$ \\(y\\)\n~~~",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
+      },
+      {
+        "id": "legacy-math-inside-indented-code",
+        "source": "    \\(x+1\\)\n",
         "expected_disposition": "render-markdown",
         "unsupported_syntax": []
       },

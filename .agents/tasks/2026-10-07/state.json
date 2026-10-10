@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T09:16:29Z",
+  "updated_at": "2026-10-10T09:23:57Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62",
+  "last_reconciled_head": "ffa7b6d76762ec12fe615dce26473da875de77c6",
   "current_milestone": "R2.8.20",
-  "next_action": "R2.8.20 is prepared locally: add a read-only dialect preflight, source-only fallback for unsupported preview syntax, UI evidence, and fixture cases. Commit and push this bounded implementation, then inspect exact-SHA GitHub Actions results. Keep C02.1 pending until the full dialect and editing contract is implemented.",
+  "next_action": "Push the CI-guided R2.8.20 correction checkpoint, then inspect exact-SHA GitHub Actions results before accepting this bounded slice. Keep C02.1 pending until the full dialect and editing contract is implemented.",
   "blockers": [],
   "phases": {
     "R0": {

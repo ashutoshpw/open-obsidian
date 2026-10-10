@@ -1949,9 +1949,7 @@ fn show_markdown_preview(
                 .join(", ");
             ui.colored_label(
                 eframe::egui::Color32::YELLOW,
-                format!(
-                    "Unsupported Markdown ({unsupported}); showing the source as written."
-                ),
+                format!("Unsupported Markdown ({unsupported}); showing the source as written."),
             );
             ui.monospace(source);
         }

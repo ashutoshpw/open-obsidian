@@ -2,14 +2,15 @@
 
 pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
-    LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
-    MarkdownUnsupportedSyntax, MAX_NOTE_SOURCE_PREVIEW_BYTES, TransclusionBlockReason,
+    LinkSubpathSlice, LinkSubpathStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewAnalysis,
+    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
     TransclusionGuard, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
-    VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition, VaultNoteEmbedNode,
-    VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview, VaultRenamePreview,
-    VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult, VaultWatchError,
-    VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue, VaultWriteRecoveryReport,
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
+    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
+    VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
+    VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
+    VaultWriteRecoveryReport,
     analyze_markdown_preview, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};

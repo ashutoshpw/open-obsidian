@@ -84,6 +84,10 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
         | Options::ENABLE_DEFINITION_LIST
         | Options::ENABLE_MATH;
 
+    if contains_legacy_math_delimiter(source) {
+        push_once(&mut unsupported, MarkdownUnsupportedSyntax::Math);
+    }
+
     for (event, source_span) in Parser::new_ext(source, options).into_offset_iter() {
         match event {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) => {
@@ -115,9 +119,6 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
                 if contains_highlight(text) {
                     push_once(&mut unsupported, MarkdownUnsupportedSyntax::Highlights);
                 }
-                if contains_legacy_math_delimiter(text) {
-                    push_once(&mut unsupported, MarkdownUnsupportedSyntax::Math);
-                }
             }
             _ => {}
         }
@@ -138,10 +139,7 @@ fn is_diagram_fence(language: &str) -> bool {
     )
 }
 
-fn push_once(
-    unsupported: &mut Vec<MarkdownUnsupportedSyntax>,
-    syntax: MarkdownUnsupportedSyntax,
-) {
+fn push_once(unsupported: &mut Vec<MarkdownUnsupportedSyntax>, syntax: MarkdownUnsupportedSyntax) {
     if !unsupported.contains(&syntax) {
         unsupported.push(syntax);
     }
@@ -178,17 +176,99 @@ fn contains_highlight(text: &str) -> bool {
     false
 }
 
-fn contains_legacy_math_delimiter(text: &str) -> bool {
-    [r"\(", r"\)", r"\[", r"\]"]
-        .iter()
-        .any(|delimiter| text.contains(*delimiter))
+fn contains_legacy_math_delimiter(source: &str) -> bool {
+    let mut fence: Option<(u8, usize)> = None;
+
+    for line in source.lines() {
+        let bytes = line.as_bytes();
+        let leading_spaces = bytes.iter().take_while(|byte| **byte == b' ').count();
+        if leading_spaces <= 3 {
+            let marker_start = leading_spaces;
+            if let Some(&marker) = bytes.get(marker_start)
+                && (marker == 96 || marker == b'~')
+            {
+                let marker_length = bytes[marker_start..]
+                    .iter()
+                    .take_while(|byte| **byte == marker)
+                    .count();
+                if let Some((open_marker, open_length)) = fence {
+                    let rest = &bytes[marker_start + marker_length..];
+                    if marker == open_marker
+                        && marker_length >= open_length
+                        && rest.iter().all(|byte| matches!(byte, b' ' | b'\t'))
+                    {
+                        fence = None;
+                    }
+                } else if marker_length >= 3 {
+                    fence = Some((marker, marker_length));
+                }
+            }
+        }
+        if fence.is_some() {
+            continue;
+        }
+        if leading_spaces >= 4 || bytes.first() == Some(&b'\t') {
+            continue;
+        }
+
+        let mut cursor = 0;
+        while cursor < bytes.len() {
+            if bytes[cursor] == 96 {
+                let run_length = bytes[cursor..]
+                    .iter()
+                    .take_while(|byte| **byte == 96)
+                    .count();
+                let run_end = cursor + run_length;
+                let mut search = run_end;
+                let mut close = None;
+                while search < bytes.len() {
+                    if bytes[search] == 96 {
+                        let closing_length = bytes[search..]
+                            .iter()
+                            .take_while(|byte| **byte == 96)
+                            .count();
+                        if closing_length == run_length {
+                            close = Some(search + closing_length);
+                            break;
+                        }
+                        search += closing_length;
+                    } else {
+                        search += 1;
+                    }
+                }
+                if let Some(close_end) = close {
+                    cursor = close_end;
+                } else {
+                    cursor = run_end;
+                }
+                continue;
+            }
+
+            if bytes[cursor] == b'\\' {
+                let mut run_end = cursor + 1;
+                while run_end < bytes.len() && bytes[run_end] == b'\\' {
+                    run_end += 1;
+                }
+                if (run_end - cursor) % 2 == 1
+                    && run_end < bytes.len()
+                    && matches!(bytes[run_end], b'(' | b'[')
+                {
+                    return true;
+                }
+                cursor = run_end;
+                continue;
+            }
+
+            cursor += 1;
+        }
+    }
+
+    false
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, analyze_markdown_preview,
-    };
+    use super::{MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, analyze_markdown_preview};
 
     const DIALECT_FIXTURE: &str = include_str!("../../../fixtures/markdown-dialects.json");
 
@@ -243,8 +323,7 @@ mod tests {
                 case["id"]
             );
             assert_eq!(
-                actual_unsupported,
-                expected_unsupported,
+                actual_unsupported, expected_unsupported,
                 "unexpected unsupported syntax for fixture case {}",
                 case["id"]
             );
