@@ -7813,9 +7813,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.12-unicode-normalization-6edc297.json"
+      ],
+      "tested_source_tree": "6edc2979f7a5434ee89c9dd4ce0d42ab38326f21",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D16",
