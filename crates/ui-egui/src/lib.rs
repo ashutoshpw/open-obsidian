@@ -2971,9 +2971,7 @@ mod tests {
         let mut markdown_cache = CommonMarkCache::default();
         let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
-            |ui, _app| {
-                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source)
-            },
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
             OpenObsidianApp::default(),
         );
 
@@ -2993,9 +2991,7 @@ mod tests {
         let mut markdown_cache = CommonMarkCache::default();
         let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
-            |ui, _app| {
-                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source)
-            },
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
             OpenObsidianApp::default(),
         );
 
@@ -3015,15 +3011,13 @@ mod tests {
         let mut markdown_cache = CommonMarkCache::default();
         let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
-            |ui, _app| {
-                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source)
-            },
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
             OpenObsidianApp::default(),
         );
 
         harness.step();
         harness.get_by_label("Rendered math formula: a + b");
-        harness.get_by_label("Rendered math formula: \\frac{1}{2}");
+        harness.get_by_label("Rendered math formula: \n\\frac{1}{2}\n");
     }
 
     #[test]
@@ -3041,7 +3035,7 @@ mod tests {
 
         harness.step();
         harness.get_by_label("Math rendering failed or exceeded image limits; showing the source.");
-        harness.get_by_label(&format!("$$\n{expression}\n$$"));
+        harness.get_by_label(&format!("$$\n\n{expression}\n\n$$"));
         harness.get_by_label("Before");
         harness.get_by_label("after the formula.");
     }

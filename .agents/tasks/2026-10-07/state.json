@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T13:50:30Z",
+  "updated_at": "2026-10-10T13:59:02Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8c84978c16bf4064811da6e9c0b1002f8d52737c",
+  "last_reconciled_head": "73a1b96d0b9085bb25af837b462848bfac97deb5",
   "current_milestone": "R2.8.27",
-  "next_action": "R2.8.27 has failed exact-SHA CI attempts on b00dec3 and 8c84978. The worktree contains the callback lifetime fix and inventory hash reconciliations for fixtures/markdown-dialects.json and .github/workflows/quality.yml. Commit and push those corrections with their CI attempt records, then validate all seven workflows on the new exact SHA. Keep full C02.1 pending.",
+  "next_action": "R2.8.27 has failed exact-SHA CI attempts on b00dec3, 8c84978, and 73a1b96. The worktree now includes CI-reported egui accessibility-label expectations and rustfmt closure layout. Commit and push those corrections with the attempt record, then validate all seven workflows on the new exact SHA. Keep full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -256,7 +256,7 @@
     "R2.8.20 safe Markdown preview preflight passed all seven required GitHub Actions workflows on exact source SHA d19d3d31e741d36d829f2eba5fb893e7453c70dc; evidence: evidence/r2.8.20-safe-preview-d19d3d3.json. C02.1 remains pending.",
     "R2.8.26 latex-rust renderer feasibility probe passed all seven required GitHub Actions workflows on exact source SHA df0e02e55934fa26e6c9c5fb787a94772209d0c9 across Ubuntu, macOS, and Windows. This is development-only candidate evidence, not runtime integration; full C02.1 remains pending. Evidence: evidence/r2.8.26-latex-rust-feasibility-df0e02e.json."
   ],
-  "push_status": "origin/main is 8c84978c16bf4064811da6e9c0b1002f8d52737c. Its quality workflow validates the new native parallel group on Ubuntu, macOS and Windows. R2.8.27 source corrections and both inventory hash reconciliations are prepared in the worktree; corrected-SHA migration acceptance remains pending. No local tests or executable validation were used.",
+  "push_status": "origin/main is 73a1b96d0b9085bb25af837b462848bfac97deb5. Inventory, quality, desktop build, vault round-trip, loaded-plugin, and plugin-renderer workflows passed; Rust CI found two accessibility-label expectation mismatches and three rustfmt closure layouts. The worktree contains those CI-reported corrections. No local tests or executable validation were used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16879,7 +16879,8 @@
         "All seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
       ],
       "implementation_commits": [
-        "b00dec3e61c5f0f767f88209f2eb7c049d9c809a"
+        "b00dec3e61c5f0f767f88209f2eb7c049d9c809a",
+        "73a1b96d0b9085bb25af837b462848bfac97deb5"
       ],
       "validated_source_sha": null,
       "ci_runs": {},
@@ -16910,13 +16911,27 @@
             "quality": 38056935093,
             "plugin_renderer": 38056935040
           }
+        },
+        {
+          "source_sha": "73a1b96d0b9085bb25af837b462848bfac97deb5",
+          "conclusion": "failure",
+          "failure_summary": "The Rust workspace compiled, but the new egui math tests expected display/fallback accessibility labels without the newlines present in the actual rendered tree; 69 other workspace tests passed on Ubuntu, macOS, and Windows. Ubuntu rustfmt requested three closure calls be flattened. The other six required workflows, including the three-platform vault round-trip and inventory, passed.",
+          "ci_runs": {
+            "rust_ci": 38057348784,
+            "obsidian_vault_roundtrip": 38057348785,
+            "inventory": 38057348815,
+            "loaded_plugins": 38057348774,
+            "desktop_build": 38057348727,
+            "quality": 38057348804,
+            "plugin_renderer": 38057348794
+          }
         }
       ],
       "evidence": "evidence/r2.8.27-latex-rust-package-provenance.json",
       "workflow_commits": [
         "8c84978c16bf4064811da6e9c0b1002f8d52737c"
       ],
-      "next_action": "The worktree has the CI-reported Rc<RefCell<_>> callback lifetime fix, rustfmt layouts, and updated hashes for both changed baseline files. Commit these corrections with CI attempt evidence and validate all seven workflows on the new exact SHA. Full C02.1 remains pending."
+      "next_action": "The worktree has updated math accessibility-label expectations and flattened closure formatting from CI output. Commit these corrections with the attempt record and validate all seven workflows on the new exact SHA. Full C02.1 remains pending."
     }
   },
   "ci_preparation": {
