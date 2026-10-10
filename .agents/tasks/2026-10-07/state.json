@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:06:09Z",
+  "updated_at": "2026-10-10T18:11:32Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "ece927bb112ba037fe6cde6bd7bc189d22bcff7d",
-  "current_milestone": "R2.8.41",
-  "next_action": "R2.8.40 is accepted on exact source SHA ece927bb112ba037fe6cde6bd7bc189d22bcff7d; all seven required GitHub Actions workflows passed. R2.8.41 should verify a resolved wiki link inside a task-list item remains source-only and its fallback remains read-only. Push its implementation as a small commit and use exact-SHA GitHub Actions only. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd",
+  "current_milestone": "R2.8.42",
+  "next_action": "R2.8.41 is accepted on exact source SHA 9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd; all seven required GitHub Actions workflows passed. R2.8.42 should verify a resolved wiki link inside a blockquote remains source-only. Push its implementation as a small commit and use exact-SHA GitHub Actions only. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "ece927bb112ba037fe6cde6bd7bc189d22bcff7d"
+      "implementation_sha": "9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.41 accepted: the primary preview keeps a resolved wiki link inside a Markdown task-list item source-only with no interactive checkbox. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd. Evidence: evidence/r2.8.41-task-list-wiki-link-read-only-9059c68.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.40 accepted: the primary preview keeps a resolved wiki link inside a Markdown table cell source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA ece927bb112ba037fe6cde6bd7bc189d22bcff7d. Evidence: evidence/r2.8.40-table-context-wiki-link-fallback-ece927b.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.39 accepted: the primary preview keeps a resolved wiki link inside a Markdown list item source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 4d667618bc97b10b1b187b3c69b183eae3927433. Evidence: evidence/r2.8.39-list-context-wiki-link-fallback-4d66761.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.38 accepted: the primary preview keeps a resolved wiki link surrounded by Markdown emphasis source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 737493c4c89022f96b1d18bf8b6a92fe7da1a013. Evidence: evidence/r2.8.38-mixed-formatting-wiki-link-fallback-737493c.json. The GitHub Actions parallel-step feature remains in use and has separate CI evidence. C02.1 and phases R3-R7 remain pending.",
@@ -267,7 +268,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA ece927bb112ba037fe6cde6bd7bc189d22bcff7d is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA 9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18573,7 +18574,7 @@
       "next_action": "R2.8.40 is accepted; continue with a resolved wiki link inside a Markdown task-list item. Full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.41": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "5e4946822092f73b8f398549f5a9c55ce58ae01d",
       "scope": "Verify a simple wiki link inside a Markdown task-list item remains source-only and any task control stays read-only.",
       "acceptance": [
@@ -18582,8 +18583,34 @@
         "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
+      "implementation_commits": [
+        "9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd"
+      ],
+      "validated_source_sha": "9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd",
+      "ci_runs": {
+        "inventory": 38074442617,
+        "loaded_plugins": 38074442671,
+        "desktop_build": 38074442649,
+        "quality": 38074442644,
+        "rust_ci": 38074442674,
+        "plugin_renderer": 38074442618,
+        "obsidian_vault_roundtrip": 38074442636
+      },
+      "evidence": "evidence/r2.8.41-task-list-wiki-link-read-only-9059c68.json",
+      "next_action": "R2.8.41 is accepted; continue with a resolved wiki link inside a Markdown blockquote. Full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.42": {
+      "status": "in_progress",
+      "starting_sha": "9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd",
+      "scope": "Verify a simple wiki link inside a Markdown blockquote remains source-only even when its target resolves to a local Markdown note.",
+      "acceptance": [
+        "The Markdown dialect fixture declares a resolved blockquote wiki link and source-only expectations.",
+        "An egui test confirms the target resolves while the preview exposes no clickable link and preserves source/vault/app-data bytes.",
+        "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
+        "No local tests, builds, formatters, linters, or app launches are used."
+      ],
       "implementation_commits": [],
-      "next_action": "The resolved task-list wiki-link fixture and existing source-only UI test now verify there is no clickable link or interactive checkbox; the fixture inventory hash is reconciled. Push this focused slice for exact-SHA GitHub Actions."
+      "next_action": "Add a resolved wiki link inside a Markdown blockquote as a fixture case and include it in the existing source-only UI test; reconcile the fixture inventory hash and push for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {
