@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T06:24:31Z",
+  "updated_at": "2026-10-10T06:30:04Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d3c929de1dec3d17e2353d598270cbfb707e646f",
+  "last_reconciled_head": "6b26869369a8d3788bafc8659b102fda19ee6bb9",
   "current_milestone": "R2.8.13",
-  "next_action": "Commit and push the exact Ubuntu rustfmt corrections reported by R2.8.13 attempt 1; accept the slice only after all seven required GitHub Actions workflows pass on the corrected exact source SHA. Broader R2 and editor integration remain pending.",
+  "next_action": "Commit and push the exact Ubuntu rustfmt correction reported by R2.8.13 attempt 2; accept the slice only after all seven required GitHub Actions workflows pass on the corrected exact source SHA. Broader R2 and editor integration remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -15962,7 +15962,8 @@
         "All seven required GitHub Actions workflows pass on the exact source SHA; all validation runs in GitHub Actions only."
       ],
       "implementation_commits": [
-        "d3c929de1dec3d17e2353d598270cbfb707e646f"
+        "d3c929de1dec3d17e2353d598270cbfb707e646f",
+        "6b26869369a8d3788bafc8659b102fda19ee6bb9"
       ],
       "ci_attempts": [
         {
@@ -15978,10 +15979,24 @@
             38030500411
           ],
           "result": "Both focused C02 tests and all workspace tests passed on Ubuntu, macOS, and Windows. Six companion workflows passed; macOS and Windows Rust CI passed. Ubuntu Rust CI failed only its formatting check, which reported three exact layout changes."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "6b26869369a8d3788bafc8659b102fda19ee6bb9",
+          "required_workflow_run_ids": [
+            38030839766,
+            38030839863,
+            38030839795,
+            38030839775,
+            38030839836,
+            38030839797,
+            38030839857
+          ],
+          "result": "Both focused C02 tests and all workspace tests passed on Ubuntu, macOS, and Windows. Six companion workflows and macOS/Windows Rust CI passed; Ubuntu Rust CI failed only its formatting check, which reported one exact line break in the block-scalar test."
         }
       ],
       "evidence": null,
-      "next_action": "Push the exact Ubuntu rustfmt corrections to origin/main and wait for all seven required workflows to finish on the corrected source SHA."
+      "next_action": "Push the exact Ubuntu rustfmt line break to origin/main and wait for all seven required workflows to finish on the corrected source SHA."
     }
   },
   "ci_preparation": {

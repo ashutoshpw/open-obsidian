@@ -1127,7 +1127,8 @@ mod c02_byte_roundtrip_fixture_tests {
             Err(MarkdownPropertyEditError::MultilineValue)
         );
 
-        let block_scalar = MarkdownSource::parse(b"---\nsummary: |\n  retained block\n---\n".to_vec()).unwrap();
+        let block_scalar =
+            MarkdownSource::parse(b"---\nsummary: |\n  retained block\n---\n".to_vec()).unwrap();
         assert_eq!(
             block_scalar.render_property_edit("summary", "inline"),
             Err(MarkdownPropertyEditError::StructuredValue)
