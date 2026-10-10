@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:59:42Z",
+  "updated_at": "2026-10-10T20:01:57Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18856,7 +18856,7 @@
     },
     "R2.8.51": {
       "status": "in_progress",
-      "starting_sha": "1bb6bd42385264f8666b0d3ef1192a37276d8beb",
+      "starting_sha": "dda71d1b8b0fb65302c621d17245f4939b34dd99",
       "scope": "Verify a document mixing supported Markdown with unsupported raw HTML stays entirely source-only and preserves the original fixture source.",
       "acceptance": [
         "The existing mixed-supported-and-unsupported C02.1 fixture drives an egui preview test.",
@@ -18864,7 +18864,14 @@
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
       "implementation_commits": [],
-      "next_action": "Add fixture-driven egui coverage for the mixed-supported-and-unsupported source-only fallback. Push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
+      "tracker_checkpoint": {
+        "sha": "dda71d1b8b0fb65302c621d17245f4939b34dd99",
+        "inventory_run_id": 38082110532,
+        "inventory_job_id": 114300986023,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38082110532"
+      },
+      "next_action": "The R2.8.51 tracker checkpoint passed inventory on SHA dda71d1b8b0fb65302c621d17245f4939b34dd99. Add fixture-driven egui coverage for the mixed-supported-and-unsupported source-only fallback, then push for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {
