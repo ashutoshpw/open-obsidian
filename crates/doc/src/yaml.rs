@@ -286,12 +286,15 @@ pub(crate) fn mapping_pair_source(value: &str) -> Option<YamlPairSource> {
     let raw_key = &value[..colon];
     let key_start = trim_ascii_start(raw_key);
     let key_end = trim_ascii_end(raw_key);
+    if key_start >= key_end {
+        return None;
+    }
     let key = mapping_key(&raw_key[key_start..key_end])?;
     let after_colon = &value[colon + 1..];
     let without_comment_end = comment_start(after_colon).unwrap_or(after_colon.len());
     let before_comment = &after_colon[..without_comment_end];
     let value_start = trim_ascii_start(before_comment);
-    let value_end = trim_ascii_end(before_comment);
+    let value_end = trim_ascii_end(before_comment).max(value_start);
 
     Some(YamlPairSource {
         key,
@@ -476,8 +479,7 @@ fn serialize_flow_value(value: &YamlValue, depth: usize) -> Option<String> {
                     let key = if !entry.key.is_empty()
                         && entry.key.bytes().all(|byte| {
                             byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-')
-                        })
-                    {
+                        }) {
                         entry.key.clone()
                     } else {
                         serde_json::to_string(&entry.key).ok()?
@@ -1178,23 +1180,35 @@ fn resolve_block_mapping(
     }
 
     let mut found = None;
-    for (index, line) in lines.iter().copied().enumerate().take(end).skip(start) {
+    let mut previous_mapping_value_is_empty = false;
+    let mut index = start;
+    while index < end {
+        let line = lines[index];
         if line.indent < indent {
             break;
         }
         if line.indent != indent {
+            previous_mapping_value_is_empty = false;
+            index += 1;
             continue;
         }
         if source_sequence_line(bytes, line) {
-            return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+            if !previous_mapping_value_is_empty {
+                return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+            }
+            index = source_block_end(bytes, lines, index, end, indent);
+            previous_mapping_value_is_empty = false;
+            continue;
         }
         let property = source_line_property(bytes, line, false)?;
+        previous_mapping_value_is_empty = property.value_span.start == property.value_span.end;
         if property.key == *wanted {
             if found.is_some() {
                 return Err(super::MarkdownPropertyEditError::UnsupportedPath);
             }
             found = Some((index, property));
         }
+        index += 1;
     }
     let (index, property) =
         found.ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
