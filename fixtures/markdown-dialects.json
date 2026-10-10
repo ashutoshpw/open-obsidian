@@ -234,7 +234,7 @@
         "source": "> [!NOTE] Callout title\n> Callout body.",
         "expected_disposition": "render-markdown",
         "unsupported_syntax": [],
-        "expected_preview_texts": ["Callout title", "Callout body."]
+        "expected_preview_texts": ["!NOTE", " Callout title", "Callout body."]
       },
       {
         "id": "commonmark-basics",

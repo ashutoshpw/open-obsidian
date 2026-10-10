@@ -4027,9 +4027,7 @@ mod tests {
         }
         assert!(
             harness
-                .query_by_label(
-                    "Unsupported Markdown (callouts); showing the source as written."
-                )
+                .query_by_label("Unsupported Markdown (callouts); showing the source as written.")
                 .is_none(),
             "standard alert callouts must render instead of source fallback"
         );
