@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T20:16:45Z",
+  "updated_at": "2026-10-10T20:18:50Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18889,7 +18889,7 @@
     },
     "R2.8.52": {
       "status": "in_progress",
-      "starting_sha": "d527e45cffa8bdcd1e5c3863fe7aa24cf1a31e48",
+      "starting_sha": "30129623e4c1ff6ada96e7011d253cf3d4e987dc",
       "scope": "Verify the raw-HTML script fixture receives a source-only fallback and the script remains visible as literal source.",
       "acceptance": [
         "The existing raw-html C02.1 fixture drives an egui preview test.",
@@ -18897,7 +18897,14 @@
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
       "implementation_commits": [],
-      "next_action": "Add fixture-driven egui coverage for the raw-HTML script source-only fallback. Push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
+      "tracker_checkpoint": {
+        "sha": "30129623e4c1ff6ada96e7011d253cf3d4e987dc",
+        "inventory_run_id": 38083231666,
+        "inventory_job_id": 114304284483,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38083231666"
+      },
+      "next_action": "The R2.8.52 tracker checkpoint passed inventory on SHA 30129623e4c1ff6ada96e7011d253cf3d4e987dc. Add fixture-driven egui coverage for the raw-HTML script source-only fallback, then push for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {

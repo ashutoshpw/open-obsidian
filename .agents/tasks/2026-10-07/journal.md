@@ -2719,3 +2719,5 @@ Accepted slice: documents that mix supported Markdown with unsupported raw HTML 
 ### R2.8.52 in progress — raw HTML script remains source-only
 
 Use the existing `raw-html` C02.1 fixture, containing `<script>alert('not executed')</script>`, to verify the native preview explains the raw-HTML fallback and displays the exact script source as text without projecting or executing it. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no executable validation runs locally.
+
+R2.8.52 tracker checkpoint: inventory [run 38083231666](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083231666), job 114304284483, passed for tracker SHA `30129623e4c1ff6ada96e7011d253cf3d4e987dc`.
