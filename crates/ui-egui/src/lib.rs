@@ -3592,6 +3592,57 @@ mod tests {
     }
 
     #[test]
+    fn egui_renders_safe_html_break_before_crlf_from_fixture_without_changing_source() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "safe-html-inline-break-before-crlf")
+            .expect("Markdown dialect fixture must include the CRLF HTML break");
+        let source = case["source"]
+            .as_str()
+            .expect("CRLF HTML-break fixture must include source");
+        let expected_render_source = case["expected_native_render_source"]
+            .as_str()
+            .expect("CRLF HTML-break fixture must include its native render source");
+        let original = source.as_bytes().to_vec();
+        assert!(
+            source.as_bytes().windows(2).any(|pair| pair == b"\r\n"),
+            "fixture must exercise an original CRLF sequence"
+        );
+
+        let analysis = analyze_markdown_preview(source);
+        assert_eq!(
+            analysis.disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+        assert_eq!(
+            analysis.native_render_source(source).as_ref(),
+            expected_render_source
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("First");
+        harness.get_by_label("Second");
+        assert!(
+            harness
+                .query_by_label("Unsupported Markdown (raw HTML); showing the source as written.")
+                .is_none(),
+            "allowlisted HTML break before CRLF must render instead of showing source fallback"
+        );
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_renders_plain_inline_highlights_without_changing_source() {
         let source = "Keep ==this phrase== visible.";
         let original = source.as_bytes().to_vec();
