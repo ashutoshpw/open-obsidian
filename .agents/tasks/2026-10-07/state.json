@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T20:26:53Z",
+  "updated_at": "2026-10-10T20:33:14Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "50455182afb258eb221ba38bef9c77870ce1ab83",
-  "current_milestone": "R2.8.53",
-  "next_action": "R2.8.52 is accepted on exact source SHA 50455182afb258eb221ba38bef9c77870ce1ab83; all seven required GitHub Actions workflows passed. R2.8.53 should verify unknown extension markup remains literal in the native preview. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "c4bd5e5b3478014a402a850afda051154efb525d",
+  "current_milestone": "R2.8.54",
+  "next_action": "R2.8.53 is accepted on exact source SHA c4bd5e5b3478014a402a850afda051154efb525d; all seven required GitHub Actions workflows passed, with the focused egui test passing on Ubuntu, macOS, and Windows. R2.8.54 should verify legacy math delimiters inside indented code remain ordinary rendered code without triggering fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "50455182afb258eb221ba38bef9c77870ce1ab83"
+      "implementation_sha": "c4bd5e5b3478014a402a850afda051154efb525d"
     },
     "R3": {
       "status": "pending",
@@ -18921,7 +18921,7 @@
       "evidence": "evidence/r2.8.52-raw-html-script-source-fallback-5045518.json"
     },
     "R2.8.53": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "4435d7755f2fd1512588609c765ef2299312ca46",
       "scope": "Verify unknown extension markup remains literal in the native Markdown preview and preserves the original fixture source.",
       "acceptance": [
@@ -18929,7 +18929,9 @@
         "The preview renders the unknown extension marker as literal text without an unsupported-syntax fallback.",
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "c4bd5e5b3478014a402a850afda051154efb525d"
+      ],
       "tracker_checkpoint": {
         "sha": "4435d7755f2fd1512588609c765ef2299312ca46",
         "inventory_run_id": 38083742362,
@@ -18937,7 +18939,36 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38083742362"
       },
-      "next_action": "The R2.8.53 tracker checkpoint passed inventory on SHA 4435d7755f2fd1512588609c765ef2299312ca46. Fixture-driven egui coverage for literal unknown extension markup is added. Commit and push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
+      "next_action": "R2.8.53 is accepted; verify legacy math inside indented code remains rendered literally in R2.8.54. Full C02.1 and phases R3-R7 remain pending.",
+      "validated_source_sha": "c4bd5e5b3478014a402a850afda051154efb525d",
+      "ci_runs": {
+        "inventory": 38083793948,
+        "loaded_plugins": 38083793913,
+        "desktop_build": 38083793915,
+        "quality": 38083793943,
+        "rust_ci": 38083793960,
+        "plugin_renderer": 38083793958,
+        "obsidian_vault_roundtrip": 38083794004
+      },
+      "quality_retry": {
+        "initial_attempt": 1,
+        "initial_conclusion": "failure on macos-latest due to Electron vault round-trip retrieval-boundary timeout",
+        "successful_attempt": 2,
+        "same_source_sha": true
+      },
+      "evidence": "evidence/r2.8.53-unknown-markup-literal-c4bd5e5.json"
+    },
+    "R2.8.54": {
+      "status": "in_progress",
+      "starting_sha": "c4bd5e5b3478014a402a850afda051154efb525d",
+      "scope": "Verify legacy math delimiters inside an indented code block do not trigger the legacy-math fallback and remain visible as literal code.",
+      "acceptance": [
+        "The existing legacy-math-inside-indented-code C02.1 fixture drives an egui preview test.",
+        "The preview keeps the fixture on the RenderMarkdown path and displays the original indented code rather than an unsupported-math source fallback.",
+        "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
+      ],
+      "implementation_commits": [],
+      "next_action": "Record the R2.8.53 acceptance and R2.8.54 tracker checkpoint in GitHub Actions, then add fixture-driven egui coverage for legacy math delimiters inside indented code. No local executable validation is used."
     }
   },
   "ci_preparation": {

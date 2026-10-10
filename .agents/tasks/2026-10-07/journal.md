@@ -2739,3 +2739,15 @@ Use the existing `unknown-markup-remains-literal` C02.1 fixture to confirm the `
 The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It checks `RenderMarkdown`, the full literal source label, absence of a raw-HTML fallback message, and unchanged source bytes. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.53 tracker checkpoint: inventory [run 38083742362](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083742362), job 114305797972, passed for tracker SHA `4435d7755f2fd1512588609c765ef2299312ca46`.
+
+### R2.8.53 accepted — unknown extension markup remains literal — source SHA c4bd5e5b3478014a402a850afda051154efb525d
+
+The existing unknown-markup-remains-literal C02.1 fixture now drives an egui preview test. It verifies that the analyzer selects RenderMarkdown, shows the exact %% source literally, does not show an unsupported raw-HTML fallback, and preserves the fixture bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 91 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38083793948](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083793948), loaded-plugin workflows [38083793913](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083793913), desktop build [38083793915](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083793915), quality [38083793943](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083793943), Rust CI [38083793960](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083793960), plugin renderer [38083793958](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083793958), and Obsidian vault round-trip [38083794004](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083794004). Quality attempt 1 failed only on macOS in the Electron vault retrieval-boundary audit; rerunning the failed job on the same SHA passed. Rust CI used rustc 1.99.0 (b940084d7, 2026-09-28). Job IDs, artifact digests, and the retry record are in [evidence/r2.8.53-unknown-markup-literal-c4bd5e5.json](evidence/r2.8.53-unknown-markup-literal-c4bd5e5.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: unknown extension markup stays visible as ordinary Markdown text without triggering source fallback. Full C02.1 and migration phases R3-R7 remain pending. Next: verify legacy math delimiters inside indented code remain ordinary rendered code in R2.8.54.
+
+### R2.8.54 in progress — legacy math inside indented code remains literal
+
+Use the existing legacy-math-inside-indented-code C02.1 fixture to verify that legacy math delimiters inside an indented code block do not trigger the unsupported-math fallback. The preview should keep the fixture on the RenderMarkdown path, show the original code literally, and preserve source bytes. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
