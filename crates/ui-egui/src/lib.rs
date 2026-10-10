@@ -3395,7 +3395,7 @@ mod tests {
         );
 
         harness.step();
-        harness.get_by_label("Keep ==this phrase== as literal text.");
+        harness.get_by_label("==this phrase== as literal text.");
         assert_eq!(source.as_bytes(), original.as_slice());
     }
 

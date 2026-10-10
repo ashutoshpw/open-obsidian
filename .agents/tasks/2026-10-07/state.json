@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:42:28Z",
+  "updated_at": "2026-10-10T18:46:30Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18698,7 +18698,7 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38076833787"
       },
-      "next_action": "Add fixture-driven egui coverage for escaped highlight delimiters, then push for exact-SHA GitHub Actions."
+      "next_action": "Attempt 1 on source SHA 7a00225 failed on all three Rust CI platforms because the accessible paragraph text was split into nodes; the escaped delimiter is exposed as '==this phrase== as literal text.'. The assertion now targets that emitted node. Push the correction for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

@@ -2625,3 +2625,5 @@ Accepted slice: literal handling for wiki-link markers inside inline and fenced 
 ### R2.8.45 in progress — escaped highlight opener remains literal
 
 Starting from tracker checkpoint `c42a4a8bedd750a082177f6af38a42cbba27cd1b`, inventory [run 38076833787](https://github.com/ashutoshpw/open-obsidian/actions/runs/38076833787), job 114285470515, passed. Add egui preview coverage for the existing `escaped-highlight-opener-is-literal` C02.1 fixture. The escaped `==` opener must remain visible as literal Markdown, produce no highlight span, and preserve the fixture source bytes. Push the focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+
+Attempt 1 on implementation SHA `7a002250` failed in Rust CI on Ubuntu, macOS, and Windows. The exact assertion expected the whole paragraph as one accessibility label; GitHub logs show the escaped text as the node label `==this phrase== as literal text.`. The test now queries the actual emitted label and will be rerun on a new exact SHA. No local test or formatter was used.
