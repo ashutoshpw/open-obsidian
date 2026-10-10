@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T08:45:21Z",
+  "updated_at": "2026-10-10T08:57:27Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "7599ecd942a3b027686e3a8da055f9ec63c70201",
+  "last_reconciled_head": "caa403719337508bc3776403e87026c979453788",
   "current_milestone": "R2.8.18",
-  "next_action": "Push the CI-reported Clippy corrections for exact-SHA GitHub Actions validation.",
+  "next_action": "R2.8.18 accepted on caa403719337508bc3776403e87026c979453788. Review the remaining C04 source-preservation requirements and define the next bounded slice; keep full C04, C02/C02.1, and structured editor integration pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16186,7 +16186,7 @@
       "next_action": "Continue with the next narrow C04 source-preservation slice; keep broader C04, C02/C02.1 and editor integration pending."
     },
     "R2.8.18": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "bda4c8d032a441f18c52f128d8fccf83675bf8b8",
       "scope": "Port explicit nested Markdown property editing from the current TypeScript core into the Rust document layer, preserving all bytes outside the selected leaf span.",
       "accepted_slice": [
@@ -16205,7 +16205,9 @@
       "implementation_commits": [
         "161656a7bc3a8fc547f2d7ccfdbab77051cdc262",
         "182f3de99412b951845da7fe8e5b2cac6b5d85d5",
-        "7599ecd942a3b027686e3a8da055f9ec63c70201"
+        "7599ecd942a3b027686e3a8da055f9ec63c70201",
+        "2f044390bccbcdb06292a0aa954e4340ae8f2b88",
+        "caa403719337508bc3776403e87026c979453788"
       ],
       "ci_attempts": [
         {
@@ -16251,9 +16253,41 @@
             "plugin_renderer": 38038697605
           },
           "failure_summary": "Inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer passed. Rust formatting passed on Ubuntu and workspace tests passed on Ubuntu, macOS, and Windows, but Clippy failed on all three platforms for one needless lifetime, one function with too many arguments, one needless range loop, and one needless borrow. The vault round-trip passed on Ubuntu, macOS, and Windows. The exact CI-requested Clippy corrections are prepared; no local executable validation was run."
+        },
+        {
+          "attempt": 4,
+          "source_sha": "2f044390bccbcdb06292a0aa954e4340ae8f2b88",
+          "conclusion": "failure",
+          "run_ids": {
+            "rust_ci": 38038994158,
+            "obsidian_vault_roundtrip": 38038994180,
+            "inventory": 38038994238,
+            "loaded_plugins": 38038994202,
+            "desktop_build": 38038994220,
+            "quality": 38038994181,
+            "plugin_renderer": 38038994177
+          },
+          "failure_summary": "Workspace tests and the three-platform vault round-trip passed, and all six companion workflows passed. Clippy passed on macOS and Windows, but Ubuntu rustfmt requested keeping the next_block_child assignment on one line. The exact formatter output was applied in the follow-up."
+        },
+        {
+          "attempt": 5,
+          "source_sha": "caa403719337508bc3776403e87026c979453788",
+          "conclusion": "success",
+          "run_ids": {
+            "rust_ci": 38039225285,
+            "obsidian_vault_roundtrip": 38039225255,
+            "inventory": 38039225271,
+            "loaded_plugins": 38039225301,
+            "desktop_build": 38039225293,
+            "quality": 38039225282,
+            "plugin_renderer": 38039225348
+          },
+          "result": "All seven required workflows passed on the exact source SHA. The focused nested-property fixture and full Rust workspace tests passed on Ubuntu, macOS, and Windows.",
+          "evidence": "evidence/r2.8.18-nested-property-edits-caa4037.json"
         }
       ],
-      "next_action": "Commit and push the Clippy corrections prepared from the third exact-SHA CI diagnostics, then inspect the seven required workflow results."
+      "evidence": "evidence/r2.8.18-nested-property-edits-caa4037.json",
+      "next_action": "R2.8.18 accepted on caa403719337508bc3776403e87026c979453788. Review the remaining C04 source-preservation requirements and define the next bounded slice; keep full C04, C02/C02.1, and structured editor integration pending."
     }
   },
   "ci_preparation": {

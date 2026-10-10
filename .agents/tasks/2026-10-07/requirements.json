@@ -2912,7 +2912,8 @@
       "mandatory": true,
       "acceptance_criteria": "Editing a represented property leaves unrepresented keys, comments, order and nested values intact.",
       "fixture_ids": [
-        "fixture:c04-unknown-preservation"
+        "fixture:c04-unknown-preservation",
+        "fixture:c04-nested-property-edit"
       ],
       "reference_versions": [
         {
@@ -2928,9 +2929,10 @@
       ],
       "status": "passing",
       "evidence_paths": [
-        "evidence/r2.8.15-c04-unknown-preservation-a89574a.json"
+        "evidence/r2.8.15-c04-unknown-preservation-a89574a.json",
+        "evidence/r2.8.18-nested-property-edits-caa4037.json"
       ],
-      "tested_source_tree": "a89574a0cfec01a20df9f525eff325a3d8a6139a",
+      "tested_source_tree": "caa403719337508bc3776403e87026c979453788",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",
