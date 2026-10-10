@@ -84,6 +84,7 @@
       "diagrams",
       "unknown-or-active-raw-html",
       "unresolved-or-complex-wiki-links",
+      "block-context-wiki-links",
       "complex-inline-highlights"
     ],
     "resolved_wiki_link_preview": {
@@ -154,6 +155,17 @@
     "mixed_formatting_wiki_link_preview": {
       "source_path": "Index.md",
       "source": "Read **[[Plans/Project]]** next.",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\nThe resolved target note.",
+      "expected_link_kind": "wiki_link",
+      "expected_subpath": null,
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
+    "block_context_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "- Read [[Plans/Project]] next.",
       "target_path": "Plans/Project.md",
       "target_source": "# Project plan\nThe resolved target note.",
       "expected_link_kind": "wiki_link",

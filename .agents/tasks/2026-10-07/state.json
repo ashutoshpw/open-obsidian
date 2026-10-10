@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T17:48:31Z",
+  "updated_at": "2026-10-10T17:50:57Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18520,7 +18520,7 @@
     },
     "R2.8.39": {
       "status": "in_progress",
-      "starting_sha": "737493c4c89022f96b1d18bf8b6a92fe7da1a013",
+      "starting_sha": "02188f14d63e90e41d78ddf997945004638311e5",
       "scope": "Verify a simple wiki link inside a Markdown list block remains source-only even when its target resolves to a local Markdown note.",
       "acceptance": [
         "The Markdown dialect fixture declares a resolved list-context wiki link and source-only expectations.",
@@ -18529,7 +18529,7 @@
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
       "implementation_commits": [],
-      "next_action": "Add a resolved wiki link to a Markdown list item as a fixture case and include it in the existing source-only UI test; reconcile the fixture inventory hash and push for exact-SHA GitHub Actions."
+      "next_action": "The resolved list-context wiki-link fixture and existing source-only UI test are updated; the fixture inventory hash is reconciled. Push this focused slice for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

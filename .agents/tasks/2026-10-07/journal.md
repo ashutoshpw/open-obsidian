@@ -2539,3 +2539,9 @@ All seven required workflows passed on this exact SHA: inventory [38072701814](h
 The GitHub Actions native `parallel` step groups remain enabled in the workflows, including Rust CI, and passed in CI. The requested parallel-step capability was already implemented in CI preparation; see [evidence/parallel-ci.json](evidence/parallel-ci.json). No local tests, builds, formatters, Clippy, or application validation were run.
 
 Accepted slice: source-only handling for a resolved wiki link surrounded by Markdown emphasis. Full C02.1 and migration phases R3-R7 remain pending. Next: R2.8.39 adds a resolved wiki link inside a Markdown list block and verifies that it stays source-only.
+
+The R2.8.38 acceptance tracker commit [02188f14d63e90e41d78ddf997945004638311e5](https://github.com/ashutoshpw/open-obsidian/commit/02188f14d63e90e41d78ddf997945004638311e5) passed the inventory workflow on that exact SHA: [run 38073362634](https://github.com/ashutoshpw/open-obsidian/actions/runs/38073362634), job 114275170259. The checkpoint is recorded in the R2.8.38 evidence.
+
+### R2.8.39 in progress — list-context wiki-link fallback
+
+Starting from tracker SHA `02188f14d63e90e41d78ddf997945004638311e5`, add a fixture-driven case for a simple wiki link inside a Markdown list item whose target resolves to a local Markdown note. The existing egui source-only test checks that the resolved list-context link exposes no clickable link and preserves source, vault, and app-data bytes. The fixture hash and inventory reconciliation reason are updated. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
