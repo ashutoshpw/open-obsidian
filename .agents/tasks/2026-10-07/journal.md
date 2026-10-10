@@ -2828,4 +2828,6 @@ Accepted slice: the allowlisted `<br />` form renders as a native hard break whi
 
 Use the existing safe-html-inline-break C02.1 fixture to verify the preview selects RenderMarkdown and produces the expected native-render source and visible text on both lines while preserving the original source bytes. Convert the existing direct-string egui case to fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
+R2.8.59 tracker checkpoint: inventory [run 38087496025](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087496025), job 114316954570, passed for tracker SHA 38123bc7abc1a7a2dc3510cd265904140b017bb4.
+
 R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.
