@@ -2980,7 +2980,7 @@ mod tests {
 
         for source in [r"a + b", r"\frac{1}{2}", r"e^{i \pi} + 1 = 0"] {
             let png = latex_rust::latex_to_png(source, &font, &latex_rust::PngOptions::new())
-            .expect("supported math should produce PNG bytes");
+                .expect("supported math should produce PNG bytes");
             assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
             let decoded = image::load_from_memory(&png)
                 .expect("candidate PNG output should decode with the selected image library");

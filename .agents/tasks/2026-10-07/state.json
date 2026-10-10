@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T12:45:00Z",
+  "updated_at": "2026-10-10T13:11:52Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c500b95c9f27cb2b5a7233a18f62b3245c46b82d",
+  "last_reconciled_head": "74b1287a1c35752a4e42f500ba243d6e608eaafb",
   "current_milestone": "R2.8.26",
-  "next_action": "R2.8.26 has a CI-generated minimal Cargo.lock and an all-target compile pass on preparation SHA 497c2b0d3b8715615ff594cdc12c65ae0181c6ce. Commit the lockfile and focused dev-only renderer probe, then inspect all seven exact-SHA workflows; keep runtime adoption and full C02.1 pending until tests and notice review pass.",
+  "next_action": "R2.8.26: a focused rustfmt continuation-indent correction is included in the current commit after CI run 38054326804. Inspect all seven required workflows for its exact SHA; if they pass, complete the candidate notice review before considering runtime integration. Keep full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -255,7 +255,7 @@
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending.",
     "R2.8.20 safe Markdown preview preflight passed all seven required GitHub Actions workflows on exact source SHA d19d3d31e741d36d829f2eba5fb893e7453c70dc; evidence: evidence/r2.8.20-safe-preview-d19d3d3.json. C02.1 remains pending."
   ],
-  "push_status": "R2.8.25 implementation SHA c500b95c9f27cb2b5a7233a18f62b3245c46b82d is on origin/main; all seven required GitHub Actions workflows passed for that exact SHA. The accepted revision-safe explicit source-editing slice is recorded in evidence/r2.8.25-revision-safe-source-editing-c500b95.json. Full C02.1 remains pending.",
+  "push_status": "Latest tested SHA 74b1287a1c35752a4e42f500ba243d6e608eaafb passed six companion workflows and all Rust gates except Ubuntu rustfmt. This commit applies the runner-reported continuation indentation; its exact-SHA seven-workflow validation is pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16802,6 +16802,46 @@
       },
       "evidence": "evidence/r2.8.25-revision-safe-source-editing-c500b95.json",
       "next_action": "R2.8.25 is accepted on c500b95c9f27cb2b5a7233a18f62b3245c46b82d; continue with another focused C02.1 Markdown preview slice. Full C02.1 remains pending."
+    },
+    "R2.8.26": {
+      "status": "in_progress",
+      "starting_sha": "c500b95c9f27cb2b5a7233a18f62b3245c46b82d",
+      "scope": "Evaluate latex-rust 1.0.2 as a development-only Markdown math PNG renderer candidate; do not integrate it into the runtime until evidence and license notices are reviewed.",
+      "implementation_commits": [
+        "05ee40722021c49e5d0ea27faaa6268427d329a3",
+        "74b1287a1c35752a4e42f500ba243d6e608eaafb"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "05ee40722021c49e5d0ea27faaa6268427d329a3",
+          "conclusion": "failure",
+          "failure_summary": "Rust CI workspace tests passed on Ubuntu, macOS and Windows; Ubuntu rustfmt reported two call-layout differences. All six companion workflows passed.",
+          "ci_runs": {
+            "rust_ci": 38053157730,
+            "obsidian_vault_roundtrip": 38053157770,
+            "inventory": 38053157768,
+            "loaded_plugins": 38053157767,
+            "desktop_build": 38053157774,
+            "quality": 38053157789,
+            "plugin_renderer": 38053157754
+          }
+        },
+        {
+          "source_sha": "74b1287a1c35752a4e42f500ba243d6e608eaafb",
+          "conclusion": "failure",
+          "failure_summary": "All six companion workflows passed. Workspace tests passed on Ubuntu, macOS and Windows; macOS and Windows Rust gates passed. Ubuntu rustfmt still required the chained .expect call to be indented one additional level.",
+          "ci_runs": {
+            "rust_ci": 38054326804,
+            "obsidian_vault_roundtrip": 38054326770,
+            "inventory": 38054326761,
+            "loaded_plugins": 38054326766,
+            "desktop_build": 38054326786,
+            "quality": 38054326762,
+            "plugin_renderer": 38054326757
+          }
+        }
+      ],
+      "next_action": "Push the focused continuation-indent correction and inspect all seven required workflows on its exact SHA. Keep runtime integration and full C02.1 pending until acceptance evidence is complete."
     }
   },
   "ci_preparation": {
