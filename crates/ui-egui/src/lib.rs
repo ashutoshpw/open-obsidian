@@ -2979,11 +2979,7 @@ mod tests {
             .expect("the candidate renderer should load its embedded math font");
 
         for source in [r"a + b", r"\frac{1}{2}", r"e^{i \pi} + 1 = 0"] {
-            let png = latex_rust::latex_to_png(
-                source,
-                &font,
-                &latex_rust::PngOptions::new(),
-            )
+            let png = latex_rust::latex_to_png(source, &font, &latex_rust::PngOptions::new())
             .expect("supported math should produce PNG bytes");
             assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
             let decoded = image::load_from_memory(&png)
@@ -2992,12 +2988,14 @@ mod tests {
             assert!(decoded.height() > 0);
         }
 
-        assert!(latex_rust::latex_to_png(
-            r"\begin{tikzpicture}\draw (0,0) -- (1,1);\end{tikzpicture}",
-            &font,
-            &latex_rust::PngOptions::new(),
-        )
-        .is_err());
+        assert!(
+            latex_rust::latex_to_png(
+                r"\begin{tikzpicture}\draw (0,0) -- (1,1);\end{tikzpicture}",
+                &font,
+                &latex_rust::PngOptions::new(),
+            )
+            .is_err()
+        );
     }
 
     #[test]
