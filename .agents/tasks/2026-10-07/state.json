@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T17:29:11Z",
+  "updated_at": "2026-10-10T17:38:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8e4a4b09127bc7a02e52d616d6e09c5118af4644",
-  "current_milestone": "R2.8.37",
-  "next_action": "R2.8.36 is accepted on exact source SHA 8e4a4b09127bc7a02e52d616d6e09c5118af4644 and tracker SHA a7ccfd1d835d36a4afa8ab6857af284545a47105 passed inventory. R2.8.37 fixture and UI coverage are prepared; commit and push for exact-SHA GitHub Actions. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "0f134032cadfd3e983359f5951cf553ea3e5b323",
+  "current_milestone": "R2.8.38",
+  "next_action": "R2.8.37 is accepted on exact source SHA 0f134032cadfd3e983359f5951cf553ea3e5b323. R2.8.38 is in progress: add fixture-driven UI evidence that mixed-formatting wiki links remain source-only even when their target resolves. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "8e4a4b09127bc7a02e52d616d6e09c5118af4644"
+      "implementation_sha": "0f134032cadfd3e983359f5951cf553ea3e5b323"
     },
     "R3": {
       "status": "pending",
@@ -18449,7 +18449,7 @@
       "next_action": "R2.8.36 is accepted. Continue with a non-Markdown target fallback case; full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.37": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "a7ccfd1d835d36a4afa8ab6857af284545a47105",
       "scope": "Verify a simple wiki link that resolves to a non-Markdown vault asset remains source-only in the primary preview.",
       "acceptance": [
@@ -18458,8 +18458,51 @@
         "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
+      "implementation_commits": [
+        "0f134032cadfd3e983359f5951cf553ea3e5b323"
+      ],
+      "workflow_attempts": [
+        {
+          "workflow": "quality",
+          "run_id": 38071964102,
+          "attempt": 1,
+          "conclusion": "failure",
+          "failure_summary": "The Ubuntu Electron vault audit did not reach the local retrieval boundary after reporting one Markdown file visited and one passage indexed; Windows and macOS quality jobs passed."
+        }
+      ],
+      "workflow_reruns": {
+        "quality": {
+          "source_sha": "0f134032cadfd3e983359f5951cf553ea3e5b323",
+          "run_id": 38071964102,
+          "attempt": 2,
+          "conclusion": "success"
+        }
+      },
+      "validated_source_sha": "0f134032cadfd3e983359f5951cf553ea3e5b323",
+      "ci_runs": {
+        "inventory": 38071964146,
+        "loaded_plugins": 38071964092,
+        "desktop_build": 38071964138,
+        "quality": 38071964102,
+        "rust_ci": 38071964165,
+        "plugin_renderer": 38071964099,
+        "obsidian_vault_roundtrip": 38071964097
+      },
+      "evidence": "evidence/r2.8.37-non-markdown-wiki-link-fallback-0f13403.json",
+      "next_action": "R2.8.37 is accepted. Continue with the mixed-formatting wiki-link source-only boundary; full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.38": {
+      "status": "in_progress",
+      "starting_sha": "0f134032cadfd3e983359f5951cf553ea3e5b323",
+      "scope": "Verify a wiki link with surrounding Markdown formatting remains source-only even when it resolves to a local Markdown target.",
+      "acceptance": [
+        "The Markdown dialect fixture declares a mixed-formatting wiki-link case and source-only expectations.",
+        "An egui test confirms the target resolves while the preview exposes no clickable link and preserves source/vault/app-data bytes.",
+        "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
+        "No local tests, builds, formatters, linters, or app launches are used."
+      ],
       "implementation_commits": [],
-      "next_action": "A fixture-driven case now proves a non-Markdown wiki-link target resolves but remains source-only. Push the updated fixture inventory and focused UI coverage for exact-SHA GitHub Actions."
+      "next_action": "Add a resolved-target mixed-formatting fixture case to the existing source-only UI test, reconcile its inventory hash, and push for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

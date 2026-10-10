@@ -2515,3 +2515,15 @@ The accepted evidence checkpoint at [a7ccfd1d835d36a4afa8ab6857af284545a47105](h
 ### R2.8.37 in progress — non-Markdown wiki-link target fallback
 
 Starting from tracker SHA `a7ccfd1d835d36a4afa8ab6857af284545a47105` (accepted implementation SHA `8e4a4b09127bc7a02e52d616d6e09c5118af4644`), add fixture-driven UI evidence that a simple wiki link to a uniquely resolved non-Markdown vault asset stays source-only. The test now confirms path resolution succeeds while the preview exposes no clickable link and preserves source, vault, and app-data bytes. The fixture hash is reconciled; push for exact-SHA GitHub Actions. All executable validation remains GitHub Actions only.
+
+### R2.8.37 accepted — non-Markdown wiki-link target fallback — source SHA `0f134032cadfd3e983359f5951cf553ea3e5b323`
+
+The fixture-driven source-only UI case now covers three resolved-target contexts: an embedded link, a heading-subpath link, and a simple wiki link to `Boards/Research.canvas`. For the non-Markdown case, the test confirms the path resolves to the `.canvas` file while the primary preview exposes no clickable link and preserves source, vault, and app-data bytes. The updated fixture hash passed inventory.
+
+All seven required workflows passed on the exact source SHA: inventory [38071964146](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964146), loaded-plugin workflows [38071964092](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964092), desktop build [38071964138](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964138), quality [38071964102](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964102), Rust CI [38071964165](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964165), plugin renderer [38071964099](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964099), and Obsidian vault round-trip [38071964097](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071964097). Rust CI passed the focused case on Ubuntu, macOS, and Windows. The first quality attempt's Ubuntu Electron vault audit stopped after indexing one passage without reaching the local retrieval boundary; the quality workflow's second attempt passed on all three operating systems at the same SHA. Exact job IDs and artifact digests are in [evidence/r2.8.37-non-markdown-wiki-link-fallback-0f13403.json](evidence/r2.8.37-non-markdown-wiki-link-fallback-0f13403.json). No local tests, builds, formatters, Clippy, or application validation were used.
+
+Accepted slice: source-only safety for resolved non-Markdown wiki-link targets. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.38 in progress — mixed-formatting wiki-link fallback
+
+Starting from accepted implementation SHA `0f134032cadfd3e983359f5951cf553ea3e5b323`, add fixture-driven UI evidence that a wiki link surrounded by Markdown emphasis remains source-only even when its target resolves to a local Markdown note. Verify no clickable link and unchanged source, vault, and app-data bytes. All executable validation remains GitHub Actions only.
