@@ -1395,9 +1395,9 @@
       "sha256": "dbd161b80ddee2b3c421ecd3fc81a388c4eff00b378650c5e8fc0ec2bc8c36f0",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
-      "status": "pending",
+      "status": "passing",
       "migration_phase": "R2",
-      "purpose": "Read-only YAML projection retains property order, scalar types, nested collections, Unicode and space-bearing keys, and the original Markdown source bytes.",
+      "purpose": "Read-only YAML projection retains property order, scalar types, nested collections, Unicode and space-bearing keys, colon-bearing keys, embedded apostrophes, and the original Markdown source bytes. Broader C04 semantics remain pending.",
       "fixture_reader": "crates/testkit"
     },
     {

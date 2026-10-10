@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T07:56:24Z",
+  "updated_at": "2026-10-10T08:07:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "83e67dbf7815542975c6f4e405dc7005f7371276",
+  "last_reconciled_head": "85325d65d4fbd25eb9ee663525128ff661e0a3ab",
   "current_milestone": "R2.8.17",
-  "next_action": "Implement fixture-backed support for plain Unicode and space-bearing YAML mapping keys, colon-containing keys, and embedded apostrophes; report unsupported complex keys explicitly. Validate only in GitHub Actions.",
+  "next_action": "Push the R2.8.17 tracker checkpoint after recording exact-SHA CI evidence, then continue with the next narrow C04 source-preservation slice.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "a89574a0cfec01a20df9f525eff325a3d8a6139a"
+      "implementation_sha": "85325d65d4fbd25eb9ee663525128ff661e0a3ab"
     },
     "R3": {
       "status": "pending",
@@ -254,7 +254,7 @@
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
   ],
-  "push_status": "R2.8.16 source SHA 3356560c9212daf1c67d402ddde93314eeeb3380 and tracker checkpoint 83e67dbf7815542975c6f4e405dc7005f7371276 are on origin/main. All seven source workflows and all six path-eligible tracker workflows passed; the path-filtered round-trip passed on the source SHA. R2.8.17 plain YAML mapping-key coverage is in progress. Broader C04, C02/C02.1 and editor integration remain pending.",
+  "push_status": "R2.8.17 source SHA 85325d65d4fbd25eb9ee663525128ff661e0a3ab is on origin/main and all seven required workflows passed on that exact SHA. The tracker checkpoint is pending. R2.8.17 plain YAML mapping-key coverage is complete; broader C04, C02/C02.1 and editor integration remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16149,7 +16149,7 @@
       "next_action": "Continue with the next C04 source-preservation slice; keep broader C04, C02/C02.1 and editor integration pending."
     },
     "R2.8.17": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "83e67dbf7815542975c6f4e405dc7005f7371276",
       "scope": "Extend the bounded YAML projection to support plain Unicode and space-bearing mapping keys, colon-containing keys, and embedded apostrophes while reporting unsupported complex keys.",
       "accepted_slice": [
@@ -16165,9 +16165,25 @@
         "The focused fixture and full Rust workspace tests pass on Ubuntu, macOS, and Windows.",
         "All seven required GitHub Actions workflows pass on the exact source SHA; executable validation runs in GitHub Actions only."
       ],
-      "implementation_commits": [],
-      "ci_attempts": [],
-      "next_action": "Commit and push the fixture-backed mapping-key parser change for exact-SHA GitHub Actions validation."
+      "implementation_commits": [
+        "cdeb47482ef01eff2f276a1f1d2cf4f9d5100d20",
+        "85325d65d4fbd25eb9ee663525128ff661e0a3ab"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "cdeb47482ef01eff2f276a1f1d2cf4f9d5100d20",
+          "rust_ci_run_id": 38036168449,
+          "conclusion": "failure",
+          "failure": "Ubuntu rustfmt requested layout changes and macOS/Windows Clippy requested replacing a let-else with Option ?; all other required workflows passed, including the three-OS vault round-trip."
+        },
+        {
+          "source_sha": "85325d65d4fbd25eb9ee663525128ff661e0a3ab",
+          "conclusion": "success",
+          "result": "All seven required workflows passed on the exact source SHA."
+        }
+      ],
+      "evidence": "evidence/r2.8.17-yaml-mapping-keys-85325d6.json",
+      "next_action": "Push the R2.8.17 tracker checkpoint; after its path-eligible CI passes, continue with the next narrow C04 source-preservation slice."
     }
   },
   "ci_preparation": {
