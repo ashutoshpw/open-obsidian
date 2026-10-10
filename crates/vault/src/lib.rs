@@ -2079,8 +2079,7 @@ mod tests {
     use super::{
         LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES,
         MarkdownSource, TransclusionBlockReason, VaultError, VaultHistoryKind,
-        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, path_to_slashes,
-        sha256_hex,
+        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex,
     };
     use openobsidian_doc::MergeStatus;
     use serde_json::Value;
@@ -4006,7 +4005,7 @@ mod tests {
             let paths = snapshot
                 .entries
                 .iter()
-                .map(|entry| path_to_slashes(&entry.relative_path).unwrap())
+                .map(|entry| super::path_to_slashes(&entry.relative_path).unwrap())
                 .collect::<Vec<_>>();
             assert!(paths.iter().any(|path| path == nfc_path_text));
             assert!(paths.iter().any(|path| path == nfd_path_text));
