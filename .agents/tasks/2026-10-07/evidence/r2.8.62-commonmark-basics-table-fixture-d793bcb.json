@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.62",
+  "status": "accepted",
+  "source_sha": "d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+  "implementation_commits": [
+    "d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6"
+  ],
+  "fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "48579c8ae246044ae32479c804c15c7bfe802076c35c3612c266014d07729547",
+    "cases": [
+      "commonmark-basics"
+    ],
+    "source": "# Heading\n\nSubheading\n---\n\n- [x] Task\n\n| Name | Value |\n| --- | --- |\n| note | 3 |\n\n> [!NOTE] Safe callout\n\n~~~rust\nfn main() {}\n~~~\n\n**bold** ~~strike~~"
+  },
+  "scope": "Drive the existing commonmark-basics C02.1 fixture through the egui table preview and verify table rendering and source preservation.",
+  "required_workflows": {
+    "inventory": {
+      "run_id": 38090184705,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184705",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114324852949,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "run_id": 38090184670,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184670",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114324853135,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114324853277,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114324853337,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38090184708,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184708",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114324853310,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114324853490,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114324853618,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "quality": {
+      "run_id": 38090184702,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184702",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114324853028,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114324853241,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114324853305,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "rust_ci": {
+      "run_id": 38090184696,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184696",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114324853015,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114324853112,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114324853128,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "plugin_renderer": {
+      "run_id": 38090184679,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184679",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114324852902,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114324853083,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114324853583,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38090184693,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184693",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114324853026,
+          "conclusion": "success"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114324853155,
+          "conclusion": "success"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114324853222,
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "tests": [
+    {
+      "name": "tests::egui_renders_markdown_tables_without_source_fallback",
+      "result": "passed on ubuntu-latest, macos-latest, and windows-latest",
+      "ui_egui_test_count": "96 passed, 0 failed on each platform"
+    }
+  ],
+  "toolchain": {
+    "channel": "stable via dtolnay/rust-toolchain@stable",
+    "rustc": "1.99.0 (b940084d7 2026-09-28)",
+    "platforms": [
+      "ubuntu-latest",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "cargo_lock_sha256": "f143845d873b4b530e4661a43baca149bec9c8deea627285620b5431252c06dc"
+  },
+  "parallel_ci": {
+    "workflow": ".github/workflows/rust.yml",
+    "evidence": "evidence/parallel-ci.json",
+    "implementation_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+    "note": "Native parallel groups in Rust CI and the Obsidian vault round-trip workflow passed on this exact accepted source SHA."
+  },
+  "artifacts": [
+    {
+      "id": 11683992145,
+      "attempt": 1,
+      "name": "loaded-plugin-workflows-Linux-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:ad00a70ab1bb8ac582f57d8f1950729a66a6d5603d443a92f45f5e3a03b0bd01"
+    },
+    {
+      "id": 11683059539,
+      "attempt": 1,
+      "name": "loaded-plugin-workflows-Windows-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:3ab2bafc169ac4863adeaa985c483969e54feca5b88de9307b0cbea155114b81"
+    },
+    {
+      "id": 11682964540,
+      "attempt": 1,
+      "name": "loaded-plugin-workflows-macOS-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:c68ace4df3cb7b644f659ccc974937b231c6ddc590144b39d625223d2830b4b2"
+    },
+    {
+      "id": 11683977179,
+      "attempt": 1,
+      "name": "openobsidian-Linux-preview-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:7b2c2b98d9a5bc5af8c856bdcd68a28c41e925a32742f8d64ce0083a87e26ecc"
+    },
+    {
+      "id": 11683682576,
+      "attempt": 1,
+      "name": "openobsidian-macOS-preview-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:d433c29944dec24ab244e45b18156abccc82098f5b573168661eba4e55267b8d"
+    },
+    {
+      "id": 11682909774,
+      "attempt": 1,
+      "name": "openobsidian-Windows-preview-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:cb89698076d1ba446ec938564c1c5df6c80a2dba120813f479e59d7335dac169"
+    },
+    {
+      "id": 11684085355,
+      "attempt": 1,
+      "name": "rust-plugin-runtime-macOS-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:39fd1795c78a80f1e6fa4f5d041d90cdcb20cd905df755ead74ec89b2b5ea268"
+    },
+    {
+      "id": 11683808946,
+      "attempt": 1,
+      "name": "rust-plugin-runtime-Windows-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:5727cb5dd5d8d22b15290aec7c9939c9034b4908386fc63bd925546fcd0cff96"
+    },
+    {
+      "id": 11683719101,
+      "attempt": 1,
+      "name": "rust-plugin-runtime-Linux-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:48d12881257efbae1fd12a91fb211962d4326cebd7320bb94d582110aa06dbd9"
+    },
+    {
+      "id": 11683534269,
+      "attempt": 1,
+      "name": "openobsidian-rust-preview-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:973dc3fd68701682e9930e25456aadc07c9e2f514d41cf2b33119c945ee1792d"
+    },
+    {
+      "id": 11683942334,
+      "attempt": 1,
+      "name": "plugin-renderer-lifecycle-Windows-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:ddcfd53915c73a2285550dd823817ef07400c1709f6e36963842dc48919b3296"
+    },
+    {
+      "id": 11683122860,
+      "attempt": 1,
+      "name": "plugin-renderer-lifecycle-Linux-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:130c05ef4c792126d61cb6e71db2ccb52aa905de90b1b134c0c07e940bc104f0"
+    },
+    {
+      "id": 11682924855,
+      "attempt": 1,
+      "name": "plugin-renderer-lifecycle-macOS-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:832c6f7686891d0375ee7fefd7095168412c4a23948fb24954f966d64deb72b6"
+    },
+    {
+      "id": 11683743914,
+      "attempt": 1,
+      "name": "obsidian-vault-roundtrip-Linux-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:5a2bb85a7100559bbf59b3d2baea30a61626b9d5dffe6b8f7a6649ec92f890e9"
+    },
+    {
+      "id": 11683619491,
+      "attempt": 1,
+      "name": "obsidian-vault-roundtrip-Windows-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:ff7b188cfbd589ddfb0192fa6d24ab9cf008905019c3f93a80a508b52f95339c"
+    },
+    {
+      "id": 11683199633,
+      "attempt": 1,
+      "name": "obsidian-vault-roundtrip-macOS-d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6",
+      "digest": "sha256:0927006b76378285362d39804444b24c88be78a3b6fa1409d08cec78ad1629ee"
+    }
+  ],
+  "limitations": [
+    "This slice moves the existing direct-string Markdown table preview test onto the commonmark-basics fixture; it does not change Markdown parsing or table rendering behavior.",
+    "Full C02.1 and migration phases R3-R7 remain pending.",
+    "All executable validation was performed in GitHub Actions; no local tests, builds, formatters, linters, or app launches were used."
+  ],
+  "recorded_at": "2026-10-10T22:13:17Z"
+}

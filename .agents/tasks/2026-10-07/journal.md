@@ -2871,3 +2871,15 @@ Accepted slice: inline and display math from the shared C02.1 fixture render thr
 Use the existing commonmark-basics C02.1 fixture in the egui Markdown table preview test. Verify RenderMarkdown, the table headers and expected row values, and unchanged source bytes. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.61 acceptance record is pushed.
 
 R2.8.62 tracker checkpoint: inventory [run 38090121657](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090121657), job 114324667885, passed for tracker SHA 5b619026759880e90cadbceb6fb92cfe80fade7f.
+
+### R2.8.62 accepted — CommonMark basics fixture table preview — source SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6
+
+The existing commonmark-basics C02.1 fixture now drives the egui Markdown table preview test. It verifies RenderMarkdown, the table header and row values, and unchanged fixture bytes. The focused Rust UI test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 96 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38090184705](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184705), loaded-plugin workflows [38090184670](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184670), desktop build [38090184708](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184708), quality [38090184702](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184702), Rust CI [38090184696](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184696), plugin renderer [38090184679](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184679), and Obsidian vault round-trip [38090184693](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090184693). Exact job IDs and artifact digests are in [evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json](evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the CommonMark basics fixture renders its table in the native preview while preserving its original bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.63 in progress — single inline highlight fixture preview
+
+Use the existing highlight C02.1 fixture to drive the egui preview, verify RenderMarkdown and the expected highlighted phrase, and preserve the original source bytes. Convert the direct-string single-highlight test to fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.62 acceptance record is pushed.
