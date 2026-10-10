@@ -935,18 +935,39 @@ impl OpenObsidianApp {
                             ui.small("Read the preview again before editing its source.");
                         }
 
-                        if analyze_markdown_preview(&preview.text).disposition()
+                        let preview_analysis = analyze_markdown_preview(&preview.text);
+                        if preview_analysis.disposition()
                             == MarkdownPreviewDisposition::RenderMarkdown
                         {
+                            let projected_preview = !preview_analysis
+                                .inline_highlight_spans()
+                                .is_empty()
+                                || preview_analysis
+                                    .native_render_source(&preview.text)
+                                    .as_ref()
+                                    != preview.text.as_str();
                             ui.small("Markdown preview");
-                            ui.small(
-                                "Task checkbox changes save only when this complete preview has a current revision and other vault work is idle.",
-                            );
+                            if projected_preview {
+                                ui.small(
+                                    "This projected Markdown preview is read-only. Use Edit Markdown source to change it.",
+                                );
+                            } else {
+                                ui.small(
+                                    "Task checkbox changes save only when this complete preview has a current revision and other vault work is idle.",
+                                );
+                            }
                             eframe::egui::ScrollArea::vertical()
                                 .id_salt("note-source-markdown-preview")
                                 .max_height(280.0)
                                 .show(ui, |ui| {
-                                    if !operation_busy
+                                    if projected_preview {
+                                        show_markdown_preview(
+                                            ui,
+                                            &mut self.markdown_cache,
+                                            &self.math_renderer_cache,
+                                            &preview.text,
+                                        );
+                                    } else if !operation_busy
                                         && !write_busy
                                         && let Some(revision_sha256) =
                                             preview.revision_sha256.as_ref()
@@ -3178,6 +3199,83 @@ mod tests {
         count_harness
             .get_by_label("Math preview limit reached for this UI pass; showing the source.");
         count_harness.get_by_label("$x_{32}$");
+    }
+
+    #[test]
+    fn egui_note_source_preview_applies_plain_highlights_without_writing_source() {
+        let source = b"Keep ==this phrase== visible.";
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Markdown preview");
+        harness.get_by_label(
+            "This projected Markdown preview is read-only. Use Edit Markdown source to change it.",
+        );
+        harness.get_by_label("this phrase");
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            source.to_vec()
+        );
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .expect("highlight preview remains open")
+                .text
+                .as_bytes(),
+            source
+        );
+    }
+
+    #[test]
+    fn egui_note_source_preview_projects_safe_html_breaks_without_writing_source() {
+        let source = b"First line<br>Second line.";
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Markdown preview");
+        harness.get_by_label(
+            "This projected Markdown preview is read-only. Use Edit Markdown source to change it.",
+        );
+        harness.get_by_label("First line");
+        harness.get_by_label("Second line.");
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            source.to_vec()
+        );
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .expect("safe HTML preview remains open")
+                .text
+                .as_bytes(),
+            source
+        );
     }
 
     #[test]

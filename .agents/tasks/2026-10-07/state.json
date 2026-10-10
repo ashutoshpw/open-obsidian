@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T16:08:10Z",
+  "updated_at": "2026-10-10T16:13:02Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "12d68e3993cf5f7951ee4245e51ee45d15759e67",
-  "current_milestone": "R2.8.32",
-  "next_action": "R2.8.32 is accepted on exact source SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67. Continue C02.1 with another focused Markdown preview slice; full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "a025616c16360f422ea0d3b8a3f22e4ff47ff93b",
+  "current_milestone": "R2.8.33",
+  "next_action": "R2.8.33 is in progress: route supported read-only Markdown projections through the primary note preview while keeping task-checkbox writes on unprojected source. Then push for exact-SHA GitHub Actions validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -18110,6 +18110,17 @@
       ],
       "evidence": "evidence/r2.8.32-inline-highlights-12d68e3.json",
       "next_action": "R2.8.32 is accepted. Continue C02.1 with another focused Markdown preview slice; full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.33": {
+      "status": "in_progress",
+      "starting_sha": "a025616c16360f422ea0d3b8a3f22e4ff47ff93b",
+      "scope": "Use the dialect-aware renderer for safe HTML and plain-highlight projections in the primary note source preview, without changing vault source or weakening task-checkbox revision checks.",
+      "acceptance": [
+        "The primary note source preview renders plain inline highlights and allowlisted HTML line breaks through the dialect-aware preview path.",
+        "Projected previews are read-only and preserve exact source bytes; ordinary CommonMark previews retain revision-checked task-checkbox editing.",
+        "Focused UI tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
+      ],
+      "next_action": "Route projected Markdown through show_markdown_preview in the main note source panel, add end-to-end UI cases for highlights and safe HTML breaks, and validate only through GitHub Actions."
     }
   },
   "ci_preparation": {
