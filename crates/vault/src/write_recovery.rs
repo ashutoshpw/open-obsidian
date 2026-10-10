@@ -158,7 +158,7 @@ impl VaultStore {
                 &record.next_revision,
                 None,
             )
-                .map_err(|error| error.to_string())?;
+            .map_err(|error| error.to_string())?;
             #[cfg(windows)]
             if let Ok(backup_paths) = matching_windows_backups(
                 &target_path,
@@ -316,9 +316,8 @@ fn matching_windows_backups(
             return Err("unexpected Windows replacement backup for a new file".to_owned());
         };
         let backup_path = entry.path();
-        let metadata = fs::symlink_metadata(&backup_path).map_err(|error| {
-            format!("Windows replacement backup cannot be checked: {error}")
-        })?;
+        let metadata = fs::symlink_metadata(&backup_path)
+            .map_err(|error| format!("Windows replacement backup cannot be checked: {error}"))?;
         if metadata.file_type().is_symlink() || !metadata.is_file() {
             return Err("Windows replacement backup is not a regular file".to_owned());
         }

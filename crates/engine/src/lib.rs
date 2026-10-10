@@ -367,7 +367,7 @@ mod tests {
             session
                 .entries()
                 .iter()
-                .any(|entry| entry.relative_path == PathBuf::from(relative_path))
+                .any(|entry| entry.relative_path == *relative_path)
         );
     }
 }

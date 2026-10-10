@@ -207,10 +207,7 @@ impl VaultStore {
         let mut latest_by_id = HashMap::new();
         for line in complete_text.lines().filter(|line| !line.trim().is_empty()) {
             let value: Value = serde_json::from_str(line).map_err(|error| {
-                VaultError::Journal(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    error,
-                ))
+                VaultError::Journal(std::io::Error::new(std::io::ErrorKind::InvalidData, error))
             })?;
             if value.get("operation").and_then(Value::as_str) != Some("write") {
                 continue;
@@ -231,10 +228,7 @@ impl VaultStore {
                         "write journal entry has an invalid operation id",
                     ))
                 })?;
-            let state = value
-                .get("state")
-                .and_then(Value::as_str)
-                .unwrap_or("");
+            let state = value.get("state").and_then(Value::as_str).unwrap_or("");
             latest_by_id.insert(operation_id.to_owned(), state.to_owned());
         }
         Ok(latest_by_id
@@ -805,12 +799,16 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(recovery_records.len(), 2);
         assert!(recovery_records.iter().all(|record| !record.protected));
-        assert!(recovery_records
-            .iter()
-            .any(|record| record.revision_sha256 == before.revision_sha256));
-        assert!(recovery_records
-            .iter()
-            .any(|record| record.revision_sha256 == written.read.revision_sha256));
+        assert!(
+            recovery_records
+                .iter()
+                .any(|record| record.revision_sha256 == before.revision_sha256)
+        );
+        assert!(
+            recovery_records
+                .iter()
+                .any(|record| record.revision_sha256 == written.read.revision_sha256)
+        );
         assert!(
             records
                 .iter()
@@ -1038,10 +1036,11 @@ mod tests {
             )
             .unwrap();
         assert_eq!(plan.pruneable.len(), 2);
-        assert!(plan
-            .pruneable
-            .iter()
-            .all(|record| recovery_ids.contains(&record.id)));
+        assert!(
+            plan.pruneable
+                .iter()
+                .all(|record| recovery_ids.contains(&record.id))
+        );
         assert_eq!(plan.protected.len(), 1);
         assert!(plan.warning);
         for recovery_id in &recovery_ids {
@@ -1059,9 +1058,11 @@ mod tests {
             )
             .unwrap();
         assert_eq!(cleanup.removed.len(), 2);
-        assert!(recovery_ids
-            .iter()
-            .all(|recovery_id| cleanup.removed.contains(recovery_id)));
+        assert!(
+            recovery_ids
+                .iter()
+                .all(|recovery_id| cleanup.removed.contains(recovery_id))
+        );
         assert_eq!(cleanup.protected.len(), 1);
         assert!(cleanup.warning);
         for recovery_id in &recovery_ids {

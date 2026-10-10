@@ -1291,10 +1291,7 @@ impl VaultStore {
             );
             #[cfg(windows)]
             let target_was_lost = request.expected_revision_sha256.is_some()
-                && matches!(
-                    self.read_if_present(&relative_path, &target_path),
-                    Ok(None)
-                );
+                && matches!(self.read_if_present(&relative_path, &target_path), Ok(None));
             #[cfg(not(windows))]
             let target_was_lost = false;
             if target_was_lost {
@@ -2281,7 +2278,10 @@ mod tests {
             .unwrap()
             .map(Result::unwrap)
             .find(|entry| {
-                entry.file_name().to_string_lossy().ends_with("-previous.bin")
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .ends_with("-previous.bin")
             })
             .map(|entry| fs::read(entry.path()).unwrap())
             .unwrap();
@@ -2297,14 +2297,18 @@ mod tests {
         let atomic_fixture: Value = serde_json::from_str(SYNC_ATOMIC_WRITE_FIXTURE)
             .expect("atomic-write fixture must be valid JSON");
         assert_eq!(atomic_fixture["id"], "fixture:sync-atomic-write");
-        assert!(atomic_fixture["protocol"]["windows"]
-            .as_str()
-            .unwrap()
-            .contains("not one atomic namespace replacement"));
-        assert!(atomic_fixture["protocol"]["power_loss"]
-            .as_str()
-            .unwrap()
-            .contains("no universal power-loss durability claim"));
+        assert!(
+            atomic_fixture["protocol"]["windows"]
+                .as_str()
+                .unwrap()
+                .contains("not one atomic namespace replacement")
+        );
+        assert!(
+            atomic_fixture["protocol"]["power_loss"]
+                .as_str()
+                .unwrap()
+                .contains("no universal power-loss durability claim")
+        );
 
         let fixture: Value = serde_json::from_str(SYNC_INTERRUPTED_WRITE_FIXTURE)
             .expect("interrupted-write fixture must be valid JSON");
@@ -2374,10 +2378,7 @@ mod tests {
             assert!(!pending_history.is_empty());
             assert!(pending_history.iter().all(|record| record.protected));
             let windows_backup_path = if case["windows_backup_at_restart"] == true {
-                let file_name = target_path
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy();
+                let file_name = target_path.file_name().unwrap().to_string_lossy();
                 let backup_path = target_path
                     .parent()
                     .unwrap()
@@ -2408,7 +2409,11 @@ mod tests {
                 assert!(report.recovered_operations.is_empty());
                 assert_eq!(report.needs_attention.len(), 1);
                 assert_eq!(fs::read(&target_path).unwrap(), expected_target.unwrap());
-                assert!(report.needs_attention[0].reason.contains("expected revision"));
+                assert!(
+                    report.needs_attention[0]
+                        .reason
+                        .contains("expected revision")
+                );
                 assert!(
                     store
                         .history_records()
