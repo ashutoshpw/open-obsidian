@@ -2865,29 +2865,32 @@ mod tests {
         assert_eq!(stale.revision_sha256, expected_revision);
         fs::write(&target_path, external).unwrap();
 
-        let (conflict_path, recorded_expected, recorded_current, preserved_path) =
-            match store.write(VaultWriteRequest {
+        let (conflict_path, recorded_expected, recorded_current, preserved_path) = match store
+            .write(VaultWriteRequest {
                 relative_path: relative_path.clone(),
                 expected_revision_sha256: Some(stale.revision_sha256),
                 bytes: incoming.to_vec(),
             }) {
-                Err(VaultError::RevisionConflict {
-                    relative_path,
-                    expected_revision,
-                    current_revision,
-                    preserved_path,
-                }) => (
-                    relative_path,
-                    expected_revision,
-                    current_revision,
-                    preserved_path,
-                ),
-                Err(error) => panic!("stale concurrent edit returned the wrong error: {error}"),
-                Ok(_) => panic!("stale concurrent edit replaced the external target"),
-            };
+            Err(VaultError::RevisionConflict {
+                relative_path,
+                expected_revision,
+                current_revision,
+                preserved_path,
+            }) => (
+                relative_path,
+                expected_revision,
+                current_revision,
+                preserved_path,
+            ),
+            Err(error) => panic!("stale concurrent edit returned the wrong error: {error}"),
+            Ok(_) => panic!("stale concurrent edit replaced the external target"),
+        };
 
         assert_eq!(conflict_path, relative_path);
-        assert_eq!(recorded_expected.as_deref(), Some(expected_revision.as_str()));
+        assert_eq!(
+            recorded_expected.as_deref(),
+            Some(expected_revision.as_str())
+        );
         assert_eq!(recorded_current.as_deref(), Some(current_revision.as_str()));
         assert_eq!(
             fs::read(&target_path).unwrap(),
