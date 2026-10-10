@@ -1395,7 +1395,7 @@
       "sha256": "883ea7773a4876cc52eb159b00a58f5391178e5ada1c8e24b6bf2377c35fe169",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
-      "status": "pending",
+      "status": "passing",
       "migration_phase": "R2",
       "purpose": "Editing a represented property preserves comments, order, aliases, tags, nested values, and unrepresented YAML bytes.",
       "fixture_reader": "crates/testkit"

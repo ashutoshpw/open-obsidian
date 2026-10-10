@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T07:01:25Z",
+  "updated_at": "2026-10-10T07:07:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "21e817b7acf54a746ccc0391a6fbe1eaf83cd7b7",
+  "last_reconciled_head": "a89574a0cfec01a20df9f525eff325a3d8a6139a",
   "current_milestone": "R2.8.15",
-  "next_action": "Add fixture-backed C04.1 coverage proving an edit to one represented property preserves unknown fields, comments, order, aliases, tags and nested YAML; push for exact-SHA GitHub Actions validation. Keep broader C04 and R2 pending.",
+  "next_action": "R2.8.15 is accepted for C04.1. Select the next uncovered R2 requirement; broader C04, C02 and editor integration remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "088d0ef6558debec1d85268d07f642e2acc251ba"
+      "implementation_sha": "a89574a0cfec01a20df9f525eff325a3d8a6139a"
     },
     "R3": {
       "status": "pending",
@@ -16055,8 +16055,9 @@
       "next_action": "Commit and push this accepted evidence/state tracker checkpoint, wait for its path-eligible workflows, then select the next uncovered R2 source-preservation requirement."
     },
     "R2.8.15": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "21e817b7acf54a746ccc0391a6fbe1eaf83cd7b7",
+      "implementation_sha": "a89574a0cfec01a20df9f525eff325a3d8a6139a",
       "scope": "Exercise the source-preserving property editor against unknown and nested YAML, comments, ordering, aliases, tags and scalar types without normalizing unrelated bytes.",
       "accepted_slice": [
         "C04.1:unknown-property-preservation"
@@ -16070,9 +16071,27 @@
         "Comments, property order, arrays, nested mappings, aliases, tags, unrepresented fields, BOM and CRLF remain exact.",
         "All seven required GitHub Actions workflows pass on the exact source SHA; all validation runs in GitHub Actions only."
       ],
-      "implementation_commits": [],
-      "ci_attempts": [],
-      "next_action": "Push the C04.1 fixture-backed source slice to origin/main and validate it through exact-SHA GitHub Actions; then record evidence and checkpoint CI."
+      "implementation_commits": [
+        "a89574a0cfec01a20df9f525eff325a3d8a6139a"
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "a89574a0cfec01a20df9f525eff325a3d8a6139a",
+          "required_workflow_run_ids": [
+            38033019449,
+            38033019518,
+            38033019459,
+            38033019457,
+            38033019438,
+            38033019469,
+            38033019474
+          ],
+          "result": "All seven required workflows passed on the exact source SHA. The fixture-driven C04.1 test and full Rust workspace tests passed on Ubuntu, macOS, and Windows."
+        }
+      ],
+      "evidence": "evidence/r2.8.15-c04-unknown-preservation-a89574a.json",
+      "next_action": "Commit and push the accepted C04.1 evidence/state tracker checkpoint, wait for path-eligible workflows, then select the next uncovered R2 requirement."
     }
   },
   "ci_preparation": {

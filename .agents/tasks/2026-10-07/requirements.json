@@ -2926,9 +2926,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.15-c04-unknown-preservation-a89574a.json"
+      ],
+      "tested_source_tree": "a89574a0cfec01a20df9f525eff325a3d8a6139a",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",
