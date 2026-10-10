@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T09:34:19Z",
+  "updated_at": "2026-10-10T09:39:47Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "26eb1df2c180d2516ee5e78e4ae13e5098829dd7",
+  "last_reconciled_head": "88ce1530d8ee4f7a17fced2def6fe706a059c9ef",
   "current_milestone": "R2.8.20",
-  "next_action": "Push the CI-guided R2.8.20 UI expectation correction, then inspect exact-SHA GitHub Actions results before accepting this bounded slice. Keep C02.1 pending until the full dialect and editing contract is implemented.",
+  "next_action": "Push the CI-guided R2.8.20 Clippy correction, then inspect exact-SHA GitHub Actions results before accepting this bounded slice. Keep C02.1 pending until the full dialect and editing contract is implemented.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16337,7 +16337,7 @@
       "validated_source_sha": null,
       "ci_runs": {},
       "evidence": null,
-      "next_action": "Commit and push the prepared implementation to origin/main. Inspect every required workflow for that exact source SHA, correct CI findings in small commits, and keep C02.1 pending because full dialect rendering/editing remains incomplete."
+      "next_action": "R2.8.20 remains in progress: push the Clippy correction and inspect all seven required workflows on its exact source SHA. Keep C02.1 pending because full dialect rendering and editing remain incomplete."
     }
   },
   "ci_preparation": {

@@ -188,10 +188,9 @@ fn scan_source_only_syntax(
             if bytes[cursor..].starts_with(b"[[") {
                 if !inside_inline_code(inline_code_spans, source_offset + cursor)
                     && let Some(close_start) = find_sequence(bytes, cursor + 2, b"]]")
+                    && text_between_is_not_blank(bytes, cursor + 2, close_start)
                 {
-                    if text_between_is_not_blank(bytes, cursor + 2, close_start) {
-                        push_once(unsupported, MarkdownUnsupportedSyntax::WikiLinks);
-                    }
+                    push_once(unsupported, MarkdownUnsupportedSyntax::WikiLinks);
                 }
                 cursor += 2;
                 continue;
