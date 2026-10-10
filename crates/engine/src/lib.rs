@@ -10,8 +10,7 @@ pub use openobsidian_vault::{
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
     VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
     VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
-    VaultWriteRecoveryReport,
-    analyze_markdown_preview, plan_history_retention,
+    VaultWriteRecoveryReport, analyze_markdown_preview, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;

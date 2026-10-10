@@ -1,6 +1,6 @@
 //! Read-only dialect preflight for safe native Markdown previews.
 
-use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 
 /// Why the native preview must show the original Markdown source instead of rendering it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -73,10 +73,10 @@ impl MarkdownPreviewAnalysis {
 /// CommonMark-compatible content continues through the native `egui_commonmark` renderer.
 /// Known syntax outside that renderer's current contract takes a source-only fallback, so the
 /// UI does not silently flatten footnotes, math, diagram fences, raw HTML, wiki links, or
-/// highlights. Inline markers inside fenced and inline code are not treated as dialect syntax.
+/// highlights. Inline markers inside fenced, indented, and inline code are not dialect syntax.
 pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
     let mut unsupported = Vec::new();
-    let mut inside_code_block = false;
+    let mut inline_code_spans = Vec::new();
     let options = Options::ENABLE_TABLES
         | Options::ENABLE_TASKLISTS
         | Options::ENABLE_STRIKETHROUGH
@@ -84,22 +84,13 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
         | Options::ENABLE_DEFINITION_LIST
         | Options::ENABLE_MATH;
 
-    if contains_legacy_math_delimiter(source) {
-        push_once(&mut unsupported, MarkdownUnsupportedSyntax::Math);
-    }
-
     for (event, source_span) in Parser::new_ext(source, options).into_offset_iter() {
         match event {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) => {
-                inside_code_block = true;
                 if is_diagram_fence(&language) {
                     push_once(&mut unsupported, MarkdownUnsupportedSyntax::Diagrams);
                 }
             }
-            Event::Start(Tag::CodeBlock(CodeBlockKind::Indented)) => {
-                inside_code_block = true;
-            }
-            Event::End(TagEnd::CodeBlock) => inside_code_block = false,
             Event::FootnoteReference(_) | Event::Start(Tag::FootnoteDefinition(_)) => {
                 push_once(&mut unsupported, MarkdownUnsupportedSyntax::Footnotes);
             }
@@ -109,21 +100,12 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
             Event::Html(_) | Event::InlineHtml(_) => {
                 push_once(&mut unsupported, MarkdownUnsupportedSyntax::RawHtml);
             }
-            Event::Text(_) if !inside_code_block => {
-                let Some(text) = source.get(source_span) else {
-                    continue;
-                };
-                if contains_wiki_link(text) {
-                    push_once(&mut unsupported, MarkdownUnsupportedSyntax::WikiLinks);
-                }
-                if contains_highlight(text) {
-                    push_once(&mut unsupported, MarkdownUnsupportedSyntax::Highlights);
-                }
-            }
+            Event::Code(_) => inline_code_spans.push(source_span),
             _ => {}
         }
     }
 
+    scan_source_only_syntax(source, &inline_code_spans, &mut unsupported);
     MarkdownPreviewAnalysis { unsupported }
 }
 
@@ -145,102 +127,84 @@ fn push_once(unsupported: &mut Vec<MarkdownUnsupportedSyntax>, syntax: MarkdownU
     }
 }
 
-fn contains_wiki_link(text: &str) -> bool {
-    let mut remaining = text;
-    while let Some(open) = remaining.find("[[") {
-        remaining = &remaining[open + 2..];
-        let Some(close) = remaining.find("]]") else {
-            return false;
-        };
-        if !remaining[..close].trim().is_empty() {
-            return true;
-        }
-        remaining = &remaining[close + 2..];
-    }
-    false
-}
-
-fn contains_highlight(text: &str) -> bool {
-    let mut remaining = text;
-    while let Some(open) = remaining.find("==") {
-        remaining = &remaining[open + 2..];
-        let Some(close) = remaining.find("==") else {
-            return false;
-        };
-        let content = &remaining[..close];
-        if !content.trim().is_empty() && !content.contains('\n') && !content.contains('\r') {
-            return true;
-        }
-        remaining = &remaining[close + 2..];
-    }
-    false
-}
-
-fn contains_legacy_math_delimiter(source: &str) -> bool {
+fn scan_source_only_syntax(
+    source: &str,
+    inline_code_spans: &[std::ops::Range<usize>],
+    unsupported: &mut Vec<MarkdownUnsupportedSyntax>,
+) {
     let mut fence: Option<(u8, usize)> = None;
+    let mut source_offset = 0;
 
-    for line in source.lines() {
+    for raw_line in source.split_inclusive('\n') {
+        let line = raw_line.strip_suffix('\n').unwrap_or(raw_line);
+        let line = line.strip_suffix('\r').unwrap_or(line);
         let bytes = line.as_bytes();
         let leading_spaces = bytes.iter().take_while(|byte| **byte == b' ').count();
-        if leading_spaces <= 3 {
-            let marker_start = leading_spaces;
-            if let Some(&marker) = bytes.get(marker_start)
-                && (marker == 96 || marker == b'~')
-            {
-                let marker_length = bytes[marker_start..]
+
+        if let Some((open_marker, open_length)) = fence {
+            if leading_spaces <= 3
+                && let Some((marker, marker_length, marker_start)) =
+                    fence_marker(bytes, leading_spaces)
+                && marker == open_marker
+                && marker_length >= open_length
+                && bytes[marker_start + marker_length..]
                     .iter()
-                    .take_while(|byte| **byte == marker)
-                    .count();
-                if let Some((open_marker, open_length)) = fence {
-                    let rest = &bytes[marker_start + marker_length..];
-                    if marker == open_marker
-                        && marker_length >= open_length
-                        && rest.iter().all(|byte| matches!(byte, b' ' | b'\t'))
-                    {
-                        fence = None;
-                    }
-                } else if marker_length >= 3 {
-                    fence = Some((marker, marker_length));
-                }
+                    .all(|byte| matches!(byte, b' ' | b'\t'))
+            {
+                fence = None;
             }
+            source_offset += raw_line.len();
+            continue;
         }
-        if fence.is_some() {
+
+        if leading_spaces <= 3
+            && let Some((marker, marker_length, _)) = fence_marker(bytes, leading_spaces)
+            && marker_length >= 3
+        {
+            fence = Some((marker, marker_length));
+            source_offset += raw_line.len();
             continue;
         }
         if leading_spaces >= 4 || bytes.first() == Some(&b'\t') {
+            source_offset += raw_line.len();
             continue;
         }
 
         let mut cursor = 0;
         while cursor < bytes.len() {
             if bytes[cursor] == 96 {
-                let run_length = bytes[cursor..]
-                    .iter()
-                    .take_while(|byte| **byte == 96)
-                    .count();
+                let run_length = backtick_run_length(bytes, cursor);
                 let run_end = cursor + run_length;
-                let mut search = run_end;
-                let mut close = None;
-                while search < bytes.len() {
-                    if bytes[search] == 96 {
-                        let closing_length = bytes[search..]
-                            .iter()
-                            .take_while(|byte| **byte == 96)
-                            .count();
-                        if closing_length == run_length {
-                            close = Some(search + closing_length);
-                            break;
-                        }
-                        search += closing_length;
-                    } else {
-                        search += 1;
-                    }
-                }
-                if let Some(close_end) = close {
+                if let Some(close_end) =
+                    matching_backtick_run_end(bytes, run_end, bytes.len(), run_length)
+                {
                     cursor = close_end;
                 } else {
                     cursor = run_end;
                 }
+                continue;
+            }
+
+            if bytes[cursor..].starts_with(b"[[") {
+                if !inside_inline_code(inline_code_spans, source_offset + cursor)
+                    && let Some(close_start) = find_sequence(bytes, cursor + 2, b"]]")
+                {
+                    if text_between_is_not_blank(bytes, cursor + 2, close_start) {
+                        push_once(unsupported, MarkdownUnsupportedSyntax::WikiLinks);
+                    }
+                }
+                cursor += 2;
+                continue;
+            }
+
+            if bytes[cursor..].starts_with(b"==") {
+                if !inside_inline_code(inline_code_spans, source_offset + cursor)
+                    && let Some(close_start) = find_sequence(bytes, cursor + 2, b"==")
+                    && text_between_is_not_blank(bytes, cursor + 2, close_start)
+                {
+                    push_once(unsupported, MarkdownUnsupportedSyntax::Highlights);
+                }
+                cursor += 2;
                 continue;
             }
 
@@ -249,11 +213,12 @@ fn contains_legacy_math_delimiter(source: &str) -> bool {
                 while run_end < bytes.len() && bytes[run_end] == b'\\' {
                     run_end += 1;
                 }
-                if (run_end - cursor) % 2 == 1
+                if !inside_inline_code(inline_code_spans, source_offset + cursor)
+                    && (run_end - cursor) % 2 == 1
                     && run_end < bytes.len()
-                    && matches!(bytes[run_end], b'(' | b'[')
+                    && matches!(bytes[run_end], b'(' | b'[' | b')' | b']')
                 {
-                    return true;
+                    push_once(unsupported, MarkdownUnsupportedSyntax::Math);
                 }
                 cursor = run_end;
                 continue;
@@ -261,9 +226,64 @@ fn contains_legacy_math_delimiter(source: &str) -> bool {
 
             cursor += 1;
         }
+        source_offset += raw_line.len();
     }
+}
 
-    false
+fn inside_inline_code(spans: &[std::ops::Range<usize>], offset: usize) -> bool {
+    spans.iter().any(|span| span.contains(&offset))
+}
+
+fn fence_marker(bytes: &[u8], leading_spaces: usize) -> Option<(u8, usize, usize)> {
+    let marker_start = leading_spaces;
+    let marker = *bytes.get(marker_start)?;
+    if marker != 96 && marker != b'~' {
+        return None;
+    }
+    let marker_length = bytes[marker_start..]
+        .iter()
+        .take_while(|byte| **byte == marker)
+        .count();
+    Some((marker, marker_length, marker_start))
+}
+
+fn backtick_run_length(bytes: &[u8], start: usize) -> usize {
+    bytes[start..]
+        .iter()
+        .take_while(|byte| **byte == 96)
+        .count()
+}
+
+fn matching_backtick_run_end(
+    bytes: &[u8],
+    mut cursor: usize,
+    end: usize,
+    length: usize,
+) -> Option<usize> {
+    while cursor < end {
+        if bytes[cursor] == 96 {
+            let run_length = backtick_run_length(bytes, cursor);
+            if run_length == length {
+                return Some(cursor + run_length);
+            }
+            cursor += run_length;
+        } else {
+            cursor += 1;
+        }
+    }
+    None
+}
+
+fn find_sequence(bytes: &[u8], start: usize, sequence: &[u8]) -> Option<usize> {
+    bytes
+        .get(start..)?
+        .windows(sequence.len())
+        .position(|window| window == sequence)
+        .map(|offset| start + offset)
+}
+
+fn text_between_is_not_blank(bytes: &[u8], start: usize, end: usize) -> bool {
+    std::str::from_utf8(&bytes[start..end]).is_ok_and(|text| !text.trim().is_empty())
 }
 
 #[cfg(test)]
