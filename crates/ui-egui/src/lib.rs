@@ -3851,6 +3851,96 @@ mod tests {
     }
 
     #[test]
+    fn egui_note_source_preview_keeps_wiki_link_markers_inside_code_literal() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "literal-markers-inside-code")
+            .expect("Markdown dialect fixture must include literal markers inside code");
+        let source = case["source"]
+            .as_str()
+            .expect("code-marker fixture must include source");
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = source_preview_test_app(
+            &vault_path,
+            &app_data_path,
+            "Index.md",
+            source.as_bytes(),
+            &[("page.md", &b"# Page"[..])],
+        );
+        let session = app
+            .session
+            .as_ref()
+            .expect("code-marker fixture must have an open vault")
+            .clone();
+        assert!(
+            session
+                .resolve_links_for_note("Index.md")
+                .expect("resolve code-marker note")
+                .is_empty(),
+            "wiki-link markers inside code spans and fences are literal"
+        );
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_task(ui);
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        wait_for_note_source_preview(&mut harness);
+        assert!(
+            harness
+                .query_by_label("Unsupported Markdown (wiki links); showing the source as written.")
+                .is_none(),
+            "literal wiki-link markers in code must not force source fallback"
+        );
+        assert!(
+            harness
+                .query_all_by_role(eframe::egui::accesskit::Role::Link)
+                .next()
+                .is_none(),
+            "literal wiki-link markers in code must not become clickable"
+        );
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .expect("Markdown preview remains open")
+                .text
+                .as_bytes(),
+            source.as_bytes()
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            before_vault,
+            "rendering code markers must preserve the vault"
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data,
+            "rendering code markers must preserve app data"
+        );
+    }
+
+    #[test]
     fn egui_note_source_preview_keeps_unsupported_wiki_link_contexts_source_only() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");

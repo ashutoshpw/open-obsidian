@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:29:48Z",
+  "updated_at": "2026-10-10T18:33:32Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "9017825fc2626069d756aa919cd7893b3ccbf390",
   "current_milestone": "R2.8.44",
-  "next_action": "R2.8.43 is accepted on exact source SHA 9017825fc2626069d756aa919cd7893b3ccbf390; all seven required GitHub Actions workflows passed. R2.8.44 should review the remaining C02.1 Markdown dialect gaps and select the next isolated fixture-backed behavior to implement. Use exact-SHA GitHub Actions only and record this tracker commit's inventory checkpoint in R2.8.44 evidence. Full C02.1 and phases R3-R7 remain pending.",
+  "next_action": "R2.8.43 is accepted on exact source SHA 9017825fc2626069d756aa919cd7893b3ccbf390. R2.8.44 adds fixture-driven UI coverage that wiki-link markers inside inline and fenced code stay literal, unlinked, and read-only; tracker checkpoint c08ef15 passed inventory run 38076155373. Push the focused implementation for exact-SHA GitHub Actions only. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -18655,16 +18655,23 @@
     },
     "R2.8.44": {
       "status": "in_progress",
-      "starting_sha": "9017825fc2626069d756aa919cd7893b3ccbf390",
-      "scope": "Review remaining C02.1 Markdown dialect gaps and implement the next isolated fixture-backed behavior with source-preserving CI coverage.",
+      "starting_sha": "c08ef15f590ca496a56e0d93fc6b2521cc7e4069",
+      "scope": "Verify wiki-link markers inside inline and fenced code remain literal rendered Markdown, are not resolved into clickable links, and do not modify vault or app-data bytes.",
       "acceptance": [
-        "The next behavior is selected from a specific pending C02.1 contract and represented by a fixture.",
-        "Rust CI verifies source-preserving behavior on Ubuntu, macOS, and Windows.",
+        "The existing literal-markers-inside-code C02.1 fixture drives an egui note-preview test.",
+        "The note resolver finds no links inside code, the preview renders Markdown without wiki-link fallback or clickable links, and vault/app-data bytes remain unchanged.",
         "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
       "implementation_commits": [],
-      "next_action": "Inspect pending C02.1 contracts and Markdown fixtures, choose one narrow uncovered behavior, then implement and push it for exact-SHA GitHub Actions."
+      "tracker_checkpoint": {
+        "sha": "c08ef15f590ca496a56e0d93fc6b2521cc7e4069",
+        "inventory_run_id": 38076155373,
+        "inventory_job_id": 114283409991,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38076155373"
+      },
+      "next_action": "The existing literal-markers-inside-code C02.1 fixture now has an egui source-preview coverage case. Push this focused slice for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {
