@@ -2687,3 +2687,5 @@ Accepted slice: the legacy delimited math fixture remains visible source-only wi
 ### R2.8.50 in progress — Mermaid diagram remains source-only
 
 Use the existing `mermaid-diagram` C02.1 fixture to verify that the native preview identifies diagrams as unsupported and displays the original fenced source unchanged. Add fixture-driven egui coverage, then push for exact-SHA GitHub Actions; no executable validation runs locally.
+
+R2.8.50 tracker checkpoint: inventory [run 38081195364](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081195364), job 114298287270, passed for tracker SHA `b81cf8d44bb6b80c23522a17c91c23c97c780e86`.
