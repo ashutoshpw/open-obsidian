@@ -51,7 +51,7 @@ const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.6.63/R2.6.65-C01.2-native-folder-picker-roundtrip-and-cancel",
+  milestone: "R2.8.71-C01.2-reference-app-source-preview-and-no-op-close",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -85,7 +85,7 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves the read-only startup, native folder-picker selection and cancellation, and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves read-only startup, source preview and close, native folder-picker selection and cancellation, and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
     "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -1935,6 +1935,260 @@ async function captureOpenObsidianScreenshot(windowId: string, child: ChildProce
   return {pngPath, windowPngPath, ocrPngPath, ocrText};
 }
 
+async function invokeNativeAccessibleControl(child: ChildProcess, controlName: string): Promise<string> {
+  const processId = child.pid;
+  if (!processId) throw new Error("OpenObsidian did not expose its process id for native accessibility automation");
+
+  if (process.platform === "linux") {
+    const script = `
+import json
+import sys
+import time
+import pyatspi
+
+process_id = int(sys.argv[1])
+target_name = sys.argv[2]
+deadline = time.monotonic() + 20
+last_names = []
+while time.monotonic() < deadline:
+    desktop = pyatspi.Registry.getDesktop(0)
+    pending = [desktop]
+    seen = set()
+    while pending:
+        accessible = pending.pop()
+        try:
+            name = accessible.getName() or ""
+            role = accessible.getRoleName() or ""
+            try:
+                owner_pid = accessible.get_process_id()
+            except Exception:
+                owner_pid = None
+            if owner_pid == process_id and name:
+                last_names.append({"name": name, "role": role})
+                if name == target_name:
+                    actions = accessible.queryAction()
+                    for index in range(actions.nActions):
+                        action_name = actions.getName(index)
+                        if action_name.lower() in ("click", "press", "activate", "open"):
+                            actions.doAction(index)
+                            print(json.dumps({"name": name, "role": role, "action": action_name}))
+                            sys.exit(0)
+                    raise RuntimeError("target control exposes no click/press/activate action")
+            child_count = accessible.getChildCount()
+            for index in range(child_count):
+                child_accessible = accessible.getChildAtIndex(index)
+                try:
+                    identity = child_accessible.get_hash()
+                except Exception:
+                    identity = id(child_accessible)
+                if identity not in seen:
+                    seen.add(identity)
+                    pending.append(child_accessible)
+        except RuntimeError:
+            raise
+        except Exception:
+            continue
+    time.sleep(0.25)
+print(json.dumps({"error": "accessible control was not found", "target": target_name, "process_id": process_id, "visible_names": last_names[-80:]}), file=sys.stderr)
+sys.exit(1)
+`;
+    try {
+      return execFileSync("python3", ["-c", script, String(processId), controlName], {
+        encoding: "utf8",
+        env: {...process.env, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId)},
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim();
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+      const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+      throw new Error(`Linux AT-SPI could not activate ${JSON.stringify(controlName)}: ${output || failure.message}`);
+    }
+  }
+
+  if (process.platform === "darwin") {
+    const script = `on run argv
+      set processId to (item 1 of argv) as integer
+      set targetName to item 2 of argv
+      tell application "System Events"
+        set targetProcess to first process whose unix id is processId
+        set frontmost of targetProcess to true
+        set visibleNames to {}
+        repeat with candidate in entire contents of window 1 of targetProcess
+          try
+            set candidateName to name of candidate as text
+            set candidateRole to role of candidate as text
+            if candidateName is not "" then set end of visibleNames to candidateRole & ":" & candidateName
+            if candidateName is targetName then
+              try
+                perform action "AXPress" of candidate
+                return "AXPress|" & candidateRole & "|" & candidateName
+              on error pressError
+                try
+                  click candidate
+                  return "click|" & candidateRole & "|" & candidateName & "|" & pressError
+                on error clickError
+                  error "Found " & candidateRole & " " & candidateName & " but activation failed: " & pressError & "; " & clickError
+                end try
+              end try
+            end if
+          end try
+        end repeat
+        error "Accessible control not found: " & targetName & "; observed=" & (visibleNames as text)
+      end tell
+    end run`;
+    try {
+      return execFileSync("osascript", ["-e", script, String(processId), controlName], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim();
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+      const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+      throw new Error(`macOS Accessibility could not activate ${JSON.stringify(controlName)}: ${output || failure.message}`);
+    }
+  }
+
+  if (process.platform === "win32") {
+    const script = `
+      $ErrorActionPreference = "Stop"
+      Add-Type -AssemblyName UIAutomationClient
+      Add-Type -AssemblyName UIAutomationTypes
+      $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+      $targetName = $env:OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME
+      $root = [System.Windows.Automation.AutomationElement]::RootElement
+      $processCondition = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
+        $processId
+      )
+      $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $processCondition)
+      $visibleNames = @()
+      foreach ($element in $elements) {
+        try {
+          $current = $element.Current
+          if ($current.Name) { $visibleNames += "$($current.ControlType.ProgrammaticName):$($current.Name)" }
+          if ($current.Name -ne $targetName) { continue }
+          try {
+            $element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern).ScrollIntoView()
+          } catch {}
+          $method = $null
+          try {
+            $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+            $method = "InvokePattern.Invoke"
+          } catch {
+            try {
+              $toggle = $element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+              if ($toggle.Current.ToggleState -eq [System.Windows.Automation.ToggleState]::Off) {
+                $toggle.Toggle()
+                $method = "TogglePattern.Toggle"
+              }
+            } catch {}
+          }
+          if (-not $method) {
+            try {
+              $expand = $element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
+              if ($expand.Current.ExpandCollapseState -eq [System.Windows.Automation.ExpandCollapseState]::Collapsed) {
+                $expand.Expand()
+                $method = "ExpandCollapsePattern.Expand"
+              }
+            } catch {}
+          }
+          if (-not $method) { throw "Control was found but exposes no usable UI Automation activation pattern" }
+          [pscustomobject]@{
+            name = $current.Name
+            control_type = $current.ControlType.ProgrammaticName
+            action = $method
+            is_enabled = [bool]$current.IsEnabled
+            is_offscreen = [bool]$current.IsOffscreen
+          } | ConvertTo-Json -Compress
+          exit 0
+        } catch {
+          if ($_.Exception.Message -like "Control was found*") { throw }
+        }
+      }
+      throw "Accessible control not found: $targetName; observed=$($visibleNames -join ' | ')"
+    `;
+    try {
+      return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+        encoding: "utf8",
+        env: {...process.env, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId), OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME: controlName},
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim();
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+      const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+      throw new Error(`Windows UI Automation could not activate ${JSON.stringify(controlName)}: ${output || failure.message}`);
+    }
+  }
+
+  throw new Error(`Native accessibility automation is not configured for ${process.platform}`);
+}
+
+async function runReferenceSourcePreview(
+  child: ChildProcess,
+  window: {window_id: string},
+  appDataRoot: string,
+  vaultBaseline: SnapshotEntry[],
+): Promise<void> {
+  const open = report.openobsidian_open as Record<string, unknown>;
+  const previewReport: Record<string, unknown> = {
+    status: "in_progress",
+    selected_note_path: seedMarkdownPath,
+    expected_source_sha256: vaultBaseline.find((entry) => entry.path === seedMarkdownPath)?.sha256 ?? null,
+    expected_source_marker: "Original bytes stay untouched.",
+  };
+  open.source_preview = previewReport;
+
+  const vaultBefore = await snapshotTree(vaultRoot);
+  ensureExactSnapshot(vaultBaseline, vaultBefore, "OpenObsidian vault before reference source preview");
+  const appDataBefore = await snapshotTree(appDataRoot);
+  previewReport.vault_snapshot_before = vaultBefore;
+  previewReport.app_data_snapshot_before = appDataBefore;
+
+  previewReport.expand_preview_action = await invokeNativeAccessibleControl(child, "Note source preview");
+  await delay(500);
+  previewReport.read_source_action = await invokeNativeAccessibleControl(child, "Read note source preview");
+
+  const visiblePreview = await waitFor("OpenObsidian to display the selected reference source", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview");
+    previewReport.preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => capture.ocrText.includes("Original bytes stay untouched."), 30_000);
+  previewReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
+  previewReport.preview_window_screenshot = relative(reportDirectory, visiblePreview.windowPngPath);
+  previewReport.source_marker_visible = visiblePreview.ocrText.includes("Original bytes stay untouched.");
+
+  const vaultAfterPreview = await snapshotTree(vaultRoot);
+  const appDataAfterPreview = await snapshotTree(appDataRoot);
+  ensureExactSnapshot(vaultBefore, vaultAfterPreview, "OpenObsidian reference source preview");
+  ensureExactSnapshot(appDataBefore, appDataAfterPreview, "OpenObsidian app data during reference source preview");
+  previewReport.vault_snapshot_after_preview = vaultAfterPreview;
+  previewReport.app_data_snapshot_after_preview = appDataAfterPreview;
+  previewReport.vault_unchanged_after_preview = true;
+  previewReport.app_data_unchanged_after_preview = true;
+
+  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, "Close source preview");
+  const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
+    previewReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => !capture.ocrText.includes("Original bytes stay untouched.") && capture.ocrText.includes("Read note source preview"), 30_000);
+  previewReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
+  previewReport.preview_closed = true;
+
+  const vaultAfterClose = await snapshotTree(vaultRoot);
+  const appDataAfterClose = await snapshotTree(appDataRoot);
+  ensureExactSnapshot(vaultBefore, vaultAfterClose, "OpenObsidian reference preview close");
+  ensureExactSnapshot(appDataBefore, appDataAfterClose, "OpenObsidian app data after reference preview close");
+  previewReport.vault_snapshot_after_close = vaultAfterClose;
+  previewReport.app_data_snapshot_after_close = appDataAfterClose;
+  previewReport.vault_unchanged_after_close = true;
+  previewReport.app_data_unchanged_after_close = true;
+  previewReport.status = "passed";
+  await saveReport();
+}
+
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
   const userConfigRoot = join(workDirectory, "openobsidian-user-config");
   const homeRoot = join(workDirectory, "openobsidian-home");
@@ -2023,6 +2277,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     (report.openobsidian_app_data as Record<string, unknown>).snapshot_after_startup = initialAppData;
     await saveReport();
 
+    await runReferenceSourcePreview(child, window, appDataRoot, noOpBaseline);
     const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(child, window, appDataRoot, noOpBaseline, initialAppData);
     await delay(2_000);
     await stopProcess(child);

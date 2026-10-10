@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T23:54:07Z",
+  "updated_at": "2026-10-10T23:57:54Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "93ca0f24325176e0ea7f7b34d5a5fe1e088e9fc6",
   "current_milestone": "R2.8.71",
-  "next_action": "R2.8.70 is accepted; inventory validated its tracker checkpoint on exact SHA 93ca0f24325176e0ea7f7b34d5a5fe1e088e9fc6 (run 38096583718, job 114343615455). Begin R2.8.71 by extending the native round-trip workflow with source preview and no-op close against the Obsidian-authored vault on Ubuntu, macOS, and Windows. Keep C01/C01.2 pending and use GitHub Actions only for executable validation.",
+  "next_action": "R2.8.71 native source-preview automation is prepared in the round-trip driver and C01.2-39 matrix row. Commit and push for exact-SHA GitHub Actions validation on Ubuntu, macOS, and Windows; use CI output to correct any platform automation issues. Keep C01/C01.2 pending and do not run local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19864,7 +19864,7 @@
         "Keep C01 and C01.2 pending until their broader reference-app read-only flows have direct cross-platform evidence; no local executable validation."
       ],
       "implementation_commits": [],
-      "next_action": "Inspect the existing round-trip driver's actual OpenObsidian UI path and snapshot checkpoints, then add the narrowest native source-preview and no-op-close interaction supported across the three CI platforms."
+      "next_action": "Native source-preview/no-op-close automation and matrix case C01.2-39 are prepared. Commit and push the workflow/driver change for exact-SHA GitHub Actions round-trip validation on Ubuntu, macOS, and Windows. Use CI diagnostics only to correct platform interactions; no local executable validation."
     }
   },
   "ci_preparation": {
