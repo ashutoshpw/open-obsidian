@@ -17,11 +17,10 @@
     "highlights"
   ],
   "visible_unsupported_blocks": [
-    "legacy-math-delimiters",
+    "footnotes",
+    "math",
     "diagrams",
-    "unknown-or-active-raw-html",
-    "wiki-links",
-    "highlights"
+    "raw-html"
   ],
   "invariants": {
     "source_bytes_remain_authoritative": true,
