@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "recorded_at": "2026-10-10T16:43:40Z",
+  "recorded_at": "2026-10-10T16:45:59Z",
   "milestone": "R2.8.34",
   "status": "accepted",
   "attempt": 3,
@@ -144,6 +144,13 @@
     "source_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
     "evidence": "evidence/parallel-ci.json",
     "announcement": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/"
+  },
+  "tracker_checkpoint": {
+    "sha": "2f10530f6b7af6450ce36a984e1dfdb68926ad7f",
+    "inventory_run_id": 38068953165,
+    "inventory_job_id": 114262249631,
+    "conclusion": "success",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38068953165"
   },
   "limitations": [
     "Only simple single-line plain-text wiki links to unambiguous Markdown-note targets are projected; unsupported or complex contexts remain source-only.",
