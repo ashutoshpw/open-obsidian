@@ -2735,3 +2735,5 @@ Accepted slice: raw HTML script content remains visible as source and is not pro
 ### R2.8.53 in progress — unknown extension markup remains literal
 
 Use the existing `unknown-markup-remains-literal` C02.1 fixture to confirm the `%%` extension marker stays visible as literal text under native CommonMark rendering, without triggering the unsupported-syntax fallback. Preserve the fixture source bytes and validate only through exact-SHA GitHub Actions.
+
+R2.8.53 tracker checkpoint: inventory [run 38083742362](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083742362), job 114305797972, passed for tracker SHA `4435d7755f2fd1512588609c765ef2299312ca46`.
