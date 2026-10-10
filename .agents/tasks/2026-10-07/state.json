@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T10:40:32Z",
+  "updated_at": "2026-10-10T10:54:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
+  "last_reconciled_head": "915653c0f2b491eb888cb52aba0bec63412563cb",
   "current_milestone": "R2.8.22",
-  "next_action": "Inspect the seven GitHub Actions workflows triggered by the R2.8.22 correction commit, record their exact-SHA results, and keep C02.1 pending until all acceptance checks pass.",
+  "next_action": "R2.8.22 is accepted on 915653c0f2b491eb888cb52aba0bec63412563cb. Continue with the next focused C02.1 Markdown preview slice while keeping full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "06d2c000ec2013acdb6f43816d4ff7025d91879d"
+      "implementation_sha": "915653c0f2b491eb888cb52aba0bec63412563cb"
     },
     "R3": {
       "status": "pending",
@@ -16572,7 +16572,7 @@
       "next_action": "R2.8.21 is accepted; continue the incomplete C02.1 Markdown preview work in another focused source slice."
     },
     "R2.8.22": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "9dbe17cf5d614a3732e357db478a2a89e162b224",
       "scope": "Allow task checkbox changes in complete supported native Markdown previews, saving through the vault's revision-checked journal while retaining every unselected source byte.",
       "accepted_slice": [
@@ -16587,11 +16587,21 @@
         "Focused vault and egui tests plus all required GitHub Actions workflows pass on the exact implementation SHA; all executable validation runs in GitHub Actions only."
       ],
       "implementation_commits": [
-        "20a1ecb5ec9ce016932f6d2ae0593985e12d3a15"
+        "20a1ecb5ec9ce016932f6d2ae0593985e12d3a15",
+        "915653c0f2b491eb888cb52aba0bec63412563cb"
       ],
-      "ci_runs": {},
-      "evidence": null,
-      "next_action": "Inspect all seven required workflows on the R2.8.22 correction SHA; keep this slice pending until they pass."
+      "validated_source_sha": "915653c0f2b491eb888cb52aba0bec63412563cb",
+      "ci_runs": {
+        "rust_ci": 38045752497,
+        "obsidian_vault_roundtrip": 38045752459,
+        "inventory": 38045752476,
+        "loaded_plugins": 38045752433,
+        "desktop_build": 38045752484,
+        "quality": 38045752392,
+        "plugin_renderer": 38045752463
+      },
+      "evidence": "evidence/r2.8.22-native-task-checkboxes-915653c.json",
+      "next_action": "R2.8.22 is accepted; continue the incomplete C02.1 Markdown preview work in another focused slice."
     }
   },
   "ci_preparation": {

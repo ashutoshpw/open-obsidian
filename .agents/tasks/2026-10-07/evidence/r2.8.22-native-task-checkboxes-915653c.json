@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T10:54:00Z",
+  "milestone": "R2.8.22",
+  "accepted_slice": [
+    "C02.1:revision-safe-task-checkbox-editing"
+  ],
+  "validated_source_sha": "915653c0f2b491eb888cb52aba0bec63412563cb",
+  "starting_tracker_sha": "9dbe17cf5d614a3732e357db478a2a89e162b224",
+  "markdown_dialect_fixture_sha256": "46485beb44dd08a5a8668c69448e79cff80349c2eb269b7da1d304c993dd6aff",
+  "related_implementation_commits": [
+    "20a1ecb5ec9ce016932f6d2ae0593985e12d3a15",
+    "915653c0f2b491eb888cb52aba0bec63412563cb"
+  ],
+  "contract": "Allow task checkbox changes in complete supported Markdown previews, save only the changed task marker through revision-checked journaled vault writes, and preserve every other source byte.",
+  "implementation": {
+    "vault_layer": "A complete note source preview of at most 16 KiB carries the SHA-256 of the exact bytes read. Truncated previews carry no writable revision. VaultSession exposes the existing journaled writer to the native UI.",
+    "ui_layer": "Complete supported Markdown previews use egui_commonmark's mutable renderer for task toggles. Writes include the preview revision. Unsupported and truncated previews remain read-only; stale writes preserve the external note and retain the attempted edit through the vault conflict history.",
+    "reconciliation": "After a successful task write, watcher refresh preserves the preview only while the selected note still has the saved revision. Changed or missing notes clear it.",
+    "source_integrity": "The fixture and egui interaction coverage verify BOM, CRLF, other task states, code literals, and unknown source text remain unchanged when one task is toggled."
+  },
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "tests::concurrent_edit_matrix_preserves_external_target_and_incoming_conflict",
+      "tests::complete_note_source_preview_carries_a_revision_for_its_exact_bytes",
+      "tests::egui_task_checkbox_toggle_saves_only_its_source_marker",
+      "tests::egui_keeps_task_checkbox_read_only_for_unsupported_markdown",
+      "tests::egui_keeps_task_checkbox_read_only_for_truncated_note_previews",
+      "tests::egui_stale_task_checkbox_write_preserves_the_external_note_version"
+    ],
+    "result": "All six focused vault/UI tests and the full workspace suites passed on Ubuntu, macOS, and Windows in Rust CI logs. No local test, build, formatter, lint, or executable validation was used."
+  },
+  "versions": {
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "egui_commonmark": "0.25.0",
+    "egui_kittest": "0.36.2",
+    "pulldown_cmark": "0.13.4",
+    "sha2": "0.10.9",
+    "bun": "1.4.2",
+    "obsidian_reference": "1.14.4"
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "915653c0f2b491eb888cb52aba0bec63412563cb",
+    "result": "All seven required workflows passed for the exact implementation SHA. The vault round-trip's failed Windows OCR check was rerun as attempt 2 on the same SHA; Linux, macOS, and Windows all passed.",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114194823968,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "focused_task_checkbox_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114194824013,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "focused_task_checkbox_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114194823821,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "focused_task_checkbox_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38045752497,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752497",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "rust (ubuntu-latest)", "job_id": 114194823968 },
+          { "name": "rust (macos-latest)", "job_id": 114194824013 },
+          { "name": "rust (windows-latest)", "job_id": 114194823821 }
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38045752459,
+        "run_attempt": 2,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752459",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114195795179 },
+          { "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114195794804 },
+          { "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114195794071 }
+        ]
+      },
+      "inventory": {
+        "run_id": 38045752476,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752476",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "inventory", "job_id": 114194823551 }
+        ]
+      },
+      "loaded_plugins": {
+        "run_id": 38045752433,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752433",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "macos-latest", "job_id": 114194823572 },
+          { "name": "windows-latest", "job_id": 114194823620 },
+          { "name": "ubuntu-latest", "job_id": 114194823657 }
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38045752484,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752484",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "macos-latest", "job_id": 114194823522 },
+          { "name": "ubuntu-latest", "job_id": 114194823674 },
+          { "name": "windows-latest", "job_id": 114194823675 }
+        ]
+      },
+      "quality": {
+        "run_id": 38045752392,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752392",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "ubuntu-latest", "job_id": 114194823487 },
+          { "name": "macos-latest", "job_id": 114194823573 },
+          { "name": "windows-latest", "job_id": 114194823579 }
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38045752463,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38045752463",
+        "conclusion": "success",
+        "jobs": [
+          { "name": "ubuntu-latest", "job_id": 114194823565 },
+          { "name": "windows-latest", "job_id": 114194823615 },
+          { "name": "macos-latest", "job_id": 114194823629 }
+        ]
+      }
+    }
+  },
+  "artifacts": [
+    { "artifact_id": 11667598891, "name": "openobsidian-rust-preview-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 9788785, "archive_sha256": "b3c158aae96c9a5728443cd0b7dbe4bc024a3c9334cc09b5dc0ff1954e9bcf33" },
+    { "artifact_id": 11667149333, "name": "rust-plugin-runtime-Linux-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 2695, "archive_sha256": "826c7a2333fbcdda994e9eb5b21b84dec0a50d6b54b615881e9aa5a5f88b7ab7" },
+    { "artifact_id": 11666633869, "name": "rust-plugin-runtime-macOS-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 2698, "archive_sha256": "fcc69f1f663f71822d0ea2f09be5504c818455d0786a62673605aa888d235c47" },
+    { "artifact_id": 11666568968, "name": "rust-plugin-runtime-Windows-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 2715, "archive_sha256": "8027ef999f31ade36e1222b5bb03a4ab47083170e1e4ba74e2b0a7ac8ed5bbe0" },
+    { "artifact_id": 11667673779, "name": "obsidian-vault-roundtrip-Linux-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 2706059, "archive_sha256": "54fe6c38390df7951aa47cb0977785d5323a606894a217daa8a9700b6c4f6285" },
+    { "artifact_id": 11667578848, "name": "obsidian-vault-roundtrip-macOS-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 3581062, "archive_sha256": "fb0e9682a1cfb3db2d175b3b76b27969fb7fda46a2f6dfd51b42022e68e898d1" },
+    { "artifact_id": 11667634537, "name": "obsidian-vault-roundtrip-Windows-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 3574297, "archive_sha256": "9bbadc54522646792d8a666a7a83dec31fe717560178e76500a4512338c0df3b" },
+    { "artifact_id": 11667603622, "name": "loaded-plugin-workflows-macOS-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 171510, "archive_sha256": "eea4da6600b27361db634f6b0b0d8fc0b9e53f213402e852eb5a557839cba3e9" },
+    { "artifact_id": 11667598615, "name": "loaded-plugin-workflows-Linux-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 171496, "archive_sha256": "5dcd9a6e8b101ff43dbbdbbbbe51ef26f69ae0b4e349fb9f1f5270961510f8a0" },
+    { "artifact_id": 11667378885, "name": "loaded-plugin-workflows-Windows-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 171510, "archive_sha256": "661b6470f474eb0ddb3ae3dd8191d5c935cf92125c6ce0f90bfaf900e1a59253" },
+    { "artifact_id": 11667618522, "name": "openobsidian-macOS-preview-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 397395487, "archive_sha256": "26e3ed441a69f147068c4584c946473ffda763f6e022a47116e66dc0a9356a5d" },
+    { "artifact_id": 11667077710, "name": "openobsidian-Linux-preview-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 125946548, "archive_sha256": "b32111d33fb5d8c3bfb7a638104f55d0f420a9e48f48172bca47dd8913bb56e0" },
+    { "artifact_id": 11666803290, "name": "openobsidian-Windows-preview-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 163005824, "archive_sha256": "9ac958577ab74fb769c4b3ded2988dc7243ddb3050726ee839b3644ad7a118f8" },
+    { "artifact_id": 11667298917, "name": "plugin-renderer-lifecycle-Linux-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 3221, "archive_sha256": "c3e2b253e943bd98c511e48f8e4d037bd9a7c5e560710974167f0f9d14faa937" },
+    { "artifact_id": 11666943313, "name": "plugin-renderer-lifecycle-Windows-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 3242, "archive_sha256": "b6d466240e50761f5398f287fc11f7c75015203c0cef77429ada0584ab2a2279" },
+    { "artifact_id": 11666843377, "name": "plugin-renderer-lifecycle-macOS-915653c0f2b491eb888cb52aba0bec63412563cb", "size_bytes": 3238, "archive_sha256": "ae1359923e6d0368ac5b4c196c0514c959e8f27997bc173bfdd813452b514b50" }
+  ],
+  "attempt_history": [
+    {
+      "source_sha": "20a1ecb5ec9ce016932f6d2ae0593985e12d3a15",
+      "rust_ci_run_id": 38045394780,
+      "rust_ci_conclusion": "failure",
+      "cause": "The two new UI tests used a unique checkbox query against a fixture containing two task checkboxes; Ubuntu also reported assertion wrapping differences.",
+      "resolution_commit": "915653c0f2b491eb888cb52aba0bec63412563cb"
+    },
+    {
+      "source_sha": "915653c0f2b491eb888cb52aba0bec63412563cb",
+      "vault_roundtrip_run_id": 38045752459,
+      "run_attempt": 1,
+      "conclusion": "failure",
+      "cause": "Windows OCR omitted characters from the visible restored vault file-count label; the uploaded screenshot showed the vault and count on screen.",
+      "resolution": "Reran the failed Windows job on the same implementation SHA; run attempt 2 passed on all three platforms."
+    }
+  ],
+  "limitations": [
+    "C02.1 remains pending: math, diagram rendering, safe HTML projection, wiki-link/highlight rendering, and freeform Markdown editing are not complete.",
+    "No local test, build, formatter, linter, benchmark, runtime probe, or executable validation was run."
+  ]
+}
