@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T05:10:05Z",
+  "updated_at": "2026-10-10T05:19:23Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c7c04ec0198505f9def5ef0d1a426533ba8bc94d",
+  "last_reconciled_head": "d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b",
   "current_milestone": "R2.8.10",
-  "next_action": "Push the Windows-only case-only-rename fixture and transaction test, then obtain exact-SHA GitHub Actions acceptance. Afterward cover Windows reserved names and Unicode normalization; keep aggregate SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "next_action": "Commit and push the R2.8.10 evidence/state checkpoint and wait for all seven exact-SHA tracker workflows. Then start R2.8.11 for the Windows-reserved-name scenario; two SYNC-004 scenarios remain, and aggregate SYNC-004, editor integration, and broader C01/C01.2 acceptance stay pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "23480420323466c3d8996889a21b0624f677a081"
+      "implementation_sha": "d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.10 implemented the Windows-only SYNC-004 case-only-rename scenario on exact source SHA d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b. The focused Windows test confirmed Notes/Title.md changed to Notes/title.md while BOM/CRLF bytes and SHA-256 revision remained unchanged, content replacement was rejected by the failure hook, and the journal recorded case_only=true and committed. All seven required workflows passed. Evidence: evidence/r2.8.10-sync-failure-matrix-d286305.json. Two scenarios and aggregate SYNC-004 remain pending.",
     "R2.8.9 implemented the SYNC-004 cloud-placeholder case. Vault link resolution classifies cloud-placeholder://provider/object/123 as external and returns no local target or candidate path. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA 23480420323466c3d8996889a21b0624f677a081. Evidence: evidence/r2.8.9-sync-failure-matrix-2348042.json. Three failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.8 implemented the SYNC-004 symlink case with fixture-driven snapshot, read, and write coverage. The snapshot records an outside-pointing symlink, while reads and writes through it are denied and the outside target remains unchanged. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA f10243984108a56c7ccb6fdd71273c55c2003302. An initial source commit had two Ubuntu rustfmt-only differences; the exact CI diff was applied in the follow-up. Evidence: evidence/r2.8.8-sync-failure-matrix-f102439.json. Four failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.7 implemented the SYNC-004 rename-versus-edit case: after an external rename, a stale edit does not recreate the old path or disturb the renamed file and is retained as protected conflict history. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA e4231593c9f19e3110ca594d8241db98c963ff5f. The Ubuntu vault round-trip job passed on a same-SHA retry after its first attempt failed at the X11 visible-window lookup. Evidence: evidence/r2.8.7-sync-failure-matrix-e423159.json. Five failure-matrix scenarios and full SYNC-004 remain pending.",
@@ -251,7 +252,7 @@
     "R2.8.1 / SYNC-002 interrupted-write recovery passed on exact source SHA c340ff19de41f3266573aa2afc34dee95c06e996; evidence: evidence/r2.8.1-interrupted-write-c340ff1.json.",
     "R2.8.2 / SYNC-001 conservative revision-aware three-way merge passed all seven required GitHub Actions workflows on exact source SHA 638ba85dd94826b77623a43709d458d13fa1c1e7; evidence: evidence/r2.8.2-revision-merge-638ba85.json."
   ],
-  "push_status": "R2.8.9 source SHA 23480420323466c3d8996889a21b0624f677a081 passed all seven required workflows. CI optimization checkpoint c7c04ec0198505f9def5ef0d1a426533ba8bc94d is pushed to origin/main and all seven workflows passed; it is the starting checkpoint for R2.8.10. The case-only rename slice is now in progress. Broader R2 filesystem and C01/C01.2 acceptance remain pending.",
+  "push_status": "R2.8.10 source SHA d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b is pushed to origin/main and all seven required workflows passed on the exact SHA; evidence is recorded in evidence/r2.8.10-sync-failure-matrix-d286305.json. The R2.8.10 tracker checkpoint is being recorded. Two SYNC-004 scenarios, aggregate SYNC-004, broader R2 filesystem, editor integration, and C01/C01.2 acceptance remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -15085,6 +15086,34 @@
       ],
       "evidence": "evidence/r2.8.3-sync-failure-matrix-c3127fa.json",
       "next_action": "Continue SYNC-004 with the remaining nine matrix scenarios; do not mark the aggregate requirement passing until its complete acceptance is met."
+    },
+    "R2.8.10": {
+      "status": "complete",
+      "starting_sha": "c7c04ec0198505f9def5ef0d1a426533ba8bc94d",
+      "implementation_sha": "d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b",
+      "implementation_commits": ["d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b"],
+      "scope": "Execute the Windows-only case-only-rename scenario in the SYNC-004 failure matrix.",
+      "accepted_slice": ["SYNC-004:case-only-rename"],
+      "remaining": [
+        "Windows reserved names and Unicode normalization remain as the two unimplemented SYNC-004 scenarios.",
+        "Aggregate SYNC-004, broader R2, editor integration, and C01/C01.2 acceptance remain pending."
+      ],
+      "acceptance": [
+        "On Windows, Notes/Title.md is renamed to Notes/title.md and the exact directory entry reflects the new spelling.",
+        "BOM/CRLF content bytes and SHA-256 revision remain unchanged; an injected replacement failure ensures the transaction does not rewrite the content.",
+        "The committed rename journal records case_only=true and equal before/after content revisions.",
+        "The focused test, formatting, Clippy, dependency layering, native builds, compatibility probes, and all seven required workflows pass on exact SHA d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b on applicable platforms."
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b",
+          "required_workflow_run_ids": [38026631734, 38026631729, 38026631748, 38026631727, 38026631725, 38026631726, 38026631747],
+          "result": "All seven required workflows and every applicable Ubuntu, macOS, and Windows job passed. GitHub Actions logs show the focused case-only rename test passed on Windows; full Rust workspace tests passed on all three platforms."
+        }
+      ],
+      "evidence": "evidence/r2.8.10-sync-failure-matrix-d286305.json",
+      "next_action": "Continue SYNC-004 with Windows-reserved-name, then Unicode normalization; do not mark the aggregate requirement passing until all eleven scenarios have coverage."
     }
   },
   "ci_preparation": {
