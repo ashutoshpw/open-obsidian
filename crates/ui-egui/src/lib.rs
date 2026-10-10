@@ -3414,7 +3414,10 @@ mod tests {
         );
 
         harness.step();
-        harness.get_by_label("\\(x+1\\)");
+        assert!(
+            harness.query_all_by_value("\\(x+1\\)").next().is_some(),
+            "indented code content must remain visible as a text value"
+        );
         assert!(
             harness
                 .query_by_label(

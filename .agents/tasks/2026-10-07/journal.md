@@ -2755,3 +2755,5 @@ Use the existing legacy-math-inside-indented-code C02.1 fixture to verify that l
 R2.8.54 tracker checkpoint: inventory [run 38084316519](https://github.com/ashutoshpw/open-obsidian/actions/runs/38084316519), job 114307488452, passed for tracker SHA 94b057532f005d67eee6a0c6a334690ec3704024.
 
 The fixture-driven egui case is added in crates/ui-egui/src/lib.rs. It checks RenderMarkdown, the literal code content, absence of the legacy-math source fallback, and unchanged source bytes. Commit and push the focused case for exact-SHA GitHub Actions; no local executable validation runs.
+
+The first implementation CI attempt failed on all three platforms because the code block's literal text is exposed as an accessibility value rather than an exact label. The assertion now checks the value. macOS also reported a failure in an unrelated existing empty-vault refresh timing assertion; check the corrected source SHA before attributing or accepting that result.
