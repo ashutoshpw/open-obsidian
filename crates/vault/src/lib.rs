@@ -32,6 +32,8 @@ pub enum VaultError {
     Root(#[from] std::io::Error),
     #[error("vault paths must be non-empty and relative")]
     InvalidPath,
+    #[error("vault path uses a Windows-reserved name: {0}")]
+    WindowsReservedPath(PathBuf),
     #[error("vault path escapes the selected root: {0}")]
     OutsideRoot(PathBuf),
     #[error("vault entry is not a regular file: {0}")]
@@ -2038,7 +2040,32 @@ fn validate_relative_path(path: &Path) -> Result<(), VaultError> {
     {
         return Err(VaultError::InvalidPath);
     }
+    #[cfg(windows)]
+    if path
+        .components()
+        .filter_map(|component| match component {
+            Component::Normal(name) => name.to_str(),
+            _ => None,
+        })
+        .any(windows_reserved_segment)
+    {
+        return Err(VaultError::WindowsReservedPath(path.to_path_buf()));
+    }
     Ok(())
+}
+
+#[cfg(windows)]
+fn windows_reserved_segment(segment: &str) -> bool {
+    if segment.contains(':') {
+        return true;
+    }
+    let trimmed = segment.trim_end_matches(|character| character == ' ' || character == '.');
+    let base_name = trimmed.split('.').next().unwrap_or_default();
+    let normalized = base_name.to_ascii_uppercase();
+    matches!(normalized.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || (normalized.len() == 4
+            && (normalized.starts_with("COM") || normalized.starts_with("LPT"))
+            && matches!(normalized.as_bytes()[3], b'1'..=b'9'))
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
@@ -3820,6 +3847,99 @@ mod tests {
             committed["files"][0]["after_revision"].as_str(),
             Some(before_revision.as_str())
         );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_reserved_name_matrix_denies_reads_and_writes_without_mutating_vault() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "windows-reserved-name")
+            .expect("failure matrix must contain windows-reserved-name");
+        assert_eq!(
+            scenario["expected_outcome"],
+            "deny-without-mutating-vault"
+        );
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["Windows"])
+        );
+
+        let existing_path = PathBuf::from(scenario["valid_relative_path"].as_str().unwrap());
+        let initial_bytes = scenario["initial_bytes_utf8"]
+            .as_str()
+            .unwrap()
+            .as_bytes()
+            .to_vec();
+        let incoming_bytes = scenario["incoming_bytes_utf8"]
+            .as_str()
+            .unwrap()
+            .as_bytes()
+            .to_vec();
+        let expected_preserved_bytes = scenario["expected_preserved_version_utf8"]
+            .as_str()
+            .unwrap()
+            .as_bytes();
+        assert_eq!(initial_bytes.as_slice(), expected_preserved_bytes);
+
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir_all(vault_temp.0.join(existing_path.parent().unwrap())).unwrap();
+        fs::write(vault_temp.0.join(&existing_path), &initial_bytes).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+
+        let rejected_paths = scenario["relative_paths_to_reject"]
+            .as_array()
+            .expect("scenario must list Windows-reserved path forms");
+        for rejected_path in rejected_paths {
+            let relative_path = PathBuf::from(rejected_path.as_str().unwrap());
+            let read_error = store.root().read(&relative_path).unwrap_err();
+            assert!(
+                read_error.to_string().contains(
+                    scenario["expected_read_error"].as_str().unwrap()
+                ),
+                "reserved path read returned the wrong error: {read_error}"
+            );
+            assert!(matches!(read_error, VaultError::WindowsReservedPath(_)));
+
+            let write_error = store
+                .write(VaultWriteRequest {
+                    relative_path,
+                    expected_revision_sha256: None,
+                    bytes: incoming_bytes.clone(),
+                })
+                .unwrap_err();
+            assert!(
+                write_error.to_string().contains(
+                    scenario["expected_write_error"].as_str().unwrap()
+                ),
+                "reserved path write returned the wrong error: {write_error}"
+            );
+            assert!(matches!(write_error, VaultError::WindowsReservedPath(_)));
+        }
+
+        assert_eq!(
+            fs::read(vault_temp.0.join(&existing_path)).unwrap(),
+            expected_preserved_bytes
+        );
+        let entries = fs::read_dir(vault_temp.0.join(existing_path.parent().unwrap()))
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].as_encoded_bytes(),
+            existing_path.file_name().unwrap().as_encoded_bytes()
+        );
+        assert_eq!(
+            scenario["expected_journal_entries"].as_u64(),
+            Some(0)
+        );
+        assert!(!app_data_temp.0.join("journal.jsonl").exists());
     }
 
     #[test]

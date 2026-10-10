@@ -141,7 +141,26 @@
       "expected_case_only": true,
       "expected_journal_state": "committed"
     },
-    {"id": "windows-reserved-name", "fault_stage": null, "expected_outcome": "deny-on-windows"},
+    {
+      "id": "windows-reserved-name",
+      "fault_stage": null,
+      "expected_outcome": "deny-without-mutating-vault",
+      "applicable_platforms": ["Windows"],
+      "relative_paths_to_reject": [
+        "Notes/CON.txt",
+        "Notes/COM1.md",
+        "Notes/LPT9 ",
+        "Notes/AUX.",
+        "Notes/other:stream.md"
+      ],
+      "valid_relative_path": "Notes/Kept.md",
+      "initial_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "incoming_bytes_utf8": "\ufeffstatus: blocked\r\n",
+      "expected_preserved_version_utf8": "\ufeffstatus: saved\r\n",
+      "expected_read_error": "Windows-reserved",
+      "expected_write_error": "Windows-reserved",
+      "expected_journal_entries": 0
+    },
     {"id": "unicode-normalization", "fault_stage": null, "expected_outcome": "preserve-original-bytes"}
   ]
 }
