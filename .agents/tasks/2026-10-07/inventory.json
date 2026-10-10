@@ -2278,7 +2278,7 @@
     },
     {
       "path": ".github/workflows/quality.yml",
-      "sha256": "70d331456325f97b65f27c9de554019c55d370c3b4a131e6e41b8deff968e6cb",
+      "sha256": "acb1c13f085d8f580e927a7a71b34745b91c99003da07c2699de53920d33fb57",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
