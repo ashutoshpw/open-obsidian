@@ -1372,13 +1372,14 @@
     },
     {
       "path": "fixtures/markdown-dialects.json",
-      "sha256": "9805f7c224c73a61963056e7a05597adc701d58dfe2a0b76f24e9e43d35bf107",
+      "sha256": "c5c09144982ab18cb0db058d3ae6e0f0138ec36113f01e8e57b6cebb33b73b1e",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
-      "fixture_reader": "crates/testkit"
+      "fixture_reader": "crates/testkit",
+      "reconciliation_reason": "R2.8.34 adds resolved, unresolved, and ambiguous wiki-link preview cases while keeping this baseline fixture mapped to its existing Rust document owner."
     },
     {
       "path": "fixtures/markdown-property-preservation.json",
