@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T20:35:30Z",
+  "updated_at": "2026-10-10T20:36:23Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "94b057532f005d67eee6a0c6a334690ec3704024",
   "current_milestone": "R2.8.54",
-  "next_action": "R2.8.53 is accepted on exact source SHA c4bd5e5b3478014a402a850afda051154efb525d; all seven required GitHub Actions workflows passed, with the focused egui test passing on Ubuntu, macOS, and Windows. R2.8.54 should verify legacy math delimiters inside indented code remain ordinary rendered code without triggering fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
+  "next_action": "R2.8.53 is accepted on exact source SHA c4bd5e5b3478014a402a850afda051154efb525d. R2.8.54 has a fixture-driven egui test for legacy math inside indented code; commit and push it for exact-SHA GitHub Actions. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -18975,7 +18975,7 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38084316519"
       },
-      "next_action": "The R2.8.54 tracker checkpoint passed inventory on SHA 94b057532f005d67eee6a0c6a334690ec3704024. Add fixture-driven egui coverage for legacy math delimiters inside indented code and validate through exact-SHA GitHub Actions only."
+      "next_action": "The R2.8.54 tracker checkpoint passed inventory on SHA 94b057532f005d67eee6a0c6a334690ec3704024. Fixture-driven egui coverage is added for legacy math inside indented code. Commit and push this focused test for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {

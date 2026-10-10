@@ -3388,6 +3388,45 @@ mod tests {
     }
 
     #[test]
+    fn egui_keeps_legacy_math_inside_indented_code_literal() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "legacy-math-inside-indented-code")
+            .expect("Markdown dialect fixture must include legacy math inside indented code");
+        let source = case["source"]
+            .as_str()
+            .expect("indented code fixture must include source");
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("\\(x+1\\)");
+        assert!(
+            harness
+                .query_by_label(
+                    "Unsupported Markdown (legacy math delimiters); showing the source as written."
+                )
+                .is_none(),
+            "legacy math syntax inside indented code must not trigger source fallback"
+        );
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_shows_source_for_mermaid_diagram() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");
