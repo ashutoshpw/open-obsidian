@@ -2899,3 +2899,16 @@ Accepted slice: the single plain highlight fixture renders the expected phrase t
 Use the existing wiki-link C02.1 fixture in the generic egui Markdown preview to verify ShowSource, the visible original wiki-link syntax, the unsupported-wiki-links reason, and unchanged source bytes. Add focused fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.63 acceptance record is pushed.
 
 R2.8.64 tracker checkpoint: inventory [run 38091980947](https://github.com/ashutoshpw/open-obsidian/actions/runs/38091980947), job 114330096505, passed for tracker SHA 2118f8446c8fa27b7c27205107e4ea395101b313.
+
+
+### R2.8.64 accepted — simple wiki-link source-fallback fixture — source SHA 885fb20208c7390d483e4a9d32136d63600d6b44
+
+The existing wiki-link C02.1 fixture now drives the generic egui Markdown preview test. It verifies ShowSource, the visible original wiki-link syntax, the unsupported-wiki-links reason, and unchanged fixture source bytes. The focused Rust UI test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 97 tests. The first implementation SHA failed only GitHub's formatting check; the exact rustfmt layout from its log was applied in the correction commit. A superseded same-SHA quality retry passed after its first macOS Electron retrieval-boundary timeout; quality passed on attempt 1 for the accepted corrected SHA.
+
+All seven required workflows passed on the corrected source SHA: inventory [38092168263](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168263), loaded-plugin workflows [38092168320](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168320), desktop build [38092168241](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168241), quality [38092168257](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168257), Rust CI [38092168281](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168281), plugin renderer [38092168296](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168296), and Obsidian vault round-trip [38092168332](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092168332). Exact job IDs, retry information, and all 16 artifact digests are in [evidence/r2.8.64-simple-wiki-link-fixture-885fb20.json](evidence/r2.8.64-simple-wiki-link-fixture-885fb20.json). Native parallel groups ran successfully in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: simple wiki links remain visible as source with an explicit unsupported reason. C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.65 in progress — C02.1 preview coverage reconciliation
+
+Reconcile each of the 21 shared Rust Markdown preview fixture cases with its egui coverage, then distinguish this read-only preview coverage from C02.1's broader render/edit acceptance. Keep C02.1 pending until the whole criterion is evidenced, and select the next bounded implementation slice from the remaining gaps. Push the R2.8.64 acceptance record and run the Rust migration inventory checkpoint on its tracker SHA; no local executable validation runs.
