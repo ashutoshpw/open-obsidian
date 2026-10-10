@@ -2475,31 +2475,94 @@ mod tests {
         assert_eq!(fs::read(temp.0.join("Old.md")).unwrap(), b"# Old\n");
     }
 
-    #[cfg(unix)]
     #[test]
-    fn snapshots_symlinks_without_following_them_and_reads_reject_them() {
-        use std::os::unix::fs::symlink;
+    fn symlink_matrix_records_link_and_denies_read_write_traversal() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "symlink")
+            .expect("failure matrix must contain symlink");
+        assert_eq!(
+            scenario["expected_outcome"],
+            "record-link-and-deny-traversal"
+        );
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["macOS", "Windows", "Linux"])
+        );
 
+        let relative_path_text = scenario["relative_path"].as_str().unwrap();
+        let relative_path = PathBuf::from(relative_path_text);
+        let symlink_target_text = scenario["symlink_target_utf8"].as_str().unwrap();
+        let symlink_target = PathBuf::from(symlink_target_text);
         let temp = TempDir::new();
-        fs::write(temp.0.join("target.md"), b"# Target\n").unwrap();
-        symlink("target.md", temp.0.join("alias.md")).unwrap();
+        let vault_path = temp.0.join("vault");
+        let outside_path = temp.0.join("outside.md");
+        let outside_bytes = scenario["outside_target_bytes_utf8"]
+            .as_str()
+            .unwrap()
+            .as_bytes();
+        let incoming = scenario["incoming_bytes_utf8"].as_str().unwrap().as_bytes();
+        let alias_path = vault_path.join(&relative_path);
+        fs::create_dir_all(alias_path.parent().unwrap()).unwrap();
+        fs::create_dir_all(&vault_path).unwrap();
+        fs::write(&outside_path, outside_bytes).unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&symlink_target, &alias_path).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(&symlink_target, &alias_path).unwrap();
 
-        let vault = VaultRoot::open(&temp.0).unwrap();
-        let snapshot = vault.snapshot().unwrap();
+        let app_data_temp = TempDir::new();
+        let store = VaultStore::open(&vault_path, &app_data_temp.0).unwrap();
+        let snapshot = store.root().snapshot().unwrap();
         let alias = snapshot
             .entries
             .iter()
-            .find(|entry| entry.relative_path == std::path::Path::new("alias.md"))
-            .unwrap();
+            .find(|entry| entry.relative_path == relative_path)
+            .expect("vault snapshot must record the symlink");
+        assert_eq!(
+            scenario["expected_recorded_kind"],
+            "symlink"
+        );
         assert_eq!(alias.kind, super::VaultSnapshotEntryKind::Symlink);
         assert_eq!(
-            alias.symlink_target.as_deref(),
-            Some(std::path::Path::new("target.md"))
+            alias
+                .symlink_target
+                .as_ref()
+                .unwrap()
+                .to_string_lossy()
+                .replace('\\', "/"),
+            symlink_target_text
         );
         assert!(matches!(
-            vault.read("alias.md"),
-            Err(super::VaultError::Symlink(_))
+            store.root().read(&relative_path),
+            Err(VaultError::Symlink(_))
         ));
+        assert_eq!(scenario["expected_read_error"], "symlink");
+        assert!(matches!(
+            store.write(VaultWriteRequest {
+                relative_path,
+                expected_revision_sha256: None,
+                bytes: incoming.to_vec(),
+            }),
+            Err(VaultError::Symlink(_))
+        ));
+        assert_eq!(scenario["expected_write_error"], "symlink");
+        assert_eq!(
+            fs::read(&outside_path).unwrap(),
+            scenario["expected_target_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+        assert!(fs::symlink_metadata(&alias_path)
+            .unwrap()
+            .file_type()
+            .is_symlink());
     }
 
     #[test]

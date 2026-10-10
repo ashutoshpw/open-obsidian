@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T04:27:20Z",
+  "updated_at": "2026-10-10T04:32:51Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e4231593c9f19e3110ca594d8241db98c963ff5f",
-  "current_milestone": "R2.8.7",
-  "next_action": "Start R2.8.8 for the next SYNC-004 failure-matrix scenario from the accepted tracker checkpoint. Five scenarios remain; keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "3a99c3578dde83e76f5a4c58591b7069bdb59ac4",
+  "current_milestone": "R2.8.8",
+  "next_action": "Run exact-SHA GitHub Actions acceptance for the symlink traversal case, then continue the remaining four SYNC-004 failure-matrix scenarios. Keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {

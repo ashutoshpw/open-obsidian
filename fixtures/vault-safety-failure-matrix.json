@@ -102,7 +102,20 @@
       ]
     },
     {"id": "cloud-placeholder", "fault_stage": null, "expected_outcome": "do-not-follow-unknown-link"},
-    {"id": "symlink", "fault_stage": null, "expected_outcome": "record-link-and-deny-traversal"},
+    {
+      "id": "symlink",
+      "fault_stage": null,
+      "expected_outcome": "record-link-and-deny-traversal",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "relative_path": "Notes/Alias.md",
+      "symlink_target_utf8": "../../outside.md",
+      "outside_target_bytes_utf8": "\ufeffstatus: external\r\n",
+      "incoming_bytes_utf8": "\ufeffstatus: candidate\r\n",
+      "expected_target_bytes_utf8": "\ufeffstatus: external\r\n",
+      "expected_recorded_kind": "symlink",
+      "expected_read_error": "symlink",
+      "expected_write_error": "symlink"
+    },
     {"id": "case-only-rename", "fault_stage": null, "expected_outcome": "observe-path-change-without-content-rewrite"},
     {"id": "windows-reserved-name", "fault_stage": null, "expected_outcome": "deny-on-windows"},
     {"id": "unicode-normalization", "fault_stage": null, "expected_outcome": "preserve-original-bytes"}
