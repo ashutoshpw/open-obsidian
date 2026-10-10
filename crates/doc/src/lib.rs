@@ -346,8 +346,7 @@ impl MarkdownSource {
         let Some(bounds) = self.frontmatter_bounds() else {
             return YamlParseResult::empty();
         };
-        let content = std::str::from_utf8(&self.raw.as_bytes()[bounds.content.start..bounds.content.end])
-            .expect("MarkdownSource frontmatter is validated UTF-8");
+        let content = &self.raw[bounds.content.start..bounds.content.end];
         yaml::parse_mapping(content)
     }
 

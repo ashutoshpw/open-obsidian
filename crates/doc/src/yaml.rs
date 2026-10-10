@@ -137,7 +137,9 @@ fn comment_start(value: &str) -> Option<usize> {
 }
 
 fn strip_comment(value: &str) -> &str {
-    comment_start(value).map_or(value, |index| &value[..index]).trim_end()
+    comment_start(value)
+        .map_or(value, |index| &value[..index])
+        .trim_end()
 }
 
 fn tokenize(source: &str, issues: &mut Vec<String>) -> Vec<YamlLine> {
@@ -313,7 +315,12 @@ fn unsupported_yaml_value(value: &str) -> bool {
     value.starts_with('!') || value.starts_with('&') || value.starts_with('*')
 }
 
-fn parse_flow(value: &str, line: usize, issues: &mut Vec<String>, depth: usize) -> Option<YamlValue> {
+fn parse_flow(
+    value: &str,
+    line: usize,
+    issues: &mut Vec<String>,
+    depth: usize,
+) -> Option<YamlValue> {
     if depth >= MAX_NESTING_DEPTH {
         issues.push(format!(
             "line {line}: YAML nesting exceeds the supported depth of {MAX_NESTING_DEPTH}"
@@ -331,7 +338,9 @@ fn parse_flow(value: &str, line: usize, issues: &mut Vec<String>, depth: usize) 
                 if inner.trim().is_empty() || index == last_part {
                     continue;
                 }
-                issues.push(format!("line {line}: empty inline YAML sequence item is not supported"));
+                issues.push(format!(
+                    "line {line}: empty inline YAML sequence item is not supported"
+                ));
                 return Some(YamlValue::Unsupported(value.to_owned()));
             }
             values.push(parse_value(part, line, issues, depth + 1));
@@ -349,11 +358,15 @@ fn parse_flow(value: &str, line: usize, issues: &mut Vec<String>, depth: usize) 
                 if inner.trim().is_empty() || index == last_part {
                     continue;
                 }
-                issues.push(format!("line {line}: empty inline YAML map entry is not supported"));
+                issues.push(format!(
+                    "line {line}: empty inline YAML map entry is not supported"
+                ));
                 return Some(YamlValue::Unsupported(value.to_owned()));
             }
             let Some(parsed) = pair(part) else {
-                issues.push(format!("line {line}: inline YAML map entry is not supported"));
+                issues.push(format!(
+                    "line {line}: inline YAML map entry is not supported"
+                ));
                 return Some(YamlValue::Unsupported(value.to_owned()));
             };
             entries.push(YamlMappingEntry {
@@ -372,19 +385,13 @@ fn is_yaml_number(value: &str) -> bool {
     let mut index = usize::from(matches!(bytes.first(), Some(&b'+') | Some(&b'-')));
     let mut digits = 0;
 
-    while bytes
-        .get(index)
-        .is_some_and(|byte| byte.is_ascii_digit())
-    {
+    while bytes.get(index).is_some_and(|byte| byte.is_ascii_digit()) {
         digits += 1;
         index += 1;
     }
     if bytes.get(index) == Some(&b'.') {
         index += 1;
-        while bytes
-            .get(index)
-            .is_some_and(|byte| byte.is_ascii_digit())
-        {
+        while bytes.get(index).is_some_and(|byte| byte.is_ascii_digit()) {
             digits += 1;
             index += 1;
         }
@@ -404,10 +411,7 @@ fn is_yaml_number(value: &str) -> bool {
             index += 1;
         }
         let exponent_start = index;
-        while bytes
-            .get(index)
-            .is_some_and(|byte| byte.is_ascii_digit())
-        {
+        while bytes.get(index).is_some_and(|byte| byte.is_ascii_digit()) {
             index += 1;
         }
         if index == exponent_start {
@@ -426,14 +430,23 @@ fn parse_value(value: &str, line: usize, issues: &mut Vec<String>, depth: usize)
         return YamlValue::Unsupported(trimmed.to_owned());
     }
     if is_block_scalar_header(trimmed) {
-        issues.push(format!("line {line}: YAML block scalars remain source-only"));
+        issues.push(format!(
+            "line {line}: YAML block scalars remain source-only"
+        ));
         return YamlValue::Unsupported(trimmed.to_owned());
     }
     if unsupported_yaml_value(trimmed) {
-        issues.push(format!("line {line}: YAML aliases and tags remain source-only"));
+        issues.push(format!(
+            "line {line}: YAML aliases and tags remain source-only"
+        ));
         return YamlValue::Unsupported(trimmed.to_owned());
     }
-    if trimmed.is_empty() || trimmed == "~" || ["null", "nil"].iter().any(|n| trimmed.eq_ignore_ascii_case(n)) {
+    if trimmed.is_empty()
+        || trimmed == "~"
+        || ["null", "nil"]
+            .iter()
+            .any(|n| trimmed.eq_ignore_ascii_case(n))
+    {
         return YamlValue::Null;
     }
     if let Some(quoted) = unquote(trimmed) {
@@ -441,11 +454,16 @@ fn parse_value(value: &str, line: usize, issues: &mut Vec<String>, depth: usize)
     }
     if trimmed.starts_with('[') || trimmed.starts_with('{') {
         return parse_flow(trimmed, line, issues, depth).unwrap_or_else(|| {
-            issues.push(format!("line {line}: malformed inline YAML collection remains source-only"));
+            issues.push(format!(
+                "line {line}: malformed inline YAML collection remains source-only"
+            ));
             YamlValue::Unsupported(trimmed.to_owned())
         });
     }
-    if ["true", "false"].iter().any(|n| trimmed.eq_ignore_ascii_case(n)) {
+    if ["true", "false"]
+        .iter()
+        .any(|n| trimmed.eq_ignore_ascii_case(n))
+    {
         return YamlValue::Boolean(trimmed.eq_ignore_ascii_case("true"));
     }
     if is_yaml_number(trimmed) {
@@ -459,7 +477,9 @@ fn is_sequence_line(line: &YamlLine) -> bool {
 }
 
 fn has_nested_block_value(next: Option<&YamlLine>, indent: usize) -> bool {
-    next.is_some_and(|line| line.indent > indent || (line.indent == indent && is_sequence_line(line)))
+    next.is_some_and(|line| {
+        line.indent > indent || (line.indent == indent && is_sequence_line(line))
+    })
 }
 
 fn skip_nested_lines(lines: &[YamlLine], start: usize, indent: usize) -> usize {
@@ -479,7 +499,9 @@ fn parse_block(
 ) -> ParsedBlock {
     if depth >= MAX_NESTING_DEPTH {
         let index = skip_nested_lines(lines, start + 1, indent);
-        let raw = lines.get(start).map_or_else(String::new, |line| line.content.clone());
+        let raw = lines
+            .get(start)
+            .map_or_else(String::new, |line| line.content.clone());
         issues.push(format!(
             "line {}: YAML nesting exceeds the supported depth of {MAX_NESTING_DEPTH}",
             lines.get(start).map_or(1, |line| line.line)
@@ -584,10 +606,7 @@ fn parse_map(
 }
 
 fn sequence_rest(line: &YamlLine) -> &str {
-    line.content
-        .strip_prefix('-')
-        .unwrap_or_default()
-        .trim()
+    line.content.strip_prefix('-').unwrap_or_default().trim()
 }
 
 fn parse_sequence_item(
@@ -702,7 +721,9 @@ pub(crate) fn parse_mapping(source: &str) -> YamlParseResult {
     };
     if parsed.index < lines.len() {
         let line = lines[parsed.index].line;
-        issues.push(format!("line {line}: YAML content could not be represented"));
+        issues.push(format!(
+            "line {line}: YAML content could not be represented"
+        ));
     }
 
     YamlParseResult { entries, issues }

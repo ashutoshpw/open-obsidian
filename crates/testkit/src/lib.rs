@@ -1052,12 +1052,18 @@ mod c02_byte_roundtrip_fixture_tests {
         let expected_entries = expected
             .as_array()
             .expect("fixture YAML entries must be an array");
-        assert_eq!(actual.len(), expected_entries.len(), "{case_id}: entry count");
+        assert_eq!(
+            actual.len(),
+            expected_entries.len(),
+            "{case_id}: entry count"
+        );
 
         for (actual, expected) in actual.iter().zip(expected_entries) {
             assert_eq!(
                 actual.key.as_str(),
-                expected["key"].as_str().expect("fixture entry must name a key"),
+                expected["key"]
+                    .as_str()
+                    .expect("fixture entry must name a key"),
                 "{case_id}: ordered mapping key"
             );
             assert_yaml_value(&actual.value, &expected["value"], case_id);
@@ -1106,7 +1112,11 @@ mod c02_byte_roundtrip_fixture_tests {
                 let expected_items = expected["items"]
                     .as_array()
                     .expect("fixture sequence items must be an array");
-                assert_eq!(actual_items.len(), expected_items.len(), "{case_id}: sequence length");
+                assert_eq!(
+                    actual_items.len(),
+                    expected_items.len(),
+                    "{case_id}: sequence length"
+                );
                 for (actual, expected) in actual_items.iter().zip(expected_items) {
                     assert_yaml_value(actual, expected, case_id);
                 }
@@ -1127,7 +1137,9 @@ mod c02_byte_roundtrip_fixture_tests {
                 ),
                 "{case_id}: unsupported source-only value"
             ),
-            unsupported_type => panic!("{case_id}: unsupported fixture YAML type {unsupported_type}"),
+            unsupported_type => {
+                panic!("{case_id}: unsupported fixture YAML type {unsupported_type}")
+            }
         }
     }
 
@@ -1382,14 +1394,27 @@ mod c02_byte_roundtrip_fixture_tests {
                 .as_array()
                 .expect("fixture issues must be an array")
                 .iter()
-                .map(|issue| issue.as_str().expect("fixture issue must be a string").to_owned())
+                .map(|issue| {
+                    issue
+                        .as_str()
+                        .expect("fixture issue must be a string")
+                        .to_owned()
+                })
                 .collect::<Vec<_>>();
 
             assert_eq!(parsed.issues, expected_issues, "{case_id}: parser issues");
             assert_yaml_entries(&parsed.entries, &case["expected_entries"], case_id);
-            assert_eq!(source.as_bytes(), before.as_bytes(), "{case_id}: source bytes");
+            assert_eq!(
+                source.as_bytes(),
+                before.as_bytes(),
+                "{case_id}: source bytes"
+            );
             let round_trip = source.clone().into_bytes();
-            assert_eq!(round_trip.as_slice(), before.as_bytes(), "{case_id}: no-op round trip");
+            assert_eq!(
+                round_trip.as_slice(),
+                before.as_bytes(),
+                "{case_id}: no-op round trip"
+            );
         }
     }
 
@@ -1402,9 +1427,12 @@ mod c02_byte_roundtrip_fixture_tests {
         let parsed = source.parse_frontmatter_yaml();
 
         assert_eq!(parsed.entries.len(), 1);
-        assert!(parsed.issues.iter().any(|issue| {
-            issue.contains("YAML nesting exceeds the supported depth")
-        }));
+        assert!(
+            parsed
+                .issues
+                .iter()
+                .any(|issue| { issue.contains("YAML nesting exceeds the supported depth") })
+        );
         assert_eq!(source.as_bytes(), markdown.as_bytes());
         let round_trip = source.clone().into_bytes();
         assert_eq!(round_trip.as_slice(), markdown.as_bytes());
