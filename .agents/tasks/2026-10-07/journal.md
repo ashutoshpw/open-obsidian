@@ -2830,4 +2830,16 @@ Use the existing safe-html-inline-break C02.1 fixture to verify the preview sele
 
 R2.8.59 tracker checkpoint: inventory [run 38087496025](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087496025), job 114316954570, passed for tracker SHA 38123bc7abc1a7a2dc3510cd265904140b017bb4.
 
+### R2.8.59 accepted — canonical safe HTML line-break fixture — source SHA 56a408ac224bb87cb8f2e263a376c55087e171b9
+
+The canonical safe-html-inline-break C02.1 fixture now drives the egui preview test. It verifies RenderMarkdown, the fixture's expected native-render source, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 96 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38087589281](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589281), loaded-plugin workflows [38087589291](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589291), desktop build [38087589278](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589278), quality [38087589284](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589284), Rust CI [38087589268](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589268), plugin renderer [38087589269](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589269), and Obsidian vault round-trip [38087589313](https://github.com/ashutoshpw/open-obsidian/actions/runs/38087589313). The first vault attempt failed only at Ubuntu X11 visible-window discovery; retry attempt 2 passed all three platforms on the same SHA. Exact job IDs and artifact digests are in [evidence/r2.8.59-canonical-safe-html-break-56a408a.json](evidence/r2.8.59-canonical-safe-html-break-56a408a.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the canonical allowlisted `<br>` fixture renders as a native hard break while retaining the original source bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.60 in progress — footnote fixture preview coverage
+
+Use the existing footnote C02.1 fixture to verify the preview selects RenderMarkdown, exposes the reference sentence and definition body, and preserves the original source bytes. Convert the direct-string egui case to fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
+
 R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.
