@@ -2785,3 +2785,5 @@ Accepted slice: both plain inline highlight spans render in the native preview a
 ### R2.8.56 in progress — safe HTML line break before CRLF
 
 Use the existing safe-html-inline-break-before-crlf C02.1 fixture to verify the preview selects RenderMarkdown and produces the expected two-line native rendering while preserving the original CRLF source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
+
+R2.8.56 tracker checkpoint: inventory [run 38085825358](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085825358), job 114311987124, passed for tracker SHA 36b73c0088d58400baf072d946ad2fa53e4902f4.
