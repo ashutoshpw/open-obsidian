@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T11:30:19Z",
+  "milestone": "R2.8.24",
+  "accepted_slice": [
+    "C02.1:revision-safe-callout-task-editing"
+  ],
+  "validated_source_sha": "89e7afbfd8dd421c64c746be0c86d60df331c456",
+  "starting_tracker_sha": "83b58b1670b749e0c0994a157079a1927f68f88e",
+  "related_implementation_commits": [
+    "89e7afbfd8dd421c64c746be0c86d60df331c456"
+  ],
+  "markdown_dialect_fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "90f8281161a9007559eb8e12abbd65b9e1d6a46f9469163c5a524a354b6dafd7",
+    "callout_task_case": "callout_task_editing",
+    "source_preservation": "The fixture includes a UTF-8 BOM, CRLF line endings, a standard NOTE callout, two differently checked tasks, and unknown source text. Its expected result changes only the first task marker."
+  },
+  "contract": "Tasks in the supported standard alert callout render as native checkboxes. Toggling one task updates only that source marker through the existing revision-checked vault write while preserving the BOM, CRLF, callout text, other task, and unknown text.",
+  "implementation": {
+    "ui_layer": "The fixture-backed egui interaction opens a complete note preview, confirms normal Markdown presentation, toggles the first checkbox inside a NOTE callout, and verifies the saved vault bytes and retained preview bytes against the exact expected source.",
+    "vault_layer": "The existing bounded preview revision and journaled write path handles the callout task; no alternate write path or source normalization was introduced.",
+    "documentation": "The native Markdown preview architecture notes that tasks inside standard callouts use the revision-checked task toggle behavior."
+  },
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "tests::egui_task_checkbox_inside_standard_callout_saves_only_its_source_marker"
+    ],
+    "result": "The focused egui interaction and full workspace suites passed on Ubuntu, macOS, and Windows. The test verifies the rendered callout checkbox, saved vault bytes, and retained preview bytes."
+  },
+  "versions": {
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "egui_commonmark": "0.25.0",
+    "egui_kittest": "0.36.2",
+    "pulldown_cmark": "0.13.4",
+    "sha2": "0.10.9",
+    "bun": "1.4.2",
+    "obsidian_reference": "1.14.4"
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "89e7afbfd8dd421c64c746be0c86d60df331c456",
+    "result": "All seven required workflows passed on the exact implementation SHA.",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114202166301,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "callout_task_ui_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114202165961,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "callout_task_ui_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114202166073,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "callout_task_ui_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38048299327,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299327",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114202166301},
+          {"name": "rust (macos-latest)", "job_id": 114202165961},
+          {"name": "rust (windows-latest)", "job_id": 114202166073}
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38048299365,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299365",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114202166564},
+          {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114202166717},
+          {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114202166754}
+        ]
+      },
+      "inventory": {
+        "run_id": 38048299410,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299410",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "inventory", "job_id": 114202166320}
+        ]
+      },
+      "loaded_plugins": {
+        "run_id": 38048299348,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299348",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 114202166737},
+          {"name": "ubuntu-latest", "job_id": 114202166824},
+          {"name": "windows-latest", "job_id": 114202166895}
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38048299367,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299367",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114202166448},
+          {"name": "macos-latest", "job_id": 114202166559},
+          {"name": "windows-latest", "job_id": 114202166603}
+        ]
+      },
+      "quality": {
+        "run_id": 38048299371,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299371",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 114202166248},
+          {"name": "ubuntu-latest", "job_id": 114202166358},
+          {"name": "windows-latest", "job_id": 114202166742}
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38048299351,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38048299351",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114202166263},
+          {"name": "macos-latest", "job_id": 114202166350},
+          {"name": "windows-latest", "job_id": 114202166403}
+        ]
+      }
+    }
+  },
+  "artifacts": [
+    {"artifact_id": 11668328212, "name": "openobsidian-rust-preview-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 9789095, "archive_sha256": "e8226049fa8e2af1f13768f1425f578a81d09b173b9e18edce802ba65ac17c8c"},
+    {"artifact_id": 11667764094, "name": "rust-plugin-runtime-Linux-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 2695, "archive_sha256": "ae2b177996ce320f57f4a24b2c44eeb43ac075196a28f7046966bbe3bffef6e6"},
+    {"artifact_id": 11668008627, "name": "rust-plugin-runtime-macOS-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 2698, "archive_sha256": "d454f2b470a69f2533104919c3d384293a52abc2bc5847b6091894c84c8edab2"},
+    {"artifact_id": 11668008819, "name": "rust-plugin-runtime-Windows-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 2715, "archive_sha256": "82763f9bee4c6802938075df3b669274c2baba10a297de4a744b6397a80ddf9d"},
+    {"artifact_id": 11668936245, "name": "obsidian-vault-roundtrip-Linux-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 2706556, "archive_sha256": "a0b585a63c3da7957bfe65bcd9019c3a749408a3d5d90bbd21d126b4c12af74b"},
+    {"artifact_id": 11668806555, "name": "obsidian-vault-roundtrip-macOS-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 3593622, "archive_sha256": "8c3043025fa1602f93832df1d21869f5202f48597650f57d62456fdb38063ea8"},
+    {"artifact_id": 11667754953, "name": "obsidian-vault-roundtrip-Windows-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 3579020, "archive_sha256": "95b4b325ce38e428311b09c1ab01d6412e2fc9b22233c0ae60f1596b23ae4b68"},
+    {"artifact_id": 11668771360, "name": "loaded-plugin-workflows-macOS-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 171471, "archive_sha256": "96bd6cc39a19aeeb7461b3e7ef3e856a2f678ec18de7edbf9a017e1df1e87f27"},
+    {"artifact_id": 11668273151, "name": "loaded-plugin-workflows-Linux-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 171452, "archive_sha256": "e87df50850ee049dd4e5f1ee58b88fd5bce98e50e097f8ba0fa24047b6cea2c1"},
+    {"artifact_id": 11668423023, "name": "loaded-plugin-workflows-Windows-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 171470, "archive_sha256": "5fd70ba2ff585d104f9d0212f690ff6f1518b3272804a94b0d2d3cd789865eaf"},
+    {"artifact_id": 11668372903, "name": "openobsidian-macOS-preview-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 397395486, "archive_sha256": "df60bea974fe0ce7b0f2ac1273484a8d4c3d739ca458481077cc02076fe25776"},
+    {"artifact_id": 11668203212, "name": "openobsidian-Linux-preview-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 125946548, "archive_sha256": "5b7d7071858fa1d5d6f0e59a8ea8d35621e880185f47b43336460531d964b823"},
+    {"artifact_id": 11668263118, "name": "openobsidian-Windows-preview-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 163005824, "archive_sha256": "5f2b03db3281504dbd75ab53629f49b4000fd041cd1b53843117b48b9de9eaf2"},
+    {"artifact_id": 11668776349, "name": "plugin-renderer-lifecycle-Linux-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 3221, "archive_sha256": "6d48716af27ce28e92e70fc2740cf94de9d830e71c4c0b4b548bdf6614e6a85d"},
+    {"artifact_id": 11667838577, "name": "plugin-renderer-lifecycle-macOS-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 3238, "archive_sha256": "78790201ac7db0b8316a4a17ee1b396ace16a1c20f4607255cb9fb54b05dba84"},
+    {"artifact_id": 11668841337, "name": "plugin-renderer-lifecycle-Windows-89e7afbfd8dd421c64c746be0c86d60df331c456", "size_bytes": 3242, "archive_sha256": "9db0e940d29b180d4a0b4e26224bea6da107a04ed100605956f0a4fbbd9d201d"}
+  ],
+  "limitations": [
+    "This accepts the task-checkbox behavior exercised inside a standard NOTE alert callout. It does not certify every callout type or custom callout syntax.",
+    "C02.1 remains pending. Math, diagrams, raw HTML projection, wiki-link rendering, active highlight rendering, and freeform Markdown editing remain incomplete; unsupported syntax continues to use the visible source fallback."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, or application validation were run. All executable validation was performed in GitHub Actions."
+}
