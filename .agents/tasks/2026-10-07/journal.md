@@ -2984,3 +2984,7 @@ The evidence-backed operation map is recorded in [evidence/r2.8.70-c01-readonly-
 Rust migration inventory passed on exact tracker SHA `e5de40c22299b27cf706ac4af584909dbac105c9`: [run 38096528700](https://github.com/ashutoshpw/open-obsidian/actions/runs/38096528700), job `114343454234`. This is tracker validation, not product behavior evidence. No local executable validation was run.
 
 Next: R2.8.71 adds native OpenObsidian source preview and no-op close to the Obsidian-authored round-trip flow, with vault and app-data snapshots on Ubuntu, macOS, and Windows. C01/C01.2 remain pending.
+
+### R2.8.71 in progress — reference-app source preview and no-op close
+
+Starting from tracker SHA `93ca0f24325176e0ea7f7b34d5a5fe1e088e9fc6`, extend the existing pinned Obsidian 1.14.4 round-trip workflow to drive the actual OpenObsidian desktop through source preview and no-op close against the Obsidian-authored note. Capture exact vault and separate app-data snapshots before and after on Ubuntu, macOS, and Windows, and retain Obsidian reopen verification. Keep C01/C01.2 pending until the wider read-only reference-app matrix is covered. No local tests, builds, formatters, linters, or application launches; implementation validation runs only in GitHub Actions.
