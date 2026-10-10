@@ -2787,3 +2787,15 @@ Accepted slice: both plain inline highlight spans render in the native preview a
 Use the existing safe-html-inline-break-before-crlf C02.1 fixture to verify the preview selects RenderMarkdown and produces the expected two-line native rendering while preserving the original CRLF source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.56 tracker checkpoint: inventory [run 38085825358](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085825358), job 114311987124, passed for tracker SHA 36b73c0088d58400baf072d946ad2fa53e4902f4.
+
+### R2.8.56 accepted — safe HTML line break before CRLF — source SHA 1db003128ea61085806e03c863ea143f433e71f8
+
+The existing safe-html-inline-break-before-crlf C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, the expected native-render source with a Markdown hard break, visible text on both lines, and unchanged CRLF source bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 94 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38085899734](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899734), loaded-plugin workflows [38085899738](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899738), desktop build [38085899740](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899740), quality [38085899739](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899739), Rust CI [38085899732](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899732), plugin renderer [38085899743](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899743), and Obsidian vault round-trip [38085899726](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085899726). Exact job IDs and artifact digests are in [evidence/r2.8.56-safe-html-break-before-crlf-1db0031.json](evidence/r2.8.56-safe-html-break-before-crlf-1db0031.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the allowlisted HTML break followed by CRLF renders as a native hard break while retaining the original source bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.57 in progress — self-closing safe HTML line break
+
+Use the existing safe-html-inline-break-self-closing C02.1 fixture to verify the preview selects RenderMarkdown and renders the expected two text lines while preserving the original source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
