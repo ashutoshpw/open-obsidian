@@ -1395,7 +1395,7 @@
       "sha256": "64df131e17e98288cb30a7ccc5cd7caeff0ebb6624329bdea06f557b4908dd97",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
-      "status": "pending",
+      "status": "passing",
       "migration_phase": "R2",
       "purpose": "Fixture-backed block scalar header variants are rejected by frontmatter edits while preserving original source bytes.",
       "fixture_reader": "crates/testkit"

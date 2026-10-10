@@ -9190,6 +9190,7 @@
       "mandatory": true,
       "acceptance_criteria": "Golden parser/writer fixtures prove only approved spans change and malformed/unknown content survives.",
       "fixture_ids": [
+        "fixture:c02-byte-roundtrip",
         "fixture:risk-normalization"
       ],
       "reference_versions": [
@@ -9204,9 +9205,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.14-block-scalar-rejection-088d0ef.json"
+      ],
+      "tested_source_tree": "088d0ef6558debec1d85268d07f642e2acc251ba",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T06:46:26Z",
+  "updated_at": "2026-10-10T06:52:45Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b30b75e6c69b8ddccb6f792f74fab2f8ce3db97a",
+  "last_reconciled_head": "088d0ef6558debec1d85268d07f642e2acc251ba",
   "current_milestone": "R2.8.14",
-  "next_action": "Implement fixture-backed rejection for YAML block-scalar header variants, push the source slice for exact-SHA GitHub Actions validation, and keep RISK-004 pending until all required workflows pass. Broader R2 and editor integration remain pending.",
+  "next_action": "R2.8.14 is accepted. Select the next uncovered R2 source-preservation requirement; broader C02, R2 and editor integration remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "530eaab471052a74d72bbbf1af63695b6a0eec3e"
+      "implementation_sha": "088d0ef6558debec1d85268d07f642e2acc251ba"
     },
     "R3": {
       "status": "pending",
@@ -16017,23 +16017,42 @@
       "next_action": "Commit and push this accepted tracker checkpoint, wait for path-eligible workflows, then review the next R2 source-preservation requirement."
     },
     "R2.8.14": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "b30b75e6c69b8ddccb6f792f74fab2f8ce3db97a",
+      "implementation_sha": "088d0ef6558debec1d85268d07f642e2acc251ba",
       "scope": "Reject YAML literal and folded block-scalar header variants, including chomping and indentation modifiers in either order, from plain frontmatter property edits.",
       "accepted_slice": [
         "RISK-004:block-scalar-header-rejection"
       ],
       "remaining": [
-        "Broader R2 and editor integration remain pending."
+        "Broader C02, R2 and editor integration remain pending."
       ],
       "acceptance": [
         "All valid block-scalar style/chomping/indentation header forms are rejected as structured values.",
         "Fixture-driven tests prove rejection leaves the source bytes unchanged.",
         "All seven required GitHub Actions workflows pass on the exact source SHA; all validation runs in GitHub Actions only."
       ],
-      "implementation_commits": [],
-      "ci_attempts": [],
-      "next_action": "Push the source slice to origin/main and validate it through the exact-SHA GitHub Actions matrix; then record evidence and checkpoint CI."
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "088d0ef6558debec1d85268d07f642e2acc251ba",
+          "required_workflow_run_ids": [
+            38032129457,
+            38032129469,
+            38032129500,
+            38032129445,
+            38032129473,
+            38032129444,
+            38032129491
+          ],
+          "result": "All seven required workflows passed on the exact source SHA. The fixture-driven rejection test and full Rust workspace tests passed on Ubuntu, macOS, and Windows."
+        }
+      ],
+      "implementation_commits": [
+        "088d0ef6558debec1d85268d07f642e2acc251ba"
+      ],
+      "evidence": "evidence/r2.8.14-block-scalar-rejection-088d0ef.json",
+      "next_action": "Commit and push this accepted evidence/state tracker checkpoint, wait for its path-eligible workflows, then select the next uncovered R2 source-preservation requirement."
     }
   },
   "ci_preparation": {
