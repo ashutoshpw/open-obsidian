@@ -156,7 +156,7 @@ impl MathRendererCache {
             );
             return;
         }
-        for pixel in rgba.chunks_exact_mut(4) {
+        for pixel in rgba.as_chunks_mut::<4>().0 {
             pixel[3] = ((u16::from(pixel[3]) * u16::from(text_color[3])) / 255) as u8;
         }
         let rgba_bytes = rgba.len();
@@ -273,7 +273,7 @@ fn math_expression_within_bounds(source: &str) -> bool {
             backslashes += 1;
             continue;
         }
-        if backslashes % 2 == 0 {
+        if backslashes.is_multiple_of(2) {
             match byte {
                 b'{' => {
                     depth += 1;

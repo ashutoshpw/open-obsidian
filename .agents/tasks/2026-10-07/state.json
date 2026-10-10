@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T14:14:07Z",
+  "updated_at": "2026-10-10T14:19:53Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c11c3900a7f1c59dd2a3a4122bcac93542c90d2e",
+  "last_reconciled_head": "9f8daa321f838fae0c56be7455076dfe458a9824",
   "current_milestone": "R2.8.27",
-  "next_action": "R2.8.27 attempt 4 on c11c390 failed a math UI assertion because the rendered tree exposes 'Before the formula:'; the exact-SHA Windows vault rerun also reproduced Chocolatey HTTP 504 responses for Tesseract. The worktree now uses the observed labels and retries and verifies Windows OCR setup. Commit and push these corrections, then validate all seven workflows on the new exact SHA. Keep full C02.1 pending.",
+  "next_action": "R2.8.27 attempt 5 on 9f8daa3 passed five workflows and failed Rust CI Clippy plus inventory. The worktree applies Clippy's slice-chunk and is_multiple_of suggestions and removes the vault-roundtrip workflow row that its validator explicitly excludes. Commit and push these corrections, then validate all seven workflows on the new exact SHA. Keep full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -256,7 +256,7 @@
     "R2.8.20 safe Markdown preview preflight passed all seven required GitHub Actions workflows on exact source SHA d19d3d31e741d36d829f2eba5fb893e7453c70dc; evidence: evidence/r2.8.20-safe-preview-d19d3d3.json. C02.1 remains pending.",
     "R2.8.26 latex-rust renderer feasibility probe passed all seven required GitHub Actions workflows on exact source SHA df0e02e55934fa26e6c9c5fb787a94772209d0c9 across Ubuntu, macOS, and Windows. This is development-only candidate evidence, not runtime integration; full C02.1 remains pending. Evidence: evidence/r2.8.26-latex-rust-feasibility-df0e02e.json."
   ],
-  "push_status": "origin/main is c11c3900a7f1c59dd2a3a4122bcac93542c90d2e. Rust CI failed on one rendered-math accessibility label per platform; inventory, quality, desktop build, loaded-plugin, and plugin-renderer passed. Vault round-trip passed on Ubuntu and macOS; its Windows job failed twice after Chocolatey returned HTTP 504 for Tesseract. The worktree contains the label correction and an install retry/verification change. No local tests or executable validation were used.",
+  "push_status": "origin/main is 9f8daa321f838fae0c56be7455076dfe458a9824. Quality, desktop build, vault round-trip, loaded-plugin, and plugin-renderer passed; Rust CI Clippy failed on two new math-renderer lints and inventory rejected the intentionally excluded vault-roundtrip workflow row. The worktree fixes both findings. No local tests or executable validation were used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16881,7 +16881,8 @@
       "implementation_commits": [
         "b00dec3e61c5f0f767f88209f2eb7c049d9c809a",
         "73a1b96d0b9085bb25af837b462848bfac97deb5",
-        "c11c3900a7f1c59dd2a3a4122bcac93542c90d2e"
+        "c11c3900a7f1c59dd2a3a4122bcac93542c90d2e",
+        "9f8daa321f838fae0c56be7455076dfe458a9824"
       ],
       "validated_source_sha": null,
       "ci_runs": {},
@@ -16941,13 +16942,29 @@
             "plugin_renderer": 38057847404
           },
           "evidence": "evidence/r2.8.27-ci-attempt4-c11c390.json"
+        },
+        {
+          "source_sha": "9f8daa321f838fae0c56be7455076dfe458a9824",
+          "conclusion": "failure",
+          "failure_summary": "Five workflows passed, including the three-OS Obsidian round-trip with Windows Tesseract retry. Rust workspace tests passed on Ubuntu, macOS, and Windows, but Clippy reported two findings in the new math renderer: constant-size chunks_exact_mut and manual modulo parity. Inventory correctly rejected an attempted row for the Obsidian vault-roundtrip workflow because the validator deliberately excludes it as migration acceptance tooling. The worktree applies Clippy's suggested as_chunks_mut::<4>() and is_multiple_of(2) forms and removes that manifest row.",
+          "ci_runs": {
+            "rust_ci": 38058813086,
+            "obsidian_vault_roundtrip": 38058813102,
+            "inventory": 38058813047,
+            "loaded_plugins": 38058813072,
+            "desktop_build": 38058813078,
+            "quality": 38058813048,
+            "plugin_renderer": 38058813060
+          },
+          "evidence": "evidence/r2.8.27-ci-attempt5-9f8daa3.json"
         }
       ],
       "evidence": "evidence/r2.8.27-latex-rust-package-provenance.json",
       "workflow_commits": [
-        "8c84978c16bf4064811da6e9c0b1002f8d52737c"
+        "8c84978c16bf4064811da6e9c0b1002f8d52737c",
+        "9f8daa321f838fae0c56be7455076dfe458a9824"
       ],
-      "next_action": "The worktree uses the rendered math accessibility labels and retries/verifies Windows Tesseract installation after two exact-SHA attempts received Chocolatey HTTP 504 responses. Commit these corrections with the attempt record and validate all seven workflows on the new exact SHA. Full C02.1 remains pending."
+      "next_action": "The worktree applies Clippy's exact as_chunks_mut::<4>() and is_multiple_of(2) suggestions and removes the manifest row for the migration workflow intentionally excluded by validate_inventory.py. Commit these corrections with the attempt record and validate all seven workflows on the new exact SHA. Full C02.1 remains pending."
     }
   },
   "ci_preparation": {

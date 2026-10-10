@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.27",
+  "attempt": 5,
+  "source_sha": "9f8daa321f838fae0c56be7455076dfe458a9824",
+  "conclusion": "failure",
+  "required_workflows": {
+    "rust_ci": {
+      "run_id": 38058813086,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813086",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114232681314,
+          "workspace_tests": "success",
+          "clippy": "failure"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114232681494,
+          "workspace_tests": "success",
+          "clippy": "failure"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114232681646,
+          "workspace_tests": "success",
+          "clippy": "failure"
+        }
+      ],
+      "failure_summary": "Clippy reported chunks_exact_to_as_chunks for rgba.chunks_exact_mut(4) and manual_is_multiple_of for backslashes % 2 == 0 in crates/ui-egui/src/markdown_math.rs. The source now follows Clippy's suggested as_chunks_mut::<4>() and is_multiple_of(2) forms."
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38058813102,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813102",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114232681749,
+          "conclusion": "success"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114232681925,
+          "conclusion": "success"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114232681961,
+          "conclusion": "success"
+        }
+      ],
+      "note": "Windows Tesseract retry and executable verification passed."
+    },
+    "inventory": {
+      "run_id": 38058813047,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813047",
+      "conclusion": "failure",
+      "job_id": 114232681211,
+      "failure_summary": "The validator deliberately excludes .github/workflows/obsidian-vault-roundtrip.yml from its source inventory as migration acceptance tooling. The attempted manifest row was removed."
+    },
+    "loaded_plugins": {
+      "run_id": 38058813072,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813072",
+      "conclusion": "success"
+    },
+    "desktop_build": {
+      "run_id": 38058813078,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813078",
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38058813048,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813048",
+      "conclusion": "success"
+    },
+    "plugin_renderer": {
+      "run_id": 38058813060,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38058813060",
+      "conclusion": "success"
+    }
+  },
+  "local_validation": "none; use GitHub Actions only",
+  "next": "Commit the Clippy corrections, keep the vault-roundtrip workflow excluded from the inventory, and validate all seven workflows on the resulting exact SHA."
+}
