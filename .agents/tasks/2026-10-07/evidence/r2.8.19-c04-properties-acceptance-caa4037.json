@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T09:06:34Z",
+  "milestone": "R2.8.19",
+  "accepted_slice": [
+    "C04:yaml-property-preservation"
+  ],
+  "validated_source_sha": "caa403719337508bc3776403e87026c979453788",
+  "starting_tracker_sha": "aec570dc4836ba6f8a9dc2f9fc3c4cdf5f80a08b",
+  "related_implementation_commits": [
+    "a89574a0cfec01a20df9f525eff325a3d8a6139a",
+    "3356560c9212daf1c67d402ddde93314eeeb3380",
+    "85325d65d4fbd25eb9ee663525128ff661e0a3ab",
+    "caa403719337508bc3776403e87026c979453788"
+  ],
+  "contract": "Preserve YAML keys, values, comments, ordering, types, aliases, tags, cssclasses, and unknown or nested data; only explicitly approved property value spans may change.",
+  "fixture_coverage": [
+    {
+      "id": "fixture:c04-properties",
+      "path": "fixtures/c04-properties.json",
+      "cases": 4,
+      "coverage": "Ordered typed projection for scalars, arrays, nested mappings/sequences, cssclasses and unknown keys; aliases, tags, malformed flow syntax and block scalars remain source-only with explicit issues; source bytes and no-op round-trip remain identical."
+    },
+    {
+      "id": "fixture:c04-unknown-preservation",
+      "path": "fixtures/c04-unknown-preservation.json",
+      "cases": 1,
+      "coverage": "A title edit changes only its approved byte span while BOM, CRLF, comments, ordering, aliases, tags, typed values, nested content and unknown top-level fields remain exact."
+    },
+    {
+      "id": "fixture:c04-nested-property-edit",
+      "path": "fixtures/c04-nested-property-edit.json",
+      "cases": 18,
+      "coverage": "Block and flow keys/indices edit only the selected leaf; comments and siblings remain exact; malformed, unsupported, ambiguous, missing and structured paths fail closed."
+    }
+  ],
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "c02_byte_roundtrip_fixture_tests::c04_bounded_yaml_projection_keeps_order_types_and_original_source_bytes",
+      "c02_byte_roundtrip_fixture_tests::c04_excessive_yaml_nesting_is_reported_and_source_remains_unchanged",
+      "c02_byte_roundtrip_fixture_tests::c04_property_edit_preserves_unrepresented_yaml_and_only_changes_approved_bytes",
+      "c02_byte_roundtrip_fixture_tests::c04_nested_property_edits_preserve_every_unselected_source_byte"
+    ],
+    "result": "All four focused tests and the full Rust workspace test suites passed on Ubuntu, macOS, and Windows. GitHub job logs contain each focused test's passing line on every platform."
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "caa403719337508bc3776403e87026c979453788",
+    "result": "All seven required workflows passed on this exact implementation SHA.",
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {"platform": "ubuntu-latest", "job_id": 114175966186, "focused_tests": "passed", "workspace_tests": "passed"},
+      {"platform": "macos-latest", "job_id": 114175966012, "focused_tests": "passed", "workspace_tests": "passed"},
+      {"platform": "windows-latest", "job_id": 114175966191, "focused_tests": "passed", "workspace_tests": "passed"}
+    ],
+    "required_workflows": {
+      "rust_ci": 38039225285,
+      "obsidian_vault_roundtrip": 38039225255,
+      "inventory": 38039225271,
+      "loaded_plugins": 38039225301,
+      "desktop_build": 38039225293,
+      "quality": 38039225282,
+      "plugin_renderer": 38039225348
+    },
+    "complete_job_and_artifact_records": "evidence/r2.8.18-nested-property-edits-caa4037.json"
+  },
+  "limitations": [
+    "Aliases, tags, block scalars, malformed YAML and excessive nesting remain explicitly source-only or unsupported; their original bytes remain authoritative.",
+    "This acceptance covers the document/property contract and does not claim a structured properties UI or full Markdown dialect rendering."
+  ],
+  "local_validation": "None. Tests and executable validation ran only in GitHub Actions."
+}

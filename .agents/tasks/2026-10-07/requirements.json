@@ -2863,7 +2863,9 @@
       "mandatory": true,
       "acceptance_criteria": "Properties fixtures round-trip with comments, ordering, scalar types, arrays, nested data and unknown keys unchanged unless explicitly edited.",
       "fixture_ids": [
-        "fixture:c04-properties"
+        "fixture:c04-properties",
+        "fixture:c04-unknown-preservation",
+        "fixture:c04-nested-property-edit"
       ],
       "reference_versions": [
         {
@@ -2877,9 +2879,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.19-c04-properties-acceptance-caa4037.json"
+      ],
+      "tested_source_tree": "caa403719337508bc3776403e87026c979453788",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T08:57:27Z",
+  "updated_at": "2026-10-10T09:06:34Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "caa403719337508bc3776403e87026c979453788",
-  "current_milestone": "R2.8.18",
-  "next_action": "R2.8.18 accepted on caa403719337508bc3776403e87026c979453788. Review the remaining C04 source-preservation requirements and define the next bounded slice; keep full C04, C02/C02.1, and structured editor integration pending.",
+  "last_reconciled_head": "aec570dc4836ba6f8a9dc2f9fc3c4cdf5f80a08b",
+  "current_milestone": "R2.8.19",
+  "next_action": "C04 property preservation is accepted on caa403719337508bc3776403e87026c979453788. Begin R2.8.20 by defining the first Rust C02.1 safe-preview dialect slice from the tracked Markdown fixture; keep full C02 editing and workspace integration pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16287,7 +16287,40 @@
         }
       ],
       "evidence": "evidence/r2.8.18-nested-property-edits-caa4037.json",
-      "next_action": "R2.8.18 accepted on caa403719337508bc3776403e87026c979453788. Review the remaining C04 source-preservation requirements and define the next bounded slice; keep full C04, C02/C02.1, and structured editor integration pending."
+      "next_action": "R2.8.18 accepted on caa403719337508bc3776403e87026c979453788."
+    },
+    "R2.8.19": {
+      "status": "complete",
+      "starting_sha": "aec570dc4836ba6f8a9dc2f9fc3c4cdf5f80a08b",
+      "source_sha": "caa403719337508bc3776403e87026c979453788",
+      "scope": "Complete the parent C04 YAML property-preservation acceptance by reconciling the bounded projection, unknown-property edit, mapping-key, and nested-edit fixtures on one exact tested source SHA.",
+      "accepted_slice": [
+        "C04:yaml-property-preservation"
+      ],
+      "acceptance": [
+        "The linked property fixture verifies ordered scalar types, arrays, nested collections, cssclasses, and unknown keys while aliases, tags, malformed values, block scalars, and excessive nesting remain source-only or explicitly unsupported.",
+        "No-op source round-trips retain exact original bytes; top-level and nested edits change only the selected span and retain comments and unrepresented content.",
+        "All four C04 projection, nesting-limit, unknown-preservation, and nested-edit tests pass on Ubuntu, macOS, and Windows.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA; executable validation runs in GitHub Actions only."
+      ],
+      "validated_source_sha": "caa403719337508bc3776403e87026c979453788",
+      "implementation_commits": [
+        "a89574a0cfec01a20df9f525eff325a3d8a6139a",
+        "3356560c9212daf1c67d402ddde93314eeeb3380",
+        "85325d65d4fbd25eb9ee663525128ff661e0a3ab",
+        "caa403719337508bc3776403e87026c979453788"
+      ],
+      "ci_runs": {
+        "rust_ci": 38039225285,
+        "obsidian_vault_roundtrip": 38039225255,
+        "inventory": 38039225271,
+        "loaded_plugins": 38039225301,
+        "desktop_build": 38039225293,
+        "quality": 38039225282,
+        "plugin_renderer": 38039225348
+      },
+      "evidence": "evidence/r2.8.19-c04-properties-acceptance-caa4037.json",
+      "next_action": "C04 is accepted. Start R2.8.20 by defining and implementing the first bounded Rust C02.1 safe-preview dialect slice; full C02 editing and workspace integration remain pending."
     }
   },
   "ci_preparation": {
