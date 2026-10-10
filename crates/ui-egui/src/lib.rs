@@ -3941,7 +3941,18 @@ mod tests {
 
     #[test]
     fn egui_renders_markdown_footnotes_without_source_fallback() {
-        let source = "A footnote reference[^one].\n\n[^one]: The original footnote body.";
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "footnote")
+            .expect("Markdown dialect fixture must include a footnote case");
+        let source = case["source"]
+            .as_str()
+            .expect("footnote fixture must include source");
+        let original = source.as_bytes().to_vec();
         assert_eq!(
             analyze_markdown_preview(source).disposition(),
             MarkdownPreviewDisposition::RenderMarkdown
@@ -3955,8 +3966,15 @@ mod tests {
         );
 
         harness.step();
-        harness.get_by_label("A footnote reference");
-        harness.get_by_label("The original footnote body.");
+        harness.get_by_label("A reference");
+        harness.get_by_label("Original footnote body.");
+        assert!(
+            harness
+                .query_by_label("Unsupported Markdown (footnotes); showing the source as written.")
+                .is_none(),
+            "supported footnote fixture must render instead of source fallback"
+        );
+        assert_eq!(source.as_bytes(), original.as_slice());
     }
 
     #[test]
