@@ -7,7 +7,7 @@ use openobsidian_engine::{
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultSession, plan_history_retention,
+    VaultRenameResult, VaultSession, VaultWatcher, plan_history_retention,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -16,13 +16,14 @@ use std::sync::{
     atomic::{AtomicU16, Ordering},
     mpsc::{self, Receiver, TryRecvError},
 };
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 
 const GIBIBYTE: u64 = 1024 * 1024 * 1024;
 const GIBIBYTE_F64: f64 = GIBIBYTE as f64;
 const MAX_RENAME_PREVIEW_EDITS: usize = 100;
 const MAX_LINK_STATUS_ROWS: usize = 100;
 const MAX_TRANSCLUSION_PREVIEW_BYTES: usize = MAX_NOTE_SOURCE_PREVIEW_BYTES;
+const VAULT_RECONCILIATION_INTERVAL: Duration = Duration::from_secs(60);
 #[cfg(test)]
 const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
 #[cfg(test)]
@@ -31,6 +32,9 @@ const C03_LINK_RESOLUTION_FIXTURE: &str = include_str!("../../../fixtures/link-r
 const HISTORY_RETENTION_FIXTURE: &str = include_str!("../../../fixtures/history-retention.json");
 #[cfg(test)]
 const SYNC_UNINSTALL_FIXTURE: &str = include_str!("../../../fixtures/uninstall-preservation.json");
+#[cfg(test)]
+const SYNC_WATCHER_RECOVERY_FIXTURE: &str =
+    include_str!("../../../fixtures/sync-watcher-recovery.json");
 #[cfg(test)]
 const EXISTING_VAULT_FIXTURE: &str = include_str!("../../../fixtures/existing-vault.json");
 #[cfg(test)]
@@ -174,6 +178,10 @@ struct OpenObsidianApp {
     vault_refresh_receiver: Option<VaultRefreshReceiver>,
     vault_refresh_error: Option<String>,
     vault_refresh_status: Option<String>,
+    vault_watcher: Option<VaultWatcher>,
+    vault_watch_error: Option<String>,
+    vault_rescan_pending: bool,
+    next_vault_reconciliation: Option<Instant>,
     history_policy: VaultHistoryPolicy,
     history_records: Vec<VaultHistoryRecord>,
     history_plan: Option<VaultHistoryPlan>,
@@ -213,6 +221,8 @@ impl eframe::App for OpenObsidianApp {
 
 impl OpenObsidianApp {
     fn show_ui(&mut self, ui: &mut eframe::egui::Ui) {
+        self.poll_vault_refresh_task(ui);
+        self.poll_vault_change_hints(ui);
         self.log_ci_open_vault_availability();
         ui.heading("OpenObsidian");
         ui.label("Native Rust migration is in progress.");
@@ -276,6 +286,15 @@ impl OpenObsidianApp {
         let open_result = self.vault_open_receiver.as_ref().map(Receiver::try_recv);
         match open_result {
             Some(Ok(Ok(session))) => {
+                let watcher = VaultWatcher::watch(session.root_path());
+                self.vault_watch_error = watcher.as_ref().err().map(|_| {
+                    "Automatic vault notifications are unavailable; periodic disk reconciliation remains active."
+                        .to_owned()
+                });
+                self.vault_watcher = watcher.ok();
+                self.vault_rescan_pending = false;
+                self.next_vault_reconciliation =
+                    Some(Instant::now() + VAULT_RECONCILIATION_INTERVAL);
                 self.rename_source_path = session
                     .entries()
                     .first()
@@ -331,7 +350,6 @@ impl OpenObsidianApp {
         self.poll_history_task(ui);
         self.poll_link_task(ui);
         self.poll_note_preview_task(ui);
-        self.poll_vault_refresh_task(ui);
         self.poll_rename_task(ui);
         if self.vault_opening {
             ui.label("Opening vault safely…");
@@ -380,6 +398,9 @@ impl OpenObsidianApp {
         }
         if let Some(status) = &self.vault_refresh_status {
             ui.small(status);
+        }
+        if let Some(error) = &self.vault_watch_error {
+            ui.colored_label(eframe::egui::Color32::YELLOW, error);
         }
         if refresh_note_list_requested {
             self.start_vault_refresh();
@@ -1402,6 +1423,52 @@ impl OpenObsidianApp {
             let _ = sender.send(result);
         });
         self.vault_refresh_receiver = Some(receiver);
+    }
+
+    fn poll_vault_change_hints(&mut self, ui: &mut eframe::egui::Ui) {
+        if self
+            .vault_watcher
+            .as_mut()
+            .and_then(VaultWatcher::poll)
+            .is_some()
+        {
+            self.vault_rescan_pending = true;
+        }
+
+        if self.session.is_none() {
+            self.next_vault_reconciliation = None;
+            return;
+        }
+
+        let now = Instant::now();
+        let next_reconciliation = self
+            .next_vault_reconciliation
+            .get_or_insert(now + VAULT_RECONCILIATION_INTERVAL);
+        if now >= *next_reconciliation {
+            self.vault_rescan_pending = true;
+            if let Some(watcher) = &mut self.vault_watcher {
+                watcher.request_rescan();
+                let _ = watcher.poll();
+            }
+            *next_reconciliation = now + VAULT_RECONCILIATION_INTERVAL;
+        }
+        ui.ctx().request_repaint_after(
+            next_reconciliation.saturating_duration_since(now),
+        );
+
+        let operation_busy = self.vault_opening
+            || self.vault_open_receiver.is_some()
+            || self.history_receiver.is_some()
+            || self.link_receiver.is_some()
+            || self.note_preview_receiver.is_some()
+            || self.vault_refresh_receiver.is_some()
+            || self.rename_receiver.is_some();
+        if self.vault_rescan_pending && !operation_busy {
+            self.vault_rescan_pending = false;
+            self.start_vault_refresh();
+        } else if self.vault_rescan_pending {
+            ui.ctx().request_repaint_after(Duration::from_millis(100));
+        }
     }
 
     fn start_rename_apply(&mut self) {
@@ -2498,6 +2565,61 @@ mod tests {
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             before_app_data
+        );
+    }
+
+    #[test]
+    fn egui_reconciles_from_disk_after_a_sleep_or_reconnect_gap() {
+        let fixture: serde_json::Value =
+            serde_json::from_str(SYNC_WATCHER_RECOVERY_FIXTURE)
+                .expect("watcher recovery fixture must be valid JSON");
+        assert_eq!(fixture["fixture_id"], "fixture:sync-watcher-recovery");
+        assert!(fixture["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|case| case["id"] == "sleep"));
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Resumed Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create existing vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        std::fs::write(vault_path.join("Before.md"), b"before\n")
+            .expect("write initial vault note");
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open vault before simulating a missed notification interval");
+        assert_eq!(session.entries().len(), 1);
+        let source_after_resume = b"# Changed while asleep\r\n";
+        std::fs::write(vault_path.join("After.md"), source_after_resume)
+            .expect("simulate a file appearing while notifications are missed");
+
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            vault_watcher: Some(
+                VaultWatcher::watch(&vault_path).expect("watch resumed test vault"),
+            ),
+            next_vault_reconciliation: Some(Instant::now() - Duration::from_secs(1)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.step();
+        assert!(harness.state().vault_refresh_receiver.is_some());
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().vault_refresh_error.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("resumed session remains open");
+        assert!(session
+            .entries()
+            .iter()
+            .any(|entry| entry.relative_path.as_path() == Path::new("After.md")));
+        assert_eq!(
+            session.read("After.md").unwrap().document.as_bytes(),
+            source_after_resume
         );
     }
 

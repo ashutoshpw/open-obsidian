@@ -1,0 +1,21 @@
+{
+  "fixture_id": "fixture:sync-watcher-recovery",
+  "version": 1,
+  "cases": [
+    {
+      "id": "overflow",
+      "stimulus": "notify Rescan flag with no event paths",
+      "expected": "verified_rescan_from_disk"
+    },
+    {
+      "id": "sleep",
+      "stimulus": "reconciliation interval expires after missed notifications",
+      "expected": "verified_rescan_from_disk"
+    },
+    {
+      "id": "reconnect",
+      "stimulus": "vault root is replaced at the same path",
+      "expected": "verified_rescan_from_disk"
+    }
+  ]
+}

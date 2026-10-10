@@ -28,6 +28,8 @@ rfd = "0.17"
 sha2 = "0.10"
 # OpenObsidian-specific bounded inline raster previews; keep decoder formats explicit.
 image = { version = "=0.25.10", default-features = false, features = ["bmp", "gif", "ico", "jpeg", "png", "webp"] }
+# OpenObsidian-specific filesystem change hints with verified disk reconciliation (CC0-1.0).
+notify = "=8.2.0"
 # OpenObsidian-specific R1.2 candidate for unchanged JavaScript/DOM plugins; not UI replacement.
 wry = "=0.57.0"
 winit = "0.30"

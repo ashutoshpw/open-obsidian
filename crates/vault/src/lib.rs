@@ -270,6 +270,7 @@ pub struct VaultStore {
 
 mod history;
 mod rename_transaction;
+mod watcher;
 pub use history::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
     VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
@@ -278,6 +279,7 @@ pub use history::{
 pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
 };
+pub use watcher::{VaultWatchError, VaultWatchHint, VaultWatcher};
 
 #[derive(Clone, Debug)]
 pub struct VaultRoot {
