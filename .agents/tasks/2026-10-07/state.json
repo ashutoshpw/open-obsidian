@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T16:37:31Z",
+  "updated_at": "2026-10-10T16:45:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01",
+  "last_reconciled_head": "b03a6733c6a26ed000b15bb1123612fd025c4e0f",
   "current_milestone": "R2.8.34",
-  "next_action": "R2.8.34 is in progress: render only simple, unambiguous resolved Markdown-note wiki links as read-only navigation; preserve source fallback for unresolved, ambiguous, stale, or complex links. Validate only through exact-SHA GitHub Actions.",
+  "next_action": "R2.8.34 is accepted on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f. Continue C02.1 with another focused Markdown preview slice; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "dcf5568011809e9b5f04d966e172a97f1ea5f6b0"
+      "implementation_sha": "b03a6733c6a26ed000b15bb1123612fd025c4e0f"
     },
     "R3": {
       "status": "pending",
@@ -260,9 +260,11 @@
     "R2.8.29 revision-safe Markdown table cell source editing passed all seven required GitHub Actions workflows on exact source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0 across Ubuntu, macOS, and Windows. The fixture-driven UI test and full Rust workspace suite passed on all platforms; the table's BOM, CRLF, alignment row, delimiters, and untouched cell bytes were preserved. Job IDs and artifact digests are in evidence/r2.8.29-table-cell-source-edit-dcf5568.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.30 accessible, keyboard-driven Markdown table source editing passed all seven required GitHub Actions workflows on exact source SHA 51ac3ff929d4643eca3b9531ddb64aced988b67c; evidence: evidence/r2.8.30-markdown-source-editor-accessibility-51ac3ff.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.31 safe inline HTML line-break preview passed all seven required GitHub Actions workflows on exact source SHA 8a6235def8b0ad6d0276995f1e295f86d1650278; evidence: evidence/r2.8.31-safe-inline-html-break-8a6235d.json. Remaining C02.1 preview features and R3-R7 remain pending.",
-    "R2.8.32 plain inline highlights passed all seven required GitHub Actions workflows on exact implementation SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67; the focused fixture and egui UI tests passed on all three platforms. Evidence: evidence/r2.8.32-inline-highlights-12d68e3.json. Complex highlights remain source-only; full C02.1 and R3-R7 remain pending."
+    "R2.8.32 plain inline highlights passed all seven required GitHub Actions workflows on exact implementation SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67; the focused fixture and egui UI tests passed on all three platforms. Evidence: evidence/r2.8.32-inline-highlights-12d68e3.json. Complex highlights remain source-only; full C02.1 and R3-R7 remain pending.",
+    "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
+    "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18340,7 +18342,7 @@
       "next_action": "R2.8.33 is accepted. Select the next focused source-preserving Markdown dialect slice for R2.8.34; full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.34": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "70d898c4e48fbb8f2851986cf07cd057dbb6b200",
       "scope": "Render simple, plain-text wiki links only when the vault resolves them unambiguously to Markdown notes. Keep unresolved, ambiguous, stale, embedded, subpath, mixed-Markdown, and non-Markdown cases source-only.",
       "acceptance": [
@@ -18350,9 +18352,22 @@
         "Focused UI tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
       ],
       "implementation_commits": [
-        "19fe5f059386ddc7c514466d18696d04d110ad0d"
+        "19fe5f059386ddc7c514466d18696d04d110ad0d",
+        "bb12bbfd114404f6be13f5835ef594507694b110",
+        "b03a6733c6a26ed000b15bb1123612fd025c4e0f"
       ],
-      "next_action": "Apply GitHub's rustfmt and Clippy corrections, push a fresh implementation SHA, and collect exact-SHA results from all seven workflows."
+      "validated_source_sha": "b03a6733c6a26ed000b15bb1123612fd025c4e0f",
+      "ci_runs": {
+        "inventory": 38068443093,
+        "loaded_plugins": 38068443140,
+        "desktop_build": 38068443079,
+        "quality": 38068443097,
+        "rust_ci": 38068443194,
+        "plugin_renderer": 38068443155,
+        "obsidian_vault_roundtrip": 38068443156
+      },
+      "evidence": "evidence/r2.8.34-resolved-wiki-links-b03a673.json",
+      "next_action": "R2.8.34 is accepted. Continue C02.1 with another focused Markdown preview slice; full C02.1 and phases R3-R7 remain pending."
     }
   },
   "ci_preparation": {
