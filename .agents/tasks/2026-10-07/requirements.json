@@ -7763,9 +7763,9 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": ["evidence/r2.7.1-sync-watcher-a301bfc.json"],
+      "tested_source_tree": "a301bfcee01d3a16c812c3eaa0f0859d9109e887",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D10",
