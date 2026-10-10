@@ -3770,14 +3770,27 @@ mod tests {
 
     #[test]
     fn egui_renders_plain_inline_highlights_without_changing_source() {
-        let source = "Keep ==this phrase== visible.";
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "highlight")
+            .expect("Markdown dialect fixture must include a plain highlight");
+        let source = case["source"]
+            .as_str()
+            .expect("highlight fixture must include source");
+        let expected_highlights = case["expected_highlight_texts"]
+            .as_array()
+            .expect("highlight fixture must include expected highlight text");
         let original = source.as_bytes().to_vec();
         let analysis = analyze_markdown_preview(source);
         assert_eq!(
             analysis.disposition(),
             MarkdownPreviewDisposition::RenderMarkdown
         );
-        assert_eq!(analysis.inline_highlight_spans().len(), 1);
+        assert_eq!(analysis.inline_highlight_spans().len(), expected_highlights.len());
 
         let mut markdown_cache = CommonMarkCache::default();
         let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
@@ -3787,7 +3800,13 @@ mod tests {
         );
 
         harness.step();
-        harness.get_by_label("this phrase");
+        for highlight in expected_highlights {
+            harness.get_by_label(
+                highlight
+                    .as_str()
+                    .expect("highlight text must be a string"),
+            );
+        }
         assert_eq!(source.as_bytes(), original.as_slice());
     }
 
