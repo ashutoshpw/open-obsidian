@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:47:40Z",
+  "updated_at": "2026-10-10T19:48:51Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18838,7 +18838,7 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38081195364"
       },
-      "next_action": "The R2.8.50 tracker checkpoint passed inventory on SHA b81cf8d44bb6b80c23522a17c91c23c97c780e86. Add fixture-driven egui coverage for the Mermaid diagram source-only fallback, then push for exact-SHA GitHub Actions; no local executable validation is used."
+      "next_action": "The R2.8.50 tracker checkpoint passed inventory on SHA b81cf8d44bb6b80c23522a17c91c23c97c780e86. Fixture-driven egui coverage for the Mermaid diagram source-only fallback is added. Commit and push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {
