@@ -283,11 +283,11 @@
     "announcement": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/"
   },
   "tracker_checkpoint": {
-    "sha": "02188f14d63e90e41d78ddf997945004638311e5",
-    "inventory_run_id": 38073362634,
-    "inventory_job_id": 114275170259,
+    "sha": "c84d298078a6cea048771550801074d2a2e67a27",
+    "inventory_run_id": 38073847295,
+    "inventory_job_id": 114276606004,
     "conclusion": "success",
-    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38073362634"
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38073847295"
   },
   "limitations": [
     "This slice adds explicit source-only coverage for a resolved wiki link in a Markdown list item; it does not expand supported preview syntax.",
