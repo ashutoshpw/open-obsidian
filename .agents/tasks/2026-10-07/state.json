@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T00:37:25Z",
+  "updated_at": "2026-10-10T00:47:36Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -14658,6 +14658,87 @@
       ],
       "evidence": "evidence/r2.6.86-attempt-2-4a7bb63.json",
       "next_action": "Review outstanding C01/C01.2 requirements and select the next small read-only acceptance slice; keep broader parent acceptance pending."
+    },
+    "R2.7.1": {
+      "status": "complete",
+      "starting_sha": "bc7cd91d1ef356340614867ca33c3d2ad39db29d",
+      "implementation_sha": "a301bfcee01d3a16c812c3eaa0f0859d9109e887",
+      "implementation_commits": [
+        "4717ddcd17b87a47be9962f02edcdb79efeb4525",
+        "c48b5b49d621f4db0809cae07e28b89c58f3f5fa",
+        "a301bfcee01d3a16c812c3eaa0f0859d9109e887"
+      ],
+      "scope": "Recover vault state from disk after watcher overflow, sleep or missed notifications, and root replacement; filesystem events remain invalidation hints.",
+      "accepted_slice": [
+        "SYNC-003"
+      ],
+      "remaining": [
+        "Broader SYNC-001, SYNC-002 and R2 vault/filesystem acceptance remain pending."
+      ],
+      "acceptance": [
+        "A one-slot coalesced notify watcher watches the vault and its parent, rearms the root watch after replacement, and requests full reconciliation after errors or overflow.",
+        "The egui shell reconciles from disk on watcher hints and performs periodic reconciliation after missed notifications, sleep or reconnect.",
+        "Overflow, root reconnect and event-hint watcher tests and the UI sleep/reconnect test pass on Ubuntu, macOS, and Windows.",
+        "All seven required workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "4717ddcd17b87a47be9962f02edcdb79efeb4525",
+          "required_workflow_run_ids": [
+            38008424440,
+            38008424427,
+            38008424655,
+            38008424663,
+            38008424376,
+            38008424530,
+            38008424478
+          ],
+          "result": "Not accepted: stale lockfile, CI-requested formatting, and inventory mapping issues."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "c48b5b49d621f4db0809cae07e28b89c58f3f5fa",
+          "required_workflow_run_ids": [
+            38008783246,
+            38008783232,
+            38008783278,
+            38008783301,
+            38008783281,
+            38008783269,
+            38008783240
+          ],
+          "result": "Not accepted: the receiver-only UI assertion failed on Ubuntu, macOS, and Windows; the other six workflows passed."
+        },
+        {
+          "attempt": 3,
+          "source_sha": "a301bfcee01d3a16c812c3eaa0f0859d9109e887",
+          "required_workflow_run_ids": [
+            38009149073,
+            38009149201,
+            38009149082,
+            38009149129,
+            38009149092,
+            38009149107,
+            38009149126
+          ],
+          "result": "All seven required workflows and every applicable job passed."
+        }
+      ],
+      "tracker_checkpoint": {
+        "source_sha": "c2003248adfde069ba2113195b1a97a4f0729fd2",
+        "conclusion": "All six triggered path-filtered workflows passed; the Obsidian round-trip workflow was skipped because its path filter excludes tracker-only changes.",
+        "run_ids": [
+          38010031849,
+          38010031832,
+          38010031819,
+          38010031975,
+          38010031864,
+          38010031799
+        ]
+      },
+      "evidence": "evidence/r2.7.1-sync-watcher-a301bfc.json",
+      "next_action": "Review the remaining R2 vault/filesystem requirements and choose the next small acceptance slice; keep broader C01 acceptance pending."
     }
   },
   "ci_preparation": {
