@@ -2801,3 +2801,15 @@ Accepted slice: the allowlisted HTML break followed by CRLF renders as a native 
 Use the existing safe-html-inline-break-self-closing C02.1 fixture to verify the preview selects RenderMarkdown and renders the expected two text lines while preserving the original source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.57 tracker checkpoint: inventory [run 38086361576](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086361576), job 114313592142, passed for tracker SHA 4ab381bbd04cbcc72abbff365f630ce26e786372.
+
+### R2.8.57 accepted — self-closing safe HTML line break — source SHA ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093
+
+The existing safe-html-inline-break-self-closing C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, the expected native-render source with a Markdown hard break, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 95 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38086419026](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086419026), loaded-plugin workflows [38086419029](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086419029), desktop build [38086419007](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086419007), quality [38086419037](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086419037), Rust CI [38086418999](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086418999), plugin renderer [38086419053](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086419053), and Obsidian vault round-trip [38086419009](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086419009). Exact job IDs and artifact digests are in [evidence/r2.8.57-self-closing-html-break-ac6cf57.json](evidence/r2.8.57-self-closing-html-break-ac6cf57.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the allowlisted `<br/>` form renders as a native hard break while retaining the original source bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.58 in progress — spaced self-closing safe HTML line break
+
+Use the existing safe-html-inline-break-spaced-self-closing C02.1 fixture to verify the preview selects RenderMarkdown and renders the expected two text lines while preserving the original source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T21:07:03Z",
+  "updated_at": "2026-10-10T21:13:55Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "4ab381bbd04cbcc72abbff365f630ce26e786372",
-  "current_milestone": "R2.8.57",
-  "next_action": "R2.8.56 is accepted on exact source SHA 1db003128ea61085806e03c863ea143f433e71f8. R2.8.57 will verify that the self-closing safe HTML line break in the existing C02.1 fixture renders while preserving source bytes. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093",
+  "current_milestone": "R2.8.58",
+  "next_action": "R2.8.57 is accepted on exact source SHA ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093. R2.8.58 will verify that the spaced self-closing safe HTML line break in the existing C02.1 fixture renders while preserving source bytes. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "1db003128ea61085806e03c863ea143f433e71f8"
+      "implementation_sha": "ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.57 accepted: the safe-html-inline-break-self-closing C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, the expected native-render source with a Markdown hard break, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows (95 ui-egui tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093. Evidence: evidence/r2.8.57-self-closing-html-break-ac6cf57.json. Full C02.1 and phases R3-R7 remain pending.",
     "R2.8.56 accepted: the safe-html-inline-break-before-crlf C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, the expected native-render source with a Markdown hard break, visible text on both lines, and unchanged CRLF source bytes. The focused test passed on Ubuntu, macOS, and Windows (94 ui-egui tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA 1db003128ea61085806e03c863ea143f433e71f8. Evidence: evidence/r2.8.56-safe-html-break-before-crlf-1db0031.json. Full C02.1 and phases R3-R7 remain pending.",
     "R2.8.55 accepted: the existing multiple-plain-highlights C02.1 fixture drives an egui preview test that selects RenderMarkdown, exposes both expected highlight texts, and preserves the fixture source bytes. The focused test passed on Ubuntu, macOS, and Windows (93 ui-egui tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA e2b1df91c0ec906d70143933335ede8473692d90. The first quality attempt failed only at the intermittent macOS Electron retrieval-boundary audit; retry attempt 2 passed all platforms on the same SHA. Evidence: evidence/r2.8.55-multiple-plain-highlights-e2b1df9.json. Full C02.1 and phases R3-R7 remain pending.",
     "R2.8.52 accepted: the existing raw-html C02.1 fixture drives a native preview test that selects the source-only disposition, displays the explicit raw-HTML fallback message, and preserves the script source as literal text byte-for-byte. The focused egui test passed on Ubuntu, macOS, and Windows (90 tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA 50455182afb258eb221ba38bef9c77870ce1ab83. Evidence: evidence/r2.8.52-raw-html-script-source-fallback-5045518.json. C02.1 and phases R3-R7 remain pending.",
@@ -281,7 +282,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA 1db003128ea61085806e03c863ea143f433e71f8 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19071,7 +19072,7 @@
       "evidence": "evidence/r2.8.56-safe-html-break-before-crlf-1db0031.json"
     },
     "R2.8.57": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "1db003128ea61085806e03c863ea143f433e71f8",
       "scope": "Verify the self-closing safe HTML line break in the existing Markdown dialect fixture renders as a native Markdown hard break without changing source bytes.",
       "acceptance": [
@@ -19079,7 +19080,9 @@
         "The preview selects RenderMarkdown and exposes both expected text lines.",
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093"
+      ],
       "tracker_checkpoint": {
         "sha": "4ab381bbd04cbcc72abbff365f630ce26e786372",
         "inventory_run_id": 38086361576,
@@ -19087,7 +19090,30 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086361576"
       },
-      "next_action": "The R2.8.57 tracker checkpoint passed inventory on SHA 4ab381bbd04cbcc72abbff365f630ce26e786372. Use the safe-html-inline-break-self-closing fixture for focused egui coverage of rendered line-break behavior and unchanged source bytes. Commit and push the small implementation slice for exact-SHA GitHub Actions; no local executable validation is used."
+      "next_action": "R2.8.57 is accepted; continue with fixture-driven coverage for the spaced self-closing safe HTML line break in R2.8.58. Full C02.1 and phases R3-R7 remain pending.",
+      "validated_source_sha": "ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093",
+      "ci_runs": {
+        "inventory": 38086419026,
+        "loaded_plugins": 38086419029,
+        "desktop_build": 38086419007,
+        "quality": 38086419037,
+        "rust_ci": 38086418999,
+        "plugin_renderer": 38086419053,
+        "obsidian_vault_roundtrip": 38086419009
+      },
+      "evidence": "evidence/r2.8.57-self-closing-html-break-ac6cf57.json"
+    },
+    "R2.8.58": {
+      "status": "in_progress",
+      "starting_sha": "ac6cf578fae6acd9aacc3c3d8a5c1f833f6cb093",
+      "scope": "Verify the spaced self-closing safe HTML line break in the existing Markdown dialect fixture renders as a native Markdown hard break without changing source bytes.",
+      "acceptance": [
+        "The existing safe-html-inline-break-spaced-self-closing C02.1 fixture drives an egui preview test.",
+        "The preview selects RenderMarkdown and exposes both expected text lines.",
+        "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
+      ],
+      "implementation_commits": [],
+      "next_action": "Use the safe-html-inline-break-spaced-self-closing fixture for focused egui coverage of rendered line-break behavior and unchanged source bytes. Commit and push the small implementation slice for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {
