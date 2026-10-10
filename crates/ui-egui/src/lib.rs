@@ -3615,6 +3615,53 @@ mod tests {
     }
 
     #[test]
+    fn egui_renders_multiple_plain_highlights_from_fixture_without_changing_source() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "multiple-plain-highlights")
+            .expect("Markdown dialect fixture must include multiple plain highlights");
+        let source = case["source"]
+            .as_str()
+            .expect("multiple-highlights fixture must include source");
+        let expected_highlights = case["expected_highlight_texts"]
+            .as_array()
+            .expect("multiple-highlights fixture must include expected text")
+            .iter()
+            .map(|text| {
+                text.as_str()
+                    .expect("expected highlight text must be a string")
+            })
+            .collect::<Vec<_>>();
+        let original = source.as_bytes().to_vec();
+        let analysis = analyze_markdown_preview(source);
+        assert_eq!(
+            analysis.disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+        assert_eq!(
+            analysis.inline_highlight_spans().len(),
+            expected_highlights.len()
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        for highlight in expected_highlights {
+            harness.get_by_label(highlight);
+        }
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_keeps_escaped_highlight_openers_literal_in_markdown_preview() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");

@@ -2771,3 +2771,5 @@ Accepted slice: legacy math delimiters inside indented code remain visible as co
 Use the existing multiple-plain-highlights C02.1 fixture to verify both expected highlight phrases appear in the Markdown preview, with RenderMarkdown disposition and unchanged source bytes. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.55 tracker checkpoint: inventory [run 38085191217](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085191217), job 114310136384, passed for tracker SHA bb8c200506018dc117adf07451fa793746a1c5ef.
+
+The fixture-driven egui case is added in crates/ui-egui/src/lib.rs. It checks RenderMarkdown, both expected highlight spans and their visible text, and unchanged source bytes. Commit and push the focused case for exact-SHA GitHub Actions; no local executable validation runs.

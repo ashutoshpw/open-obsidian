@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T20:48:50Z",
+  "updated_at": "2026-10-10T20:49:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "bb8c200506018dc117adf07451fa793746a1c5ef",
   "current_milestone": "R2.8.55",
-  "next_action": "R2.8.54 is accepted on exact source SHA 81bda29b1f938f8ebc2cb7674b265b11ca765297; all seven required GitHub Actions workflows passed, and the focused test passed on Ubuntu, macOS, and Windows. R2.8.55 should cover both plain inline highlights using its existing fixture and preserve the original source. Full C02.1 and phases R3-R7 remain pending.",
+  "next_action": "R2.8.54 is accepted on exact source SHA 81bda29b1f938f8ebc2cb7674b265b11ca765297. R2.8.55 has fixture-driven egui coverage for both plain inline highlights; commit and push it for exact-SHA GitHub Actions. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19013,7 +19013,7 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38085191217"
       },
-      "next_action": "The R2.8.55 tracker checkpoint passed inventory on SHA bb8c200506018dc117adf07451fa793746a1c5ef. Add fixture-driven egui coverage for both plain inline highlights and validate through exact-SHA GitHub Actions only."
+      "next_action": "The R2.8.55 tracker checkpoint passed inventory on SHA bb8c200506018dc117adf07451fa793746a1c5ef. Fixture-driven egui coverage is added for both expected highlight texts and unchanged source bytes. Commit and push this focused case for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {
