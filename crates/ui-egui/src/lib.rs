@@ -2703,6 +2703,14 @@ mod tests {
         }
     }
 
+    fn click_first_task_checkbox(harness: &Harness<'_, OpenObsidianApp>) {
+        harness
+            .query_all_by_role(eframe::egui::accesskit::Role::CheckBox)
+            .next()
+            .expect("task preview should render at least one task checkbox")
+            .click();
+    }
+
     fn wait_for_vault_refresh(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -2792,9 +2800,7 @@ mod tests {
 
         harness.get_by_label("Note source preview").click();
         harness.step();
-        harness
-            .get_by_role(eframe::egui::accesskit::Role::CheckBox)
-            .click();
+        click_first_task_checkbox(&harness);
         harness.step();
         assert!(harness.state().note_preview_write_receiver.is_some());
         wait_for_note_preview_write(&mut harness);
@@ -2850,9 +2856,11 @@ mod tests {
         harness.get_by_label("Note source preview").click();
         harness.step();
         harness.get_by_label("Unsupported Markdown (raw HTML); showing the source as written.");
-        assert!(harness
-            .query_by_role(eframe::egui::accesskit::Role::CheckBox)
-            .is_none());
+        assert!(
+            harness
+                .query_by_role(eframe::egui::accesskit::Role::CheckBox)
+                .is_none()
+        );
         assert_eq!(std::fs::read(vault_path.join("Tasks.md")).unwrap(), source);
     }
 
@@ -2866,10 +2874,11 @@ mod tests {
             "x".repeat(MAX_NOTE_SOURCE_PREVIEW_BYTES)
         );
         let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
-        assert!(app
-            .note_source_preview
-            .as_ref()
-            .is_some_and(|preview| preview.truncated && preview.revision_sha256.is_none()));
+        assert!(
+            app.note_source_preview
+                .as_ref()
+                .is_some_and(|preview| preview.truncated && preview.revision_sha256.is_none())
+        );
         let mut harness = Harness::new_ui_state(
             |ui, app| {
                 app.poll_note_preview_write_task(ui);
@@ -2881,9 +2890,11 @@ mod tests {
         harness.get_by_label("Note source preview").click();
         harness.step();
         harness.get_by_label("This truncated preview is read-only.");
-        assert!(harness
-            .query_by_role(eframe::egui::accesskit::Role::CheckBox)
-            .is_none());
+        assert!(
+            harness
+                .query_by_role(eframe::egui::accesskit::Role::CheckBox)
+                .is_none()
+        );
         assert_eq!(
             std::fs::read(vault_path.join("Tasks.md")).unwrap(),
             source.as_bytes().to_vec()
@@ -2914,9 +2925,7 @@ mod tests {
 
         harness.get_by_label("Note source preview").click();
         harness.step();
-        harness
-            .get_by_role(eframe::egui::accesskit::Role::CheckBox)
-            .click();
+        click_first_task_checkbox(&harness);
         harness.step();
         wait_for_note_preview_write(&mut harness);
 
@@ -2924,16 +2933,20 @@ mod tests {
             std::fs::read(vault_path.join("Tasks.md")).unwrap(),
             external_bytes.to_vec()
         );
-        assert!(harness
-            .state()
-            .note_preview_error
-            .as_deref()
-            .is_some_and(|error| error.contains("note changed after this preview")));
-        assert!(harness
-            .state()
-            .note_source_preview
-            .as_ref()
-            .is_some_and(|preview| preview.revision_sha256.is_none()));
+        assert!(
+            harness
+                .state()
+                .note_preview_error
+                .as_deref()
+                .is_some_and(|error| error.contains("note changed after this preview"))
+        );
+        assert!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .is_some_and(|preview| preview.revision_sha256.is_none())
+        );
     }
 
     #[test]

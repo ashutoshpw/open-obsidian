@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T10:29:22Z",
+  "updated_at": "2026-10-10T10:40:32Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
   "current_milestone": "R2.8.22",
-  "next_action": "R2.8.22 implementation is prepared from tracker SHA 9dbe17cf5d614a3732e357db478a2a89e162b224. Commit and push the focused task-checkbox slice to origin/main, then inspect all seven required workflows on its exact implementation SHA; keep C02.1 pending.",
+  "next_action": "Inspect the seven GitHub Actions workflows triggered by the R2.8.22 correction commit, record their exact-SHA results, and keep C02.1 pending until all acceptance checks pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16586,10 +16586,12 @@
         "Unsupported and truncated previews remain read-only with visible source or truncation information; failed writes leave edited source visible and disable further writes until reload.",
         "Focused vault and egui tests plus all required GitHub Actions workflows pass on the exact implementation SHA; all executable validation runs in GitHub Actions only."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "20a1ecb5ec9ce016932f6d2ae0593985e12d3a15"
+      ],
       "ci_runs": {},
       "evidence": null,
-      "next_action": "Commit and push the implementation to origin/main, then inspect exact-SHA GitHub Actions results before marking this slice complete."
+      "next_action": "Inspect all seven required workflows on the R2.8.22 correction SHA; keep this slice pending until they pass."
     }
   },
   "ci_preparation": {
