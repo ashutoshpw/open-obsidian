@@ -1201,7 +1201,10 @@ mod c02_byte_roundtrip_fixture_tests {
         }
     }
 
-    fn property_path_from_fixture(value: &Value, case_id: &str) -> Vec<MarkdownPropertyPathSegment> {
+    fn property_path_from_fixture(
+        value: &Value,
+        case_id: &str,
+    ) -> Vec<MarkdownPropertyPathSegment> {
         value
             .as_array()
             .unwrap_or_else(|| panic!("{case_id}: property path must be an array"))
@@ -1497,9 +1500,9 @@ mod c02_byte_roundtrip_fixture_tests {
                 continue;
             }
 
-            let after = case["after"]
-                .as_str()
-                .unwrap_or_else(|| panic!("{case_id}: successful case must provide expected bytes"));
+            let after = case["after"].as_str().unwrap_or_else(|| {
+                panic!("{case_id}: successful case must provide expected bytes")
+            });
             let rendered = rendered
                 .unwrap_or_else(|error| panic!("{case_id}: render nested property edit: {error}"));
             assert_eq!(rendered, after.as_bytes(), "{case_id}: exact output bytes");
@@ -1521,8 +1524,9 @@ mod c02_byte_roundtrip_fixture_tests {
                 "{case_id}: only the selected value changes"
             );
 
-            let edited = MarkdownSource::parse(rendered)
-                .unwrap_or_else(|error| panic!("{case_id}: edited Markdown must remain UTF-8: {error}"));
+            let edited = MarkdownSource::parse(rendered).unwrap_or_else(|error| {
+                panic!("{case_id}: edited Markdown must remain UTF-8: {error}")
+            });
             assert!(
                 edited.parse_frontmatter_yaml().issues.is_empty(),
                 "{case_id}: bounded YAML remains representable after edit"

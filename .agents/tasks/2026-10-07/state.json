@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T08:30:47Z",
+  "updated_at": "2026-10-10T08:34:01Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "bda4c8d032a441f18c52f128d8fccf83675bf8b8",
   "current_milestone": "R2.8.18",
-  "next_action": "Port source-preserving nested YAML property edits for explicit mapping and sequence paths, including flow collections, with fixture-driven exact-byte acceptance and CI-only validation.",
+  "next_action": "Push the GitHub-reported formatting and compile correction, then complete exact-SHA GitHub Actions acceptance.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16202,9 +16202,26 @@
         "The focused fixture and full Rust workspace tests pass on Ubuntu, macOS, and Windows.",
         "All seven required GitHub Actions workflows pass on the exact source SHA; executable validation runs in GitHub Actions only."
       ],
-      "implementation_commits": [],
-      "ci_attempts": [],
-      "next_action": "Commit and push the focused nested-edit implementation, then use exact-SHA GitHub Actions diagnostics to finish acceptance."
+      "implementation_commits": [
+        "161656a7bc3a8fc547f2d7ccfdbab77051cdc262"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "161656a7bc3a8fc547f2d7ccfdbab77051cdc262",
+          "conclusion": "failure",
+          "run_ids": {
+            "rust_ci": 38038162071,
+            "obsidian_vault_roundtrip": 38038162080,
+            "inventory": 38038162067,
+            "loaded_plugins": 38038162049,
+            "desktop_build": 38038162100,
+            "quality": 38038162068,
+            "plugin_renderer": 38038162134
+          },
+          "failure_summary": "Inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer passed. Rust CI and all three vault round-trip build jobs reported E0277 because source_property used ? on std::str::from_utf8's Result; Ubuntu Rust CI also reported rustfmt layout changes. The direct CI corrections are prepared for a follow-up."
+        }
+      ],
+      "next_action": "Push the direct compiler and rustfmt corrections from the first exact-SHA CI attempt and inspect the follow-up runs."
     }
   },
   "ci_preparation": {

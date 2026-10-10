@@ -474,10 +474,9 @@ fn serialize_flow_value(value: &YamlValue, depth: usize) -> Option<String> {
                         return None;
                     }
                     let key = if !entry.key.is_empty()
-                        && entry
-                            .key
-                            .bytes()
-                            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+                        && entry.key.bytes().all(|byte| {
+                            byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-')
+                        })
                     {
                         entry.key.clone()
                     } else {
@@ -950,7 +949,11 @@ fn source_lines(
     let mut lines = Vec::new();
     for (start, end) in line_ranges(source) {
         let raw = &source[start..end];
-        let indent = raw.as_bytes().iter().take_while(|byte| **byte == b' ').count();
+        let indent = raw
+            .as_bytes()
+            .iter()
+            .take_while(|byte| **byte == b' ')
+            .count();
         if raw.as_bytes().get(indent) == Some(&b'\t') {
             return Err(super::MarkdownPropertyEditError::UnsupportedPath);
         }
@@ -999,8 +1002,12 @@ fn source_line_property(
     sequence_head: bool,
 ) -> Result<super::MarkdownPropertySource, super::MarkdownPropertyEditError> {
     let content_start = line.start + line.indent;
-    super::source_property(&bytes[content_start..line.end], content_start, sequence_head)
-        .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)
+    super::source_property(
+        &bytes[content_start..line.end],
+        content_start,
+        sequence_head,
+    )
+    .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)
 }
 
 fn source_value<'a>(
@@ -1189,16 +1196,10 @@ fn resolve_block_mapping(
             found = Some((index, property));
         }
     }
-    let (index, property) = found.ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
+    let (index, property) =
+        found.ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
     resolve_property_value(
-        bytes,
-        lines,
-        index,
-        end,
-        indent,
-        &property,
-        path,
-        path_index,
+        bytes, lines, index, end, indent, &property, path, path_index,
     )
 }
 
@@ -1257,14 +1258,8 @@ fn resolve_block_sequence_item(
     if let Ok(head) = &head {
         if head.key == *wanted {
             let mapping_indent = head.key_span.start - lines[start].start;
-            if sequence_continuation_has_key(
-                bytes,
-                lines,
-                start,
-                item_end,
-                mapping_indent,
-                wanted,
-            )? {
+            if sequence_continuation_has_key(bytes, lines, start, item_end, mapping_indent, wanted)?
+            {
                 return Err(super::MarkdownPropertyEditError::UnsupportedPath);
             }
             return resolve_property_value(
@@ -1283,8 +1278,8 @@ fn resolve_block_sequence_item(
         }
     } else {
         let content = &bytes[lines[start].start + indent..lines[start].end];
-        let is_bare_item = std::str::from_utf8(content)
-            .is_ok_and(|content| strip_comment(content).trim() == "-");
+        let is_bare_item =
+            std::str::from_utf8(content).is_ok_and(|content| strip_comment(content).trim() == "-");
         if !is_bare_item {
             return Err(super::MarkdownPropertyEditError::UnsupportedPath);
         }
@@ -1337,13 +1332,7 @@ fn resolve_block_sequence(
         let item_end = source_sequence_item_end(lines, index, end, indent);
         if item_number == *wanted {
             return resolve_block_sequence_item(
-                bytes,
-                lines,
-                index,
-                item_end,
-                indent,
-                path,
-                path_index,
+                bytes, lines, index, item_end, indent, path, path_index,
             );
         }
         item_number += 1;
@@ -1374,13 +1363,5 @@ pub(crate) fn nested_property_value_span(
     let Some(first) = lines.first() else {
         return Err(super::MarkdownPropertyEditError::PropertyNotRepresented);
     };
-    resolve_block_mapping(
-        source_bytes,
-        &lines,
-        0,
-        end,
-        first.indent,
-        path,
-        0,
-    )
+    resolve_block_mapping(source_bytes, &lines, 0, end, first.indent, path, 0)
 }

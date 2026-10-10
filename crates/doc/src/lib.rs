@@ -476,7 +476,8 @@ fn render_nested_property_edit(
     path: &[MarkdownPropertyPathSegment],
     value: &YamlValue,
 ) -> Result<Vec<u8>, MarkdownPropertyEditError> {
-    let replacement = yaml::serialize_flow(value).ok_or(MarkdownPropertyEditError::UnsupportedValue)?;
+    let replacement =
+        yaml::serialize_flow(value).ok_or(MarkdownPropertyEditError::UnsupportedValue)?;
     let bounds = source
         .frontmatter_bounds()
         .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
@@ -487,7 +488,8 @@ fn render_nested_property_edit(
     let bytes = source.as_bytes();
     let span = yaml::nested_property_value_span(content, bounds.content.start, bytes, path)?;
 
-    let mut rendered = Vec::with_capacity(bytes.len() - (span.end - span.start) + replacement.len());
+    let mut rendered =
+        Vec::with_capacity(bytes.len() - (span.end - span.start) + replacement.len());
     rendered.extend_from_slice(&bytes[..span.start]);
     rendered.extend_from_slice(replacement.as_bytes());
     rendered.extend_from_slice(&bytes[span.end..]);
@@ -519,10 +521,7 @@ fn source_property(
     line_start: usize,
     sequence_head: bool,
 ) -> Option<MarkdownPropertySource> {
-    let indent = line
-        .iter()
-        .take_while(|byte| **byte == b' ')
-        .count();
+    let indent = line.iter().take_while(|byte| **byte == b' ').count();
     if line.get(indent) == Some(&b'\t') || (!sequence_head && indent > 0) {
         return None;
     }
@@ -540,7 +539,7 @@ fn source_property(
         0
     };
     let content_start = indent + sequence_prefix;
-    let content = std::str::from_utf8(line.get(content_start..)?)?;
+    let content = std::str::from_utf8(line.get(content_start..)?).ok()?;
     let pair = yaml::mapping_pair_source(content)?;
 
     Some(MarkdownPropertySource {
