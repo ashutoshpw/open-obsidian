@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T03:25:19Z",
+  "updated_at": "2026-10-10T03:34:10Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c3127faf3ad3601f6d7bed67b08b3ac7173e99dd",
+  "last_reconciled_head": "d17cc084cbfcdd6a7dc918c88202dcac28989cf7",
   "current_milestone": "R2.8.4",
-  "next_action": "Run exact-SHA GitHub Actions acceptance for partial-sync batch journaling and recovery; then continue the remaining eight SYNC-004 failure-matrix scenarios. Keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "next_action": "Run exact-SHA GitHub Actions acceptance after the CI-reported formatting correction, retry the Ubuntu headless round-trip job if needed, then continue the remaining eight SYNC-004 failure-matrix scenarios. Keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {

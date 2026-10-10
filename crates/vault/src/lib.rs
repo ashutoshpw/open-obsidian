@@ -3013,11 +3013,7 @@ mod tests {
             .iter()
             .map(|file| {
                 let relative_path = PathBuf::from(file["relative_path"].as_str().unwrap());
-                let expected_revision = store
-                    .root()
-                    .read(&relative_path)
-                    .unwrap()
-                    .revision_sha256;
+                let expected_revision = store.root().read(&relative_path).unwrap().revision_sha256;
                 VaultWriteRequest {
                     relative_path,
                     expected_revision_sha256: Some(expected_revision),
@@ -3084,10 +3080,12 @@ mod tests {
             }
         }
 
-        assert!(!fs::read_dir(&vault_temp.0)
-            .unwrap()
-            .map(Result::unwrap)
-            .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp")));
+        assert!(
+            !fs::read_dir(&vault_temp.0)
+                .unwrap()
+                .map(Result::unwrap)
+                .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp"))
+        );
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         let entries = journal
             .lines()
@@ -3100,10 +3098,18 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(batch_entries.len(), 2);
         assert_eq!(batch_entries[0]["state"], "prepared");
-        assert_eq!(batch_entries[0]["paths"], serde_json::json!(["note.md", "second.md"]));
+        assert_eq!(
+            batch_entries[0]["paths"],
+            serde_json::json!(["note.md", "second.md"])
+        );
         assert_eq!(batch_entries[1]["state"], scenario["expected_batch_state"]);
         assert_eq!(batch_entries[1]["paths"], batch_entries[0]["paths"]);
-        assert!(batch_entries[1]["error"].as_str().unwrap().contains(injected_error));
+        assert!(
+            batch_entries[1]["error"]
+                .as_str()
+                .unwrap()
+                .contains(injected_error)
+        );
 
         let write_entries = entries
             .iter()
