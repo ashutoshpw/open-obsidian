@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T02:33:47Z",
+  "updated_at": "2026-10-10T03:03:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "638ba85dd94826b77623a43709d458d13fa1c1e7",
-  "current_milestone": "R2.8.2",
-  "next_action": "Review remaining R2 vault/filesystem requirements and select the next small acceptance slice; keep broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "c3127faf3ad3601f6d7bed67b08b3ac7173e99dd",
+  "current_milestone": "R2.8.3",
+  "next_action": "Continue SYNC-004 with the remaining nine failure-matrix scenarios in small slices; keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "2964c96cea6ad96710ef3a7a0e02eeab4d500776"
+      "implementation_sha": "c3127faf3ad3601f6d7bed67b08b3ac7173e99dd"
     },
     "R3": {
       "status": "pending",
@@ -67,6 +67,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.3 implemented disk-full-before-temporary-write and permission-loss-before-replacement coverage for SYNC-004; all seven required workflows passed on exact SHA c3127faf3ad3601f6d7bed67b08b3ac7173e99dd across Ubuntu, macOS and Windows. Evidence: evidence/r2.8.3-sync-failure-matrix-c3127fa.json. The other nine failure-matrix cases, full SYNC-004, editor integration, and broader C01/C01.2 acceptance remain pending.",
     "Read migration goal and prior plan/module documents",
     "Inspected origin/main, repository permissions and existing exact-SHA CI",
     "Created provisional full legacy requirement mapping and source inventory",
@@ -15034,6 +15035,42 @@
       ],
       "evidence": "evidence/r2.8.2-revision-merge-638ba85.json",
       "next_action": "Review remaining R2 vault/filesystem requirements and select the next small acceptance slice; keep broader C01/C01.2 acceptance pending."
+    },
+    "R2.8.3": {
+      "status": "complete",
+      "starting_sha": "bd7e88355c5be0a4470c39918334eba51ba4c77",
+      "implementation_sha": "c3127faf3ad3601f6d7bed67b08b3ac7173e99dd",
+      "implementation_commits": ["7b945d0f52a4ab891aeeeb95a51d45bb76a52546", "8699a70a5da23deddb4a82b4f90bc937ce54173f", "c3127faf3ad3601f6d7bed67b08b3ac7173e99dd"],
+      "scope": "Execute the disk-full-before-temporary-write and permission-loss-before-replacement cases in the existing vault-safety failure matrix.",
+      "accepted_slice": ["SYNC-004:disk-full", "SYNC-004:permission-loss"],
+      "remaining": ["Only two of eleven SYNC-004 scenarios have executable Rust coverage; the other nine remain pending.", "Full SYNC-004, editor integration, broader R2, and C01/C01.2 acceptance remain pending."],
+      "acceptance": [
+        "For both injected failure points, original BOM/CRLF target bytes remain unchanged and incoming bytes are preserved in failed and recovery history.",
+        "Failure cleanup removes target temporary files and records a failed journal terminal state.",
+        "The focused test, Rust formatting, Clippy, dependency layering, native builds, compatibility probes, and all seven required workflows pass on exact SHA c3127faf3ad3601f6d7bed67b08b3ac7173e99dd across applicable platforms."
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "7b945d0f52a4ab891aeeeb95a51d45bb76a52546",
+          "required_workflow_run_ids": [38018097195, 38018097295, 38018097275, 38018097271, 38018097191, 38018097226, 38018097239],
+          "result": "Focused/workspace tests passed on Ubuntu and macOS Rust CI passed; six companion workflows passed. Ubuntu rustfmt reported an assertion layout difference."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "8699a70a5da23deddb4a82b4f90bc937ce54173f",
+          "required_workflow_run_ids": [38018517675, 38018517670, 38018517648, 38018517668, 38018517646, 38018517678, 38018517652],
+          "result": "Six companion workflows, all vault round-trip OS jobs, and Rust tests on all three platforms passed. Ubuntu rustfmt reported one further required line wrap."
+        },
+        {
+          "attempt": 3,
+          "source_sha": "c3127faf3ad3601f6d7bed67b08b3ac7173e99dd",
+          "required_workflow_run_ids": [38018867912, 38018867953, 38018867935, 38018867922, 38018867939, 38018867928, 38018867956],
+          "result": "All seven workflows and every applicable Ubuntu, macOS, and Windows job passed; focused failure-matrix test passed on all three Rust CI platforms."
+        }
+      ],
+      "evidence": "evidence/r2.8.3-sync-failure-matrix-c3127fa.json",
+      "next_action": "Continue SYNC-004 with the remaining nine matrix scenarios; do not mark the aggregate requirement passing until its complete acceptance is met."
     }
   },
   "ci_preparation": {
