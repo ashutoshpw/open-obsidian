@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T10:12:43Z",
+  "updated_at": "2026-10-10T10:29:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
-  "current_milestone": "R2.8.21",
-  "next_action": "R2.8.21 is accepted. Continue C02.1 with the next focused Markdown preview slice; keep full dialect rendering and source-preserving editing pending.",
+  "current_milestone": "R2.8.22",
+  "next_action": "R2.8.22 implementation is prepared from tracker SHA 9dbe17cf5d614a3732e357db478a2a89e162b224. Commit and push the focused task-checkbox slice to origin/main, then inspect all seven required workflows on its exact implementation SHA; keep C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16570,6 +16570,26 @@
       },
       "evidence": "evidence/r2.8.21-native-footnotes-06d2c00.json",
       "next_action": "R2.8.21 is accepted; continue the incomplete C02.1 Markdown preview work in another focused source slice."
+    },
+    "R2.8.22": {
+      "status": "in_progress",
+      "starting_sha": "9dbe17cf5d614a3732e357db478a2a89e162b224",
+      "scope": "Allow task checkbox changes in complete supported native Markdown previews, saving through the vault's revision-checked journal while retaining every unselected source byte.",
+      "accepted_slice": [
+        "C02.1:revision-safe-task-checkbox-editing"
+      ],
+      "acceptance": [
+        "Complete valid UTF-8 previews of at most 16 KiB carry the SHA-256 revision of the exact bytes read; truncated previews carry no writable revision.",
+        "Toggling a supported task checkbox changes only its source marker and preserves BOM, CRLF, code literals, other tasks, and unknown source text.",
+        "Task writes pass through the existing journaled vault writer with the preview revision; stale writes do not overwrite external note changes and preserve incoming bytes in conflict recovery history.",
+        "After a successful task write, vault reconciliation keeps the preview only while the selected file still matches the saved revision; a changed or missing note clears it.",
+        "Unsupported and truncated previews remain read-only with visible source or truncation information; failed writes leave edited source visible and disable further writes until reload.",
+        "Focused vault and egui tests plus all required GitHub Actions workflows pass on the exact implementation SHA; all executable validation runs in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_runs": {},
+      "evidence": null,
+      "next_action": "Commit and push the implementation to origin/main, then inspect exact-SHA GitHub Actions results before marking this slice complete."
     }
   },
   "ci_preparation": {

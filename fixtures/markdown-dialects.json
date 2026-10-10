@@ -28,6 +28,14 @@
     "code_and_diagram_execution": false,
     "unknown_syntax_is_not_silently_rewritten": true
   },
+  "task_editing": {
+    "mutation_scope": "task-checkbox-marker-only",
+    "requires_complete_valid_utf8_revision": true,
+    "unsupported_or_truncated_previews_are_read_only": true,
+    "conflicts_use_vault_recovery": true,
+    "source": "\uFEFF# Task byte preservation\r\n\r\n- [ ] Toggle only this marker\r\n- [x] Preserve this checked marker\r\n\r\n~~~text\r\n- [ ] Marker inside code stays literal\r\n[[page]] ==mark==\r\n~~~\r\n\r\n%% Unknown extension remains literal.\r\n",
+    "expected_after_toggle": "\uFEFF# Task byte preservation\r\n\r\n- [x] Toggle only this marker\r\n- [x] Preserve this checked marker\r\n\r\n~~~text\r\n- [ ] Marker inside code stays literal\r\n[[page]] ==mark==\r\n~~~\r\n\r\n%% Unknown extension remains literal.\r\n"
+  },
   "rust_preview": {
     "renderer": "egui_commonmark 0.25.0",
     "rendered_blocks": [

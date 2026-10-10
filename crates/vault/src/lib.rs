@@ -106,12 +106,14 @@ pub struct VaultRead {
     pub revision_sha256: String,
 }
 
-/// A bounded prefix of a note source for read-only inspection.
+/// A bounded prefix of a note source. A revision is available only when the prefix
+/// contains the complete file and can safely identify the bytes used by an edit.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultReadPreview {
     pub source: RawDocument,
     pub total_size_bytes: u64,
     pub truncated: bool,
+    pub revision_sha256: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -358,10 +360,13 @@ impl VaultRoot {
         {
             return Err(VaultError::SnapshotChanged);
         }
+        let truncated = total_size_bytes > MAX_NOTE_SOURCE_PREVIEW_BYTES as u64;
+        let revision_sha256 = (!truncated).then(|| sha256_hex(&bytes));
         Ok(VaultReadPreview {
             source: RawDocument::from_bytes(bytes),
             total_size_bytes,
-            truncated: total_size_bytes > MAX_NOTE_SOURCE_PREVIEW_BYTES as u64,
+            truncated,
+            revision_sha256,
         })
     }
 
@@ -2207,7 +2212,24 @@ mod tests {
         );
         assert_eq!(preview.total_size_bytes, original.len() as u64);
         assert!(preview.truncated);
+        assert!(preview.revision_sha256.is_none());
         assert_eq!(vault.snapshot().unwrap(), before);
+    }
+
+    #[test]
+    fn complete_note_source_preview_carries_a_revision_for_its_exact_bytes() {
+        let temp = TempDir::new();
+        let vault_path = temp.0.join("vault");
+        fs::create_dir(&vault_path).unwrap();
+        let original = b"\xef\xbb\xbf# Checklist\r\n- [ ] Keep CRLF\r\n";
+        fs::write(vault_path.join("Tasks.md"), original).unwrap();
+        let vault = VaultRoot::open(&vault_path).unwrap();
+
+        let preview = vault.read_preview("Tasks.md").unwrap();
+
+        assert_eq!(preview.source.as_bytes(), original);
+        assert!(!preview.truncated);
+        assert_eq!(preview.revision_sha256, Some(sha256_hex(original)));
     }
 
     #[test]
