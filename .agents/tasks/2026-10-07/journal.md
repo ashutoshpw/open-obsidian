@@ -2923,3 +2923,5 @@ All 21 `rust_preview.cases` entries map to explicit egui preview tests. The audi
 ### R2.8.66 in progress — standard alert callout preview fixture
 
 Add a standard alert callout to the shared C02.1 Rust preview fixture and verify the egui preview exposes its heading and body while keeping the original source bytes unchanged. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs.
+
+R2.8.66 tracker checkpoint: inventory [run 38092990546](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092990546), job 114333070887, passed for tracker SHA 767799df2165056bff889e770abf814ecf91f80a.
