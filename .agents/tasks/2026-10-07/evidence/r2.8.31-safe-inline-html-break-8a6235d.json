@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.31",
+  "status": "accepted",
+  "attempt": 2,
+  "source_sha": "8a6235def8b0ad6d0276995f1e295f86d1650278",
+  "implementation_commits": [
+    "fa0ff45597f546b34d03a0aa89e0ff6829491d47",
+    "8a6235def8b0ad6d0276995f1e295f86d1650278"
+  ],
+  "scope": "Render a minimal safe inline HTML line-break subset through a Markdown-only projection while preserving all other HTML as visible source and leaving vault bytes authoritative.",
+  "tests": [
+    "c02_safe_preview_dialect_fixtures_select_a_visible_fallback_without_mutating_source",
+    "egui_renders_safe_inline_html_breaks_without_changing_source"
+  ],
+  "fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "d32ecab7487e971d8195c8f886235ecbfff8b133e5eb2699d1e69d5dce4e7e62",
+    "cases": [
+      "safe-html-inline-break",
+      "safe-html-inline-break-self-closing",
+      "safe-html-inline-break-spaced-self-closing",
+      "safe-html-inline-break-before-crlf",
+      "html-break-with-attributes-remains-source",
+      "raw-html"
+    ]
+  },
+  "acceptance": [
+    "The pinned fixture renders attribute-free inline br, br/, and br / tags as Markdown hard breaks, including when the source uses CRLF.",
+    "Attribute-bearing break tags, script HTML, and every other raw HTML form remain in the literal source-only fallback.",
+    "The UI renders both sides of an inline break from a temporary preview projection and preserves the original source bytes.",
+    "Focused Rust tests and all seven required GitHub Actions workflows pass on the exact source SHA across Ubuntu, macOS, and Windows."
+  ],
+  "required_workflows": {
+    "rust_ci": {
+      "run_id": 38064579873,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114249521608,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/job/114249521608"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114249521825,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/job/114249521825"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114249521845,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/job/114249521845"
+        }
+      ]
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38064610431,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064610431",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114249610622,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064610431/job/114249610622"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114249610802,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064610431/job/114249610802"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114249610855,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064610431/job/114249610855"
+        }
+      ]
+    },
+    "inventory": {
+      "run_id": 38064579801,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579801",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114249521369,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579801/job/114249521369"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "run_id": 38064579830,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579830",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114249521570,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579830/job/114249521570"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114249521706,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579830/job/114249521706"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114249521731,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579830/job/114249521731"
+        }
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38064579790,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579790",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114249521324,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579790/job/114249521324"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114249521415,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579790/job/114249521415"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114249521448,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579790/job/114249521448"
+        }
+      ]
+    },
+    "quality": {
+      "run_id": 38064579782,
+      "attempt": 2,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579782",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114249880921,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579782/job/114249880921"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114249881549,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579782/job/114249881549"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114249882076,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579782/job/114249882076"
+        }
+      ]
+    },
+    "plugin_renderer": {
+      "run_id": 38064579845,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579845",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114249521689,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579845/job/114249521689"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114249521823,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579845/job/114249521823"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114249521935,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579845/job/114249521935"
+        }
+      ]
+    }
+  },
+  "failed_attempts": [
+    {
+      "source_sha": "fa0ff45597f546b34d03a0aa89e0ff6829491d47",
+      "workflow": "OpenObsidian quality",
+      "run_id": 38064239363,
+      "conclusion": "failure",
+      "reason": "The TypeScript fixture contract expected the legacy top-level visible_unsupported_blocks values. The correction restored that legacy list and kept the new safe HTML contract under rust_preview."
+    },
+    {
+      "source_sha": "8a6235def8b0ad6d0276995f1e295f86d1650278",
+      "workflow": "OpenObsidian quality",
+      "run_id": 38064579782,
+      "attempt": 1,
+      "conclusion": "failure",
+      "failed_job_id": 114249521464,
+      "reason": "The Ubuntu Electron vault audit saw local indexing complete at 1/1 passages but did not observe the expected retrieval status; the macOS and Windows jobs passed.",
+      "same_sha_rerun_attempt": 2,
+      "rerun_conclusion": "success"
+    }
+  ],
+  "toolchain": {
+    "rust_channel": "stable",
+    "markdown_renderer": "egui_commonmark 0.25.0",
+    "validation": "GitHub Actions only"
+  },
+  "artifacts": [
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11675225794,
+      "name": "rust-plugin-runtime-Linux-8a6235def8b0ad6d0276995f1e295f86d1650278",
+      "archive_sha256": "a064d806a9198858999587f89219f2df7fc58490bcfe39fff915c04ce716810b",
+      "size_bytes": 2695,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/artifacts/11675225794"
+    },
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11675011111,
+      "name": "openobsidian-rust-preview-8a6235def8b0ad6d0276995f1e295f86d1650278",
+      "archive_sha256": "e83583a6a6b8749fa7dd6b390a1f70b6484b7ec55aec299566f0a3435942b26d",
+      "size_bytes": 10748554,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/artifacts/11675011111"
+    },
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11674701556,
+      "name": "rust-plugin-runtime-macOS-8a6235def8b0ad6d0276995f1e295f86d1650278",
+      "archive_sha256": "b9774efc0a9994d30f435cb951e760458bc717224de683fbacd9681d6b890d6d",
+      "size_bytes": 2698,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/artifacts/11674701556"
+    },
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11674611995,
+      "name": "rust-plugin-runtime-Windows-8a6235def8b0ad6d0276995f1e295f86d1650278",
+      "archive_sha256": "f064003d382a29622824e6d4ce01b0603f10d3ce5ae66ecd356ad83b21fd1794",
+      "size_bytes": 2715,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38064579873/artifacts/11674611995"
+    }
+  ]
+}
