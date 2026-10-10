@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T07:07:40Z",
+  "updated_at": "2026-10-10T07:25:45Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a89574a0cfec01a20df9f525eff325a3d8a6139a",
-  "current_milestone": "R2.8.15",
-  "next_action": "R2.8.15 is accepted for C04.1. Select the next uncovered R2 requirement; broader C04, C02 and editor integration remain pending.",
+  "last_reconciled_head": "fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831",
+  "current_milestone": "R2.8.16",
+  "next_action": "R2.8.15 source and tracker checkpoint are accepted. Implement a bounded, read-only YAML projection for ordered property mappings and nested values; keep broader C04, C02 and editor integration pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -254,7 +254,7 @@
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
   ],
-  "push_status": "R2.8.12 source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21 is pushed to origin/main and all seven required workflows passed on the exact SHA. Evidence is recorded in evidence/r2.8.12-unicode-normalization-6edc297.json. The R2.8.12 evidence/state tracker checkpoint is pending; all eleven SYNC-004 scenarios now have executable Rust coverage and SYNC-004 is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending.",
+  "push_status": "R2.8.15 implementation SHA a89574a0cfec01a20df9f525eff325a3d8a6139a and tracker checkpoint fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831 are on origin/main. All seven required source workflows passed on a89574a; all six path-eligible tracker workflows passed on fa9bbed. Evidence: evidence/r2.8.15-c04-unknown-preservation-a89574a.json. R2.8.16 bounded YAML projection is in progress; broader C04, C02 and editor integration remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16091,7 +16091,28 @@
         }
       ],
       "evidence": "evidence/r2.8.15-c04-unknown-preservation-a89574a.json",
-      "next_action": "Commit and push the accepted C04.1 evidence/state tracker checkpoint, wait for path-eligible workflows, then select the next uncovered R2 requirement."
+      "next_action": "Tracker checkpoint fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831 passed all six path-eligible workflows; continue with the bounded C04 YAML projection in R2.8.16."
+    },
+    "R2.8.16": {
+      "status": "in_progress",
+      "starting_sha": "fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831",
+      "scope": "Add a bounded, read-only YAML projection for Markdown frontmatter that retains ordered mappings and distinguishes supported scalar and collection types without changing the original source.",
+      "accepted_slice": [
+        "C04:bounded-yaml-projection"
+      ],
+      "remaining": [
+        "Full C04 property semantics, aliases/tags, and the remaining source-preserving fixtures are still pending.",
+        "C02/C02.1 dialect rendering and editor integration remain pending."
+      ],
+      "acceptance": [
+        "The projection preserves mapping order and represents supported null, boolean, number, string, sequence, and mapping values.",
+        "Unsupported aliases, tags, block scalars, malformed flow values, and excessive nesting are reported and remain source-only; the projection cannot serialize over Markdown.",
+        "The fixture verifies comments, scalar types, arrays, nested mappings/sequences, unknown keys, BOM, CRLF, and byte-identical source after projection.",
+        "All seven required GitHub Actions workflows pass on the exact source SHA; all testing and executable validation run in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "next_action": "Commit and push the fixture-backed Rust YAML projection for exact-SHA GitHub Actions validation; keep the broader C04 requirement pending."
     }
   },
   "ci_preparation": {

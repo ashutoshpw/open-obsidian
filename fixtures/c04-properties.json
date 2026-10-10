@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c04-properties",
+  "purpose": "Exercise the bounded Rust YAML projection while keeping original Markdown bytes authoritative.",
+  "invariants": {
+    "source_bom_and_crlf_are_retained": true,
+    "top_level_property_order_is_retained": true,
+    "scalar_types_are_distinguished": true,
+    "flow_and_block_sequences_are_projected": true,
+    "nested_mappings_and_sequences_are_projected": true,
+    "unknown_keys_remain_in_the_projection": true,
+    "the_markdown_source_remains_byte_identical": true
+  },
+  "cases": [
+    {
+      "id": "mixed-frontmatter-types-and-nested-collections",
+      "before": "\uFEFF---\r\n# YAML comment retained\r\ntitle: \"A stable title\" # title comment\r\nquoted: 'owner''s title'\r\nrank: 7\r\nratio: 2.5\r\nenabled: true\r\npublished: null\r\ndate: 2026-10-10\r\ntags: [project, rust, 'two, words']\r\ncssclasses:\r\n  - wide\r\n  - readable\r\nmetadata:\r\n  owner: Alice\r\n  flags: [one, {key: two}]\r\nrelated:\r\n  - id: first\r\n    labels: [a, b]\r\n  - id: second\r\n    enabled: false\r\nunknown: {nested: [keep, 9], stay: true}\r\naliases: &names [first, second]\r\nalias-copy: *names\r\nopaque: !future/metadata {keep: [value, 7]}\r\nsummary: |-\r\n  retained block\r\n---\r\nBody\r\n",
+      "expected_issues": [
+        "line 22: YAML aliases and tags remain source-only",
+        "line 23: YAML aliases and tags remain source-only",
+        "line 24: YAML aliases and tags remain source-only",
+        "line 25: YAML block scalars remain source-only"
+      ],
+      "expected_entries": [
+        {"key": "title", "value": {"type": "string", "value": "A stable title"}},
+        {"key": "quoted", "value": {"type": "string", "value": "owner's title"}},
+        {"key": "rank", "value": {"type": "number", "value": "7"}},
+        {"key": "ratio", "value": {"type": "number", "value": "2.5"}},
+        {"key": "enabled", "value": {"type": "boolean", "value": true}},
+        {"key": "published", "value": {"type": "null"}},
+        {"key": "date", "value": {"type": "string", "value": "2026-10-10"}},
+        {"key": "tags", "value": {"type": "sequence", "items": [
+          {"type": "string", "value": "project"},
+          {"type": "string", "value": "rust"},
+          {"type": "string", "value": "two, words"}
+        ]}},
+        {"key": "cssclasses", "value": {"type": "sequence", "items": [
+          {"type": "string", "value": "wide"},
+          {"type": "string", "value": "readable"}
+        ]}},
+        {"key": "metadata", "value": {"type": "mapping", "entries": [
+          {"key": "owner", "value": {"type": "string", "value": "Alice"}},
+          {"key": "flags", "value": {"type": "sequence", "items": [
+            {"type": "string", "value": "one"},
+            {"type": "mapping", "entries": [
+              {"key": "key", "value": {"type": "string", "value": "two"}}
+            ]}
+          ]}}
+        ]}},
+        {"key": "related", "value": {"type": "sequence", "items": [
+          {"type": "mapping", "entries": [
+            {"key": "id", "value": {"type": "string", "value": "first"}},
+            {"key": "labels", "value": {"type": "sequence", "items": [
+              {"type": "string", "value": "a"},
+              {"type": "string", "value": "b"}
+            ]}}
+          ]},
+          {"type": "mapping", "entries": [
+            {"key": "id", "value": {"type": "string", "value": "second"}},
+            {"key": "enabled", "value": {"type": "boolean", "value": false}}
+          ]}
+        ]}},
+        {"key": "unknown", "value": {"type": "mapping", "entries": [
+          {"key": "nested", "value": {"type": "sequence", "items": [
+            {"type": "string", "value": "keep"},
+            {"type": "number", "value": "9"}
+          ]}},
+          {"key": "stay", "value": {"type": "boolean", "value": true}}
+        ]}},
+        {"key": "aliases", "value": {"type": "unsupported", "value": "&names [first, second]"}},
+        {"key": "alias-copy", "value": {"type": "unsupported", "value": "*names"}},
+        {"key": "opaque", "value": {"type": "unsupported", "value": "!future/metadata {keep: [value, 7]}"}},
+        {"key": "summary", "value": {"type": "unsupported", "value": "|-"}}
+      ]
+    },
+    {
+      "id": "malformed-flow-value-remains-source-only",
+      "before": "---\nvalue: [broken, {nested: 1]\n---\nBody\n",
+      "expected_issues": [
+        "line 1: malformed inline YAML collection remains source-only"
+      ],
+      "expected_entries": [
+        {"key": "value", "value": {"type": "unsupported", "value": "[broken, {nested: 1]"}}
+      ]
+    }
+  ]
+}

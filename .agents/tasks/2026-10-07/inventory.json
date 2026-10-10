@@ -1391,6 +1391,16 @@
       "fixture_reader": "crates/testkit"
     },
     {
+      "path": "fixtures/c04-properties.json",
+      "sha256": "fa13c1e63094310ed24dbbc37bd166303e5516c237f944f395f850a2c43ce3ab",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Read-only YAML projection retains property order, scalar types, nested collections, and the original Markdown source bytes.",
+      "fixture_reader": "crates/testkit"
+    },
+    {
       "path": "fixtures/c04-unknown-preservation.json",
       "sha256": "883ea7773a4876cc52eb159b00a58f5391178e5ada1c8e24b6bf2377c35fe169",
       "rust_owner": "crates/doc",

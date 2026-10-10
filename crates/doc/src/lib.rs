@@ -1,8 +1,10 @@
 //! Lossless document values shared by the vault engine and native UI.
 
 mod merge;
+mod yaml;
 
 pub use merge::{MergeConflict, MergeStatus, ThreeWayMergeResult, three_way_merge_bytes};
+pub use yaml::{YamlMappingEntry, YamlParseResult, YamlValue};
 
 use std::collections::HashMap;
 
@@ -333,6 +335,20 @@ impl MarkdownSource {
             return Vec::new();
         };
         frontmatter_properties(self.raw.as_bytes(), bounds.content)
+    }
+
+    /// Project the supported YAML frontmatter mapping without changing source bytes.
+    ///
+    /// The returned view preserves mapping order and scalar types. Unsupported
+    /// aliases, tags, block scalars, and malformed constructs are reported in
+    /// `issues` and retained as opaque values; this API has no serializer.
+    pub fn parse_frontmatter_yaml(&self) -> YamlParseResult {
+        let Some(bounds) = self.frontmatter_bounds() else {
+            return YamlParseResult::empty();
+        };
+        let content = std::str::from_utf8(&self.raw.as_bytes()[bounds.content.start..bounds.content.end])
+            .expect("MarkdownSource frontmatter is validated UTF-8");
+        yaml::parse_mapping(content)
     }
 
     /// Render an edit to one existing top-level frontmatter property.

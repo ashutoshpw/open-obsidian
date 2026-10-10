@@ -1035,15 +1035,101 @@ mod existing_vault_no_op_tests {
 
 #[cfg(test)]
 mod c02_byte_roundtrip_fixture_tests {
-    use openobsidian_doc::{MarkdownPropertyEditError, MarkdownSource};
+    use openobsidian_doc::{
+        MarkdownPropertyEditError, MarkdownSource, YamlMappingEntry, YamlValue,
+    };
     use serde_json::Value;
 
     const C02_BYTE_ROUNDTRIP_FIXTURE: &str =
         include_str!("../../../fixtures/c02-byte-roundtrip.json");
     const C04_UNKNOWN_PRESERVATION_FIXTURE: &str =
         include_str!("../../../fixtures/c04-unknown-preservation.json");
+    const C04_PROPERTIES_FIXTURE: &str = include_str!("../../../fixtures/c04-properties.json");
     const RISK_NORMALIZATION_FIXTURE: &str =
         include_str!("../../../fixtures/risk-normalization.json");
+
+    fn assert_yaml_entries(actual: &[YamlMappingEntry], expected: &Value, case_id: &str) {
+        let expected_entries = expected
+            .as_array()
+            .expect("fixture YAML entries must be an array");
+        assert_eq!(actual.len(), expected_entries.len(), "{case_id}: entry count");
+
+        for (actual, expected) in actual.iter().zip(expected_entries) {
+            assert_eq!(
+                actual.key.as_str(),
+                expected["key"].as_str().expect("fixture entry must name a key"),
+                "{case_id}: ordered mapping key"
+            );
+            assert_yaml_value(&actual.value, &expected["value"], case_id);
+        }
+    }
+
+    fn assert_yaml_value(actual: &YamlValue, expected: &Value, case_id: &str) {
+        match expected["type"]
+            .as_str()
+            .expect("fixture YAML value must specify a type")
+        {
+            "null" => assert_eq!(actual, &YamlValue::Null, "{case_id}: null"),
+            "boolean" => assert_eq!(
+                actual,
+                &YamlValue::Boolean(
+                    expected["value"]
+                        .as_bool()
+                        .expect("fixture boolean must be a JSON boolean")
+                ),
+                "{case_id}: boolean"
+            ),
+            "number" => assert_eq!(
+                actual,
+                &YamlValue::Number(
+                    expected["value"]
+                        .as_str()
+                        .expect("fixture number must retain its source spelling")
+                        .to_owned()
+                ),
+                "{case_id}: number"
+            ),
+            "string" => assert_eq!(
+                actual,
+                &YamlValue::String(
+                    expected["value"]
+                        .as_str()
+                        .expect("fixture string must be a string")
+                        .to_owned()
+                ),
+                "{case_id}: string"
+            ),
+            "sequence" => {
+                let YamlValue::Sequence(actual_items) = actual else {
+                    panic!("{case_id}: expected a YAML sequence, got {actual:?}");
+                };
+                let expected_items = expected["items"]
+                    .as_array()
+                    .expect("fixture sequence items must be an array");
+                assert_eq!(actual_items.len(), expected_items.len(), "{case_id}: sequence length");
+                for (actual, expected) in actual_items.iter().zip(expected_items) {
+                    assert_yaml_value(actual, expected, case_id);
+                }
+            }
+            "mapping" => {
+                let YamlValue::Mapping(actual_entries) = actual else {
+                    panic!("{case_id}: expected a YAML mapping, got {actual:?}");
+                };
+                assert_yaml_entries(actual_entries, &expected["entries"], case_id);
+            }
+            "unsupported" => assert_eq!(
+                actual,
+                &YamlValue::Unsupported(
+                    expected["value"]
+                        .as_str()
+                        .expect("fixture unsupported value must retain raw syntax")
+                        .to_owned()
+                ),
+                "{case_id}: unsupported source-only value"
+            ),
+            unsupported_type => panic!("{case_id}: unsupported fixture YAML type {unsupported_type}"),
+        }
+    }
 
     #[test]
     fn c02_markdown_property_edits_change_only_fixture_approved_bytes() {
@@ -1263,5 +1349,64 @@ mod c02_byte_roundtrip_fixture_tests {
                 "{case_id}: comments, order, nested values, and following bytes must remain identical"
             );
         }
+    }
+
+    #[test]
+    fn c04_bounded_yaml_projection_keeps_order_types_and_original_source_bytes() {
+        let fixture: Value = serde_json::from_str(C04_PROPERTIES_FIXTURE)
+            .expect("C04 properties fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:c04-properties");
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
+
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let before = case["before"]
+                .as_str()
+                .expect("fixture case must have source bytes");
+            let source = MarkdownSource::parse(before.as_bytes().to_vec())
+                .unwrap_or_else(|error| panic!("{case_id}: fixture must be UTF-8: {error}"));
+            let parsed = source.parse_frontmatter_yaml();
+            let expected_issues = case["expected_issues"]
+                .as_array()
+                .expect("fixture issues must be an array")
+                .iter()
+                .map(|issue| issue.as_str().expect("fixture issue must be a string").to_owned())
+                .collect::<Vec<_>>();
+
+            assert_eq!(parsed.issues, expected_issues, "{case_id}: parser issues");
+            assert_yaml_entries(&parsed.entries, &case["expected_entries"], case_id);
+            assert_eq!(source.as_bytes(), before.as_bytes(), "{case_id}: source bytes");
+            let round_trip = source.clone().into_bytes();
+            assert_eq!(round_trip.as_slice(), before.as_bytes(), "{case_id}: no-op round trip");
+        }
+    }
+
+    #[test]
+    fn c04_excessive_yaml_nesting_is_reported_and_source_remains_unchanged() {
+        let nested_value = format!("{}item{}", "[".repeat(80), "]".repeat(80));
+        let markdown = format!("---\nvalue: {nested_value}\n---\n");
+        let source = MarkdownSource::parse(markdown.as_bytes().to_vec())
+            .expect("generated Markdown frontmatter must be UTF-8");
+        let parsed = source.parse_frontmatter_yaml();
+
+        assert_eq!(parsed.entries.len(), 1);
+        assert!(parsed.issues.iter().any(|issue| {
+            issue.contains("YAML nesting exceeds the supported depth")
+        }));
+        assert_eq!(source.as_bytes(), markdown.as_bytes());
+        let round_trip = source.clone().into_bytes();
+        assert_eq!(round_trip.as_slice(), markdown.as_bytes());
     }
 }
