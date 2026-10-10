@@ -7000,7 +7000,8 @@ mod tests {
         }));
         harness.get_by_label("Note transclusions");
         harness.get_by_label("Rendered transcluded heading");
-        harness.get_by_label("formatted paragraph");
+        harness.get_by_label("Unsupported Markdown (wiki links); showing the source as written.");
+        harness.get_by_label("Opening **formatted paragraph** ![[Unique]]");
         harness.get_by_label("Not rendered: this embed would create a cycle. ![[Unique]]");
         harness.get_by_label(
             "Not rendered: this attachment type or size is outside the safe image preview limits. ![[Assets/plot.svg]]",

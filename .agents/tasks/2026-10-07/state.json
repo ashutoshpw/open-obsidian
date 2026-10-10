@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T09:28:53Z",
+  "updated_at": "2026-10-10T09:34:19Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a787fe65c5035d784f95de8b7bf2aa62c05f57b8",
+  "last_reconciled_head": "26eb1df2c180d2516ee5e78e4ae13e5098829dd7",
   "current_milestone": "R2.8.20",
-  "next_action": "Push the follow-up CI-guided R2.8.20 source-marker correction, then inspect exact-SHA GitHub Actions results before accepting this bounded slice. Keep C02.1 pending until the full dialect and editing contract is implemented.",
+  "next_action": "Push the CI-guided R2.8.20 UI expectation correction, then inspect exact-SHA GitHub Actions results before accepting this bounded slice. Keep C02.1 pending until the full dialect and editing contract is implemented.",
   "blockers": [],
   "phases": {
     "R0": {
