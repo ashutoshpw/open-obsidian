@@ -871,7 +871,7 @@ impl OpenObsidianApp {
                             preview.revision_sha256.as_ref(),
                         ) {
                             ui.label("Markdown source editor");
-                            ui.add(
+                            let editor_response = ui.add(
                                 eframe::egui::TextEdit::multiline(draft)
                                     .id_salt("markdown-source-editor")
                                     .font(eframe::egui::TextStyle::Monospace)
@@ -879,6 +879,10 @@ impl OpenObsidianApp {
                                     .desired_width(f32::INFINITY)
                                     .cursor_at_end(true),
                             );
+                            ui.ctx()
+                                .accesskit_node_builder(editor_response.id, |node| {
+                                    node.set_label("Markdown source editor");
+                                });
                             let source_bytes = draft.as_bytes().to_vec();
                             let draft_fits_limit = source_bytes.len()
                                 <= MAX_NOTE_SOURCE_PREVIEW_BYTES;
@@ -3354,12 +3358,24 @@ mod tests {
             Some(source)
         );
         harness
-            .state_mut()
-            .note_source_preview
-            .as_mut()
-            .expect("source preview remains visible while editing the table")
-            .source_draft = Some(expected.to_owned());
+            .get_by_role_and_label(
+                eframe::egui::accesskit::Role::TextInput,
+                "Markdown source editor",
+            )
+            .click();
         harness.step();
+        harness.key_press_modifiers(eframe::egui::Modifiers::COMMAND, eframe::egui::Key::A);
+        harness.step();
+        harness.event(eframe::egui::Event::Paste(expected.to_owned()));
+        harness.step();
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(expected)
+        );
         harness.get_by_label("Save source edits").click();
         harness.step();
         wait_for_note_preview_write(&mut harness);
