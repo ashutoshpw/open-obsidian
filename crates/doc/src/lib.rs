@@ -1,9 +1,14 @@
 //! Lossless document values shared by the vault engine and native UI.
 
 mod merge;
+mod markdown_preview;
 mod yaml;
 
 pub use merge::{MergeConflict, MergeStatus, ThreeWayMergeResult, three_way_merge_bytes};
+pub use markdown_preview::{
+    MarkdownPreviewAnalysis, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
+    analyze_markdown_preview,
+};
 pub use yaml::{YamlMappingEntry, YamlParseResult, YamlValue};
 
 use std::collections::HashMap;

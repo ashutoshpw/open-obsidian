@@ -3,8 +3,9 @@
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
-    LinkSubpathSlice, LinkSubpathStatus, MergeConflict, MergeStatus, ThreeWayMergeResult,
-    TransclusionBlockReason, TransclusionGuard,
+    LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
+    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, ThreeWayMergeResult,
+    TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,

@@ -3,12 +3,12 @@
 use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use openobsidian_engine::{
     LinkKind, LinkRenameAction, LinkResolutionStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES,
-    TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
-    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
-    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport,
-    plan_history_retention,
+    MarkdownPreviewDisposition, TransclusionBlockReason, VaultConflictAction, VaultConflictRead,
+    VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan,
+    VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
+    VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
+    VaultRenameRecoveryReport, VaultRenameResult, VaultSession, VaultWatcher,
+    VaultWriteRecoveryReport, analyze_markdown_preview, plan_history_retention,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -1930,6 +1930,34 @@ fn note_source_preview_error(error: VaultError) -> String {
     }
 }
 
+fn show_markdown_preview(
+    ui: &mut eframe::egui::Ui,
+    markdown_cache: &mut CommonMarkCache,
+    source: &str,
+) {
+    let analysis = analyze_markdown_preview(source);
+    match analysis.disposition() {
+        MarkdownPreviewDisposition::RenderMarkdown => {
+            CommonMarkViewer::new().show(ui, markdown_cache, source);
+        }
+        MarkdownPreviewDisposition::ShowSource => {
+            let unsupported = analysis
+                .unsupported()
+                .iter()
+                .map(|syntax| syntax.label())
+                .collect::<Vec<_>>()
+                .join(", ");
+            ui.colored_label(
+                eframe::egui::Color32::YELLOW,
+                format!(
+                    "Unsupported Markdown ({unsupported}); showing the source as written."
+                ),
+            );
+            ui.monospace(source);
+        }
+    }
+}
+
 fn note_embed_error(error: VaultError) -> String {
     match error {
         VaultError::LinkResolutionSnapshotChanged | VaultError::SnapshotChanged => {
@@ -1981,7 +2009,7 @@ fn show_note_embed_node(
                     while !text.is_char_boundary(end) {
                         end -= 1;
                     }
-                    CommonMarkViewer::new().show(ui, markdown_cache, &text[..end]);
+                    show_markdown_preview(ui, markdown_cache, &text[..end]);
                     if end < text.len() {
                         ui.small("Transcluded text preview shortened to 16 KiB.");
                     }
@@ -2439,6 +2467,20 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
+    }
+
+    #[test]
+    fn egui_shows_original_source_and_reason_for_unsupported_markdown_preview() {
+        let source = "<script>unsafe()</script>";
+        let mut markdown_cache = CommonMarkCache::default();
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("Unsupported Markdown (raw HTML); showing the source as written.");
+        harness.get_by_label(source);
     }
 
     #[test]

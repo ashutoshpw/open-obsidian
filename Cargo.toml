@@ -23,6 +23,8 @@ egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
 egui_kittest = { version = "0.36", default-features = false }
 # Photocraft-aligned native file and folder dialogs.
 rfd = "0.17"
+# OpenObsidian-specific read-only Markdown dialect preflight (MIT).
+pulldown-cmark = { version = "=0.13.4", default-features = false }
 
 # OpenObsidian-specific: SHA-256 preserves the existing vault revision contract.
 sha2 = "0.10"

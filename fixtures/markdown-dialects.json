@@ -1,12 +1,125 @@
 {
   "schema_version": 1,
+  "id": "fixture:c02-dialects",
   "name": "safe-markdown-preview-dialects",
-  "supported_blocks": ["headings", "setext-headings", "tasks", "unordered-lists", "ordered-lists", "tables", "callouts", "fenced-code", "thematic-breaks", "inline-formatting", "wiki-links", "highlights"],
-  "visible_unsupported_blocks": ["footnotes", "math", "diagrams", "raw-html"],
+  "target_supported_blocks": [
+    "headings",
+    "setext-headings",
+    "tasks",
+    "unordered-lists",
+    "ordered-lists",
+    "tables",
+    "callouts",
+    "fenced-code",
+    "thematic-breaks",
+    "inline-formatting",
+    "wiki-links",
+    "highlights"
+  ],
+  "visible_unsupported_blocks": [
+    "footnotes",
+    "math",
+    "diagrams",
+    "raw-html",
+    "wiki-links",
+    "highlights"
+  ],
   "invariants": {
     "source_bytes_remain_authoritative": true,
     "preview_uses_text_content_for_untrusted_source": true,
     "code_and_diagram_execution": false,
     "unknown_syntax_is_not_silently_rewritten": true
+  },
+  "rust_preview": {
+    "renderer": "egui_commonmark 0.25.0",
+    "rendered_blocks": [
+      "headings",
+      "setext-headings",
+      "tasks",
+      "unordered-lists",
+      "ordered-lists",
+      "tables",
+      "standard-alert-callouts",
+      "fenced-code",
+      "thematic-breaks",
+      "inline-formatting"
+    ],
+    "source_only_blocks": [
+      "footnotes",
+      "math",
+      "diagrams",
+      "raw-html",
+      "wiki-links",
+      "highlights"
+    ],
+    "fallback": "If a known source-only construct is present, show the bounded original source slice as monospace text and name the unsupported syntax. Do not write or normalize the source.",
+    "cases": [
+      {
+        "id": "commonmark-basics",
+        "source": "# Heading\n\nSubheading\n---\n\n- [x] Task\n\n| Name | Value |\n| --- | --- |\n| note | 3 |\n\n> [!NOTE] Safe callout\n\n~~~rust\nfn main() {}\n~~~\n\n**bold** ~~strike~~",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
+      },
+      {
+        "id": "footnote",
+        "source": "A reference[^one].\n\n[^one]: Original footnote body.",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["footnotes"]
+      },
+      {
+        "id": "inline-and-display-math",
+        "source": "Inline $a + b$.\n\n$$\nc = 3\n$$",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["math"]
+      },
+      {
+        "id": "legacy-delimited-math",
+        "source": "Legacy \\[x^2\\] and \\(y+1\\).",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["math"]
+      },
+      {
+        "id": "mermaid-diagram",
+        "source": "~~~mermaid title=flow\nflowchart TD\n  A --> B\n~~~",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["diagrams"]
+      },
+      {
+        "id": "raw-html",
+        "source": "<script>alert('not executed')</script>",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["raw-html"]
+      },
+      {
+        "id": "wiki-link",
+        "source": "See [[Project plan|the plan]].",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["wiki-links"]
+      },
+      {
+        "id": "highlight",
+        "source": "Keep ==this phrase== visible.",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["highlights"]
+      },
+      {
+        "id": "mixed-supported-and-unsupported",
+        "source": "# Kept as source\n\n<script>unsafe()</script>\n\nA formula $x$.",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["raw-html", "math"]
+      },
+      {
+        "id": "literal-markers-inside-code",
+        "source": "Inline \u0060[[page]] ==mark== <script>[^one] $x$\u0060.\n\n~~~text\n[[page]] ==mark== <script>[^one] $x$\n~~~",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
+      },
+      {
+        "id": "unknown-markup-remains-literal",
+        "source": "%% Unknown extension text stays in source.",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
+      }
+    ]
   }
 }

@@ -9,4 +9,5 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+pulldown-cmark = { workspace = true }
 serde_json = { workspace = true }

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T09:06:34Z",
+  "updated_at": "2026-10-10T09:16:29Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "aec570dc4836ba6f8a9dc2f9fc3c4cdf5f80a08b",
-  "current_milestone": "R2.8.19",
-  "next_action": "C04 property preservation is accepted on caa403719337508bc3776403e87026c979453788. Begin R2.8.20 by defining the first Rust C02.1 safe-preview dialect slice from the tracked Markdown fixture; keep full C02 editing and workspace integration pending.",
+  "last_reconciled_head": "74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62",
+  "current_milestone": "R2.8.20",
+  "next_action": "R2.8.20 is prepared locally: add a read-only dialect preflight, source-only fallback for unsupported preview syntax, UI evidence, and fixture cases. Commit and push this bounded implementation, then inspect exact-SHA GitHub Actions results. Keep C02.1 pending until the full dialect and editing contract is implemented.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -254,7 +254,7 @@
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
   ],
-  "push_status": "R2.8.17 source SHA 85325d65d4fbd25eb9ee663525128ff661e0a3ab passed all seven required workflows; tracker checkpoint SHA 981fd0d8e08bbffd99d95e54a8996cc271e37a25 passed all six path-eligible workflows. Both commits are on origin/main. R2.8.17 plain YAML mapping-key coverage is complete; broader C04, C02/C02.1 and editor integration remain pending.",
+  "push_status": "R2.8.19 tracker checkpoint SHA 74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62 is on origin/main. All six path-eligible workflows passed: Rust CI 38040236585, quality 38040236607, desktop build 38040236631, loaded-plugin workflows 38040236532, inventory 38040236595, and plugin renderer 38040236529. Obsidian vault round-trip was not path-eligible for the tracker-only change. The C04 implementation remains validated on caa403719337508bc3776403e87026c979453788. R2.8.20 is locally prepared and awaits exact-SHA CI; C02.1 remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16320,7 +16320,24 @@
         "plugin_renderer": 38039225348
       },
       "evidence": "evidence/r2.8.19-c04-properties-acceptance-caa4037.json",
-      "next_action": "C04 is accepted. Start R2.8.20 by defining and implementing the first bounded Rust C02.1 safe-preview dialect slice; full C02 editing and workspace integration remain pending."
+      "next_action": "C04 is accepted. R2.8.20 is the first bounded Rust C02.1 safe-preview slice; full C02 editing and workspace integration remain pending."
+    },
+    "R2.8.20": {
+      "status": "in_progress",
+      "starting_sha": "74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62",
+      "scope": "Add a read-only Rust Markdown dialect preflight to the document layer and use it to choose between the existing native renderer and a visible source-only fallback for unsupported transclusion syntax.",
+      "accepted_slice": [],
+      "acceptance": [
+        "Golden cases classify supported CommonMark preview content and known unsupported footnotes, math, diagram/plugin fences, raw HTML, wiki links, and highlights; marker-like text inside code is not misclassified.",
+        "The native UI continues rendering the current CommonMark subset and displays the bounded source slice plus an explicit reason when unsupported syntax appears. Previewing does not change vault source bytes.",
+        "The pinned pulldown-cmark 0.13.4 dependency, MIT license, renderer relationship, and known limitations are documented.",
+        "All required GitHub Actions workflows for the exact implementation SHA pass; formatting, tests, Clippy, layering, builds, and executable validation run only in GitHub Actions."
+      ],
+      "implementation_commits": [],
+      "validated_source_sha": null,
+      "ci_runs": {},
+      "evidence": null,
+      "next_action": "Commit and push the prepared implementation to origin/main. Inspect every required workflow for that exact source SHA, correct CI findings in small commits, and keep C02.1 pending because full dialect rendering/editing remains incomplete."
     }
   },
   "ci_preparation": {
