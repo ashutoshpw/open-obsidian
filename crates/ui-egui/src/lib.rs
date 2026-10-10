@@ -3856,10 +3856,9 @@ mod tests {
             .expect("Markdown dialect fixture must be valid JSON");
         let temporary = UiTempDir::new();
 
-        for (scenario_index, case_id) in
-            ["embedded_wiki_link_preview", "subpath_wiki_link_preview"]
-                .into_iter()
-                .enumerate()
+        for (scenario_index, case_id) in ["embedded_wiki_link_preview", "subpath_wiki_link_preview"]
+            .into_iter()
+            .enumerate()
         {
             let case = &fixture["rust_preview"][case_id];
             let source_path = case["source_path"]
