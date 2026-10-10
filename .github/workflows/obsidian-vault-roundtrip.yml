@@ -79,13 +79,14 @@ jobs:
               if (-not $imageMagick) { throw 'ImageMagick magick.exe was not installed under Program Files' }
               (Split-Path $imageMagick) | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-
-      - name: Cache Cargo outputs
-        uses: Swatinem/rust-cache@v2
+      # Bun setup and Cargo cache restore use independent tools and paths.
+      - parallel:
+          - name: Set up Bun
+            uses: oven-sh/setup-bun@v2
+            with:
+              bun-version-file: package.json
+          - name: Cache Cargo outputs
+            uses: Swatinem/rust-cache@v2
 
       # The pinned Obsidian extraction and Rust build write to separate directories.
       - parallel:
