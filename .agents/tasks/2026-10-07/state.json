@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T00:17:25Z",
+  "updated_at": "2026-10-10T00:21:45Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bc7cd91d1ef356340614867ca33c3d2ad39db29d",
+  "last_reconciled_head": "4717ddcd17b87a47be9962f02edcdb79efeb4525",
   "current_milestone": "R2.7.1",
-  "next_action": "Push the watcher and reconciliation slice, resolve Cargo.lock in GitHub Actions, then validate its exact SHA on all required workflows and platforms; keep SYNC-003 pending until CI passes.",
+  "next_action": "Push the resolved lockfile, inventory mapping and CI-requested formatting correction; then validate the corrected exact SHA across all required GitHub workflows and platforms.",
   "blockers": [],
   "phases": {
     "R0": {

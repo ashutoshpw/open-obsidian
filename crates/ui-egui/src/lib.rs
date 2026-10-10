@@ -1452,9 +1452,8 @@ impl OpenObsidianApp {
             }
             *next_reconciliation = now + VAULT_RECONCILIATION_INTERVAL;
         }
-        ui.ctx().request_repaint_after(
-            next_reconciliation.saturating_duration_since(now),
-        );
+        ui.ctx()
+            .request_repaint_after(next_reconciliation.saturating_duration_since(now));
 
         let operation_busy = self.vault_opening
             || self.vault_open_receiver.is_some()
@@ -2570,15 +2569,16 @@ mod tests {
 
     #[test]
     fn egui_reconciles_from_disk_after_a_sleep_or_reconnect_gap() {
-        let fixture: serde_json::Value =
-            serde_json::from_str(SYNC_WATCHER_RECOVERY_FIXTURE)
-                .expect("watcher recovery fixture must be valid JSON");
+        let fixture: serde_json::Value = serde_json::from_str(SYNC_WATCHER_RECOVERY_FIXTURE)
+            .expect("watcher recovery fixture must be valid JSON");
         assert_eq!(fixture["fixture_id"], "fixture:sync-watcher-recovery");
-        assert!(fixture["cases"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|case| case["id"] == "sleep"));
+        assert!(
+            fixture["cases"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|case| case["id"] == "sleep")
+        );
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("Resumed Vault");
         let app_data_path = temporary.0.join("App Data");
@@ -2613,10 +2613,12 @@ mod tests {
             .session
             .as_ref()
             .expect("resumed session remains open");
-        assert!(session
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path.as_path() == Path::new("After.md")));
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path.as_path() == Path::new("After.md"))
+        );
         assert_eq!(
             session.read("After.md").unwrap().document.as_bytes(),
             source_after_resume

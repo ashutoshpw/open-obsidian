@@ -2246,6 +2246,16 @@
       "migration_phase": "R2",
       "purpose": "Golden existing-vault fixture records arbitrary paths and bytes, source revision SHA-256, direct in-place opening, app-data boundary and read-only operation expectations.",
       "fixture_reader": "crates/ui-egui and crates/testkit"
+    },
+    {
+      "path": "fixtures/sync-watcher-recovery.json",
+      "sha256": "68f9e0effd96ce653ecf1a720d71d0d0f8231133c8ab1a60c2d8c21c66ace1cd",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Synthetic overflow, sleep and root-reconnect cases require disk-verified vault reconciliation.",
+      "fixture_reader": "crates/vault"
     }
   ],
   "spec_hashes": {

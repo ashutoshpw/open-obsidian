@@ -2,9 +2,9 @@
 
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher as NotifyWatcher};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Receiver, SyncSender, TryRecvError};
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 
@@ -68,8 +68,8 @@ impl VaultWatcher {
         let callback_rescan_pending = Arc::clone(&rescan_pending);
         let callback_root_change_pending = Arc::clone(&root_change_pending);
         let callback_root = root.clone();
-        let mut watcher = notify::recommended_watcher(move |result: Result<Event, notify::Error>| {
-            match result {
+        let mut watcher =
+            notify::recommended_watcher(move |result: Result<Event, notify::Error>| match result {
                 Ok(event) => {
                     if let Some(hint) = classify_event(&event, &callback_root) {
                         if hint == VaultWatchHint::RescanRequired {
@@ -78,11 +78,7 @@ impl VaultWatcher {
                         if event.paths.iter().any(|path| path == &callback_root) {
                             callback_root_change_pending.store(true, Ordering::Release);
                         }
-                        enqueue_hint(
-                            &callback_sender,
-                            &callback_rescan_pending,
-                            hint,
-                        );
+                        enqueue_hint(&callback_sender, &callback_rescan_pending, hint);
                     }
                 }
                 Err(_) => {
@@ -93,12 +89,11 @@ impl VaultWatcher {
                         VaultWatchHint::RescanRequired,
                     );
                 }
-            }
-        })
-        .map_err(|source| VaultWatchError::Initialize {
-            path: root.clone(),
-            source,
-        })?;
+            })
+            .map_err(|source| VaultWatchError::Initialize {
+                path: root.clone(),
+                source,
+            })?;
 
         if let Some(parent) = root.parent() {
             watcher
@@ -179,11 +174,7 @@ impl VaultWatcher {
     }
 }
 
-fn enqueue_hint(
-    sender: &SyncSender<()>,
-    rescan_pending: &AtomicBool,
-    hint: VaultWatchHint,
-) {
+fn enqueue_hint(sender: &SyncSender<()>, rescan_pending: &AtomicBool, hint: VaultWatchHint) {
     if hint == VaultWatchHint::RescanRequired {
         rescan_pending.store(true, Ordering::Release);
     }
@@ -268,10 +259,7 @@ mod tests {
         let root = Path::new("/vault");
         let event = Event::new(EventKind::Any).add_path(root.join("Note.md"));
 
-        assert_eq!(
-            classify_event(&event, root),
-            Some(VaultWatchHint::Changed)
-        );
+        assert_eq!(classify_event(&event, root), Some(VaultWatchHint::Changed));
     }
 
     #[test]
@@ -294,7 +282,10 @@ mod tests {
                 .collect::<Vec<_>>(),
             [Path::new("After.md"), Path::new("Before.md")]
         );
-        assert_eq!(root.read("After.md").unwrap().document.as_bytes(), b"after\r\n");
+        assert_eq!(
+            root.read("After.md").unwrap().document.as_bytes(),
+            b"after\r\n"
+        );
     }
 
     #[test]
