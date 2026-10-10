@@ -3354,6 +3354,7 @@ mod tests {
                 .and_then(|preview| preview.source_draft.as_deref()),
             Some(source)
         );
+        harness.step();
         harness
             .get_by_role_and_label(
                 eframe::egui::accesskit::Role::MultilineTextInput,
