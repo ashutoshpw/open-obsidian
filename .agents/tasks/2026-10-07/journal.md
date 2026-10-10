@@ -2660,4 +2660,6 @@ Accepted slice: attribute-bearing HTML breaks remain visible source-only. Full C
 
 ### R2.8.48 in progress — even-backslash highlight remains explicit source
 
-Use the existing `even-backslash-run-keeps-highlight-active` fixture to verify an active highlight opener after an even backslash run receives the unsupported-highlights fallback and displays the original source unchanged. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+Use the existing `even-backslash-run-keeps-highlight-active` fixture to verify an active highlight opener after an even backslash run receives the unsupported-highlights fallback and displays the original source unchanged. The fixture-driven egui case is added; push this focused slice for exact-SHA GitHub Actions. No executable validation runs locally.
+
+Starting from tracker checkpoint `4a325896501d2581e9770caa5d57bbb59349d1f1`, inventory [run 38079330150](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079330150), job 114292823765, passed.
