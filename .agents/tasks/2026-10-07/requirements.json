@@ -7687,7 +7687,11 @@
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI."
+      "migration_acceptance": "Preserve in-place vault bytes, path confinement, revisions, journaled writes and recovery; validate with synthetic vaults in GitHub CI.",
+      "status": "passing",
+      "evidence_paths": ["evidence/r2.8.2-revision-merge-638ba85.json"],
+      "tested_source_tree": "638ba85dd94826b77623a43709d458d13fa1c1e7",
+      "blocker": null
     },
     {
       "id": "SYNC-002",
