@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:20:21Z",
+  "updated_at": "2026-10-10T19:27:57Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "56c398d0f604219ed206ec95a322311e63dad6fc",
-  "current_milestone": "R2.8.48",
-  "next_action": "R2.8.47 is accepted on exact source SHA 56c398d0f604219ed206ec95a322311e63dad6fc; all seven required GitHub Actions workflows passed. R2.8.48 should verify an active highlight opener after an even backslash run uses a visible source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "8ae3b8acf636a35ccc18a12bf4914c365dedbb02",
+  "current_milestone": "R2.8.49",
+  "next_action": "R2.8.48 is accepted on exact source SHA 8ae3b8acf636a35ccc18a12bf4914c365dedbb02; all seven required GitHub Actions workflows passed. R2.8.49 should verify legacy delimited math is shown with an explicit source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "56c398d0f604219ed206ec95a322311e63dad6fc"
+      "implementation_sha": "8ae3b8acf636a35ccc18a12bf4914c365dedbb02"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.48 accepted: a highlight opener after an even backslash run remains active and receives the explicit source-only fallback without a partial highlight span. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 8ae3b8acf636a35ccc18a12bf4914c365dedbb02. Evidence: evidence/r2.8.48-even-backslash-highlight-fallback-8ae3b8a.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.47 accepted: an HTML line break with attributes remains source-only, displays a raw-HTML fallback message, and preserves the source. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 56c398d0f604219ed206ec95a322311e63dad6fc. Evidence: evidence/r2.8.47-html-break-attributes-source-only-56c398d.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.46 accepted: a highlight mixed with Markdown emphasis uses a visible source-only fallback without projecting a partial highlight. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 0df8f8ca8ea6181d1d665006d1bac478ca247064. Evidence: evidence/r2.8.46-mixed-formatting-highlight-fallback-0df8f8c.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.45 accepted: an escaped highlight opener remains literal in the native preview and produces no highlight span. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA ddaa4122c04e60cadd69825145e1f79fbb005f70. Attempt 1's cross-platform label assertion failure and correction are recorded in evidence. Evidence: evidence/r2.8.45-escaped-highlight-literal-ddaa412.json. C02.1 and phases R3-R7 remain pending.",
@@ -274,7 +275,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA 56c398d0f604219ed206ec95a322311e63dad6fc is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA 8ae3b8acf636a35ccc18a12bf4914c365dedbb02 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18762,7 +18763,7 @@
       "next_action": "R2.8.47 is accepted; continue with a fixture-backed check for an active highlight opener after an even backslash run in R2.8.48. Full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.48": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "4a325896501d2581e9770caa5d57bbb59349d1f1",
       "scope": "Verify a highlight opener preceded by an even backslash run stays active and uses the explicit source-only fallback.",
       "acceptance": [
@@ -18771,15 +18772,33 @@
         "The analyzer reports no partial highlight span after selecting source-only fallback.",
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
-      "implementation_commits": [],
-      "tracker_checkpoint": {
-        "sha": "4a325896501d2581e9770caa5d57bbb59349d1f1",
-        "inventory_run_id": 38079330150,
-        "inventory_job_id": 114292823765,
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38079330150"
+      "implementation_commits": [
+        "8ae3b8acf636a35ccc18a12bf4914c365dedbb02"
+      ],
+      "validated_source_sha": "8ae3b8acf636a35ccc18a12bf4914c365dedbb02",
+      "ci_runs": {
+        "inventory": 38079424869,
+        "loaded_plugins": 38079424891,
+        "desktop_build": 38079424876,
+        "quality": 38079424863,
+        "rust_ci": 38079424880,
+        "plugin_renderer": 38079424850,
+        "obsidian_vault_roundtrip": 38079424878
       },
-      "next_action": "The fixture-driven egui case now checks the even-backslash highlight fallback and source preservation. Push this focused slice for exact-SHA GitHub Actions."
+      "evidence": "evidence/r2.8.48-even-backslash-highlight-fallback-8ae3b8a.json",
+      "next_action": "R2.8.48 is accepted; continue with source-only coverage for legacy delimited math in R2.8.49. Full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.49": {
+      "status": "in_progress",
+      "starting_sha": "8ae3b8acf636a35ccc18a12bf4914c365dedbb02",
+      "scope": "Verify legacy delimited math uses a visible source-only fallback and preserves the original fixture source.",
+      "acceptance": [
+        "The existing legacy-delimited-math C02.1 fixture drives an egui preview test.",
+        "The preview identifies legacy math delimiters as unsupported and displays the original source unchanged.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
+      "implementation_commits": [],
+      "next_action": "Add fixture-driven egui coverage for legacy delimited math, then push for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

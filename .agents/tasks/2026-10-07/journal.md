@@ -2663,3 +2663,13 @@ Accepted slice: attribute-bearing HTML breaks remain visible source-only. Full C
 Use the existing `even-backslash-run-keeps-highlight-active` fixture to verify an active highlight opener after an even backslash run receives the unsupported-highlights fallback and displays the original source unchanged. The fixture-driven egui case is added; push this focused slice for exact-SHA GitHub Actions. No executable validation runs locally.
 
 Starting from tracker checkpoint `4a325896501d2581e9770caa5d57bbb59349d1f1`, inventory [run 38079330150](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079330150), job 114292823765, passed.
+
+### R2.8.48 accepted — even-backslash highlight stays active and source-only — source SHA `8ae3b8acf636a35ccc18a12bf4914c365dedbb02`
+
+The fixture-driven egui test confirms the highlight opener remains active after an even backslash run, the analyzer selects source-only fallback without retaining a partial span, and the preview displays the original source. The focused case passed on Ubuntu, macOS, and Windows. All seven workflows passed on this exact SHA: inventory [38079424869](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424869), loaded-plugin workflows [38079424891](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424891), desktop build [38079424876](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424876), quality [38079424863](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424863), Rust CI [38079424880](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424880), plugin renderer [38079424850](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424850), and Obsidian vault round-trip [38079424878](https://github.com/ashutoshpw/open-obsidian/actions/runs/38079424878). Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.48-even-backslash-highlight-fallback-8ae3b8a.json](evidence/r2.8.48-even-backslash-highlight-fallback-8ae3b8a.json). No local executable validation was used.
+
+Accepted slice: an active even-backslash highlight opener remains source-only when the syntax is unsupported. Full C02.1 and migration phases R3-R7 remain pending. Next: verify the legacy delimited math fixture's source-only fallback in R2.8.49.
+
+### R2.8.49 in progress — legacy delimited math uses source fallback
+
+Use the existing `legacy-delimited-math` fixture to verify the preview identifies legacy math delimiters as unsupported and displays the original source unchanged. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
