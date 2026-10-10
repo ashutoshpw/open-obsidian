@@ -2079,7 +2079,8 @@ mod tests {
     use super::{
         LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES,
         MarkdownSource, TransclusionBlockReason, VaultError, VaultHistoryKind,
-        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex,
+        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, path_to_slashes,
+        sha256_hex,
     };
     use openobsidian_doc::MergeStatus;
     use serde_json::Value;
@@ -3951,15 +3952,21 @@ mod tests {
             scenario["applicable_platforms"],
             serde_json::json!(["macOS", "Windows", "Linux"])
         );
-        assert!(scenario["macos_aliases_canonical_path_forms"]
-            .as_bool()
-            .unwrap());
-        assert!(scenario["windows_linux_keep_canonical_path_forms_distinct"]
-            .as_bool()
-            .unwrap());
+        assert!(
+            scenario["macos_aliases_canonical_path_forms"]
+                .as_bool()
+                .unwrap()
+        );
+        assert!(
+            scenario["windows_linux_keep_canonical_path_forms_distinct"]
+                .as_bool()
+                .unwrap()
+        );
 
-        let nfc_path = PathBuf::from(scenario["nfc_relative_path"].as_str().unwrap());
-        let nfd_path = PathBuf::from(scenario["nfd_relative_path"].as_str().unwrap());
+        let nfc_path_text = scenario["nfc_relative_path"].as_str().unwrap();
+        let nfd_path_text = scenario["nfd_relative_path"].as_str().unwrap();
+        let nfc_path = PathBuf::from(nfc_path_text);
+        let nfd_path = PathBuf::from(nfd_path_text);
         let nfc_bytes = scenario["nfc_bytes_utf8"].as_str().unwrap().as_bytes();
         let nfd_bytes = scenario["nfd_bytes_utf8"].as_str().unwrap().as_bytes();
         assert_ne!(nfc_path, nfd_path);
@@ -3987,21 +3994,11 @@ mod tests {
             fs::write(vault_temp.0.join(&nfd_path), nfd_bytes).unwrap();
             let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
             assert_eq!(
-                store
-                    .root()
-                    .read(&nfc_path)
-                    .unwrap()
-                    .document
-                    .as_bytes(),
+                store.root().read(&nfc_path).unwrap().document.as_bytes(),
                 nfc_bytes
             );
             assert_eq!(
-                store
-                    .root()
-                    .read(&nfd_path)
-                    .unwrap()
-                    .document
-                    .as_bytes(),
+                store.root().read(&nfd_path).unwrap().document.as_bytes(),
                 nfd_bytes
             );
             let snapshot = store.root().snapshot().unwrap();
@@ -4009,10 +4006,10 @@ mod tests {
             let paths = snapshot
                 .entries
                 .iter()
-                .map(|entry| entry.relative_path.to_str().unwrap())
+                .map(|entry| path_to_slashes(&entry.relative_path).unwrap())
                 .collect::<Vec<_>>();
-            assert!(paths.contains(&scenario["nfc_relative_path"].as_str().unwrap()));
-            assert!(paths.contains(&scenario["nfd_relative_path"].as_str().unwrap()));
+            assert!(paths.iter().any(|path| path == nfc_path_text));
+            assert!(paths.iter().any(|path| path == nfd_path_text));
         }
     }
 
