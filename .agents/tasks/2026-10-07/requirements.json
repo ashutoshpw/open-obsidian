@@ -2661,9 +2661,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.13-frontmatter-property-edit-530eaab.json"
+      ],
+      "tested_source_tree": "530eaab471052a74d72bbbf1af63695b6a0eec3e",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",

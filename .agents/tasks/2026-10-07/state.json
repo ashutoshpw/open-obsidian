@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T06:30:04Z",
+  "updated_at": "2026-10-10T06:38:25Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6b26869369a8d3788bafc8659b102fda19ee6bb9",
+  "last_reconciled_head": "530eaab471052a74d72bbbf1af63695b6a0eec3e",
   "current_milestone": "R2.8.13",
-  "next_action": "Commit and push the exact Ubuntu rustfmt correction reported by R2.8.13 attempt 2; accept the slice only after all seven required GitHub Actions workflows pass on the corrected exact source SHA. Broader R2 and editor integration remain pending.",
+  "next_action": "Commit and push the R2.8.13 evidence/state tracker checkpoint; wait for its path-eligible workflows, then continue with the next small R2 source-preservation slice. Broader R2 and editor integration remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "6edc2979f7a5434ee89c9dd4ce0d42ab38326f21"
+      "implementation_sha": "530eaab471052a74d72bbbf1af63695b6a0eec3e"
     },
     "R3": {
       "status": "pending",
@@ -15948,12 +15948,15 @@
       "next_action": "The R2.8.12 evidence checkpoint is on origin/main at 992dfe1 and its Rust CI plus all path-eligible tracker workflows passed; continue R2 with source-preserving Markdown property edits."
     },
     "R2.8.13": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "992dfe13fa6ac2265e6542608072c983dc13ab2a",
+      "implementation_sha": "530eaab471052a74d72bbbf1af63695b6a0eec3e",
       "scope": "Implement Rust source-preserving edits for represented top-level Markdown frontmatter properties and exercise the byte-span contract with a dedicated golden fixture.",
-      "accepted_slice": [],
+      "accepted_slice": [
+        "C02.2:frontmatter-property-edit"
+      ],
       "remaining": [
-        "Exact-SHA GitHub Actions acceptance is pending.",
+        "Broader C02 and RISK-004 acceptance remain pending.",
         "Broader R2 and editor integration remain pending."
       ],
       "acceptance": [
@@ -15963,7 +15966,8 @@
       ],
       "implementation_commits": [
         "d3c929de1dec3d17e2353d598270cbfb707e646f",
-        "6b26869369a8d3788bafc8659b102fda19ee6bb9"
+        "6b26869369a8d3788bafc8659b102fda19ee6bb9",
+        "530eaab471052a74d72bbbf1af63695b6a0eec3e"
       ],
       "ci_attempts": [
         {
@@ -15993,10 +15997,24 @@
             38030839857
           ],
           "result": "Both focused C02 tests and all workspace tests passed on Ubuntu, macOS, and Windows. Six companion workflows and macOS/Windows Rust CI passed; Ubuntu Rust CI failed only its formatting check, which reported one exact line break in the block-scalar test."
+        },
+        {
+          "attempt": 3,
+          "source_sha": "530eaab471052a74d72bbbf1af63695b6a0eec3e",
+          "required_workflow_run_ids": [
+            38031163672,
+            38031165332,
+            38031163624,
+            38031163735,
+            38031163630,
+            38031163719,
+            38031163648
+          ],
+          "result": "All seven required workflows passed on the exact source SHA. Both focused C02 tests and the full Rust workspace passed on all three OSes. The quality workflow's Ubuntu legacy Electron audit passed on same-SHA retry attempt 2."
         }
       ],
-      "evidence": null,
-      "next_action": "Push the exact Ubuntu rustfmt line break to origin/main and wait for all seven required workflows to finish on the corrected source SHA."
+      "evidence": "evidence/r2.8.13-frontmatter-property-edit-530eaab.json",
+      "next_action": "Commit and push this accepted tracker checkpoint, wait for path-eligible workflows, then review the next R2 source-preservation requirement."
     }
   },
   "ci_preparation": {

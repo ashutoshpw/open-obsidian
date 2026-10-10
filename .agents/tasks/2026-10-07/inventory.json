@@ -1355,7 +1355,7 @@
       "sha256": "6ad095d060a604a06edab4ee6e62d47650274fbdec398569e0bbece9ee38c673",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
-      "status": "pending",
+      "status": "passing",
       "migration_phase": "R2",
       "purpose": "Golden source-span edits preserve Markdown BOM, line endings, comments, unknown syntax, and malformed frontmatter bytes.",
       "fixture_reader": "crates/testkit"
