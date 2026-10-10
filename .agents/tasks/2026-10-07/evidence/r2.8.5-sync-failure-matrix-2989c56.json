@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T04:00:24Z",
+  "source_commit": "[rust R2.8.5] Apply CI formatter feedback",
+  "source_sha": "2989c5659a8324ecc7f4aaf53c51122a12b57272",
+  "starting_sha": "2370ecd86f258af6746ebca7c861a3ebbf456dec",
+  "implementation_commits": [
+    "d5e979a9429659eabd0cd58a06df6c9df050ab20",
+    "2989c5659a8324ecc7f4aaf53c51122a12b57272"
+  ],
+  "milestone": "R2.8.5",
+  "attempt": 2,
+  "accepted_slice": ["SYNC-004:concurrent-edit"],
+  "change": "Make the stale-write conflict behavior an executable SYNC-004 failure-matrix case. A caller reads the base revision, an external edit replaces the vault bytes, and the stale incoming version is rejected and retained as a protected conflict.",
+  "focused_tests": {
+    "command": "cargo test --workspace --locked",
+    "names": ["tests::concurrent_edit_matrix_preserves_external_target_and_incoming_conflict"],
+    "result": "The focused test and full Rust workspace tests passed in GitHub Actions on Ubuntu, macOS, and Windows.",
+    "jobs": {
+      "ubuntu_job_id": 114125257361,
+      "macos_job_id": 114125257437,
+      "windows_job_id": 114125257489
+    }
+  },
+  "scenario_results": [
+    "The caller's initial BOM/CRLF bytes determine the expected revision. After the external edit, that external BOM/CRLF content remains at the vault path.",
+    "The stale incoming editor bytes are preserved in readable, protected conflict history. The conflict record identifies both the expected base revision and the current external revision.",
+    "The write journal records a single write operation in conflict state with the relative path, expected revision, and incoming revision.",
+    "The fixture fixtures/vault-safety-failure-matrix.json now has executable Rust coverage for four of its eleven scenarios. Seven scenarios remain pending."
+  ],
+  "ci": {
+    "event": "push",
+    "head_sha": "2989c5659a8324ecc7f4aaf53c51122a12b57272",
+    "conclusion": "All seven required workflows and every applicable job passed on this exact source SHA. The quality workflow's first attempt failed an unrelated Electron vault audit; its failed Ubuntu job passed on attempt 2 at the same SHA.",
+    "parallel_step_groups": "Existing native parallel step groups completed successfully in Rust CI, vault round-trip, desktop-build, and quality workflows.",
+    "toolchain": {
+      "rust": "stable 1.99.0",
+      "bun": "1.4.2",
+      "obsidian_reference": "1.14.4"
+    },
+    "platforms": ["ubuntu-24.04", "macos-latest", "windows-latest"],
+    "workflows": [
+      {
+        "workflow": "OpenObsidian Rust CI",
+        "key": "rust_ci",
+        "run_id": 38022153278,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153278",
+        "attempt": 1,
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114125257361, "conclusion": "success", "workspace_tests": "passed", "fmt": "passed", "clippy": "passed", "dependency_layers": "passed", "native_build": "passed", "wry_probe": "passed"},
+          {"name": "rust (macos-latest)", "job_id": 114125257437, "conclusion": "success", "workspace_tests": "passed", "fmt": "not run on macOS", "clippy": "passed", "dependency_layers": "passed", "native_build": "passed", "wry_probe": "passed"},
+          {"name": "rust (windows-latest)", "job_id": 114125257489, "conclusion": "success", "workspace_tests": "passed", "fmt": "not run on Windows", "clippy": "passed", "dependency_layers": "passed", "native_build": "passed", "wry_probe": "passed"}
+        ]
+      },
+      {
+        "workflow": "Obsidian vault round-trip acceptance",
+        "key": "obsidian_vault_roundtrip",
+        "run_id": 38022153277,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153277",
+        "attempt": 1,
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114125257526, "conclusion": "success"},
+          {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114125257668, "conclusion": "success"},
+          {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114125257676, "conclusion": "success"}
+        ]
+      },
+      {
+        "workflow": "Rust migration inventory",
+        "key": "inventory",
+        "run_id": 38022153251,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153251",
+        "attempt": 1,
+        "conclusion": "success",
+        "jobs": [{"name": "inventory", "job_id": 114125257239, "conclusion": "success"}]
+      },
+      {
+        "workflow": "OpenObsidian loaded plugin workflows",
+        "key": "loaded_plugin_workflows",
+        "run_id": 38022153236,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153236",
+        "attempt": 1,
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 114125257445, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 114125257521, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 114125257527, "conclusion": "success"}
+        ]
+      },
+      {
+        "workflow": "OpenObsidian desktop build",
+        "key": "desktop_build",
+        "run_id": 38022153233,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153233",
+        "attempt": 1,
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114125257236, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 114125257398, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 114125257416, "conclusion": "success"}
+        ]
+      },
+      {
+        "workflow": "OpenObsidian quality",
+        "key": "quality",
+        "run_id": 38022153259,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153259",
+        "attempt": 2,
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114126108226, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 114126109210, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 114126128145, "conclusion": "success"}
+        ]
+      },
+      {
+        "workflow": "OpenObsidian plugin renderer matrix",
+        "key": "plugin_renderer",
+        "run_id": 38022153244,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38022153244",
+        "attempt": 1,
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114125257547, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 114125257639, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 114125257661, "conclusion": "success"}
+        ]
+      }
+    ],
+    "artifacts": [
+      {"workflow": "OpenObsidian Rust CI", "artifact_id": 11658903279, "name": "rust-plugin-runtime-Linux-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:525832816e62cda87d6b963f02f92dc46341cbd3b66cb366c9ff281935ec42a7"},
+      {"workflow": "OpenObsidian Rust CI", "artifact_id": 11658708357, "name": "openobsidian-rust-preview-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:d302cc1da577cb6d1e4e6f66213fef8c542af15383606453f112024538b18b28"},
+      {"workflow": "OpenObsidian Rust CI", "artifact_id": 11658588552, "name": "rust-plugin-runtime-Windows-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:b54520576bc8b71e1e4ac060554ef5693edc2f751b7aebd4c16de88379b3d0d1"},
+      {"workflow": "OpenObsidian Rust CI", "artifact_id": 11658164098, "name": "rust-plugin-runtime-macOS-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:d7638941ac50e769d36a78d2b459d8868e0edc7aa6e341df7929945cb5e2f313"},
+      {"workflow": "Obsidian vault round-trip acceptance", "artifact_id": 11658748243, "name": "obsidian-vault-roundtrip-Linux-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:027c13348975e870ebfe196af07814d04e9c02f8265930100a49af771b53c2ee"},
+      {"workflow": "Obsidian vault round-trip acceptance", "artifact_id": 11658723375, "name": "obsidian-vault-roundtrip-macOS-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:d2f083bca7924d37739819197308b53a901bcfee53c135cf3b3647ff04b45b30"},
+      {"workflow": "Obsidian vault round-trip acceptance", "artifact_id": 11658094128, "name": "obsidian-vault-roundtrip-Windows-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:ddb24ddda15b191693b8b030096cd200577860b8c46bb380a2d52ceb73043b9e"},
+      {"workflow": "OpenObsidian loaded plugin workflows", "artifact_id": 11658818105, "name": "loaded-plugin-workflows-Linux-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:b30c81db9b59faa7ce5ab98308e9202fee70f37d13bea379a6ed33dc6adf74af"},
+      {"workflow": "OpenObsidian loaded plugin workflows", "artifact_id": 11658608101, "name": "loaded-plugin-workflows-macOS-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:4ff54db284800365e3adba3857bf1a089d0d4d36bad7478619a6fb94a8724c37"},
+      {"workflow": "OpenObsidian loaded plugin workflows", "artifact_id": 11657894052, "name": "loaded-plugin-workflows-Windows-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:8686bef46fbf40d40a4ea4ebbbe17a920689cf9ebc64aa6140cfb3be7e184ef5"},
+      {"workflow": "OpenObsidian desktop build", "artifact_id": 11658987796, "name": "openobsidian-macOS-preview-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:26cd81ab266b65c9193b9600177fb550e351f5571f45b157dcbf747a9fe0b387"},
+      {"workflow": "OpenObsidian desktop build", "artifact_id": 11658598060, "name": "openobsidian-Linux-preview-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:56783709369ed9686b2a5a338486497a700955976d4c5771c375d960ed7c13b2"},
+      {"workflow": "OpenObsidian desktop build", "artifact_id": 11658353400, "name": "openobsidian-Windows-preview-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:4eb7ff8eac7da553a781aacf5c8472b0c4547ba467cd198c1bc9a40b837b65eb"},
+      {"workflow": "OpenObsidian plugin renderer matrix", "artifact_id": 11658753185, "name": "plugin-renderer-lifecycle-macOS-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:5cbd73d843ab051550ce7b757bb2393df50357c9e3f3ab52768a89dce4496c10"},
+      {"workflow": "OpenObsidian plugin renderer matrix", "artifact_id": 11658513254, "name": "plugin-renderer-lifecycle-Windows-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:dd4685f52b75ad24ba87b5dd0609f50f514311a6807f2fb7d0ea145c2432cad1"},
+      {"workflow": "OpenObsidian plugin renderer matrix", "artifact_id": 11657908963, "name": "plugin-renderer-lifecycle-Linux-2989c5659a8324ecc7f4aaf53c51122a12b57272", "digest": "sha256:6c93149857695d80f8febf378655090ecfb16cfc182a45a6693fe515bf5e5f2e"}
+    ],
+    "prior_attempts": [
+      {
+        "source_sha": "d5e979a9429659eabd0cd58a06df6c9df050ab20",
+        "required_workflow_run_ids": [38021865918, 38021865933, 38021866043, 38021865912, 38021865907, 38021865966, 38021865915],
+        "result": "The focused and workspace tests passed on all three Rust CI platforms. Six workflows passed; Rust CI's only failure was the Ubuntu rustfmt gate. The exact CI formatting diff was applied."
+      },
+      {
+        "source_sha": "2989c5659a8324ecc7f4aaf53c51122a12b57272",
+        "workflow": "OpenObsidian quality",
+        "run_id": 38022153259,
+        "attempt": 1,
+        "result": "The quality workflow's Ubuntu Electron vault audit failed to reach the local retrieval boundary. Rerunning the failed job on the same source SHA passed on attempt 2."
+      }
+    ],
+    "execution_policy": "Acceptance evidence is from GitHub Actions only. Rustfmt output was applied directly from the GitHub Actions log. No local tests, builds, formatters, linters, or application launches were run for this accepted attempt."
+  },
+  "limitations": [
+    "This slice implements one of the eleven SYNC-004 failure-matrix scenarios. Seven scenarios remain pending, and SYNC-004 as a whole is not passing.",
+    "The test injects the external edit between reading the caller's base revision and submitting its write; it verifies the stale-write rejection and protected conflict handling, not the timing behavior of a real third-party sync service.",
+    "Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
+  ]
+}
