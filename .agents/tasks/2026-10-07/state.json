@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T16:21:13Z",
+  "updated_at": "2026-10-10T16:32:45Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01",
-  "current_milestone": "R2.8.33",
-  "next_action": "R2.8.33 is accepted. Select the next focused source-preserving Markdown dialect slice for R2.8.34; full C02.1 and phases R3-R7 remain pending.",
+  "current_milestone": "R2.8.34",
+  "next_action": "R2.8.34 is in progress: render only simple, unambiguous resolved Markdown-note wiki links as read-only navigation; preserve source fallback for unresolved, ambiguous, stale, or complex links. Validate only through exact-SHA GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -18338,6 +18338,19 @@
       },
       "evidence": "evidence/r2.8.33-primary-preview-projections-d8ab02c.json",
       "next_action": "R2.8.33 is accepted. Select the next focused source-preserving Markdown dialect slice for R2.8.34; full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.34": {
+      "status": "in_progress",
+      "starting_sha": "70d898c4e48fbb8f2851986cf07cd057dbb6b200",
+      "scope": "Render simple, plain-text wiki links only when the vault resolves them unambiguously to Markdown notes. Keep unresolved, ambiguous, stale, embedded, subpath, mixed-Markdown, and non-Markdown cases source-only.",
+      "acceptance": [
+        "The Markdown dialect fixture covers resolved, unresolved, and ambiguous wiki-link cases.",
+        "The primary UI renders resolved simple wiki links as read-only navigation and preserves the source note bytes.",
+        "Resolution is associated with the preview source revision; stale results fail closed to source-only behavior.",
+        "Focused UI tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
+      ],
+      "implementation_commits": [],
+      "next_action": "Commit and push the focused implementation to origin/main; rely only on GitHub Actions for executable validation and record exact-SHA results."
     }
   },
   "ci_preparation": {

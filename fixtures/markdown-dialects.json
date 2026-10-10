@@ -78,13 +78,36 @@
       "safe-inline-html-break",
       "inline-highlights"
     ],
+    "vault_context_rendered_blocks": ["simple-resolved-wiki-links"],
     "source_only_blocks": [
       "legacy-math-delimiters",
       "diagrams",
       "unknown-or-active-raw-html",
-      "wiki-links",
+      "unresolved-or-complex-wiki-links",
       "complex-inline-highlights"
     ],
+    "resolved_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read [[Plans/Project|the plan]] next.",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\nThe resolved target note.",
+      "expected_label": "the plan",
+      "expected_navigation_path": "Plans/Project.md",
+      "preserves_source_bytes": true
+    },
+    "unresolved_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read [[Missing]] next.",
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false
+    },
+    "ambiguous_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read [[Project]] next.",
+      "candidate_paths": ["Plans/Project.md", "Archive/Project.md"],
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false
+    },
     "safe_inline_html": {
       "rendered_tags": ["<br>", "<br/>", "<br />"],
       "unsupported_html": "Keep all other inline and block HTML visible as original source."

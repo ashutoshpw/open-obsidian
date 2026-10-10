@@ -2451,3 +2451,9 @@ All seven required workflows passed on the exact source SHA: inventory [38066822
 The user's requested GitHub Actions parallel-step feature was already implemented and accepted in CI preparation before Rust migration implementation. It is used in the current Rust, quality, desktop-build, vault round-trip, compatibility-pin, and reference-runner workflows; no additional workflow edit was needed. See [evidence/parallel-ci-runner-setup-c479996.json](evidence/parallel-ci-runner-setup-c479996.json) and the [GitHub Actions parallel steps announcement](https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/).
 
 Accepted slice: primary-panel projection integration for safe HTML breaks and plain inline highlights. Other unsupported Markdown constructs remain source-only; full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.34 in progress — resolved wiki-link preview
+
+Starting from accepted `origin/main` SHA `70d898c`, add a bounded preview for single-line plain-text wiki links that resolve unambiguously to `.md` notes. Clicks navigate through the existing vault session. Unresolved, ambiguous, stale-revision, subpath, embedded, non-Markdown, and mixed-Markdown cases remain source-only. Fixture and egui coverage verify visible labels, navigation, source-byte preservation, and safe fallback. Executable validation remains limited to exact-SHA GitHub Actions; no local tests, builds, formatters, linters, or app launches are allowed by the goal.
+
+The requested GitHub Actions parallel-step capability was already implemented and accepted before migration work. Native `parallel` groups are present in the Rust, quality, desktop-build, vault round-trip, compatibility-pin, and reference-feasibility workflows; the pre-migration run and per-runner evidence are recorded in `evidence/parallel-ci.json` and `evidence/parallel-ci-runner-setup-c479996.json`.

@@ -6,9 +6,10 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
     LinkKind, LinkRenameAction, LinkResolutionStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES,
-    MarkdownPreviewDisposition, TransclusionBlockReason, VaultConflictAction, VaultConflictRead,
-    VaultConflictResolution, VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan,
-    VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
+    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
     VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
     VaultRenameRecoveryReport, VaultRenameResult, VaultSession, VaultWatcher,
     VaultWriteRecoveryReport, VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
@@ -70,6 +71,9 @@ struct NoteSourcePreview {
     total_size_bytes: u64,
     truncated: bool,
     revision_sha256: Option<String>,
+    wiki_link_resolutions: Vec<VaultLinkResolution>,
+    wiki_links_revision_sha256: Option<String>,
+    wiki_link_resolution_error: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -807,6 +811,7 @@ impl OpenObsidianApp {
         let mut cancel_source_edit = false;
         let mut task_write = None;
         let mut source_write = None;
+        let mut wiki_link_navigation = None;
         let write_busy = self.note_preview_write_receiver.is_some();
         eframe::egui::CollapsingHeader::new("Note source preview")
             .id_salt("note-source-preview")
@@ -936,12 +941,16 @@ impl OpenObsidianApp {
                         }
 
                         let preview_analysis = analyze_markdown_preview(&preview.text);
+                        let renderable_wiki_links = renderable_wiki_link_resolutions(
+                            preview,
+                            &preview_analysis,
+                        );
                         if preview_analysis.disposition()
                             == MarkdownPreviewDisposition::RenderMarkdown
+                            || renderable_wiki_links.is_some()
                         {
-                            let projected_preview = !preview_analysis
-                                .inline_highlight_spans()
-                                .is_empty()
+                            let projected_preview = renderable_wiki_links.is_some()
+                                || !preview_analysis.inline_highlight_spans().is_empty()
                                 || preview_analysis
                                     .native_render_source(&preview.text)
                                     .as_ref()
@@ -961,12 +970,20 @@ impl OpenObsidianApp {
                                 .max_height(280.0)
                                 .show(ui, |ui| {
                                     if projected_preview {
-                                        show_markdown_preview(
-                                            ui,
-                                            &mut self.markdown_cache,
-                                            &self.math_renderer_cache,
-                                            &preview.text,
-                                        );
+                                        if let Some(links) = &renderable_wiki_links {
+                                            wiki_link_navigation = show_resolved_wiki_link_preview(
+                                                ui,
+                                                &preview.text,
+                                                links,
+                                            );
+                                        } else {
+                                            show_markdown_preview(
+                                                ui,
+                                                &mut self.markdown_cache,
+                                                &self.math_renderer_cache,
+                                                &preview.text,
+                                            );
+                                        }
                                     } else if !operation_busy
                                         && !write_busy
                                         && let Some(revision_sha256) =
@@ -1014,6 +1031,18 @@ impl OpenObsidianApp {
                                     "Unsupported Markdown ({unsupported}); showing the source as written."
                                 ),
                             );
+                            if let Some(error) = &preview.wiki_link_resolution_error {
+                                ui.colored_label(eframe::egui::Color32::YELLOW, error);
+                            } else if preview_analysis
+                                .unsupported()
+                                .contains(&MarkdownUnsupportedSyntax::WikiLinks)
+                                && preview.wiki_links_revision_sha256.as_deref()
+                                    != preview.revision_sha256.as_deref()
+                            {
+                                ui.small(
+                                    "Read the note preview again to refresh resolved wiki links.",
+                                );
+                            }
                         }
 
                         ui.small("Original Markdown source");
@@ -1037,6 +1066,20 @@ impl OpenObsidianApp {
                 }
             });
         if request_preview {
+            self.start_note_source_preview();
+        }
+        if let Some(relative_path) = wiki_link_navigation {
+            self.link_source_path = Some(relative_path);
+            self.link_resolutions.clear();
+            self.link_error = None;
+            self.link_status = None;
+            self.note_source_preview = None;
+            self.note_preview_error = None;
+            self.note_preview_status = None;
+            self.last_note_preview_write = None;
+            self.note_embed_report = None;
+            self.note_embed_error = None;
+            self.inline_image_textures.clear();
             self.start_note_source_preview();
         }
         if begin_source_edit && let Some(preview) = &mut self.note_source_preview {
@@ -1673,6 +1716,41 @@ impl OpenObsidianApp {
                             );
                         }
                     };
+                    let analysis = analyze_markdown_preview(&text);
+                    let mut wiki_link_resolutions = Vec::new();
+                    let mut wiki_links_revision_sha256 = None;
+                    let mut wiki_link_resolution_error = None;
+                    if !preview.truncated
+                        && preview.revision_sha256.is_some()
+                        && analysis.unsupported()
+                            == [MarkdownUnsupportedSyntax::WikiLinks]
+                    {
+                        match session.resolve_links_for_note(&relative_path) {
+                            Ok(resolutions) => match session.read_preview(&relative_path) {
+                                Ok(current)
+                                    if current.revision_sha256 == preview.revision_sha256 =>
+                                {
+                                    wiki_link_resolutions = resolutions;
+                                    wiki_links_revision_sha256 =
+                                        preview.revision_sha256.clone();
+                                }
+                                Ok(_) => {
+                                    wiki_link_resolution_error = Some(
+                                        "The note changed while wiki links were being resolved. Read the preview again."
+                                            .to_owned(),
+                                    );
+                                }
+                                Err(error) => {
+                                    wiki_link_resolution_error =
+                                        Some(note_source_preview_error(error));
+                                }
+                            },
+                            Err(error) => {
+                                wiki_link_resolution_error =
+                                    Some(link_resolution_error(error));
+                            }
+                        }
+                    }
                     Ok(NoteSourcePreview {
                         relative_path,
                         text,
@@ -1680,6 +1758,9 @@ impl OpenObsidianApp {
                         total_size_bytes: preview.total_size_bytes,
                         truncated: preview.truncated,
                         revision_sha256: preview.revision_sha256,
+                        wiki_link_resolutions,
+                        wiki_links_revision_sha256,
+                        wiki_link_resolution_error,
                     })
                 });
             let _ = sender.send(result);
@@ -2033,6 +2114,12 @@ impl OpenObsidianApp {
                     .map(|preview| preview.relative_path.clone());
                 if let Some(preview) = &mut self.note_source_preview {
                     preview.revision_sha256 = Some(revision_sha256.clone());
+                    if !preview.wiki_link_resolutions.is_empty() {
+                        preview.wiki_link_resolution_error = Some(
+                            "The source changed. Read the note preview again to refresh resolved wiki links."
+                                .to_owned(),
+                        );
+                    }
                 }
                 self.last_note_preview_write = preview_path.map(|path| (path, revision_sha256));
                 self.note_preview_error = None;
@@ -2115,6 +2202,15 @@ impl OpenObsidianApp {
                     self.note_preview_error = None;
                     self.note_preview_status = None;
                     self.last_note_preview_write = None;
+                } else if let Some(preview) = &mut self.note_source_preview {
+                    if !preview.wiki_link_resolutions.is_empty() {
+                        preview.wiki_link_resolutions.clear();
+                        preview.wiki_links_revision_sha256 = None;
+                        preview.wiki_link_resolution_error = Some(
+                            "The vault changed. Read the note preview again to refresh resolved wiki links."
+                                .to_owned(),
+                        );
+                    }
                 }
                 self.note_embed_report = None;
                 self.note_embed_error = None;
@@ -2419,6 +2515,152 @@ fn show_markdown_preview(
             ui.monospace(source);
         }
     }
+}
+
+fn renderable_wiki_link_resolutions(
+    preview: &NoteSourcePreview,
+    analysis: &openobsidian_engine::MarkdownPreviewAnalysis,
+) -> Option<Vec<VaultLinkResolution>> {
+    if preview.truncated
+        || analysis.unsupported() != [MarkdownUnsupportedSyntax::WikiLinks]
+        || preview.wiki_link_resolutions.is_empty()
+    {
+        return None;
+    }
+    let revision_sha256 = preview.revision_sha256.as_deref()?;
+    if preview.wiki_links_revision_sha256.as_deref() != Some(revision_sha256)
+        || preview
+            .wiki_link_resolutions
+            .iter()
+            .any(|link| link.reference.kind != LinkKind::WikiLink)
+    {
+        return None;
+    }
+
+    let mut links = preview.wiki_link_resolutions.clone();
+    links.sort_by_key(|link| link.reference.source_span.start);
+    let mut source_cursor = 0;
+    for link in &links {
+        let span = link.reference.source_span;
+        let raw = preview.text.get(span.start..span.end)?;
+        if span.start < source_cursor
+            || raw != link.reference.raw
+            || !is_plain_wiki_link_context(&preview.text[source_cursor..span.start])
+            || link.resolution.status != LinkResolutionStatus::Resolved
+            || link.reference.subpath.is_some()
+        {
+            return None;
+        }
+        let target = link.resolution.target.as_deref()?;
+        if !Path::new(target)
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return None;
+        }
+        if link
+            .reference
+            .alias
+            .as_deref()
+            .is_some_and(|alias| alias.trim().is_empty() || !is_plain_wiki_link_context(alias))
+        {
+            return None;
+        }
+        source_cursor = span.end;
+    }
+    if !is_plain_wiki_link_context(&preview.text[source_cursor..]) {
+        return None;
+    }
+
+    let first_line = preview
+        .text
+        .strip_prefix('\u{feff}')
+        .unwrap_or(&preview.text)
+        .trim_start();
+    if preview
+        .text
+        .bytes()
+        .any(|byte| matches!(byte, b'\n' | b'\r'))
+        || ["# ", "> ", "- ", "+ ", "* ", "|"]
+            .iter()
+            .any(|prefix| first_line.starts_with(prefix))
+    {
+        return None;
+    }
+    let list_marker_end = first_line
+        .bytes()
+        .take_while(|byte| byte.is_ascii_digit())
+        .count();
+    if list_marker_end > 0
+        && (first_line[list_marker_end..].starts_with(". ")
+            || first_line[list_marker_end..].starts_with(") "))
+    {
+        return None;
+    }
+
+    Some(links)
+}
+
+fn is_plain_wiki_link_context(text: &str) -> bool {
+    !text.chars().any(|character| {
+        matches!(
+            character,
+            '\\' | '&'
+                | '<'
+                | '>'
+                | '`'
+                | '*'
+                | '_'
+                | '$'
+                | '~'
+                | '['
+                | ']'
+                | '('
+                | ')'
+                | '!'
+                | '#'
+                | '|'
+                | '='
+                | '\n'
+                | '\r'
+        )
+    })
+}
+
+fn show_resolved_wiki_link_preview(
+    ui: &mut eframe::egui::Ui,
+    source: &str,
+    links: &[VaultLinkResolution],
+) -> Option<std::path::PathBuf> {
+    let mut navigation = None;
+    ui.horizontal_wrapped(|ui| {
+        ui.spacing_mut().item_spacing.x = 0.0;
+        let mut source_cursor = 0;
+        for link in links {
+            let span = link.reference.source_span;
+            if source_cursor < span.start {
+                ui.label(&source[source_cursor..span.start]);
+            }
+            if let Some(target) = link.resolution.target.as_deref() {
+                let label = link
+                    .reference
+                    .alias
+                    .as_deref()
+                    .unwrap_or(&link.reference.target);
+                let response = ui
+                    .link(label)
+                    .on_hover_text(format!("Open {target}"));
+                if response.clicked() && navigation.is_none() {
+                    navigation = Some(std::path::PathBuf::from(target));
+                }
+            }
+            source_cursor = span.end;
+        }
+        if source_cursor < source.len() {
+            ui.label(&source[source_cursor..]);
+        }
+    });
+    navigation
 }
 
 fn show_inline_highlight_paragraph(
@@ -2878,8 +3120,52 @@ mod tests {
                 total_size_bytes: preview.total_size_bytes,
                 truncated: preview.truncated,
                 revision_sha256: preview.revision_sha256,
+                wiki_link_resolutions: Vec::new(),
+                wiki_links_revision_sha256: None,
+                wiki_link_resolution_error: None,
             }),
             ..OpenObsidianApp::default()
+        }
+    }
+
+    fn source_preview_test_app(
+        vault_path: &Path,
+        app_data_path: &Path,
+        source_path: &str,
+        source: &[u8],
+        additional_files: &[(&str, &[u8])],
+    ) -> OpenObsidianApp {
+        std::fs::create_dir_all(vault_path).expect("create source-preview vault");
+        std::fs::create_dir_all(app_data_path).expect("create source-preview app data");
+        for (relative_path, bytes) in std::iter::once((source_path, source))
+            .chain(additional_files.iter().copied())
+        {
+            let path = vault_path.join(relative_path);
+            std::fs::create_dir_all(path.parent().expect("fixture file must have a parent"))
+                .expect("create source-preview file parents");
+            std::fs::write(path, bytes).expect("write source-preview fixture bytes");
+        }
+        let session = VaultSession::open(vault_path, app_data_path)
+            .expect("open source-preview vault");
+        OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(std::path::PathBuf::from(source_path)),
+            ..OpenObsidianApp::default()
+        }
+    }
+
+    fn wait_for_note_source_preview(harness: &mut Harness<'_, OpenObsidianApp>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            harness.step();
+            if harness.state().note_preview_receiver.is_none() {
+                return;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "note source preview worker did not finish within five seconds"
+            );
+            std::thread::sleep(std::time::Duration::from_millis(2));
         }
     }
 
@@ -3276,6 +3562,185 @@ mod tests {
                 .as_bytes(),
             source
         );
+    }
+
+    #[test]
+    fn egui_note_source_preview_renders_and_navigates_resolved_wiki_links_without_writing_source() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = &fixture["rust_preview"]["resolved_wiki_link_preview"];
+        let source_path = case["source_path"]
+            .as_str()
+            .expect("resolved wiki-link case must name its source note");
+        let source = case["source"]
+            .as_str()
+            .expect("resolved wiki-link case must include source");
+        let target_path = case["target_path"]
+            .as_str()
+            .expect("resolved wiki-link case must name its target note");
+        let target_source = case["target_source"]
+            .as_str()
+            .expect("resolved wiki-link case must include target source");
+        let expected_label = case["expected_label"]
+            .as_str()
+            .expect("resolved wiki-link case must name the visible label");
+        let temporary = UiTempDir::new();
+        let scenario_path = temporary.0.join("resolved-wiki-link");
+        let vault_path = scenario_path.join("vault");
+        let app_data_path = scenario_path.join("app-data");
+        let app = source_preview_test_app(
+            &vault_path,
+            &app_data_path,
+            source_path,
+            source.as_bytes(),
+            &[(target_path, target_source.as_bytes())],
+        );
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_task(ui);
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        wait_for_note_source_preview(&mut harness);
+        harness.get_by_label("Markdown preview");
+        harness.get_by_label(
+            "This projected Markdown preview is read-only. Use Edit Markdown source to change it.",
+        );
+        harness.get_by_label(expected_label);
+        assert_eq!(
+            std::fs::read(vault_path.join(source_path)).unwrap(),
+            source.as_bytes()
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            before_vault,
+            "resolving a wiki link must not change any vault path or byte"
+        );
+
+        harness.get_by_label(expected_label).click();
+        wait_for_note_source_preview(&mut harness);
+        assert_eq!(
+            harness.state().link_source_path.as_deref(),
+            Some(Path::new(
+                case["expected_navigation_path"]
+                    .as_str()
+                    .expect("fixture must declare the navigation path"),
+            ))
+        );
+        harness.get_by_label(&format!("Source: {target_path}"));
+        harness.get_by_label("The resolved target note.");
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            before_vault,
+            "navigating a wiki link must not change any vault path or byte"
+        );
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            before_app_data
+        );
+    }
+
+    #[test]
+    fn egui_note_source_preview_keeps_unresolved_and_ambiguous_wiki_links_source_only() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+
+        for (scenario_index, case_id) in [
+            "unresolved_wiki_link_preview",
+            "ambiguous_wiki_link_preview",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let case = &fixture["rust_preview"][case_id];
+            let source_path = case["source_path"]
+                .as_str()
+                .expect("wiki-link case must name its source note");
+            let source = case["source"]
+                .as_str()
+                .expect("wiki-link case must include source");
+            let candidate_paths = case["candidate_paths"]
+                .as_array()
+                .map(|paths| {
+                    paths
+                        .iter()
+                        .map(|path| {
+                            path.as_str()
+                                .expect("candidate paths must be strings")
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            let candidates = candidate_paths
+                .iter()
+                .map(|path| (*path, &b"# Candidate note."[..]))
+                .collect::<Vec<_>>();
+            let scenario_path = temporary.0.join(format!("wiki-link-fallback-{scenario_index}"));
+            let vault_path = scenario_path.join("vault");
+            let app_data_path = scenario_path.join("app-data");
+            let app = source_preview_test_app(
+                &vault_path,
+                &app_data_path,
+                source_path,
+                source.as_bytes(),
+                &candidates,
+            );
+            let before_vault = existing_vault_tree_snapshot(&vault_path);
+            let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+            let mut harness = Harness::new_ui_state(
+                |ui, app| {
+                    app.poll_note_preview_task(ui);
+                    app.poll_note_preview_write_task(ui);
+                    app.show_note_source_preview(ui, false);
+                },
+                app,
+            );
+
+            harness.get_by_label("Note source preview").click();
+            harness.step();
+            harness.get_by_label("Read note source preview").click();
+            wait_for_note_source_preview(&mut harness);
+            harness.get_by_label(
+                case["expected_fallback"]
+                    .as_str()
+                    .expect("wiki-link case must declare its source fallback"),
+            );
+            assert!(
+                harness
+                    .query_all_by_role(eframe::egui::accesskit::Role::Link)
+                    .next()
+                    .is_none(),
+                "unresolved or ambiguous wiki links must not be clickable"
+            );
+            assert_eq!(
+                harness
+                    .state()
+                    .note_source_preview
+                    .as_ref()
+                    .expect("wiki-link source preview remains open")
+                    .text
+                    .as_bytes(),
+                source.as_bytes()
+            );
+            assert_eq!(
+                existing_vault_tree_snapshot(&vault_path),
+                before_vault,
+                "source-only wiki-link fallback must preserve the vault"
+            );
+            assert_eq!(
+                existing_vault_tree_snapshot(&app_data_path),
+                before_app_data
+            );
+        }
     }
 
     #[test]
