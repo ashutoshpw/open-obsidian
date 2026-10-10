@@ -2751,3 +2751,5 @@ Accepted slice: unknown extension markup stays visible as ordinary Markdown text
 ### R2.8.54 in progress — legacy math inside indented code remains literal
 
 Use the existing legacy-math-inside-indented-code C02.1 fixture to verify that legacy math delimiters inside an indented code block do not trigger the unsupported-math fallback. The preview should keep the fixture on the RenderMarkdown path, show the original code literally, and preserve source bytes. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
+
+R2.8.54 tracker checkpoint: inventory [run 38084316519](https://github.com/ashutoshpw/open-obsidian/actions/runs/38084316519), job 114307488452, passed for tracker SHA 94b057532f005d67eee6a0c6a334690ec3704024.
