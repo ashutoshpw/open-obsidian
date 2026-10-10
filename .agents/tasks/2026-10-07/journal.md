@@ -2651,3 +2651,13 @@ Accepted slice: mixed-formatting highlights remain source-only. Full C02.1 and m
 Use the existing `html-break-with-attributes-remains-source` fixture to verify the native preview identifies raw HTML as unsupported and displays the original source without mutation. The fixture-driven egui case is added; push this focused slice for exact-SHA GitHub Actions. No executable validation runs locally.
 
 Starting from tracker checkpoint `9986a6af0e047d213232edf51901efcc559f656a`, inventory [run 38078130253](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078130253), job 114289293256, passed.
+
+### R2.8.47 accepted — attribute-bearing HTML line breaks remain source-only — source SHA `56c398d0f604219ed206ec95a322311e63dad6fc`
+
+The fixture-driven egui test confirms `<br class=wide>` produces the raw-HTML fallback and displays the exact source. The focused case passed on Ubuntu, macOS, and Windows. All seven workflows passed on this exact SHA: inventory [38078177857](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177857), loaded-plugin workflows [38078177936](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177936), desktop build [38078177881](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177881), quality [38078177854](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177854), Rust CI [38078177855](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177855), plugin renderer [38078177894](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177894), and Obsidian vault round-trip [38078177971](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078177971). Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.47-html-break-attributes-source-only-56c398d.json](evidence/r2.8.47-html-break-attributes-source-only-56c398d.json). No local executable validation was used.
+
+Accepted slice: attribute-bearing HTML breaks remain visible source-only. Full C02.1 and migration phases R3-R7 remain pending. Next: verify the even-backslash highlight fixture's active opener and source fallback in R2.8.48.
+
+### R2.8.48 in progress — even-backslash highlight remains explicit source
+
+Use the existing `even-backslash-run-keeps-highlight-active` fixture to verify an active highlight opener after an even backslash run receives the unsupported-highlights fallback and displays the original source unchanged. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:01:52Z",
+  "updated_at": "2026-10-10T19:08:15Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "0df8f8ca8ea6181d1d665006d1bac478ca247064",
-  "current_milestone": "R2.8.47",
-  "next_action": "R2.8.46 is accepted on exact source SHA 0df8f8ca8ea6181d1d665006d1bac478ca247064; all seven required GitHub Actions workflows passed. R2.8.47 should verify an attribute-bearing HTML line break uses a visible source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "56c398d0f604219ed206ec95a322311e63dad6fc",
+  "current_milestone": "R2.8.48",
+  "next_action": "R2.8.47 is accepted on exact source SHA 56c398d0f604219ed206ec95a322311e63dad6fc; all seven required GitHub Actions workflows passed. R2.8.48 should verify an active highlight opener after an even backslash run uses a visible source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "0df8f8ca8ea6181d1d665006d1bac478ca247064"
+      "implementation_sha": "56c398d0f604219ed206ec95a322311e63dad6fc"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.47 accepted: an HTML line break with attributes remains source-only, displays a raw-HTML fallback message, and preserves the source. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 56c398d0f604219ed206ec95a322311e63dad6fc. Evidence: evidence/r2.8.47-html-break-attributes-source-only-56c398d.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.46 accepted: a highlight mixed with Markdown emphasis uses a visible source-only fallback without projecting a partial highlight. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 0df8f8ca8ea6181d1d665006d1bac478ca247064. Evidence: evidence/r2.8.46-mixed-formatting-highlight-fallback-0df8f8c.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.45 accepted: an escaped highlight opener remains literal in the native preview and produces no highlight span. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA ddaa4122c04e60cadd69825145e1f79fbb005f70. Attempt 1's cross-platform label assertion failure and correction are recorded in evidence. Evidence: evidence/r2.8.45-escaped-highlight-literal-ddaa412.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.44 accepted: wiki-link markers inside inline and fenced code remain literal Markdown and are not resolved or clickable in the native note preview; source, vault, and app-data bytes remain unchanged. The focused egui test passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 8006dd7002965a57ac40135d3fb38e9edac536d3. Evidence: evidence/r2.8.44-code-markers-remain-literal-8006dd7.json. C02.1 and phases R3-R7 remain pending.",
@@ -273,7 +274,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA 0df8f8ca8ea6181d1d665006d1bac478ca247064 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA 56c398d0f604219ed206ec95a322311e63dad6fc is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18735,7 +18736,7 @@
       "next_action": "R2.8.46 is accepted; continue with an attribute-bearing HTML line-break fallback in R2.8.47. Full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.47": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "9986a6af0e047d213232edf51901efcc559f656a",
       "scope": "Verify an HTML line break with attributes remains source-only and visibly identifies raw HTML as unsupported.",
       "acceptance": [
@@ -18744,15 +18745,34 @@
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
-      "implementation_commits": [],
-      "tracker_checkpoint": {
-        "sha": "9986a6af0e047d213232edf51901efcc559f656a",
-        "inventory_run_id": 38078130253,
-        "inventory_job_id": 114289293256,
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38078130253"
+      "implementation_commits": [
+        "56c398d0f604219ed206ec95a322311e63dad6fc"
+      ],
+      "validated_source_sha": "56c398d0f604219ed206ec95a322311e63dad6fc",
+      "ci_runs": {
+        "inventory": 38078177857,
+        "loaded_plugins": 38078177936,
+        "desktop_build": 38078177881,
+        "quality": 38078177854,
+        "rust_ci": 38078177855,
+        "plugin_renderer": 38078177894,
+        "obsidian_vault_roundtrip": 38078177971
       },
-      "next_action": "The fixture-driven egui case now checks that attribute-bearing HTML breaks show the raw-HTML fallback and preserve source bytes. Push this focused slice for exact-SHA GitHub Actions."
+      "evidence": "evidence/r2.8.47-html-break-attributes-source-only-56c398d.json",
+      "next_action": "R2.8.47 is accepted; continue with a fixture-backed check for an active highlight opener after an even backslash run in R2.8.48. Full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.48": {
+      "status": "in_progress",
+      "starting_sha": "56c398d0f604219ed206ec95a322311e63dad6fc",
+      "scope": "Verify a highlight opener preceded by an even backslash run stays active and uses the explicit source-only fallback.",
+      "acceptance": [
+        "The existing even-backslash-run-keeps-highlight-active C02.1 fixture drives an egui preview test.",
+        "The preview identifies unsupported highlights and displays the original source unchanged.",
+        "The analyzer reports no partial highlight span after selecting source-only fallback.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
+      "implementation_commits": [],
+      "next_action": "Add fixture-driven egui coverage for the active highlight after an even backslash run, then push for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {
