@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.32",
+  "status": "accepted",
+  "attempt": 2,
+  "source_sha": "12d68e3993cf5f7951ee4245e51ee45d15759e67",
+  "implementation_commits": [
+    "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0",
+    "12d68e3993cf5f7951ee4245e51ee45d15759e67"
+  ],
+  "scope": "Render simple plain-text inline highlights in the native Markdown preview while preserving source-only fallback for mixed Markdown contexts.",
+  "tests": [
+    "markdown_preview::tests::c02_safe_preview_dialect_fixtures_select_a_visible_fallback_without_mutating_source",
+    "tests::egui_renders_plain_inline_highlights_without_changing_source"
+  ],
+  "fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "9805f7c224c73a61963056e7a05597adc701d58dfe2a0b76f24e9e43d35bf107",
+    "cases": [
+      "highlight",
+      "multiple-plain-highlights",
+      "highlight-mixed-with-markdown-formatting",
+      "escaped-highlight-opener-is-literal",
+      "even-backslash-run-keeps-highlight-active"
+    ]
+  },
+  "acceptance": [
+    "The Markdown dialect fixture covers plain and multiple inline highlights as rendered content, and mixed-format highlights as source-only.",
+    "The native UI exposes the highlighted phrase while keeping the original Markdown source bytes unchanged.",
+    "Rust workspace tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
+  ],
+  "required_workflows": {
+    "rust_ci": {
+      "run_id": 38065888656,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888656",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 114253332868, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 114253333011, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114253333094, "conclusion": "success"}
+      ]
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38065888746,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888746",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114253334278, "conclusion": "success"},
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114253334351, "conclusion": "success"},
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114253334381, "conclusion": "success"}
+      ]
+    },
+    "inventory": {
+      "run_id": 38065888790,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888790",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114253333415, "conclusion": "success"}]
+    },
+    "loaded_plugins": {
+      "run_id": 38065888677,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888677",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114253333369, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114253333553, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114253333619, "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38065888710,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888710",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114253333291, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114253333567, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114253333633, "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "run_id": 38065888685,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888685",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114253333459, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114253333659, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114253333749, "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "run_id": 38065888716,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38065888716",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114253333647, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114253333759, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114253333853, "conclusion": "success"}
+      ]
+    }
+  },
+  "artifacts": [
+    {"id": 11674858496, "name": "openobsidian-rust-preview-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:94d04f129032e6689aa0ff397fa40bfceb48922be0d1368ad9921ed33dda272a"},
+    {"id": 11674564405, "name": "rust-plugin-runtime-Linux-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:3c1e99e3776106c3f5bd3c0c6e8c4f1f4721b096885e9dffe5594b7022dad62e"},
+    {"id": 11674948420, "name": "rust-plugin-runtime-macOS-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:e4b400ab2903235906af692b40fc92fc9025dd78a84655e840fa44760efa3d49"},
+    {"id": 11674524618, "name": "rust-plugin-runtime-Windows-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:f0b2c1bdf8148b0a0b3d31b1e4d76b018e4551164c271dc0b1c348e3282f5ca6"},
+    {"id": 11675083152, "name": "obsidian-vault-roundtrip-Linux-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:5696d0c8d044cb9f30243aeebceea6fa8eb1c36a7181edce793901e4d273ea00"},
+    {"id": 11674688847, "name": "obsidian-vault-roundtrip-Windows-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:ff6bad14fe5590bc4f95c54407c3e57c27e133a9db055f6e28d5c8b9566818ad"},
+    {"id": 11674318248, "name": "obsidian-vault-roundtrip-macOS-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:9f9cd18516581588351460a1e041bbe1d714eb9c1df5d1af654f6b7fb38fa8b7"},
+    {"id": 11674517700, "name": "openobsidian-Linux-preview-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:50485ff202af54af8fd317fd35608064065bb3d77695457a376e8a6382f8f702"},
+    {"id": 11674482786, "name": "openobsidian-Windows-preview-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:6102e262d1cdd322f7d33dc8d6d555ea42ab81b22598acf7924ae8cce469d89c"},
+    {"id": 11674273077, "name": "openobsidian-macOS-preview-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:f49994e0c6f738c51d443901a715e984e110a68ab6e60df28f7930bff076cce5"},
+    {"id": 11675097882, "name": "loaded-plugin-workflows-Windows-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:0584db62da509542e7105e67887f74e19e06722c9b56d71828dafb0a27f1703e"},
+    {"id": 11675012941, "name": "loaded-plugin-workflows-macOS-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:051afff6284b3ef604b446d939f4ab5e5e8a01516174dfd1f8072243f90a0030"},
+    {"id": 11674437873, "name": "loaded-plugin-workflows-Linux-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:e4be998b4f4706640c9823e58bb17576838e4ce1a79f11f54c28ababe8743cba"},
+    {"id": 11675062961, "name": "plugin-renderer-lifecycle-Linux-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:6c13cc563c1f8e0896607ce11806830716741356fe01cc907934025574ef6813"},
+    {"id": 11674743492, "name": "plugin-renderer-lifecycle-Windows-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:638393b58ddfb3fa788ddd4af728b06f1c3641c0aa2933a98b9fce2fafd8dad2"},
+    {"id": 11674178114, "name": "plugin-renderer-lifecycle-macOS-12d68e3993cf5f7951ee4245e51ee45d15759e67", "digest": "sha256:9ad5a04b4f06ceee1a253f97aeb0d6c7ebb94099dd0bddcd98a68144801ea6a8"}
+  ],
+  "failed_attempts": [
+    {
+      "source_sha": "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0",
+      "workflow": "OpenObsidian Rust CI",
+      "run_id": 38065534531,
+      "conclusion": "failure",
+      "reason": "Ubuntu rustfmt requested the highlight-span push expression on one line. Ubuntu workspace tests passed and the macOS and Windows Rust jobs passed; all six companion workflows passed. The formatter correction was pushed in 12d68e3993cf5f7951ee4245e51ee45d15759e67."
+    }
+  ],
+  "limitations": [
+    "Only plain-text paragraphs with simple inline highlights are rendered; complex highlights remain source-only.",
+    "This does not complete C02.1 or migration phases R3-R7.",
+    "All executable validation was performed in GitHub Actions; no local tests, builds, formatters, or application runs were used."
+  ]
+}

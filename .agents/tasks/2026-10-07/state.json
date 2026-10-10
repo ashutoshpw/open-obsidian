@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T15:48:00Z",
+  "updated_at": "2026-10-10T16:08:10Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8a6235def8b0ad6d0276995f1e295f86d1650278",
-  "current_milestone": "R2.8.31",
-  "next_action": "Continue C02.1 with another focused Markdown preview slice; native highlights and the remaining explicit source-only constructs are pending, as are phases R3-R7.",
+  "last_reconciled_head": "12d68e3993cf5f7951ee4245e51ee45d15759e67",
+  "current_milestone": "R2.8.32",
+  "next_action": "R2.8.32 is accepted on exact source SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67. Continue C02.1 with another focused Markdown preview slice; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -259,9 +259,10 @@
     "R2.8.28 native Markdown table preview UI contract passed all seven required GitHub Actions workflows on exact source SHA f2c5bfb459852a777c192697fece5731295628f8 across Ubuntu, macOS, and Windows. Rust workspace tests, including the accessible table header/body-cell and source-byte preservation assertions, passed on all three platforms. Job IDs and artifact digests are in evidence/r2.8.28-markdown-table-ui-contract-f2c5bfb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.29 revision-safe Markdown table cell source editing passed all seven required GitHub Actions workflows on exact source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0 across Ubuntu, macOS, and Windows. The fixture-driven UI test and full Rust workspace suite passed on all platforms; the table's BOM, CRLF, alignment row, delimiters, and untouched cell bytes were preserved. Job IDs and artifact digests are in evidence/r2.8.29-table-cell-source-edit-dcf5568.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.30 accessible, keyboard-driven Markdown table source editing passed all seven required GitHub Actions workflows on exact source SHA 51ac3ff929d4643eca3b9531ddb64aced988b67c; evidence: evidence/r2.8.30-markdown-source-editor-accessibility-51ac3ff.json. Full C02.1 and R3-R7 remain pending.",
-    "R2.8.31 safe inline HTML line-break preview passed all seven required GitHub Actions workflows on exact source SHA 8a6235def8b0ad6d0276995f1e295f86d1650278; evidence: evidence/r2.8.31-safe-inline-html-break-8a6235d.json. Remaining C02.1 preview features and R3-R7 remain pending."
+    "R2.8.31 safe inline HTML line-break preview passed all seven required GitHub Actions workflows on exact source SHA 8a6235def8b0ad6d0276995f1e295f86d1650278; evidence: evidence/r2.8.31-safe-inline-html-break-8a6235d.json. Remaining C02.1 preview features and R3-R7 remain pending.",
+    "R2.8.32 plain inline highlights passed all seven required GitHub Actions workflows on exact implementation SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67; the focused fixture and egui UI tests passed on all three platforms. Evidence: evidence/r2.8.32-inline-highlights-12d68e3.json. Complex highlights remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust source SHA 8a6235def8b0ad6d0276995f1e295f86d1650278 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. The quality workflow passed on same-SHA attempt 2 after its initial Ubuntu Electron audit status timeout. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18062,17 +18063,31 @@
       "next_action": "Continue C02.1 with another focused Markdown preview slice; native highlights and the remaining explicit source-only constructs are pending, as are phases R3-R7."
     },
     "R2.8.32": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "d17595568f2d3c824f401bfb8d089e8ee67aeca1",
       "scope": "Render simple plain-text inline highlights in the native Markdown preview while preserving source-only fallback for mixed Markdown contexts.",
+      "accepted_slice": [
+        "C02.1:plain-inline-highlight-preview"
+      ],
       "acceptance": [
         "The Markdown dialect fixture covers plain and multiple inline highlights as rendered content, and mixed-format highlights as source-only.",
         "The native UI exposes the highlighted phrase while keeping the original Markdown source bytes unchanged.",
         "Rust workspace tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
       ],
       "implementation_commits": [
-        "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0"
+        "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0",
+        "12d68e3993cf5f7951ee4245e51ee45d15759e67"
       ],
+      "validated_source_sha": "12d68e3993cf5f7951ee4245e51ee45d15759e67",
+      "ci_runs": {
+        "rust_ci": 38065888656,
+        "obsidian_vault_roundtrip": 38065888746,
+        "inventory": 38065888790,
+        "loaded_plugins": 38065888677,
+        "desktop_build": 38065888710,
+        "quality": 38065888685,
+        "plugin_renderer": 38065888716
+      },
       "ci_attempts": [
         {
           "source_sha": "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0",
@@ -18086,9 +18101,15 @@
             "desktop_build": 38065534519,
             "quality": 38065534540
           }
+        },
+        {
+          "source_sha": "12d68e3993cf5f7951ee4245e51ee45d15759e67",
+          "rust_ci_run": 38065888656,
+          "result": "All seven required workflows passed on the exact source SHA. Workspace tests, formatting, Clippy, layering, native builds, plugin probes, and Obsidian vault round-trip passed on their applicable platform jobs."
         }
       ],
-      "next_action": "Apply the exact Ubuntu rustfmt correction from run 38065534531, push a fresh implementation SHA, and rerun the seven required GitHub Actions workflows."
+      "evidence": "evidence/r2.8.32-inline-highlights-12d68e3.json",
+      "next_action": "R2.8.32 is accepted. Continue C02.1 with another focused Markdown preview slice; full C02.1 and phases R3-R7 remain pending."
     }
   },
   "ci_preparation": {
