@@ -5,7 +5,6 @@ use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 /// Why the native preview must show the original Markdown source instead of rendering it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MarkdownUnsupportedSyntax {
-    Footnotes,
     Math,
     Diagrams,
     RawHtml,
@@ -17,7 +16,6 @@ impl MarkdownUnsupportedSyntax {
     /// A stable fixture key for this unsupported syntax.
     pub const fn key(self) -> &'static str {
         match self {
-            Self::Footnotes => "footnotes",
             Self::Math => "math",
             Self::Diagrams => "diagrams",
             Self::RawHtml => "raw-html",
@@ -29,7 +27,6 @@ impl MarkdownUnsupportedSyntax {
     /// A short label suitable for a user-visible preview notice.
     pub const fn label(self) -> &'static str {
         match self {
-            Self::Footnotes => "footnotes",
             Self::Math => "math",
             Self::Diagrams => "diagrams",
             Self::RawHtml => "raw HTML",
@@ -72,8 +69,9 @@ impl MarkdownPreviewAnalysis {
 ///
 /// CommonMark-compatible content continues through the native `egui_commonmark` renderer.
 /// Known syntax outside that renderer's current contract takes a source-only fallback, so the
-/// UI does not silently flatten footnotes, math, diagram fences, raw HTML, wiki links, or
-/// highlights. Inline markers inside fenced, indented, and inline code are not dialect syntax.
+/// UI does not silently flatten math, diagram fences, raw HTML, wiki links, or highlights.
+/// Footnotes are supported by the pinned renderer. Inline markers inside fenced, indented, and
+/// inline code are not dialect syntax.
 pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
     let mut unsupported = Vec::new();
     let mut inline_code_spans = Vec::new();
@@ -90,9 +88,6 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
                 if is_diagram_fence(&language) {
                     push_once(&mut unsupported, MarkdownUnsupportedSyntax::Diagrams);
                 }
-            }
-            Event::FootnoteReference(_) | Event::Start(Tag::FootnoteDefinition(_)) => {
-                push_once(&mut unsupported, MarkdownUnsupportedSyntax::Footnotes);
             }
             Event::InlineMath(_) | Event::DisplayMath(_) => {
                 push_once(&mut unsupported, MarkdownUnsupportedSyntax::Math);

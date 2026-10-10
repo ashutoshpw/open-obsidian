@@ -40,10 +40,10 @@
       "standard-alert-callouts",
       "fenced-code",
       "thematic-breaks",
-      "inline-formatting"
+      "inline-formatting",
+      "footnotes"
     ],
     "source_only_blocks": [
-      "footnotes",
       "math",
       "diagrams",
       "raw-html",
@@ -61,8 +61,8 @@
       {
         "id": "footnote",
         "source": "A reference[^one].\n\n[^one]: Original footnote body.",
-        "expected_disposition": "show-source",
-        "unsupported_syntax": ["footnotes"]
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
       },
       {
         "id": "inline-and-display-math",

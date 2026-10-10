@@ -2482,6 +2482,25 @@ mod tests {
     }
 
     #[test]
+    fn egui_renders_markdown_footnotes_without_source_fallback() {
+        let source = "A footnote reference[^one].\n\n[^one]: The original footnote body.";
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("A footnote reference");
+        harness.get_by_label("The original footnote body.");
+    }
+
+    #[test]
     fn egui_opens_an_existing_vault_in_place_without_changing_its_tree() {
         let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
             .expect("existing-vault fixture must be valid JSON");
