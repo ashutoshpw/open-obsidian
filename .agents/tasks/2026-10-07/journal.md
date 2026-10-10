@@ -2883,3 +2883,5 @@ Accepted slice: the CommonMark basics fixture renders its table in the native pr
 ### R2.8.63 in progress — single inline highlight fixture preview
 
 Use the existing highlight C02.1 fixture to drive the egui preview, verify RenderMarkdown and the expected highlighted phrase, and preserve the original source bytes. Convert the direct-string single-highlight test to fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.62 acceptance record is pushed.
+
+R2.8.63 tracker checkpoint: inventory [run 38090729528](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090729528), job 114326433179, passed for tracker SHA c36d6c9768e1d924d3aea9e9535eee1aa57e0fb0.
