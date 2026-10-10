@@ -2523,10 +2523,7 @@ mod tests {
             .iter()
             .find(|entry| entry.relative_path == relative_path)
             .expect("vault snapshot must record the symlink");
-        assert_eq!(
-            scenario["expected_recorded_kind"],
-            "symlink"
-        );
+        assert_eq!(scenario["expected_recorded_kind"], "symlink");
         assert_eq!(alias.kind, super::VaultSnapshotEntryKind::Symlink);
         assert_eq!(
             alias
@@ -2559,10 +2556,12 @@ mod tests {
                 .as_bytes()
                 .to_vec()
         );
-        assert!(fs::symlink_metadata(&alias_path)
-            .unwrap()
-            .file_type()
-            .is_symlink());
+        assert!(
+            fs::symlink_metadata(&alias_path)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
     }
 
     #[test]
