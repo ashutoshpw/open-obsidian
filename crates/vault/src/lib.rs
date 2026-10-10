@@ -3092,6 +3092,146 @@ mod tests {
     }
 
     #[test]
+    fn rename_edit_matrix_preserves_external_move_and_incoming_conflict() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "rename-versus-edit")
+            .expect("failure matrix must contain rename-versus-edit");
+        assert_eq!(
+            scenario["fault_stage"],
+            "after-base-read-before-external-rename"
+        );
+        assert_eq!(
+            scenario["expected_outcome"],
+            "preserve-incoming-as-conflict"
+        );
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["macOS", "Windows", "Linux"])
+        );
+
+        let relative_path_text = scenario["relative_path"].as_str().unwrap();
+        let relative_path = PathBuf::from(relative_path_text);
+        let renamed_path = PathBuf::from(scenario["renamed_path"].as_str().unwrap());
+        let initial = scenario["initial_bytes_utf8"].as_str().unwrap().as_bytes();
+        let incoming = scenario["incoming_bytes_utf8"].as_str().unwrap().as_bytes();
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let target_path = vault_temp.0.join(&relative_path);
+        let renamed_target_path = vault_temp.0.join(&renamed_path);
+        fs::create_dir_all(target_path.parent().unwrap()).unwrap();
+        fs::create_dir_all(renamed_target_path.parent().unwrap()).unwrap();
+        fs::write(&target_path, initial).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let stale = store.root().read(&relative_path).unwrap();
+        let expected_revision = sha256_hex(initial);
+        assert_eq!(stale.revision_sha256, expected_revision);
+        fs::rename(&target_path, &renamed_target_path).unwrap();
+
+        let (conflict_path, recorded_expected, recorded_current, preserved_path) = match store
+            .write(VaultWriteRequest {
+                relative_path: relative_path.clone(),
+                expected_revision_sha256: Some(stale.revision_sha256),
+                bytes: incoming.to_vec(),
+            }) {
+            Err(VaultError::RevisionConflict {
+                relative_path,
+                expected_revision,
+                current_revision,
+                preserved_path,
+            }) => (
+                relative_path,
+                expected_revision,
+                current_revision,
+                preserved_path,
+            ),
+            Err(error) => panic!("rename-versus-edit returned the wrong error: {error}"),
+            Ok(_) => panic!("stale edit recreated the pre-rename path"),
+        };
+
+        assert_eq!(conflict_path, relative_path);
+        assert_eq!(
+            recorded_expected.as_deref(),
+            Some(expected_revision.as_str())
+        );
+        assert!(recorded_current.is_none());
+        assert!(scenario["expected_target_bytes_utf8"].is_null());
+        assert!(!target_path.exists());
+        assert_eq!(
+            fs::read(&renamed_target_path).unwrap(),
+            scenario["expected_renamed_path_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+        assert_eq!(
+            fs::read(&preserved_path).unwrap(),
+            scenario["expected_conflict_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+
+        let conflict = store
+            .history_records()
+            .unwrap()
+            .into_iter()
+            .find(|record| {
+                record.kind == VaultHistoryKind::Conflict && record.relative_path == relative_path
+            })
+            .expect("rename-versus-edit must create a protected conflict record");
+        assert_eq!(
+            conflict.protected,
+            scenario["expected_conflict_protected"].as_bool().unwrap()
+        );
+        assert_eq!(
+            conflict.expected_revision_sha256.as_deref(),
+            Some(expected_revision.as_str())
+        );
+        assert!(conflict.current_revision_sha256.is_none());
+        let conflict_read = store
+            .read_conflict(&conflict.id, &relative_path)
+            .expect("renamed-note edit must remain readable as a conflict");
+        assert_eq!(
+            conflict_read.bytes,
+            scenario["expected_conflict_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        let entries = journal
+            .lines()
+            .map(serde_json::from_str::<Value>)
+            .collect::<Result<Vec<_>, _>>()
+            .expect("rename-versus-edit journal must contain valid JSON");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0]["operation"], "write");
+        assert_eq!(entries[0]["state"], scenario["expected_journal_state"]);
+        assert_eq!(
+            entries[0]["relative_path"].as_str(),
+            Some(relative_path_text)
+        );
+        assert_eq!(
+            entries[0]["expected_revision"].as_str(),
+            Some(expected_revision.as_str())
+        );
+        let incoming_revision = sha256_hex(incoming);
+        assert_eq!(
+            entries[0]["next_revision"].as_str(),
+            Some(incoming_revision.as_str())
+        );
+    }
+
+    #[test]
     fn failure_matrix_preserves_all_versions_for_disk_full_and_permission_loss() {
         let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
             .expect("vault safety failure-matrix fixture must be valid JSON");

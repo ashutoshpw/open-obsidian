@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T04:14:17Z",
+  "updated_at": "2026-10-10T04:16:30Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c36954bd4ff4f4ecb5b34263ccd24a59ab63650e",
-  "current_milestone": "R2.8.6",
-  "next_action": "Start R2.8.7 for the next SYNC-004 failure-matrix scenario from the accepted tracker checkpoint. Six scenarios remain; keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "1c6a300b461ff42749c971e1a221d26ef006c2bc",
+  "current_milestone": "R2.8.7",
+  "next_action": "Run exact-SHA GitHub Actions acceptance for the rename-versus-edit case, then continue the remaining five SYNC-004 failure-matrix scenarios. Keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {

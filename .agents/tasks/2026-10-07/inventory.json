@@ -1662,7 +1662,7 @@
     },
     {
       "path": "fixtures/vault-safety-failure-matrix.json",
-      "sha256": "c92fde7bb354820c85f75105ad3132b2d5439cab937fd5297d7acb96d3acb12d",
+      "sha256": "ee8495cd787812b38f41c6d058c6582fe8bd9b1579b3975cacaa937a900f47c8",
       "rust_owner": "crates/vault",
       "mapping_status": "reviewed",
       "status": "pending",
