@@ -1075,8 +1075,7 @@ fn resolve_property_value(
 
     let raw_value = source_value(bytes, property.value_span)?;
     if raw_value.is_empty() {
-        let (child, child_end) =
-            next_block_child(bytes, lines, index, end, lines[index].indent)?;
+        let (child, child_end) = next_block_child(bytes, lines, index, end, lines[index].indent)?;
         let child_line = lines[child];
         return match path.get(path_index + 1) {
             Some(super::MarkdownPropertyPathSegment::Index(_))
