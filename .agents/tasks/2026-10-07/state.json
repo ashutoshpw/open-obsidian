@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:21:59Z",
+  "updated_at": "2026-10-10T18:29:48Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e67e133d557526d1a4db355561136b09451683b8",
-  "current_milestone": "R2.8.43",
-  "next_action": "R2.8.42 is accepted on exact source SHA e67e133d557526d1a4db355561136b09451683b8; all seven required GitHub Actions workflows passed. R2.8.43 should verify a resolved wiki link inside a Markdown heading remains source-only. Push its implementation as a small commit and use exact-SHA GitHub Actions only. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "9017825fc2626069d756aa919cd7893b3ccbf390",
+  "current_milestone": "R2.8.44",
+  "next_action": "R2.8.43 is accepted on exact source SHA 9017825fc2626069d756aa919cd7893b3ccbf390; all seven required GitHub Actions workflows passed. R2.8.44 should review the remaining C02.1 Markdown dialect gaps and select the next isolated fixture-backed behavior to implement. Use exact-SHA GitHub Actions only and record this tracker commit's inventory checkpoint in R2.8.44 evidence. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "e67e133d557526d1a4db355561136b09451683b8"
+      "implementation_sha": "9017825fc2626069d756aa919cd7893b3ccbf390"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.43 accepted: the primary preview keeps a resolved wiki link inside a Markdown heading source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 9017825fc2626069d756aa919cd7893b3ccbf390. Evidence: evidence/r2.8.43-heading-context-wiki-link-fallback-9017825.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.42 accepted: the primary preview keeps a resolved wiki link inside a Markdown blockquote source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA e67e133d557526d1a4db355561136b09451683b8. Evidence: evidence/r2.8.42-blockquote-wiki-link-fallback-e67e133.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.41 accepted: the primary preview keeps a resolved wiki link inside a Markdown task-list item source-only with no interactive checkbox. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 9059c689a1d5cb3db4ed9cf3ace40bed3839a7bd. Evidence: evidence/r2.8.41-task-list-wiki-link-read-only-9059c68.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.40 accepted: the primary preview keeps a resolved wiki link inside a Markdown table cell source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA ece927bb112ba037fe6cde6bd7bc189d22bcff7d. Evidence: evidence/r2.8.40-table-context-wiki-link-fallback-ece927b.json. C02.1 and phases R3-R7 remain pending.",
@@ -269,7 +270,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA e67e133d557526d1a4db355561136b09451683b8 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA 9017825fc2626069d756aa919cd7893b3ccbf390 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18627,7 +18628,7 @@
       "next_action": "R2.8.42 is accepted; continue with a resolved wiki link inside a Markdown heading. Full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.43": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "f547f62ee3eefe7a2dbe52c936d8822dff1d9fc8",
       "scope": "Verify a simple wiki link inside a Markdown heading remains source-only even when its target resolves to a local Markdown note.",
       "acceptance": [
@@ -18636,8 +18637,34 @@
         "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
+      "implementation_commits": [
+        "9017825fc2626069d756aa919cd7893b3ccbf390"
+      ],
+      "validated_source_sha": "9017825fc2626069d756aa919cd7893b3ccbf390",
+      "ci_runs": {
+        "inventory": 38075498280,
+        "loaded_plugins": 38075498538,
+        "desktop_build": 38075498441,
+        "quality": 38075498371,
+        "rust_ci": 38075498313,
+        "plugin_renderer": 38075498348,
+        "obsidian_vault_roundtrip": 38075498399
+      },
+      "evidence": "evidence/r2.8.43-heading-context-wiki-link-fallback-9017825.json",
+      "next_action": "R2.8.43 is accepted; review the remaining C02.1 Markdown dialect gaps and select the next isolated fixture-backed behavior for R2.8.44. Full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.44": {
+      "status": "in_progress",
+      "starting_sha": "9017825fc2626069d756aa919cd7893b3ccbf390",
+      "scope": "Review remaining C02.1 Markdown dialect gaps and implement the next isolated fixture-backed behavior with source-preserving CI coverage.",
+      "acceptance": [
+        "The next behavior is selected from a specific pending C02.1 contract and represented by a fixture.",
+        "Rust CI verifies source-preserving behavior on Ubuntu, macOS, and Windows.",
+        "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
+        "No local tests, builds, formatters, linters, or app launches are used."
+      ],
       "implementation_commits": [],
-      "next_action": "The resolved heading-context wiki-link fixture and existing source-only UI test are updated; the fixture inventory hash is reconciled. Push this focused slice for exact-SHA GitHub Actions."
+      "next_action": "Inspect pending C02.1 contracts and Markdown fixtures, choose one narrow uncovered behavior, then implement and push it for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

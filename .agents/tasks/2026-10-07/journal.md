@@ -2601,3 +2601,11 @@ The R2.8.42 acceptance tracker commit [f547f62ee3eefe7a2dbe52c936d8822dff1d9fc8]
 ### R2.8.43 in progress — heading-context wiki-link fallback
 
 Starting from tracker SHA `f547f62ee3eefe7a2dbe52c936d8822dff1d9fc8`, add a fixture-driven case for a simple wiki link inside a Markdown heading whose target resolves to a local Markdown note. The existing egui source-only test checks that the resolved link exposes no clickable link and preserves source, vault, and app-data bytes. The fixture hash and inventory reconciliation reason are updated. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+
+### R2.8.43 accepted — heading-context wiki-link fallback — source SHA `9017825fc2626069d756aa919cd7893b3ccbf390`
+
+The primary preview keeps a simple resolved wiki link inside a Markdown heading source-only. The fixture-driven egui test confirms the target resolves, exposes no clickable link, and preserves source, vault, and app-data bytes. The focused test passed on Ubuntu, macOS, and Windows.
+
+All seven required workflows passed on this exact SHA: inventory [38075498280](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498280), loaded-plugin workflows [38075498538](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498538), desktop build [38075498441](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498441), quality [38075498371](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498371), Rust CI [38075498313](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498313), plugin renderer [38075498348](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498348), and Obsidian vault round-trip [38075498399](https://github.com/ashutoshpw/open-obsidian/actions/runs/38075498399). Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.43-heading-context-wiki-link-fallback-9017825.json](evidence/r2.8.43-heading-context-wiki-link-fallback-9017825.json). No local executable validation was used.
+
+Accepted slice: source-only handling for a resolved wiki link inside a Markdown heading. Full C02.1 and migration phases R3-R7 remain pending. Next: review the remaining C02.1 Markdown dialect gaps and select one isolated fixture-backed behavior for R2.8.44.
