@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T23:49:05Z",
+  "updated_at": "2026-10-10T23:52:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "0d6db90c67d1cb779ae9a383489b05736543c717",
+  "last_reconciled_head": "8cf701b825ba13b9715388a6c3fbc313547bfdf6",
   "current_milestone": "R2.8.70",
-  "next_action": "R2.8.69 is accepted on source SHA 8fe603b3fa4164cf681f94c3093f65b793d31e8c; C02 is passing with three-mode and golden byte-preservation evidence. Begin R2.8.70 by auditing C01/C01.2 read-only vault operations against current Rust UI tests, fixtures, and exact-SHA GitHub evidence; keep both requirements pending while any operation or platform lacks direct proof. No local executable validation.",
+  "next_action": "R2.8.70 audit and C01.2-38 matrix reconciliation are prepared. Commit and push the audit on main, use the GitHub Actions inventory result as the tracker gate, then record its exact-SHA result. C01/C01.2 stay pending. Next bounded slice: C01.2-39 reference-app source preview and no-op close against the Obsidian-authored vault on Ubuntu, macOS, and Windows. No local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19843,7 +19843,7 @@
         "Document remaining gaps and select one bounded implementation slice; run executable validation only in GitHub Actions."
       ],
       "implementation_commits": [],
-      "next_action": "Review C01/C01.2 requirement clauses, current vault snapshot fixtures, Rust tests, and existing round-trip artifacts; write an evidence-backed coverage matrix before choosing the next code change."
+      "next_action": "Audit and matrix reconciliation are prepared in evidence/r2.8.70-c01-readonly-audit.md and c01.2-reference-roundtrip-matrix.md. Commit and push the tracker slice; obtain the Rust migration inventory workflow result on its exact SHA, then record the CI checkpoint."
     }
   },
   "ci_preparation": {
