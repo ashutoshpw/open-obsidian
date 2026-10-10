@@ -8,7 +8,8 @@ pub use openobsidian_vault::{
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
     VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
-    VaultWatchError, VaultWatchHint, VaultWatcher, plan_history_retention,
+    VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
+    VaultWriteRecoveryReport, plan_history_retention,
 };
 use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
 use std::path::Path;
@@ -19,6 +20,7 @@ use std::time::SystemTime;
 pub struct VaultSession {
     store: VaultStore,
     entries: Vec<VaultEntry>,
+    write_recovery: VaultWriteRecoveryReport,
     rename_recovery: VaultRenameRecoveryReport,
 }
 
@@ -29,11 +31,13 @@ impl VaultSession {
         app_data_root: impl AsRef<Path>,
     ) -> Result<Self, VaultError> {
         let store = VaultStore::open(root, app_data_root)?;
+        let write_recovery = store.recover_pending_writes()?;
         let rename_recovery = store.recover_pending_rename_transactions()?;
         let entries = store.root().scan_markdown()?;
         Ok(Self {
             store,
             entries,
+            write_recovery,
             rename_recovery,
         })
     }
@@ -46,6 +50,11 @@ impl VaultSession {
     /// Returns the recovery outcome processed before the Markdown listing was scanned.
     pub fn rename_recovery_report(&self) -> &VaultRenameRecoveryReport {
         &self.rename_recovery
+    }
+
+    /// Returns the interrupted single-file write recovery outcome from open.
+    pub fn write_recovery_report(&self) -> &VaultWriteRecoveryReport {
+        &self.write_recovery
     }
 
     /// Returns the canonical vault root path.
@@ -211,6 +220,10 @@ mod tests {
             session.rename_recovery_report(),
             &VaultRenameRecoveryReport::default()
         );
+        assert_eq!(
+            session.write_recovery_report(),
+            &VaultWriteRecoveryReport::default()
+        );
         let preview = session.build_rename_preview("Old.md", "New.md").unwrap();
         let result = session.apply_rename_preview(&preview).unwrap();
 
@@ -276,6 +289,85 @@ mod tests {
                 .entries()
                 .iter()
                 .any(|entry| entry.relative_path == *"Old.md")
+        );
+    }
+
+    #[test]
+    fn opening_session_recovers_interrupted_write_before_scanning_notes() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        fs::create_dir(vault.join("Notes")).unwrap();
+        let relative_path = "Notes/Prepared.md";
+        let previous = b"\xef\xbb\xbfstatus: old\r\n";
+        let incoming = b"\xef\xbb\xbfstatus: recovered\r\n";
+        fs::write(vault.join(relative_path), previous).unwrap();
+        let expected_revision = VaultRoot::open(&vault)
+            .unwrap()
+            .read(relative_path)
+            .unwrap()
+            .revision_sha256;
+        let seed_path = "Notes/IncomingSeed";
+        fs::write(vault.join(seed_path), incoming).unwrap();
+        let next_revision = VaultRoot::open(&vault)
+            .unwrap()
+            .read(seed_path)
+            .unwrap()
+            .revision_sha256;
+        fs::remove_file(vault.join(seed_path)).unwrap();
+
+        let operation_id = "123-456-0";
+        let recovery = app_data.join("recovery");
+        fs::create_dir(&recovery).unwrap();
+        fs::write(
+            recovery.join(format!("{operation_id}-previous.bin")),
+            previous,
+        )
+        .unwrap();
+        fs::write(
+            recovery.join(format!("{operation_id}-previous.json")),
+            format!(
+                "{{\"id\":\"{operation_id}-previous\",\"relative_path\":\"{relative_path}\",\"revision\":\"{expected_revision}\",\"bytes\":{},\"path\":\"ignored\",\"captured_at\":\"1\",\"expected_revision\":\"{expected_revision}\",\"current_revision\":\"{expected_revision}\"}}\n",
+                previous.len()
+            ),
+        )
+        .unwrap();
+        fs::write(
+            recovery.join(format!("{operation_id}-incoming.bin")),
+            incoming,
+        )
+        .unwrap();
+        fs::write(
+            recovery.join(format!("{operation_id}-incoming.json")),
+            format!(
+                "{{\"id\":\"{operation_id}-incoming\",\"relative_path\":\"{relative_path}\",\"revision\":\"{next_revision}\",\"bytes\":{},\"path\":\"ignored\",\"captured_at\":\"1\",\"expected_revision\":\"{expected_revision}\",\"current_revision\":\"{expected_revision}\"}}\n",
+                incoming.len()
+            ),
+        )
+        .unwrap();
+        fs::write(
+            app_data.join("journal.jsonl"),
+            format!(
+                "{{\"id\":\"{operation_id}\",\"operation\":\"write\",\"state\":\"prepared\",\"relative_path\":\"{relative_path}\",\"expected_revision\":\"{expected_revision}\",\"next_revision\":\"{next_revision}\",\"recorded_at\":\"1\",\"error\":null}}\n"
+            ),
+        )
+        .unwrap();
+
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        assert_eq!(
+            session.write_recovery_report().recovered_operations,
+            vec![operation_id.to_owned()]
+        );
+        assert!(session.write_recovery_report().needs_attention.is_empty());
+        assert_eq!(
+            session.read(relative_path).unwrap().document.as_bytes(),
+            incoming
+        );
+        assert!(
+            session
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == PathBuf::from(relative_path))
         );
     }
 }

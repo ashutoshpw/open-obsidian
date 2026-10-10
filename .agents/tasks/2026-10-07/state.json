@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T01:01:26Z",
+  "updated_at": "2026-10-10T01:19:39Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "2964c96cea6ad96710ef3a7a0e02eeab4d500776",
-  "current_milestone": "R2.7.2",
-  "next_action": "Review the remaining R2 vault/filesystem requirements and choose the next small acceptance slice; keep broader C01/C01.2 acceptance pending.",
+  "current_milestone": "R2.8.1",
+  "next_action": "Push the interrupted-write recovery slice to origin/main, inspect exact-SHA GitHub Actions on Ubuntu/macOS/Windows, fix CI findings, and record evidence before accepting SYNC-002.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -234,7 +234,7 @@
     "R2.7.1 SYNC-003 watcher recovery passed all seven required GitHub Actions workflows on exact SHA a301bfcee01d3a16c812c3eaa0f0859d9109e887; evidence recorded in evidence/r2.7.1-sync-watcher-a301bfc.json.",
     "R2.7.2 C01.2-38 verified event-driven watcher refresh with exact source bytes and unchanged vault/app-data snapshots; all seven required workflows passed on 2964c96cea6ad96710ef3a7a0e02eeab4d500776. Evidence: evidence/r2.7.2-watcher-event-2964c96.json."
   ],
-  "push_status": "R2.7.2 / C01.2-38 watcher event reconciliation passed on exact implementation SHA 2964c96cea6ad96710ef3a7a0e02eeab4d500776, pushed to origin/main. The focused test and all seven required workflows passed on Linux, macOS and Windows. Evidence: evidence/r2.7.2-watcher-event-2964c96.json. Broader C01/C01.2 and R2 acceptance remain pending.",
+  "push_status": "R2.7.2 / C01.2-38 watcher event reconciliation passed on exact implementation SHA 2964c96cea6ad96710ef3a7a0e02eeab4d500776, pushed to origin/main. R2.8.1 interrupted-write recovery implementation is being prepared from tracker checkpoint a8c06b93ba7895b24421df29eefc2ab3638ab4a0; it is not yet pushed or accepted. Broader C01/C01.2 and R2 acceptance remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -14780,6 +14780,31 @@
       ],
       "evidence": "evidence/r2.7.2-watcher-event-2964c96.json",
       "next_action": "Review remaining R2 vault/filesystem requirements and select the next small acceptance slice; keep broader C01/C01.2 acceptance pending."
+    },
+    "R2.8.1": {
+      "status": "in_progress",
+      "starting_sha": "a8c06b93ba7895b24421df29eefc2ab3638ab4a0",
+      "implementation_sha": null,
+      "implementation_commits": [],
+      "scope": "Persist intended write bytes before the prepared journal record, recover interrupted single-file writes by revision, protect unresolved recovery images from cleanup, expose startup outcomes in the native UI, and document filesystem replacement limits.",
+      "accepted_slice": [
+        "SYNC-002"
+      ],
+      "remaining": [
+        "Exact-SHA GitHub Actions results are pending.",
+        "Broader R2 filesystem and C01/C01.2 acceptance remain pending."
+      ],
+      "acceptance": [
+        "Crash-before-replace, crash-after-replace-before-commit, new-file creation, external-edit conflict and Windows backup-move fixtures preserve exact versions and recover only when revisions match.",
+        "A pending write's incoming and previous recovery images remain protected until a terminal journal state is recorded.",
+        "VaultSession completes write recovery before scanning Markdown entries and the UI reports unresolved operations.",
+        "Multi-file rename recovery continues to restore each original only when the current revision matches its transaction write.",
+        "The atomic-write fixture states the platform and power-loss limits without a universal filesystem atomicity claim.",
+        "All required exact-SHA GitHub Actions workflows pass on Ubuntu, macOS and Windows."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Commit and push the implementation for exact-SHA CI; leave SYNC-002 pending until all required workflows pass."
     }
   },
   "ci_preparation": {

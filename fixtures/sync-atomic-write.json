@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "fixture:sync-atomic-write",
+  "purpose": "Describe the write replacement protocol without promising unsupported filesystem atomicity.",
+  "protocol": {
+    "incoming_snapshot": "Persist the intended bytes and revision in app-owned recovery history before journaling prepared.",
+    "previous_snapshot": "Persist the prior bytes and revision in app-owned recovery history before journaling prepared when the target exists.",
+    "temporary_file": "Create a unique temporary file beside the target, write all bytes, and sync the file before replacement.",
+    "linux_and_macos": "Use same-directory rename and rely on the mounted filesystem's documented semantics; network and sync filesystems are not certified by this fixture.",
+    "windows": "Move the old target to an operation-scoped backup and then move the temporary file into place; this two-step fallback is not one atomic namespace replacement.",
+    "power_loss": "The parent directory is not synced, so this protocol makes no universal power-loss durability claim."
+  },
+  "acceptance": [
+    "A prepared journal record is written only after required recovery images exist.",
+    "Replacement failures preserve the original target and incoming bytes where the filesystem permits.",
+    "No platform or filesystem is described as atomic unless its replacement behavior is established."
+  ]
+}

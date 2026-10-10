@@ -1,5 +1,6 @@
 use super::{VaultError, VaultStore, normalize_relative_path};
 use serde_json::Value;
+use std::collections::{HashMap, HashSet};
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -145,6 +146,7 @@ pub fn plan_history_retention(
 impl VaultStore {
     /// List validated recovery, failed-write and conflict records outside the vault.
     pub fn history_records(&self) -> Result<Vec<VaultHistoryRecord>, VaultError> {
+        let pending_write_ids = self.pending_write_operation_ids()?;
         let mut records = Vec::new();
         for kind in HISTORY_CATEGORIES {
             let Some(directory) = managed_history_directory(&self.app_data_root, kind)? else {
@@ -160,7 +162,16 @@ impl VaultStore {
                 if metadata.file_type().is_symlink() || !metadata.is_file() {
                     return Err(VaultError::InvalidHistoryRecord(path));
                 }
-                records.push(read_history_record(&directory, &path, kind)?);
+                let mut record = read_history_record(&directory, &path, kind)?;
+                if kind == VaultHistoryKind::Recovery
+                    && pending_write_ids.iter().any(|operation_id| {
+                        record.id == format!("{operation_id}-incoming")
+                            || record.id == format!("{operation_id}-previous")
+                    })
+                {
+                    record.protected = true;
+                }
+                records.push(record);
             }
         }
         records.sort_by(|left, right| {
@@ -170,6 +181,68 @@ impl VaultStore {
                 .then_with(|| left.id.cmp(&right.id))
         });
         Ok(records)
+    }
+
+    fn pending_write_operation_ids(&self) -> Result<HashSet<String>, VaultError> {
+        let journal_path = self.app_data_root.join("journal.jsonl");
+        match fs::symlink_metadata(&journal_path) {
+            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_file() => {
+                return Err(VaultError::InvalidDataDirectory(journal_path));
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(HashSet::new());
+            }
+            Err(error) => return Err(VaultError::Journal(error)),
+        }
+        let journal_bytes = fs::read(&journal_path).map_err(VaultError::Journal)?;
+        let complete_length = journal_bytes
+            .iter()
+            .rposition(|byte| *byte == b'\n')
+            .map_or(0, |index| index + 1);
+        let complete_text =
+            std::str::from_utf8(&journal_bytes[..complete_length]).map_err(|error| {
+                VaultError::Journal(std::io::Error::new(std::io::ErrorKind::InvalidData, error))
+            })?;
+        let mut latest_by_id = HashMap::new();
+        for line in complete_text.lines().filter(|line| !line.trim().is_empty()) {
+            let value: Value = serde_json::from_str(line).map_err(|error| {
+                VaultError::Journal(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    error,
+                ))
+            })?;
+            if value.get("operation").and_then(Value::as_str) != Some("write") {
+                continue;
+            }
+            let operation_id = value
+                .get("id")
+                .and_then(Value::as_str)
+                .filter(|id| {
+                    !id.is_empty()
+                        && id.len() <= 128
+                        && id
+                            .bytes()
+                            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+                })
+                .ok_or_else(|| {
+                    VaultError::Journal(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "write journal entry has an invalid operation id",
+                    ))
+                })?;
+            let state = value
+                .get("state")
+                .and_then(Value::as_str)
+                .unwrap_or("");
+            latest_by_id.insert(operation_id.to_owned(), state.to_owned());
+        }
+        Ok(latest_by_id
+            .into_iter()
+            .filter_map(|(id, state)| {
+                (!matches!(state.as_str(), "committed" | "failed" | "conflict")).then_some(id)
+            })
+            .collect())
     }
 
     /// Return a fresh retention plan. This method is read-only.
@@ -708,10 +781,10 @@ mod tests {
     fn lists_validated_history_from_each_managed_category() {
         let (_temp, store, _app_data_path) = fixture();
         let before = store.root.read("note.md").unwrap();
-        store
+        let written = store
             .write(super::super::VaultWriteRequest {
                 relative_path: PathBuf::from("note.md"),
-                expected_revision_sha256: Some(before.revision_sha256),
+                expected_revision_sha256: Some(before.revision_sha256.clone()),
                 bytes: b"after\n".to_vec(),
             })
             .unwrap();
@@ -725,12 +798,19 @@ mod tests {
         assert!(matches!(error, VaultError::RevisionConflict { .. }));
 
         let records = store.history_records().unwrap();
-        assert_eq!(records.len(), 2);
-        assert!(
-            records
-                .iter()
-                .any(|record| { record.kind == VaultHistoryKind::Recovery && !record.protected })
-        );
+        assert_eq!(records.len(), 3);
+        let recovery_records = records
+            .iter()
+            .filter(|record| record.kind == VaultHistoryKind::Recovery)
+            .collect::<Vec<_>>();
+        assert_eq!(recovery_records.len(), 2);
+        assert!(recovery_records.iter().all(|record| !record.protected));
+        assert!(recovery_records
+            .iter()
+            .any(|record| record.revision_sha256 == before.revision_sha256));
+        assert!(recovery_records
+            .iter()
+            .any(|record| record.revision_sha256 == written.read.revision_sha256));
         assert!(
             records
                 .iter()
@@ -915,28 +995,38 @@ mod tests {
         assert!(matches!(error, VaultError::RevisionConflict { .. }));
 
         let recovery_dir = app_data_path.join("recovery");
-        let recovery_record = fs::read_dir(&recovery_dir)
+        let recovery_records = fs::read_dir(&recovery_dir)
             .unwrap()
             .map(Result::unwrap)
-            .find(|entry| entry.path().extension() == Some(OsStr::new("json")))
-            .unwrap();
-        let recovery_id = recovery_record
-            .path()
-            .file_stem()
-            .unwrap()
-            .to_string_lossy()
-            .into_owned();
+            .filter(|entry| entry.path().extension() == Some(OsStr::new("json")))
+            .collect::<Vec<_>>();
+        assert_eq!(recovery_records.len(), 2);
+        let recovery_ids = recovery_records
+            .iter()
+            .map(|record| {
+                record
+                    .path()
+                    .file_stem()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect::<Vec<_>>();
         let outside_path = temp.0.join("outside-history.bin");
         fs::write(&outside_path, b"keep outside managed history\n").unwrap();
-        let mut metadata: Value =
-            serde_json::from_slice(&fs::read(recovery_record.path()).unwrap()).unwrap();
-        metadata["captured_at"] = Value::String("1".to_owned());
-        metadata["path"] = Value::String(outside_path.to_string_lossy().into_owned());
-        fs::write(
-            recovery_record.path(),
-            serde_json::to_vec(&metadata).unwrap(),
-        )
-        .unwrap();
+        for (index, recovery_record) in recovery_records.iter().enumerate() {
+            let mut metadata: Value =
+                serde_json::from_slice(&fs::read(recovery_record.path()).unwrap()).unwrap();
+            metadata["captured_at"] = Value::String("1".to_owned());
+            if index == 0 {
+                metadata["path"] = Value::String(outside_path.to_string_lossy().into_owned());
+            }
+            fs::write(
+                recovery_record.path(),
+                serde_json::to_vec(&metadata).unwrap(),
+            )
+            .unwrap();
+        }
 
         let plan = store
             .history_retention_plan(
@@ -947,12 +1037,17 @@ mod tests {
                 UNIX_EPOCH + Duration::from_secs(500 * 24 * 60 * 60),
             )
             .unwrap();
-        assert_eq!(plan.pruneable.len(), 1);
-        assert_eq!(plan.pruneable[0].id, recovery_id);
+        assert_eq!(plan.pruneable.len(), 2);
+        assert!(plan
+            .pruneable
+            .iter()
+            .all(|record| recovery_ids.contains(&record.id)));
         assert_eq!(plan.protected.len(), 1);
         assert!(plan.warning);
-        assert!(recovery_dir.join(format!("{recovery_id}.bin")).exists());
-        assert!(recovery_dir.join(format!("{recovery_id}.json")).exists());
+        for recovery_id in &recovery_ids {
+            assert!(recovery_dir.join(format!("{recovery_id}.bin")).exists());
+            assert!(recovery_dir.join(format!("{recovery_id}.json")).exists());
+        }
 
         let cleanup = store
             .cleanup_history_at(
@@ -963,11 +1058,16 @@ mod tests {
                 UNIX_EPOCH + Duration::from_secs(500 * 24 * 60 * 60),
             )
             .unwrap();
-        assert_eq!(cleanup.removed, vec![recovery_id.clone()]);
+        assert_eq!(cleanup.removed.len(), 2);
+        assert!(recovery_ids
+            .iter()
+            .all(|recovery_id| cleanup.removed.contains(recovery_id)));
         assert_eq!(cleanup.protected.len(), 1);
         assert!(cleanup.warning);
-        assert!(!recovery_dir.join(format!("{recovery_id}.bin")).exists());
-        assert!(!recovery_dir.join(format!("{recovery_id}.json")).exists());
+        for recovery_id in &recovery_ids {
+            assert!(!recovery_dir.join(format!("{recovery_id}.bin")).exists());
+            assert!(!recovery_dir.join(format!("{recovery_id}.json")).exists());
+        }
         assert_eq!(
             fs::read(&outside_path).unwrap(),
             b"keep outside managed history\n"

@@ -1579,13 +1579,22 @@ mod tests {
     fn recovers_interrupted_c03_fixture_rename_and_restores_every_original_byte() {
         let fixture: Value = serde_json::from_str(C03_RENAME_FIXTURE)
             .expect("rename-plan fixture must be valid JSON");
+        let sync_fixture: Value = serde_json::from_str(include_str!(
+            "../../../fixtures/sync-interrupted-write.json"
+        ))
+        .expect("interrupted-write fixture must be valid JSON");
+        assert_eq!(
+            sync_fixture["multi_file_recovery"]["fixture"],
+            "fixtures/rename-plan.json"
+        );
+        let case_id = sync_fixture["multi_file_recovery"]["existing_case"]
+            .as_str()
+            .expect("sync fixture must name its multi-file case");
         let case = fixture["cases"]
             .as_array()
             .expect("fixture cases must be an array")
             .iter()
-            .find(|case| {
-                case["id"].as_str() == Some("resolved-wiki-markdown-embed-and-unrelated-targets")
-            })
+            .find(|case| case["id"].as_str() == Some(case_id))
             .expect("fixture must contain the resolved rename case");
 
         let temporary = TempDir::new();

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "id": "fixture:sync-interrupted-write",
+  "purpose": "Recover an interrupted single-file write by revisions, retaining every version and preserving external changes.",
+  "relative_path": "Notes/Status.md",
+  "cases": [
+    {
+      "id": "crash-before-replace",
+      "initial_bytes": "\uFEFFstatus: old\r\n",
+      "incoming_bytes": "\uFEFFstatus: new\r\n",
+      "target_at_restart": "\uFEFFstatus: old\r\n",
+      "expected_outcome": "complete-the-prepared-write-and-record-committed",
+      "expected_target": "\uFEFFstatus: new\r\n"
+    },
+    {
+      "id": "crash-after-replace-before-commit",
+      "initial_bytes": "\uFEFFstatus: old\r\n",
+      "incoming_bytes": "\uFEFFstatus: new\r\n",
+      "target_at_restart": "\uFEFFstatus: new\r\n",
+      "expected_outcome": "record-committed-without-replacing-again",
+      "expected_target": "\uFEFFstatus: new\r\n"
+    },
+    {
+      "id": "crash-before-replace-new-file",
+      "initial_bytes": null,
+      "incoming_bytes": "\uFEFFstatus: created\r\n",
+      "target_at_restart": null,
+      "expected_outcome": "complete-the-prepared-write-and-record-committed",
+      "expected_target": "\uFEFFstatus: created\r\n"
+    },
+    {
+      "id": "windows-crash-after-target-to-backup",
+      "platform": "windows",
+      "initial_bytes": "\uFEFFstatus: old\r\n",
+      "incoming_bytes": "\uFEFFstatus: new\r\n",
+      "target_at_restart": null,
+      "windows_backup_at_restart": true,
+      "expected_outcome": "complete-the-prepared-write-and-record-committed",
+      "expected_target": "\uFEFFstatus: new\r\n"
+    },
+    {
+      "id": "external-edit-after-crash",
+      "initial_bytes": "\uFEFFstatus: old\r\n",
+      "incoming_bytes": "\uFEFFstatus: intended\r\n",
+      "target_at_restart": "\uFEFFstatus: external\r\n",
+      "expected_outcome": "leave-target-untouched-and-report-recovery-required",
+      "expected_target": "\uFEFFstatus: external\r\n"
+    }
+  ],
+  "multi_file_recovery": {
+    "fixture": "fixtures/rename-plan.json",
+    "existing_case": "resolved-wiki-markdown-embed-and-unrelated-targets",
+    "expected_outcome": "restore-each-original-only-when-its-current-revision-matches-the-transaction-write"
+  }
+}

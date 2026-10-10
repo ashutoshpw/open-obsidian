@@ -2256,6 +2256,26 @@
       "migration_phase": "R2",
       "purpose": "Synthetic overflow, sleep, root-reconnect and external filesystem-event cases require disk-verified vault reconciliation.",
       "fixture_reader": "crates/vault"
+    },
+    {
+      "path": "fixtures/sync-atomic-write.json",
+      "sha256": "533237a482a93c5e8ab453616af8553c77631b01e91b6c5457de7ebcf922c0d8",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Documents write snapshots, platform replacement semantics and limits on filesystem atomicity claims.",
+      "fixture_reader": "crates/vault"
+    },
+    {
+      "path": "fixtures/sync-interrupted-write.json",
+      "sha256": "61d4770cb92e915b6ecf14b183a35d98b5a99a587df50d061a18323197a1e9e8",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Covers crash-before-replace, crash-after-replace, external-edit preservation and the multi-file rename recovery case.",
+      "fixture_reader": "crates/vault"
     }
   ],
   "spec_hashes": {

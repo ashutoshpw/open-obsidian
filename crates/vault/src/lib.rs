@@ -261,6 +261,8 @@ pub struct VaultStore {
     #[cfg(test)]
     fail_committed_journal: bool,
     #[cfg(test)]
+    fail_rollback_replace: bool,
+    #[cfg(test)]
     fail_rename_committed_journal: bool,
     #[cfg(test)]
     fail_replace_path: Option<PathBuf>,
@@ -271,6 +273,7 @@ pub struct VaultStore {
 mod history;
 mod rename_transaction;
 mod watcher;
+mod write_recovery;
 pub use history::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
     VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
@@ -280,6 +283,7 @@ pub use rename_transaction::{
     VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
 };
 pub use watcher::{VaultWatchError, VaultWatchHint, VaultWatcher};
+pub use write_recovery::{VaultWriteRecoveryIssue, VaultWriteRecoveryReport};
 
 #[derive(Clone, Debug)]
 pub struct VaultRoot {
@@ -1113,6 +1117,8 @@ impl VaultStore {
             #[cfg(test)]
             fail_committed_journal: false,
             #[cfg(test)]
+            fail_rollback_replace: false,
+            #[cfg(test)]
             fail_rename_committed_journal: false,
             #[cfg(test)]
             fail_replace_path: None,
@@ -1126,8 +1132,10 @@ impl VaultStore {
     }
 
     /// Write a file only when its current SHA-256 revision matches the caller's
-    /// expectation. Previous, conflicting and failed incoming bytes are stored
-    /// under app-owned data; each operation is appended to `journal.jsonl`.
+    /// expectation. Previous and incoming bytes are stored under app-owned data
+    /// before the prepared journal entry; conflicts and failed writes keep their
+    /// own preserved versions. Replacement semantics depend on the platform and
+    /// filesystem, as documented by `fixtures/sync-atomic-write.json`.
     pub fn write(&self, request: VaultWriteRequest) -> Result<VaultWriteResult, VaultError> {
         let relative_path = normalize_relative_path(&request.relative_path)?;
         let relative_path_text = path_to_slashes(&relative_path)?;
@@ -1163,15 +1171,6 @@ impl VaultStore {
         }
 
         let next_revision = sha256_hex(&request.bytes);
-        self.append_journal(
-            &operation_id,
-            "prepared",
-            &relative_path_text,
-            request.expected_revision_sha256.as_deref(),
-            &next_revision,
-            None,
-        )?;
-
         if let Some(previous) = &before
             && let Err(error) = self.preserve_bytes(
                 "recovery",
@@ -1194,6 +1193,36 @@ impl VaultStore {
             );
             return Err(error);
         }
+
+        if let Err(error) = self.preserve_bytes(
+            "recovery",
+            &format!("{operation_id}-incoming"),
+            ".bin",
+            &relative_path_text,
+            &request.bytes,
+            &next_revision,
+            request.expected_revision_sha256.as_deref(),
+            current_revision.as_deref(),
+        ) {
+            let _ = self.append_journal(
+                &operation_id,
+                "failed",
+                &relative_path_text,
+                request.expected_revision_sha256.as_deref(),
+                &next_revision,
+                Some(&error.to_string()),
+            );
+            return Err(error);
+        }
+
+        self.append_journal(
+            &operation_id,
+            "prepared",
+            &relative_path_text,
+            request.expected_revision_sha256.as_deref(),
+            &next_revision,
+            None,
+        )?;
 
         let latest_revision = match self.read_if_present(&relative_path, &target_path) {
             Ok(read) => read.map(|read| read.revision_sha256),
@@ -1260,6 +1289,36 @@ impl VaultStore {
                 request.expected_revision_sha256.as_deref(),
                 current_revision.as_deref(),
             );
+            #[cfg(windows)]
+            let target_was_lost = request.expected_revision_sha256.is_some()
+                && matches!(
+                    self.read_if_present(&relative_path, &target_path),
+                    Ok(None)
+                );
+            #[cfg(not(windows))]
+            let target_was_lost = false;
+            if target_was_lost {
+                let preservation_note = preservation
+                    .as_ref()
+                    .err()
+                    .map(|error| format!("; failed-write preservation also failed: {error}"))
+                    .unwrap_or_default();
+                let reason = format!(
+                    "atomic replacement failed: {error}; the previous target is missing and requires startup recovery{preservation_note}"
+                );
+                let _ = self.append_journal(
+                    &operation_id,
+                    "recovery_required",
+                    &relative_path_text,
+                    request.expected_revision_sha256.as_deref(),
+                    &next_revision,
+                    Some(&reason),
+                );
+                return Err(VaultError::RecoveryRequired {
+                    relative_path,
+                    reason,
+                });
+            }
             let _ = self.append_journal(
                 &operation_id,
                 "failed",
@@ -1294,21 +1353,34 @@ impl VaultStore {
                 before.as_ref(),
                 &next_revision,
             );
-            let _ = self.append_journal(
-                &operation_id,
-                "failed",
-                &relative_path_text,
-                request.expected_revision_sha256.as_deref(),
-                &next_revision,
-                Some(&journal_error.to_string()),
-            );
-            if let Err(rollback_error) = rollback {
-                return Err(VaultError::RecoveryRequired {
-                    relative_path,
-                    reason: format!(
+            match rollback {
+                Ok(()) => {
+                    let _ = self.append_journal(
+                        &operation_id,
+                        "failed",
+                        &relative_path_text,
+                        request.expected_revision_sha256.as_deref(),
+                        &next_revision,
+                        Some(&journal_error.to_string()),
+                    );
+                }
+                Err(rollback_error) => {
+                    let reason = format!(
                         "journal commit failed: {journal_error}; rollback failed: {rollback_error}"
-                    ),
-                });
+                    );
+                    let _ = self.append_journal(
+                        &operation_id,
+                        "recovery_required",
+                        &relative_path_text,
+                        request.expected_revision_sha256.as_deref(),
+                        &next_revision,
+                        Some(&reason),
+                    );
+                    return Err(VaultError::RecoveryRequired {
+                        relative_path,
+                        reason,
+                    });
+                }
             }
             return Err(journal_error);
         }
@@ -1356,7 +1428,9 @@ impl VaultStore {
             temporary.sync_all()?;
             drop(temporary);
             #[cfg(test)]
-            if self.fail_before_replace || self.fail_replace_path.as_deref() == Some(relative_path)
+            if self.fail_before_replace
+                || self.fail_replace_path.as_deref() == Some(relative_path)
+                || (self.fail_rollback_replace && operation_id.ends_with("-rollback"))
             {
                 if let Some((external_path, external_bytes)) = &self.external_change_on_failure {
                     let external_path = self
@@ -1517,6 +1591,8 @@ fn replace_temporary(
     #[cfg(windows)]
     {
         if fs::symlink_metadata(target_path).is_ok() {
+            // This backup-and-rename fallback is recoverable, but is not one
+            // atomic namespace replacement.
             let file_name = target_path
                 .file_name()
                 .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "missing target name"))?
@@ -1785,6 +1861,10 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
+    const SYNC_ATOMIC_WRITE_FIXTURE: &str =
+        include_str!("../../../fixtures/sync-atomic-write.json");
+    const SYNC_INTERRUPTED_WRITE_FIXTURE: &str =
+        include_str!("../../../fixtures/sync-interrupted-write.json");
 
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -2201,10 +2281,7 @@ mod tests {
             .unwrap()
             .map(Result::unwrap)
             .find(|entry| {
-                entry
-                    .path()
-                    .extension()
-                    .is_some_and(|extension| extension == std::ffi::OsStr::new("bin"))
+                entry.file_name().to_string_lossy().ends_with("-previous.bin")
             })
             .map(|entry| fs::read(entry.path()).unwrap())
             .unwrap();
@@ -2213,6 +2290,187 @@ mod tests {
         assert!(journal.contains("\"state\":\"prepared\""));
         assert!(journal.contains("\"state\":\"committed\""));
         assert!(journal.contains(&result.operation_id));
+    }
+
+    #[test]
+    fn interrupted_write_fixture_recovers_or_preserves_every_version() {
+        let atomic_fixture: Value = serde_json::from_str(SYNC_ATOMIC_WRITE_FIXTURE)
+            .expect("atomic-write fixture must be valid JSON");
+        assert_eq!(atomic_fixture["id"], "fixture:sync-atomic-write");
+        assert!(atomic_fixture["protocol"]["windows"]
+            .as_str()
+            .unwrap()
+            .contains("not one atomic namespace replacement"));
+        assert!(atomic_fixture["protocol"]["power_loss"]
+            .as_str()
+            .unwrap()
+            .contains("no universal power-loss durability claim"));
+
+        let fixture: Value = serde_json::from_str(SYNC_INTERRUPTED_WRITE_FIXTURE)
+            .expect("interrupted-write fixture must be valid JSON");
+        assert_eq!(fixture["id"], "fixture:sync-interrupted-write");
+        for case in fixture["cases"].as_array().expect("fixture cases") {
+            if case["platform"].as_str() == Some("windows") && !cfg!(windows) {
+                continue;
+            }
+            let vault_temp = TempDir::new();
+            let app_data_temp = TempDir::new();
+            let relative_path = PathBuf::from(fixture["relative_path"].as_str().unwrap());
+            let target_path = vault_temp.0.join(&relative_path);
+            fs::create_dir_all(target_path.parent().unwrap()).unwrap();
+            let initial = case["initial_bytes"].as_str().map(str::as_bytes);
+            if let Some(initial) = initial {
+                fs::write(&target_path, initial).unwrap();
+            }
+            let incoming = case["incoming_bytes"].as_str().unwrap().as_bytes();
+            let target_at_restart = case["target_at_restart"].as_str().map(str::as_bytes);
+            let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+            let operation_id = super::next_operation_id();
+            let relative_path_text = super::path_to_slashes(&relative_path).unwrap();
+            let expected_revision = initial.map(sha256_hex);
+            if let Some(previous) = initial {
+                store
+                    .preserve_bytes(
+                        "recovery",
+                        &format!("{operation_id}-previous"),
+                        ".bin",
+                        &relative_path_text,
+                        previous,
+                        expected_revision.as_deref().unwrap(),
+                        expected_revision.as_deref(),
+                        expected_revision.as_deref(),
+                    )
+                    .unwrap();
+            }
+            let next_revision = sha256_hex(incoming);
+            store
+                .preserve_bytes(
+                    "recovery",
+                    &format!("{operation_id}-incoming"),
+                    ".bin",
+                    &relative_path_text,
+                    incoming,
+                    &next_revision,
+                    expected_revision.as_deref(),
+                    expected_revision.as_deref(),
+                )
+                .unwrap();
+            store
+                .append_journal(
+                    &operation_id,
+                    "prepared",
+                    &relative_path_text,
+                    expected_revision.as_deref(),
+                    &next_revision,
+                    None,
+                )
+                .unwrap();
+            let pending_history = store
+                .history_records()
+                .unwrap()
+                .into_iter()
+                .filter(|record| record.id.starts_with(operation_id.as_str()))
+                .collect::<Vec<_>>();
+            assert!(!pending_history.is_empty());
+            assert!(pending_history.iter().all(|record| record.protected));
+            let windows_backup_path = if case["windows_backup_at_restart"] == true {
+                let file_name = target_path
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy();
+                let backup_path = target_path
+                    .parent()
+                    .unwrap()
+                    .join(format!(".{file_name}.{operation_id}.backup"));
+                fs::rename(&target_path, &backup_path).unwrap();
+                Some(backup_path)
+            } else {
+                match target_at_restart {
+                    Some(bytes) => fs::write(&target_path, bytes).unwrap(),
+                    None => {
+                        if target_path.exists() {
+                            fs::remove_file(&target_path).unwrap();
+                        }
+                    }
+                }
+                None
+            };
+            drop(store);
+
+            let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+            let report = store.recover_pending_writes().unwrap();
+            let expected_target = case["expected_target"].as_str().map(str::as_bytes);
+            let needs_attention = case["expected_outcome"]
+                .as_str()
+                .unwrap()
+                .contains("recovery-required");
+            if needs_attention {
+                assert!(report.recovered_operations.is_empty());
+                assert_eq!(report.needs_attention.len(), 1);
+                assert_eq!(fs::read(&target_path).unwrap(), expected_target.unwrap());
+                assert!(report.needs_attention[0].reason.contains("expected revision"));
+                assert!(
+                    store
+                        .history_records()
+                        .unwrap()
+                        .into_iter()
+                        .filter(|record| record.id.starts_with(operation_id.as_str()))
+                        .all(|record| record.protected)
+                );
+                assert_eq!(
+                    fs::read(
+                        app_data_temp
+                            .0
+                            .join("recovery")
+                            .join(format!("{operation_id}-incoming.bin"))
+                    )
+                    .unwrap(),
+                    incoming
+                );
+                let repeated = store.recover_pending_writes().unwrap();
+                assert_eq!(repeated.needs_attention.len(), 1);
+                assert_eq!(fs::read(&target_path).unwrap(), expected_target.unwrap());
+            } else {
+                assert_eq!(report.recovered_operations, vec![operation_id.clone()]);
+                assert!(report.needs_attention.is_empty());
+                assert_eq!(fs::read(&target_path).unwrap(), expected_target.unwrap());
+                assert!(
+                    store
+                        .history_records()
+                        .unwrap()
+                        .into_iter()
+                        .filter(|record| record.id.starts_with(operation_id.as_str()))
+                        .all(|record| !record.protected)
+                );
+                let repeated = store.recover_pending_writes().unwrap();
+                assert_eq!(repeated, super::VaultWriteRecoveryReport::default());
+            }
+            assert_eq!(
+                fs::read(
+                    app_data_temp
+                        .0
+                        .join("recovery")
+                        .join(format!("{operation_id}-incoming.bin"))
+                )
+                .unwrap(),
+                incoming
+            );
+            if let Some(backup_path) = windows_backup_path {
+                assert!(!backup_path.exists());
+            }
+            if let Some(previous) = initial {
+                assert_eq!(
+                    fs::read(
+                        app_data_temp
+                            .0
+                            .join("recovery")
+                            .join(format!("{operation_id}-previous.bin"))
+                    )
+                    .unwrap(),
+                    previous
+                );
+            }
+        }
     }
 
     #[test]
@@ -2315,6 +2573,49 @@ mod tests {
         let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
         assert!(journal.contains("\"state\":\"prepared\""));
         assert!(journal.contains("\"state\":\"failed\""));
+    }
+
+    #[test]
+    fn failed_commit_journal_with_failed_rollback_recovers_the_prepared_write() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let note_path = vault_temp.0.join("note.md");
+        let previous = b"previous\r\n";
+        let incoming = b"incoming\r\n";
+        fs::write(&note_path, previous).unwrap();
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_committed_journal = true;
+        store.fail_rollback_replace = true;
+        let expected_revision = store.root().read("note.md").unwrap().revision_sha256;
+
+        let error = store
+            .write(VaultWriteRequest {
+                relative_path: PathBuf::from("note.md"),
+                expected_revision_sha256: Some(expected_revision),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap_err();
+
+        assert!(matches!(error, VaultError::RecoveryRequired { .. }));
+        assert_eq!(fs::read(&note_path).unwrap(), incoming);
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        assert!(journal.contains("\"state\":\"recovery_required\""));
+        let operation_id = journal
+            .lines()
+            .filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .find(|record| record["state"] == "recovery_required")
+            .unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert_eq!(report.recovered_operations, vec![operation_id]);
+        assert!(report.needs_attention.is_empty());
+        assert_eq!(fs::read(note_path).unwrap(), incoming);
     }
 
     #[test]

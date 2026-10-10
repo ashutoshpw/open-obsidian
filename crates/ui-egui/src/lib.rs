@@ -7,7 +7,8 @@ use openobsidian_engine::{
     VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
-    VaultRenameResult, VaultSession, VaultWatcher, plan_history_retention,
+    VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport,
+    plan_history_retention,
 };
 use std::collections::HashMap;
 use std::path::Path;
@@ -381,6 +382,16 @@ impl OpenObsidianApp {
                     } else {
                         ui.colored_label(eframe::egui::Color32::YELLOW, summary);
                         for issue in &session.rename_recovery_report().needs_attention {
+                            ui.small(format!("{}: {}", issue.operation_id, issue.reason));
+                        }
+                    }
+                }
+                if let Some(summary) = write_recovery_summary(session.write_recovery_report()) {
+                    if session.write_recovery_report().needs_attention.is_empty() {
+                        ui.label(summary);
+                    } else {
+                        ui.colored_label(eframe::egui::Color32::YELLOW, summary);
+                        for issue in &session.write_recovery_report().needs_attention {
                             ui.small(format!("{}: {}", issue.operation_id, issue.reason));
                         }
                     }
@@ -2210,6 +2221,23 @@ fn rename_recovery_summary(report: &VaultRenameRecoveryReport) -> Option<String>
         )),
         (recovered, needs_attention) => Some(format!(
             "Recovered {recovered} interrupted rename operation(s); {needs_attention} additional operation(s) need attention."
+        )),
+    }
+}
+
+fn write_recovery_summary(report: &VaultWriteRecoveryReport) -> Option<String> {
+    let recovered = report.recovered_operations.len();
+    let needs_attention = report.needs_attention.len();
+    match (recovered, needs_attention) {
+        (0, 0) => None,
+        (recovered, 0) => Some(format!(
+            "Recovered {recovered} interrupted write operation(s) before loading notes."
+        )),
+        (0, needs_attention) => Some(format!(
+            "{needs_attention} interrupted write operation(s) need attention."
+        )),
+        (recovered, needs_attention) => Some(format!(
+            "Recovered {recovered} interrupted write operation(s); {needs_attention} additional operation(s) need attention."
         )),
     }
 }
@@ -8217,6 +8245,30 @@ mod tests {
         assert_eq!(
             rename_recovery_summary(&attention).as_deref(),
             Some("1 interrupted rename operation(s) need attention.")
+        );
+    }
+
+    #[test]
+    fn write_recovery_summary_reports_completed_and_attention_counts() {
+        let recovered = VaultWriteRecoveryReport {
+            recovered_operations: vec!["write-1".to_owned()],
+            needs_attention: Vec::new(),
+        };
+        assert_eq!(
+            write_recovery_summary(&recovered).as_deref(),
+            Some("Recovered 1 interrupted write operation(s) before loading notes.")
+        );
+
+        let attention = VaultWriteRecoveryReport {
+            recovered_operations: Vec::new(),
+            needs_attention: vec![openobsidian_engine::VaultWriteRecoveryIssue {
+                operation_id: "write-2".to_owned(),
+                reason: "incoming bytes need review".to_owned(),
+            }],
+        };
+        assert_eq!(
+            write_recovery_summary(&attention).as_deref(),
+            Some("1 interrupted write operation(s) need attention.")
         );
     }
 
