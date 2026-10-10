@@ -1372,7 +1372,7 @@
     },
     {
       "path": "fixtures/markdown-dialects.json",
-      "sha256": "d32ecab7487e971d8195c8f886235ecbfff8b133e5eb2699d1e69d5dce4e7e62",
+      "sha256": "9805f7c224c73a61963056e7a05597adc701d58dfe2a0b76f24e9e43d35bf107",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",

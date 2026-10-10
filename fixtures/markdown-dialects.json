@@ -75,14 +75,15 @@
       "inline-formatting",
       "footnotes",
       "inline-and-display-math",
-      "safe-inline-html-break"
+      "safe-inline-html-break",
+      "inline-highlights"
     ],
     "source_only_blocks": [
       "legacy-math-delimiters",
       "diagrams",
       "unknown-or-active-raw-html",
       "wiki-links",
-      "highlights"
+      "complex-inline-highlights"
     ],
     "safe_inline_html": {
       "rendered_tags": ["<br>", "<br/>", "<br />"],
@@ -169,6 +170,20 @@
       {
         "id": "highlight",
         "source": "Keep ==this phrase== visible.",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_highlight_texts": ["this phrase"]
+      },
+      {
+        "id": "multiple-plain-highlights",
+        "source": "Keep ==this phrase== and ==that phrase== visible.",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_highlight_texts": ["this phrase", "that phrase"]
+      },
+      {
+        "id": "highlight-mixed-with-markdown-formatting",
+        "source": "**Keep** ==this phrase== visible.",
         "expected_disposition": "show-source",
         "unsupported_syntax": ["highlights"]
       },

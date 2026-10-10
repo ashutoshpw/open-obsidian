@@ -2374,11 +2374,15 @@ fn show_markdown_preview(
     let analysis = analyze_markdown_preview(source);
     match analysis.disposition() {
         MarkdownPreviewDisposition::RenderMarkdown => {
-            let math_callback = math_render_callback(Rc::clone(math_renderer_cache));
-            let render_source = analysis.native_render_source(source);
-            CommonMarkViewer::new()
-                .render_math_fn(Some(&math_callback))
-                .show(ui, markdown_cache, render_source.as_ref());
+            if analysis.inline_highlight_spans().is_empty() {
+                let math_callback = math_render_callback(Rc::clone(math_renderer_cache));
+                let render_source = analysis.native_render_source(source);
+                CommonMarkViewer::new()
+                    .render_math_fn(Some(&math_callback))
+                    .show(ui, markdown_cache, render_source.as_ref());
+            } else {
+                show_inline_highlight_paragraph(ui, source, analysis.inline_highlight_spans());
+            }
         }
         MarkdownPreviewDisposition::ShowSource => {
             let unsupported = analysis
@@ -2394,6 +2398,36 @@ fn show_markdown_preview(
             ui.monospace(source);
         }
     }
+}
+
+fn show_inline_highlight_paragraph(
+    ui: &mut eframe::egui::Ui,
+    source: &str,
+    highlight_spans: &[std::ops::Range<usize>],
+) {
+    let highlight_background = if ui.visuals().dark_mode {
+        eframe::egui::Color32::from_rgb(110, 78, 20)
+    } else {
+        eframe::egui::Color32::from_rgb(255, 226, 112)
+    };
+
+    ui.horizontal_wrapped(|ui| {
+        ui.spacing_mut().item_spacing.x = 0.0;
+        let mut source_cursor = 0;
+        for span in highlight_spans {
+            if source_cursor < span.start {
+                ui.label(&source[source_cursor..span.start]);
+            }
+            ui.label(
+                eframe::egui::RichText::new(&source[span.start + 2..span.end - 2])
+                    .background_color(highlight_background),
+            );
+            source_cursor = span.end;
+        }
+        if source_cursor < source.len() {
+            ui.label(&source[source_cursor..]);
+        }
+    });
 }
 
 fn note_embed_error(error: VaultError) -> String {
@@ -3001,6 +3035,29 @@ mod tests {
         harness.step();
         harness.get_by_label("First line");
         harness.get_by_label("Second line.");
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
+    fn egui_renders_plain_inline_highlights_without_changing_source() {
+        let source = "Keep ==this phrase== visible.";
+        let original = source.as_bytes().to_vec();
+        let analysis = analyze_markdown_preview(source);
+        assert_eq!(
+            analysis.disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+        assert_eq!(analysis.inline_highlight_spans().len(), 1);
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("this phrase");
         assert_eq!(source.as_bytes(), original.as_slice());
     }
 

@@ -18060,6 +18060,17 @@
       },
       "evidence": "evidence/r2.8.31-safe-inline-html-break-8a6235d.json",
       "next_action": "Continue C02.1 with another focused Markdown preview slice; native highlights and the remaining explicit source-only constructs are pending, as are phases R3-R7."
+    },
+    "R2.8.32": {
+      "status": "in_progress",
+      "starting_sha": "d17595568f2d3c824f401bfb8d089e8ee67aeca1",
+      "scope": "Render simple plain-text inline highlights in the native Markdown preview while preserving source-only fallback for mixed Markdown contexts.",
+      "acceptance": [
+        "The Markdown dialect fixture covers plain and multiple inline highlights as rendered content, and mixed-format highlights as source-only.",
+        "The native UI exposes the highlighted phrase while keeping the original Markdown source bytes unchanged.",
+        "Rust workspace tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
+      ],
+      "next_action": "Implement conservative source-span recognition and native rendering for plain-text highlights, then push the source SHA and use only exact-SHA GitHub Actions for executable validation."
     }
   },
   "ci_preparation": {

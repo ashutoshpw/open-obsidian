@@ -2,7 +2,7 @@
 
 use std::borrow::Cow;
 
-use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
+use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 
 /// Why the native preview must show the original Markdown source instead of rendering it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -50,12 +50,18 @@ pub enum MarkdownPreviewDisposition {
 pub struct MarkdownPreviewAnalysis {
     unsupported: Vec<MarkdownUnsupportedSyntax>,
     safe_html_break_spans: Vec<std::ops::Range<usize>>,
+    inline_highlight_spans: Vec<std::ops::Range<usize>>,
 }
 
 impl MarkdownPreviewAnalysis {
     /// Features that require the UI to show the original source as text.
     pub fn unsupported(&self) -> &[MarkdownUnsupportedSyntax] {
         &self.unsupported
+    }
+
+    /// Source spans for plain-text highlight phrases the native UI can safely present.
+    pub fn inline_highlight_spans(&self) -> &[std::ops::Range<usize>] {
+        &self.inline_highlight_spans
     }
 
     /// The safe presentation for the current native preview implementation.
@@ -115,8 +121,9 @@ impl MarkdownPreviewAnalysis {
 /// CommonMark-compatible content, including standard inline and display math, continues through
 /// the native `egui_commonmark` renderer. Known syntax outside that renderer's current contract
 /// takes a source-only fallback, so the UI does not silently flatten legacy math delimiters,
-/// diagram fences, unsupported raw HTML, wiki links, or highlights. Attribute-free inline `<br>`
-/// tags are the one safe HTML subset projected to a Markdown hard break.
+/// diagram fences, unsupported raw HTML, wiki links, or complex highlights. A plain-text
+/// paragraph may contain safely rendered highlight phrases. Attribute-free inline `<br>` tags
+/// are the one safe HTML subset projected to a Markdown hard break.
 /// Footnotes are supported by the pinned renderer. Inline markers inside fenced, indented, and
 /// inline code are not dialect syntax. Backslash-escaped highlight openers remain literal text
 /// and do not force the source-only fallback.
@@ -124,6 +131,8 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
     let mut unsupported = Vec::new();
     let mut inline_code_spans = Vec::new();
     let mut safe_html_break_spans = Vec::new();
+    let mut paragraph_count = 0;
+    let mut plain_text_paragraph_events_only = true;
     let options = Options::ENABLE_TABLES
         | Options::ENABLE_TASKLISTS
         | Options::ENABLE_STRIKETHROUGH
@@ -132,6 +141,17 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
         | Options::ENABLE_MATH;
 
     for (event, source_span) in Parser::new_ext(source, options).into_offset_iter() {
+        match &event {
+            Event::Start(Tag::Paragraph) => {
+                paragraph_count += 1;
+                if paragraph_count > 1 {
+                    plain_text_paragraph_events_only = false;
+                }
+            }
+            Event::End(TagEnd::Paragraph) | Event::Text(_) => {}
+            _ => plain_text_paragraph_events_only = false,
+        }
+
         match event {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) => {
                 if is_diagram_fence(&language) {
@@ -149,11 +169,36 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
         }
     }
 
-    scan_source_only_syntax(source, &inline_code_spans, &mut unsupported);
+    let mut inline_highlight_spans = Vec::new();
+    scan_source_only_syntax(
+        source,
+        &inline_code_spans,
+        &mut inline_highlight_spans,
+        &mut unsupported,
+    );
+    if !inline_highlight_spans.is_empty()
+        && !(paragraph_count == 1
+            && plain_text_paragraph_events_only
+            && is_simple_plain_highlight_source(source))
+    {
+        push_once(&mut unsupported, MarkdownUnsupportedSyntax::Highlights);
+        inline_highlight_spans.clear();
+    }
+
     MarkdownPreviewAnalysis {
         unsupported,
         safe_html_break_spans,
+        inline_highlight_spans,
     }
+}
+
+fn is_simple_plain_highlight_source(source: &str) -> bool {
+    !source.chars().any(|character| {
+        matches!(
+            character,
+            '\\' | '&' | '<' | '>' | '`' | '[' | ']' | '*' | '_' | '$' | '~' | '\n' | '\r'
+        )
+    })
 }
 
 fn is_diagram_fence(language: &str) -> bool {
@@ -184,6 +229,7 @@ fn push_once(unsupported: &mut Vec<MarkdownUnsupportedSyntax>, syntax: MarkdownU
 fn scan_source_only_syntax(
     source: &str,
     inline_code_spans: &[std::ops::Range<usize>],
+    inline_highlight_spans: &mut Vec<std::ops::Range<usize>>,
     unsupported: &mut Vec<MarkdownUnsupportedSyntax>,
 ) {
     let mut fence: Option<(u8, usize)> = None;
@@ -255,7 +301,11 @@ fn scan_source_only_syntax(
                     && let Some(close_start) = find_sequence(bytes, cursor + 2, b"==")
                     && text_between_is_not_blank(bytes, cursor + 2, close_start)
                 {
-                    push_once(unsupported, MarkdownUnsupportedSyntax::Highlights);
+                    inline_highlight_spans.push(
+                        source_offset + cursor..source_offset + close_start + 2,
+                    );
+                    cursor = close_start + 2;
+                    continue;
                 }
                 cursor += 2;
                 continue;
@@ -401,6 +451,24 @@ mod tests {
                 .iter()
                 .map(|syntax| syntax.key())
                 .collect::<Vec<_>>();
+            let actual_highlight_texts = analysis
+                .inline_highlight_spans()
+                .iter()
+                .map(|span| {
+                    source
+                        .get(span.start + 2..span.end - 2)
+                        .expect("highlight spans must cover valid UTF-8 source")
+                })
+                .collect::<Vec<_>>();
+            let expected_highlight_texts = case["expected_highlight_texts"]
+                .as_array()
+                .map(|texts| {
+                    texts
+                        .iter()
+                        .map(|text| text.as_str().expect("highlight text must be a string"))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
 
             assert_eq!(
                 analysis.disposition(),
@@ -411,6 +479,11 @@ mod tests {
             assert_eq!(
                 actual_unsupported, expected_unsupported,
                 "unexpected unsupported syntax for fixture case {}",
+                case["id"]
+            );
+            assert_eq!(
+                actual_highlight_texts, expected_highlight_texts,
+                "unexpected native highlight spans for fixture case {}",
                 case["id"]
             );
             if let Some(expected_projection) = case["expected_native_render_source"].as_str() {
