@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c04-unknown-preservation",
+  "name": "represented-property-edit-preserves-unrepresented-yaml",
+  "invariants": {
+    "unrepresented_top_level_fields_survive": true,
+    "comments_and_property_order_survive": true,
+    "arrays_scalars_tags_aliases_and_nested_values_survive": true,
+    "only_the_approved_property_span_changes": true
+  },
+  "cases": [
+    {
+      "id": "title-edit-with-unknown-nested-and-typed-properties",
+      "before": "\uFEFF---\r\n# Frontmatter comment\r\ntitle: Original # retain title comment\r\naliases: &names\r\n  - \"First\"\r\n  - \"Second\"\r\ntags: [project, rust] # retain tags comment\r\ncreated: 2026-10-10\r\nnested:\r\n  key: value\r\n  children: [one, {two: 2}]\r\nopaque: !future/metadata {keep: [value, 7]}\r\nalias-copy: *names\r\n---\r\nBody\r\n",
+      "after": "\uFEFF---\r\n# Frontmatter comment\r\ntitle: Revised # retain title comment\r\naliases: &names\r\n  - \"First\"\r\n  - \"Second\"\r\ntags: [project, rust] # retain tags comment\r\ncreated: 2026-10-10\r\nnested:\r\n  key: value\r\n  children: [one, {two: 2}]\r\nopaque: !future/metadata {keep: [value, 7]}\r\nalias-copy: *names\r\n---\r\nBody\r\n",
+      "edit": {"key": "title", "raw_value": "Revised"},
+      "approved_span": {"start_byte": 38, "delete": "Original", "insert": "Revised"}
+    }
+  ]
+}

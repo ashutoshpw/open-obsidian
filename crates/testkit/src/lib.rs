@@ -1040,6 +1040,8 @@ mod c02_byte_roundtrip_fixture_tests {
 
     const C02_BYTE_ROUNDTRIP_FIXTURE: &str =
         include_str!("../../../fixtures/c02-byte-roundtrip.json");
+    const C04_UNKNOWN_PRESERVATION_FIXTURE: &str =
+        include_str!("../../../fixtures/c04-unknown-preservation.json");
     const RISK_NORMALIZATION_FIXTURE: &str =
         include_str!("../../../fixtures/risk-normalization.json");
 
@@ -1185,6 +1187,80 @@ mod c02_byte_roundtrip_fixture_tests {
                 source.as_bytes(),
                 original_bytes.as_slice(),
                 "{case_id}: rejected edit must preserve original source bytes"
+            );
+        }
+    }
+
+    #[test]
+    fn c04_property_edit_preserves_unrepresented_yaml_and_only_changes_approved_bytes() {
+        let fixture: Value = serde_json::from_str(C04_UNKNOWN_PRESERVATION_FIXTURE)
+            .expect("C04 unknown-preservation fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:c04-unknown-preservation");
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
+
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let before = case["before"]
+                .as_str()
+                .expect("fixture case must have source bytes");
+            let after = case["after"]
+                .as_str()
+                .expect("fixture case must have expected source bytes");
+            let key = case["edit"]["key"]
+                .as_str()
+                .expect("fixture edit must name a property");
+            let raw_value = case["edit"]["raw_value"]
+                .as_str()
+                .expect("fixture edit must name a raw value");
+            let span = &case["approved_span"];
+            let start = usize::try_from(
+                span["start_byte"]
+                    .as_u64()
+                    .expect("fixture approved span must state its byte offset"),
+            )
+            .expect("fixture byte offset must fit usize");
+            let deleted = span["delete"]
+                .as_str()
+                .expect("fixture approved span must state deleted bytes")
+                .as_bytes();
+            let inserted = span["insert"]
+                .as_str()
+                .expect("fixture approved span must state inserted bytes")
+                .as_bytes();
+            let before_bytes = before.as_bytes();
+            assert_eq!(
+                before_bytes.get(start..start + deleted.len()),
+                Some(deleted),
+                "{case_id}: approved span must match the source bytes"
+            );
+
+            let source = MarkdownSource::parse(before_bytes.to_vec())
+                .unwrap_or_else(|error| panic!("{case_id}: fixture must be UTF-8: {error}"));
+            let rendered = source
+                .render_property_edit(key, raw_value)
+                .unwrap_or_else(|error| panic!("{case_id}: render property edit: {error}"));
+            assert_eq!(rendered, after.as_bytes(), "{case_id}: exact output bytes");
+            assert_eq!(
+                rendered.get(..start),
+                before_bytes.get(..start),
+                "{case_id}: bytes before the approved span must remain identical"
+            );
+            assert_eq!(
+                rendered.get(start + inserted.len()..),
+                before_bytes.get(start + deleted.len()..),
+                "{case_id}: comments, order, nested values, and following bytes must remain identical"
             );
         }
     }

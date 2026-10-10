@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T06:52:45Z",
+  "updated_at": "2026-10-10T07:01:25Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "088d0ef6558debec1d85268d07f642e2acc251ba",
-  "current_milestone": "R2.8.14",
-  "next_action": "R2.8.14 is accepted. Select the next uncovered R2 source-preservation requirement; broader C02, R2 and editor integration remain pending.",
+  "last_reconciled_head": "21e817b7acf54a746ccc0391a6fbe1eaf83cd7b7",
+  "current_milestone": "R2.8.15",
+  "next_action": "Add fixture-backed C04.1 coverage proving an edit to one represented property preserves unknown fields, comments, order, aliases, tags and nested YAML; push for exact-SHA GitHub Actions validation. Keep broader C04 and R2 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16053,6 +16053,26 @@
       ],
       "evidence": "evidence/r2.8.14-block-scalar-rejection-088d0ef.json",
       "next_action": "Commit and push this accepted evidence/state tracker checkpoint, wait for its path-eligible workflows, then select the next uncovered R2 source-preservation requirement."
+    },
+    "R2.8.15": {
+      "status": "in_progress",
+      "starting_sha": "21e817b7acf54a746ccc0391a6fbe1eaf83cd7b7",
+      "scope": "Exercise the source-preserving property editor against unknown and nested YAML, comments, ordering, aliases, tags and scalar types without normalizing unrelated bytes.",
+      "accepted_slice": [
+        "C04.1:unknown-property-preservation"
+      ],
+      "remaining": [
+        "Broader C04 and R2 acceptance remain pending.",
+        "C02 and editor integration remain pending."
+      ],
+      "acceptance": [
+        "The fixture changes only the approved bytes for one represented property.",
+        "Comments, property order, arrays, nested mappings, aliases, tags, unrepresented fields, BOM and CRLF remain exact.",
+        "All seven required GitHub Actions workflows pass on the exact source SHA; all validation runs in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "next_action": "Push the C04.1 fixture-backed source slice to origin/main and validate it through exact-SHA GitHub Actions; then record evidence and checkpoint CI."
     }
   },
   "ci_preparation": {
