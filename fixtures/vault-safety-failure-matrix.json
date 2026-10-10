@@ -32,7 +32,36 @@
     {"id": "concurrent-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {"id": "delete-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {"id": "rename-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
-    {"id": "partial-sync", "fault_stage": null, "expected_outcome": "journal-batch-and-preserve-failed-version"},
+    {
+      "id": "partial-sync",
+      "fault_stage": "before-replace",
+      "fault_path": "second.md",
+      "expected_outcome": "journal-batch-and-preserve-failed-version",
+      "injected_error": "injected atomic replace failure",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "expected_batch_state": "failed",
+      "files": [
+        {
+          "relative_path": "note.md",
+          "write_outcome": "committed",
+          "initial_bytes_utf8": "\ufefftitle: first-original\r\n",
+          "incoming_bytes_utf8": "\ufefftitle: first-incoming\r\n",
+          "expected_target_bytes_utf8": "\ufefftitle: first-incoming\r\n",
+          "expected_previous_recovery_bytes_utf8": "\ufefftitle: first-original\r\n",
+          "expected_incoming_recovery_bytes_utf8": "\ufefftitle: first-incoming\r\n"
+        },
+        {
+          "relative_path": "second.md",
+          "write_outcome": "failed",
+          "initial_bytes_utf8": "\ufeffstatus: second-original\r\n",
+          "incoming_bytes_utf8": "\ufeffstatus: second-incoming\r\n",
+          "expected_target_bytes_utf8": "\ufeffstatus: second-original\r\n",
+          "expected_failed_history_bytes_utf8": "\ufeffstatus: second-incoming\r\n",
+          "expected_previous_recovery_bytes_utf8": "\ufeffstatus: second-original\r\n",
+          "expected_incoming_recovery_bytes_utf8": "\ufeffstatus: second-incoming\r\n"
+        }
+      ]
+    },
     {"id": "cloud-placeholder", "fault_stage": null, "expected_outcome": "do-not-follow-unknown-link"},
     {"id": "symlink", "fault_stage": null, "expected_outcome": "record-link-and-deny-traversal"},
     {"id": "case-only-rename", "fault_stage": null, "expected_outcome": "observe-path-change-without-content-rewrite"},

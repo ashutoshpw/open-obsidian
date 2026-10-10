@@ -1481,6 +1481,81 @@ impl VaultStore {
         })
     }
 
+    /// Apply revision-bound writes in order and journal their batch outcome.
+    ///
+    /// The vault filesystem does not provide a multi-file atomic replacement:
+    /// writes completed before a later failure remain committed. Each write
+    /// keeps its own recovery history and journal entries, while the batch
+    /// record identifies the complete path set and final outcome.
+    pub fn write_batch(
+        &self,
+        mut requests: Vec<VaultWriteRequest>,
+    ) -> Result<Vec<VaultWriteResult>, VaultError> {
+        if requests.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let operation_id = next_operation_id();
+        let paths = requests
+            .iter_mut()
+            .map(|request| {
+                let relative_path = normalize_relative_path(&request.relative_path)?;
+                let relative_path_text = path_to_slashes(&relative_path)?;
+                request.relative_path = relative_path;
+                Ok(relative_path_text)
+            })
+            .collect::<Result<Vec<_>, VaultError>>()?;
+        self.append_batch_journal(&operation_id, "prepared", &paths, None)?;
+
+        let outcome = (|| -> Result<Vec<VaultWriteResult>, VaultError> {
+            for (index, request) in requests.iter().enumerate() {
+                let target_path = self.root.resolve_vault_path(&request.relative_path, true)?;
+                let current = self.read_if_present(&request.relative_path, &target_path)?;
+                let current_revision = current.as_ref().map(|read| read.revision_sha256.clone());
+                if current_revision.as_deref() != request.expected_revision_sha256.as_deref() {
+                    let next_revision = sha256_hex(&request.bytes);
+                    let preserved_path = self.preserve_bytes(
+                        "conflicts",
+                        &format!("{operation_id}-conflict-{index}"),
+                        ".incoming",
+                        &paths[index],
+                        &request.bytes,
+                        &next_revision,
+                        request.expected_revision_sha256.as_deref(),
+                        current_revision.as_deref(),
+                    )?;
+                    return Err(VaultError::RevisionConflict {
+                        relative_path: request.relative_path.clone(),
+                        expected_revision: request.expected_revision_sha256.clone(),
+                        current_revision,
+                        preserved_path,
+                    });
+                }
+            }
+
+            requests
+                .into_iter()
+                .map(|request| self.write(request))
+                .collect()
+        })();
+
+        match outcome {
+            Ok(results) => {
+                self.append_batch_journal(&operation_id, "committed", &paths, None)?;
+                Ok(results)
+            }
+            Err(error) => {
+                self.append_batch_journal(
+                    &operation_id,
+                    "failed",
+                    &paths,
+                    Some(&error.to_string()),
+                )?;
+                Err(error)
+            }
+        }
+    }
+
     fn read_if_present(
         &self,
         relative_path: &Path,
@@ -1608,6 +1683,30 @@ impl VaultStore {
             json_string(relative_path),
             json_option_string(expected_revision),
             json_string(next_revision),
+            json_string(&timestamp()),
+            error_json,
+        );
+        self.append_journal_line(&line)
+    }
+
+    fn append_batch_journal(
+        &self,
+        operation_id: &str,
+        state: &str,
+        paths: &[String],
+        error: Option<&str>,
+    ) -> Result<(), VaultError> {
+        let paths_json = paths
+            .iter()
+            .map(|path| json_string(path))
+            .collect::<Vec<_>>()
+            .join(",");
+        let error_json = error.map_or_else(|| "null".to_owned(), json_string);
+        let line = format!(
+            "{{\"id\":{},\"operation\":\"batch\",\"state\":{},\"paths\":[{}],\"recorded_at\":{},\"error\":{}}}\n",
+            json_string(operation_id),
+            json_string(state),
+            paths_json,
             json_string(&timestamp()),
             error_json,
         );
@@ -2013,6 +2112,41 @@ mod tests {
             .find(|entry| entry.file_name().to_string_lossy().ends_with(suffix))
             .map(|entry| fs::read(entry.path()).unwrap())
             .unwrap_or_else(|| panic!("missing {suffix} artifact in {}", directory.display()))
+    }
+
+    fn history_artifact_bytes_for_path(
+        directory: &Path,
+        suffix: &str,
+        relative_path: &str,
+    ) -> Vec<u8> {
+        for entry in fs::read_dir(directory)
+            .unwrap_or_else(|error| panic!("reading {}: {error}", directory.display()))
+            .map(Result::unwrap)
+            .filter(|entry| {
+                entry
+                    .path()
+                    .extension()
+                    .is_some_and(|extension| extension == std::ffi::OsStr::new("json"))
+            })
+        {
+            let record: Value = serde_json::from_slice(&fs::read(entry.path()).unwrap()).unwrap();
+            if record["relative_path"] != relative_path {
+                continue;
+            }
+            let Some(path) = record["path"].as_str() else {
+                continue;
+            };
+            if Path::new(path)
+                .file_name()
+                .is_some_and(|name| name.to_string_lossy().ends_with(suffix))
+            {
+                return fs::read(path).unwrap();
+            }
+        }
+        panic!(
+            "missing {suffix} artifact for {relative_path} in {}",
+            directory.display()
+        );
     }
 
     fn rgba_png(rgba: [u8; 4]) -> Vec<u8> {
@@ -2834,6 +2968,160 @@ mod tests {
                     .as_str()
                     .is_some_and(|message| message.contains(injected_error)),
                 "{scenario_id}: journal must retain the failure reason"
+            );
+        }
+    }
+
+    #[test]
+    fn partial_sync_matrix_journals_partial_application_and_preserves_each_version() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "partial-sync")
+            .expect("failure matrix must contain partial-sync");
+        assert_eq!(
+            scenario["expected_outcome"],
+            "journal-batch-and-preserve-failed-version"
+        );
+        assert_eq!(scenario["fault_stage"], "before-replace");
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["macOS", "Windows", "Linux"])
+        );
+
+        let files = scenario["files"]
+            .as_array()
+            .expect("partial-sync must list its batch files");
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        for file in files {
+            let relative_path = PathBuf::from(file["relative_path"].as_str().unwrap());
+            fs::write(
+                vault_temp.0.join(relative_path),
+                file["initial_bytes_utf8"].as_str().unwrap().as_bytes(),
+            )
+            .unwrap();
+        }
+
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let fault_path = PathBuf::from(scenario["fault_path"].as_str().unwrap());
+        store.fail_replace_path = Some(fault_path.clone());
+        let requests = files
+            .iter()
+            .map(|file| {
+                let relative_path = PathBuf::from(file["relative_path"].as_str().unwrap());
+                let expected_revision = store
+                    .root()
+                    .read(&relative_path)
+                    .unwrap()
+                    .revision_sha256;
+                VaultWriteRequest {
+                    relative_path,
+                    expected_revision_sha256: Some(expected_revision),
+                    bytes: file["incoming_bytes_utf8"]
+                        .as_str()
+                        .unwrap()
+                        .as_bytes()
+                        .to_vec(),
+                }
+            })
+            .collect();
+
+        let injected_error = scenario["injected_error"].as_str().unwrap();
+        let error = store.write_batch(requests).unwrap_err();
+        assert!(error.to_string().contains(injected_error));
+
+        for file in files {
+            let relative_path = file["relative_path"].as_str().unwrap();
+            assert_eq!(
+                fs::read(vault_temp.0.join(relative_path)).unwrap(),
+                file["expected_target_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{relative_path}: target bytes"
+            );
+            assert_eq!(
+                history_artifact_bytes_for_path(
+                    &app_data_temp.0.join("recovery"),
+                    "-previous.bin",
+                    relative_path,
+                ),
+                file["expected_previous_recovery_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{relative_path}: previous recovery bytes"
+            );
+            assert_eq!(
+                history_artifact_bytes_for_path(
+                    &app_data_temp.0.join("recovery"),
+                    "-incoming.bin",
+                    relative_path,
+                ),
+                file["expected_incoming_recovery_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{relative_path}: incoming recovery bytes"
+            );
+            if let Some(failed_bytes) = file["expected_failed_history_bytes_utf8"].as_str() {
+                assert_eq!(
+                    history_artifact_bytes_for_path(
+                        &app_data_temp.0.join("failed"),
+                        ".bin",
+                        relative_path,
+                    ),
+                    failed_bytes.as_bytes(),
+                    "{relative_path}: failed history bytes"
+                );
+            }
+        }
+
+        assert!(!fs::read_dir(&vault_temp.0)
+            .unwrap()
+            .map(Result::unwrap)
+            .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp")));
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        let entries = journal
+            .lines()
+            .map(serde_json::from_str::<Value>)
+            .collect::<Result<Vec<_>, _>>()
+            .expect("write journal must contain valid JSON records");
+        let batch_entries = entries
+            .iter()
+            .filter(|entry| entry["operation"] == "batch")
+            .collect::<Vec<_>>();
+        assert_eq!(batch_entries.len(), 2);
+        assert_eq!(batch_entries[0]["state"], "prepared");
+        assert_eq!(batch_entries[0]["paths"], serde_json::json!(["note.md", "second.md"]));
+        assert_eq!(batch_entries[1]["state"], scenario["expected_batch_state"]);
+        assert_eq!(batch_entries[1]["paths"], batch_entries[0]["paths"]);
+        assert!(batch_entries[1]["error"].as_str().unwrap().contains(injected_error));
+
+        let write_entries = entries
+            .iter()
+            .filter(|entry| entry["operation"] == "write")
+            .collect::<Vec<_>>();
+        assert_eq!(write_entries.len(), 4);
+        for file in files {
+            let relative_path = file["relative_path"].as_str().unwrap();
+            let states = write_entries
+                .iter()
+                .filter(|entry| entry["relative_path"] == relative_path)
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>();
+            let expected_terminal = file["write_outcome"].as_str().unwrap();
+            assert_eq!(
+                states,
+                vec!["prepared", expected_terminal],
+                "{relative_path}"
             );
         }
     }
