@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T06:18:27Z",
+  "updated_at": "2026-10-10T06:24:31Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "992dfe13fa6ac2265e6542608072c983dc13ab2a",
+  "last_reconciled_head": "d3c929de1dec3d17e2353d598270cbfb707e646f",
   "current_milestone": "R2.8.13",
-  "next_action": "Commit and push the R2.8.13 source-preserving Markdown property edit slice to origin/main; accept it only after all seven required GitHub Actions workflows pass on the exact source SHA. Broader R2 and editor integration remain pending.",
+  "next_action": "Commit and push the exact Ubuntu rustfmt corrections reported by R2.8.13 attempt 1; accept the slice only after all seven required GitHub Actions workflows pass on the corrected exact source SHA. Broader R2 and editor integration remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -15961,9 +15961,27 @@
         "Missing properties, multiline values, and block scalars fail closed without rendering an edit.",
         "All seven required GitHub Actions workflows pass on the exact source SHA; all validation runs in GitHub Actions only."
       ],
-      "ci_attempts": [],
+      "implementation_commits": [
+        "d3c929de1dec3d17e2353d598270cbfb707e646f"
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "d3c929de1dec3d17e2353d598270cbfb707e646f",
+          "required_workflow_run_ids": [
+            38030500309,
+            38030500390,
+            38030500343,
+            38030500341,
+            38030500352,
+            38030500257,
+            38030500411
+          ],
+          "result": "Both focused C02 tests and all workspace tests passed on Ubuntu, macOS, and Windows. Six companion workflows passed; macOS and Windows Rust CI passed. Ubuntu Rust CI failed only its formatting check, which reported three exact layout changes."
+        }
+      ],
       "evidence": null,
-      "next_action": "Push the source slice to origin/main and use only GitHub Actions results to resolve any compiler, formatting, Clippy, or test findings."
+      "next_action": "Push the exact Ubuntu rustfmt corrections to origin/main and wait for all seven required workflows to finish on the corrected source SHA."
     }
   },
   "ci_preparation": {

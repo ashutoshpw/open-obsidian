@@ -84,9 +84,8 @@ impl std::fmt::Display for MarkdownPropertyEditError {
             Self::MultilineValue => {
                 formatter.write_str("Markdown property edits must use a single-line value")
             }
-            Self::StructuredValue => formatter.write_str(
-                "Markdown block-scalar properties cannot be edited as inline values",
-            ),
+            Self::StructuredValue => formatter
+                .write_str("Markdown block-scalar properties cannot be edited as inline values"),
         }
     }
 }

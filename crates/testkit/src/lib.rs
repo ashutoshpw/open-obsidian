@@ -1047,11 +1047,13 @@ mod c02_byte_roundtrip_fixture_tests {
             .expect("C02 byte-roundtrip fixture must be valid JSON");
         assert_eq!(fixture["schema_version"], 1);
         assert_eq!(fixture["id"], "fixture:c02-byte-roundtrip");
-        assert!(fixture["invariants"]
-            .as_object()
-            .expect("fixture invariants must be an object")
-            .values()
-            .all(|value| value.as_bool() == Some(true)));
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
 
         let cases = fixture["cases"]
             .as_array()
@@ -1125,9 +1127,7 @@ mod c02_byte_roundtrip_fixture_tests {
             Err(MarkdownPropertyEditError::MultilineValue)
         );
 
-        let block_scalar =
-            MarkdownSource::parse(b"---\nsummary: |\n  retained block\n---\n".to_vec())
-                .unwrap();
+        let block_scalar = MarkdownSource::parse(b"---\nsummary: |\n  retained block\n---\n".to_vec()).unwrap();
         assert_eq!(
             block_scalar.render_property_edit("summary", "inline"),
             Err(MarkdownPropertyEditError::StructuredValue)
