@@ -18379,8 +18379,18 @@
         "The Markdown preview architecture guide accurately describes the resolved simple-wiki-link exception and remaining limitations.",
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
-      "implementation_commits": [],
-      "next_action": "Add the stale-resolution UI case, update the preview guide and fixture inventory hash, then push for exact-SHA GitHub Actions."
+      "implementation_commits": [
+        "c18eecf0543cdc6dff12ae0a2bc293846ee42bce"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "c18eecf0543cdc6dff12ae0a2bc293846ee42bce",
+          "rust_ci_run_id": 38069247624,
+          "conclusion": "failure",
+          "failure_summary": "Workspace tests failed to compile on Ubuntu, macOS, and Windows because the new stale-wiki-link UI test passed &RawDocument to std::str::from_utf8; the source bytes must be read through RawDocument::as_bytes()."
+        }
+      ],
+      "next_action": "Correct the RawDocument byte access based on exact GitHub Rust CI diagnostics, push a follow-up source SHA, and rerun the seven required workflows."
     }
   },
   "ci_preparation": {

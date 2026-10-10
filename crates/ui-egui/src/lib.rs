@@ -3777,7 +3777,7 @@ mod tests {
         let preview = session
             .read_preview(source_path)
             .expect("read stale wiki-link source");
-        let text = std::str::from_utf8(&preview.source)
+        let text = std::str::from_utf8(preview.source.as_bytes())
             .expect("stale wiki-link source must be UTF-8")
             .to_owned();
         let resolutions = session

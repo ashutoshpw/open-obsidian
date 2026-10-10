@@ -2479,3 +2479,7 @@ The accepted tracker/evidence checkpoint at [2f10530f6b7af6450ce36a984e1dfdb6892
 ### R2.8.35 in progress — stale wiki-link fallback and documentation
 
 Starting from tracker SHA `a3d7bcf37f92445a8066dfa21872b381b47417cf`, close the evidence gap in R2.8.34's stale-revision contract with an egui test that injects resolved links associated with an older revision and verifies source-only fallback, no clickable link, the refresh instruction, and unchanged vault/app-data snapshots. Update `docs/architecture/markdown-preview.md` so its supported wiki-link boundary matches the accepted primary-panel behavior. All executable validation remains GitHub Actions only.
+
+### R2.8.35 CI attempt 1 — source SHA `c18eecf0543cdc6dff12ae0a2bc293846ee42bce`
+
+GitHub Rust CI [38069247624](https://github.com/ashutoshpw/open-obsidian/actions/runs/38069247624) failed to compile the new test on Ubuntu, macOS, and Windows: it passed `&RawDocument` directly to `std::str::from_utf8` instead of using `RawDocument::as_bytes()`. The Ubuntu and macOS workspace-test jobs reported the same E0308 mismatch; Windows confirmed it as well. The test now uses the existing byte accessor, following nearby preview code. The Obsidian vault round-trip had passed on Ubuntu and macOS and was still running on Windows when this correction was prepared; the corrected source SHA will receive its own full required-workflow run. No local tests, builds, formatters, linters, or app launches were used.
