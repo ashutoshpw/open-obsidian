@@ -57,12 +57,14 @@ jobs:
             run: bun run check:accessibility
           - name: Type-check source
             run: bun run typecheck
-      - name: Run host vault round-trip report
-        run: bun run audit:vault-roundtrip
-      - name: Run tests
-        run: bun test
-      - name: Run executable quality scorecard
-        run: bun run quality:program
+      # These checks use isolated temporary data and do not consume one another's output.
+      - parallel:
+          - name: Run host vault round-trip report
+            run: bun run audit:vault-roundtrip
+          - name: Run tests
+            run: bun test
+          - name: Run executable quality scorecard
+            run: bun run quality:program
       - name: Compile Electron shell
         run: bun run compile
       - name: Configure Electron Linux sandbox helper
