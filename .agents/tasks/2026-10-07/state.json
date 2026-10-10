@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:40:38Z",
+  "updated_at": "2026-10-10T18:42:28Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18682,7 +18682,7 @@
     },
     "R2.8.45": {
       "status": "in_progress",
-      "starting_sha": "8006dd7002965a57ac40135d3fb38e9edac536d3",
+      "starting_sha": "c42a4a8bedd750a082177f6af38a42cbba27cd1b",
       "scope": "Verify an escaped highlight opener remains literal in the native Markdown preview and is not projected as a highlight.",
       "acceptance": [
         "The existing escaped-highlight-opener-is-literal C02.1 fixture drives an egui preview test.",
@@ -18691,6 +18691,13 @@
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
       "implementation_commits": [],
+      "tracker_checkpoint": {
+        "sha": "c42a4a8bedd750a082177f6af38a42cbba27cd1b",
+        "inventory_run_id": 38076833787,
+        "inventory_job_id": 114285470515,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38076833787"
+      },
       "next_action": "Add fixture-driven egui coverage for escaped highlight delimiters, then push for exact-SHA GitHub Actions."
     }
   },
