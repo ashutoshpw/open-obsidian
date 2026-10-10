@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T11:16:14Z",
+  "updated_at": "2026-10-10T11:23:50Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e6117c8ce7e123ed34c2b143404cae15f8755a0a",
-  "current_milestone": "R2.8.23",
-  "next_action": "R2.8.23 is accepted on e6117c8ce7e123ed34c2b143404cae15f8755a0a. Continue with the next focused C02.1 Markdown preview slice while keeping full C02.1 pending.",
+  "last_reconciled_head": "83b58b1670b749e0c0994a157079a1927f68f88e",
+  "current_milestone": "R2.8.24",
+  "next_action": "Complete the fixture-backed native UI slice for task-checkbox toggling inside standard alert callouts. Preserve the callout and all untouched BOM/CRLF source bytes; keep full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16649,6 +16649,25 @@
       ],
       "evidence": "evidence/r2.8.23-escaped-markdown-highlights-e6117c8.json",
       "next_action": "R2.8.23 is accepted on e6117c8ce7e123ed34c2b143404cae15f8755a0a; continue C02.1 in another focused slice. Full C02.1 remains pending."
+    },
+    "R2.8.24": {
+      "status": "in_progress",
+      "starting_sha": "83b58b1670b749e0c0994a157079a1927f68f88e",
+      "scope": "Render and revision-safely toggle supported task checkboxes inside standard alert callouts while preserving the complete Markdown source bytes around the changed marker.",
+      "accepted_slice": [
+        "C02.1:revision-safe-callout-task-editing"
+      ],
+      "acceptance": [
+        "A complete UTF-8 note with a standard alert callout and task list is classified for normal Markdown rendering.",
+        "The native preview displays callout task checkboxes as controls instead of falling back to source text.",
+        "Toggling one callout task writes only its checkbox marker through the existing revision-checked vault writer and preserves BOM, CRLF, callout text, other tasks, and unknown text.",
+        "The callout task fixture records exact source and expected bytes after the toggle.",
+        "The focused Rust UI test and all seven required GitHub Actions workflows pass on the exact implementation SHA; all executable validation runs in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_runs": {},
+      "evidence": null,
+      "next_action": "Push the fixture-backed callout task UI slice and use exact-SHA GitHub Actions to accept or correct it; keep full C02.1 pending."
     }
   },
   "ci_preparation": {

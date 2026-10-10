@@ -2839,6 +2839,63 @@ mod tests {
     }
 
     #[test]
+    fn egui_task_checkbox_inside_standard_callout_saves_only_its_source_marker() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let editing = &fixture["callout_task_editing"];
+        let source = editing["source"]
+            .as_str()
+            .expect("callout task fixture must include source");
+        let expected = editing["expected_after_toggle"]
+            .as_str()
+            .expect("callout task fixture must include expected source");
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_vault_refresh_task(ui);
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Markdown preview");
+        click_first_task_checkbox(&harness);
+        harness.step();
+        wait_for_note_preview_write(&mut harness);
+
+        assert!(harness.state().note_preview_error.is_none());
+        assert_eq!(
+            harness.state().note_preview_status.as_deref(),
+            Some("Task checkbox saved to the vault.")
+        );
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            expected.as_bytes().to_vec()
+        );
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .expect("callout task preview remains visible after save")
+                .text
+                .as_bytes(),
+            expected.as_bytes()
+        );
+    }
+
+    #[test]
     fn egui_keeps_task_checkbox_read_only_for_unsupported_markdown() {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("vault");
