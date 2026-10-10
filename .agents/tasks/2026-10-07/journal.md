@@ -2707,3 +2707,15 @@ Use the existing `mixed-supported-and-unsupported` C02.1 fixture, which combines
 The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It checks `ShowSource`, the raw-HTML fallback message, the complete source label, absence of separately rendered heading/formula labels, and unchanged source bytes. Push this focused change for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.51 tracker checkpoint: inventory [run 38082110532](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082110532), job 114300986023, passed for tracker SHA `dda71d1b8b0fb65302c621d17245f4939b34dd99`.
+
+### R2.8.51 accepted — mixed supported and unsupported Markdown stays source-only — source SHA `d527e45cffa8bdcd1e5c3863fe7aa24cf1a31e48`
+
+The existing `mixed-supported-and-unsupported` C02.1 fixture now drives an egui preview test. It verifies that unsupported raw HTML selects `ShowSource`, the fallback message and complete source are visible, the heading and formula do not appear as separately rendered nodes, and source bytes remain unchanged. The focused test passed on Ubuntu, macOS, and Windows; each platform's `ui-egui` suite passed 89 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38082227704](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227704), loaded-plugin workflows [38082227732](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227732), desktop build [38082227692](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227692), quality [38082227721](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227721), Rust CI [38082227688](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227688), plugin renderer [38082227723](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227723), and Obsidian vault round-trip [38082227685](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082227685). The initial Windows Rust CI attempt had an existing attachment-refresh test time out waiting five seconds for its link-resolver worker; retry attempt 2 passed on the same SHA. Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28). Job IDs, both attempts, artifact digests, and the failure details are recorded in [evidence/r2.8.51-mixed-markdown-source-fallback-d527e45.json](evidence/r2.8.51-mixed-markdown-source-fallback-d527e45.json). Native `parallel:` groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: documents that mix supported Markdown with unsupported raw HTML remain entirely source-only. Full C02.1 and migration phases R3-R7 remain pending. Next: verify the raw-HTML script fixture remains literal in the preview in R2.8.52.
+
+### R2.8.52 in progress — raw HTML script remains source-only
+
+Use the existing `raw-html` C02.1 fixture, containing `<script>alert('not executed')</script>`, to verify the native preview explains the raw-HTML fallback and displays the exact script source as text without projecting or executing it. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no executable validation runs locally.
