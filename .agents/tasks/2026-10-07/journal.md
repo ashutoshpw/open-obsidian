@@ -2529,3 +2529,13 @@ The accepted evidence checkpoint at [3e4af157c28d3eca8b746b3b567772f3a3ad6c79](h
 ### R2.8.38 in progress — mixed-formatting wiki-link fallback
 
 Starting from tracker SHA `3e4af157c28d3eca8b746b3b567772f3a3ad6c79` (accepted implementation SHA `0f134032cadfd3e983359f5951cf553ea3e5b323`), add fixture-driven UI evidence that a wiki link surrounded by Markdown emphasis remains source-only even when its target resolves to a local Markdown note. The resolved-target mixed-formatting case is in the existing source-only UI test; it checks for no clickable link and unchanged source, vault, and app-data bytes. The fixture hash is reconciled; push for exact-SHA GitHub Actions. All executable validation remains GitHub Actions only.
+
+### R2.8.38 accepted — mixed-formatting wiki-link fallback — source SHA `737493c4c89022f96b1d18bf8b6a92fe7da1a013`
+
+The primary preview keeps a resolved wiki link surrounded by Markdown emphasis source-only. The focused egui test confirmed the target resolves, exposes no clickable link, and preserves source, vault, and app-data bytes. It passed on Ubuntu, macOS, and Windows.
+
+All seven required workflows passed on this exact SHA: inventory [38072701814](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701814), loaded-plugin workflows [38072701755](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701755), desktop build [38072701771](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701771), quality [38072701876](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701876), Rust CI [38072701798](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701798), plugin renderer [38072701863](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701863), and Obsidian vault round-trip [38072701916](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072701916). Rust CI and vault round-trip passed on all three platforms. Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.38-mixed-formatting-wiki-link-fallback-737493c.json](evidence/r2.8.38-mixed-formatting-wiki-link-fallback-737493c.json).
+
+The GitHub Actions native `parallel` step groups remain enabled in the workflows, including Rust CI, and passed in CI. The requested parallel-step capability was already implemented in CI preparation; see [evidence/parallel-ci.json](evidence/parallel-ci.json). No local tests, builds, formatters, Clippy, or application validation were run.
+
+Accepted slice: source-only handling for a resolved wiki link surrounded by Markdown emphasis. Full C02.1 and migration phases R3-R7 remain pending. Next: R2.8.39 adds a resolved wiki link inside a Markdown list block and verifies that it stays source-only.

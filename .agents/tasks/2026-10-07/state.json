@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T17:39:57Z",
+  "updated_at": "2026-10-10T17:48:31Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "0f134032cadfd3e983359f5951cf553ea3e5b323",
-  "current_milestone": "R2.8.38",
-  "next_action": "R2.8.37 is accepted on exact source SHA 0f134032cadfd3e983359f5951cf553ea3e5b323; tracker SHA 3e4af157c28d3eca8b746b3b567772f3a3ad6c79 passed inventory. R2.8.38 fixture and UI coverage are prepared; push for exact-SHA GitHub Actions. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "737493c4c89022f96b1d18bf8b6a92fe7da1a013",
+  "current_milestone": "R2.8.39",
+  "next_action": "R2.8.38 is accepted on exact source SHA 737493c4c89022f96b1d18bf8b6a92fe7da1a013; all seven required GitHub Actions workflows passed. R2.8.39 should verify a resolved wiki link inside a Markdown list block remains source-only. Push its implementation as a small commit and use exact-SHA GitHub Actions only. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "0f134032cadfd3e983359f5951cf553ea3e5b323"
+      "implementation_sha": "737493c4c89022f96b1d18bf8b6a92fe7da1a013"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.38 accepted: the primary preview keeps a resolved wiki link surrounded by Markdown emphasis source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 737493c4c89022f96b1d18bf8b6a92fe7da1a013. Evidence: evidence/r2.8.38-mixed-formatting-wiki-link-fallback-737493c.json. The GitHub Actions parallel-step feature remains in use and has separate CI evidence. C02.1 and phases R3-R7 remain pending.",
     "R2.8.10 implemented the Windows-only SYNC-004 case-only-rename scenario on exact source SHA d286305aa68e958b03ca8f42f5fe2e49d5a6ea8b. The focused Windows test confirmed Notes/Title.md changed to Notes/title.md while BOM/CRLF bytes and SHA-256 revision remained unchanged, content replacement was rejected by the failure hook, and the journal recorded case_only=true and committed. All seven required workflows passed. Evidence: evidence/r2.8.10-sync-failure-matrix-d286305.json. Two scenarios and aggregate SYNC-004 remain pending.",
     "R2.8.9 implemented the SYNC-004 cloud-placeholder case. Vault link resolution classifies cloud-placeholder://provider/object/123 as external and returns no local target or candidate path. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA 23480420323466c3d8996889a21b0624f677a081. Evidence: evidence/r2.8.9-sync-failure-matrix-2348042.json. Three failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.8 implemented the SYNC-004 symlink case with fixture-driven snapshot, read, and write coverage. The snapshot records an outside-pointing symlink, while reads and writes through it are denied and the outside target remains unchanged. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA f10243984108a56c7ccb6fdd71273c55c2003302. An initial source commit had two Ubuntu rustfmt-only differences; the exact CI diff was applied in the follow-up. Evidence: evidence/r2.8.8-sync-failure-matrix-f102439.json. Four failure-matrix scenarios and full SYNC-004 remain pending.",
@@ -264,7 +265,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA 737493c4c89022f96b1d18bf8b6a92fe7da1a013 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18492,7 +18493,7 @@
       "next_action": "R2.8.37 is accepted. Continue with the mixed-formatting wiki-link source-only boundary; full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.38": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "3e4af157c28d3eca8b746b3b567772f3a3ad6c79",
       "scope": "Verify a wiki link with surrounding Markdown formatting remains source-only even when it resolves to a local Markdown target.",
       "acceptance": [
@@ -18501,8 +18502,34 @@
         "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
+      "implementation_commits": [
+        "737493c4c89022f96b1d18bf8b6a92fe7da1a013"
+      ],
+      "validated_source_sha": "737493c4c89022f96b1d18bf8b6a92fe7da1a013",
+      "ci_runs": {
+        "inventory": 38072701814,
+        "loaded_plugins": 38072701755,
+        "desktop_build": 38072701771,
+        "quality": 38072701876,
+        "rust_ci": 38072701798,
+        "plugin_renderer": 38072701863,
+        "obsidian_vault_roundtrip": 38072701916
+      },
+      "evidence": "evidence/r2.8.38-mixed-formatting-wiki-link-fallback-737493c.json",
+      "next_action": "R2.8.38 is accepted on exact source SHA 737493c4c89022f96b1d18bf8b6a92fe7da1a013; all seven required GitHub Actions workflows passed. Continue with R2.8.39 block-context wiki-link source-only coverage; full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.39": {
+      "status": "in_progress",
+      "starting_sha": "737493c4c89022f96b1d18bf8b6a92fe7da1a013",
+      "scope": "Verify a simple wiki link inside a Markdown list block remains source-only even when its target resolves to a local Markdown note.",
+      "acceptance": [
+        "The Markdown dialect fixture declares a resolved list-context wiki link and source-only expectations.",
+        "An egui test confirms the target resolves while the preview exposes no clickable link and preserves source/vault/app-data bytes.",
+        "The fixture inventory hash is reconciled and all seven required GitHub Actions workflows pass on the exact implementation SHA.",
+        "No local tests, builds, formatters, linters, or app launches are used."
+      ],
       "implementation_commits": [],
-      "next_action": "A resolved-target mixed-formatting fixture case is added to the source-only UI test and the fixture inventory hash is reconciled. Push this slice for exact-SHA GitHub Actions."
+      "next_action": "Add a resolved wiki link to a Markdown list item as a fixture case and include it in the existing source-only UI test; reconcile the fixture inventory hash and push for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {
