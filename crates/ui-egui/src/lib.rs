@@ -4003,7 +4003,18 @@ mod tests {
 
     #[test]
     fn egui_renders_inline_and_display_math_through_the_preview_callback() {
-        let source = "Inline $a + b$ and a display formula:\n\n$$\n\\frac{1}{2}\n$$";
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "inline-and-display-math")
+            .expect("Markdown dialect fixture must include inline and display math");
+        let source = case["source"]
+            .as_str()
+            .expect("inline and display math fixture must include source");
+        let original = source.as_bytes().to_vec();
         assert_eq!(
             analyze_markdown_preview(source).disposition(),
             MarkdownPreviewDisposition::RenderMarkdown
@@ -4018,7 +4029,8 @@ mod tests {
 
         harness.step();
         harness.get_by_label("Rendered math formula: a + b");
-        harness.get_by_label("Rendered math formula: \n\\frac{1}{2}\n");
+        harness.get_by_label("Rendered math formula: \nc = 3\n");
+        assert_eq!(source.as_bytes(), original.as_slice());
     }
 
     #[test]
