@@ -2605,7 +2605,11 @@ mod tests {
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
         harness.step();
-        assert!(harness.state().vault_refresh_receiver.is_some());
+        assert!(
+            harness.state().vault_refresh_receiver.is_some()
+                || harness.state().vault_refresh_status.is_some(),
+            "periodic reconciliation should be running or already complete"
+        );
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().vault_refresh_error.is_none());
         let session = harness
