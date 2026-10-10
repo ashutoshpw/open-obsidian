@@ -17,4 +17,5 @@ rayon = { workspace = true }
 [dev-dependencies]
 egui_kittest = { workspace = true }
 image = { workspace = true }
+latex-rust = { version = "=1.0.2", default-features = false, features = ["std", "png"] }
 serde_json = { workspace = true }

@@ -2974,6 +2974,33 @@ mod tests {
     }
 
     #[test]
+    fn latex_math_renderer_candidate_emits_decodable_pngs_and_rejects_tikz() {
+        let font = latex_rust::MathFont::stix_two_math()
+            .expect("the candidate renderer should load its embedded math font");
+
+        for source in [r"a + b", r"\frac{1}{2}", r"e^{i \pi} + 1 = 0"] {
+            let png = latex_rust::latex_to_png(
+                source,
+                &font,
+                &latex_rust::PngOptions::new(),
+            )
+            .expect("supported math should produce PNG bytes");
+            assert!(png.starts_with(b"\x89PNG\r\n\x1a\n"));
+            let decoded = image::load_from_memory(&png)
+                .expect("candidate PNG output should decode with the selected image library");
+            assert!(decoded.width() > 0);
+            assert!(decoded.height() > 0);
+        }
+
+        assert!(latex_rust::latex_to_png(
+            r"\begin{tikzpicture}\draw (0,0) -- (1,1);\end{tikzpicture}",
+            &font,
+            &latex_rust::PngOptions::new(),
+        )
+        .is_err());
+    }
+
+    #[test]
     fn egui_task_checkbox_toggle_saves_only_its_source_marker() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");
