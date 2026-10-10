@@ -100,7 +100,7 @@ struct UninstallCleanupSelection {
 
 enum RenameTaskMessage {
     Preview(Result<VaultRenamePreview, String>),
-    Applied(Result<RenameApplyOutcome, String>),
+    Applied(Result<Box<RenameApplyOutcome>, String>),
 }
 
 /// Display-safe storage state passed from the desktop composition boundary.
@@ -1496,11 +1496,11 @@ impl OpenObsidianApp {
             let result = match session.apply_rename_preview(&preview) {
                 Ok(result) => {
                     let listing_refreshed = session.refresh_entries().is_ok();
-                    Ok(RenameApplyOutcome {
+                    Ok(Box::new(RenameApplyOutcome {
                         session,
                         result,
                         listing_refreshed,
-                    })
+                    }))
                 }
                 Err(error) => Err(rename_apply_error(error)),
             };
@@ -1539,7 +1539,12 @@ impl OpenObsidianApp {
             }
             Some(Ok(RenameTaskMessage::Applied(Ok(outcome)))) => {
                 self.rename_receiver = None;
-                let result = &outcome.result;
+                let RenameApplyOutcome {
+                    session,
+                    result,
+                    listing_refreshed,
+                } = *outcome;
+                let result = &result;
                 self.rename_source_path = Some(result.new_path.clone());
                 if self.link_source_path.as_ref() == Some(&result.old_path) {
                     self.link_source_path = Some(result.new_path.clone());
@@ -1552,11 +1557,11 @@ impl OpenObsidianApp {
                 self.note_embed_report = None;
                 self.note_embed_error = None;
                 self.inline_image_textures.clear();
-                self.session = Some(Arc::new(outcome.session));
+                self.session = Some(Arc::new(session));
                 self.rename_destination_path.clear();
                 self.rename_preview = None;
                 self.rename_confirmation = false;
-                self.rename_error = if outcome.listing_refreshed {
+                self.rename_error = if listing_refreshed {
                     None
                 } else {
                     Some(
