@@ -3990,6 +3990,53 @@ mod tests {
     }
 
     #[test]
+    fn egui_renders_standard_alert_callout_fixture_without_changing_source() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "standard-alert-callout")
+            .expect("Markdown dialect fixture must include a standard alert callout");
+        let source = case["source"]
+            .as_str()
+            .expect("standard alert callout fixture must include source");
+        let expected_preview_texts = case["expected_preview_texts"]
+            .as_array()
+            .expect("standard alert callout fixture must include expected preview text")
+            .iter()
+            .map(|text| text.as_str().expect("preview text must be a string"))
+            .collect::<Vec<_>>();
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        for text in expected_preview_texts {
+            harness.get_by_label(text);
+        }
+        assert!(
+            harness
+                .query_by_label(
+                    "Unsupported Markdown (callouts); showing the source as written."
+                )
+                .is_none(),
+            "standard alert callouts must render instead of source fallback"
+        );
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_renders_markdown_footnotes_without_source_fallback() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");

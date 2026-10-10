@@ -230,6 +230,13 @@
     "fallback": "If a known source-only construct is present, show the bounded original source slice as monospace text and name the unsupported syntax. Do not write or normalize the source.",
     "cases": [
       {
+        "id": "standard-alert-callout",
+        "source": "> [!NOTE] Callout title\n> Callout body.",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_preview_texts": ["Callout title", "Callout body."]
+      },
+      {
         "id": "commonmark-basics",
         "source": "# Heading\n\nSubheading\n---\n\n- [x] Task\n\n| Name | Value |\n| --- | --- |\n| note | 3 |\n\n> [!NOTE] Safe callout\n\n~~~rust\nfn main() {}\n~~~\n\n**bold** ~~strike~~",
         "expected_disposition": "render-markdown",
