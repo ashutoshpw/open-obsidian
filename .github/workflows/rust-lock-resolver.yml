@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   resolve:
-    name: Resolve committed workspace dependencies in CI
+    name: Resolve and compile committed workspace in CI
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -17,8 +17,8 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Generate Cargo.lock
-        run: cargo generate-lockfile
+      - name: Resolve dependencies and compile all targets
+        run: cargo check --workspace --all-targets
 
       - name: Upload generated lockfile
         uses: actions/upload-artifact@v4
