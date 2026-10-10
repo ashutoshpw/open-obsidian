@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T20:40:40Z",
+  "updated_at": "2026-10-10T20:47:30Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "94b057532f005d67eee6a0c6a334690ec3704024",
-  "current_milestone": "R2.8.54",
-  "next_action": "R2.8.54's first CI attempt showed the indented code is exposed through an accessibility value, not an exact label. The assertion now checks that value; push the correction and validate the exact new SHA in GitHub Actions. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "81bda29b1f938f8ebc2cb7674b265b11ca765297",
+  "current_milestone": "R2.8.55",
+  "next_action": "R2.8.54 is accepted on exact source SHA 81bda29b1f938f8ebc2cb7674b265b11ca765297; all seven required GitHub Actions workflows passed, and the focused test passed on Ubuntu, macOS, and Windows. R2.8.55 should cover both plain inline highlights using its existing fixture and preserve the original source. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "c4bd5e5b3478014a402a850afda051154efb525d"
+      "implementation_sha": "81bda29b1f938f8ebc2cb7674b265b11ca765297"
     },
     "R3": {
       "status": "pending",
@@ -18959,7 +18959,7 @@
       "evidence": "evidence/r2.8.53-unknown-markup-literal-c4bd5e5.json"
     },
     "R2.8.54": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "94b057532f005d67eee6a0c6a334690ec3704024",
       "scope": "Verify legacy math delimiters inside an indented code block do not trigger the legacy-math fallback and remain visible as literal code.",
       "acceptance": [
@@ -18967,7 +18967,10 @@
         "The preview keeps the fixture on the RenderMarkdown path and displays the original indented code rather than an unsupported-math source fallback.",
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "b7d72a9e94b33ebfc66455fac5895907a91fcfd0",
+        "81bda29b1f938f8ebc2cb7674b265b11ca765297"
+      ],
       "tracker_checkpoint": {
         "sha": "94b057532f005d67eee6a0c6a334690ec3704024",
         "inventory_run_id": 38084316519,
@@ -18975,7 +18978,35 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38084316519"
       },
-      "next_action": "The first R2.8.54 implementation failed because the code text is a value, not an exact label; GitHub's accessibility tree shows the literal code as a value. The assertion now queries that value. Push the correction and validate through exact-SHA GitHub Actions only; no local executable validation is used."
+      "next_action": "R2.8.54 is accepted; continue with fixture-driven coverage for multiple plain inline highlights in R2.8.55. Full C02.1 and phases R3-R7 remain pending.",
+      "validated_source_sha": "81bda29b1f938f8ebc2cb7674b265b11ca765297",
+      "ci_runs": {
+        "inventory": 38084695689,
+        "loaded_plugins": 38084695706,
+        "desktop_build": 38084695734,
+        "quality": 38084695721,
+        "rust_ci": 38084695757,
+        "plugin_renderer": 38084695719,
+        "obsidian_vault_roundtrip": 38084695776
+      },
+      "superseded_attempt": {
+        "source_sha": "b7d72a9e94b33ebfc66455fac5895907a91fcfd0",
+        "rust_ci_run_id": 38084425518,
+        "reason": "The first assertion searched for the code text as a label, but the accessibility tree exposes it as a value. A macOS-only existing empty-vault refresh timing assertion also failed on that attempt and passed on the corrected SHA."
+      },
+      "evidence": "evidence/r2.8.54-indented-math-code-literal-81bda29.json"
+    },
+    "R2.8.55": {
+      "status": "in_progress",
+      "starting_sha": "81bda29b1f938f8ebc2cb7674b265b11ca765297",
+      "scope": "Verify multiple plain inline highlights render together through the existing Markdown dialect fixture without changing source.",
+      "acceptance": [
+        "The existing multiple-plain-highlights C02.1 fixture drives an egui preview test.",
+        "The preview selects RenderMarkdown and exposes both expected highlight texts.",
+        "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
+      ],
+      "implementation_commits": [],
+      "next_action": "Record the R2.8.54 acceptance and R2.8.55 tracker checkpoint in GitHub Actions, then add fixture-driven egui coverage for multiple plain inline highlights. No local executable validation is used."
     }
   },
   "ci_preparation": {
