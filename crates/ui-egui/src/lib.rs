@@ -3571,11 +3571,29 @@ mod tests {
 
     #[test]
     fn egui_renders_safe_inline_html_breaks_without_changing_source() {
-        let source = "First line<br>Second line.";
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "safe-html-inline-break")
+            .expect("Markdown dialect fixture must include a safe HTML inline break");
+        let source = case["source"]
+            .as_str()
+            .expect("safe HTML inline-break fixture must include source");
+        let expected_render_source = case["expected_native_render_source"]
+            .as_str()
+            .expect("safe HTML inline-break fixture must include native render source");
         let original = source.as_bytes().to_vec();
+        let analysis = analyze_markdown_preview(source);
         assert_eq!(
-            analyze_markdown_preview(source).disposition(),
+            analysis.disposition(),
             MarkdownPreviewDisposition::RenderMarkdown
+        );
+        assert_eq!(
+            analysis.native_render_source(source).as_ref(),
+            expected_render_source
         );
 
         let mut markdown_cache = CommonMarkCache::default();
@@ -3588,6 +3606,12 @@ mod tests {
         harness.step();
         harness.get_by_label("First line");
         harness.get_by_label("Second line.");
+        assert!(
+            harness
+                .query_by_label("Unsupported Markdown (raw HTML); showing the source as written.")
+                .is_none(),
+            "allowlisted inline HTML break must render instead of source fallback"
+        );
         assert_eq!(source.as_bytes(), original.as_slice());
     }
 
