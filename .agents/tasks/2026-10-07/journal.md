@@ -2773,3 +2773,15 @@ Use the existing multiple-plain-highlights C02.1 fixture to verify both expected
 R2.8.55 tracker checkpoint: inventory [run 38085191217](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085191217), job 114310136384, passed for tracker SHA bb8c200506018dc117adf07451fa793746a1c5ef.
 
 The fixture-driven egui case is added in crates/ui-egui/src/lib.rs. It checks RenderMarkdown, both expected highlight spans and their visible text, and unchanged source bytes. Commit and push the focused case for exact-SHA GitHub Actions; no local executable validation runs.
+
+### R2.8.55 accepted — multiple plain inline highlights render together — source SHA e2b1df91c0ec906d70143933335ede8473692d90
+
+The existing multiple-plain-highlights C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, both expected highlight texts, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 93 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38085254558](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254558), loaded-plugin workflows [38085254551](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254551), desktop build [38085254564](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254564), quality [38085254574](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254574), Rust CI [38085254560](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254560), plugin renderer [38085254563](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254563), and Obsidian vault round-trip [38085254593](https://github.com/ashutoshpw/open-obsidian/actions/runs/38085254593). Quality attempt 1 failed only on macOS at the intermittent Electron local retrieval-boundary audit; rerunning failed jobs on the same SHA passed all three platforms. Exact job IDs, artifacts, and retry details are in [evidence/r2.8.55-multiple-plain-highlights-e2b1df9.json](evidence/r2.8.55-multiple-plain-highlights-e2b1df9.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: both plain inline highlight spans render in the native preview and the fixture source remains unchanged. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.56 in progress — safe HTML line break before CRLF
+
+Use the existing safe-html-inline-break-before-crlf C02.1 fixture to verify the preview selects RenderMarkdown and produces the expected two-line native rendering while preserving the original CRLF source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
