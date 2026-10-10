@@ -2736,4 +2736,6 @@ Accepted slice: raw HTML script content remains visible as source and is not pro
 
 Use the existing `unknown-markup-remains-literal` C02.1 fixture to confirm the `%%` extension marker stays visible as literal text under native CommonMark rendering, without triggering the unsupported-syntax fallback. Preserve the fixture source bytes and validate only through exact-SHA GitHub Actions.
 
+The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It checks `RenderMarkdown`, the full literal source label, absence of a raw-HTML fallback message, and unchanged source bytes. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs.
+
 R2.8.53 tracker checkpoint: inventory [run 38083742362](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083742362), job 114305797972, passed for tracker SHA `4435d7755f2fd1512588609c765ef2299312ca46`.
