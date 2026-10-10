@@ -5105,7 +5105,9 @@ mod tests {
         );
         harness.get_by_label("Markdown preview");
         harness.get_by_label("Edited mode heading");
-        harness.get_by_label("This preview reflects the unsaved source draft.");
+        harness.get_by_label(
+            "This preview reflects the source editor. Save to write it to the vault.",
+        );
 
         harness.get_by_label("Reading").click();
         harness.step();

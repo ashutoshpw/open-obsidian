@@ -8,7 +8,7 @@
   "current_phase": "R2",
   "last_reconciled_head": "54e9574d0235beaadb5e49f7b8850d973b028989",
   "current_milestone": "R2.8.69",
-  "next_action": "R2.8.69 first source SHA a01e0db80e132bc6020c323fe05777711f4ec72d failed Rust CI on all three OSes because two UI tests queried the source editor before the next egui frame. All six companion workflows, including the Ubuntu/macOS/Windows vault round-trip, have now passed. The test harness correction is prepared; push it as a small commit and inspect fresh exact-SHA GitHub Actions results. No local executable validation.",
+  "next_action": "R2.8.69 source SHA 6535790e5e9b6f90f193a5aab737edc3159006b4 fixed the editor-frame timing but Rust CI still failed on one incorrect Live preview accessibility-label expectation across all three OSes. Its same-SHA Linux vault round-trip retry passed, as did the macOS and Windows round-trip jobs. The focused assertion correction and tracker update are ready; commit and push them for fresh exact-SHA results from all seven required workflows. No local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19752,9 +19752,45 @@
             "macos-latest": 114338370553,
             "windows-latest": 114338370764
           }
+        },
+        {
+          "source_sha": "6535790e5e9b6f90f193a5aab737edc3159006b4",
+          "rust_ci_run_id": 38095070927,
+          "failed_jobs": [
+            {"platform": "ubuntu-latest", "job_id": 114339193779},
+            {"platform": "macos-latest", "job_id": 114339193884},
+            {"platform": "windows-latest", "job_id": 114339193915}
+          ],
+          "failing_tests": [
+            "egui_markdown_modes_keep_drafts_and_show_distinct_surfaces"
+          ],
+          "cause": "The Live preview UI correctly labels its preview as reflecting the source editor, but the new test expected the distinct unsaved-draft label used by Reading mode. The other 99 ui-egui tests passed on each platform, including the golden round-trip test.",
+          "correction": "Assert the source-editor preview label in Live preview; retain the unsaved-draft label assertion for Reading mode.",
+          "companion_workflow_runs": {
+            "inventory": 38095070882,
+            "loaded_plugins": 38095070884,
+            "plugin_renderer": 38095070933,
+            "quality": 38095070888,
+            "desktop_build": 38095070917
+          },
+          "vault_roundtrip_run_id": 38095070831,
+          "vault_roundtrip_jobs": {
+            "ubuntu-24.04": {"job_id": 114339193353, "conclusion": "failure", "cause": "xdotool found no visible window during Obsidian launch"},
+            "macos-latest": {"job_id": 114339193444, "conclusion": "success"},
+            "windows-latest": {"job_id": 114339193489, "conclusion": "success"}
+          },
+          "same_sha_retry": {
+            "attempt": 2,
+            "conclusion": "success",
+            "jobs": {
+              "ubuntu-24.04": {"job_id": 114339986622, "conclusion": "success"},
+              "windows-latest": {"job_id": 114339987796, "conclusion": "success"},
+              "macos-latest": {"job_id": 114340014317, "conclusion": "success"}
+            }
+          }
         }
       ],
-      "next_action": "The first SHA's six companion workflows passed; Rust CI failed on the two documented test-frame timing assertions. Push the focused harness correction and obtain fresh exact-SHA GitHub Actions results. Keep parent C02 pending until its full acceptance passes."
+      "next_action": "The second source SHA corrected the egui frame timing but exposed an incorrect expected accessible label in Live preview. Same-SHA attempt 2 passed the vault round-trip on Ubuntu, macOS, and Windows. Push the focused assertion correction and tracker update, then obtain fresh exact-SHA results from all seven required workflows. Keep parent C02 pending until its full acceptance passes."
     }
   },
   "ci_preparation": {
