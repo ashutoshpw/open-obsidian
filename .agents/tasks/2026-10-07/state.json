@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T04:07:26Z",
+  "updated_at": "2026-10-10T04:14:17Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "789108eaf6bbed5279397b8ef601da162848326f",
+  "last_reconciled_head": "c36954bd4ff4f4ecb5b34263ccd24a59ab63650e",
   "current_milestone": "R2.8.6",
-  "next_action": "Run exact-SHA GitHub Actions acceptance for the delete-versus-edit case, then continue the remaining six SYNC-004 failure-matrix scenarios. Keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "next_action": "Start R2.8.7 for the next SYNC-004 failure-matrix scenario from the accepted tracker checkpoint. Six scenarios remain; keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "2989c5659a8324ecc7f4aaf53c51122a12b57272"
+      "implementation_sha": "c36954bd4ff4f4ecb5b34263ccd24a59ab63650e"
     },
     "R3": {
       "status": "pending",
@@ -67,6 +67,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.6 implemented the SYNC-004 delete-versus-edit case: a stale incoming edit is rejected after external deletion, preserved as protected conflict history, journaled, and does not resurrect the deleted path. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA c36954bd4ff4f4ecb5b34263ccd24a59ab63650e. Evidence: evidence/r2.8.6-sync-failure-matrix-c36954b.json. Six failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.5 implemented the SYNC-004 concurrent-edit case with fixture-driven stale-revision checks, protected incoming conflict history, and conflict journaling. All seven required workflows passed on exact SHA 2989c5659a8324ecc7f4aaf53c51122a12b57272 across Ubuntu, macOS and Windows; the quality workflow passed on attempt 2 at the same SHA. Evidence: evidence/r2.8.5-sync-failure-matrix-2989c56.json. Seven failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.4 implemented the SYNC-004 partial-sync scenario with revision-checked batch writes, batch and per-file journals, and preserved versions when a later replacement fails. All seven required workflows passed on exact SHA e031fd9b9eb838401e8aeb4f649aace26d10c384 across Ubuntu, macOS and Windows. Evidence: evidence/r2.8.4-sync-failure-matrix-e031fd9.json. Eight failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.3 implemented disk-full-before-temporary-write and permission-loss-before-replacement coverage for SYNC-004; all seven required workflows passed on exact SHA c3127faf3ad3601f6d7bed67b08b3ac7173e99dd across Ubuntu, macOS and Windows. Evidence: evidence/r2.8.3-sync-failure-matrix-c3127fa.json. The other nine failure-matrix cases, full SYNC-004, editor integration, and broader C01/C01.2 acceptance remain pending.",
