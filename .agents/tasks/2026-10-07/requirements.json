@@ -2564,9 +2564,13 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.69-markdown-modes-8fe603b.json",
+        "evidence/r2.8.67-c02.1-render-edit-audit.md",
+        "evidence/r2.8.13-frontmatter-property-edit-530eaab.json"
+      ],
+      "tested_source_tree": "8fe603b3fa4164cf681f94c3093f65b793d31e8c",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",
