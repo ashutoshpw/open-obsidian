@@ -1,9 +1,34 @@
 {
   "schema_version": 1,
+  "id": "fixture:sync-failure-matrix",
   "purpose": "Portable failure classes and their non-destructive VaultStore outcomes.",
   "scenarios": [
-    {"id": "disk-full", "fault_stage": "before-temp-write", "expected_outcome": "preserve-incoming-as-failed-history"},
-    {"id": "permission-loss", "fault_stage": "before-replace", "expected_outcome": "preserve-incoming-as-failed-history"},
+    {
+      "id": "disk-full",
+      "fault_stage": "before-temp-write",
+      "expected_outcome": "preserve-incoming-as-failed-history",
+      "injected_error": "injected disk-full fault before the target temporary write",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "initial_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "incoming_bytes_utf8": "\ufeffstatus: candidate\r\n",
+      "expected_target_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "expected_failed_history_bytes_utf8": "\ufeffstatus: candidate\r\n",
+      "expected_previous_recovery_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "expected_incoming_recovery_bytes_utf8": "\ufeffstatus: candidate\r\n"
+    },
+    {
+      "id": "permission-loss",
+      "fault_stage": "before-replace",
+      "expected_outcome": "preserve-incoming-as-failed-history",
+      "injected_error": "injected permission loss before target replacement",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "initial_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "incoming_bytes_utf8": "\ufeffstatus: candidate\r\n",
+      "expected_target_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "expected_failed_history_bytes_utf8": "\ufeffstatus: candidate\r\n",
+      "expected_previous_recovery_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "expected_incoming_recovery_bytes_utf8": "\ufeffstatus: candidate\r\n"
+    },
     {"id": "concurrent-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {"id": "delete-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {"id": "rename-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},

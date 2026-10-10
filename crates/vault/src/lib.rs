@@ -266,6 +266,8 @@ pub struct VaultStore {
     root: VaultRoot,
     app_data_root: PathBuf,
     #[cfg(test)]
+    fail_before_temp_write: bool,
+    #[cfg(test)]
     fail_before_replace: bool,
     #[cfg(test)]
     fail_committed_journal: bool,
@@ -1122,6 +1124,8 @@ impl VaultStore {
             root,
             app_data_root,
             #[cfg(test)]
+            fail_before_temp_write: false,
+            #[cfg(test)]
             fail_before_replace: false,
             #[cfg(test)]
             fail_committed_journal: false,
@@ -1503,6 +1507,12 @@ impl VaultStore {
             .to_string_lossy();
         let temporary_path = parent.join(format!(".{file_name}.{operation_id}.tmp"));
         let result = (|| -> io::Result<()> {
+            #[cfg(test)]
+            if self.fail_before_temp_write {
+                return Err(io::Error::other(
+                    "injected disk-full fault before the target temporary write",
+                ));
+            }
             let mut temporary = OpenOptions::new()
                 .write(true)
                 .create_new(true)
@@ -1511,10 +1521,17 @@ impl VaultStore {
             temporary.sync_all()?;
             drop(temporary);
             #[cfg(test)]
-            if self.fail_before_replace
-                || self.fail_replace_path.as_deref() == Some(relative_path)
+            let injected_error = if self.fail_before_replace {
+                Some("injected permission loss before target replacement")
+            } else if self.fail_replace_path.as_deref() == Some(relative_path)
                 || (self.fail_rollback_replace && operation_id.ends_with("-rollback"))
             {
+                Some("injected atomic replace failure")
+            } else {
+                None
+            };
+            #[cfg(test)]
+            if let Some(message) = injected_error {
                 if let Some((external_path, external_bytes)) = &self.external_change_on_failure {
                     let external_path = self
                         .root
@@ -1522,7 +1539,7 @@ impl VaultStore {
                         .map_err(|error| io::Error::other(error.to_string()))?;
                     fs::write(external_path, external_bytes)?;
                 }
-                return Err(io::Error::other("injected atomic replace failure"));
+                return Err(io::Error::other(message));
             }
             replace_temporary(&temporary_path, target_path, operation_id)
         })();
@@ -1941,7 +1958,7 @@ mod tests {
     use openobsidian_doc::MergeStatus;
     use serde_json::Value;
     use std::fs;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
 
     const C03_RENAME_FIXTURE: &str = include_str!("../../../fixtures/rename-plan.json");
@@ -1951,6 +1968,8 @@ mod tests {
         include_str!("../../../fixtures/sync-interrupted-write.json");
     const SYNC_REVISION_MERGE_FIXTURE: &str =
         include_str!("../../../fixtures/sync-revision-merge.json");
+    const SYNC_FAILURE_MATRIX_FIXTURE: &str =
+        include_str!("../../../fixtures/vault-safety-failure-matrix.json");
 
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -1985,6 +2004,15 @@ mod tests {
             .into_iter()
             .find(|reference| reference.kind == LinkKind::Embed && reference.target == target)
             .unwrap_or_else(|| panic!("expected embed reference to {target}"))
+    }
+
+    fn history_artifact_bytes(directory: &Path, suffix: &str) -> Vec<u8> {
+        fs::read_dir(directory)
+            .unwrap_or_else(|error| panic!("reading {}: {error}", directory.display()))
+            .map(Result::unwrap)
+            .find(|entry| entry.file_name().to_string_lossy().ends_with(suffix))
+            .map(|entry| fs::read(entry.path()).unwrap())
+            .unwrap_or_else(|| panic!("missing {suffix} artifact in {}", directory.display()))
     }
 
     fn rgba_png(rgba: [u8; 4]) -> Vec<u8> {
@@ -2693,52 +2721,122 @@ mod tests {
     }
 
     #[test]
-    fn failed_atomic_write_keeps_original_and_preserves_incoming_bytes() {
-        let vault_temp = TempDir::new();
-        let app_data_temp = TempDir::new();
-        let note_path = vault_temp.0.join("note.md");
-        let original = b"original\n";
-        let incoming = b"incoming\n";
-        fs::write(&note_path, original).unwrap();
-        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
-        store.fail_before_replace = true;
-        let expected = store.root().read("note.md").unwrap().revision_sha256;
+    fn failure_matrix_preserves_all_versions_for_disk_full_and_permission_loss() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:sync-failure-matrix");
+        let scenarios = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios");
 
-        let error = store
-            .write(VaultWriteRequest {
-                relative_path: PathBuf::from("note.md"),
-                expected_revision_sha256: Some(expected),
-                bytes: incoming.to_vec(),
-            })
-            .unwrap_err();
+        for scenario_id in ["disk-full", "permission-loss"] {
+            let scenario = scenarios
+                .iter()
+                .find(|scenario| scenario["id"] == scenario_id)
+                .unwrap_or_else(|| panic!("failure matrix is missing {scenario_id}"));
+            assert_eq!(
+                scenario["expected_outcome"],
+                "preserve-incoming-as-failed-history",
+                "{scenario_id}"
+            );
+            assert_eq!(
+                scenario["applicable_platforms"],
+                serde_json::json!(["macOS", "Windows", "Linux"]),
+                "{scenario_id}"
+            );
+            let initial = scenario["initial_bytes_utf8"]
+                .as_str()
+                .expect("scenario must include initial source bytes")
+                .as_bytes();
+            let incoming = scenario["incoming_bytes_utf8"]
+                .as_str()
+                .expect("scenario must include incoming source bytes")
+                .as_bytes();
+            let vault_temp = TempDir::new();
+            let app_data_temp = TempDir::new();
+            let note_path = vault_temp.0.join("note.md");
+            fs::write(&note_path, initial).unwrap();
+            let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+            match scenario["fault_stage"].as_str() {
+                Some("before-temp-write") => store.fail_before_temp_write = true,
+                Some("before-replace") => store.fail_before_replace = true,
+                stage => panic!("unexpected {scenario_id} fault stage: {stage:?}"),
+            }
+            let expected_revision = store.root().read("note.md").unwrap().revision_sha256;
 
-        assert!(
-            error
-                .to_string()
-                .contains("injected atomic replace failure")
-        );
-        assert_eq!(fs::read(&note_path).unwrap(), original);
-        let failed_dir = app_data_temp.0.join("failed");
-        let failed_bytes = fs::read_dir(failed_dir)
-            .unwrap()
-            .map(Result::unwrap)
-            .find(|entry| {
-                entry
-                    .path()
-                    .extension()
-                    .is_some_and(|extension| extension == std::ffi::OsStr::new("bin"))
-            })
-            .map(|entry| fs::read(entry.path()).unwrap())
-            .unwrap();
-        assert_eq!(failed_bytes, incoming);
-        assert!(
-            !fs::read_dir(&vault_temp.0)
-                .unwrap()
-                .map(Result::unwrap)
-                .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp"))
-        );
-        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
-        assert!(journal.contains("\"state\":\"failed\""));
+            let error = store
+                .write(VaultWriteRequest {
+                    relative_path: PathBuf::from("note.md"),
+                    expected_revision_sha256: Some(expected_revision),
+                    bytes: incoming.to_vec(),
+                })
+                .unwrap_err();
+
+            let injected_error = scenario["injected_error"]
+                .as_str()
+                .expect("scenario must state its injected error");
+            assert!(error.to_string().contains(injected_error), "{scenario_id}");
+            assert_eq!(
+                fs::read(&note_path).unwrap(),
+                scenario["expected_target_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{scenario_id}: target bytes"
+            );
+            assert_eq!(
+                history_artifact_bytes(&app_data_temp.0.join("failed"), ".bin"),
+                scenario["expected_failed_history_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{scenario_id}: failed-write history"
+            );
+            let recovery_dir = app_data_temp.0.join("recovery");
+            assert_eq!(
+                history_artifact_bytes(&recovery_dir, "-previous.bin"),
+                scenario["expected_previous_recovery_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{scenario_id}: previous recovery image"
+            );
+            assert_eq!(
+                history_artifact_bytes(&recovery_dir, "-incoming.bin"),
+                scenario["expected_incoming_recovery_bytes_utf8"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+                "{scenario_id}: incoming recovery image"
+            );
+            assert!(
+                !fs::read_dir(&vault_temp.0)
+                    .unwrap()
+                    .map(Result::unwrap)
+                    .any(|entry| entry.file_name().to_string_lossy().ends_with(".tmp")),
+                "{scenario_id}: temporary target was left behind"
+            );
+            let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+            let entries = journal
+                .lines()
+                .map(serde_json::from_str::<Value>)
+                .collect::<Result<Vec<_>, _>>()
+                .expect("write journal must contain valid JSON records");
+            assert_eq!(entries.len(), 2, "{scenario_id}: journal entry count");
+            assert_eq!(entries[0]["state"], "prepared", "{scenario_id}");
+            assert_eq!(entries[1]["state"], "failed", "{scenario_id}");
+            assert!(
+                entries[1]["error"]
+                    .as_str()
+                    .is_some_and(|message| message.contains(injected_error)),
+                "{scenario_id}: journal must retain the failure reason"
+            );
+        }
     }
 
     #[test]

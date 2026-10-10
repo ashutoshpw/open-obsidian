@@ -1662,13 +1662,13 @@
     },
     {
       "path": "fixtures/vault-safety-failure-matrix.json",
-      "sha256": "ee62447326d32dfdb5e671324dff6ee2c90eeaf60257c8384ce795e2b40757ac",
+      "sha256": "08b5b3263b9dabf850404940695acd4959d64f26478b8a04cfa9b319b72c5f77",
       "rust_owner": "crates/vault",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
-      "fixture_reader": "crates/testkit"
+      "fixture_reader": "crates/vault"
     },
     {
       "path": "fixtures/vault-safety.json",
