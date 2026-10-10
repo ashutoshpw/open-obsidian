@@ -2,11 +2,11 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T22:02:33Z",
+  "updated_at": "2026-10-10T22:06:07Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3b3aca73db358cea7a2e13c2d845162813471fec",
+  "last_reconciled_head": "5b619026759880e90cadbceb6fb92cfe80fade7f",
   "current_milestone": "R2.8.62",
   "next_action": "R2.8.61 is accepted on exact source SHA 3b3aca73db358cea7a2e13c2d845162813471fec; all seven required GitHub Actions workflows passed. R2.8.62 will drive the existing CommonMark basics fixture through the egui table preview, verify rendered table content and unchanged source bytes, and use GitHub Actions as the only executable validation. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
@@ -19253,8 +19253,14 @@
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
       ],
       "implementation_commits": [],
-      "tracker_checkpoint": null,
-      "next_action": "Commit and push the R2.8.61 acceptance record, then dispatch the inventory workflow on main and record its successful tracker checkpoint before implementing R2.8.62. No local executable validation is used."
+      "tracker_checkpoint": {
+        "sha": "5b619026759880e90cadbceb6fb92cfe80fade7f",
+        "inventory_run_id": 38090121657,
+        "inventory_job_id": 114324667885,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38090121657"
+      },
+      "next_action": "The R2.8.62 tracker checkpoint passed inventory on SHA 5b619026759880e90cadbceb6fb92cfe80fade7f. Refactor the existing direct-string Markdown table egui test to read the commonmark-basics C02.1 fixture, verify the table headers and cells, and preserve source bytes. Commit and push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {

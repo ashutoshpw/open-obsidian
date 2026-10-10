@@ -2869,3 +2869,5 @@ Accepted slice: inline and display math from the shared C02.1 fixture render thr
 ### R2.8.62 in progress — CommonMark basics fixture table preview
 
 Use the existing commonmark-basics C02.1 fixture in the egui Markdown table preview test. Verify RenderMarkdown, the table headers and expected row values, and unchanged source bytes. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.61 acceptance record is pushed.
+
+R2.8.62 tracker checkpoint: inventory [run 38090121657](https://github.com/ashutoshpw/open-obsidian/actions/runs/38090121657), job 114324667885, passed for tracker SHA 5b619026759880e90cadbceb6fb92cfe80fade7f.
