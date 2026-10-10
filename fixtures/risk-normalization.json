@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "fixture:risk-normalization",
+  "name": "block-scalar-edit-rejection",
+  "invariants": {
+    "block_scalar_headers_are_rejected": true,
+    "rejected_edits_preserve_original_bytes": true
+  },
+  "cases": [
+    {"id": "literal-default", "before": "---\nsummary: |\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-default", "before": "---\nsummary: >\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-strip", "before": "---\nsummary: |-\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-keep", "before": "---\nsummary: |+\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-indent", "before": "---\nsummary: |2\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-keep-indent", "before": "---\nsummary: |+2\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-indent-keep", "before": "---\nsummary: |2+\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-strip-indent", "before": "---\nsummary: |-2\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "literal-indent-strip", "before": "---\nsummary: |2-\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-strip", "before": "---\nsummary: >-\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-keep", "before": "---\nsummary: >+\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-indent", "before": "---\nsummary: >2\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-keep-indent", "before": "---\nsummary: >+2\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-indent-keep", "before": "---\nsummary: >2+\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-strip-indent", "before": "---\nsummary: >-2\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"},
+    {"id": "folded-indent-strip", "before": "---\nsummary: >2-\n  retained block\n---\nBody\n", "key": "summary", "raw_value": "inline", "expected_error": "structured_value"}
+  ]
+}

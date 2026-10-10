@@ -1040,6 +1040,8 @@ mod c02_byte_roundtrip_fixture_tests {
 
     const C02_BYTE_ROUNDTRIP_FIXTURE: &str =
         include_str!("../../../fixtures/c02-byte-roundtrip.json");
+    const RISK_NORMALIZATION_FIXTURE: &str =
+        include_str!("../../../fixtures/risk-normalization.json");
 
     #[test]
     fn c02_markdown_property_edits_change_only_fixture_approved_bytes() {
@@ -1133,5 +1135,57 @@ mod c02_byte_roundtrip_fixture_tests {
             block_scalar.render_property_edit("summary", "inline"),
             Err(MarkdownPropertyEditError::StructuredValue)
         );
+    }
+
+    #[test]
+    fn risk_normalization_rejects_block_scalar_variants_without_source_changes() {
+        let fixture: Value = serde_json::from_str(RISK_NORMALIZATION_FIXTURE)
+            .expect("risk-normalization fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:risk-normalization");
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
+
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let before = case["before"]
+                .as_str()
+                .expect("fixture case must have source bytes");
+            let key = case["key"]
+                .as_str()
+                .expect("fixture case must name a property");
+            let raw_value = case["raw_value"]
+                .as_str()
+                .expect("fixture case must name a replacement value");
+            assert_eq!(
+                case["expected_error"].as_str(),
+                Some("structured_value"),
+                "{case_id}: fixture must expect structured-value rejection"
+            );
+
+            let source = MarkdownSource::parse(before.as_bytes().to_vec())
+                .unwrap_or_else(|error| panic!("{case_id}: fixture must be UTF-8: {error}"));
+            let original_bytes = source.as_bytes().to_vec();
+            assert_eq!(
+                source.render_property_edit(key, raw_value),
+                Err(MarkdownPropertyEditError::StructuredValue),
+                "{case_id}: block scalar edit must be rejected"
+            );
+            assert_eq!(
+                source.as_bytes(),
+                original_bytes.as_slice(),
+                "{case_id}: rejected edit must preserve original source bytes"
+            );
+        }
     }
 }

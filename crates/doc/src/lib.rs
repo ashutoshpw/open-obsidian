@@ -397,7 +397,7 @@ fn render_property_edit(
     let current_value = bytes
         .get(span.start..span.end)
         .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
-    if current_value == b"|" || current_value == b">" {
+    if is_block_scalar_indicator(current_value) {
         return Err(MarkdownPropertyEditError::StructuredValue);
     }
 
@@ -424,6 +424,26 @@ fn render_property_edit(
     }
     rendered.extend_from_slice(&bytes[span.end..]);
     Ok(rendered)
+}
+
+fn is_block_scalar_indicator(value: &[u8]) -> bool {
+    let Some((&style, modifiers)) = value.split_first() else {
+        return false;
+    };
+    if !matches!(style, b'|' | b'>') {
+        return false;
+    }
+
+    let mut has_chomping_indicator = false;
+    let mut has_indentation_indicator = false;
+    for modifier in modifiers {
+        match modifier {
+            b'+' | b'-' if !has_chomping_indicator => has_chomping_indicator = true,
+            b'1'..=b'9' if !has_indentation_indicator => has_indentation_indicator = true,
+            _ => return false,
+        }
+    }
+    true
 }
 
 fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySource> {
