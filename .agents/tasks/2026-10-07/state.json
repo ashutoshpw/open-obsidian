@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T21:38:41Z",
+  "updated_at": "2026-10-10T21:50:56Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "645f73ce00ff9e36988f019c922a74676e46a2f2",
-  "current_milestone": "R2.8.60",
-  "next_action": "R2.8.59 is accepted on exact source SHA 56a408ac224bb87cb8f2e263a376c55087e171b9. R2.8.60 will drive the existing footnote case through the egui preview and verify rendered content without changing source bytes. Full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "e2293a33dc1070a7130fc6a1991632dd9fff47ba",
+  "current_milestone": "R2.8.61",
+  "next_action": "R2.8.60 is accepted on exact source SHA e2293a33dc1070a7130fc6a1991632dd9fff47ba; all seven required GitHub Actions workflows passed. R2.8.61 will move the inline and display math preview case onto the existing C02.1 fixture, verify rendered formulas and unchanged source bytes, and use GitHub Actions as the only executable validation. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "56a408ac224bb87cb8f2e263a376c55087e171b9"
+      "implementation_sha": "e2293a33dc1070a7130fc6a1991632dd9fff47ba"
     },
     "R3": {
       "status": "pending",
@@ -282,9 +282,10 @@
     "R2.8.31 safe inline HTML line-break preview passed all seven required GitHub Actions workflows on exact source SHA 8a6235def8b0ad6d0276995f1e295f86d1650278; evidence: evidence/r2.8.31-safe-inline-html-break-8a6235d.json. Remaining C02.1 preview features and R3-R7 remain pending.",
     "R2.8.32 plain inline highlights passed all seven required GitHub Actions workflows on exact implementation SHA 12d68e3993cf5f7951ee4245e51ee45d15759e67; the focused fixture and egui UI tests passed on all three platforms. Evidence: evidence/r2.8.32-inline-highlights-12d68e3.json. Complex highlights remain source-only; full C02.1 and R3-R7 remain pending.",
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
-    "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
+    "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending.",
+    "R2.8.60 fixture-driven footnote preview passed all seven required GitHub Actions workflows on exact implementation SHA e2293a33dc1070a7130fc6a1991632dd9fff47ba. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.60-footnote-fixture-e2293a3.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA 56a408ac224bb87cb8f2e263a376c55087e171b9 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA e2293a33dc1070a7130fc6a1991632dd9fff47ba is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19178,7 +19179,7 @@
       "evidence": "evidence/r2.8.59-canonical-safe-html-break-56a408a.json"
     },
     "R2.8.60": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "56a408ac224bb87cb8f2e263a376c55087e171b9",
       "scope": "Drive the existing footnote C02.1 fixture through the egui preview and verify rendered footnote content and unchanged source bytes.",
       "acceptance": [
@@ -19186,7 +19187,9 @@
         "The preview selects RenderMarkdown and exposes the reference sentence and footnote body.",
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "e2293a33dc1070a7130fc6a1991632dd9fff47ba"
+      ],
       "tracker_checkpoint": {
         "sha": "645f73ce00ff9e36988f019c922a74676e46a2f2",
         "inventory_run_id": 38088389129,
@@ -19194,7 +19197,31 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38088389129"
       },
-      "next_action": "The R2.8.60 tracker checkpoint passed inventory on SHA 645f73ce00ff9e36988f019c922a74676e46a2f2. Refactor the existing direct-string footnote egui test to read the footnote fixture and preserve its source bytes. Commit and push the focused fixture-backed test for exact-SHA GitHub Actions; no local executable validation is used."
+      "next_action": "R2.8.60 is accepted. Continue with fixture-driven inline and display math preview coverage in R2.8.61. Full C02.1 and phases R3-R7 remain pending.",
+      "validated_source_sha": "e2293a33dc1070a7130fc6a1991632dd9fff47ba",
+      "ci_runs": {
+        "inventory": 38088479335,
+        "loaded_plugins": 38088479392,
+        "desktop_build": 38088479334,
+        "quality": 38088479339,
+        "rust_ci": 38088479349,
+        "plugin_renderer": 38088479441,
+        "obsidian_vault_roundtrip": 38088479326
+      },
+      "evidence": "evidence/r2.8.60-footnote-fixture-e2293a3.json"
+    },
+    "R2.8.61": {
+      "status": "in_progress",
+      "starting_sha": "e2293a33dc1070a7130fc6a1991632dd9fff47ba",
+      "scope": "Drive the existing inline-and-display-math C02.1 fixture through the egui preview and verify rendered formulas and unchanged source bytes.",
+      "acceptance": [
+        "The existing inline-and-display-math C02.1 fixture drives the egui preview test.",
+        "The preview selects RenderMarkdown and exposes both inline and display formulas.",
+        "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
+      ],
+      "implementation_commits": [],
+      "tracker_checkpoint": null,
+      "next_action": "Commit and push the R2.8.60 acceptance record, then dispatch the inventory workflow on main and record its successful tracker checkpoint before implementing R2.8.61. No local executable validation is used."
     }
   },
   "ci_preparation": {

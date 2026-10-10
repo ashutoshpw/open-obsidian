@@ -2844,4 +2844,14 @@ Use the existing footnote C02.1 fixture to verify the preview selects RenderMark
 
 R2.8.60 tracker checkpoint: inventory [run 38088389129](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088389129), job 114319596343, passed for tracker SHA 645f73ce00ff9e36988f019c922a74676e46a2f2.
 
-R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.
+### R2.8.60 accepted — footnote fixture preview coverage — source SHA e2293a33dc1070a7130fc6a1991632dd9fff47ba
+
+The existing footnote C02.1 fixture now drives the egui preview test. It verifies RenderMarkdown, the visible reference and footnote body, no raw-HTML source fallback, and unchanged fixture bytes. The focused Rust UI test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 96 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38088479335](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479335), loaded-plugin workflows [38088479392](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479392), desktop build [38088479334](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479334), quality [38088479339](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479339), Rust CI [38088479349](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479349), plugin renderer [38088479441](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479441), and Obsidian vault round-trip [38088479326](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088479326). Exact job IDs and artifact digests are in [evidence/r2.8.60-footnote-fixture-e2293a3.json](evidence/r2.8.60-footnote-fixture-e2293a3.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the footnote fixture renders the reference and definition in the native preview while preserving source bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.61 in progress — inline and display math fixture preview
+
+Use the existing inline-and-display-math C02.1 fixture to verify the preview selects RenderMarkdown, exposes both formulas, and preserves the original source bytes. Move the existing egui case onto fixture-driven coverage, then push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.60 acceptance record is pushed.
