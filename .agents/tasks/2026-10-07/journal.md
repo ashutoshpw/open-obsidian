@@ -2897,3 +2897,5 @@ Accepted slice: the single plain highlight fixture renders the expected phrase t
 ### R2.8.64 in progress — simple wiki-link source-fallback fixture
 
 Use the existing wiki-link C02.1 fixture in the generic egui Markdown preview to verify ShowSource, the visible original wiki-link syntax, the unsupported-wiki-links reason, and unchanged source bytes. Add focused fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.63 acceptance record is pushed.
+
+R2.8.64 tracker checkpoint: inventory [run 38091980947](https://github.com/ashutoshpw/open-obsidian/actions/runs/38091980947), job 114330096505, passed for tracker SHA 2118f8446c8fa27b7c27205107e4ea395101b313.

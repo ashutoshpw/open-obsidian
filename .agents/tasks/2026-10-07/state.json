@@ -2,11 +2,11 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T22:34:20Z",
+  "updated_at": "2026-10-10T22:35:27Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "2a5a304362cf1ed73adc8adc31035b51dac992ac",
+  "last_reconciled_head": "2118f8446c8fa27b7c27205107e4ea395101b313",
   "current_milestone": "R2.8.64",
   "next_action": "R2.8.63 is accepted on exact source SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac; all seven required GitHub Actions workflows passed after a rustfmt-only correction and same-SHA retries for the quality and vault workflows. R2.8.64 will use the existing simple wiki-link C02.1 fixture to verify source-only fallback and unchanged bytes. GitHub Actions remains the only executable validation. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
@@ -19341,8 +19341,14 @@
         "The fixture source remains byte-identical and all seven required GitHub Actions workflows pass on the exact implementation SHA."
       ],
       "implementation_commits": [],
-      "tracker_checkpoint": null,
-      "next_action": "Commit and push the R2.8.63 acceptance record, then dispatch the inventory workflow on main and record its successful tracker checkpoint before implementing R2.8.64. No local executable validation is used."
+      "tracker_checkpoint": {
+        "sha": "2118f8446c8fa27b7c27205107e4ea395101b313",
+        "inventory_run_id": 38091980947,
+        "inventory_job_id": 114330096505,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38091980947"
+      },
+      "next_action": "The R2.8.64 tracker checkpoint passed inventory on SHA 2118f8446c8fa27b7c27205107e4ea395101b313. Add fixture-driven egui coverage for the simple wiki-link C02.1 case, checking ShowSource, the literal syntax and fallback reason, and unchanged source bytes. Commit and push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {
