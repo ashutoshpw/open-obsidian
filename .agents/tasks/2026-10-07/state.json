@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T09:51:41Z",
+  "updated_at": "2026-10-10T10:12:43Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+  "last_reconciled_head": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
   "current_milestone": "R2.8.21",
-  "next_action": "R2.8.21: enable and verify native egui_commonmark footnote rendering with a dialect fixture case and egui UI coverage. Keep full C02.1 pending.",
+  "next_action": "R2.8.21 is accepted. Continue C02.1 with the next focused Markdown preview slice; keep full dialect rendering and source-preserving editing pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc"
+      "implementation_sha": "06d2c000ec2013acdb6f43816d4ff7025d91879d"
     },
     "R3": {
       "status": "pending",
@@ -16542,10 +16542,12 @@
       "source_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc"
     },
     "R2.8.21": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
       "scope": "Render Markdown footnotes through the existing egui_commonmark path where the pinned renderer supports them, instead of forcing an unnecessary source-only fallback.",
-      "accepted_slice": [],
+      "accepted_slice": [
+        "C02.1:native-footnote-rendering"
+      ],
       "acceptance": [
         "The C02 dialect fixture records footnotes as rendered by the current native renderer while preserving the original source bytes.",
         "Native egui UI coverage shows the footnote reference and definition without an unsupported-syntax fallback notice.",
@@ -16553,20 +16555,21 @@
         "All required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
       "implementation_commits": [
-        "b0044852bfefed99659e71dbd4f992262c623d98"
+        "b0044852bfefed99659e71dbd4f992262c623d98",
+        "06d2c000ec2013acdb6f43816d4ff7025d91879d"
       ],
-      "validated_source_sha": null,
+      "validated_source_sha": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
       "ci_runs": {
-        "rust_ci": 38043421631,
-        "obsidian_vault_roundtrip": 38043421643,
-        "inventory": 38043421640,
-        "loaded_plugins": 38043421613,
-        "desktop_build": 38043421616,
-        "quality": 38043421602,
-        "plugin_renderer": 38043421823
+        "rust_ci": 38043772928,
+        "obsidian_vault_roundtrip": 38043783596,
+        "inventory": 38043772850,
+        "loaded_plugins": 38043772895,
+        "desktop_build": 38043772980,
+        "quality": 38043772839,
+        "plugin_renderer": 38043772854
       },
-      "evidence": null,
-      "next_action": "Reconcile the markdown dialect fixture SHA-256 in inventory.json and push a tracker correction; rerun all required workflows, including vault round-trip, for the corrected exact SHA."
+      "evidence": "evidence/r2.8.21-native-footnotes-06d2c00.json",
+      "next_action": "R2.8.21 is accepted; continue the incomplete C02.1 Markdown preview work in another focused source slice."
     }
   },
   "ci_preparation": {

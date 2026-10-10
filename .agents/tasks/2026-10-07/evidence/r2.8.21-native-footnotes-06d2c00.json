@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T10:12:43Z",
+  "milestone": "R2.8.21",
+  "accepted_slice": [
+    "C02.1:native-footnote-rendering"
+  ],
+  "validated_source_sha": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
+  "starting_tracker_sha": "1b2e85dd15bbb9066d37affa628879208e31a93f",
+  "related_implementation_commits": [
+    "b0044852bfefed99659e71dbd4f992262c623d98",
+    "06d2c000ec2013acdb6f43816d4ff7025d91879d"
+  ],
+  "contract": "Render Markdown footnotes through the pinned native egui_commonmark renderer where it supports them, while preserving source bytes and visible source fallback for remaining unsupported syntax.",
+  "implementation": {
+    "document_layer": "crates/doc no longer classifies footnote references or definitions as unsupported by the native preview. The existing pulldown-cmark 0.13.4 parser enables footnote events.",
+    "ui_layer": "crates/ui-egui renders the footnote reference and definition through egui_commonmark 0.25.0 without the source-only fallback notice.",
+    "fixture_and_docs": "fixtures/markdown-dialects.json records footnotes as rendered and retains fallback expectations for math, diagrams, raw HTML, wiki links, and highlights. docs/architecture/markdown-preview.md describes that boundary.",
+    "source_integrity": "The existing preview remains read-only; no source normalization or vault writes were added."
+  },
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "tests::egui_renders_markdown_footnotes_without_source_fallback"
+    ],
+    "result": "The focused egui footnote test and full workspace test suites passed in Rust CI logs on Ubuntu, macOS, and Windows."
+  },
+  "ci": {
+    "event": "push plus workflow_dispatch for path-filtered vault round-trip",
+    "source_sha": "06d2c000ec2013acdb6f43816d4ff7025d91879d",
+    "result": "All seven required workflows completed successfully for this exact source SHA.",
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114189070165,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "focused_footnote_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114189070083,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "focused_footnote_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114189070172,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "focused_footnote_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38043772928,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043772928",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114189070165},
+          {"name": "rust (macos-latest)", "job_id": 114189070083},
+          {"name": "rust (windows-latest)", "job_id": 114189070172}
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38043783596,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043783596",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114189103644},
+          {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114189103695},
+          {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114189103468}
+        ]
+      },
+      "inventory": {
+        "run_id": 38043772850,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043772850",
+        "conclusion": "success",
+        "jobs": [{"name": "inventory", "job_id": 114189069588}]
+      },
+      "loaded_plugins": {
+        "run_id": 38043772895,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043772895",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114189069837},
+          {"name": "macos-latest", "job_id": 114189070056},
+          {"name": "windows-latest", "job_id": 114189070018}
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38043772980,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043772980",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114189070247},
+          {"name": "macos-latest", "job_id": 114189070312},
+          {"name": "windows-latest", "job_id": 114189070138}
+        ]
+      },
+      "quality": {
+        "run_id": 38043772839,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043772839",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114189069685},
+          {"name": "macos-latest", "job_id": 114189069936},
+          {"name": "ubuntu-latest", "job_id": 114189069956}
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38043772854,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38043772854",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114189069757},
+          {"name": "macos-latest", "job_id": 114189069861},
+          {"name": "windows-latest", "job_id": 114189069885}
+        ]
+      }
+    }
+  },
+  "artifacts": [
+    {"artifact_id": 11666701108, "name": "openobsidian-rust-preview-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 9772861, "sha256": "3e49ff9044ed9d839c268c01ecf869a54aa9bd391f7d230e8ccdb786ebd00e23"},
+    {"artifact_id": 11667046122, "name": "rust-plugin-runtime-macOS-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 2698, "sha256": "458e70dcb92c148d5fa2a673d48f4cf86883381a3caad9ea33d8f9a81d31d436"},
+    {"artifact_id": 11666940819, "name": "rust-plugin-runtime-Linux-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 2695, "sha256": "6a7e0742146b05da5c8df02bdcba32939989bbe7cb2c93834ba01043cc819e57"},
+    {"artifact_id": 11666791090, "name": "rust-plugin-runtime-Windows-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 2715, "sha256": "2dfdc24c1ec66c5354baaf68a4f2bb9a4b1d4fe529e5cd4d9232fdcb4363e7da"},
+    {"artifact_id": 11667615322, "name": "obsidian-vault-roundtrip-Linux-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 2701512, "sha256": "e2501b94d0029b2e8530f6652cdff5fb8e32d2fa1386add7457ca4cb166ece8f"},
+    {"artifact_id": 11667585547, "name": "obsidian-vault-roundtrip-Windows-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 3683008, "sha256": "9d5e4ffa42f9ded03014db9c19c01ec596dfa55eb09db0c584197abbc45c6bab"},
+    {"artifact_id": 11667400828, "name": "obsidian-vault-roundtrip-macOS-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 3521221, "sha256": "429f495eb80368b1095e243ab7147ea9a86f818477191300387017ae31b79cfd"},
+    {"artifact_id": 11667520273, "name": "openobsidian-Windows-preview-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 163005824, "sha256": "9a0af5edeeef74930612bbcb8473109f8cc7fc3903b88f30d70226f0ee3b23b3"},
+    {"artifact_id": 11666840844, "name": "openobsidian-macOS-preview-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 397395487, "sha256": "e5ec43b34efeeebd3c5f43845423a3d0672b740ae5c26eea648511cc975c6c7d"},
+    {"artifact_id": 11667500256, "name": "openobsidian-Linux-preview-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 125946548, "sha256": "8edfc02a65b1be29523e2a3ffb03c2f14cff89ac4d5de66d995bf361b13da2b7"},
+    {"artifact_id": 11667255571, "name": "loaded-plugin-workflows-macOS-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 171483, "sha256": "d87ae4d340632e2e0068b22dc5b747bf19b256485b578dad42ad9aa4d034806a"},
+    {"artifact_id": 11667020983, "name": "loaded-plugin-workflows-Linux-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 171480, "sha256": "6925a7282c4a07fc98ebd02bdcba32939989bbe7cb2c93834ba0109d42e213c8"},
+    {"artifact_id": 11666890653, "name": "loaded-plugin-workflows-Windows-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 171496, "sha256": "72753d1f57927a110084b57ccb4bb982804986ff3b49e575bc1cac095c9104f3"},
+    {"artifact_id": 11667030957, "name": "plugin-renderer-lifecycle-macOS-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 3238, "sha256": "4598126c83abb388a1554b3bdd697a263147958ca41757bf0fa95404d52c64cc"},
+    {"artifact_id": 11666990494, "name": "plugin-renderer-lifecycle-Linux-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 3221, "sha256": "95ed51ffb1f18e4391589c5ae5893aec7b4b998d5955fbf8f9f3a33963a378d4"},
+    {"artifact_id": 11666960664, "name": "plugin-renderer-lifecycle-Windows-06d2c000ec2013acdb6f43816d4ff7025d91879d", "size_bytes": 3242, "sha256": "a4731bbb97ab7a9a86d76386b5e8083e255f1336ffe16aea1f8b37647d4e2f2e"}
+  ],
+  "limitations": [
+    "This accepts only the native footnote rendering slice. Full C02.1 remains incomplete, including math, diagrams, wiki-link and highlight rendering, safe HTML projection, and source-preserving editing.",
+    "Known unsupported syntax still triggers the bounded original-source fallback with a visible reason; this acceptance does not claim compatibility beyond the pinned renderer's exercised behavior."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, or application validation were run. A local git diff --check whitespace check was run inadvertently and is excluded from acceptance evidence."
+}
