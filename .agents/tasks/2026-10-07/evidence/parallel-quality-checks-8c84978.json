@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "change_commit": "8c84978c16bf4064811da6e9c0b1002f8d52737c",
+  "workflow": ".github/workflows/quality.yml",
+  "run_id": 38056935093,
+  "run_url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38056935093",
+  "run_conclusion": "success",
+  "parallel_steps": [
+    "Run host vault round-trip report",
+    "Run tests",
+    "Run executable quality scorecard"
+  ],
+  "matrix_jobs": [
+    {
+      "os": "ubuntu-latest",
+      "job_id": 114227230129,
+      "conclusion": "success",
+      "parallel_group_started_at": "2026-10-10T13:45:25Z",
+      "parallel_group_completed_at": "2026-10-10T13:45:29Z",
+      "children_started_at": "2026-10-10T13:45:25Z",
+      "children": [
+        {"name": "Run host vault round-trip report", "conclusion": "success", "completed_at": "2026-10-10T13:45:25Z"},
+        {"name": "Run tests", "conclusion": "success", "completed_at": "2026-10-10T13:45:29Z"},
+        {"name": "Run executable quality scorecard", "conclusion": "success", "completed_at": "2026-10-10T13:45:25Z"}
+      ],
+      "compile_electron_started_at": "2026-10-10T13:45:29Z"
+    },
+    {
+      "os": "macos-latest",
+      "job_id": 114227230257,
+      "conclusion": "success",
+      "parallel_group_started_at": "2026-10-10T13:45:31Z",
+      "parallel_group_completed_at": "2026-10-10T13:45:36Z",
+      "children_started_at": "2026-10-10T13:45:31Z",
+      "children": [
+        {"name": "Run host vault round-trip report", "conclusion": "success", "completed_at": "2026-10-10T13:45:31Z"},
+        {"name": "Run tests", "conclusion": "success", "completed_at": "2026-10-10T13:45:36Z"},
+        {"name": "Run executable quality scorecard", "conclusion": "success", "completed_at": "2026-10-10T13:45:32Z"}
+      ],
+      "compile_electron_started_at": "2026-10-10T13:45:36Z"
+    },
+    {
+      "os": "windows-latest",
+      "job_id": 114227230305,
+      "conclusion": "success",
+      "parallel_group_started_at": "2026-10-10T13:46:05Z",
+      "parallel_group_completed_at": "2026-10-10T13:46:17Z",
+      "children_started_at": "2026-10-10T13:46:05Z",
+      "children": [
+        {"name": "Run host vault round-trip report", "conclusion": "success", "completed_at": "2026-10-10T13:46:06Z"},
+        {"name": "Run tests", "conclusion": "success", "completed_at": "2026-10-10T13:46:17Z"},
+        {"name": "Run executable quality scorecard", "conclusion": "success", "completed_at": "2026-10-10T13:46:06Z"}
+      ],
+      "compile_electron_started_at": "2026-10-10T13:46:17Z"
+    }
+  ],
+  "limitations": [
+    "The exact-SHA Actions run confirms parallel execution and the wait barrier; it does not claim a measured speedup versus a sequential baseline.",
+    "This workflow-only commit is not acceptance evidence for the pending Rust migration slice."
+  ]
+}

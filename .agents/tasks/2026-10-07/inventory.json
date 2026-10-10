@@ -1372,7 +1372,7 @@
     },
     {
       "path": "fixtures/markdown-dialects.json",
-      "sha256": "fa74c99d5d2da6756bfcc7eef43cbfda088a1d18ba7bc2d63a5bfd5aac9e0a79",
+      "sha256": "5b8bb84b93ccfbf418be3617ff8748932937c84177a492ccfdf91c42b54ca92c",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -2278,12 +2278,12 @@
     },
     {
       "path": ".github/workflows/quality.yml",
-      "sha256": "42d474c1e13b61e9e476c8ffd715fdd5663bde85518ff2dc45cef28ff2b3a195",
+      "sha256": "70d331456325f97b65f27c9de554019c55d370c3b4a131e6e41b8deff968e6cb",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "status": "pending",
       "baseline_sha256": "87197aaf1cfee74e304872cde7352f6a5e4371fb0997ceab7025cfb2788cb55d",
-      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers. Added an independent Knip/Fallow health group, which waits for both source audits, and grouped the read-only progress-state check with the other parallel preflight checks.",
+      "reconciliation_reason": "User-requested native parallel CI steps before Rust migration; checks retained with dependency barriers. Added an independent Knip/Fallow health group, which waits for both source audits, grouped the read-only progress-state check with the other parallel preflight checks, and grouped the isolated host-vault round-trip, test suite, and quality scorecard in native Actions parallel steps.",
       "migration_phase": "R0",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },

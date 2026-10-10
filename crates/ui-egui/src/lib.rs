@@ -13,8 +13,10 @@ use openobsidian_engine::{
     VaultRenameRecoveryReport, VaultRenameResult, VaultSession, VaultWatcher,
     VaultWriteRecoveryReport, VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
 };
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
+use std::rc::Rc;
 use std::sync::{
     Arc,
     atomic::{AtomicU16, Ordering},
@@ -226,7 +228,7 @@ struct OpenObsidianApp {
     note_embed_report: Option<VaultNoteEmbedReport>,
     note_embed_error: Option<String>,
     markdown_cache: CommonMarkCache,
-    math_renderer_cache: MathRendererCache,
+    math_renderer_cache: Rc<RefCell<MathRendererCache>>,
     inline_image_textures: HashMap<String, eframe::egui::TextureHandle>,
     rename_source_path: Option<std::path::PathBuf>,
     rename_destination_path: String,
@@ -785,7 +787,7 @@ impl OpenObsidianApp {
                                     ui,
                                     embed,
                                     &mut self.markdown_cache,
-                                    &mut self.math_renderer_cache,
+                                    &self.math_renderer_cache,
                                     &mut self.inline_image_textures,
                                 );
                             }
@@ -949,7 +951,7 @@ impl OpenObsidianApp {
                                             preview.revision_sha256.as_ref()
                                     {
                                         let math_callback =
-                                            math_render_callback(&mut self.math_renderer_cache);
+                                            math_render_callback(Rc::clone(&self.math_renderer_cache));
                                         let response = CommonMarkViewer::new()
                                             .render_math_fn(Some(&math_callback))
                                             .show_mut(
@@ -967,7 +969,7 @@ impl OpenObsidianApp {
                                         }
                                     } else {
                                         let math_callback =
-                                            math_render_callback(&mut self.math_renderer_cache);
+                                            math_render_callback(Rc::clone(&self.math_renderer_cache));
                                         CommonMarkViewer::new()
                                             .render_math_fn(Some(&math_callback))
                                             .show(
@@ -2365,13 +2367,13 @@ fn note_preview_write_error(error: VaultError, kind: NotePreviewWriteKind) -> St
 fn show_markdown_preview(
     ui: &mut eframe::egui::Ui,
     markdown_cache: &mut CommonMarkCache,
-    math_renderer_cache: &mut MathRendererCache,
+    math_renderer_cache: &Rc<RefCell<MathRendererCache>>,
     source: &str,
 ) {
     let analysis = analyze_markdown_preview(source);
     match analysis.disposition() {
         MarkdownPreviewDisposition::RenderMarkdown => {
-            let math_callback = math_render_callback(math_renderer_cache);
+            let math_callback = math_render_callback(Rc::clone(math_renderer_cache));
             CommonMarkViewer::new()
                 .render_math_fn(Some(&math_callback))
                 .show(ui, markdown_cache, source);
@@ -2416,7 +2418,7 @@ fn show_note_embed_node(
     ui: &mut eframe::egui::Ui,
     node: &VaultNoteEmbedNode,
     markdown_cache: &mut CommonMarkCache,
-    math_renderer_cache: &mut MathRendererCache,
+    math_renderer_cache: &Rc<RefCell<MathRendererCache>>,
     inline_image_textures: &mut HashMap<String, eframe::egui::TextureHandle>,
 ) {
     let reference = &node.resolution.reference;
@@ -2967,15 +2969,10 @@ mod tests {
     fn egui_shows_original_source_and_reason_for_unsupported_markdown_preview() {
         let source = "<script>unsafe()</script>";
         let mut markdown_cache = CommonMarkCache::default();
-        let mut math_renderer_cache = MathRendererCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
             |ui, _app| {
-                show_markdown_preview(
-                    ui,
-                    &mut markdown_cache,
-                    &mut math_renderer_cache,
-                    source,
-                )
+                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source)
             },
             OpenObsidianApp::default(),
         );
@@ -2994,15 +2991,10 @@ mod tests {
         );
 
         let mut markdown_cache = CommonMarkCache::default();
-        let mut math_renderer_cache = MathRendererCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
             |ui, _app| {
-                show_markdown_preview(
-                    ui,
-                    &mut markdown_cache,
-                    &mut math_renderer_cache,
-                    source,
-                )
+                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source)
             },
             OpenObsidianApp::default(),
         );
@@ -3021,15 +3013,10 @@ mod tests {
         );
 
         let mut markdown_cache = CommonMarkCache::default();
-        let mut math_renderer_cache = MathRendererCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
             |ui, _app| {
-                show_markdown_preview(
-                    ui,
-                    &mut markdown_cache,
-                    &mut math_renderer_cache,
-                    source,
-                )
+                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source)
             },
             OpenObsidianApp::default(),
         );
@@ -3044,23 +3031,16 @@ mod tests {
         let expression = r"\begin{tikzpicture}\draw (0,0) -- (1,1);\end{tikzpicture}";
         let source = format!("Before the formula:\n\n$$\n{expression}\n$$\n\nAfter the formula.");
         let mut markdown_cache = CommonMarkCache::default();
-        let mut math_renderer_cache = MathRendererCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut harness = Harness::new_ui_state(
             |ui, _app| {
-                show_markdown_preview(
-                    ui,
-                    &mut markdown_cache,
-                    &mut math_renderer_cache,
-                    &source,
-                )
+                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, &source)
             },
             OpenObsidianApp::default(),
         );
 
         harness.step();
-        harness.get_by_label(
-            "Math rendering failed or exceeded image limits; showing the source.",
-        );
+        harness.get_by_label("Math rendering failed or exceeded image limits; showing the source.");
         harness.get_by_label(&format!("$$\n{expression}\n$$"));
         harness.get_by_label("Before");
         harness.get_by_label("after the formula.");
@@ -3070,15 +3050,10 @@ mod tests {
     fn egui_math_preview_bounds_expression_size_and_per_pass_formula_count() {
         let oversized = format!("${}$", "x".repeat(513));
         let mut markdown_cache = CommonMarkCache::default();
-        let mut math_renderer_cache = MathRendererCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut oversized_harness = Harness::new_ui_state(
             |ui, _app| {
-                show_markdown_preview(
-                    ui,
-                    &mut markdown_cache,
-                    &mut math_renderer_cache,
-                    &oversized,
-                )
+                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, &oversized)
             },
             OpenObsidianApp::default(),
         );
@@ -3093,20 +3068,16 @@ mod tests {
             .collect::<Vec<_>>()
             .join(" ");
         let mut markdown_cache = CommonMarkCache::default();
-        let mut math_renderer_cache = MathRendererCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
         let mut count_harness = Harness::new_ui_state(
             |ui, _app| {
-                show_markdown_preview(
-                    ui,
-                    &mut markdown_cache,
-                    &mut math_renderer_cache,
-                    &source,
-                )
+                show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, &source)
             },
             OpenObsidianApp::default(),
         );
         count_harness.step();
-        count_harness.get_by_label("Math preview limit reached for this UI pass; showing the source.");
+        count_harness
+            .get_by_label("Math preview limit reached for this UI pass; showing the source.");
         count_harness.get_by_label("$x_{32}$");
     }
 

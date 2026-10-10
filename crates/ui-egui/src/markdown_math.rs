@@ -2,6 +2,7 @@
 
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
+use std::rc::Rc;
 
 use eframe::egui::{self, Color32, TextureHandle, TextureOptions};
 use latex_rust::{Dim, MathFont, MathStyle, PngOptions};
@@ -50,10 +51,9 @@ pub(super) struct MathRendererCache {
     formulas_this_pass: usize,
 }
 
-pub(super) fn math_render_callback<'a>(
-    renderer: &'a mut MathRendererCache,
-) -> impl Fn(&mut egui::Ui, &str, bool) + 'a {
-    let renderer = RefCell::new(renderer);
+pub(super) fn math_render_callback(
+    renderer: Rc<RefCell<MathRendererCache>>,
+) -> impl Fn(&mut egui::Ui, &str, bool) + 'static {
     move |ui, source, inline| renderer.borrow_mut().render(ui, source, inline)
 }
 
@@ -106,9 +106,7 @@ impl MathRendererCache {
 
         let rendered = {
             let font = self.math_font();
-            font.and_then(|font| {
-                render_formula_png(source, inline, font, font_size_px, text_color)
-            })
+            font.and_then(|font| render_formula_png(source, inline, font, font_size_px, text_color))
         };
 
         let Some((png, width, height)) = rendered else {
@@ -164,10 +162,7 @@ impl MathRendererCache {
         let rgba_bytes = rgba.len();
         let texture = ui.ctx().load_texture(
             "markdown-math-preview",
-            egui::ColorImage::from_rgba_unmultiplied(
-                [width as usize, height as usize],
-                &rgba,
-            ),
+            egui::ColorImage::from_rgba_unmultiplied([width as usize, height as usize], &rgba),
             TextureOptions::LINEAR,
         );
         self.insert(
@@ -194,17 +189,17 @@ impl MathRendererCache {
 
     fn get_cached(&mut self, key: &FormulaKey) -> Option<CachedFormula> {
         let formula = self.entries.get(key)?.formula.clone();
-        self.least_recently_used.retain(|candidate| candidate != key);
+        self.least_recently_used
+            .retain(|candidate| candidate != key);
         self.least_recently_used.push_back(key.clone());
         Some(formula)
     }
 
     fn insert(&mut self, key: FormulaKey, formula: CachedFormula, rgba_bytes: usize) {
         if let Some(previous) = self.entries.remove(&key) {
-            self.cached_rgba_bytes = self
-                .cached_rgba_bytes
-                .saturating_sub(previous.rgba_bytes);
-            self.least_recently_used.retain(|candidate| candidate != &key);
+            self.cached_rgba_bytes = self.cached_rgba_bytes.saturating_sub(previous.rgba_bytes);
+            self.least_recently_used
+                .retain(|candidate| candidate != &key);
         }
 
         while self.entries.len() >= MAX_MATH_CACHE_ENTRIES
@@ -214,9 +209,7 @@ impl MathRendererCache {
                 break;
             };
             if let Some(removed) = self.entries.remove(&oldest) {
-                self.cached_rgba_bytes = self
-                    .cached_rgba_bytes
-                    .saturating_sub(removed.rgba_bytes);
+                self.cached_rgba_bytes = self.cached_rgba_bytes.saturating_sub(removed.rgba_bytes);
             }
         }
 
@@ -380,8 +373,7 @@ mod tests {
         math_expression_within_bounds, math_image_dimensions_within_bounds, png_dimensions,
     };
 
-    const LATEX_RUST_NOTICE: &str =
-        include_str!("../../../licenses/latex-rust/NOTICE.txt");
+    const LATEX_RUST_NOTICE: &str = include_str!("../../../licenses/latex-rust/NOTICE.txt");
     const STIX_TWO_MATH_OFL: &str =
         include_str!("../../../licenses/latex-rust/STIX-Two-Math-OFL-1.1.txt");
 
