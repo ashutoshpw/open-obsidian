@@ -118,6 +118,28 @@
       "remains_clickable": false,
       "preserves_source_bytes": true
     },
+    "embedded_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read ![[Plans/Project]] next.",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\n\n## Overview\nThe resolved target note.",
+      "expected_link_kind": "embed",
+      "expected_subpath": null,
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
+    "subpath_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read [[Plans/Project#Overview]] next.",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\n\n## Overview\nThe resolved target note.",
+      "expected_link_kind": "wiki_link",
+      "expected_subpath": "Overview",
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
     "safe_inline_html": {
       "rendered_tags": ["<br>", "<br/>", "<br />"],
       "unsupported_html": "Keep all other inline and block HTML visible as original source."

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T17:04:38Z",
+  "updated_at": "2026-10-10T17:06:01Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "07848e213417184734da29a4810762ecf9b3a106",
   "current_milestone": "R2.8.36",
-  "next_action": "R2.8.35 is accepted on exact source SHA 07848e213417184734da29a4810762ecf9b3a106. R2.8.36 is in progress: add fixture-driven egui coverage that embedded and subpath wiki links remain source-only and preserve source/vault bytes. Full C02.1 and phases R3-R7 remain pending.",
+  "next_action": "R2.8.35 is accepted on exact source SHA 07848e213417184734da29a4810762ecf9b3a106. R2.8.36 fixture and UI coverage are prepared; commit and push for exact-SHA GitHub Actions, then reconcile the result. Full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -18406,7 +18406,7 @@
     },
     "R2.8.36": {
       "status": "in_progress",
-      "starting_sha": "68ce866fa3bc2f3c071a5a6e355e2c9fe7dfa5bc",
+      "starting_sha": "d670877dd97fe9493b436461f39b207c791e4785",
       "scope": "Add fixture-driven UI evidence that embedded and subpath wiki links remain source-only when their underlying Markdown target resolves, without changing note, vault, or app-data bytes.",
       "acceptance": [
         "The Markdown dialect fixture declares an embedded wiki-link case and a subpath wiki-link case with explicit source-only expectations.",
@@ -18415,7 +18415,7 @@
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
       "implementation_commits": [],
-      "next_action": "Inspect the existing link preview projection and fixture conventions, add bounded embedded/subpath fallback cases and UI evidence, then push for exact-SHA GitHub Actions."
+      "next_action": "Fixture cases and a focused egui test now assert successful underlying target resolution followed by source-only rendering for embeds and subpaths. Push this slice for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

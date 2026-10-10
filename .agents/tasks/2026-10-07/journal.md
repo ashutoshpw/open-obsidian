@@ -2496,4 +2496,4 @@ The accepted evidence checkpoint at [68ce866fa3bc2f3c071a5a6e355e2c9fe7dfa5bc](h
 
 ### R2.8.36 in progress — embedded and subpath wiki-link fallback
 
-Starting from accepted source SHA `07848e213417184734da29a4810762ecf9b3a106`, add fixture-driven egui evidence that embedded and subpath wiki links remain source-only even when their underlying Markdown target resolves. Verify no clickable link and unchanged source, vault, and app-data bytes. All executable validation remains limited to exact-SHA GitHub Actions.
+Starting from tracker SHA `d670877dd97fe9493b436461f39b207c791e4785` (accepted implementation SHA `07848e213417184734da29a4810762ecf9b3a106`), add fixture-driven egui evidence that embedded and subpath wiki links remain source-only even when their underlying Markdown target resolves. The fixture cases and UI test now assert successful target resolution, no clickable link, visible original source, and unchanged vault/app-data snapshots. The fixture inventory hash is reconciled; push this slice for exact-SHA GitHub Actions. All executable validation remains GitHub Actions only.

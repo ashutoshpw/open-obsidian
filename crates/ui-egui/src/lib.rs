@@ -3851,6 +3851,118 @@ mod tests {
     }
 
     #[test]
+    fn egui_note_source_preview_keeps_embedded_and_subpath_wiki_links_source_only() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+
+        for (scenario_index, case_id) in
+            ["embedded_wiki_link_preview", "subpath_wiki_link_preview"]
+                .into_iter()
+                .enumerate()
+        {
+            let case = &fixture["rust_preview"][case_id];
+            let source_path = case["source_path"]
+                .as_str()
+                .expect("wiki-link case must name its source note");
+            let source = case["source"]
+                .as_str()
+                .expect("wiki-link case must include source");
+            let target_path = case["target_path"]
+                .as_str()
+                .expect("wiki-link case must name its target note");
+            let target_source = case["target_source"]
+                .as_str()
+                .expect("wiki-link case must include target source");
+            let scenario_path = temporary
+                .0
+                .join(format!("wiki-link-context-fallback-{scenario_index}"));
+            let vault_path = scenario_path.join("vault");
+            let app_data_path = scenario_path.join("app-data");
+            let app = source_preview_test_app(
+                &vault_path,
+                &app_data_path,
+                source_path,
+                source.as_bytes(),
+                &[(target_path, target_source.as_bytes())],
+            );
+            let session = app
+                .session
+                .as_ref()
+                .expect("wiki-link case must have an open vault")
+                .clone();
+            let resolutions = session
+                .resolve_links_for_note(source_path)
+                .expect("resolve wiki-link target before checking source-only context");
+            assert_eq!(resolutions.len(), 1);
+            let link = &resolutions[0];
+            assert_eq!(link.resolution.status, LinkResolutionStatus::Resolved);
+            assert_eq!(link.resolution.target.as_deref(), Some(target_path));
+            assert_eq!(
+                link.reference.kind,
+                match case["expected_link_kind"]
+                    .as_str()
+                    .expect("wiki-link case must declare its reference kind")
+                {
+                    "embed" => LinkKind::Embed,
+                    "wiki_link" => LinkKind::WikiLink,
+                    kind => panic!("unsupported fixture wiki-link kind: {kind}"),
+                }
+            );
+            assert_eq!(
+                link.reference.subpath.as_deref(),
+                case["expected_subpath"].as_str()
+            );
+            let before_vault = existing_vault_tree_snapshot(&vault_path);
+            let before_app_data = existing_vault_tree_snapshot(&app_data_path);
+            let mut harness = Harness::new_ui_state(
+                |ui, app| {
+                    app.poll_note_preview_task(ui);
+                    app.poll_note_preview_write_task(ui);
+                    app.show_note_source_preview(ui, false);
+                },
+                app,
+            );
+
+            harness.get_by_label("Note source preview").click();
+            harness.step();
+            harness.get_by_label("Read note source preview").click();
+            wait_for_note_source_preview(&mut harness);
+            harness.get_by_label(
+                case["expected_fallback"]
+                    .as_str()
+                    .expect("wiki-link case must declare its source fallback"),
+            );
+            assert!(
+                harness
+                    .query_all_by_role(eframe::egui::accesskit::Role::Link)
+                    .next()
+                    .is_none(),
+                "embedded and subpath wiki links must not be clickable"
+            );
+            assert_eq!(
+                harness
+                    .state()
+                    .note_source_preview
+                    .as_ref()
+                    .expect("source-only wiki-link preview remains open")
+                    .text
+                    .as_bytes(),
+                source.as_bytes()
+            );
+            assert_eq!(
+                existing_vault_tree_snapshot(&vault_path),
+                before_vault,
+                "source-only wiki-link context must preserve the vault"
+            );
+            assert_eq!(
+                existing_vault_tree_snapshot(&app_data_path),
+                before_app_data
+            );
+        }
+    }
+
+    #[test]
     fn egui_task_checkbox_toggle_saves_only_its_source_marker() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");
