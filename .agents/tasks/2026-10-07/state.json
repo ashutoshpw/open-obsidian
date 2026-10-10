@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:00:25Z",
+  "updated_at": "2026-10-10T19:01:52Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18736,7 +18736,7 @@
     },
     "R2.8.47": {
       "status": "in_progress",
-      "starting_sha": "0df8f8ca8ea6181d1d665006d1bac478ca247064",
+      "starting_sha": "9986a6af0e047d213232edf51901efcc559f656a",
       "scope": "Verify an HTML line break with attributes remains source-only and visibly identifies raw HTML as unsupported.",
       "acceptance": [
         "The existing html-break-with-attributes-remains-source C02.1 fixture drives an egui preview test.",
@@ -18745,7 +18745,14 @@
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
       "implementation_commits": [],
-      "next_action": "Add fixture-driven egui coverage for attribute-bearing HTML line breaks, then push for exact-SHA GitHub Actions."
+      "tracker_checkpoint": {
+        "sha": "9986a6af0e047d213232edf51901efcc559f656a",
+        "inventory_run_id": 38078130253,
+        "inventory_job_id": 114289293256,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38078130253"
+      },
+      "next_action": "The fixture-driven egui case now checks that attribute-bearing HTML breaks show the raw-HTML fallback and preserve source bytes. Push this focused slice for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

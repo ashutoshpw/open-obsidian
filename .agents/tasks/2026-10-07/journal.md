@@ -2648,4 +2648,6 @@ Accepted slice: mixed-formatting highlights remain source-only. Full C02.1 and m
 
 ### R2.8.47 in progress — attribute-bearing HTML line breaks remain source-only
 
-Use the existing `html-break-with-attributes-remains-source` fixture to verify the native preview identifies raw HTML as unsupported and displays the original source without mutation. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+Use the existing `html-break-with-attributes-remains-source` fixture to verify the native preview identifies raw HTML as unsupported and displays the original source without mutation. The fixture-driven egui case is added; push this focused slice for exact-SHA GitHub Actions. No executable validation runs locally.
+
+Starting from tracker checkpoint `9986a6af0e047d213232edf51901efcc559f656a`, inventory [run 38078130253](https://github.com/ashutoshpw/open-obsidian/actions/runs/38078130253), job 114289293256, passed.
