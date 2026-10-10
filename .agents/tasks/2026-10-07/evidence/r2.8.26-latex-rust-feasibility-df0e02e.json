@@ -1,0 +1,269 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.26",
+  "starting_tracker_sha": "c500b95c9f27cb2b5a7233a18f62b3245c46b82d",
+  "validated_source_sha": "df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+  "accepted_slice": [
+    "C02.1:math-renderer-candidate-feasibility"
+  ],
+  "recorded_at": "2026-10-10T13:19:59Z",
+  "contract": "Probe latex-rust as a development-only candidate for native Markdown math rendering. This slice does not add a production rendering path or complete C02.1.",
+  "versions": {
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "latex-rust": "1.0.2, exact pin, dev-dependency only; std and png features",
+    "egui_commonmark": "0.25.0",
+    "egui_kittest": "0.36.2",
+    "image": "0.25.10",
+    "obsidian_reference": "1.14.4"
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+    "result": "All seven required workflows passed on the exact implementation SHA.",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114220999062,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "math_renderer_probe": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114220998918,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "math_renderer_probe": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114220999055,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "math_renderer_probe": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38054819418,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819418",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "rust (ubuntu-latest)",
+            "job_id": 114220999062
+          },
+          {
+            "name": "rust (macos-latest)",
+            "job_id": 114220998918
+          },
+          {
+            "name": "rust (windows-latest)",
+            "job_id": 114220999055
+          }
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38054819362,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819362",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+            "job_id": 114220998867
+          },
+          {
+            "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+            "job_id": 114220998669
+          },
+          {
+            "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+            "job_id": 114220998824
+          }
+        ]
+      },
+      "inventory": {
+        "run_id": 38054819545,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819545",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "inventory",
+            "job_id": 114220999338
+          }
+        ]
+      },
+      "loaded_plugins": {
+        "run_id": 38054819374,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819374",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "macos-latest",
+            "job_id": 114220998941
+          },
+          {
+            "name": "ubuntu-latest",
+            "job_id": 114220999077
+          },
+          {
+            "name": "windows-latest",
+            "job_id": 114220999153
+          }
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38054819375,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819375",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "macos-latest",
+            "job_id": 114220998630
+          },
+          {
+            "name": "windows-latest",
+            "job_id": 114220998784
+          },
+          {
+            "name": "ubuntu-latest",
+            "job_id": 114220998800
+          }
+        ]
+      },
+      "quality": {
+        "run_id": 38054819406,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819406",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "windows-latest",
+            "job_id": 114220998920
+          },
+          {
+            "name": "macos-latest",
+            "job_id": 114220999114
+          },
+          {
+            "name": "ubuntu-latest",
+            "job_id": 114220999139
+          }
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38054819369,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38054819369",
+        "conclusion": "success",
+        "jobs": [
+          {
+            "name": "macos-latest",
+            "job_id": 114220998908
+          },
+          {
+            "name": "ubuntu-latest",
+            "job_id": 114220998981
+          },
+          {
+            "name": "windows-latest",
+            "job_id": 114220999033
+          }
+        ]
+      }
+    }
+  },
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "tests::latex_math_renderer_candidate_emits_decodable_pngs_and_rejects_tikz"
+    ],
+    "result": "The test rendered a+b, a fraction, and Euler's identity to PNG, decoded each with the locked image crate, and verified TikZ input returns an error. It passed on Ubuntu, macOS, and Windows."
+  },
+  "implementation": {
+    "dependency": "latex-rust is pinned exactly at 1.0.2 with std and png features as a dev-dependency. Its optional egui integration is not enabled because it targets egui 0.28.",
+    "runtime": "No production preview callback or runtime dependency was added. Standard math remains on the visible source-only fallback.",
+    "parallel_ci": "The existing GitHub Actions parallel groups ran successfully on this exact SHA; no local test or timing claim is used."
+  },
+  "artifacts": [
+    {
+      "artifact_id": 11671105218,
+      "name": "rust-plugin-runtime-Windows-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 2715,
+      "archive_sha256": "79a5469e08b3f1cd12269b9545694f21da9f0b2cedeb631a9500b243398eab4e"
+    },
+    {
+      "artifact_id": 11670279954,
+      "name": "rust-plugin-runtime-macOS-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 2698,
+      "archive_sha256": "be8d603c023a3f6762e09f369579a0447b9be7e2393d4fefcf9f787acfbfbffc"
+    },
+    {
+      "artifact_id": 11670199083,
+      "name": "rust-plugin-runtime-Linux-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 2695,
+      "archive_sha256": "6a3f725336860c18e30f6319c52b0484cbfb79f836f09c4b4541ecfdf0208907"
+    },
+    {
+      "artifact_id": 11670069477,
+      "name": "openobsidian-rust-preview-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 9793926,
+      "archive_sha256": "1d9fea347dd9abed751929ca2e07f777b371830b8cb1c8c6152ad997d2b60537"
+    },
+    {
+      "artifact_id": 11670764196,
+      "name": "obsidian-vault-roundtrip-macOS-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 3519222,
+      "archive_sha256": "a48fa62725dfabb386ba5e6eaa4d93278e7829255586f4cc4bff6bc7ee78f234"
+    },
+    {
+      "artifact_id": 11670409521,
+      "name": "obsidian-vault-roundtrip-Linux-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 2758315,
+      "archive_sha256": "ce9e825fa102ce8680f9e35337c9becc15539eb0884cef8fcb56c9c1d5a88d40"
+    },
+    {
+      "artifact_id": 11670384763,
+      "name": "obsidian-vault-roundtrip-Windows-df0e02e55934fa26e6c9c5fb787a94772209d0c9",
+      "size_bytes": 3681031,
+      "archive_sha256": "543f822e5e09193fe9f47d9f2b1c322d8a8833c4ed6259914c7686341d471f4b"
+    }
+  ],
+  "failed_ci_attempts": [
+    {
+      "source_sha": "05ee40722021c49e5d0ea27faaa6268427d329a3",
+      "rust_ci_run_id": 38053157730,
+      "summary": "Workspace tests passed on three operating systems; Ubuntu formatting failed on two call-layout differences. Six companion workflows passed. Corrected by CI feedback in subsequent commits."
+    },
+    {
+      "source_sha": "74b1287a1c35752a4e42f500ba243d6e608eaafb",
+      "rust_ci_run_id": 38054326804,
+      "summary": "Workspace tests passed on three operating systems; macOS and Windows Rust gates passed. Ubuntu formatting still required one chained-call indentation adjustment. Six companion workflows passed. Corrected by CI feedback in the accepted SHA."
+    }
+  ],
+  "limitations": [
+    "This tests renderer feasibility only; it does not establish formula fidelity, layout quality, accessibility, UI fallback behavior, resource ceilings, cache bounds, or end-to-end Markdown rendering.",
+    "TikZ is not supported by the candidate and returns an error.",
+    "The candidate remains development-only. Runtime integration requires a bounded renderer path, visible per-formula fallback, actual egui coverage, and redistribution of the embedded STIX Two Math OFL notice.",
+    "Full C02.1 Markdown preview rendering and source-preserving editing remain pending."
+  ],
+  "local_validation": "No local tests, builds, formatting, Clippy, or application validation were run. All executable validation was performed in GitHub Actions. Artifact ZIPs were downloaded from GitHub Actions and hashed without executing them."
+}
