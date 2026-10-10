@@ -2815,3 +2815,17 @@ Accepted slice: the allowlisted `<br/>` form renders as a native hard break whil
 Use the existing safe-html-inline-break-spaced-self-closing C02.1 fixture to verify the preview selects RenderMarkdown and renders the expected two text lines while preserving the original source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.
+
+### R2.8.58 accepted — spaced self-closing safe HTML line break — source SHA d1e6283339193b6c72273cccf4ce657e2c7063e6
+
+The existing safe-html-inline-break-spaced-self-closing C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, the expected native-render source with a Markdown hard break, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 96 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38086933721](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933721), loaded-plugin workflows [38086933663](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933663), desktop build [38086933763](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933763), quality [38086933624](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933624), Rust CI [38086933673](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933673), plugin renderer [38086933728](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933728), and Obsidian vault round-trip [38086933662](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933662). Exact job IDs and artifact digests are in [evidence/r2.8.58-spaced-self-closing-html-break-d1e6283.json](evidence/r2.8.58-spaced-self-closing-html-break-d1e6283.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the allowlisted `<br />` form renders as a native hard break while retaining the original source bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.59 in progress — canonical safe HTML line-break fixture
+
+Use the existing safe-html-inline-break C02.1 fixture to verify the preview selects RenderMarkdown and produces the expected native-render source and visible text on both lines while preserving the original source bytes. Convert the existing direct-string egui case to fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
+
+R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.

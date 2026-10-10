@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T21:21:26Z",
+  "milestone": "R2.8.58",
+  "status": "accepted",
+  "scope": "Verify that the spaced self-closing safe HTML line break from the existing Markdown dialect fixture renders as a native Markdown hard break without changing source bytes.",
+  "source_sha": "d1e6283339193b6c72273cccf4ce657e2c7063e6",
+  "implementation_commits": [
+    "d1e6283339193b6c72273cccf4ce657e2c7063e6"
+  ],
+  "fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "48579c8ae246044ae32479c804c15c7bfe802076c35c3612c266014d07729547",
+    "cases": [
+      "safe-html-inline-break-spaced-self-closing"
+    ],
+    "source_contains_spaced_self_closing_break": true,
+    "expected_native_render_source": "First  \nSecond"
+  },
+  "tests": [
+    {
+      "name": "tests::egui_renders_spaced_self_closing_safe_html_break_from_fixture_without_changing_source",
+      "result": "passed on ubuntu-latest, macos-latest, and windows-latest",
+      "ui_egui_test_count": "96 passed, 0 failed on each platform"
+    }
+  ],
+  "toolchain": {
+    "channel": "stable via dtolnay/rust-toolchain@stable",
+    "rustc": "1.99.0 (b940084d7 2026-09-28)",
+    "platforms": [
+      "ubuntu-latest",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "cargo_lock_sha256": "f143845d873b4b530e4661a43baca149bec9c8deea627285620b5431252c06dc"
+  },
+  "required_workflows": {
+    "inventory": {
+      "run_id": 38086933721,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933721",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114315285282,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "run_id": 38086933663,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933663",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114315284803,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114315284879,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114315284928,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38086933763,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933763",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114315285152,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114315285371,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114315285425,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "quality": {
+      "run_id": 38086933624,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933624",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114315284611,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114315284806,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114315284825,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "rust_ci": {
+      "run_id": 38086933673,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933673",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114315284505,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114315284713,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114315284752,
+          "conclusion": "success"
+        }
+      ],
+      "focused_test": {
+        "name": "tests::egui_renders_spaced_self_closing_safe_html_break_from_fixture_without_changing_source",
+        "result": "passed on ubuntu-latest, macos-latest, and windows-latest",
+        "test_count": "96 passed, 0 failed on each platform"
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38086933728,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933728",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114315285158,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114315285326,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114315285429,
+          "conclusion": "success"
+        }
+      ]
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38086933662,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086933662",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114315285101,
+          "conclusion": "success"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114315285149,
+          "conclusion": "success"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114315285181,
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "tracker_checkpoint": {
+    "sha": "d165f95cce2645454b32cedb5585a84945e00ac8",
+    "inventory_run_id": 38086875802,
+    "inventory_job_id": 114315123074,
+    "conclusion": "success",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802"
+  },
+  "parallel_ci": {
+    "workflow": ".github/workflows/rust.yml",
+    "evidence": "evidence/parallel-ci.json",
+    "implementation_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+    "note": "Native parallel groups in Rust CI and the Obsidian vault round-trip workflow passed on this exact accepted source SHA."
+  },
+  "artifacts": [
+    {
+      "id": 11682718264,
+      "attempt": 1,
+      "name": "loaded-plugin-workflows-Linux-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:4e19a9a87e0b736b23cf0ce6d3e0895f0f724cae51e678a8967597ebd7414cda"
+    },
+    {
+      "id": 11682698381,
+      "attempt": 1,
+      "name": "loaded-plugin-workflows-macOS-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:1a52dbf63ffa98d9ef6eb3ce273c8f8d860b56f380b44dfc53c64e85848b4980"
+    },
+    {
+      "id": 11682368862,
+      "attempt": 1,
+      "name": "loaded-plugin-workflows-Windows-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:028c141ec53f53c00445ad76c7a7319df7ce3b5b16711418e67515f142a73698"
+    },
+    {
+      "id": 11682842601,
+      "attempt": 1,
+      "name": "openobsidian-Windows-preview-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:3d2a569cb2a40042601cf6c3c7e383f69a1b722e552a16d867dd93e67bdde14f"
+    },
+    {
+      "id": 11682572674,
+      "attempt": 1,
+      "name": "openobsidian-Linux-preview-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:d43d3ae047d48a638f59dbeaf9b6523acb7538435485aa8dedb125bc00dc1450"
+    },
+    {
+      "id": 11681823629,
+      "attempt": 1,
+      "name": "openobsidian-macOS-preview-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:80f6cdd6914c9ce1324724eea7b83372732e7e55df04af102ecb7832e7d6b52b"
+    },
+    {
+      "id": 11682743595,
+      "attempt": 1,
+      "name": "openobsidian-rust-preview-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:3050131ff64901f1887e54294d68180eba61b0da58ead839b6c5276466fd713c"
+    },
+    {
+      "id": 11682673521,
+      "attempt": 1,
+      "name": "rust-plugin-runtime-macOS-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:d9380eae217244b3db8a95d7ae5e6b260ff8a1e9e71246fd2f466f6b12bac2c0"
+    },
+    {
+      "id": 11682599032,
+      "attempt": 1,
+      "name": "rust-plugin-runtime-Windows-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:c62e214f35ffbbdb99884be9071baf4aa98f73004c1cce95a7e592d879a0aa76"
+    },
+    {
+      "id": 11682314109,
+      "attempt": 1,
+      "name": "rust-plugin-runtime-Linux-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:528c810563c7e0bba0c785a6b65ea6642319afebc72ae9be53518976458138b5"
+    },
+    {
+      "id": 11682273984,
+      "attempt": 1,
+      "name": "plugin-renderer-lifecycle-macOS-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:1197a0ba37e227f73ae0e47e3e365984f462a78992f0c58c8d901327562afeaa"
+    },
+    {
+      "id": 11681783584,
+      "attempt": 1,
+      "name": "plugin-renderer-lifecycle-Linux-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:cbf19bda800399f2da30ad0c7749d7c2a9e3cdc744ead07d5b76f21f1605ed85"
+    },
+    {
+      "id": 11681693908,
+      "attempt": 1,
+      "name": "plugin-renderer-lifecycle-Windows-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:611476bac08a9006e689f4c46bf621c888fcc8cbebf182e76c5232c5784c1906"
+    },
+    {
+      "id": 11682683725,
+      "attempt": 1,
+      "name": "obsidian-vault-roundtrip-Windows-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:5afbc88598ddd1b525a6a38a2376f554a3e5ad4c664e1f96d3fdf834d1478e87"
+    },
+    {
+      "id": 11682409026,
+      "attempt": 1,
+      "name": "obsidian-vault-roundtrip-Linux-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:000fcd3c1e76797e7068f2c4b8cdc6c2362aaa07f55670c53d4f29fe1e65bedc"
+    },
+    {
+      "id": 11681818800,
+      "attempt": 1,
+      "name": "obsidian-vault-roundtrip-macOS-d1e6283339193b6c72273cccf4ce657e2c7063e6",
+      "digest": "sha256:5c897520b60a7462a99776beb10b9d72846990b7848667182149518d9c81ff61"
+    }
+  ],
+  "limitations": [
+    "This slice verifies the spaced self-closing safe HTML break in one fixture; it does not complete all C02.1 behavior.",
+    "Full C02.1 and migration phases R3-R7 remain pending.",
+    "All executable validation was performed in GitHub Actions; no local tests, builds, formatters, linters, or app launches were used."
+  ]
+}
