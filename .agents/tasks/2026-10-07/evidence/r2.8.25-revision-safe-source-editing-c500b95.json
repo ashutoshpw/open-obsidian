@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T12:16:36Z",
+  "milestone": "R2.8.25",
+  "accepted_slice": [
+    "C02.1:revision-safe-explicit-source-drafts"
+  ],
+  "validated_source_sha": "c500b95c9f27cb2b5a7233a18f62b3245c46b82d",
+  "starting_tracker_sha": "170a6fcd351a7776befefdf4a7cf12de62bdb1e7",
+  "related_implementation_commits": [
+    "5ce0d80ecec9f423a74e7c1dfd061172b9d3716f",
+    "0a47929374fa930c1869e9b2127a98d1eb158571",
+    "187f4772ef8c2bf80f86a4537432802ec72c29b7",
+    "cc47f99f5a1915b757cdd044507ad32cdfaa1a09",
+    "c500b95c9f27cb2b5a7233a18f62b3245c46b82d"
+  ],
+  "markdown_dialect_fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "fa74c99d5d2da6756bfcc7eef43cbfda088a1d18ba7bc2d63a5bfd5aac9e0a79",
+    "case": "source_editing",
+    "source_preservation": "The fixture includes a UTF-8 BOM, CRLF line endings, an unsupported wiki embed, and an unknown extension. Its expected result appends source text while retaining all existing bytes and unsupported syntax literally."
+  },
+  "contract": "A complete valid UTF-8 note of at most 16 KiB can be edited as explicit plain Markdown source. Saving uses the revision captured by the complete preview and the existing revision-checked vault writer. BOM, CRLF, and unsupported source syntax remain literal. A stale write preserves the external note, records the edited source in conflict recovery history, invalidates the preview revision, and disables another save until the source is read again.",
+  "implementation": {
+    "ui_layer": "The native source preview exposes an explicit multiline source draft with save and cancel actions. Draft mode blocks conflicting vault operations and navigation; truncated or revisionless previews cannot be edited. Successful saves retain the preview through refresh while the selected file still matches the saved revision; a later external change clears it.",
+    "vault_layer": "Source bytes are submitted through the existing revision-checked writer. A stale revision is rejected and handled by existing conflict recovery; no unguarded write path or Markdown normalization was added.",
+    "fixture": "The source-editing fixture records the exact source and exact expected post-edit source, including BOM, CRLF, unsupported wiki syntax, and an unknown extension.",
+    "documentation": "The Markdown preview architecture and UI copy describe explicit plain-source editing, the 16 KiB bound, revision matching, unsupported syntax, and stale-save behavior."
+  },
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "tests::egui_source_edit_saves_exact_bom_crlf_and_unsupported_markdown_bytes",
+      "tests::egui_stale_source_edit_preserves_external_note_and_disables_retry"
+    ],
+    "result": "Both focused UI cases and the full workspace test suites passed on Ubuntu, macOS, and Windows. The success case verifies exact saved bytes and preview refresh behavior; the stale case verifies the external file remains unchanged, recovery history is retained, and retry is disabled."
+  },
+  "versions": {
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "egui_commonmark": "0.25.0",
+    "egui_kittest": "0.36.2",
+    "pulldown_cmark": "0.13.4",
+    "sha2": "0.10.9",
+    "bun": "1.4.2",
+    "obsidian_reference": "1.14.4"
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "c500b95c9f27cb2b5a7233a18f62b3245c46b82d",
+    "result": "All seven required workflows passed on the exact implementation SHA.",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114208469625,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "source_edit_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114208469694,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "source_edit_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114208469670,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "source_edit_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38050497085,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497085",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114208469625},
+          {"name": "rust (macos-latest)", "job_id": 114208469694},
+          {"name": "rust (windows-latest)", "job_id": 114208469670}
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38050497055,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497055",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114208469576},
+          {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114208469728},
+          {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114208469733}
+        ]
+      },
+      "inventory": {
+        "run_id": 38050497056,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497056",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "inventory", "job_id": 114208469603}
+        ]
+      },
+      "loaded_plugins": {
+        "run_id": 38050497057,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497057",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114208469487},
+          {"name": "windows-latest", "job_id": 114208469602},
+          {"name": "macos-latest", "job_id": 114208469633}
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38050497045,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497045",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114208469617},
+          {"name": "macos-latest", "job_id": 114208469709},
+          {"name": "windows-latest", "job_id": 114208469741}
+        ]
+      },
+      "quality": {
+        "run_id": 38050497102,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497102",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114208469692},
+          {"name": "ubuntu-latest", "job_id": 114208469804},
+          {"name": "macos-latest", "job_id": 114208469816}
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38050497072,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38050497072",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114208469582},
+          {"name": "macos-latest", "job_id": 114208469682},
+          {"name": "ubuntu-latest", "job_id": 114208469712}
+        ]
+      }
+    }
+  },
+  "artifacts": [
+    {"artifact_id": 11669482263, "name": "rust-plugin-runtime-Windows-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 2715, "archive_sha256": "dffe4263c74c3c48ca35adde66be4f46a61c16a5ad88f24ce9dd31a9c830731d"},
+    {"artifact_id": 11669427119, "name": "openobsidian-rust-preview-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 9793926, "archive_sha256": "732df9e9563fd5c63a157865204d23803837e31600267d58e279f4c5cd625fb3"},
+    {"artifact_id": 11669282231, "name": "rust-plugin-runtime-Linux-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 2695, "archive_sha256": "9faf3d68f4a00baf4268167a6d20a88e6f156f14d8e0c2b732ea8e70589697ac"},
+    {"artifact_id": 11669177404, "name": "rust-plugin-runtime-macOS-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 2698, "archive_sha256": "011b6690309c605803e367692a99813e4cd3f41d1907a7b0a97277b637ce62b2"},
+    {"artifact_id": 11669402183, "name": "obsidian-vault-roundtrip-Linux-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 2714559, "archive_sha256": "4121331214631baee9878365cc72b7535f82e9c4816c0aa24edf31a1a9b12465"},
+    {"artifact_id": 11669162533, "name": "obsidian-vault-roundtrip-Windows-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 3072231, "archive_sha256": "690c6fcedc22881031abe8c6cec4d2d93f64d7efea23a24dd1ff9e9c2e9a546d"},
+    {"artifact_id": 11668734178, "name": "obsidian-vault-roundtrip-macOS-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 3570070, "archive_sha256": "2836f8d95bf51c8d7f0f0f370e988f1bbf304dcdaae25234bdbb4e40ff414c1f"},
+    {"artifact_id": 11669561723, "name": "loaded-plugin-workflows-macOS-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 171485, "archive_sha256": "136c6a5add3352aeb85dd1a3dd0652a9c2a06d9061dfb224a605fb7331fe002b"},
+    {"artifact_id": 11669262091, "name": "loaded-plugin-workflows-Windows-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 171508, "archive_sha256": "1579fbdd581d7bb4d077bba67f5093f9c7e00ff2c81e4fd423133378feddb2ae"},
+    {"artifact_id": 11668864048, "name": "loaded-plugin-workflows-Linux-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 171486, "archive_sha256": "6ae11d4bfd32233e69001011777c05758cd75244ec8c93560829ec7aa3b74825"},
+    {"artifact_id": 11669451967, "name": "openobsidian-macOS-preview-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 397395487, "archive_sha256": "1bd6bdbf207f658cd79e16d5688ab62df7e378cc7c314d3a8f00cf94f8df331c"},
+    {"artifact_id": 11669042488, "name": "openobsidian-Windows-preview-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 163005824, "archive_sha256": "0864c72e59d563f9b5ebb0aadf5629e8d3e116f5360495e59be01815fe09d1aa"},
+    {"artifact_id": 11668639177, "name": "openobsidian-Linux-preview-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 125946548, "archive_sha256": "bcb982e89f7fe65a0d2fadbb44d052d06043033e4370856b9166f07e187af545"},
+    {"artifact_id": 11669172146, "name": "plugin-renderer-lifecycle-Linux-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 3221, "archive_sha256": "e0d2a8ba4181951c0ada7c6d81f3dbd22b65c7496c5ce6cd6861edc141615379"},
+    {"artifact_id": 11668918918, "name": "plugin-renderer-lifecycle-macOS-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 3238, "archive_sha256": "f1ca57d3cfc29f77e6d2083c002756c43f863b956ab8a064f991636df9168b7a"},
+    {"artifact_id": 11668494363, "name": "plugin-renderer-lifecycle-Windows-c500b95c9f27cb2b5a7233a18f62b3245c46b82d", "size_bytes": 3242, "archive_sha256": "b5248a63fc65c3e51a6799c14ce9c72fee5281b791804555a0b989f56af035aa"}
+  ],
+  "failed_ci_attempts": [
+    {
+      "source_sha": "5ce0d80ecec9f423a74e7c1dfd061172b9d3716f",
+      "rust_ci_run_id": 38049459405,
+      "conclusion": "failure",
+      "issue": "The first UI harness selectors did not match the source editor's multiline text-input role, the stale-save assertion needed the CI rustfmt layout, and an existing task-toggle UI assertion was affected.",
+      "correction_source_sha": "0a47929374fa930c1869e9b2127a98d1eb158571"
+    },
+    {
+      "source_sha": "0a47929374fa930c1869e9b2127a98d1eb158571",
+      "rust_ci_run_id": 38049711599,
+      "conclusion": "failure",
+      "issue": "The source-editor label was not exposed in the AccessKit tree used by this egui test harness; the tests were changed to exercise the visible save action without querying that label.",
+      "correction_source_sha": "187f4772ef8c2bf80f86a4537432802ec72c29b7"
+    },
+    {
+      "source_sha": "187f4772ef8c2bf80f86a4537432802ec72c29b7",
+      "rust_ci_run_id": 38049976766,
+      "conclusion": "failure",
+      "issue": "Clippy rejected nested if statements around beginning and canceling a source draft.",
+      "correction_source_sha": "cc47f99f5a1915b757cdd044507ad32cdfaa1a09"
+    },
+    {
+      "source_sha": "cc47f99f5a1915b757cdd044507ad32cdfaa1a09",
+      "rust_ci_run_id": 38050251529,
+      "conclusion": "failure",
+      "issue": "Clippy rejected the remaining nested if around canceling a source draft.",
+      "correction_source_sha": "c500b95c9f27cb2b5a7233a18f62b3245c46b82d"
+    }
+  ],
+  "limitations": [
+    "The egui test harness does not expose the multiline source editor through a queryable AccessKit label in this test setup. The UI cases seed draft state through the app test state, then exercise the visible save action and verify successful and stale-write outcomes; direct keyboard entry into the editor is not covered by these cases.",
+    "This accepts bounded explicit source editing and stale-write behavior only. Full C02.1 dialect rendering, live preview, safe HTML, math, diagrams, and broader editor integration remain pending."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, or application validation were run. All executable validation was performed in GitHub Actions."
+}
