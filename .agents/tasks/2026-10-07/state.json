@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T23:21:05Z",
+  "updated_at": "2026-10-10T23:26:48Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "54e9574d0235beaadb5e49f7b8850d973b028989",
   "current_milestone": "R2.8.69",
-  "next_action": "R2.8.69 implementation is prepared with explicit Source, Live preview, and Reading controls, retained revision-bound drafts, fixture-driven mode interaction and exact-byte round-trip coverage, architecture documentation, and the reconciled fixture inventory hash. Commit and push this slice, then inspect exact-SHA GitHub Actions across the required workflows. No local executable validation.",
+  "next_action": "R2.8.69 first source SHA a01e0db80e132bc6020c323fe05777711f4ec72d failed Rust CI on all three OSes because two UI tests queried the source editor before the next egui frame. All six companion workflows, including the Ubuntu/macOS/Windows vault round-trip, have now passed. The test harness correction is prepared; push it as a small commit and inspect fresh exact-SHA GitHub Actions results. No local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19724,7 +19724,37 @@
         "All seven required GitHub Actions workflows pass for the implementation SHA, including focused egui coverage on Ubuntu, macOS, and Windows. No local executable validation."
       ],
       "implementation_commits": [],
-      "next_action": "Commit and push the mode UI, fixture, documentation, and inventory hash as one focused implementation slice. Inspect all exact-SHA GitHub Actions runs and correct any failures using CI output only. Keep parent C02 pending until its full acceptance passes."
+      "failed_attempts": [
+        {
+          "source_sha": "a01e0db80e132bc6020c323fe05777711f4ec72d",
+          "rust_ci_run_id": 38094789852,
+          "failed_jobs": [
+            {"platform": "ubuntu-latest", "job_id": 114338370400},
+            {"platform": "macos-latest", "job_id": 114338370485},
+            {"platform": "windows-latest", "job_id": 114338370507}
+          ],
+          "failing_tests": [
+            "egui_markdown_modes_keep_drafts_and_show_distinct_surfaces",
+            "egui_markdown_mode_roundtrip_preserves_the_approved_source_span"
+          ],
+          "cause": "Both tests queried Markdown source editor in the same harness frame that clicked Edit Markdown source; the draft transition is applied after that frame. CI output still showed the Edit Markdown source button.",
+          "correction": "Advance one additional egui harness frame before querying the editor.",
+          "companion_workflow_runs": {
+            "inventory": 38094789844,
+            "loaded_plugins": 38094789890,
+            "plugin_renderer": 38094789848,
+            "quality": 38094789865,
+            "desktop_build": 38094789918,
+            "obsidian_vault_roundtrip": 38094789842
+          },
+          "vault_roundtrip_jobs": {
+            "ubuntu-24.04": 114338370716,
+            "macos-latest": 114338370553,
+            "windows-latest": 114338370764
+          }
+        }
+      ],
+      "next_action": "The first SHA's six companion workflows passed; Rust CI failed on the two documented test-frame timing assertions. Push the focused harness correction and obtain fresh exact-SHA GitHub Actions results. Keep parent C02 pending until its full acceptance passes."
     }
   },
   "ci_preparation": {

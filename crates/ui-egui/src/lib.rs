@@ -5084,6 +5084,7 @@ mod tests {
         harness.get_by_label("Original Markdown source");
         harness.get_by_label("Edit Markdown source").click();
         harness.step();
+        harness.step();
         harness.get_by_role_and_label(
             eframe::egui::accesskit::Role::MultilineTextInput,
             "Markdown source editor",
@@ -5195,6 +5196,7 @@ mod tests {
         harness.get_by_label("Source").click();
         harness.step();
         harness.get_by_label("Edit Markdown source").click();
+        harness.step();
         harness.step();
         harness
             .get_by_role_and_label(
