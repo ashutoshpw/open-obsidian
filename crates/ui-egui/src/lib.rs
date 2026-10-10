@@ -3359,7 +3359,7 @@ mod tests {
         );
         harness
             .get_by_role_and_label(
-                eframe::egui::accesskit::Role::TextInput,
+                eframe::egui::accesskit::Role::MultilineTextInput,
                 "Markdown source editor",
             )
             .click();
