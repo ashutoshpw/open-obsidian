@@ -3937,6 +3937,86 @@ mod tests {
     }
 
     #[test]
+    fn unicode_normalization_matrix_preserves_bytes_across_filesystem_lookup() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "unicode-normalization")
+            .expect("failure matrix must contain unicode-normalization");
+        assert_eq!(scenario["expected_outcome"], "preserve-original-bytes");
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["macOS", "Windows", "Linux"])
+        );
+        assert!(scenario["macos_aliases_canonical_path_forms"]
+            .as_bool()
+            .unwrap());
+        assert!(scenario["windows_linux_keep_canonical_path_forms_distinct"]
+            .as_bool()
+            .unwrap());
+
+        let nfc_path = PathBuf::from(scenario["nfc_relative_path"].as_str().unwrap());
+        let nfd_path = PathBuf::from(scenario["nfd_relative_path"].as_str().unwrap());
+        let nfc_bytes = scenario["nfc_bytes_utf8"].as_str().unwrap().as_bytes();
+        let nfd_bytes = scenario["nfd_bytes_utf8"].as_str().unwrap().as_bytes();
+        assert_ne!(nfc_path, nfd_path);
+        assert_ne!(nfc_bytes, nfd_bytes);
+
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir_all(vault_temp.0.join("Notes")).unwrap();
+
+        #[cfg(target_os = "macos")]
+        {
+            fs::write(vault_temp.0.join(&nfd_path), nfd_bytes).unwrap();
+            let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+            for relative_path in [&nfc_path, &nfd_path] {
+                let read = store.root().read(relative_path).unwrap();
+                assert_eq!(read.document.as_bytes(), nfd_bytes);
+                assert_eq!(read.revision_sha256, sha256_hex(nfd_bytes));
+            }
+            assert_eq!(store.root().snapshot().unwrap().entries.len(), 1);
+        }
+
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        {
+            fs::write(vault_temp.0.join(&nfc_path), nfc_bytes).unwrap();
+            fs::write(vault_temp.0.join(&nfd_path), nfd_bytes).unwrap();
+            let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+            assert_eq!(
+                store
+                    .root()
+                    .read(&nfc_path)
+                    .unwrap()
+                    .document
+                    .as_bytes(),
+                nfc_bytes
+            );
+            assert_eq!(
+                store
+                    .root()
+                    .read(&nfd_path)
+                    .unwrap()
+                    .document
+                    .as_bytes(),
+                nfd_bytes
+            );
+            let snapshot = store.root().snapshot().unwrap();
+            assert_eq!(snapshot.entries.len(), 2);
+            let paths = snapshot
+                .entries
+                .iter()
+                .map(|entry| entry.relative_path.to_str().unwrap())
+                .collect::<Vec<_>>();
+            assert!(paths.contains(&scenario["nfc_relative_path"].as_str().unwrap()));
+            assert!(paths.contains(&scenario["nfd_relative_path"].as_str().unwrap()));
+        }
+    }
+
+    #[test]
     fn c03_fixture_failed_apply_restores_prior_reference_write_and_source_move() {
         let fixture: Value = serde_json::from_str(C03_RENAME_FIXTURE)
             .expect("rename-plan fixture must be valid JSON");

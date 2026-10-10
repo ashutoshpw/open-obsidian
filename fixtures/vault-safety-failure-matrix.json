@@ -161,6 +161,17 @@
       "expected_write_error": "Windows-reserved",
       "expected_journal_entries": 0
     },
-    {"id": "unicode-normalization", "fault_stage": null, "expected_outcome": "preserve-original-bytes"}
+    {
+      "id": "unicode-normalization",
+      "fault_stage": null,
+      "expected_outcome": "preserve-original-bytes",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "nfc_relative_path": "Notes/Caf\u00e9.md",
+      "nfd_relative_path": "Notes/Cafe\u0301.md",
+      "nfc_bytes_utf8": "\ufefftitle: Caf\u00e9\r\nbody: Caf\u00e9\r\n",
+      "nfd_bytes_utf8": "\ufefftitle: Cafe\u0301\r\nbody: Cafe\u0301\r\n",
+      "macos_aliases_canonical_path_forms": true,
+      "windows_linux_keep_canonical_path_forms_distinct": true
+    }
   ]
 }
