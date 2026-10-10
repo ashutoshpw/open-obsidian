@@ -69,12 +69,22 @@ pub struct MarkdownPropertySource {
     pub value_span: SourceSpan,
 }
 
+/// One explicit step in a nested YAML property path.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum MarkdownPropertyPathSegment {
+    Key(String),
+    Index(usize),
+}
+
 /// Why a source-preserving Markdown property edit could not be rendered.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MarkdownPropertyEditError {
     PropertyNotRepresented,
     MultilineValue,
     StructuredValue,
+    InvalidPath,
+    UnsupportedPath,
+    UnsupportedValue,
 }
 
 impl std::fmt::Display for MarkdownPropertyEditError {
@@ -88,6 +98,13 @@ impl std::fmt::Display for MarkdownPropertyEditError {
             }
             Self::StructuredValue => formatter
                 .write_str("Markdown block-scalar properties cannot be edited as inline values"),
+            Self::InvalidPath => formatter.write_str("Markdown property path is invalid"),
+            Self::UnsupportedPath => {
+                formatter.write_str("Markdown property path cannot be represented safely")
+            }
+            Self::UnsupportedValue => {
+                formatter.write_str("YAML value cannot be represented safely")
+            }
         }
     }
 }
@@ -364,6 +381,19 @@ impl MarkdownSource {
         render_property_edit(self, key, raw_value)
     }
 
+    /// Render an explicit nested property edit without reserializing its siblings.
+    ///
+    /// Mapping keys and sequence indices in `path` identify an existing inline
+    /// leaf value. Only that leaf's source span is replaced with a bounded flow
+    /// value. Ambiguous, malformed, block-scalar, and unsupported paths fail closed.
+    pub fn render_nested_property_edit(
+        &self,
+        path: &[MarkdownPropertyPathSegment],
+        value: &YamlValue,
+    ) -> Result<Vec<u8>, MarkdownPropertyEditError> {
+        render_nested_property_edit(self, path, value)
+    }
+
     /// Extract supported wiki, Markdown and embed references outside Markdown code spans.
     ///
     /// Returned ranges are UTF-8 byte offsets. Fenced code blocks and matched inline
@@ -381,7 +411,7 @@ fn frontmatter_properties(bytes: &[u8], content: SourceSpan) -> Vec<MarkdownProp
     while line_start < content.end {
         let (line_end, break_width) = line_bounds(bytes, line_start);
         let line_end = line_end.min(content.end);
-        if let Some(property) = source_property(&bytes[line_start..line_end], line_start) {
+        if let Some(property) = source_property(&bytes[line_start..line_end], line_start, false) {
             properties.push(property);
         }
         if break_width == 0 {
@@ -441,6 +471,29 @@ fn render_property_edit(
     Ok(rendered)
 }
 
+fn render_nested_property_edit(
+    source: &MarkdownSource,
+    path: &[MarkdownPropertyPathSegment],
+    value: &YamlValue,
+) -> Result<Vec<u8>, MarkdownPropertyEditError> {
+    let replacement = yaml::serialize_flow(value).ok_or(MarkdownPropertyEditError::UnsupportedValue)?;
+    let bounds = source
+        .frontmatter_bounds()
+        .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
+    let markdown = source.text();
+    let content = markdown
+        .get(bounds.content.start..bounds.content.end)
+        .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
+    let bytes = source.as_bytes();
+    let span = yaml::nested_property_value_span(content, bounds.content.start, bytes, path)?;
+
+    let mut rendered = Vec::with_capacity(bytes.len() - (span.end - span.start) + replacement.len());
+    rendered.extend_from_slice(&bytes[..span.start]);
+    rendered.extend_from_slice(replacement.as_bytes());
+    rendered.extend_from_slice(&bytes[span.end..]);
+    Ok(rendered)
+}
+
 fn is_block_scalar_indicator(value: &[u8]) -> bool {
     let Some((&style, modifiers)) = value.split_first() else {
         return false;
@@ -461,54 +514,44 @@ fn is_block_scalar_indicator(value: &[u8]) -> bool {
     true
 }
 
-fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySource> {
-    let mut key_end = 0;
-    while line
-        .get(key_end)
-        .is_some_and(|byte| byte.is_ascii_alphanumeric() || matches!(*byte, b'_' | b'-'))
-    {
-        key_end += 1;
-    }
-    if key_end == 0 {
+fn source_property(
+    line: &[u8],
+    line_start: usize,
+    sequence_head: bool,
+) -> Option<MarkdownPropertySource> {
+    let indent = line
+        .iter()
+        .take_while(|byte| **byte == b' ')
+        .count();
+    if line.get(indent) == Some(&b'\t') || (!sequence_head && indent > 0) {
         return None;
     }
 
-    let mut colon = key_end;
-    while line
-        .get(colon)
-        .is_some_and(|byte| matches!(*byte, b' ' | b'\t'))
-    {
-        colon += 1;
-    }
-    if line.get(colon) != Some(&b':') {
-        return None;
-    }
-
-    let key = std::str::from_utf8(&line[..key_end]).ok()?.to_owned();
-    let mut value_start = colon + 1;
-    while line
-        .get(value_start)
-        .is_some_and(|byte| matches!(*byte, b' ' | b'\t'))
-    {
-        value_start += 1;
-    }
-
-    let value = &line[value_start..];
-    let value_end = yaml_inline_comment_start(value).unwrap_or(value.len());
-    let mut value_end = value_start + value_end;
-    while value_end > value_start && matches!(line[value_end - 1], b' ' | b'\t') {
-        value_end -= 1;
-    }
+    let sequence_prefix = if sequence_head {
+        let sequence = line.get(indent..)?;
+        if sequence.starts_with(b"- ") {
+            2
+        } else if sequence == b"-" {
+            1
+        } else {
+            return None;
+        }
+    } else {
+        0
+    };
+    let content_start = indent + sequence_prefix;
+    let content = std::str::from_utf8(line.get(content_start..)?)?;
+    let pair = yaml::mapping_pair_source(content)?;
 
     Some(MarkdownPropertySource {
-        key,
+        key: pair.key,
         key_span: SourceSpan {
-            start: line_start,
-            end: line_start + key_end,
+            start: line_start + content_start + pair.key_start,
+            end: line_start + content_start + pair.key_end,
         },
         value_span: SourceSpan {
-            start: line_start + value_start,
-            end: line_start + value_end,
+            start: line_start + content_start + pair.value_start,
+            end: line_start + content_start + pair.value_end,
         },
     })
 }
@@ -1797,43 +1840,6 @@ fn has_uri_scheme(value: &str) -> bool {
         && characters.all(|character| {
             character.is_ascii_alphanumeric() || matches!(character, '+' | '.' | '-')
         })
-}
-
-fn yaml_inline_comment_start(value: &[u8]) -> Option<usize> {
-    let mut quote = None;
-    let mut depth = 0usize;
-    let mut index = 0;
-
-    while index < value.len() {
-        let byte = value[index];
-        if let Some(active_quote) = quote {
-            if active_quote == b'\'' && byte == active_quote && value.get(index + 1) == Some(&byte)
-            {
-                index += 2;
-                continue;
-            }
-            if active_quote == b'"' && byte == b'\\' {
-                index = (index + 2).min(value.len());
-                continue;
-            }
-            if byte == active_quote {
-                quote = None;
-            }
-        } else {
-            match byte {
-                b'\'' | b'"' => quote = Some(byte),
-                b'[' | b'{' | b'(' => depth += 1,
-                b']' | b'}' | b')' => depth = depth.saturating_sub(1),
-                b'#' if depth == 0 && (index == 0 || matches!(value[index - 1], b' ' | b'\t')) => {
-                    return Some(index);
-                }
-                _ => {}
-            }
-        }
-        index += 1;
-    }
-
-    None
 }
 
 fn line_bounds(bytes: &[u8], start: usize) -> (usize, usize) {

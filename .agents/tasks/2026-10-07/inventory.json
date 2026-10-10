@@ -1391,6 +1391,16 @@
       "fixture_reader": "crates/testkit"
     },
     {
+      "path": "fixtures/c04-nested-property-edit.json",
+      "sha256": "49e0403cc303ba8feba856c18979c637604760747bca6cf3a6a8711168184bd6",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Exact-source fixtures for nested property edits through block and flow YAML mappings and sequences, including ambiguity and fail-closed behavior.",
+      "fixture_reader": "crates/testkit"
+    },
+    {
       "path": "fixtures/c04-properties.json",
       "sha256": "dbd161b80ddee2b3c421ecd3fc81a388c4eff00b378650c5e8fc0ec2bc8c36f0",
       "rust_owner": "crates/doc",

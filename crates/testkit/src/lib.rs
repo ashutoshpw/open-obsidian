@@ -1036,7 +1036,8 @@ mod existing_vault_no_op_tests {
 #[cfg(test)]
 mod c02_byte_roundtrip_fixture_tests {
     use openobsidian_doc::{
-        MarkdownPropertyEditError, MarkdownSource, YamlMappingEntry, YamlValue,
+        MarkdownPropertyEditError, MarkdownPropertyPathSegment, MarkdownSource, YamlMappingEntry,
+        YamlValue,
     };
     use serde_json::Value;
 
@@ -1045,6 +1046,8 @@ mod c02_byte_roundtrip_fixture_tests {
     const C04_UNKNOWN_PRESERVATION_FIXTURE: &str =
         include_str!("../../../fixtures/c04-unknown-preservation.json");
     const C04_PROPERTIES_FIXTURE: &str = include_str!("../../../fixtures/c04-properties.json");
+    const C04_NESTED_PROPERTY_EDIT_FIXTURE: &str =
+        include_str!("../../../fixtures/c04-nested-property-edit.json");
     const RISK_NORMALIZATION_FIXTURE: &str =
         include_str!("../../../fixtures/risk-normalization.json");
 
@@ -1140,6 +1143,92 @@ mod c02_byte_roundtrip_fixture_tests {
             unsupported_type => {
                 panic!("{case_id}: unsupported fixture YAML type {unsupported_type}")
             }
+        }
+    }
+
+    fn yaml_value_from_fixture(value: &Value, case_id: &str) -> YamlValue {
+        match value["type"]
+            .as_str()
+            .expect("fixture YAML value must specify a type")
+        {
+            "null" => YamlValue::Null,
+            "boolean" => YamlValue::Boolean(
+                value["value"]
+                    .as_bool()
+                    .unwrap_or_else(|| panic!("{case_id}: replacement boolean must be a bool")),
+            ),
+            "number" => YamlValue::Number(
+                value["value"]
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{case_id}: replacement number must be a string"))
+                    .to_owned(),
+            ),
+            "string" => YamlValue::String(
+                value["value"]
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{case_id}: replacement string must be a string"))
+                    .to_owned(),
+            ),
+            "sequence" => YamlValue::Sequence(
+                value["items"]
+                    .as_array()
+                    .unwrap_or_else(|| panic!("{case_id}: replacement items must be an array"))
+                    .iter()
+                    .map(|item| yaml_value_from_fixture(item, case_id))
+                    .collect(),
+            ),
+            "mapping" => YamlValue::Mapping(
+                value["entries"]
+                    .as_array()
+                    .unwrap_or_else(|| panic!("{case_id}: replacement entries must be an array"))
+                    .iter()
+                    .map(|entry| YamlMappingEntry {
+                        key: entry["key"]
+                            .as_str()
+                            .unwrap_or_else(|| panic!("{case_id}: mapping key must be a string"))
+                            .to_owned(),
+                        value: yaml_value_from_fixture(&entry["value"], case_id),
+                    })
+                    .collect(),
+            ),
+            "unsupported" => YamlValue::Unsupported(
+                value["value"]
+                    .as_str()
+                    .unwrap_or_else(|| panic!("{case_id}: unsupported value must be a string"))
+                    .to_owned(),
+            ),
+            unsupported => panic!("{case_id}: unsupported replacement type {unsupported}"),
+        }
+    }
+
+    fn property_path_from_fixture(value: &Value, case_id: &str) -> Vec<MarkdownPropertyPathSegment> {
+        value
+            .as_array()
+            .unwrap_or_else(|| panic!("{case_id}: property path must be an array"))
+            .iter()
+            .map(|segment| {
+                if let Some(key) = segment.as_str() {
+                    MarkdownPropertyPathSegment::Key(key.to_owned())
+                } else if let Some(index) = segment.as_u64() {
+                    MarkdownPropertyPathSegment::Index(
+                        usize::try_from(index)
+                            .unwrap_or_else(|_| panic!("{case_id}: sequence index must fit usize")),
+                    )
+                } else {
+                    panic!("{case_id}: path segments must be string keys or non-negative indices")
+                }
+            })
+            .collect()
+    }
+
+    fn property_edit_error_from_fixture(value: &str) -> MarkdownPropertyEditError {
+        match value {
+            "PropertyNotRepresented" => MarkdownPropertyEditError::PropertyNotRepresented,
+            "StructuredValue" => MarkdownPropertyEditError::StructuredValue,
+            "InvalidPath" => MarkdownPropertyEditError::InvalidPath,
+            "UnsupportedPath" => MarkdownPropertyEditError::UnsupportedPath,
+            "UnsupportedValue" => MarkdownPropertyEditError::UnsupportedValue,
+            error => panic!("unsupported property edit error {error}"),
         }
     }
 
@@ -1359,6 +1448,84 @@ mod c02_byte_roundtrip_fixture_tests {
                 rendered.get(start + inserted.len()..),
                 before_bytes.get(start + deleted.len()..),
                 "{case_id}: comments, order, nested values, and following bytes must remain identical"
+            );
+        }
+    }
+
+    #[test]
+    fn c04_nested_property_edits_preserve_every_unselected_source_byte() {
+        let fixture: Value = serde_json::from_str(C04_NESTED_PROPERTY_EDIT_FIXTURE)
+            .expect("C04 nested-property fixture must be valid JSON");
+        assert_eq!(fixture["schema_version"], 1);
+        assert_eq!(fixture["id"], "fixture:c04-nested-property-edit");
+        assert!(
+            fixture["invariants"]
+                .as_object()
+                .expect("fixture invariants must be an object")
+                .values()
+                .all(|value| value.as_bool() == Some(true))
+        );
+
+        let cases = fixture["cases"]
+            .as_array()
+            .expect("fixture cases must be an array");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"].as_str().expect("fixture case must have an id");
+            let before = case["before"]
+                .as_str()
+                .expect("fixture case must have source bytes");
+            let path = property_path_from_fixture(&case["path"], case_id);
+            let value = yaml_value_from_fixture(&case["replacement"], case_id);
+            let source = MarkdownSource::parse(before.as_bytes().to_vec())
+                .unwrap_or_else(|error| panic!("{case_id}: fixture must be UTF-8: {error}"));
+            let original_bytes = source.as_bytes().to_vec();
+            let rendered = source.render_nested_property_edit(&path, &value);
+
+            if let Some(expected_error) = case["expected_error"].as_str() {
+                assert_eq!(
+                    rendered,
+                    Err(property_edit_error_from_fixture(expected_error)),
+                    "{case_id}: expected fail-closed result"
+                );
+                assert_eq!(
+                    source.as_bytes(),
+                    original_bytes.as_slice(),
+                    "{case_id}: rejected edit must leave source bytes unchanged"
+                );
+                continue;
+            }
+
+            let after = case["after"]
+                .as_str()
+                .unwrap_or_else(|| panic!("{case_id}: successful case must provide expected bytes"));
+            let rendered = rendered
+                .unwrap_or_else(|error| panic!("{case_id}: render nested property edit: {error}"));
+            assert_eq!(rendered, after.as_bytes(), "{case_id}: exact output bytes");
+
+            let deleted = case["edit"]["delete"]
+                .as_str()
+                .unwrap_or_else(|| panic!("{case_id}: edit must state deleted bytes"));
+            let inserted = case["edit"]["insert"]
+                .as_str()
+                .unwrap_or_else(|| panic!("{case_id}: edit must state inserted bytes"));
+            assert_eq!(
+                before.matches(deleted).count(),
+                1,
+                "{case_id}: approved old value must occur exactly once"
+            );
+            assert_eq!(
+                before.replacen(deleted, inserted, 1),
+                after,
+                "{case_id}: only the selected value changes"
+            );
+
+            let edited = MarkdownSource::parse(rendered)
+                .unwrap_or_else(|error| panic!("{case_id}: edited Markdown must remain UTF-8: {error}"));
+            assert!(
+                edited.parse_frontmatter_yaml().issues.is_empty(),
+                "{case_id}: bounded YAML remains representable after edit"
             );
         }
     }

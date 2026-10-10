@@ -50,6 +50,14 @@ struct YamlPair {
     value: String,
 }
 
+pub(crate) struct YamlPairSource {
+    pub key: String,
+    pub key_start: usize,
+    pub key_end: usize,
+    pub value_start: usize,
+    pub value_end: usize,
+}
+
 struct ParsedBlock {
     value: YamlValue,
     index: usize,
@@ -250,6 +258,50 @@ fn mapping_separator(value: &str) -> Option<usize> {
     None
 }
 
+fn trim_ascii_start(value: &str) -> usize {
+    value
+        .as_bytes()
+        .iter()
+        .take_while(|byte| matches!(**byte, b' ' | b'\t'))
+        .count()
+}
+
+fn trim_ascii_end(value: &str) -> usize {
+    value
+        .as_bytes()
+        .iter()
+        .rposition(|byte| !matches!(*byte, b' ' | b'\t'))
+        .map_or(0, |index| index + 1)
+}
+
+/// Parse one mapping pair and retain the exact byte span of its inline value.
+pub(crate) fn mapping_pair_source(value: &str) -> Option<YamlPairSource> {
+    let mapping_end = comment_start(value).unwrap_or(value.len());
+    let mapping_source = &value[..mapping_end];
+    let colon = mapping_separator(mapping_source)?;
+    if colon == 0 {
+        return None;
+    }
+
+    let raw_key = &value[..colon];
+    let key_start = trim_ascii_start(raw_key);
+    let key_end = trim_ascii_end(raw_key);
+    let key = mapping_key(&raw_key[key_start..key_end])?;
+    let after_colon = &value[colon + 1..];
+    let without_comment_end = comment_start(after_colon).unwrap_or(after_colon.len());
+    let before_comment = &after_colon[..without_comment_end];
+    let value_start = trim_ascii_start(before_comment);
+    let value_end = trim_ascii_end(before_comment);
+
+    Some(YamlPairSource {
+        key,
+        key_start,
+        key_end,
+        value_start: colon + 1 + value_start,
+        value_end: colon + 1 + value_end,
+    })
+}
+
 fn pair(value: &str) -> Option<YamlPair> {
     let colon = mapping_separator(value)?;
     if colon == 0 {
@@ -262,7 +314,7 @@ fn pair(value: &str) -> Option<YamlPair> {
     })
 }
 
-fn split_flow_parts(value: &str) -> Option<Vec<&str>> {
+fn split_flow_ranges(value: &str) -> Option<Vec<(usize, usize)>> {
     let bytes = value.as_bytes();
     let mut quote = None;
     let mut escaped = false;
@@ -311,7 +363,10 @@ fn split_flow_parts(value: &str) -> Option<Vec<&str>> {
                 }
             }
             b',' if delimiters.is_empty() => {
-                parts.push(value[start..index].trim());
+                let part = &value[start..index];
+                let leading = trim_ascii_start(part);
+                let trailing = trim_ascii_end(part);
+                parts.push((start + leading, start + trailing));
                 start = index + 1;
             }
             _ => {}
@@ -322,8 +377,125 @@ fn split_flow_parts(value: &str) -> Option<Vec<&str>> {
     if quote.is_some() || !delimiters.is_empty() {
         return None;
     }
-    parts.push(value[start..].trim());
+    let part = &value[start..];
+    let leading = trim_ascii_start(part);
+    let trailing = trim_ascii_end(part);
+    parts.push((start + leading, start + trailing));
     Some(parts)
+}
+
+fn split_flow_parts(value: &str) -> Option<Vec<&str>> {
+    split_flow_ranges(value).map(|parts| {
+        parts
+            .into_iter()
+            .map(|(start, end)| &value[start..end])
+            .collect()
+    })
+}
+
+/// Return source spans for every non-empty entry in an inline flow mapping.
+pub(crate) fn flow_mapping_entry_sources(value: &str) -> Option<Vec<YamlPairSource>> {
+    if !value.starts_with('{') || !value.ends_with('}') {
+        return None;
+    }
+
+    let inner = &value[1..value.len() - 1];
+    if inner.trim().is_empty() {
+        return Some(Vec::new());
+    }
+    let ranges = split_flow_ranges(inner)?;
+    let last = ranges.len().saturating_sub(1);
+    let mut entries = Vec::new();
+    for (index, (start, end)) in ranges.into_iter().enumerate() {
+        if start == end {
+            if index == last {
+                continue;
+            }
+            return None;
+        }
+        let mut pair = mapping_pair_source(&inner[start..end])?;
+        pair.key_start += start + 1;
+        pair.key_end += start + 1;
+        pair.value_start += start + 1;
+        pair.value_end += start + 1;
+        entries.push(pair);
+    }
+    Some(entries)
+}
+
+/// Return source spans for every value in an inline flow sequence.
+pub(crate) fn flow_sequence_entry_sources(value: &str) -> Option<Vec<(usize, usize)>> {
+    if !value.starts_with('[') || !value.ends_with(']') {
+        return None;
+    }
+
+    let inner = &value[1..value.len() - 1];
+    if inner.trim().is_empty() {
+        return Some(Vec::new());
+    }
+    let ranges = split_flow_ranges(inner)?;
+    let last = ranges.len().saturating_sub(1);
+    let mut entries = Vec::with_capacity(ranges.len());
+    for (index, (start, end)) in ranges.into_iter().enumerate() {
+        if start == end {
+            if index == last {
+                continue;
+            }
+            return None;
+        }
+        entries.push((start + 1, end + 1));
+    }
+    Some(entries)
+}
+
+fn serialize_flow_value(value: &YamlValue, depth: usize) -> Option<String> {
+    if depth >= MAX_NESTING_DEPTH - 1 {
+        return None;
+    }
+    match value {
+        YamlValue::Null => Some("null".to_owned()),
+        YamlValue::Boolean(value) => Some(value.to_string()),
+        YamlValue::Number(value) if is_yaml_number(value) => Some(value.clone()),
+        YamlValue::Number(_) | YamlValue::Unsupported(_) => None,
+        YamlValue::String(value) => serde_json::to_string(value).ok(),
+        YamlValue::Sequence(values) => {
+            let values = values
+                .iter()
+                .map(|value| serialize_flow_value(value, depth + 1))
+                .collect::<Option<Vec<_>>>()?;
+            Some(format!("[{}]", values.join(", ")))
+        }
+        YamlValue::Mapping(entries) => {
+            let mut seen = std::collections::HashSet::new();
+            let entries = entries
+                .iter()
+                .map(|entry| {
+                    if !seen.insert(&entry.key) {
+                        return None;
+                    }
+                    let key = if !entry.key.is_empty()
+                        && entry
+                            .key
+                            .bytes()
+                            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+                    {
+                        entry.key.clone()
+                    } else {
+                        serde_json::to_string(&entry.key).ok()?
+                    };
+                    Some(format!(
+                        "{key}: {}",
+                        serialize_flow_value(&entry.value, depth + 1)?
+                    ))
+                })
+                .collect::<Option<Vec<_>>>()?;
+            Some(format!("{{{}}}", entries.join(", ")))
+        }
+    }
+}
+
+pub(crate) fn serialize_flow(value: &YamlValue) -> Option<String> {
+    serialize_flow_value(value, 0)
 }
 
 fn is_block_scalar_header(value: &str) -> bool {
@@ -762,4 +934,453 @@ pub(crate) fn parse_mapping(source: &str) -> YamlParseResult {
     }
 
     YamlParseResult { entries, issues }
+}
+
+#[derive(Clone, Copy)]
+struct SourceYamlLine {
+    indent: usize,
+    start: usize,
+    end: usize,
+}
+
+fn source_lines(
+    source: &str,
+    source_offset: usize,
+) -> Result<Vec<SourceYamlLine>, super::MarkdownPropertyEditError> {
+    let mut lines = Vec::new();
+    for (start, end) in line_ranges(source) {
+        let raw = &source[start..end];
+        let indent = raw.as_bytes().iter().take_while(|byte| **byte == b' ').count();
+        if raw.as_bytes().get(indent) == Some(&b'\t') {
+            return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+        }
+        if strip_comment(&raw[indent..]).trim().is_empty() {
+            continue;
+        }
+        lines.push(SourceYamlLine {
+            indent,
+            start: source_offset + start,
+            end: source_offset + end,
+        });
+    }
+    Ok(lines)
+}
+
+fn source_sequence_line(bytes: &[u8], line: SourceYamlLine) -> bool {
+    bytes
+        .get(line.start + line.indent..line.end)
+        .is_some_and(|content| content == b"-" || content.starts_with(b"- "))
+}
+
+fn source_block_end(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    start: usize,
+    end: usize,
+    parent_indent: usize,
+) -> usize {
+    let mut index = start;
+    while index < end {
+        let line = lines[index];
+        if line.indent > parent_indent
+            || (line.indent == parent_indent && source_sequence_line(bytes, line))
+        {
+            index += 1;
+        } else {
+            break;
+        }
+    }
+    index
+}
+
+fn source_line_property(
+    bytes: &[u8],
+    line: SourceYamlLine,
+    sequence_head: bool,
+) -> Result<super::MarkdownPropertySource, super::MarkdownPropertyEditError> {
+    let content_start = line.start + line.indent;
+    super::source_property(&bytes[content_start..line.end], content_start, sequence_head)
+        .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)
+}
+
+fn source_value<'a>(
+    bytes: &'a [u8],
+    span: super::SourceSpan,
+) -> Result<&'a str, super::MarkdownPropertyEditError> {
+    std::str::from_utf8(
+        bytes
+            .get(span.start..span.end)
+            .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)?,
+    )
+    .map_err(|_| super::MarkdownPropertyEditError::UnsupportedPath)
+}
+
+fn validate_leaf_span(
+    bytes: &[u8],
+    span: super::SourceSpan,
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    let value = source_value(bytes, span)?;
+    if value.is_empty() || is_block_scalar_header(value) {
+        return Err(super::MarkdownPropertyEditError::StructuredValue);
+    }
+    if (value.starts_with('{') && flow_mapping_entry_sources(value).is_none())
+        || (value.starts_with('[') && flow_sequence_entry_sources(value).is_none())
+    {
+        return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+    }
+    Ok(span)
+}
+
+fn next_block_child(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    index: usize,
+    end: usize,
+    parent_indent: usize,
+) -> Result<(usize, usize), super::MarkdownPropertyEditError> {
+    let child = index + 1;
+    let Some(line) = lines.get(child).copied().filter(|_| child < end) else {
+        return Err(super::MarkdownPropertyEditError::PropertyNotRepresented);
+    };
+    if line.indent < parent_indent
+        || (line.indent == parent_indent && !source_sequence_line(bytes, line))
+    {
+        return Err(super::MarkdownPropertyEditError::PropertyNotRepresented);
+    }
+    let child_end = source_block_end(bytes, lines, child, end, parent_indent);
+    Ok((child, child_end))
+}
+
+fn resolve_property_value(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    index: usize,
+    end: usize,
+    parent_indent: usize,
+    property: &super::MarkdownPropertySource,
+    path: &[super::MarkdownPropertyPathSegment],
+    path_index: usize,
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    if path_index + 1 == path.len() {
+        return validate_leaf_span(bytes, property.value_span);
+    }
+
+    let raw_value = source_value(bytes, property.value_span)?;
+    if raw_value.is_empty() {
+        let (child, child_end) = next_block_child(bytes, lines, index, end, parent_indent)?;
+        let child_line = lines[child];
+        return match path.get(path_index + 1) {
+            Some(super::MarkdownPropertyPathSegment::Index(_))
+                if source_sequence_line(bytes, child_line) =>
+            {
+                resolve_block_sequence(
+                    bytes,
+                    lines,
+                    child,
+                    child_end,
+                    child_line.indent,
+                    path,
+                    path_index + 1,
+                )
+            }
+            Some(super::MarkdownPropertyPathSegment::Key(_))
+                if !source_sequence_line(bytes, child_line) =>
+            {
+                resolve_block_mapping(
+                    bytes,
+                    lines,
+                    child,
+                    child_end,
+                    child_line.indent,
+                    path,
+                    path_index + 1,
+                )
+            }
+            _ => Err(super::MarkdownPropertyEditError::UnsupportedPath),
+        };
+    }
+
+    resolve_inline_value(bytes, property.value_span, path, path_index + 1)
+}
+
+fn resolve_inline_value(
+    bytes: &[u8],
+    value_span: super::SourceSpan,
+    path: &[super::MarkdownPropertyPathSegment],
+    path_index: usize,
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    let value = source_value(bytes, value_span)?;
+    match path.get(path_index) {
+        Some(super::MarkdownPropertyPathSegment::Key(wanted)) if value.starts_with('{') => {
+            let entries = flow_mapping_entry_sources(value)
+                .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)?;
+            let mut found = None;
+            for entry in entries.into_iter().filter(|entry| entry.key == *wanted) {
+                if found.is_some() {
+                    return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+                }
+                found = Some(entry);
+            }
+            let entry = found.ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
+            let span = super::SourceSpan {
+                start: value_span.start + entry.value_start,
+                end: value_span.start + entry.value_end,
+            };
+            if path_index + 1 == path.len() {
+                validate_leaf_span(bytes, span)
+            } else {
+                resolve_inline_value(bytes, span, path, path_index + 1)
+            }
+        }
+        Some(super::MarkdownPropertyPathSegment::Index(wanted)) if value.starts_with('[') => {
+            let entries = flow_sequence_entry_sources(value)
+                .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)?;
+            let (start, end) = entries
+                .get(*wanted)
+                .copied()
+                .ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
+            let span = super::SourceSpan {
+                start: value_span.start + start,
+                end: value_span.start + end,
+            };
+            if path_index + 1 == path.len() {
+                validate_leaf_span(bytes, span)
+            } else {
+                resolve_inline_value(bytes, span, path, path_index + 1)
+            }
+        }
+        Some(_) => Err(super::MarkdownPropertyEditError::UnsupportedPath),
+        None => validate_leaf_span(bytes, value_span),
+    }
+}
+
+fn resolve_block_mapping(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    start: usize,
+    end: usize,
+    indent: usize,
+    path: &[super::MarkdownPropertyPathSegment],
+    path_index: usize,
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    let Some(super::MarkdownPropertyPathSegment::Key(wanted)) = path.get(path_index) else {
+        return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+    };
+    if wanted.trim().is_empty() {
+        return Err(super::MarkdownPropertyEditError::InvalidPath);
+    }
+
+    let mut found = None;
+    for (index, line) in lines.iter().copied().enumerate().take(end).skip(start) {
+        if line.indent < indent {
+            break;
+        }
+        if line.indent != indent {
+            continue;
+        }
+        if source_sequence_line(bytes, line) {
+            return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+        }
+        let property = source_line_property(bytes, line, false)?;
+        if property.key == *wanted {
+            if found.is_some() {
+                return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+            }
+            found = Some((index, property));
+        }
+    }
+    let (index, property) = found.ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
+    resolve_property_value(
+        bytes,
+        lines,
+        index,
+        end,
+        indent,
+        &property,
+        path,
+        path_index,
+    )
+}
+
+fn source_sequence_item_end(
+    lines: &[SourceYamlLine],
+    start: usize,
+    end: usize,
+    indent: usize,
+) -> usize {
+    let mut item_end = start + 1;
+    while item_end < end && lines[item_end].indent > indent {
+        item_end += 1;
+    }
+    item_end
+}
+
+fn sequence_continuation_has_key(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    start: usize,
+    item_end: usize,
+    mapping_indent: usize,
+    wanted: &str,
+) -> Result<bool, super::MarkdownPropertyEditError> {
+    for index in start + 1..item_end {
+        let line = lines[index];
+        if line.indent < mapping_indent {
+            break;
+        }
+        if line.indent != mapping_indent {
+            continue;
+        }
+        if source_sequence_line(bytes, line) {
+            return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+        }
+        if source_line_property(bytes, line, false)?.key == wanted {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn resolve_block_sequence_item(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    start: usize,
+    item_end: usize,
+    indent: usize,
+    path: &[super::MarkdownPropertyPathSegment],
+    path_index: usize,
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    let Some(super::MarkdownPropertyPathSegment::Key(wanted)) = path.get(path_index + 1) else {
+        return Err(super::MarkdownPropertyEditError::InvalidPath);
+    };
+    let head = source_line_property(bytes, lines[start], true);
+    if let Ok(head) = &head {
+        if head.key == *wanted {
+            let mapping_indent = head.key_span.start - lines[start].start;
+            if sequence_continuation_has_key(
+                bytes,
+                lines,
+                start,
+                item_end,
+                mapping_indent,
+                wanted,
+            )? {
+                return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+            }
+            return resolve_property_value(
+                bytes,
+                lines,
+                start,
+                item_end,
+                indent,
+                &head,
+                path,
+                path_index + 1,
+            );
+        }
+        if head.value_span.start == head.value_span.end {
+            return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+        }
+    } else {
+        let content = &bytes[lines[start].start + indent..lines[start].end];
+        let is_bare_item = std::str::from_utf8(content)
+            .is_ok_and(|content| strip_comment(content).trim() == "-");
+        if !is_bare_item {
+            return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+        }
+    }
+
+    let continuation = start + 1;
+    let Some(line) = lines
+        .get(continuation)
+        .copied()
+        .filter(|_| continuation < item_end && lines[continuation].indent > indent)
+    else {
+        return Err(super::MarkdownPropertyEditError::PropertyNotRepresented);
+    };
+    if source_sequence_line(bytes, line) {
+        return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+    }
+    resolve_block_mapping(
+        bytes,
+        lines,
+        continuation,
+        item_end,
+        line.indent,
+        path,
+        path_index + 1,
+    )
+}
+
+fn resolve_block_sequence(
+    bytes: &[u8],
+    lines: &[SourceYamlLine],
+    start: usize,
+    end: usize,
+    indent: usize,
+    path: &[super::MarkdownPropertyPathSegment],
+    path_index: usize,
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    let Some(super::MarkdownPropertyPathSegment::Index(wanted)) = path.get(path_index) else {
+        return Err(super::MarkdownPropertyEditError::UnsupportedPath);
+    };
+    let mut item_number = 0;
+    let mut index = start;
+    while index < end {
+        let line = lines[index];
+        if line.indent < indent {
+            break;
+        }
+        if line.indent != indent || !source_sequence_line(bytes, line) {
+            break;
+        }
+        let item_end = source_sequence_item_end(lines, index, end, indent);
+        if item_number == *wanted {
+            return resolve_block_sequence_item(
+                bytes,
+                lines,
+                index,
+                item_end,
+                indent,
+                path,
+                path_index,
+            );
+        }
+        item_number += 1;
+        index = item_end;
+    }
+    Err(super::MarkdownPropertyEditError::PropertyNotRepresented)
+}
+
+/// Resolve an explicit nested property path to the exact original value bytes.
+pub(crate) fn nested_property_value_span(
+    source: &str,
+    source_offset: usize,
+    source_bytes: &[u8],
+    path: &[super::MarkdownPropertyPathSegment],
+) -> Result<super::SourceSpan, super::MarkdownPropertyEditError> {
+    if path.is_empty() || path.len() > MAX_NESTING_DEPTH {
+        return Err(super::MarkdownPropertyEditError::InvalidPath);
+    }
+    let Some(super::MarkdownPropertyPathSegment::Key(root_key)) = path.first() else {
+        return Err(super::MarkdownPropertyEditError::InvalidPath);
+    };
+    if root_key.trim().is_empty() {
+        return Err(super::MarkdownPropertyEditError::InvalidPath);
+    }
+
+    let lines = source_lines(source, source_offset)?;
+    let end = lines.len();
+    let Some(first) = lines.first() else {
+        return Err(super::MarkdownPropertyEditError::PropertyNotRepresented);
+    };
+    resolve_block_mapping(
+        source_bytes,
+        &lines,
+        0,
+        end,
+        first.indent,
+        path,
+        0,
+    )
 }

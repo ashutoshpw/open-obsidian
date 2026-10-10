@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c04-nested-property-edit",
+  "purpose": "Exercise explicit source-preserving nested YAML property edits across block and flow mappings and sequences.",
+  "invariants": {
+    "only_the_selected_inline_leaf_value_changes": true,
+    "comments_order_and_unrepresented_siblings_are_retained": true,
+    "bom_line_endings_and_markdown_framing_are_retained": true,
+    "ambiguous_malformed_and_structured_paths_fail_closed": true
+  },
+  "cases": [
+    {
+      "id": "unicode-spaced-block-map-key-preserves-bom-crlf-and-comment",
+      "before": "\uFEFF---\r\n# Frontmatter comment\r\n設定 data:\r\n  owner name: Ashutosh # retain this comment\r\n  labels:\r\n    - one\r\nunknown: [keep, me]\r\n---\r\nBody\r\n",
+      "after": "\uFEFF---\r\n# Frontmatter comment\r\n設定 data:\r\n  owner name: \"Ada\" # retain this comment\r\n  labels:\r\n    - one\r\nunknown: [keep, me]\r\n---\r\nBody\r\n",
+      "path": ["設定 data", "owner name"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "edit": {"delete": "Ashutosh", "insert": "\"Ada\""}
+    },
+    {
+      "id": "indexed-block-sequence-map-preserves-comment-and-siblings",
+      "before": "---\r\nmetadata:\r\n  children:\r\n    - owner: Ashutosh # keep this comment\r\n      role: maintainer\r\n    - owner: Bea\r\nunknown: [keep, me]\r\n---\r\nBody\r\n",
+      "after": "---\r\nmetadata:\r\n  children:\r\n    - owner: \"Ada\" # keep this comment\r\n      role: maintainer\r\n    - owner: Bea\r\nunknown: [keep, me]\r\n---\r\nBody\r\n",
+      "path": ["metadata", "children", 0, "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "edit": {"delete": "Ashutosh", "insert": "\"Ada\""}
+    },
+    {
+      "id": "bare-block-sequence-map-item",
+      "before": "---\nmetadata:\n  children:\n    -\n      owner: Ashutosh\n      role: maintainer\nunknown: keep\n---\n",
+      "after": "---\nmetadata:\n  children:\n    -\n      owner: \"Ada\"\n      role: maintainer\nunknown: keep\n---\n",
+      "path": ["metadata", "children", 0, "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "edit": {"delete": "Ashutosh", "insert": "\"Ada\""}
+    },
+    {
+      "id": "indentationless-block-sequence-map-item",
+      "before": "---\r\nmetadata:\r\n- owner: Ashutosh # keep this comment\r\n  role: maintainer\r\n- owner: Bea\r\nunknown: keep\r\n---\r\n",
+      "after": "---\r\nmetadata:\r\n- owner: \"Ada\" # keep this comment\r\n  role: maintainer\r\n- owner: Bea\r\nunknown: keep\r\n---\r\n",
+      "path": ["metadata", 0, "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "edit": {"delete": "Ashutosh", "insert": "\"Ada\""}
+    },
+    {
+      "id": "nested-flow-map-value",
+      "before": "---\nmetadata: {owner: Ashutosh, nested: {name: source}} # keep this comment\n---\n",
+      "after": "---\nmetadata: {owner: Ashutosh, nested: {name: \"changed\"}} # keep this comment\n---\n",
+      "path": ["metadata", "nested", "name"],
+      "replacement": {"type": "string", "value": "changed"},
+      "edit": {"delete": "source", "insert": "\"changed\""}
+    },
+    {
+      "id": "indexed-flow-sequence-map-value",
+      "before": "---\nmetadata: [owner, {name: Ashutosh, role: maintainer}, tail] # keep this comment\n---\n",
+      "after": "---\nmetadata: [owner, {name: \"Ada\", role: maintainer}, tail] # keep this comment\n---\n",
+      "path": ["metadata", 1, "name"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "edit": {"delete": "Ashutosh", "insert": "\"Ada\""}
+    },
+    {
+      "id": "trailing-flow-commas-remain-editable",
+      "before": "---\nmetadata: [head, {owner: Ashutosh,}, tail,] # keep this comment\n---\n",
+      "after": "---\nmetadata: [head, {owner: \"Ada\",}, tail,] # keep this comment\n---\n",
+      "path": ["metadata", 1, "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "edit": {"delete": "Ashutosh", "insert": "\"Ada\""}
+    },
+    {
+      "id": "typed-flow-value-quotes-keys-and-preserves-types",
+      "before": "---\nmetadata:\n  owner: Ashutosh\n---\n",
+      "after": "---\nmetadata:\n  owner: {\"display name\": \"Ada\", active: true}\n---\n",
+      "path": ["metadata", "owner"],
+      "replacement": {"type": "mapping", "entries": [
+        {"key": "display name", "value": {"type": "string", "value": "Ada"}},
+        {"key": "active", "value": {"type": "boolean", "value": true}}
+      ]},
+      "edit": {"delete": "Ashutosh", "insert": "{\"display name\": \"Ada\", active: true}"}
+    },
+    {
+      "id": "block-scalar-leaf-is-rejected",
+      "before": "---\nmetadata:\n  summary: |\n    source stays authoritative\n---\n",
+      "path": ["metadata", "summary"],
+      "replacement": {"type": "string", "value": "changed"},
+      "expected_error": "StructuredValue"
+    },
+    {
+      "id": "mapping-path-cannot-cross-sequence-with-key",
+      "before": "---\nmetadata:\n  children:\n    - owner: Ashutosh\n---\n",
+      "path": ["metadata", "children", "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "UnsupportedPath"
+    },
+    {
+      "id": "missing-nested-key-is-rejected",
+      "before": "---\nmetadata: {owner: Ashutosh}\n---\n",
+      "path": ["metadata", "missing"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "PropertyNotRepresented"
+    },
+    {
+      "id": "malformed-flow-collection-is-rejected",
+      "before": "---\nmetadata: {owner: Ashutosh, nested: [broken}\n---\n",
+      "path": ["metadata", "nested"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "UnsupportedPath"
+    },
+    {
+      "id": "duplicate-flow-map-keys-are-ambiguous",
+      "before": "---\nmetadata: {owner: first, owner: second}\n---\n",
+      "path": ["metadata", "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "UnsupportedPath"
+    },
+    {
+      "id": "unsupported-yaml-replacement-is-rejected",
+      "before": "---\nmetadata: {owner: Ashutosh}\n---\n",
+      "path": ["metadata", "owner"],
+      "replacement": {"type": "unsupported", "value": "*alias"},
+      "expected_error": "UnsupportedValue"
+    },
+    {
+      "id": "duplicate-block-map-keys-are-ambiguous",
+      "before": "---\nmetadata:\n  owner: first\n  owner: second\n---\n",
+      "path": ["metadata", "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "UnsupportedPath"
+    },
+    {
+      "id": "duplicate-sequence-head-key-is-ambiguous",
+      "before": "---\nmetadata:\n  children:\n    - owner: first\n      owner: second\n---\n",
+      "path": ["metadata", "children", 0, "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "UnsupportedPath"
+    },
+    {
+      "id": "empty-sequence-head-with-nested-map-is-ambiguous",
+      "before": "---\nmetadata:\n  children:\n    - role:\n        nested: value\n      owner: Ashutosh\n---\n",
+      "path": ["metadata", "children", 0, "owner"],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "UnsupportedPath"
+    },
+    {
+      "id": "empty-property-path-is-invalid",
+      "before": "---\nmetadata: {owner: Ashutosh}\n---\n",
+      "path": [],
+      "replacement": {"type": "string", "value": "Ada"},
+      "expected_error": "InvalidPath"
+    }
+  ]
+}

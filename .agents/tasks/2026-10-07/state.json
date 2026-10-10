@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T08:13:40Z",
+  "updated_at": "2026-10-10T08:30:47Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "981fd0d8e08bbffd99d95e54a8996cc271e37a25",
-  "current_milestone": "R2.8.17",
-  "next_action": "Continue with the next narrow C04 source-preservation slice after the R2.8.17 tracker checkpoint passed its path-eligible CI.",
+  "last_reconciled_head": "bda4c8d032a441f18c52f128d8fccf83675bf8b8",
+  "current_milestone": "R2.8.18",
+  "next_action": "Port source-preserving nested YAML property edits for explicit mapping and sequence paths, including flow collections, with fixture-driven exact-byte acceptance and CI-only validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16184,6 +16184,27 @@
       ],
       "evidence": "evidence/r2.8.17-yaml-mapping-keys-85325d6.json",
       "next_action": "Continue with the next narrow C04 source-preservation slice; keep broader C04, C02/C02.1 and editor integration pending."
+    },
+    "R2.8.18": {
+      "status": "in_progress",
+      "starting_sha": "bda4c8d032a441f18c52f128d8fccf83675bf8b8",
+      "scope": "Port explicit nested Markdown property editing from the current TypeScript core into the Rust document layer, preserving all bytes outside the selected leaf span.",
+      "accepted_slice": [
+        "C04.1:nested-property-edits"
+      ],
+      "remaining": [
+        "Full C04 property semantics, unsupported YAML constructs, and structured UI integration remain pending.",
+        "C02/C02.1 dialect rendering remains pending."
+      ],
+      "acceptance": [
+        "Explicit mapping keys and sequence indices edit nested block and flow values without rewriting sibling values, comments, ordering, indentation, line endings, BOM, or surrounding Markdown bytes.",
+        "Malformed, ambiguous, unsupported, or block-scalar paths fail closed without changing source bytes.",
+        "The focused fixture and full Rust workspace tests pass on Ubuntu, macOS, and Windows.",
+        "All seven required GitHub Actions workflows pass on the exact source SHA; executable validation runs in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "next_action": "Commit and push the focused nested-edit implementation, then use exact-SHA GitHub Actions diagnostics to finish acceptance."
     }
   },
   "ci_preparation": {
