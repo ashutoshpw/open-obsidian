@@ -2059,7 +2059,7 @@ fn windows_reserved_segment(segment: &str) -> bool {
     if segment.contains(':') {
         return true;
     }
-    let trimmed = segment.trim_end_matches(|character| character == ' ' || character == '.');
+    let trimmed = segment.trim_end_matches([' ', '.']);
     let base_name = trimmed.split('.').next().unwrap_or_default();
     let normalized = base_name.to_ascii_uppercase();
     matches!(normalized.as_str(), "CON" | "PRN" | "AUX" | "NUL")
@@ -3860,10 +3860,7 @@ mod tests {
             .iter()
             .find(|scenario| scenario["id"] == "windows-reserved-name")
             .expect("failure matrix must contain windows-reserved-name");
-        assert_eq!(
-            scenario["expected_outcome"],
-            "deny-without-mutating-vault"
-        );
+        assert_eq!(scenario["expected_outcome"], "deny-without-mutating-vault");
         assert_eq!(
             scenario["applicable_platforms"],
             serde_json::json!(["Windows"])
@@ -3899,9 +3896,9 @@ mod tests {
             let relative_path = PathBuf::from(rejected_path.as_str().unwrap());
             let read_error = store.root().read(&relative_path).unwrap_err();
             assert!(
-                read_error.to_string().contains(
-                    scenario["expected_read_error"].as_str().unwrap()
-                ),
+                read_error
+                    .to_string()
+                    .contains(scenario["expected_read_error"].as_str().unwrap()),
                 "reserved path read returned the wrong error: {read_error}"
             );
             assert!(matches!(read_error, VaultError::WindowsReservedPath(_)));
@@ -3914,9 +3911,9 @@ mod tests {
                 })
                 .unwrap_err();
             assert!(
-                write_error.to_string().contains(
-                    scenario["expected_write_error"].as_str().unwrap()
-                ),
+                write_error
+                    .to_string()
+                    .contains(scenario["expected_write_error"].as_str().unwrap()),
                 "reserved path write returned the wrong error: {write_error}"
             );
             assert!(matches!(write_error, VaultError::WindowsReservedPath(_)));
@@ -3935,10 +3932,7 @@ mod tests {
             entries[0].as_encoded_bytes(),
             existing_path.file_name().unwrap().as_encoded_bytes()
         );
-        assert_eq!(
-            scenario["expected_journal_entries"].as_u64(),
-            Some(0)
-        );
+        assert_eq!(scenario["expected_journal_entries"].as_u64(), Some(0));
         assert!(!app_data_temp.0.join("journal.jsonl").exists());
     }
 
