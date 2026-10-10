@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:53:51Z",
+  "updated_at": "2026-10-10T18:55:14Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18710,7 +18710,7 @@
     },
     "R2.8.46": {
       "status": "in_progress",
-      "starting_sha": "ddaa4122c04e60cadd69825145e1f79fbb005f70",
+      "starting_sha": "fce50a295a53bcc0a191591b8bab6a58307c814c",
       "scope": "Verify highlights mixed with Markdown emphasis use a visible source-only fallback instead of a partial highlight projection.",
       "acceptance": [
         "The existing highlight-mixed-with-markdown-formatting C02.1 fixture drives an egui preview test.",
@@ -18718,6 +18718,13 @@
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
       "implementation_commits": [],
+      "tracker_checkpoint": {
+        "sha": "fce50a295a53bcc0a191591b8bab6a58307c814c",
+        "inventory_run_id": 38077690594,
+        "inventory_job_id": 114287998844,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077690594"
+      },
       "next_action": "Add fixture-driven egui coverage for the mixed-formatting highlight fallback, then push for exact-SHA GitHub Actions."
     }
   },

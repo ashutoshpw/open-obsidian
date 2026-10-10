@@ -3400,6 +3400,40 @@ mod tests {
     }
 
     #[test]
+    fn egui_shows_source_for_highlights_mixed_with_markdown_formatting() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "highlight-mixed-with-markdown-formatting")
+            .expect("Markdown dialect fixture must include mixed-formatting highlight");
+        let source = case["source"]
+            .as_str()
+            .expect("mixed-formatting highlight fixture must include source");
+        let original = source.as_bytes().to_vec();
+        let analysis = analyze_markdown_preview(source);
+        assert_eq!(
+            analysis.disposition(),
+            MarkdownPreviewDisposition::ShowSource
+        );
+        assert!(analysis.inline_highlight_spans().is_empty());
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("Unsupported Markdown (highlights); showing the source as written.");
+        harness.get_by_label(source);
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_renders_markdown_footnotes_without_source_fallback() {
         let source = "A footnote reference[^one].\n\n[^one]: The original footnote body.";
         assert_eq!(
