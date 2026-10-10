@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T09:51:41Z",
+  "milestone": "R2.8.20",
+  "accepted_slice": [
+    "C02.1:safe-preview-preflight"
+  ],
+  "validated_source_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+  "starting_tracker_sha": "74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62",
+  "related_implementation_commits": [
+    "ffa7b6d76762ec12fe615dce26473da875de77c6",
+    "a787fe65c5035d784f95de8b7bf2aa62c05f57b8",
+    "26eb1df2c180d2516ee5e78e4ae13e5098829dd7",
+    "88ce1530d8ee4f7a17fced2def6fe706a059c9ef",
+    "d19d3d31e741d36d829f2eba5fb893e7453c70dc"
+  ],
+  "contract": "Classify Markdown dialect syntax before the native renderer runs. Keep the borrowed source authoritative; render the current CommonMark subset and show bounded original source with a visible reason for known syntax outside that subset.",
+  "implementation": {
+    "document_layer": "crates/doc exposes a read-only preview analysis using pinned pulldown-cmark = 0.13.4 (MIT), matching the version in egui_commonmark 0.25.0.",
+    "ui_layer": "crates/ui-egui continues through egui_commonmark for supported content and shows unsupported source as monospace text after a visible notice.",
+    "dependencies_and_limitations": "docs/architecture/markdown-preview.md records the renderer relationship and states that full editing, safe HTML projection, wiki-link/highlight rendering, math, and diagrams remain incomplete."
+  },
+  "fixture_coverage": [
+    {
+      "id": "fixture:c02-dialects",
+      "path": "fixtures/markdown-dialects.json",
+      "cases": 12,
+      "coverage": "CommonMark headings, tasks, tables, callouts, code, and inline formatting; footnotes; dollar and legacy-delimited math; Mermaid and plugin fences; raw HTML; wiki links; highlights; mixed content; marker literals in inline/fenced/indented code; and unknown markup. Each case asserts its preview disposition and stable unsupported-syntax keys."
+    }
+  ],
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "markdown_preview::tests::c02_safe_preview_dialect_fixtures_select_a_visible_fallback_without_mutating_source",
+      "markdown_preview::tests::unsupported_syntax_labels_are_stable_and_user_readable",
+      "tests::egui_shows_original_source_and_reason_for_unsupported_markdown_preview",
+      "tests::egui_existing_vault_nested_transclusions_preserve_full_snapshots"
+    ],
+    "result": "All four focused tests passed in Rust CI logs on Ubuntu, macOS, and Windows. The full workspace test suites also passed on all three platforms."
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+    "result": "All seven required workflows completed successfully for this exact source SHA.",
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114184468910,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114184469006,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114184469019,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38042185233,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185233",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114184468910},
+          {"name": "rust (macos-latest)", "job_id": 114184469006},
+          {"name": "rust (windows-latest)", "job_id": 114184469019}
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38042185254,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185254",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114184469213},
+          {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114184469073},
+          {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114184469212}
+        ]
+      },
+      "inventory": {
+        "run_id": 38042185235,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185235",
+        "conclusion": "success",
+        "jobs": [{"name": "inventory", "job_id": 114184469117}]
+      },
+      "loaded_plugins": {
+        "run_id": 38042185212,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185212",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 114184469031},
+          {"name": "ubuntu-latest", "job_id": 114184469187},
+          {"name": "windows-latest", "job_id": 114184469194}
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38042185173,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185173",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114184468637},
+          {"name": "macos-latest", "job_id": 114184468840},
+          {"name": "ubuntu-latest", "job_id": 114184468886}
+        ]
+      },
+      "quality": {
+        "run_id": 38042185298,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185298",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "windows-latest", "job_id": 114184469219},
+          {"name": "macos-latest", "job_id": 114184469258},
+          {"name": "ubuntu-latest", "job_id": 114184469523}
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38042185291,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185291",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114184469043},
+          {"name": "macos-latest", "job_id": 114184469200},
+          {"name": "windows-latest", "job_id": 114184469235}
+        ]
+      }
+    }
+  },
+  "artifacts": [
+    {"artifact_id": 11666507541, "name": "openobsidian-rust-preview-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 9773029, "sha256": "b10eae63f1eafe82f21be3ebd4ebf05a9ac823d948ccdf4552fcaf4aa89066d3"},
+    {"artifact_id": 11666397897, "name": "rust-plugin-runtime-Windows-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 2715, "sha256": "2881ec79c594a1a36e9f9207ddee9932699b22e9da72f7227d46afa5ebe4cb40"},
+    {"artifact_id": 11666043071, "name": "rust-plugin-runtime-macOS-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 2698, "sha256": "a8e2c310007f5e6403865779806cc44df49297d24cc1d48a38c479b9403ced35"},
+    {"artifact_id": 11666028197, "name": "rust-plugin-runtime-Linux-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 2695, "sha256": "adb1e86f278e3257f83dff7e0ba382e60f48be4a312056b9d46c59fbbd080112"},
+    {"artifact_id": 11666257750, "name": "obsidian-vault-roundtrip-Linux-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 2701542, "sha256": "d5d867b5b2d36d242b735a96c61457dd91afb8bf0836abd5c74551542b1ac88e"},
+    {"artifact_id": 11665913087, "name": "obsidian-vault-roundtrip-macOS-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 3586085, "sha256": "a7ad8644e4d0171924a48c57ed71e6e27a201b79c2b62610928f07c8e2211669"},
+    {"artifact_id": 11665614075, "name": "obsidian-vault-roundtrip-Windows-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 3578849, "sha256": "d793b92bc84a9ec52281d9f96e490a12cfe9c1f0b7393de9b98553ccc2835e8c"},
+    {"artifact_id": 11666282677, "name": "openobsidian-Windows-preview-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 163005824, "sha256": "c10e36cecf405738396639d235931e30bd235f88c93d6d93c5c08bc25b97fc04"},
+    {"artifact_id": 11665838310, "name": "openobsidian-macOS-preview-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 397395487, "sha256": "6774218246e75ff86998471bf4cb578fbaae0a1fbc0cd48e44ec2dee25dff571"},
+    {"artifact_id": 11665598863, "name": "openobsidian-Linux-preview-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 125946548, "sha256": "929057000b40ab376e1f709e7c270587146cd5e410737a3b8652beaa2510080d"},
+    {"artifact_id": 11666257718, "name": "loaded-plugin-workflows-macOS-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 171494, "sha256": "e4c177b339c9c66d7efc37bb00381ab0ce3f783e1ba7f9c45cb9457519c6ce72"},
+    {"artifact_id": 11666227607, "name": "loaded-plugin-workflows-Linux-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 171484, "sha256": "e5e6bdb8de6590d3d2db70fe9d37ee23ddd315cff82c891acf70015c69d9af59"},
+    {"artifact_id": 11666117705, "name": "loaded-plugin-workflows-Windows-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 171480, "sha256": "a3773e5174d46093f768abf330b7c784ca676db67a9f56dbafc9394204c0c97f"},
+    {"artifact_id": 11666527189, "name": "plugin-renderer-lifecycle-Windows-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 3242, "sha256": "aad3c4731362fffb409a52fc850ce4d99d37f1528dc71be7245adf6f4ce855d7"},
+    {"artifact_id": 11666132690, "name": "plugin-renderer-lifecycle-Linux-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 3221, "sha256": "63ab66ec0bcb9de1220f54fe5f9e34892c320ebc54430d2cde8010f117f91a0e"},
+    {"artifact_id": 11666067827, "name": "plugin-renderer-lifecycle-macOS-d19d3d31e741d36d829f2eba5fb893e7453c70dc", "size_bytes": 3238, "sha256": "3db860cec30374a8252414928ab811fd969f2cd997fdd27a1761daf394d704ff"}
+  ],
+  "limitations": [
+    "This accepts only the safe preview preflight slice. Full C02.1 rendering and editing, including math, diagrams, wiki-link/highlight rendering, and safe HTML projection, remain incomplete.",
+    "The native preview shows original source when unsupported syntax appears; that source-only fallback is not a rendering implementation for those constructs.",
+    "The 16 KiB transclusion preview bound and 512 KiB source-read bound remain in effect."
+  ],
+  "local_validation": "None. Formatting, workspace tests, Clippy, layering, builds, UI probes and executable validation were inspected in GitHub Actions only."
+}

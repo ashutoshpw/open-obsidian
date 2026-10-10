@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T09:39:47Z",
+  "updated_at": "2026-10-10T09:51:41Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "88ce1530d8ee4f7a17fced2def6fe706a059c9ef",
-  "current_milestone": "R2.8.20",
-  "next_action": "Push the CI-guided R2.8.20 Clippy correction, then inspect exact-SHA GitHub Actions results before accepting this bounded slice. Keep C02.1 pending until the full dialect and editing contract is implemented.",
+  "last_reconciled_head": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+  "current_milestone": "R2.8.21",
+  "next_action": "R2.8.21: enable and verify native egui_commonmark footnote rendering with a dialect fixture case and egui UI coverage. Keep full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "85325d65d4fbd25eb9ee663525128ff661e0a3ab"
+      "implementation_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc"
     },
     "R3": {
       "status": "pending",
@@ -252,9 +252,10 @@
     "R2.8.1 / SYNC-002 interrupted-write recovery passed on exact source SHA c340ff19de41f3266573aa2afc34dee95c06e996; evidence: evidence/r2.8.1-interrupted-write-c340ff1.json.",
     "R2.8.2 / SYNC-001 conservative revision-aware three-way merge passed all seven required GitHub Actions workflows on exact source SHA 638ba85dd94826b77623a43709d458d13fa1c1e7; evidence: evidence/r2.8.2-revision-merge-638ba85.json.",
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
-    "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
+    "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending.",
+    "R2.8.20 safe Markdown preview preflight passed all seven required GitHub Actions workflows on exact source SHA d19d3d31e741d36d829f2eba5fb893e7453c70dc; evidence: evidence/r2.8.20-safe-preview-d19d3d3.json. C02.1 remains pending."
   ],
-  "push_status": "R2.8.19 tracker checkpoint SHA 74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62 is on origin/main. All six path-eligible workflows passed: Rust CI 38040236585, quality 38040236607, desktop build 38040236631, loaded-plugin workflows 38040236532, inventory 38040236595, and plugin renderer 38040236529. Obsidian vault round-trip was not path-eligible for the tracker-only change. The C04 implementation remains validated on caa403719337508bc3776403e87026c979453788. R2.8.20 is locally prepared and awaits exact-SHA CI; C02.1 remains pending.",
+  "push_status": "R2.8.20 implementation SHA d19d3d31e741d36d829f2eba5fb893e7453c70dc is on origin/main; all seven required GitHub Actions workflows passed for that exact SHA. The accepted safe-preview slice is recorded in evidence/r2.8.20-safe-preview-d19d3d3.json. Full C02.1 remains pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -9757,6 +9758,190 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38029254216/job/114146545947"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38042185233,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185233",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185233/job/114184468910"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185233/job/114184469006"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185233/job/114184469019"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38042185254,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185254",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185254/job/114184469213"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185254/job/114184469073"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185254/job/114184469212"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38042185235,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185235",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185235/job/114184469117"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38042185212,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185212",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185212/job/114184469031"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185212/job/114184469187"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185212/job/114184469194"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38042185173,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185173",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185173/job/114184468637"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185173/job/114184468840"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185173/job/114184468886"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38042185298,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185298",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185298/job/114184469219"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185298/job/114184469258"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185298/job/114184469523"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38042185291,
+      "head_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185291",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185291/job/114184469043"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185291/job/114184469200"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38042185291/job/114184469235"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -16323,21 +16508,55 @@
       "next_action": "C04 is accepted. R2.8.20 is the first bounded Rust C02.1 safe-preview slice; full C02 editing and workspace integration remain pending."
     },
     "R2.8.20": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "74d58cbf2abf32d90e1d554fd95ecfd6e82b0d62",
       "scope": "Add a read-only Rust Markdown dialect preflight to the document layer and use it to choose between the existing native renderer and a visible source-only fallback for unsupported transclusion syntax.",
-      "accepted_slice": [],
+      "accepted_slice": [
+        "C02.1:safe-preview-preflight"
+      ],
       "acceptance": [
         "Golden cases classify supported CommonMark preview content and known unsupported footnotes, math, diagram/plugin fences, raw HTML, wiki links, and highlights; marker-like text inside code is not misclassified.",
         "The native UI continues rendering the current CommonMark subset and displays the bounded source slice plus an explicit reason when unsupported syntax appears. Previewing does not change vault source bytes.",
         "The pinned pulldown-cmark 0.13.4 dependency, MIT license, renderer relationship, and known limitations are documented.",
         "All required GitHub Actions workflows for the exact implementation SHA pass; formatting, tests, Clippy, layering, builds, and executable validation run only in GitHub Actions."
       ],
+      "implementation_commits": [
+        "ffa7b6d76762ec12fe615dce26473da875de77c6",
+        "a787fe65c5035d784f95de8b7bf2aa62c05f57b8",
+        "26eb1df2c180d2516ee5e78e4ae13e5098829dd7",
+        "88ce1530d8ee4f7a17fced2def6fe706a059c9ef",
+        "d19d3d31e741d36d829f2eba5fb893e7453c70dc"
+      ],
+      "validated_source_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "ci_runs": {
+        "rust_ci": 38042185233,
+        "obsidian_vault_roundtrip": 38042185254,
+        "inventory": 38042185235,
+        "loaded_plugins": 38042185212,
+        "desktop_build": 38042185173,
+        "quality": 38042185298,
+        "plugin_renderer": 38042185291
+      },
+      "evidence": "evidence/r2.8.20-safe-preview-d19d3d3.json",
+      "next_action": "R2.8.21: enable and verify native egui_commonmark footnote rendering with a dialect fixture case and egui UI coverage. Keep full C02.1 pending.",
+      "source_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc"
+    },
+    "R2.8.21": {
+      "status": "in_progress",
+      "starting_sha": "d19d3d31e741d36d829f2eba5fb893e7453c70dc",
+      "scope": "Render Markdown footnotes through the existing egui_commonmark path where the pinned renderer supports them, instead of forcing an unnecessary source-only fallback.",
+      "accepted_slice": [],
+      "acceptance": [
+        "The C02 dialect fixture records footnotes as rendered by the current native renderer while preserving the original source bytes.",
+        "Native egui UI coverage shows the footnote reference and definition without an unsupported-syntax fallback notice.",
+        "Other unsupported dialects continue to show the original source with a visible reason.",
+        "All required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
       "implementation_commits": [],
       "validated_source_sha": null,
       "ci_runs": {},
       "evidence": null,
-      "next_action": "R2.8.20 remains in progress: push the Clippy correction and inspect all seven required workflows on its exact source SHA. Keep C02.1 pending because full dialect rendering and editing remain incomplete."
+      "next_action": "Implement the focused footnote rendering slice, then push it to origin/main for exact-SHA GitHub Actions validation."
     }
   },
   "ci_preparation": {
