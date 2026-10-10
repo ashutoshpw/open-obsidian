@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T10:54:00Z",
+  "updated_at": "2026-10-10T11:03:24Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "915653c0f2b491eb888cb52aba0bec63412563cb",
-  "current_milestone": "R2.8.22",
-  "next_action": "R2.8.22 is accepted on 915653c0f2b491eb888cb52aba0bec63412563cb. Continue with the next focused C02.1 Markdown preview slice while keeping full C02.1 pending.",
+  "current_milestone": "R2.8.23",
+  "next_action": "Implement a bounded C02.1 Markdown preflight slice: respect backslash escape parity for highlight markers. Keep full C02.1 pending and run all executable validation in GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16602,6 +16602,25 @@
       },
       "evidence": "evidence/r2.8.22-native-task-checkboxes-915653c.json",
       "next_action": "R2.8.22 is accepted; continue the incomplete C02.1 Markdown preview work in another focused slice."
+    },
+    "R2.8.23": {
+      "status": "in_progress",
+      "starting_sha": "f0a668941739f31513e60082b89891b6684796f2",
+      "scope": "Treat backslash-escaped highlight delimiters as literal text while retaining source-only fallback for active highlight syntax.",
+      "accepted_slice": [
+        "C02.1:escaped-markdown-highlight-delimiters"
+      ],
+      "acceptance": [
+        "An odd-length backslash run before a highlight opener leaves it literal and permits normal Markdown rendering.",
+        "An even-length backslash run leaves the highlight opener active and selects the source-only fallback.",
+        "An unescaped highlight continues to select the visible source fallback; syntax classification does not mutate the original source.",
+        "The shared dialect fixture and its inventory SHA-256 are updated for both escape-parity cases.",
+        "Focused Rust tests and all seven required GitHub Actions workflows pass on the exact implementation SHA; all executable validation runs in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_runs": {},
+      "evidence": null,
+      "next_action": "Commit and push the focused escape-parity slice, then use exact-SHA GitHub Actions results to accept or correct it; keep full C02.1 pending."
     }
   },
   "ci_preparation": {

@@ -109,6 +109,18 @@
         "unsupported_syntax": ["highlights"]
       },
       {
+        "id": "escaped-highlight-opener-is-literal",
+        "source": "Keep \\==this phrase== as literal text.",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
+      },
+      {
+        "id": "even-backslash-run-keeps-highlight-active",
+        "source": "Keep \\\\==this phrase== as an active highlight.",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["highlights"]
+      },
+      {
         "id": "mixed-supported-and-unsupported",
         "source": "# Kept as source\n\n<script>unsafe()</script>\n\nA formula $x$.",
         "expected_disposition": "show-source",

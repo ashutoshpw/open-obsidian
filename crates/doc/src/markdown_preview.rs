@@ -71,7 +71,8 @@ impl MarkdownPreviewAnalysis {
 /// Known syntax outside that renderer's current contract takes a source-only fallback, so the
 /// UI does not silently flatten math, diagram fences, raw HTML, wiki links, or highlights.
 /// Footnotes are supported by the pinned renderer. Inline markers inside fenced, indented, and
-/// inline code are not dialect syntax.
+/// inline code are not dialect syntax. Backslash-escaped highlight openers remain literal text
+/// and do not force the source-only fallback.
 pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
     let mut unsupported = Vec::new();
     let mut inline_code_spans = Vec::new();
@@ -207,14 +208,26 @@ fn scan_source_only_syntax(
                 while run_end < bytes.len() && bytes[run_end] == b'\\' {
                     run_end += 1;
                 }
+                let odd_backslash_run = (run_end - cursor) % 2 == 1;
                 if !inside_inline_code(inline_code_spans, source_offset + cursor)
-                    && (run_end - cursor) % 2 == 1
+                    && odd_backslash_run
                     && run_end < bytes.len()
                     && matches!(bytes[run_end], b'(' | b'[' | b')' | b']')
                 {
                     push_once(unsupported, MarkdownUnsupportedSyntax::Math);
                 }
-                cursor = run_end;
+                // CommonMark's backslash escapes quote punctuation. Consume the first equals
+                // sign in an escaped highlight opener so the scanner does not mistake the second
+                // one for a fresh delimiter. Even-length backslash runs retain their normal
+                // behavior: the following opener is still active syntax.
+                cursor = if odd_backslash_run
+                    && run_end < bytes.len()
+                    && bytes[run_end] == b'='
+                {
+                    run_end + 1
+                } else {
+                    run_end
+                };
                 continue;
             }
 
