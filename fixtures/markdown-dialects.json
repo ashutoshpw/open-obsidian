@@ -51,6 +51,18 @@
     "source": "\uFEFF# Explicit source editing\r\n\r\nKeep this wiki embed literal: ![[Missing note]]\r\n\r\n%% Preserve this unknown extension.\r\n",
     "expected_after_edit": "\uFEFF# Explicit source editing\r\n\r\nKeep this wiki embed literal: ![[Missing note]]\r\n\r\n%% Preserve this unknown extension.\r\nSource edit"
   },
+  "editor_modes": {
+    "supported_source": "# Mode switching fixture\n\nOriginal preview paragraph.\n",
+    "draft_source": "# Edited mode heading\n\nEdited preview paragraph.\n",
+    "golden_roundtrip": {
+      "source": "\uFEFF---\r\n# Keep this YAML comment\r\nstatus: open\r\nunknown: [keep, {nested: true}]\r\n---\r\n# Byte fidelity\r\n\r\nKeep trailing spaces:  \r\n\r\n%% Keep this Markdown comment.\r\n",
+      "approved_edit": {
+        "before": "status: open",
+        "after": "status: done"
+      },
+      "expected_after_edit": "\uFEFF---\r\n# Keep this YAML comment\r\nstatus: done\r\nunknown: [keep, {nested: true}]\r\n---\r\n# Byte fidelity\r\n\r\nKeep trailing spaces:  \r\n\r\n%% Keep this Markdown comment.\r\n"
+    }
+  },
   "table_editing": {
     "mode": "explicit-source-draft",
     "edit": "change one table cell value",

@@ -2950,3 +2950,7 @@ Mapped the three legacy editor modes to the Rust note preview UI, existing fixtu
 Next: push this tracker update and obtain its exact-SHA inventory result. Then implement the three explicit native modes and a composite byte-preservation fixture as R2.8.69; keep validation in GitHub Actions only.
 
 R2.8.68 tracker checkpoint: inventory [run 38094389705](https://github.com/ashutoshpw/open-obsidian/actions/runs/38094389705), job 114337166754, passed for tracker SHA 54e9574d0235beaadb5e49f7b8850d973b028989. R2.8.69 is in progress.
+
+### R2.8.69 implementation prepared — native Markdown modes
+
+Added Source, Live preview, and Reading controls to the bounded native note workflow. Live preview can show the source draft and rendered result together; Reading hides source-edit controls and retains an unsaved draft; Source focuses the raw source editor. Added fixture-driven mode transitions and a composite exact-byte save case carrying BOM, CRLF, a YAML comment, unknown frontmatter, significant trailing spaces, and a Markdown comment. Updated the Markdown architecture note and reconciled the changed fixture hash in the inventory. This slice has not yet been validated; push it and use exact-SHA GitHub Actions only. Parent C02 remains pending.

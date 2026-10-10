@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T23:15:35Z",
+  "updated_at": "2026-10-10T23:21:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "54e9574d0235beaadb5e49f7b8850d973b028989",
   "current_milestone": "R2.8.69",
-  "next_action": "R2.8.68 audit tracker checkpoint passed inventory on SHA 54e9574d0235beaadb5e49f7b8850d973b028989 (run 38094389705). Implement explicit Source, Live preview, and Reading modes in the native Markdown workflow. Preserve drafts and the existing revision-checked write path across mode switches; add cross-platform mode and byte-preservation UI coverage. Keep C02 pending until the whole parent criterion passes. Use GitHub Actions only for executable validation.",
+  "next_action": "R2.8.69 implementation is prepared with explicit Source, Live preview, and Reading controls, retained revision-bound drafts, fixture-driven mode interaction and exact-byte round-trip coverage, architecture documentation, and the reconciled fixture inventory hash. Commit and push this slice, then inspect exact-SHA GitHub Actions across the required workflows. No local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19724,7 +19724,7 @@
         "All seven required GitHub Actions workflows pass for the implementation SHA, including focused egui coverage on Ubuntu, macOS, and Windows. No local executable validation."
       ],
       "implementation_commits": [],
-      "next_action": "Inspect the current preview state, rendering helpers and egui test harness; then add a native mode enum and mode-specific UI/tests. Keep source writes revision-checked and keep drafts intact when changing modes."
+      "next_action": "Commit and push the mode UI, fixture, documentation, and inventory hash as one focused implementation slice. Inspect all exact-SHA GitHub Actions runs and correct any failures using CI output only. Keep parent C02 pending until its full acceptance passes."
     }
   },
   "ci_preparation": {

@@ -76,6 +76,14 @@ struct NoteSourcePreview {
     wiki_link_resolution_error: Option<String>,
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+enum NoteSourceMode {
+    Source,
+    #[default]
+    LivePreview,
+    Reading,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum NotePreviewWriteKind {
     TaskCheckbox,
@@ -223,6 +231,7 @@ struct OpenObsidianApp {
     link_error: Option<String>,
     link_status: Option<String>,
     note_source_preview: Option<NoteSourcePreview>,
+    note_source_mode: NoteSourceMode,
     note_preview_receiver: Option<NotePreviewReceiver>,
     note_preview_write_receiver: Option<NotePreviewWriteReceiver>,
     note_preview_write_kind: Option<NotePreviewWriteKind>,
@@ -866,193 +875,248 @@ impl OpenObsidianApp {
                                 .desired_width(f32::INFINITY)
                                 .interactive(false),
                         );
-                    } else if source_editing {
-                        ui.small(format!(
-                            "Edit the complete note as plain UTF-8 source. The draft must fit within the {} KiB write limit; unsupported Markdown remains literal source.",
-                            MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
-                        ));
-                        if let (Some(draft), Some(revision_sha256)) = (
-                            preview.source_draft.as_mut(),
-                            preview.revision_sha256.as_ref(),
-                        ) {
-                            let editor_label = ui.label("Markdown source editor");
-                            ui.add(
-                                eframe::egui::TextEdit::multiline(draft)
-                                    .id_salt("markdown-source-editor")
-                                    .font(eframe::egui::TextStyle::Monospace)
-                                    .desired_rows(16)
-                                    .desired_width(f32::INFINITY)
-                                    .cursor_at_end(true),
-                            )
-                            .labelled_by(editor_label.id);
-                            let source_bytes = draft.as_bytes().to_vec();
-                            let draft_fits_limit = source_bytes.len()
-                                <= MAX_NOTE_SOURCE_PREVIEW_BYTES;
-                            if !draft_fits_limit {
-                                ui.colored_label(
-                                    eframe::egui::Color32::YELLOW,
-                                    "The edited source exceeds the 16 KiB write limit.",
-                                );
-                            }
-                            ui.horizontal(|ui| {
-                                let save_enabled = !operation_busy
-                                    && !write_busy
-                                    && draft_fits_limit
-                                    && preview.revision_sha256.is_some();
-                                if ui
-                                    .add_enabled(
-                                        save_enabled,
-                                        eframe::egui::Button::new("Save source edits"),
-                                    )
-                                    .clicked()
-                                {
-                                    source_write = Some((
-                                        preview.relative_path.clone(),
-                                        source_bytes,
-                                        revision_sha256.clone(),
-                                    ));
-                                }
-                                if ui
-                                    .add_enabled(
-                                        !write_busy,
-                                        eframe::egui::Button::new("Cancel source edits"),
-                                    )
-                                    .clicked()
-                                {
-                                    cancel_source_edit = true;
-                                }
-                            });
-                        } else {
-                            ui.colored_label(
-                                eframe::egui::Color32::YELLOW,
-                                "This preview no longer has a current revision. Read it again before editing.",
-                            );
-                        }
                     } else {
-                        if !operation_busy
-                            && !write_busy
-                            && preview.revision_sha256.is_some()
-                            && ui.button("Edit Markdown source").clicked()
-                        {
-                            begin_source_edit = true;
-                        }
-                        if preview.revision_sha256.is_none() {
-                            ui.small("Read the preview again before editing its source.");
-                        }
+                        ui.horizontal_wrapped(|ui| {
+                            ui.label("Mode:");
+                            ui.add_enabled_ui(!operation_busy && !write_busy, |ui| {
+                                ui.selectable_value(
+                                    &mut self.note_source_mode,
+                                    NoteSourceMode::Source,
+                                    "Source",
+                                );
+                                ui.selectable_value(
+                                    &mut self.note_source_mode,
+                                    NoteSourceMode::LivePreview,
+                                    "Live preview",
+                                );
+                                ui.selectable_value(
+                                    &mut self.note_source_mode,
+                                    NoteSourceMode::Reading,
+                                    "Reading",
+                                );
+                            });
+                        });
 
-                        let preview_analysis = analyze_markdown_preview(&preview.text);
-                        let renderable_wiki_links = renderable_wiki_link_resolutions(
-                            preview,
-                            &preview_analysis,
-                        );
-                        if preview_analysis.disposition()
-                            == MarkdownPreviewDisposition::RenderMarkdown
-                            || renderable_wiki_links.is_some()
-                        {
-                            let projected_preview = renderable_wiki_links.is_some()
-                                || !preview_analysis.inline_highlight_spans().is_empty()
-                                || preview_analysis
-                                    .native_render_source(&preview.text)
-                                    .as_ref()
-                                    != preview.text.as_str();
-                            ui.small("Markdown preview");
-                            if projected_preview {
-                                ui.small(
-                                    "This projected Markdown preview is read-only. Use Edit Markdown source to change it.",
-                                );
-                            } else {
-                                ui.small(
-                                    "Task checkbox changes save only when this complete preview has a current revision and other vault work is idle.",
-                                );
-                            }
-                            eframe::egui::ScrollArea::vertical()
-                                .id_salt("note-source-markdown-preview")
-                                .max_height(280.0)
-                                .show(ui, |ui| {
-                                    if projected_preview {
-                                        if let Some(links) = &renderable_wiki_links {
-                                            wiki_link_navigation = show_resolved_wiki_link_preview(
-                                                ui,
-                                                &preview.text,
-                                                links,
-                                            );
-                                        } else {
-                                            show_markdown_preview(
-                                                ui,
-                                                &mut self.markdown_cache,
-                                                &self.math_renderer_cache,
-                                                &preview.text,
-                                            );
-                                        }
-                                    } else if !operation_busy
-                                        && !write_busy
-                                        && let Some(revision_sha256) =
-                                            preview.revision_sha256.as_ref()
-                                    {
-                                        let math_callback =
-                                            math_render_callback(Rc::clone(&self.math_renderer_cache));
-                                        let response = CommonMarkViewer::new()
-                                            .render_math_fn(Some(&math_callback))
-                                            .show_mut(
-                                                ui,
-                                                &mut self.markdown_cache,
-                                                &mut preview.text,
+                        if self.note_source_mode != NoteSourceMode::Reading {
+                            if source_editing {
+                                ui.small(format!(
+                                    "Edit the complete note as plain UTF-8 source. The draft must fit within the {} KiB write limit; unsupported Markdown remains literal source.",
+                                    MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
+                                ));
+                                if let (Some(draft), Some(revision_sha256)) = (
+                                    preview.source_draft.as_mut(),
+                                    preview.revision_sha256.as_ref(),
+                                ) {
+                                    let editor_label = ui.label("Markdown source editor");
+                                    ui.add(
+                                        eframe::egui::TextEdit::multiline(draft)
+                                            .id_salt("markdown-source-editor")
+                                            .font(eframe::egui::TextStyle::Monospace)
+                                            .desired_rows(16)
+                                            .desired_width(f32::INFINITY)
+                                            .cursor_at_end(true),
+                                    )
+                                    .labelled_by(editor_label.id);
+                                    let source_bytes = draft.as_bytes().to_vec();
+                                    let draft_fits_limit = source_bytes.len()
+                                        <= MAX_NOTE_SOURCE_PREVIEW_BYTES;
+                                    if !draft_fits_limit {
+                                        ui.colored_label(
+                                            eframe::egui::Color32::YELLOW,
+                                            "The edited source exceeds the 16 KiB write limit.",
+                                        );
+                                    }
+                                    ui.horizontal(|ui| {
+                                        let save_enabled = !operation_busy
+                                            && !write_busy
+                                            && draft_fits_limit
+                                            && preview.revision_sha256.is_some();
+                                        if ui
+                                            .add_enabled(
+                                                save_enabled,
+                                                eframe::egui::Button::new("Save source edits"),
                                             )
-                                            .response;
-                                        if response.changed() {
-                                            task_write = Some((
+                                            .clicked()
+                                        {
+                                            source_write = Some((
                                                 preview.relative_path.clone(),
-                                                preview.text.as_bytes().to_vec(),
+                                                source_bytes,
                                                 revision_sha256.clone(),
                                             ));
                                         }
-                                    } else {
-                                        let math_callback =
-                                            math_render_callback(Rc::clone(&self.math_renderer_cache));
-                                        CommonMarkViewer::new()
-                                            .render_math_fn(Some(&math_callback))
-                                            .show(
-                                                ui,
-                                                &mut self.markdown_cache,
-                                                &preview.text,
-                                            );
+                                        if ui
+                                            .add_enabled(
+                                                !write_busy,
+                                                eframe::egui::Button::new("Cancel source edits"),
+                                            )
+                                            .clicked()
+                                        {
+                                            cancel_source_edit = true;
+                                        }
+                                    });
+                                } else {
+                                    ui.colored_label(
+                                        eframe::egui::Color32::YELLOW,
+                                        "This preview no longer has a current revision. Read it again before editing.",
+                                    );
+                                }
+                            } else {
+                                ui.small("Original Markdown source");
+                                ui.add(
+                                    eframe::egui::TextEdit::multiline(&mut preview.text)
+                                        .font(eframe::egui::TextStyle::Monospace)
+                                        .desired_rows(8)
+                                        .desired_width(f32::INFINITY)
+                                        .interactive(false),
+                                );
+                                if preview.revision_sha256.is_some() {
+                                    if !operation_busy
+                                        && !write_busy
+                                        && ui.button("Edit Markdown source").clicked()
+                                    {
+                                        begin_source_edit = true;
                                     }
-                                });
-                        } else {
-                            let unsupported = analyze_markdown_preview(&preview.text)
-                                .unsupported()
-                                .iter()
-                                .map(|syntax| syntax.label())
-                                .collect::<Vec<_>>()
-                                .join(", ");
-                            ui.colored_label(
-                                eframe::egui::Color32::YELLOW,
-                                format!(
-                                    "Unsupported Markdown ({unsupported}); showing the source as written."
-                                ),
+                                } else {
+                                    ui.small("Read the preview again before editing its source.");
+                                }
+                            }
+                        } else if source_editing {
+                            ui.small(
+                                "This Reading view includes an unsaved source draft. Switch to Source or Live preview to review or save it.",
                             );
-                            if let Some(error) = &preview.wiki_link_resolution_error {
-                                ui.colored_label(eframe::egui::Color32::YELLOW, error);
-                            } else if preview_analysis
-                                .unsupported()
-                                .contains(&MarkdownUnsupportedSyntax::WikiLinks)
-                                && preview.wiki_links_revision_sha256.as_deref()
-                                    != preview.revision_sha256.as_deref()
+                        }
+
+                        if self.note_source_mode != NoteSourceMode::Source {
+                            let mut render_source = preview
+                                .source_draft
+                                .clone()
+                                .unwrap_or_else(|| preview.text.clone());
+                            let preview_analysis = analyze_markdown_preview(&render_source);
+                            let renderable_wiki_links = if source_editing {
+                                None
+                            } else {
+                                renderable_wiki_link_resolutions(preview, &preview_analysis)
+                            };
+                            if preview_analysis.disposition()
+                                == MarkdownPreviewDisposition::RenderMarkdown
+                                || renderable_wiki_links.is_some()
                             {
-                                ui.small(
-                                    "Read the note preview again to refresh resolved wiki links.",
+                                let projected_preview = renderable_wiki_links.is_some()
+                                    || !preview_analysis.inline_highlight_spans().is_empty()
+                                    || preview_analysis
+                                        .native_render_source(&render_source)
+                                        .as_ref()
+                                        != render_source.as_str();
+                                ui.small("Markdown preview");
+                                if self.note_source_mode == NoteSourceMode::Reading
+                                    && source_editing
+                                {
+                                    ui.small("This preview reflects the unsaved source draft.");
+                                } else if projected_preview {
+                                    ui.small(
+                                        "This projected Markdown preview is read-only. Use Edit Markdown source to change it.",
+                                    );
+                                } else if source_editing {
+                                    ui.small(
+                                        "This preview reflects the source editor. Save to write it to the vault.",
+                                    );
+                                } else {
+                                    ui.small(
+                                        "Task checkbox changes save only when this complete preview has a current revision and other vault work is idle.",
+                                    );
+                                }
+                                eframe::egui::ScrollArea::vertical()
+                                    .id_salt("note-source-markdown-preview")
+                                    .max_height(280.0)
+                                    .show(ui, |ui| {
+                                        if projected_preview {
+                                            if let Some(links) = &renderable_wiki_links {
+                                                wiki_link_navigation =
+                                                    show_resolved_wiki_link_preview(
+                                                        ui,
+                                                        &render_source,
+                                                        links,
+                                                    );
+                                            } else {
+                                                show_markdown_preview(
+                                                    ui,
+                                                    &mut self.markdown_cache,
+                                                    &self.math_renderer_cache,
+                                                    &render_source,
+                                                );
+                                            }
+                                        } else if !source_editing
+                                            && !operation_busy
+                                            && !write_busy
+                                            && let Some(revision_sha256) =
+                                                preview.revision_sha256.as_ref()
+                                        {
+                                            let math_callback = math_render_callback(Rc::clone(
+                                                &self.math_renderer_cache,
+                                            ));
+                                            let response = CommonMarkViewer::new()
+                                                .render_math_fn(Some(&math_callback))
+                                                .show_mut(
+                                                    ui,
+                                                    &mut self.markdown_cache,
+                                                    &mut preview.text,
+                                                )
+                                                .response;
+                                            if response.changed() {
+                                                task_write = Some((
+                                                    preview.relative_path.clone(),
+                                                    preview.text.as_bytes().to_vec(),
+                                                    revision_sha256.clone(),
+                                                ));
+                                            }
+                                        } else {
+                                            let math_callback = math_render_callback(Rc::clone(
+                                                &self.math_renderer_cache,
+                                            ));
+                                            CommonMarkViewer::new()
+                                                .render_math_fn(Some(&math_callback))
+                                                .show(
+                                                    ui,
+                                                    &mut self.markdown_cache,
+                                                    &render_source,
+                                                );
+                                        }
+                                    });
+                            } else {
+                                let unsupported = preview_analysis
+                                    .unsupported()
+                                    .iter()
+                                    .map(|syntax| syntax.label())
+                                    .collect::<Vec<_>>()
+                                    .join(", ");
+                                ui.colored_label(
+                                    eframe::egui::Color32::YELLOW,
+                                    format!(
+                                        "Unsupported Markdown ({unsupported}); showing the source as written."
+                                    ),
+                                );
+                                if let Some(error) = &preview.wiki_link_resolution_error {
+                                    ui.colored_label(eframe::egui::Color32::YELLOW, error);
+                                } else if preview_analysis
+                                    .unsupported()
+                                    .contains(&MarkdownUnsupportedSyntax::WikiLinks)
+                                    && preview.wiki_links_revision_sha256.as_deref()
+                                        != preview.revision_sha256.as_deref()
+                                {
+                                    ui.small(
+                                        "Read the note preview again to refresh resolved wiki links.",
+                                    );
+                                }
+                                ui.small("Original Markdown source");
+                                ui.add(
+                                    eframe::egui::TextEdit::multiline(&mut render_source)
+                                        .font(eframe::egui::TextStyle::Monospace)
+                                        .desired_rows(8)
+                                        .desired_width(f32::INFINITY)
+                                        .interactive(false),
                                 );
                             }
                         }
-
-                        ui.small("Original Markdown source");
-                        ui.add(
-                            eframe::egui::TextEdit::multiline(&mut preview.text)
-                                .font(eframe::egui::TextStyle::Monospace)
-                                .desired_rows(8)
-                                .desired_width(f32::INFINITY)
-                                .interactive(false),
-                        );
                     }
 
                     if preview.truncated {
@@ -4984,6 +5048,211 @@ mod tests {
         harness.state_mut().start_vault_refresh();
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().note_source_preview.is_none());
+    }
+
+    #[test]
+    fn egui_markdown_modes_keep_drafts_and_show_distinct_surfaces() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let modes = &fixture["editor_modes"];
+        let source = modes["supported_source"]
+            .as_str()
+            .expect("mode fixture must include supported source");
+        let draft = modes["draft_source"]
+            .as_str()
+            .expect("mode fixture must include edited source");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Original Markdown source");
+        harness.get_by_label("Markdown preview");
+
+        harness.get_by_label("Source").click();
+        harness.step();
+        assert!(harness.query_by_label("Markdown preview").is_none());
+        harness.get_by_label("Original Markdown source");
+        harness.get_by_label("Edit Markdown source").click();
+        harness.step();
+        harness.get_by_role_and_label(
+            eframe::egui::accesskit::Role::MultilineTextInput,
+            "Markdown source editor",
+        );
+        harness
+            .state_mut()
+            .note_source_preview
+            .as_mut()
+            .expect("source preview remains open")
+            .source_draft = Some(draft.to_owned());
+        harness.step();
+
+        harness.get_by_label("Live preview").click();
+        harness.step();
+        harness.get_by_role_and_label(
+            eframe::egui::accesskit::Role::MultilineTextInput,
+            "Markdown source editor",
+        );
+        harness.get_by_label("Markdown preview");
+        harness.get_by_label("Edited mode heading");
+        harness.get_by_label("This preview reflects the unsaved source draft.");
+
+        harness.get_by_label("Reading").click();
+        harness.step();
+        harness.get_by_label("Markdown preview");
+        harness.get_by_label("Edited mode heading");
+        assert!(harness.query_by_label("Markdown source editor").is_none());
+        assert!(harness.query_by_label("Edit Markdown source").is_none());
+        assert!(harness.query_by_label("Original Markdown source").is_none());
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(draft)
+        );
+
+        harness.get_by_label("Source").click();
+        harness.step();
+        harness.get_by_role_and_label(
+            eframe::egui::accesskit::Role::MultilineTextInput,
+            "Markdown source editor",
+        );
+        assert!(harness.query_by_label("Markdown preview").is_none());
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(draft)
+        );
+
+        harness.get_by_label("Cancel source edits").click();
+        harness.step();
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("source preview remains open after cancel");
+        assert!(preview.source_draft.is_none());
+        assert_eq!(preview.text, source);
+
+        harness.get_by_label("Reading").click();
+        harness.step();
+        harness.get_by_label("Original preview paragraph.");
+        assert!(harness.query_by_label("Original Markdown source").is_none());
+    }
+
+    #[test]
+    fn egui_markdown_mode_roundtrip_preserves_the_approved_source_span() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let golden = &fixture["editor_modes"]["golden_roundtrip"];
+        let source = golden["source"]
+            .as_str()
+            .expect("mode fixture must include golden source");
+        let approved_edit = &golden["approved_edit"];
+        let before = approved_edit["before"]
+            .as_str()
+            .expect("approved edit must include original text");
+        let after = approved_edit["after"]
+            .as_str()
+            .expect("approved edit must include replacement text");
+        assert_eq!(source.matches(before).count(), 1);
+        let expected = source.replacen(before, after, 1);
+        assert_eq!(
+            expected.as_str(),
+            golden["expected_after_edit"]
+                .as_str()
+                .expect("mode fixture must include exact expected bytes")
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Source").click();
+        harness.step();
+        harness.get_by_label("Edit Markdown source").click();
+        harness.step();
+        harness
+            .get_by_role_and_label(
+                eframe::egui::accesskit::Role::MultilineTextInput,
+                "Markdown source editor",
+            )
+            .click();
+        harness.step();
+        harness.key_press_modifiers(eframe::egui::Modifiers::COMMAND, eframe::egui::Key::A);
+        harness.step();
+        harness.event(eframe::egui::Event::Paste(expected.clone()));
+        harness.step();
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(expected.as_str())
+        );
+
+        harness.get_by_label("Reading").click();
+        harness.step();
+        assert!(harness.query_by_label("Markdown source editor").is_none());
+        harness.get_by_label(
+            "This Reading view includes an unsaved source draft. Switch to Source or Live preview to review or save it.",
+        );
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(expected.as_str())
+        );
+        harness.get_by_label("Live preview").click();
+        harness.step();
+        harness.get_by_role_and_label(
+            eframe::egui::accesskit::Role::MultilineTextInput,
+            "Markdown source editor",
+        );
+
+        harness.get_by_label("Save source edits").click();
+        harness.step();
+        assert!(harness.state().note_preview_write_receiver.is_some());
+        wait_for_note_preview_write(&mut harness);
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            expected.as_bytes().to_vec()
+        );
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("saved source preview remains open");
+        assert_eq!(preview.text.as_bytes(), expected.as_bytes());
+        assert!(preview.source_draft.is_none());
+        assert!(preview.revision_sha256.is_some());
     }
 
     #[test]
