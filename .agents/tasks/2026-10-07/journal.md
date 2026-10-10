@@ -2842,4 +2842,6 @@ Accepted slice: the canonical allowlisted `<br>` fixture renders as a native har
 
 Use the existing footnote C02.1 fixture to verify the preview selects RenderMarkdown, exposes the reference sentence and definition body, and preserves the original source bytes. Convert the direct-string egui case to fixture-driven coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
+R2.8.60 tracker checkpoint: inventory [run 38088389129](https://github.com/ashutoshpw/open-obsidian/actions/runs/38088389129), job 114319596343, passed for tracker SHA 645f73ce00ff9e36988f019c922a74676e46a2f2.
+
 R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.
