@@ -3036,8 +3036,8 @@ mod tests {
         harness.step();
         harness.get_by_label("Math rendering failed or exceeded image limits; showing the source.");
         harness.get_by_label(&format!("$$\n\n{expression}\n\n$$"));
-        harness.get_by_label("Before");
-        harness.get_by_label("after the formula.");
+        harness.get_by_label("Before the formula:");
+        harness.get_by_label("After the formula.");
     }
 
     #[test]

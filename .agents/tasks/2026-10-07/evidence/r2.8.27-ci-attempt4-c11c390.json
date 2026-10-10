@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.27",
+  "attempt": 4,
+  "source_sha": "c11c3900a7f1c59dd2a3a4122bcac93542c90d2e",
+  "conclusion": "failure",
+  "required_workflows": {
+    "rust_ci": {
+      "run_id": 38057847412,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847412",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114229874612,
+          "conclusion": "failure"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114229874741,
+          "conclusion": "failure"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114229874785,
+          "conclusion": "failure"
+        }
+      ],
+      "failure_summary": "The math error UI test queried the label 'Before'; the rendered egui tree reports 'Before the formula:'. The source assertion now uses the observed label. The rest of the workspace tests passed."
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38057847433,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847433",
+      "attempts": [
+        {
+          "attempt": 1,
+          "windows_job_id": 114229874963,
+          "windows_conclusion": "failure",
+          "linux_job_id": 114229875083,
+          "linux_conclusion": "success",
+          "macos_job_id": 114229874824,
+          "macos_conclusion": "success"
+        },
+        {
+          "attempt": 2,
+          "windows_job_id": 114230941336,
+          "windows_conclusion": "failure",
+          "linux_job_id": 114230942267,
+          "linux_conclusion": "success",
+          "macos_job_id": 114230942661,
+          "macos_conclusion": "success"
+        }
+      ],
+      "failure_summary": "The Windows runner's Chocolatey request for Tesseract returned HTTP 504 on both attempts. The install step continued, then the audit could not find tesseract.exe. The workflow now retries Tesseract installation and checks for the executable before adding its directory to PATH."
+    },
+    "inventory": {
+      "run_id": 38057847426,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847426",
+      "conclusion": "success"
+    },
+    "loaded_plugins": {
+      "run_id": 38057847408,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847408",
+      "conclusion": "success"
+    },
+    "desktop_build": {
+      "run_id": 38057847396,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847396",
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38057847418,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847418",
+      "conclusion": "success"
+    },
+    "plugin_renderer": {
+      "run_id": 38057847404,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38057847404",
+      "conclusion": "success"
+    }
+  },
+  "local_validation": "none; use GitHub Actions only",
+  "next": "Commit the UI label and Windows OCR workflow corrections and validate all seven workflows on the resulting exact SHA."
+}

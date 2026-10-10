@@ -2259,6 +2259,16 @@
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase."
     },
     {
+      "path": ".github/workflows/obsidian-vault-roundtrip.yml",
+      "sha256": "e14ef3b1c647d23df5435e30e4dd53cabb728b1c9ba2d4e7b28fbd77b0d3d7bf",
+      "rust_owner": "xtask",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "reconciliation_reason": "Added to the tracked workflow inventory while hardening Windows OCR setup after repeated Chocolatey feed HTTP 504 responses; installation now retries and verifies tesseract.exe before the audit continues.",
+      "migration_phase": "R0",
+      "purpose": "Runs the pinned Obsidian vault round-trip acceptance flow across Linux, macOS, and Windows using GitHub Actions only."
+    },
+    {
       "path": ".github/workflows/plugin-loaded-workflows.yml",
       "sha256": "d83a7d01f6d0d7aacba100190fbeed6d50c2d400c66658c0c8b26a76de787903",
       "rust_owner": "xtask",
