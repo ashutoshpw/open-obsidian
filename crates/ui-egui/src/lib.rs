@@ -3979,7 +3979,17 @@ mod tests {
 
     #[test]
     fn egui_renders_markdown_tables_without_source_fallback() {
-        let source = "| Name | Value |\n| --- | ---: |\n| note | 3 |";
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "commonmark-basics")
+            .expect("Markdown dialect fixture must include CommonMark basics");
+        let source = case["source"]
+            .as_str()
+            .expect("CommonMark basics fixture must include source");
         let original = source.as_bytes().to_vec();
         assert_eq!(
             analyze_markdown_preview(source).disposition(),
