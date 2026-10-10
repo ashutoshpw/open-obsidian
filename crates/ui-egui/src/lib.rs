@@ -3354,6 +3354,40 @@ mod tests {
     }
 
     #[test]
+    fn egui_keeps_simple_wiki_link_fixture_source_only() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "wiki-link")
+            .expect("Markdown dialect fixture must include a simple wiki link");
+        let source = case["source"]
+            .as_str()
+            .expect("wiki-link fixture must include source");
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::ShowSource
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label(
+            "Unsupported Markdown (wiki links); showing the source as written.",
+        );
+        harness.get_by_label(source);
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_shows_source_for_legacy_delimited_math() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");
