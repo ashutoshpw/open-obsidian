@@ -2168,3 +2168,7 @@ The CI-reported rustfmt and Clippy corrections from the first source attempt (`c
 The fixture's mapping-key projection slice is passing. Full C04 property semantics, structured editor integration, and C02/C02.1 dialect rendering remain pending. No local tests, builds, formatting, Clippy or application launches were run.
 
 Next: review the remaining C04 requirements and fixtures, then define the next focused parser or edit-safety slice.
+
+### R2.8.17 tracker checkpoint accepted — SHA `981fd0d8e08bbffd99d95e54a8996cc271e37a25`
+
+The six path-eligible tracker workflows passed: Rust CI [38036889732](https://github.com/ashutoshpw/open-obsidian/actions/runs/38036889732), inventory [38036889892](https://github.com/ashutoshpw/open-obsidian/actions/runs/38036889892), loaded-plugin workflows [38036889848](https://github.com/ashutoshpw/open-obsidian/actions/runs/38036889848), desktop build [38036889853](https://github.com/ashutoshpw/open-obsidian/actions/runs/38036889853), quality [38036889852](https://github.com/ashutoshpw/open-obsidian/actions/runs/38036889852), and plugin renderer [38036889857](https://github.com/ashutoshpw/open-obsidian/actions/runs/38036889857). The task-record-only commit did not trigger the path-filtered vault round-trip; that workflow passed on the tested source SHA `85325d65d4fbd25eb9ee663525128ff661e0a3ab`. No local tests or builds were run.

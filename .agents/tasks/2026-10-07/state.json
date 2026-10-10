@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T08:07:49Z",
+  "updated_at": "2026-10-10T08:13:40Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "85325d65d4fbd25eb9ee663525128ff661e0a3ab",
+  "last_reconciled_head": "981fd0d8e08bbffd99d95e54a8996cc271e37a25",
   "current_milestone": "R2.8.17",
-  "next_action": "Push the R2.8.17 tracker checkpoint after recording exact-SHA CI evidence, then continue with the next narrow C04 source-preservation slice.",
+  "next_action": "Continue with the next narrow C04 source-preservation slice after the R2.8.17 tracker checkpoint passed its path-eligible CI.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -254,7 +254,7 @@
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
   ],
-  "push_status": "R2.8.17 source SHA 85325d65d4fbd25eb9ee663525128ff661e0a3ab is on origin/main and all seven required workflows passed on that exact SHA. The tracker checkpoint is pending. R2.8.17 plain YAML mapping-key coverage is complete; broader C04, C02/C02.1 and editor integration remain pending.",
+  "push_status": "R2.8.17 source SHA 85325d65d4fbd25eb9ee663525128ff661e0a3ab passed all seven required workflows; tracker checkpoint SHA 981fd0d8e08bbffd99d95e54a8996cc271e37a25 passed all six path-eligible workflows. Both commits are on origin/main. R2.8.17 plain YAML mapping-key coverage is complete; broader C04, C02/C02.1 and editor integration remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16183,7 +16183,7 @@
         }
       ],
       "evidence": "evidence/r2.8.17-yaml-mapping-keys-85325d6.json",
-      "next_action": "Push the R2.8.17 tracker checkpoint; after its path-eligible CI passes, continue with the next narrow C04 source-preservation slice."
+      "next_action": "Continue with the next narrow C04 source-preservation slice; keep broader C04, C02/C02.1 and editor integration pending."
     }
   },
   "ci_preparation": {
