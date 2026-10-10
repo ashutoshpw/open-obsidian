@@ -50,6 +50,15 @@
     "source": "\uFEFF# Explicit source editing\r\n\r\nKeep this wiki embed literal: ![[Missing note]]\r\n\r\n%% Preserve this unknown extension.\r\n",
     "expected_after_edit": "\uFEFF# Explicit source editing\r\n\r\nKeep this wiki embed literal: ![[Missing note]]\r\n\r\n%% Preserve this unknown extension.\r\nSource edit"
   },
+  "table_editing": {
+    "mode": "explicit-source-draft",
+    "edit": "change one table cell value",
+    "requires_complete_valid_utf8_revision": true,
+    "writes_through_revision_checked_vault_writer": true,
+    "preserves_bom_crlf_and_table_delimiters": true,
+    "source": "\uFEFF# Table source editing\r\n\r\n| Name | Value |\r\n| --- | ---: |\r\n| item | before |\r\n",
+    "expected_after_edit": "\uFEFF# Table source editing\r\n\r\n| Name | Value |\r\n| --- | ---: |\r\n| item | after |\r\n"
+  },
   "rust_preview": {
     "renderer": "egui_commonmark 0.25.0",
     "rendered_blocks": [

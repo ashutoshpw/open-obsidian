@@ -3308,6 +3308,83 @@ mod tests {
     }
 
     #[test]
+    fn egui_source_edit_saves_a_table_cell_without_normalizing_markdown() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let editing = &fixture["table_editing"];
+        let source = editing["source"]
+            .as_str()
+            .expect("table editing fixture must include source");
+        let expected = editing["expected_after_edit"]
+            .as_str()
+            .expect("table editing fixture must include expected source");
+        assert_eq!(editing["preserves_bom_crlf_and_table_delimiters"], true);
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_vault_refresh_task(ui);
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Markdown preview");
+        harness.get_by_label("Name");
+        harness.get_by_label("Value");
+        harness.get_by_label("before");
+        harness.get_by_label("Edit Markdown source").click();
+        harness.step();
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(source)
+        );
+        harness
+            .state_mut()
+            .note_source_preview
+            .as_mut()
+            .expect("source preview remains visible while editing the table")
+            .source_draft = Some(expected.to_owned());
+        harness.step();
+        harness.get_by_label("Save source edits").click();
+        harness.step();
+        wait_for_note_preview_write(&mut harness);
+
+        assert!(harness.state().note_preview_error.is_none());
+        assert_eq!(
+            harness.state().note_preview_status.as_deref(),
+            Some("Markdown source edits saved to the vault.")
+        );
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            expected.as_bytes().to_vec()
+        );
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("table preview remains visible after save");
+        assert_eq!(preview.text.as_bytes(), expected.as_bytes());
+        assert!(preview.revision_sha256.is_some());
+        assert!(preview.source_draft.is_none());
+        harness.get_by_label("after");
+    }
+
+    #[test]
     fn egui_stale_source_edit_preserves_external_note_and_disables_retry() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");
