@@ -17,16 +17,18 @@
     "highlights"
   ],
   "visible_unsupported_blocks": [
-    "footnotes",
-    "math",
+    "legacy-math-delimiters",
     "diagrams",
-    "raw-html"
+    "unknown-or-active-raw-html",
+    "wiki-links",
+    "highlights"
   ],
   "invariants": {
     "source_bytes_remain_authoritative": true,
     "preview_uses_text_content_for_untrusted_source": true,
     "code_and_diagram_execution": false,
-    "unknown_syntax_is_not_silently_rewritten": true
+    "unknown_syntax_is_not_silently_rewritten": true,
+    "safe_html_projection_is_read_only": true
   },
   "task_editing": {
     "mutation_scope": "task-checkbox-marker-only",
@@ -73,15 +75,20 @@
       "thematic-breaks",
       "inline-formatting",
       "footnotes",
-      "inline-and-display-math"
+      "inline-and-display-math",
+      "safe-inline-html-break"
     ],
     "source_only_blocks": [
       "legacy-math-delimiters",
       "diagrams",
-      "raw-html",
+      "unknown-or-active-raw-html",
       "wiki-links",
       "highlights"
     ],
+    "safe_inline_html": {
+      "rendered_tags": ["<br>", "<br/>", "<br />"],
+      "unsupported_html": "Keep all other inline and block HTML visible as original source."
+    },
     "fallback": "If a known source-only construct is present, show the bounded original source slice as monospace text and name the unsupported syntax. Do not write or normalize the source.",
     "cases": [
       {
@@ -117,6 +124,40 @@
       {
         "id": "raw-html",
         "source": "<script>alert('not executed')</script>",
+        "expected_disposition": "show-source",
+        "unsupported_syntax": ["raw-html"]
+      },
+      {
+        "id": "safe-html-inline-break",
+        "source": "First line<br>Second line.",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_native_render_source": "First line  \nSecond line."
+      },
+      {
+        "id": "safe-html-inline-break-self-closing",
+        "source": "First<br/>Second",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_native_render_source": "First  \nSecond"
+      },
+      {
+        "id": "safe-html-inline-break-spaced-self-closing",
+        "source": "First<br />Second",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_native_render_source": "First  \nSecond"
+      },
+      {
+        "id": "safe-html-inline-break-before-crlf",
+        "source": "First<br>\r\nSecond",
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": [],
+        "expected_native_render_source": "First  \nSecond"
+      },
+      {
+        "id": "html-break-with-attributes-remains-source",
+        "source": "First<br class=wide>Second",
         "expected_disposition": "show-source",
         "unsupported_syntax": ["raw-html"]
       },

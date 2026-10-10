@@ -2375,9 +2375,10 @@ fn show_markdown_preview(
     match analysis.disposition() {
         MarkdownPreviewDisposition::RenderMarkdown => {
             let math_callback = math_render_callback(Rc::clone(math_renderer_cache));
+            let render_source = analysis.native_render_source(source);
             CommonMarkViewer::new()
                 .render_math_fn(Some(&math_callback))
-                .show(ui, markdown_cache, source);
+                .show(ui, markdown_cache, render_source.as_ref());
         }
         MarkdownPreviewDisposition::ShowSource => {
             let unsupported = analysis
@@ -2979,6 +2980,28 @@ mod tests {
         harness.step();
         harness.get_by_label("Unsupported Markdown (raw HTML); showing the source as written.");
         harness.get_by_label(source);
+    }
+
+    #[test]
+    fn egui_renders_safe_inline_html_breaks_without_changing_source() {
+        let source = "First line<br>Second line.";
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("First line");
+        harness.get_by_label("Second line.");
+        assert_eq!(source.as_bytes(), original.as_slice());
     }
 
     #[test]

@@ -1,5 +1,7 @@
 //! Read-only dialect preflight for safe native Markdown previews.
 
+use std::borrow::Cow;
+
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 
 /// Why the native preview must show the original Markdown source instead of rendering it.
@@ -47,6 +49,7 @@ pub enum MarkdownPreviewDisposition {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct MarkdownPreviewAnalysis {
     unsupported: Vec<MarkdownUnsupportedSyntax>,
+    safe_html_break_spans: Vec<std::ops::Range<usize>>,
 }
 
 impl MarkdownPreviewAnalysis {
@@ -63,6 +66,48 @@ impl MarkdownPreviewAnalysis {
             MarkdownPreviewDisposition::ShowSource
         }
     }
+
+    /// Return the Markdown text used by the native preview without changing the source note.
+    ///
+    /// Only allowlisted inline HTML line breaks are projected to Markdown hard breaks. Any other
+    /// raw HTML is classified as unsupported and remains available through the source fallback.
+    pub fn native_render_source<'a>(&self, source: &'a str) -> Cow<'a, str> {
+        if self.safe_html_break_spans.is_empty() {
+            return Cow::Borrowed(source);
+        }
+
+        let mut rendered = String::with_capacity(source.len());
+        let mut source_cursor = 0;
+        for span in &self.safe_html_break_spans {
+            if span.start < source_cursor
+                || span.end < span.start
+                || span.end > source.len()
+                || !source.is_char_boundary(span.start)
+                || !source.is_char_boundary(span.end)
+            {
+                return Cow::Borrowed(source);
+            }
+
+            rendered.push_str(&source[source_cursor..span.start]);
+            let raw_span = &source[span.clone()];
+            if !is_safe_inline_html_break(raw_span) {
+                return Cow::Borrowed(source);
+            }
+            let mut break_end = span.end;
+            if !raw_span.ends_with('\n') && !raw_span.ends_with('\r') {
+                let remaining = &source.as_bytes()[break_end..];
+                if remaining.starts_with(b"\r\n") {
+                    break_end += 2;
+                } else if remaining.first() == Some(&b'\n') || remaining.first() == Some(&b'\r') {
+                    break_end += 1;
+                }
+            }
+            rendered.push_str("  \n");
+            source_cursor = break_end;
+        }
+        rendered.push_str(&source[source_cursor..]);
+        Cow::Owned(rendered)
+    }
 }
 
 /// Classify dialect syntax before rendering while leaving the borrowed source untouched.
@@ -70,13 +115,15 @@ impl MarkdownPreviewAnalysis {
 /// CommonMark-compatible content, including standard inline and display math, continues through
 /// the native `egui_commonmark` renderer. Known syntax outside that renderer's current contract
 /// takes a source-only fallback, so the UI does not silently flatten legacy math delimiters,
-/// diagram fences, raw HTML, wiki links, or highlights.
+/// diagram fences, unsupported raw HTML, wiki links, or highlights. Attribute-free inline `<br>`
+/// tags are the one safe HTML subset projected to a Markdown hard break.
 /// Footnotes are supported by the pinned renderer. Inline markers inside fenced, indented, and
 /// inline code are not dialect syntax. Backslash-escaped highlight openers remain literal text
 /// and do not force the source-only fallback.
 pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
     let mut unsupported = Vec::new();
     let mut inline_code_spans = Vec::new();
+    let mut safe_html_break_spans = Vec::new();
     let options = Options::ENABLE_TABLES
         | Options::ENABLE_TASKLISTS
         | Options::ENABLE_STRIKETHROUGH
@@ -91,6 +138,9 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
                     push_once(&mut unsupported, MarkdownUnsupportedSyntax::Diagrams);
                 }
             }
+            Event::InlineHtml(html) if is_safe_inline_html_break(&html) => {
+                safe_html_break_spans.push(source_span);
+            }
             Event::Html(_) | Event::InlineHtml(_) => {
                 push_once(&mut unsupported, MarkdownUnsupportedSyntax::RawHtml);
             }
@@ -100,7 +150,10 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
     }
 
     scan_source_only_syntax(source, &inline_code_spans, &mut unsupported);
-    MarkdownPreviewAnalysis { unsupported }
+    MarkdownPreviewAnalysis {
+        unsupported,
+        safe_html_break_spans,
+    }
 }
 
 fn is_diagram_fence(language: &str) -> bool {
@@ -113,6 +166,13 @@ fn is_diagram_fence(language: &str) -> bool {
             .as_str(),
         "mermaid" | "plantuml" | "dot" | "excalidraw" | "dataview" | "dataviewjs"
     )
+}
+
+fn is_safe_inline_html_break(html: &str) -> bool {
+    let tag = html.trim();
+    tag.eq_ignore_ascii_case("<br>")
+        || tag.eq_ignore_ascii_case("<br/>")
+        || tag.eq_ignore_ascii_case("<br />")
 }
 
 fn push_once(unsupported: &mut Vec<MarkdownUnsupportedSyntax>, syntax: MarkdownUnsupportedSyntax) {
@@ -308,6 +368,10 @@ mod tests {
             true
         );
         assert_eq!(fixture["invariants"]["code_and_diagram_execution"], false);
+        assert_eq!(
+            fixture["invariants"]["safe_html_projection_is_read_only"],
+            true
+        );
         let cases = fixture["rust_preview"]["cases"]
             .as_array()
             .expect("C02 dialect fixture must include Rust preview cases");
@@ -349,6 +413,14 @@ mod tests {
                 "unexpected unsupported syntax for fixture case {}",
                 case["id"]
             );
+            if let Some(expected_projection) = case["expected_native_render_source"].as_str() {
+                assert_eq!(
+                    analysis.native_render_source(source).as_ref(),
+                    expected_projection,
+                    "unexpected native preview projection for fixture case {}",
+                    case["id"]
+                );
+            }
             assert_eq!(
                 source.as_bytes(),
                 original.as_bytes(),
