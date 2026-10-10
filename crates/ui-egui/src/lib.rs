@@ -3420,6 +3420,46 @@ mod tests {
     }
 
     #[test]
+    fn egui_keeps_mixed_supported_and_unsupported_markdown_source_only() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "mixed-supported-and-unsupported")
+            .expect("Markdown dialect fixture must include mixed supported and unsupported syntax");
+        let source = case["source"]
+            .as_str()
+            .expect("mixed syntax fixture must include source");
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::ShowSource
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("Unsupported Markdown (raw HTML); showing the source as written.");
+        harness.get_by_label(source);
+        assert!(
+            harness.query_by_label("Kept as source").is_none(),
+            "supported heading must not be partially rendered"
+        );
+        assert!(
+            harness.query_by_label("A formula").is_none(),
+            "supported formula paragraph must not be partially rendered"
+        );
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_renders_safe_inline_html_breaks_without_changing_source() {
         let source = "First line<br>Second line.";
         let original = source.as_bytes().to_vec();

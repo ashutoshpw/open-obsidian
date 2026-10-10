@@ -2704,4 +2704,6 @@ Accepted slice: Mermaid fenced diagrams remain visible source-only with an expli
 
 Use the existing `mixed-supported-and-unsupported` C02.1 fixture, which combines a heading and math with a raw HTML script block. Verify the preview reports the raw-HTML fallback, presents the entire original document as source, does not project the heading or formula partially, and preserves the source bytes. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
 
+The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It checks `ShowSource`, the raw-HTML fallback message, the complete source label, absence of separately rendered heading/formula labels, and unchanged source bytes. Push this focused change for exact-SHA GitHub Actions; no local executable validation runs.
+
 R2.8.51 tracker checkpoint: inventory [run 38082110532](https://github.com/ashutoshpw/open-obsidian/actions/runs/38082110532), job 114300986023, passed for tracker SHA `dda71d1b8b0fb65302c621d17245f4939b34dd99`.
