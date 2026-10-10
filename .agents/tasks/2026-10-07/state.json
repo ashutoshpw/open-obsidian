@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T01:19:39Z",
+  "updated_at": "2026-10-10T01:51:43Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "2964c96cea6ad96710ef3a7a0e02eeab4d500776",
+  "last_reconciled_head": "c340ff19de41f3266573aa2afc34dee95c06e996",
   "current_milestone": "R2.8.1",
-  "next_action": "Push the interrupted-write recovery slice to origin/main, inspect exact-SHA GitHub Actions on Ubuntu/macOS/Windows, fix CI findings, and record evidence before accepting SYNC-002.",
+  "next_action": "Review remaining R2 vault/filesystem requirements and select the next small acceptance slice; keep broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -232,9 +232,10 @@
     "R2.6.81 / C01.2-32 passed on exact implementation SHA 6ce07476f4266161b49df79e1e55ad032e52c9b1: external creation of a same-basename attachment made the basename-only image embed Ambiguous with exactly two candidates, no target, and NotRendered; stale UI state cleared and vault/app-data snapshots remained unchanged through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.81-attempt-1-6ce0747.json.",
     "R2.6.82 / C01.2-33 passed on exact implementation SHA f6a75a6f76555dc91f38f138e0f3b0fd28501a9a: external removal of one same-basename attachment cleared stale ambiguous state, then uniquely resolved and rendered the remaining attachment with exact decoded pixels and alt text; vault/app-data snapshots remained unchanged through teardown on Ubuntu, macOS, and Windows. The focused workspace test and all seven required workflows passed. Evidence: evidence/r2.6.82-attempt-1-f6a75a6.json.",
     "R2.7.1 SYNC-003 watcher recovery passed all seven required GitHub Actions workflows on exact SHA a301bfcee01d3a16c812c3eaa0f0859d9109e887; evidence recorded in evidence/r2.7.1-sync-watcher-a301bfc.json.",
-    "R2.7.2 C01.2-38 verified event-driven watcher refresh with exact source bytes and unchanged vault/app-data snapshots; all seven required workflows passed on 2964c96cea6ad96710ef3a7a0e02eeab4d500776. Evidence: evidence/r2.7.2-watcher-event-2964c96.json."
+    "R2.7.2 C01.2-38 verified event-driven watcher refresh with exact source bytes and unchanged vault/app-data snapshots; all seven required workflows passed on 2964c96cea6ad96710ef3a7a0e02eeab4d500776. Evidence: evidence/r2.7.2-watcher-event-2964c96.json.",
+    "R2.8.1 / SYNC-002 interrupted-write recovery passed on exact source SHA c340ff19de41f3266573aa2afc34dee95c06e996; evidence: evidence/r2.8.1-interrupted-write-c340ff1.json."
   ],
-  "push_status": "R2.7.2 / C01.2-38 watcher event reconciliation passed on exact implementation SHA 2964c96cea6ad96710ef3a7a0e02eeab4d500776, pushed to origin/main. R2.8.1 interrupted-write recovery implementation is being prepared from tracker checkpoint a8c06b93ba7895b24421df29eefc2ab3638ab4a0; it is not yet pushed or accepted. Broader C01/C01.2 and R2 acceptance remain pending.",
+  "push_status": "R2.8.1 / SYNC-002 interrupted-write recovery passed on exact implementation SHA c340ff19de41f3266573aa2afc34dee95c06e996, pushed to origin/main in commits 672995b76b95c889afad41b3def3267e1aee6cfa, e98eab193fd55eb4c275a02fac0e4c80b0cc4d97, and c340ff19de41f3266573aa2afc34dee95c06e996. All seven required workflows and all applicable jobs passed. Broader R2 filesystem and C01/C01.2 acceptance remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -8855,7 +8856,94 @@
         {"name": "ubuntu-latest", "job_id": 113900699543, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/37954282558/job/113900699543"}
       ]
     },
-    "R2.6.73 C01.2-24 passed on exact source SHA 5670d5ae84a449a17359c975b676247d38564ad0: external rename refresh cleared stale preview/link/embed state, selected README.md, kept the renamed note previewable with exact BOM/CRLF bytes, and preserved vault/app-data snapshots through teardown; the focused test and all seven required GitHub Actions workflows passed across Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.73-attempt-2-5670d5a.json."
+    "R2.6.73 C01.2-24 passed on exact source SHA 5670d5ae84a449a17359c975b676247d38564ad0: external rename refresh cleared stale preview/link/embed state, selected README.md, kept the renamed note previewable with exact BOM/CRLF bytes, and preserved vault/app-data snapshots through teardown; the focused test and all seven required GitHub Actions workflows passed across Ubuntu, macOS, and Windows. Evidence: evidence/r2.6.73-attempt-2-5670d5a.json.",
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38014303728,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303728",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 114101075919, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303728/job/114101075919"},
+        {"name": "rust (macos-latest)", "job_id": 114101076046, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303728/job/114101076046"},
+        {"name": "rust (windows-latest)", "job_id": 114101076078, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303728/job/114101076078"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38014303720,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303720",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114101076192, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303720/job/114101076192"},
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114101076228, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303720/job/114101076228"},
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114101076371, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303720/job/114101076371"}
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38014303759,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303759",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114101076184, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303759/job/114101076184"}]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38014303738,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303738",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114101076130, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303738/job/114101076130"},
+        {"name": "ubuntu-latest", "job_id": 114101076292, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303738/job/114101076292"},
+        {"name": "macos-latest", "job_id": 114101076321, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303738/job/114101076321"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38014303713,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303713",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114101075924, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303713/job/114101075924"},
+        {"name": "macos-latest", "job_id": 114101076060, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303713/job/114101076060"},
+        {"name": "ubuntu-latest", "job_id": 114101076072, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303713/job/114101076072"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38014303715,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303715",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114101076217, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303715/job/114101076217"},
+        {"name": "windows-latest", "job_id": 114101076306, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303715/job/114101076306"},
+        {"name": "macos-latest", "job_id": 114101076409, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303715/job/114101076409"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38014303734,
+      "head_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303734",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114101076091, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303734/job/114101076091"},
+        {"name": "macos-latest", "job_id": 114101076251, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303734/job/114101076251"},
+        {"name": "ubuntu-latest", "job_id": 114101076328, "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303734/job/114101076328"}
+      ]
+    }
   ],
   "milestones": {
     "R0.1": {
@@ -14782,18 +14870,15 @@
       "next_action": "Review remaining R2 vault/filesystem requirements and select the next small acceptance slice; keep broader C01/C01.2 acceptance pending."
     },
     "R2.8.1": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "a8c06b93ba7895b24421df29eefc2ab3638ab4a0",
-      "implementation_sha": null,
-      "implementation_commits": [],
+      "implementation_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+      "implementation_commits": ["672995b76b95c889afad41b3def3267e1aee6cfa", "e98eab193fd55eb4c275a02fac0e4c80b0cc4d97", "c340ff19de41f3266573aa2afc34dee95c06e996"],
       "scope": "Persist intended write bytes before the prepared journal record, recover interrupted single-file writes by revision, protect unresolved recovery images from cleanup, expose startup outcomes in the native UI, and document filesystem replacement limits.",
       "accepted_slice": [
         "SYNC-002"
       ],
-      "remaining": [
-        "Exact-SHA GitHub Actions results are pending.",
-        "Broader R2 filesystem and C01/C01.2 acceptance remain pending."
-      ],
+      "remaining": ["Broader R2 filesystem and C01/C01.2 acceptance remain pending."],
       "acceptance": [
         "Crash-before-replace, crash-after-replace-before-commit, new-file creation, external-edit conflict and Windows backup-move fixtures preserve exact versions and recover only when revisions match.",
         "A pending write's incoming and previous recovery images remain protected until a terminal journal state is recorded.",
@@ -14802,9 +14887,28 @@
         "The atomic-write fixture states the platform and power-loss limits without a universal filesystem atomicity claim.",
         "All required exact-SHA GitHub Actions workflows pass on Ubuntu, macOS and Windows."
       ],
-      "ci_attempts": [],
-      "evidence": null,
-      "next_action": "Commit and push the implementation for exact-SHA CI; leave SYNC-002 pending until all required workflows pass."
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "672995b76b95c889afad41b3def3267e1aee6cfa",
+          "required_workflow_run_ids": [38012822686, 38012822627, 38012822669, 38012822769, 38012822648, 38012822636, 38012822624],
+          "result": "Workspace tests passed on all three OSes. Rust CI failed Ubuntu formatting and Windows/macOS Clippy; the other six workflows passed, including the three-OS vault round-trip."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "e98eab193fd55eb4c275a02fac0e4c80b0cc4d97",
+          "required_workflow_run_ids": [38013133993, 38013133963, 38013134040, 38013134004, 38013133968, 38013134533, 38013133971],
+          "result": "Formatting and the owned-comparison lint were corrected. Rust workspace tests passed on all three OSes, but Windows Clippy identified a large rename worker message. The first Linux round-trip attempt found no visible X11 window; its second attempt stalled in dependency setup and was cancelled; its third same-SHA attempt passed on all three OSes. Five other workflows passed."
+        },
+        {
+          "attempt": 3,
+          "source_sha": "c340ff19de41f3266573aa2afc34dee95c06e996",
+          "required_workflow_run_ids": [38014303728, 38014303720, 38014303759, 38014303738, 38014303713, 38014303715, 38014303734],
+          "result": "All seven required workflows and all applicable Ubuntu, macOS, and Windows jobs passed. The interrupted-write fixture, startup recovery, and existing multi-file rename recovery tests passed across the Rust CI matrix."
+        }
+      ],
+      "evidence": "evidence/r2.8.1-interrupted-write-c340ff1.json",
+      "next_action": "Review remaining R2 vault/filesystem requirements and select the next small acceptance slice; keep broader C01/C01.2 acceptance pending."
     }
   },
   "ci_preparation": {

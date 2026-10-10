@@ -1973,3 +1973,19 @@ Rust CI [38011050342](https://github.com/ashutoshpw/open-obsidian/actions/runs/3
 ### R2.8.1 started — SYNC-002 interrupted single-file writes
 
 Starting from tracker checkpoint SHA `a8c06b93ba7895b24421df29eefc2ab3638ab4a0`, this slice persists incoming write bytes and the previous revision before journaling `prepared`, then recovers by SHA-256 only when the target is still at the expected revision. It also handles a completed replacement with a missing commit record, retains unresolved write images against history cleanup, surfaces recovery outcomes in the UI, and documents POSIX/Windows and power-loss limits. Fixtures cover crash-before-replace, crash-after-replace, new-file creation, external edits, and the existing multi-file rename rollback case. Implementation and exact-SHA GitHub Actions acceptance are pending. No local tests, builds, formatters, linters, or application launches were run.
+
+### R2.8.1 attempt 1 — source SHA `672995b`
+
+The interrupted-write recovery implementation was pushed in commit `672995b76b95c889afad41b3def3267e1aee6cfa`. Workspace tests passed on Ubuntu, macOS, and Windows, but Rust CI failed Ubuntu formatting and Windows/macOS Clippy. The formatting and owned-comparison findings were corrected in `e98eab193fd55eb4c275a02fac0e4c80b0cc4d97` before accepting the slice. The other six required workflows passed on the initial source SHA, including all three Obsidian round-trip jobs.
+
+### R2.8.1 attempt 2 — source SHA `e98eab1`
+
+The formatter and owned-comparison corrections passed; workspace tests also passed across the OS matrix. Windows Clippy then identified a large `RenameTaskMessage` variant, corrected by boxing the rename result in `c340ff19de41f3266573aa2afc34dee95c06e996`. The first round-trip attempt on this source SHA failed on Ubuntu before the reopen checks because `xdotool` found no visible X11 window. The second Ubuntu retry stalled in dependency setup for over ten minutes and was cancelled; the third same-SHA retry passed, as did macOS and Windows. This environment retry did not change source code.
+
+### R2.8.1 accepted — SYNC-002 — source SHA `c340ff1`
+
+On exact source SHA `c340ff19de41f3266573aa2afc34dee95c06e996`, the interrupted-write fixture, `VaultSession` startup recovery, and existing multi-file rename recovery tests passed on Ubuntu, macOS, and Windows. The Windows-only case-only rename recovery test passed on Windows. Rust CI also passed formatting, Clippy, dependency-layer checks, and native preview builds on all three systems.
+
+All seven required GitHub Actions workflows passed on the exact SHA: Rust CI [38014303728](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303728), Obsidian vault round-trip [38014303720](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303720), inventory [38014303759](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303759), loaded-plugin workflows [38014303738](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303738), desktop build [38014303713](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303713), quality [38014303715](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303715), and plugin renderer [38014303734](https://github.com/ashutoshpw/open-obsidian/actions/runs/38014303734). Job IDs, artifact digests, test names, and limits are recorded in [`evidence/r2.8.1-interrupted-write-c340ff1.json`](evidence/r2.8.1-interrupted-write-c340ff1.json). SYNC-002 is passing. Broader R2 filesystem and C01/C01.2 acceptance remain pending.
+
+The fixture injects persisted restart states in generated synthetic vaults; it does not simulate hardware power loss or certify identical replacement semantics on every filesystem. The atomic-write fixture states the Windows and power-loss limits without a universal atomicity claim. No local tests, builds, formatters, linters, or application launches were run.

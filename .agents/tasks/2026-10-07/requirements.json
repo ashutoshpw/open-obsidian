@@ -7717,9 +7717,9 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": ["evidence/r2.8.1-interrupted-write-c340ff1.json"],
+      "tested_source_tree": "c340ff19de41f3266573aa2afc34dee95c06e996",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D16",
