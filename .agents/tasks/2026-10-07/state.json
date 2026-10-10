@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:48:51Z",
+  "updated_at": "2026-10-10T19:59:42Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "17235d180c0a7d233aa79a7d0f9e2f48d3a13e4f",
-  "current_milestone": "R2.8.50",
-  "next_action": "R2.8.49 is accepted on exact source SHA 17235d180c0a7d233aa79a7d0f9e2f48d3a13e4f; all seven required GitHub Actions workflows passed, with the Linux vault round-trip succeeding on same-SHA retry attempt 2. R2.8.50 should verify the existing Mermaid diagram fixture uses an explicit source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "1bb6bd42385264f8666b0d3ef1192a37276d8beb",
+  "current_milestone": "R2.8.51",
+  "next_action": "R2.8.50 is accepted on exact source SHA 1bb6bd42385264f8666b0d3ef1192a37276d8beb; all seven required GitHub Actions workflows passed, with the Linux vault round-trip succeeding on same-SHA retry attempt 2. R2.8.51 should verify the mixed-supported-and-unsupported Markdown fixture uses a whole-document source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "17235d180c0a7d233aa79a7d0f9e2f48d3a13e4f"
+      "implementation_sha": "1bb6bd42385264f8666b0d3ef1192a37276d8beb"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.50 accepted: the existing mermaid-diagram C02.1 fixture drives a native preview test that selects the source-only disposition, displays the explicit diagrams fallback message, and preserves the exact fenced source. The focused egui test passed on Ubuntu, macOS, and Windows (88 tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA 1bb6bd42385264f8666b0d3ef1192a37276d8beb. The first Linux vault round-trip attempt failed at xdotool visible-window discovery; retry attempt 2 passed on the same SHA. Evidence: evidence/r2.8.50-mermaid-diagram-source-fallback-1bb6bd4.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.49 accepted: the existing legacy-delimited-math C02.1 fixture drives a native preview test that identifies legacy math delimiters as unsupported, shows the source unchanged, and preserves its bytes. The focused egui test passed on Ubuntu, macOS, and Windows (87 tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA 17235d180c0a7d233aa79a7d0f9e2f48d3a13e4f. The first Linux vault round-trip attempt failed at xdotool visible-window discovery; retry attempt 2 passed on the same SHA. Evidence: evidence/r2.8.49-legacy-delimited-math-fallback-17235d1.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.48 accepted: a highlight opener after an even backslash run remains active and receives the explicit source-only fallback without a partial highlight span. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 8ae3b8acf636a35ccc18a12bf4914c365dedbb02. Evidence: evidence/r2.8.48-even-backslash-highlight-fallback-8ae3b8a.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.47 accepted: an HTML line break with attributes remains source-only, displays a raw-HTML fallback message, and preserves the source. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 56c398d0f604219ed206ec95a322311e63dad6fc. Evidence: evidence/r2.8.47-html-break-attributes-source-only-56c398d.json. C02.1 and phases R3-R7 remain pending.",
@@ -18822,7 +18823,7 @@
       "evidence": "evidence/r2.8.49-legacy-delimited-math-fallback-17235d1.json"
     },
     "R2.8.50": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "b81cf8d44bb6b80c23522a17c91c23c97c780e86",
       "scope": "Verify the existing Mermaid diagram fixture receives a visible source-only fallback and preserves the original fixture source.",
       "acceptance": [
@@ -18830,7 +18831,9 @@
         "The preview identifies diagrams as unsupported and displays the original source unchanged.",
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "1bb6bd42385264f8666b0d3ef1192a37276d8beb"
+      ],
       "tracker_checkpoint": {
         "sha": "b81cf8d44bb6b80c23522a17c91c23c97c780e86",
         "inventory_run_id": 38081195364,
@@ -18838,7 +18841,30 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38081195364"
       },
-      "next_action": "The R2.8.50 tracker checkpoint passed inventory on SHA b81cf8d44bb6b80c23522a17c91c23c97c780e86. Fixture-driven egui coverage for the Mermaid diagram source-only fallback is added. Commit and push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
+      "next_action": "R2.8.50 is accepted; continue with a whole-document source-only fallback check for mixed supported and unsupported Markdown in R2.8.51. Full C02.1 and phases R3-R7 remain pending.",
+      "validated_source_sha": "1bb6bd42385264f8666b0d3ef1192a37276d8beb",
+      "ci_runs": {
+        "inventory": 38081307837,
+        "loaded_plugins": 38081307870,
+        "desktop_build": 38081307852,
+        "quality": 38081307835,
+        "rust_ci": 38081307857,
+        "plugin_renderer": 38081307847,
+        "obsidian_vault_roundtrip": 38081307838
+      },
+      "evidence": "evidence/r2.8.50-mermaid-diagram-source-fallback-1bb6bd4.json"
+    },
+    "R2.8.51": {
+      "status": "in_progress",
+      "starting_sha": "1bb6bd42385264f8666b0d3ef1192a37276d8beb",
+      "scope": "Verify a document mixing supported Markdown with unsupported raw HTML stays entirely source-only and preserves the original fixture source.",
+      "acceptance": [
+        "The existing mixed-supported-and-unsupported C02.1 fixture drives an egui preview test.",
+        "The preview identifies raw HTML as unsupported and displays the complete original source without partially rendering its heading or math.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
+      "implementation_commits": [],
+      "next_action": "Add fixture-driven egui coverage for the mixed-supported-and-unsupported source-only fallback. Push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {

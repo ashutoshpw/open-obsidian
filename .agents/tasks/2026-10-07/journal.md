@@ -2691,3 +2691,15 @@ Use the existing `mermaid-diagram` C02.1 fixture to verify that the native previ
 The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It asserts the source-only disposition, the explicit diagrams fallback message, the exact fixture source in the accessibility tree, and unchanged source bytes. Commit and push for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.50 tracker checkpoint: inventory [run 38081195364](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081195364), job 114298287270, passed for tracker SHA `b81cf8d44bb6b80c23522a17c91c23c97c780e86`.
+
+### R2.8.50 accepted — Mermaid diagram remains source-only — source SHA `1bb6bd42385264f8666b0d3ef1192a37276d8beb`
+
+The existing `mermaid-diagram` C02.1 fixture now drives an egui preview test. It confirms the analyzer selects `ShowSource`, the preview announces unsupported diagrams, and the complete fenced source remains visible with unchanged bytes. The focused case passed on Ubuntu, macOS, and Windows; each platform's `ui-egui` suite passed 88 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38081307837](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307837), loaded-plugin workflows [38081307870](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307870), desktop build [38081307852](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307852), quality [38081307835](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307835), Rust CI [38081307857](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307857), plugin renderer [38081307847](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307847), and Obsidian vault round-trip [38081307838](https://github.com/ashutoshpw/open-obsidian/actions/runs/38081307838). The first Linux round-trip attempt failed at `xdotool search --onlyvisible --name .`; retry attempt 2 passed on the same SHA. Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28). Job IDs, both Linux attempt artifacts, all artifact digests, and retry details are recorded in [evidence/r2.8.50-mermaid-diagram-source-fallback-1bb6bd4.json](evidence/r2.8.50-mermaid-diagram-source-fallback-1bb6bd4.json). Native `parallel:` groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: Mermaid fenced diagrams remain visible source-only with an explicit reason. Full C02.1 and migration phases R3-R7 remain pending. Next: verify an unsupported raw-HTML block makes a document with otherwise supported Markdown stay entirely source-only in R2.8.51.
+
+### R2.8.51 in progress — mixed supported and unsupported Markdown stays source-only
+
+Use the existing `mixed-supported-and-unsupported` C02.1 fixture, which combines a heading and math with a raw HTML script block. Verify the preview reports the raw-HTML fallback, presents the entire original document as source, does not project the heading or formula partially, and preserves the source bytes. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
