@@ -1372,14 +1372,14 @@
     },
     {
       "path": "fixtures/markdown-dialects.json",
-      "sha256": "e128a6a2cfa3c2516eb8ae76458718af7c56e448106333985a320487366e891a",
+      "sha256": "0b1dca1253db794731dd5fd8e831c73882a9a938a1e2c7a226835659a6015ee8",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
       "fixture_reader": "crates/testkit",
-      "reconciliation_reason": "R2.8.34 adds resolved, unresolved, and ambiguous wiki-link preview cases; R2.8.35 adds a stale-revision fallback case; R2.8.36 adds resolved-target embed and subpath source-only cases; R2.8.37 adds a resolved non-Markdown target fallback case; R2.8.38 adds a resolved mixed-formatting wiki-link fallback case; R2.8.39 adds a resolved list-context wiki-link fallback case; R2.8.40 adds a resolved table-context wiki-link fallback case; R2.8.41 adds a resolved task-list wiki-link fallback case while keeping this baseline fixture mapped to its existing Rust document owner."
+      "reconciliation_reason": "R2.8.34 adds resolved, unresolved, and ambiguous wiki-link preview cases; R2.8.35 adds a stale-revision fallback case; R2.8.36 adds resolved-target embed and subpath source-only cases; R2.8.37 adds a resolved non-Markdown target fallback case; R2.8.38 adds a resolved mixed-formatting wiki-link fallback case; R2.8.39 adds a resolved list-context wiki-link fallback case; R2.8.40 adds a resolved table-context wiki-link fallback case; R2.8.41 adds a resolved task-list wiki-link fallback case; R2.8.42 adds a resolved blockquote-context wiki-link fallback case while keeping this baseline fixture mapped to its existing Rust document owner."
     },
     {
       "path": "fixtures/markdown-property-preservation.json",

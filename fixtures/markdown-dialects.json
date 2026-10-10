@@ -87,6 +87,7 @@
       "block-context-wiki-links",
       "table-context-wiki-links",
       "task-list-wiki-links",
+      "blockquote-context-wiki-links",
       "complex-inline-highlights"
     ],
     "resolved_wiki_link_preview": {
@@ -197,6 +198,17 @@
       "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
       "remains_clickable": false,
       "expected_task_checkbox_interactive": false,
+      "preserves_source_bytes": true
+    },
+    "blockquote_context_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "> Read [[Plans/Project]] next.",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\nThe resolved target note.",
+      "expected_link_kind": "wiki_link",
+      "expected_subpath": null,
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
       "preserves_source_bytes": true
     },
     "safe_inline_html": {
