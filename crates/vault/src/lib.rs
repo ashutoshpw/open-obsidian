@@ -2650,7 +2650,10 @@ mod tests {
                     .map(|bytes| sha256_hex(bytes.as_bytes()));
                 assert_eq!(conflict.current_revision_sha256, expected_current_revision);
                 assert_eq!(
-                    store.read_conflict(&conflict.id, &relative_path).unwrap().bytes,
+                    store
+                        .read_conflict(&conflict.id, &relative_path)
+                        .unwrap()
+                        .bytes,
                     expected_incoming
                 );
                 let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
