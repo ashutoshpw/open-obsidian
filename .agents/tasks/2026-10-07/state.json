@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:46:30Z",
+  "updated_at": "2026-10-10T18:53:51Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8006dd7002965a57ac40135d3fb38e9edac536d3",
-  "current_milestone": "R2.8.45",
-  "next_action": "R2.8.44 is accepted on exact source SHA 8006dd7002965a57ac40135d3fb38e9edac536d3; all seven required GitHub Actions workflows passed. R2.8.45 should verify the existing escaped-highlight-opener fixture stays literal in native preview and does not create a highlight span. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
+  "last_reconciled_head": "ddaa4122c04e60cadd69825145e1f79fbb005f70",
+  "current_milestone": "R2.8.46",
+  "next_action": "R2.8.45 is accepted on exact source SHA ddaa4122c04e60cadd69825145e1f79fbb005f70 after correcting an accessibility-label assertion; all seven required GitHub Actions workflows passed. R2.8.46 should verify a highlight mixed with Markdown emphasis uses an explicit source-only fallback. Use exact-SHA GitHub Actions only; full C02.1 and phases R3-R7 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "8006dd7002965a57ac40135d3fb38e9edac536d3"
+      "implementation_sha": "ddaa4122c04e60cadd69825145e1f79fbb005f70"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.45 accepted: an escaped highlight opener remains literal in the native preview and produces no highlight span. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA ddaa4122c04e60cadd69825145e1f79fbb005f70. Attempt 1's cross-platform label assertion failure and correction are recorded in evidence. Evidence: evidence/r2.8.45-escaped-highlight-literal-ddaa412.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.44 accepted: wiki-link markers inside inline and fenced code remain literal Markdown and are not resolved or clickable in the native note preview; source, vault, and app-data bytes remain unchanged. The focused egui test passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 8006dd7002965a57ac40135d3fb38e9edac536d3. Evidence: evidence/r2.8.44-code-markers-remain-literal-8006dd7.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.43 accepted: the primary preview keeps a resolved wiki link inside a Markdown heading source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA 9017825fc2626069d756aa919cd7893b3ccbf390. Evidence: evidence/r2.8.43-heading-context-wiki-link-fallback-9017825.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.42 accepted: the primary preview keeps a resolved wiki link inside a Markdown blockquote source-only. The focused egui case passed on Ubuntu, macOS, and Windows; all seven required GitHub Actions workflows passed on exact source SHA e67e133d557526d1a4db355561136b09451683b8. Evidence: evidence/r2.8.42-blockquote-wiki-link-fallback-e67e133.json. C02.1 and phases R3-R7 remain pending.",
@@ -271,7 +272,7 @@
     "R2.8.33 primary-panel safe HTML-break and plain-highlight projections passed all seven required workflows on exact source SHA d8ab02cc5f0c2a0f9cf9af6aaf7072ab120c9a01. Evidence: evidence/r2.8.33-primary-preview-projections-d8ab02c.json.",
     "R2.8.34 resolved wiki-link preview passed both focused UI tests and all seven required GitHub Actions workflows on exact source SHA b03a6733c6a26ed000b15bb1123612fd025c4e0f across Ubuntu, macOS, and Windows. Evidence: evidence/r2.8.34-resolved-wiki-links-b03a673.json. Unsupported or complex wiki links remain source-only; full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA 8006dd7002965a57ac40135d3fb38e9edac536d3 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
+  "push_status": "Accepted Rust implementation source SHA ddaa4122c04e60cadd69825145e1f79fbb005f70 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -18681,7 +18682,7 @@
       "next_action": "R2.8.44 is accepted; continue with a fixture-backed native preview check for an escaped highlight opener in R2.8.45. Full C02.1 and phases R3-R7 remain pending."
     },
     "R2.8.45": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "c42a4a8bedd750a082177f6af38a42cbba27cd1b",
       "scope": "Verify an escaped highlight opener remains literal in the native Markdown preview and is not projected as a highlight.",
       "acceptance": [
@@ -18690,15 +18691,34 @@
         "The fixture source remains byte-identical and the fixture inventory is reconciled.",
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
-      "implementation_commits": [],
-      "tracker_checkpoint": {
-        "sha": "c42a4a8bedd750a082177f6af38a42cbba27cd1b",
-        "inventory_run_id": 38076833787,
-        "inventory_job_id": 114285470515,
-        "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38076833787"
+      "implementation_commits": [
+        "7a00225f6bd2451b7a90fe7920aa71e2ac251565",
+        "ddaa4122c04e60cadd69825145e1f79fbb005f70"
+      ],
+      "validated_source_sha": "ddaa4122c04e60cadd69825145e1f79fbb005f70",
+      "ci_runs": {
+        "inventory": 38077150604,
+        "loaded_plugins": 38077150596,
+        "desktop_build": 38077150598,
+        "quality": 38077150615,
+        "rust_ci": 38077150576,
+        "plugin_renderer": 38077150586,
+        "obsidian_vault_roundtrip": 38077150578
       },
-      "next_action": "Attempt 1 on source SHA 7a00225 failed on all three Rust CI platforms because the accessible paragraph text was split into nodes; the escaped delimiter is exposed as '==this phrase== as literal text.'. The assertion now targets that emitted node. Push the correction for exact-SHA GitHub Actions."
+      "evidence": "evidence/r2.8.45-escaped-highlight-literal-ddaa412.json",
+      "next_action": "R2.8.45 is accepted; continue with a fixture-backed source-only fallback check for mixed-formatting highlights in R2.8.46. Full C02.1 and phases R3-R7 remain pending."
+    },
+    "R2.8.46": {
+      "status": "in_progress",
+      "starting_sha": "ddaa4122c04e60cadd69825145e1f79fbb005f70",
+      "scope": "Verify highlights mixed with Markdown emphasis use a visible source-only fallback instead of a partial highlight projection.",
+      "acceptance": [
+        "The existing highlight-mixed-with-markdown-formatting C02.1 fixture drives an egui preview test.",
+        "The preview announces unsupported highlights and presents the original source unchanged.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
+      "implementation_commits": [],
+      "next_action": "Add fixture-driven egui coverage for the mixed-formatting highlight fallback, then push for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

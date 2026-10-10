@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T18:53:16Z",
+  "milestone": "R2.8.45",
+  "status": "accepted",
+  "attempt": 2,
+  "source_sha": "ddaa4122c04e60cadd69825145e1f79fbb005f70",
+  "implementation_commits": [
+    "7a00225f6bd2451b7a90fe7920aa71e2ac251565",
+    "ddaa4122c04e60cadd69825145e1f79fbb005f70"
+  ],
+  "scope": "Verify an escaped highlight opener remains literal in the native Markdown preview and is not projected as a highlight.",
+  "tests": [
+    "tests::egui_keeps_escaped_highlight_openers_literal_in_markdown_preview"
+  ],
+  "fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "48579c8ae246044ae32479c804c15c7bfe802076c35c3612c266014d07729547",
+    "cases": [
+      "escaped-highlight-opener-is-literal"
+    ]
+  },
+  "toolchain": {
+    "channel": "stable via dtolnay/rust-toolchain@stable",
+    "rustc": "1.99.0 (b940084d7 2026-09-28)",
+    "platforms": [
+      "ubuntu-latest",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "cargo_lock_sha256": "f143845d873b4b530e4661a43baca149bec9c8deea627285620b5431252c06dc"
+  },
+  "acceptance": [
+    "The existing escaped-highlight-opener-is-literal C02.1 fixture drives a new egui preview test.",
+    "The escaped delimiter remains visible in the rendered text, the Markdown preview renders normally, and the analyzer reports no highlight span.",
+    "The fixture source remains byte-identical.",
+    "The focused egui test and all seven required GitHub Actions workflows pass on the exact accepted implementation SHA.",
+    "No local tests, builds, formatters, linters, or app launches are used."
+  ],
+  "attempts": [
+    {
+      "attempt": 1,
+      "source_sha": "7a00225f6bd2451b7a90fe7920aa71e2ac251565",
+      "required_workflows": {
+        "inventory": {"run_id": 38076889328, "conclusion": "success"},
+        "loaded_plugins": {"run_id": 38076889239, "conclusion": "success"},
+        "desktop_build": {"run_id": 38076889206, "conclusion": "success"},
+        "quality": {"run_id": 38076889265, "conclusion": "success"},
+        "rust_ci": {"run_id": 38076889325, "conclusion": "failure"},
+        "plugin_renderer": {"run_id": 38076889322, "conclusion": "success"},
+        "obsidian_vault_roundtrip": {"run_id": 38076889287, "conclusion": "success"}
+      },
+      "failure": "The test queried the whole rendered paragraph as one label. On all three OSes the AccessKit tree exposed the escaped marker text as a separate node, so the label assertion failed. The code correction queries that emitted node label."
+    }
+  ],
+  "required_workflows": {
+    "inventory": {
+      "run_id": 38077150604,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150604",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "inventory", "job_id": 114286402678, "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "run_id": 38077150596,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150596",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114286402859, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114286402955, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114286402993, "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38077150598,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150598",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114286402783, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114286402932, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114286402958, "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "run_id": 38077150615,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150615",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114286402969, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114286403101, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114286403151, "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "run_id": 38077150576,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150576",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 114286402479, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114286402659, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114286402672, "conclusion": "success"}
+      ],
+      "focused_test": {
+        "name": "tests::egui_keeps_escaped_highlight_openers_literal_in_markdown_preview",
+        "result": "passed on ubuntu-latest, macos-latest, and windows-latest",
+        "test_count": "83 passed, 0 failed on each platform"
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38077150586,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150586",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114286402878, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114286402994, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114286403045, "conclusion": "success"}
+      ]
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38077150578,
+      "attempt": 1,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38077150578",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114286542143, "conclusion": "success"},
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114286542379, "conclusion": "success"},
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114286542395, "conclusion": "success"}
+      ]
+    }
+  },
+  "tracker_checkpoint": {
+    "sha": "c42a4a8bedd750a082177f6af38a42cbba27cd1b",
+    "inventory_run_id": 38076833787,
+    "inventory_job_id": 114285470515,
+    "conclusion": "success",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38076833787"
+  },
+  "parallel_ci": {
+    "workflow": ".github/workflows/rust.yml",
+    "evidence": "evidence/parallel-ci.json",
+    "implementation_sha": "f38c0ef40cd073cc8c6aada74adbf190b15ac0f2",
+    "note": "The existing native parallel groups remain enabled; Rust CI and Obsidian vault round-trip passed on this exact SHA."
+  },
+  "artifacts": [
+    {"id": 11679616777, "name": "loaded-plugin-workflows-Linux-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:0cafa7b4e82ac9dbc7b232e46eea82907619cee307b81a08902b3c346461a59e"},
+    {"id": 11679516767, "name": "loaded-plugin-workflows-macOS-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:416761dd30c97703d7ea9af65a6a02f0f65936669f42eae13236f1f1b9efec8a"},
+    {"id": 11678766650, "name": "loaded-plugin-workflows-Windows-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:d8f4ba518907e4b45fdcfa2e9af97aebffee9806024dae17a97b4ab1a0a76814"},
+    {"id": 11679651531, "name": "openobsidian-Linux-preview-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:4b2318c2310534fdd0245584d5dd7c248d38617b9f809a4cc6a5fa53f9e6b256"},
+    {"id": 11679496967, "name": "openobsidian-macOS-preview-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:fdb4f0a13ccd14481368af274a17d97e4e7f508072d73d26792f628b28f473de"},
+    {"id": 11679362054, "name": "openobsidian-Windows-preview-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:64248750ed2fa89d54587e49d7daf55dce82ae21fce29e7f12c4ba800dbc8923"},
+    {"id": 11678907854, "name": "openobsidian-rust-preview-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:6a7d3d0a949906cb16a099af976396c0129ce177d084ff66b4c3eaed880989e6"},
+    {"id": 11679422198, "name": "rust-plugin-runtime-Linux-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:e6968c6dc161462425dcb03a9c93a2c75e441d4af446a7a093cce94255d39597"},
+    {"id": 11679002886, "name": "rust-plugin-runtime-Windows-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:e0f0f6e7f6735ff9c6ef8ac4e9b2b36020bb382ac44891ea8576e44bad63d39c"},
+    {"id": 11678606989, "name": "rust-plugin-runtime-macOS-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:8eab77aec4257ff9576e1f012cf2add643e0a0f6c80f478daf0ae48918461cc4"},
+    {"id": 11679037280, "name": "plugin-renderer-lifecycle-Linux-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:f94961cd67b17b93561db85e2b9468c1e5c9fe6346a6035d037ffbf8ad812eef"},
+    {"id": 11678752707, "name": "plugin-renderer-lifecycle-Windows-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:0d1584e641e88fc4e3a375c00cd2e65818d0c73087921d9d53b30cd4958bed01"},
+    {"id": 11678547969, "name": "plugin-renderer-lifecycle-macOS-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:9f0373f9797ddfab9a0e1323d13afb42841367d762347a14516d028eaf0bfd24"},
+    {"id": 11679107829, "name": "obsidian-vault-roundtrip-Windows-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:9943b4d434a04be8f6df26632e9620acabf5c78b1f4f7b39492d1f596130744c"},
+    {"id": 11678612145, "name": "obsidian-vault-roundtrip-macOS-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:7f2ab528898e79b3443a2cf6c98ff8da3d65cf500a5efe77697e225decb7c122"},
+    {"id": 11678482385, "name": "obsidian-vault-roundtrip-Linux-ddaa4122c04e60cadd69825145e1f79fbb005f70", "digest": "sha256:9fbe5d934955213609af278049ea127d7b29f8e0e742bc503ac7941a780705f2"}
+  ],
+  "limitations": [
+    "This slice verifies escaped highlight delimiters remain literal in the native preview; it does not complete all C02.1 behavior.",
+    "Full C02.1 and migration phases R3-R7 remain pending.",
+    "All executable validation was performed in GitHub Actions; no local tests, builds, formatters, linters, or app launches were used."
+  ]
+}
