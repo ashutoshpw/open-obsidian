@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T04:48:59Z",
+  "updated_at": "2026-10-10T04:54:58Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c3a2aed08ad7e6bff6d943070205bb2a578d94de",
+  "last_reconciled_head": "23480420323466c3d8996889a21b0624f677a081",
   "current_milestone": "R2.8.9",
-  "next_action": "Run exact-SHA GitHub Actions acceptance for the cloud-placeholder case, then continue the remaining three SYNC-004 failure-matrix scenarios. Keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "next_action": "Start R2.8.10 for the case-only-rename SYNC-004 scenario from the accepted tracker checkpoint. Three scenarios remain; keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -38,7 +38,7 @@
     "R2": {
       "status": "in_progress",
       "required_ci": [],
-      "implementation_sha": "f10243984108a56c7ccb6fdd71273c55c2003302"
+      "implementation_sha": "23480420323466c3d8996889a21b0624f677a081"
     },
     "R3": {
       "status": "pending",
@@ -67,6 +67,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.9 implemented the SYNC-004 cloud-placeholder case. Vault link resolution classifies cloud-placeholder://provider/object/123 as external and returns no local target or candidate path. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA 23480420323466c3d8996889a21b0624f677a081. Evidence: evidence/r2.8.9-sync-failure-matrix-2348042.json. Three failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.8 implemented the SYNC-004 symlink case with fixture-driven snapshot, read, and write coverage. The snapshot records an outside-pointing symlink, while reads and writes through it are denied and the outside target remains unchanged. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA f10243984108a56c7ccb6fdd71273c55c2003302. An initial source commit had two Ubuntu rustfmt-only differences; the exact CI diff was applied in the follow-up. Evidence: evidence/r2.8.8-sync-failure-matrix-f102439.json. Four failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.7 implemented the SYNC-004 rename-versus-edit case: after an external rename, a stale edit does not recreate the old path or disturb the renamed file and is retained as protected conflict history. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA e4231593c9f19e3110ca594d8241db98c963ff5f. The Ubuntu vault round-trip job passed on a same-SHA retry after its first attempt failed at the X11 visible-window lookup. Evidence: evidence/r2.8.7-sync-failure-matrix-e423159.json. Five failure-matrix scenarios and full SYNC-004 remain pending.",
     "R2.8.6 implemented the SYNC-004 delete-versus-edit case: a stale incoming edit is rejected after external deletion, preserved as protected conflict history, journaled, and does not resurrect the deleted path. The focused test and full workspace tests passed on Ubuntu, macOS and Windows; all seven required workflows passed on exact SHA c36954bd4ff4f4ecb5b34263ccd24a59ab63650e. Evidence: evidence/r2.8.6-sync-failure-matrix-c36954b.json. Six failure-matrix scenarios and full SYNC-004 remain pending.",
