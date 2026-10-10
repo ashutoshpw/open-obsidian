@@ -2675,3 +2675,15 @@ Accepted slice: an active even-backslash highlight opener remains source-only wh
 Use the existing `legacy-delimited-math` fixture to verify the preview identifies legacy math delimiters as unsupported and displays the original source unchanged. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
 
 Starting from tracker checkpoint `6985063e723a100f342864bf965d8959152627b5`, inventory [run 38080064698](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080064698), job 114294968243, passed.
+
+### R2.8.49 accepted — legacy delimited math uses source fallback — source SHA `17235d180c0a7d233aa79a7d0f9e2f48d3a13e4f`
+
+The existing `legacy-delimited-math` C02.1 fixture now drives an egui preview test. It verifies the preview labels legacy math delimiters as unsupported, displays the exact fixture source, and leaves its bytes unchanged. The focused test passed on Ubuntu, macOS, and Windows; each platform's `ui-egui` suite passed 87 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38080241011](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080241011), loaded-plugin workflows [38080241041](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080241041), desktop build [38080241039](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080241039), quality [38080241030](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080241030), Rust CI [38080241040](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080241040), plugin renderer [38080240989](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080240989), and Obsidian vault round-trip [38080241014](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080241014). The first Linux round-trip attempt failed at `xdotool search --onlyvisible --name .`; retry attempt 2 passed on the same SHA. Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28). Job IDs, both Linux attempt artifacts, all artifact digests, and the retry details are recorded in [evidence/r2.8.49-legacy-delimited-math-fallback-17235d1.json](evidence/r2.8.49-legacy-delimited-math-fallback-17235d1.json). Native `parallel:` groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: the legacy delimited math fixture remains visible source-only with an explicit reason and no source mutation. Full C02.1 and migration phases R3-R7 remain pending. Next: verify the existing Mermaid diagram fixture uses the visible source-only fallback in R2.8.50.
+
+### R2.8.50 in progress — Mermaid diagram remains source-only
+
+Use the existing `mermaid-diagram` C02.1 fixture to verify that the native preview identifies diagrams as unsupported and displays the original fenced source unchanged. Add fixture-driven egui coverage, then push for exact-SHA GitHub Actions; no executable validation runs locally.
