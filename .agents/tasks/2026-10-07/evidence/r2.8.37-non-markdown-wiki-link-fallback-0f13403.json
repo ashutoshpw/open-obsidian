@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "recorded_at": "2026-10-10T17:38:03Z",
+  "recorded_at": "2026-10-10T17:39:57Z",
   "milestone": "R2.8.37",
   "status": "accepted",
   "attempt": 1,
@@ -163,7 +163,13 @@
     "evidence": "evidence/parallel-ci.json",
     "announcement": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/"
   },
-  "tracker_checkpoint": null,
+  "tracker_checkpoint": {
+    "sha": "3e4af157c28d3eca8b746b3b567772f3a3ad6c79",
+    "inventory_run_id": 38072571002,
+    "inventory_job_id": 114272857654,
+    "conclusion": "success",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38072571002"
+  },
   "limitations": [
     "This slice verifies source-only handling for one resolved non-Markdown asset type in addition to embedded and subpath links; it does not broaden supported preview syntax.",
     "This does not complete C02.1 or migration phases R3-R7.",

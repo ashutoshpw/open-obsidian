@@ -2524,6 +2524,8 @@ All seven required workflows passed on the exact source SHA: inventory [38071964
 
 Accepted slice: source-only safety for resolved non-Markdown wiki-link targets. Full C02.1 and migration phases R3-R7 remain pending.
 
+The accepted evidence checkpoint at [3e4af157c28d3eca8b746b3b567772f3a3ad6c79](https://github.com/ashutoshpw/open-obsidian/commit/3e4af157c28d3eca8b746b3b567772f3a3ad6c79) passed the GitHub inventory workflow on that exact tracker SHA: [run 38072571002](https://github.com/ashutoshpw/open-obsidian/actions/runs/38072571002), job 114272857654.
+
 ### R2.8.38 in progress — mixed-formatting wiki-link fallback
 
-Starting from accepted implementation SHA `0f134032cadfd3e983359f5951cf553ea3e5b323`, add fixture-driven UI evidence that a wiki link surrounded by Markdown emphasis remains source-only even when its target resolves to a local Markdown note. Verify no clickable link and unchanged source, vault, and app-data bytes. All executable validation remains GitHub Actions only.
+Starting from tracker SHA `3e4af157c28d3eca8b746b3b567772f3a3ad6c79` (accepted implementation SHA `0f134032cadfd3e983359f5951cf553ea3e5b323`), add fixture-driven UI evidence that a wiki link surrounded by Markdown emphasis remains source-only even when its target resolves to a local Markdown note. The resolved-target mixed-formatting case is in the existing source-only UI test; it checks for no clickable link and unchanged source, vault, and app-data bytes. The fixture hash is reconciled; push for exact-SHA GitHub Actions. All executable validation remains GitHub Actions only.

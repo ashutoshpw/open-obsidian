@@ -151,6 +151,17 @@
       "remains_clickable": false,
       "preserves_source_bytes": true
     },
+    "mixed_formatting_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read **[[Plans/Project]]** next.",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\nThe resolved target note.",
+      "expected_link_kind": "wiki_link",
+      "expected_subpath": null,
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
     "safe_inline_html": {
       "rendered_tags": ["<br>", "<br/>", "<br />"],
       "unsupported_html": "Keep all other inline and block HTML visible as original source."

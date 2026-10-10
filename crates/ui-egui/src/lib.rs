@@ -3860,6 +3860,7 @@ mod tests {
             "embedded_wiki_link_preview",
             "subpath_wiki_link_preview",
             "non_markdown_wiki_link_preview",
+            "mixed_formatting_wiki_link_preview",
         ]
         .into_iter()
         .enumerate()
@@ -3941,7 +3942,7 @@ mod tests {
                     .query_all_by_role(eframe::egui::accesskit::Role::Link)
                     .next()
                     .is_none(),
-                "embedded, subpath, and non-Markdown wiki links must not be clickable"
+                "embedded, subpath, non-Markdown, and mixed-formatting wiki links must not be clickable"
             );
             assert_eq!(
                 harness
