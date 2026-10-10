@@ -2637,3 +2637,15 @@ Accepted slice: escaped highlight markers remain literal and read-only in native
 ### R2.8.46 in progress — mixed-formatting highlights use source fallback
 
 Starting from tracker checkpoint `fce50a295a53bcc0a191591b8bab6a58307c814c`, inventory [run 38077690594](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077690594), job 114287998844, passed. Add egui preview coverage for the existing `highlight-mixed-with-markdown-formatting` fixture. The preview should explain that highlights are unsupported in this mixed form, show the original source intact, and keep the source bytes unchanged. Push the focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+
+### R2.8.46 accepted — mixed-formatting highlights use source fallback — source SHA `0df8f8ca8ea6181d1d665006d1bac478ca247064`
+
+The fixture-driven egui preview test confirms mixed emphasis and highlight syntax is shown as source with an explicit unsupported-highlights message and no projected highlight span. The original source remains unchanged. The focused case passed on Ubuntu, macOS, and Windows.
+
+All seven workflows passed on this exact SHA: inventory [38077740796](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740796), loaded-plugin workflows [38077740745](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740745), desktop build [38077740675](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740675), quality [38077740749](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740749), Rust CI [38077740698](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740698), plugin renderer [38077740789](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740789), and Obsidian vault round-trip [38077740761](https://github.com/ashutoshpw/open-obsidian/actions/runs/38077740761). Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.46-mixed-formatting-highlight-fallback-0df8f8c.json](evidence/r2.8.46-mixed-formatting-highlight-fallback-0df8f8c.json). No local executable validation was used.
+
+Accepted slice: mixed-formatting highlights remain source-only. Full C02.1 and migration phases R3-R7 remain pending. Next: check the attribute-bearing HTML line-break fallback in R2.8.47.
+
+### R2.8.47 in progress — attribute-bearing HTML line breaks remain source-only
+
+Use the existing `html-break-with-attributes-remains-source` fixture to verify the native preview identifies raw HTML as unsupported and displays the original source without mutation. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
