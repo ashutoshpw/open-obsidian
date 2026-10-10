@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T22:50:03Z",
+  "updated_at": "2026-10-10T22:51:20Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bb61601e1a8358c665cebd3cda544782c497a585",
-  "current_milestone": "R2.8.65",
-  "next_action": "R2.8.64 is accepted on implementation SHA 885fb20208c7390d483e4a9d32136d63600d6b44; all seven required GitHub Actions workflows passed. R2.8.65 tracker SHA bb61601e1a8358c665cebd3cda544782c497a585 passed the GitHub inventory checkpoint. Reconcile all 21 shared C02.1 preview fixture cases against explicit egui test coverage, and record the broader render/edit gaps before selecting the next implementation slice.",
+  "last_reconciled_head": "cacdb89f456f165ca6a5dca183f7be8fb714525e",
+  "current_milestone": "R2.8.66",
+  "next_action": "R2.8.65 reconciled all 21 Rust preview cases on tracker base cacdb89f456f165ca6a5dca183f7be8fb714525e and identified the missing dedicated standard alert callout preview fixture. R2.8.66 adds that fixture and verifies visible callout text plus unchanged source bytes through GitHub Actions. C02.1 remains pending until broader render/edit criteria are evidenced.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.65 reconciled all 21 rust_preview fixture cases with explicit egui tests and recorded the separate C02.1 render/edit gap. No dedicated standard alert callout preview case exists although the renderer declares that block supported; C02.1 remains pending. Evidence: evidence/r2.8.65-c02.1-preview-coverage-audit.md. The tracker inventory checkpoint passed on SHA bb61601e1a8358c665cebd3cda544782c497a585.",
     "R2.8.64 fixture-driven simple wiki-link source fallback passed all seven required GitHub Actions workflows on exact implementation SHA 885fb20208c7390d483e4a9d32136d63600d6b44. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 97 ui-egui tests passing on each platform. The initial formatting-only failure was corrected from GitHub Actions output; a superseded quality retry passed on the same initial SHA, and final corrected-source quality passed on attempt 1. Evidence: evidence/r2.8.64-simple-wiki-link-fixture-885fb20.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.59 accepted: the canonical safe-html-inline-break C02.1 fixture now drives the egui preview test. It verifies RenderMarkdown, the fixture's expected native-render source, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows (96 ui-egui tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA 56a408ac224bb87cb8f2e263a376c55087e171b9. The first vault round-trip attempt failed only at Ubuntu X11 visible-window discovery; same-SHA attempt 2 passed on all three platforms. Evidence: evidence/r2.8.59-canonical-safe-html-break-56a408a.json. Full C02.1 and phases R3-R7 remain pending.",
     "R2.8.58 accepted: the safe-html-inline-break-spaced-self-closing C02.1 fixture now drives an egui preview test. It verifies RenderMarkdown, the expected native-render source with a Markdown hard break, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows (96 ui-egui tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA d1e6283339193b6c72273cccf4ce657e2c7063e6. Evidence: evidence/r2.8.58-spaced-self-closing-html-break-d1e6283.json. Full C02.1 and phases R3-R7 remain pending.",
@@ -289,7 +290,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.64 acceptance evidence is pushed; inventory passed on tracker SHA bb61601e1a8358c665cebd3cda544782c497a585. The accepted implementation SHA 885fb20208c7390d483e4a9d32136d63600d6b44 passed all seven required GitHub Actions workflows. No local executable validation was used.",
+  "push_status": "R2.8.65 C02.1 preview coverage audit recorded on tracker base cacdb89f456f165ca6a5dca183f7be8fb714525e; the prior tracker inventory checkpoint passed. C02.1 remains pending and R2.8.66 starts the dedicated standard alert callout preview slice. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19381,9 +19382,9 @@
       "evidence": "evidence/r2.8.64-simple-wiki-link-fixture-885fb20.json"
     },
     "R2.8.65": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "885fb20208c7390d483e4a9d32136d63600d6b44",
-      "scope": "Reconcile shared C02.1 Rust Markdown preview fixture coverage against its broader render/edit acceptance and identify the next concrete migration slice.",
+      "scope": "Reconcile the shared C02.1 Rust Markdown preview cases with egui coverage and distinguish that evidence from full render/edit acceptance.",
       "acceptance": [
         "Reconcile each of the 21 rust_preview fixture cases with explicit Rust egui preview coverage or record a specific gap.",
         "Separate read-only preview evidence from C02.1 render/edit acceptance and keep the requirement pending until the full criteria are evidenced.",
@@ -19397,7 +19398,22 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38092858681"
       },
-      "next_action": "The tracker inventory passed on SHA bb61601e1a8358c665cebd3cda544782c497a585. Reconcile all 21 shared C02.1 Rust preview cases with explicit egui coverage, record the render/edit acceptance gaps, and select the next bounded implementation slice. Do not run local executable validation."
+      "next_action": "R2.8.65 mapped all 21 rust_preview cases to explicit egui tests. The broader C02.1 criterion remains pending; R2.8.66 adds a dedicated standard alert callout preview case.",
+      "validated_source_sha": "885fb20208c7390d483e4a9d32136d63600d6b44",
+      "evidence": "evidence/r2.8.65-c02.1-preview-coverage-audit.md"
+    },
+    "R2.8.66": {
+      "status": "in_progress",
+      "starting_sha": "cacdb89f456f165ca6a5dca183f7be8fb714525e",
+      "scope": "Add fixture-driven egui preview coverage for a standard alert callout and verify visible callout text with unchanged source bytes.",
+      "acceptance": [
+        "The shared C02.1 fixture includes a standard alert callout preview case with expected RenderMarkdown disposition.",
+        "The egui preview visibly exposes the callout heading and body while preserving the original fixture source bytes.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
+      ],
+      "implementation_commits": [],
+      "tracker_checkpoint": null,
+      "next_action": "After the R2.8.65 audit record is pushed, run the Rust migration inventory workflow on that tracker SHA. Then add the standard alert callout case and focused egui coverage, pushing for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {

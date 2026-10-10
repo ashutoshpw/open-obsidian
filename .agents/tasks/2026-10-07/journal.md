@@ -2914,3 +2914,12 @@ Accepted slice: simple wiki links remain visible as source with an explicit unsu
 Reconcile each of the 21 shared Rust Markdown preview fixture cases with its egui coverage, then distinguish this read-only preview coverage from C02.1's broader render/edit acceptance. Keep C02.1 pending until the whole criterion is evidenced, and select the next bounded implementation slice from the remaining gaps. Push the R2.8.64 acceptance record and run the Rust migration inventory checkpoint on its tracker SHA; no local executable validation runs.
 
 R2.8.65 tracker checkpoint: inventory [run 38092858681](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092858681), job 114332692803, passed for tracker SHA bb61601e1a8358c665cebd3cda544782c497a585.
+
+
+### R2.8.65 accepted — C02.1 preview coverage reconciliation
+
+All 21 `rust_preview.cases` entries map to explicit egui preview tests. The audit separates that preview coverage from C02.1's wider render/edit clause: task and callout-task toggles, table-cell source editing and generic source editing have separate UI tests, but the declared standard alert callout preview has no dedicated case asserting its heading and body. C02.1 remains pending. The audit and complete case-to-test map are in [evidence/r2.8.65-c02.1-preview-coverage-audit.md](evidence/r2.8.65-c02.1-preview-coverage-audit.md). The Rust migration inventory checkpoint passed on tracker SHA `bb61601e1a8358c665cebd3cda544782c497a585`; no local executable validation was used.
+
+### R2.8.66 in progress — standard alert callout preview fixture
+
+Add a standard alert callout to the shared C02.1 Rust preview fixture and verify the egui preview exposes its heading and body while keeping the original source bytes unchanged. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs.
