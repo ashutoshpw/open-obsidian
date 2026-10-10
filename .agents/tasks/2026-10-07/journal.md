@@ -2799,3 +2799,5 @@ Accepted slice: the allowlisted HTML break followed by CRLF renders as a native 
 ### R2.8.57 in progress — self-closing safe HTML line break
 
 Use the existing safe-html-inline-break-self-closing C02.1 fixture to verify the preview selects RenderMarkdown and renders the expected two text lines while preserving the original source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
+
+R2.8.57 tracker checkpoint: inventory [run 38086361576](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086361576), job 114313592142, passed for tracker SHA 4ab381bbd04cbcc72abbff365f630ce26e786372.
