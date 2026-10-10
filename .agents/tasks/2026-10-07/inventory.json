@@ -1372,14 +1372,14 @@
     },
     {
       "path": "fixtures/markdown-dialects.json",
-      "sha256": "86ae688ed6e579e0688261cce1287e16401741bfe49c23b230d3434f14a482f4",
+      "sha256": "2b111e6f840d892cbd2e12ad8eb1594c0e2803172e6dd0d5343da013c0196013",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
       "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
       "fixture_reader": "crates/testkit",
-      "reconciliation_reason": "R2.8.34 adds resolved, unresolved, and ambiguous wiki-link preview cases; R2.8.35 adds a stale-revision fallback case; R2.8.36 adds resolved-target embed and subpath source-only cases while keeping this baseline fixture mapped to its existing Rust document owner."
+      "reconciliation_reason": "R2.8.34 adds resolved, unresolved, and ambiguous wiki-link preview cases; R2.8.35 adds a stale-revision fallback case; R2.8.36 adds resolved-target embed and subpath source-only cases; R2.8.37 adds a resolved non-Markdown target fallback case while keeping this baseline fixture mapped to its existing Rust document owner."
     },
     {
       "path": "fixtures/markdown-property-preservation.json",

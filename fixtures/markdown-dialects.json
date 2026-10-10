@@ -140,6 +140,17 @@
       "remains_clickable": false,
       "preserves_source_bytes": true
     },
+    "non_markdown_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read [[Boards/Research.canvas]] next.",
+      "target_path": "Boards/Research.canvas",
+      "target_source": "{\"nodes\":[],\"edges\":[]}",
+      "expected_link_kind": "wiki_link",
+      "expected_subpath": null,
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
     "safe_inline_html": {
       "rendered_tags": ["<br>", "<br/>", "<br />"],
       "unsupported_html": "Keep all other inline and block HTML visible as original source."

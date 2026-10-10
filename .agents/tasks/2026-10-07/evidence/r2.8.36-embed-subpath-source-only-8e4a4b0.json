@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "recorded_at": "2026-10-10T17:22:17Z",
+  "recorded_at": "2026-10-10T17:29:11Z",
   "milestone": "R2.8.36",
   "status": "accepted",
   "attempt": 2,
@@ -152,7 +152,13 @@
     "evidence": "evidence/parallel-ci.json",
     "announcement": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/"
   },
-  "tracker_checkpoint": null,
+  "tracker_checkpoint": {
+    "sha": "a7ccfd1d835d36a4afa8ab6857af284545a47105",
+    "inventory_run_id": 38071735312,
+    "inventory_job_id": 114270346478,
+    "conclusion": "success",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38071735312"
+  },
   "limitations": [
     "This slice verifies the source-only boundary for embedded and subpath wiki links; it does not expand the supported preview syntax.",
     "This does not complete C02.1 or migration phases R3-R7.",

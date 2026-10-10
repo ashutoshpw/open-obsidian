@@ -2510,6 +2510,8 @@ All seven required workflows passed on this exact source SHA: inventory [3807079
 
 Accepted slice: source-only safety for embedded and subpath wiki links whose Markdown targets resolve. Full C02.1 and migration phases R3-R7 remain pending.
 
+The accepted evidence checkpoint at [a7ccfd1d835d36a4afa8ab6857af284545a47105](https://github.com/ashutoshpw/open-obsidian/commit/a7ccfd1d835d36a4afa8ab6857af284545a47105) passed the GitHub inventory workflow on that exact tracker SHA: [run 38071735312](https://github.com/ashutoshpw/open-obsidian/actions/runs/38071735312), job 114270346478.
+
 ### R2.8.37 in progress — non-Markdown wiki-link target fallback
 
-Starting from accepted implementation SHA `8e4a4b09127bc7a02e52d616d6e09c5118af4644`, add fixture-driven UI evidence that a simple wiki link to a uniquely resolved non-Markdown vault asset stays source-only. Confirm the path resolution succeeds while the preview exposes no clickable link and preserves source, vault, and app-data bytes. All executable validation remains GitHub Actions only.
+Starting from tracker SHA `a7ccfd1d835d36a4afa8ab6857af284545a47105` (accepted implementation SHA `8e4a4b09127bc7a02e52d616d6e09c5118af4644`), add fixture-driven UI evidence that a simple wiki link to a uniquely resolved non-Markdown vault asset stays source-only. The test now confirms path resolution succeeds while the preview exposes no clickable link and preserves source, vault, and app-data bytes. The fixture hash is reconciled; push for exact-SHA GitHub Actions. All executable validation remains GitHub Actions only.

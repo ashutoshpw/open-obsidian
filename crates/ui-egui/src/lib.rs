@@ -3851,14 +3851,18 @@ mod tests {
     }
 
     #[test]
-    fn egui_note_source_preview_keeps_embedded_and_subpath_wiki_links_source_only() {
+    fn egui_note_source_preview_keeps_unsupported_wiki_link_contexts_source_only() {
         let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
             .expect("Markdown dialect fixture must be valid JSON");
         let temporary = UiTempDir::new();
 
-        for (scenario_index, case_id) in ["embedded_wiki_link_preview", "subpath_wiki_link_preview"]
-            .into_iter()
-            .enumerate()
+        for (scenario_index, case_id) in [
+            "embedded_wiki_link_preview",
+            "subpath_wiki_link_preview",
+            "non_markdown_wiki_link_preview",
+        ]
+        .into_iter()
+        .enumerate()
         {
             let case = &fixture["rust_preview"][case_id];
             let source_path = case["source_path"]
@@ -3937,7 +3941,7 @@ mod tests {
                     .query_all_by_role(eframe::egui::accesskit::Role::Link)
                     .next()
                     .is_none(),
-                "embedded and subpath wiki links must not be clickable"
+                "embedded, subpath, and non-Markdown wiki links must not be clickable"
             );
             assert_eq!(
                 harness
