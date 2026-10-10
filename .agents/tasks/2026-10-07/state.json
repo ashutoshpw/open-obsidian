@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T11:03:24Z",
+  "updated_at": "2026-10-10T11:08:36Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "915653c0f2b491eb888cb52aba0bec63412563cb",
+  "last_reconciled_head": "9bc9eaaa8161824018b546aa142736b2d7d228e8",
   "current_milestone": "R2.8.23",
-  "next_action": "Implement a bounded C02.1 Markdown preflight slice: respect backslash escape parity for highlight markers. Keep full C02.1 pending and run all executable validation in GitHub Actions only.",
+  "next_action": "R2.8.23 CI attempt 1 on 9bc9eaaa8161824018b546aa142736b2d7d228e8 found a Linux rustfmt line-wrap failure; apply the exact CI correction, push a follow-up, and rerun all seven required workflows.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16617,10 +16617,28 @@
         "The shared dialect fixture and its inventory SHA-256 are updated for both escape-parity cases.",
         "Focused Rust tests and all seven required GitHub Actions workflows pass on the exact implementation SHA; all executable validation runs in GitHub Actions only."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "9bc9eaaa8161824018b546aa142736b2d7d228e8"
+      ],
       "ci_runs": {},
+      "ci_attempts": [
+        {
+          "source_sha": "9bc9eaaa8161824018b546aa142736b2d7d228e8",
+          "conclusion": "failure",
+          "failure_summary": "Rust CI failed only because Ubuntu rustfmt required one condition to be on a single line; workspace tests passed on Ubuntu, macOS, and Windows. The other six workflows passed, including the three-OS vault round-trip.",
+          "ci_runs": {
+            "rust_ci": 38047091161,
+            "obsidian_vault_roundtrip": 38047091229,
+            "inventory": 38047091127,
+            "loaded_plugins": 38047091211,
+            "desktop_build": 38047091149,
+            "quality": 38047091128,
+            "plugin_renderer": 38047091157
+          }
+        }
+      ],
       "evidence": null,
-      "next_action": "Commit and push the focused escape-parity slice, then use exact-SHA GitHub Actions results to accept or correct it; keep full C02.1 pending."
+      "next_action": "The formatter-reported correction is prepared; commit and push it, then wait for all seven required workflows on the exact new SHA."
     }
   },
   "ci_preparation": {

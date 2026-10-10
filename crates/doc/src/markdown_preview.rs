@@ -220,10 +220,7 @@ fn scan_source_only_syntax(
                 // sign in an escaped highlight opener so the scanner does not mistake the second
                 // one for a fresh delimiter. Even-length backslash runs retain their normal
                 // behavior: the following opener is still active syntax.
-                cursor = if odd_backslash_run
-                    && run_end < bytes.len()
-                    && bytes[run_end] == b'='
-                {
+                cursor = if odd_backslash_run && run_end < bytes.len() && bytes[run_end] == b'=' {
                     run_end + 1
                 } else {
                     run_end
