@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T22:52:13Z",
+  "updated_at": "2026-10-10T23:06:23Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "767799df2165056bff889e770abf814ecf91f80a",
-  "current_milestone": "R2.8.66",
-  "next_action": "R2.8.65 coverage reconciliation is recorded on tracker SHA 767799df2165056bff889e770abf814ecf91f80a, and its inventory checkpoint passed. Implement R2.8.66 by adding a standard alert callout fixture preview assertion for visible heading/body and unchanged source bytes. Use GitHub Actions only for executable validation.",
+  "last_reconciled_head": "71022bfb86eda820835a9e3e57f72a9bed271241",
+  "current_milestone": "R2.8.68",
+  "next_action": "R2.8.66 and R2.8.67 now establish passing C02.1 render/edit acceptance on source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. Start R2.8.68 by auditing the parent C02 three-mode workflow and byte-preserving golden round-trip criteria against Rust UI, document, and vault fixtures; keep C02 pending until every clause has direct evidence. Use GitHub Actions only for executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "885fb20208c7390d483e4a9d32136d63600d6b44"
+      "implementation_sha": "71022bfb86eda820835a9e3e57f72a9bed271241"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,8 @@
     }
   },
   "completed_actions": [
+    "R2.8.67 reconciled all 22 C02.1 preview fixture cases with egui tests and matched fixture-backed task, callout-task, table-cell, and generic source edits to byte-preservation assertions. All seven required workflows passed on source SHA 71022bfb86eda820835a9e3e57f72a9bed271241, with 98 ui-egui tests passing on Ubuntu, macOS, and Windows; C02.1 is marked passing with evidence/r2.8.67-c02.1-render-edit-audit.md and evidence/r2.8.66-standard-alert-callout-71022bf.json. Parent C02 remains pending.",
+    "R2.8.66 added a standard alert callout to the shared dialect fixture and verified RenderMarkdown, accessible alert/title/body labels, and unchanged source bytes. The focused UI test passed on all three platforms, with 98 ui-egui tests passing each; all seven required workflows passed on corrected source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. GitHub CI exposed and resolved initial rustfmt and accessible-label differences. Evidence: evidence/r2.8.66-standard-alert-callout-71022bf.json.",
     "R2.8.65 reconciled all 21 rust_preview fixture cases with explicit egui tests and recorded the separate C02.1 render/edit gap. No dedicated standard alert callout preview case exists although the renderer declares that block supported; C02.1 remains pending. Evidence: evidence/r2.8.65-c02.1-preview-coverage-audit.md. The tracker inventory checkpoint passed on SHA bb61601e1a8358c665cebd3cda544782c497a585.",
     "R2.8.64 fixture-driven simple wiki-link source fallback passed all seven required GitHub Actions workflows on exact implementation SHA 885fb20208c7390d483e4a9d32136d63600d6b44. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 97 ui-egui tests passing on each platform. The initial formatting-only failure was corrected from GitHub Actions output; a superseded quality retry passed on the same initial SHA, and final corrected-source quality passed on attempt 1. Evidence: evidence/r2.8.64-simple-wiki-link-fixture-885fb20.json. C02.1 and phases R3-R7 remain pending.",
     "R2.8.59 accepted: the canonical safe-html-inline-break C02.1 fixture now drives the egui preview test. It verifies RenderMarkdown, the fixture's expected native-render source, visible text on both lines, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows (96 ui-egui tests passed per platform); all seven required GitHub Actions workflows passed on exact source SHA 56a408ac224bb87cb8f2e263a376c55087e171b9. The first vault round-trip attempt failed only at Ubuntu X11 visible-window discovery; same-SHA attempt 2 passed on all three platforms. Evidence: evidence/r2.8.59-canonical-safe-html-break-56a408a.json. Full C02.1 and phases R3-R7 remain pending.",
@@ -290,7 +292,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.65 C02.1 coverage audit passed the Rust migration inventory workflow on tracker SHA 767799df2165056bff889e770abf814ecf91f80a. The 21 preview cases map to egui coverage; R2.8.66 targets the missing dedicated standard alert callout preview case. No local executable validation was used.",
+  "push_status": "R2.8.66 and R2.8.67 acceptance records are prepared against exact source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. C02.1 is passing; parent C02 remains pending. Run the Rust migration inventory on the acceptance-record commit, then record its checkpoint before implementing R2.8.68. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -11231,6 +11233,209 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38066822179/job/114256045879"
         }
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38093279218,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279218",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114333907759,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279218/job/114333907759"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38093279364,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279364",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114333908476,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279364/job/114333908476"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114333908569,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279364/job/114333908569"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114333908616,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279364/job/114333908616"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38093279298,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279298",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114333908254,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279298/job/114333908254"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114333908358,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279298/job/114333908358"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114333908418,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279298/job/114333908418"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38093279365,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279365",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114333908367,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279365/job/114333908367"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114333908438,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279365/job/114333908438"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114333908482,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279365/job/114333908482"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38093279283,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279283",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114333907994,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279283/job/114333907994"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114333908114,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279283/job/114333908114"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114333908159,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279283/job/114333908159"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38093279208,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279208",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114333908009,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279208/job/114333908009"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114333908132,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279208/job/114333908132"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114333908176,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279208/job/114333908176"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38093279270,
+      "head_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279270",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114334088663,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279270/job/114334088663"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114334088763,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279270/job/114334088763"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114334088765,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279270/job/114334088765"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -19403,7 +19608,7 @@
       "evidence": "evidence/r2.8.65-c02.1-preview-coverage-audit.md"
     },
     "R2.8.66": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "cacdb89f456f165ca6a5dca183f7be8fb714525e",
       "scope": "Add fixture-driven egui preview coverage for a standard alert callout and verify visible callout text with unchanged source bytes.",
       "acceptance": [
@@ -19411,7 +19616,10 @@
         "The egui preview visibly exposes the callout heading and body while preserving the original fixture source bytes.",
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "0feb192f437fe91642ae9f8aa386a75e2673cc2a",
+        "71022bfb86eda820835a9e3e57f72a9bed271241"
+      ],
       "tracker_checkpoint": {
         "sha": "767799df2165056bff889e770abf814ecf91f80a",
         "inventory_run_id": 38092990546,
@@ -19419,7 +19627,64 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38092990546"
       },
-      "next_action": "The inventory checkpoint passed on tracker SHA 767799df2165056bff889e770abf814ecf91f80a. Add a standard alert callout case to rust_preview.cases and a focused egui test for visible heading/body and unchanged source bytes; push for exact-SHA GitHub Actions."
+      "next_action": "Accepted on corrected source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. The dedicated callout test and all 98 ui-egui tests passed on Ubuntu, macOS, and Windows; all seven required workflows passed.",
+      "validated_source_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "ci_runs": {
+        "inventory": 38093279218,
+        "loaded_plugins": 38093279364,
+        "desktop_build": 38093279298,
+        "quality": 38093279365,
+        "rust_ci": 38093279283,
+        "plugin_renderer": 38093279208,
+        "obsidian_vault_roundtrip": 38093279270
+      },
+      "evidence": "evidence/r2.8.66-standard-alert-callout-71022bf.json"
+    },
+    "R2.8.67": {
+      "status": "complete",
+      "starting_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "scope": "Reconcile C02.1 dialect preview and edit acceptance, then attach exact-source cross-platform GitHub CI evidence.",
+      "acceptance": [
+        "All 22 rust_preview fixture cases map to explicit egui preview tests for rendered output or named source-only fallback.",
+        "Fixture-backed task, callout-task, table-cell, and generic source editing tests assert exact saved bytes and relevant revision/conflict behavior.",
+        "All seven required GitHub Actions workflows pass on the exact tested source SHA, including 98 ui-egui tests on Ubuntu, macOS, and Windows.",
+        "Record C02.1 as passing with evidence while keeping the distinct parent C02 criteria pending."
+      ],
+      "implementation_commits": [],
+      "tracker_checkpoint": {
+        "sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+        "inventory_run_id": 38093279218,
+        "inventory_job_id": 114333907759,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279218"
+      },
+      "next_action": "C02.1 is passing on tested source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. Parent C02 remains pending; R2.8.68 audits its three editor modes and golden round-trip preservation criteria.",
+      "validated_source_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "ci_runs": {
+        "inventory": 38093279218,
+        "loaded_plugins": 38093279364,
+        "desktop_build": 38093279298,
+        "quality": 38093279365,
+        "rust_ci": 38093279283,
+        "plugin_renderer": 38093279208,
+        "obsidian_vault_roundtrip": 38093279270
+      },
+      "evidence": "evidence/r2.8.67-c02.1-render-edit-audit.md",
+      "requirement_id": "C02.1"
+    },
+    "R2.8.68": {
+      "status": "in_progress",
+      "starting_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "scope": "Audit parent C02's source, live-preview, and reading workflows and its golden round-trip byte-preservation requirement to identify remaining Rust acceptance gaps.",
+      "acceptance": [
+        "Map each of the three C02 editor modes to Rust UI behavior, fixtures, and explicit tests.",
+        "Map BOM, line endings, whitespace, comments, unknown syntax, and untouched-span preservation to direct Rust round-trip or editing evidence.",
+        "Keep parent C02 pending until every acceptance clause has direct evidence on the supported desktop matrix.",
+        "Document the audit and choose a bounded implementation slice for any uncovered behavior; use GitHub Actions only for executable validation."
+      ],
+      "implementation_commits": [],
+      "tracker_checkpoint": null,
+      "next_action": "The R2.8.67 source tree passed its exact-source workflow matrix. Reconcile C02's three editor modes and golden round-trip requirements against current Rust implementation, fixtures, and tests; no local executable validation."
     }
   },
   "ci_preparation": {

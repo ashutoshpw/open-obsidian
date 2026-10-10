@@ -2611,9 +2611,12 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r2.8.66-standard-alert-callout-71022bf.json",
+        "evidence/r2.8.67-c02.1-render-edit-audit.md"
+      ],
+      "tested_source_tree": "71022bfb86eda820835a9e3e57f72a9bed271241",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",

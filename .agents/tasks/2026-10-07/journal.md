@@ -2925,3 +2925,18 @@ All 21 `rust_preview.cases` entries map to explicit egui preview tests. The audi
 Add a standard alert callout to the shared C02.1 Rust preview fixture and verify the egui preview exposes its heading and body while keeping the original source bytes unchanged. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs.
 
 R2.8.66 tracker checkpoint: inventory [run 38092990546](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092990546), job 114333070887, passed for tracker SHA 767799df2165056bff889e770abf814ecf91f80a.
+
+
+### R2.8.66 accepted — standard alert callout preview fixture — source SHA 71022bfb86eda820835a9e3e57f72a9bed271241
+
+The shared C02.1 fixture includes a standard alert callout case. Its egui preview test verifies RenderMarkdown, the alert marker, visible title/body, and unchanged fixture source bytes. The focused test passed on Ubuntu, macOS, and Windows; each ui-egui suite passed 98 tests. GitHub CI exposed the renderer's exact accessible labels and rustfmt layout on the first implementation SHA; both were corrected from CI output. A same-SHA quality retry passed after its first macOS Electron retrieval-boundary failure; corrected-source quality passed on attempt 1.
+
+All seven required workflows passed on exact source SHA 71022bfb86eda820835a9e3e57f72a9bed271241: inventory [38093279218](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279218), loaded plugins [38093279364](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279364), desktop build [38093279298](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279298), quality [38093279365](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279365), Rust CI [38093279283](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279283), plugin renderer [38093279208](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279208), and vault round-trip [38093279270](https://github.com/ashutoshpw/open-obsidian/actions/runs/38093279270). Exact job identifiers and all 16 artifact digests are in [evidence/r2.8.66-standard-alert-callout-71022bf.json](evidence/r2.8.66-standard-alert-callout-71022bf.json). No local executable validation was used.
+
+### R2.8.67 accepted — C02.1 render/edit acceptance audit
+
+The audit reconciles all 22 Rust preview cases with explicit egui tests and separately maps fixture-backed task, callout-task, table-cell, and generic source editing, including exact saved bytes and stale-edit conflict behavior. GitHub UI suite logs confirm 98 tests passed on each supported CI OS; all seven required workflows passed on the same exact source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. Requirement C02.1 is marked passing with [evidence/r2.8.67-c02.1-render-edit-audit.md](evidence/r2.8.67-c02.1-render-edit-audit.md) and the exact-SHA workflow/artifact record above. Parent C02 remains pending because its three-mode and golden round-trip clauses require separate evidence. No local executable validation was used.
+
+### R2.8.68 in progress — parent C02 mode and round-trip acceptance
+
+Audit source, live-preview, and reading workflows against their Rust UI behavior and fixtures. Reconcile BOM, line ending, whitespace, comment, unknown-syntax, and untouched-span preservation to direct round-trip/edit evidence. Keep C02 pending until all criteria have direct cross-platform evidence; choose a bounded implementation change for any gap. The R2.8.67 acceptance record's inventory checkpoint is pending. No local executable validation runs.
