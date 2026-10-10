@@ -2475,3 +2475,7 @@ All seven required workflows passed on the exact source SHA: inventory [38068443
 Accepted slice: simple resolved Markdown-note wiki-link preview and navigation. Full C02.1 and migration phases R3-R7 remain pending.
 
 The accepted tracker/evidence checkpoint at [2f10530f6b7af6450ce36a984e1dfdb68926ad7f](https://github.com/ashutoshpw/open-obsidian/commit/2f10530f6b7af6450ce36a984e1dfdb68926ad7f) also passed the GitHub inventory workflow on that exact tracker SHA: [run 38068953165](https://github.com/ashutoshpw/open-obsidian/actions/runs/38068953165).
+
+### R2.8.35 in progress — stale wiki-link fallback and documentation
+
+Starting from tracker SHA `a3d7bcf37f92445a8066dfa21872b381b47417cf`, close the evidence gap in R2.8.34's stale-revision contract with an egui test that injects resolved links associated with an older revision and verifies source-only fallback, no clickable link, the refresh instruction, and unchanged vault/app-data snapshots. Update `docs/architecture/markdown-preview.md` so its supported wiki-link boundary matches the accepted primary-panel behavior. All executable validation remains GitHub Actions only.

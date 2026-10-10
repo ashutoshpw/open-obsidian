@@ -108,6 +108,16 @@
       "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
       "remains_clickable": false
     },
+    "stale_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "Read [[Plans/Project|the plan]] next.",
+      "target_path": "Plans/Project.md",
+      "resolution_revision": "older-than-preview-source",
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "expected_refresh_message": "Read the note preview again to refresh resolved wiki links.",
+      "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
     "safe_inline_html": {
       "rendered_tags": ["<br>", "<br/>", "<br />"],
       "unsupported_html": "Keep all other inline and block HTML visible as original source."
