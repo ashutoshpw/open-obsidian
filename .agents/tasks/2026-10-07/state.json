@@ -16552,11 +16552,21 @@
         "Other unsupported dialects continue to show the original source with a visible reason.",
         "All required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "b0044852bfefed99659e71dbd4f992262c623d98"
+      ],
       "validated_source_sha": null,
-      "ci_runs": {},
+      "ci_runs": {
+        "rust_ci": 38043421631,
+        "obsidian_vault_roundtrip": 38043421643,
+        "inventory": 38043421640,
+        "loaded_plugins": 38043421613,
+        "desktop_build": 38043421616,
+        "quality": 38043421602,
+        "plugin_renderer": 38043421823
+      },
       "evidence": null,
-      "next_action": "Implement the focused footnote rendering slice, then push it to origin/main for exact-SHA GitHub Actions validation."
+      "next_action": "Reconcile the markdown dialect fixture SHA-256 in inventory.json and push a tracker correction; rerun all required workflows, including vault round-trip, for the corrected exact SHA."
     }
   },
   "ci_preparation": {
