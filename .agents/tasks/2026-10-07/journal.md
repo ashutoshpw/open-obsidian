@@ -2673,3 +2673,5 @@ Accepted slice: an active even-backslash highlight opener remains source-only wh
 ### R2.8.49 in progress — legacy delimited math uses source fallback
 
 Use the existing `legacy-delimited-math` fixture to verify the preview identifies legacy math delimiters as unsupported and displays the original source unchanged. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+
+Starting from tracker checkpoint `6985063e723a100f342864bf965d8959152627b5`, inventory [run 38080064698](https://github.com/ashutoshpw/open-obsidian/actions/runs/38080064698), job 114294968243, passed.

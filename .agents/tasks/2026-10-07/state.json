@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T19:27:57Z",
+  "updated_at": "2026-10-10T19:32:34Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18790,7 +18790,7 @@
     },
     "R2.8.49": {
       "status": "in_progress",
-      "starting_sha": "8ae3b8acf636a35ccc18a12bf4914c365dedbb02",
+      "starting_sha": "6985063e723a100f342864bf965d8959152627b5",
       "scope": "Verify legacy delimited math uses a visible source-only fallback and preserves the original fixture source.",
       "acceptance": [
         "The existing legacy-delimited-math C02.1 fixture drives an egui preview test.",
@@ -18798,7 +18798,14 @@
         "All seven required GitHub Actions workflows pass on the exact implementation SHA; no local executable validation is used."
       ],
       "implementation_commits": [],
-      "next_action": "Add fixture-driven egui coverage for legacy delimited math, then push for exact-SHA GitHub Actions."
+      "tracker_checkpoint": {
+        "sha": "6985063e723a100f342864bf965d8959152627b5",
+        "inventory_run_id": 38080064698,
+        "inventory_job_id": 114294968243,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38080064698"
+      },
+      "next_action": "Fixture-driven egui coverage for legacy delimited math is added. Commit and push the focused change for exact-SHA GitHub Actions; no local executable validation is used."
     }
   },
   "ci_preparation": {
