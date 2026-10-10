@@ -2565,6 +2565,46 @@ mod tests {
     }
 
     #[test]
+    fn cloud_placeholder_matrix_does_not_resolve_unknown_uri_as_vault_path() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "cloud-placeholder")
+            .expect("failure matrix must contain cloud-placeholder");
+        assert_eq!(scenario["expected_outcome"], "do-not-follow-unknown-link");
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["macOS", "Windows", "Linux"])
+        );
+
+        let relative_path_text = scenario["relative_path"].as_str().unwrap();
+        let relative_path = PathBuf::from(relative_path_text);
+        let markdown = scenario["markdown_bytes_utf8"].as_str().unwrap();
+        let cloud_uri = scenario["cloud_uri_utf8"].as_str().unwrap();
+        let vault_temp = TempDir::new();
+        let note_path = vault_temp.0.join(&relative_path);
+        fs::create_dir_all(note_path.parent().unwrap()).unwrap();
+        fs::write(&note_path, markdown.as_bytes()).unwrap();
+
+        let vault = VaultRoot::open(&vault_temp.0).unwrap();
+        let links = vault.resolve_links_for_note(&relative_path).unwrap();
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0].reference.target, cloud_uri);
+        assert_eq!(scenario["expected_link_status"], "external");
+        assert_eq!(
+            links[0].resolution.status,
+            super::LinkResolutionStatus::External
+        );
+        assert!(scenario["expected_local_target_utf8"].is_null());
+        assert!(links[0].resolution.target.is_none());
+        assert_eq!(scenario["expected_candidate_count"], 0);
+        assert!(links[0].resolution.candidates.is_empty());
+    }
+
+    #[test]
     fn revision_checked_writes_preserve_previous_bytes_and_journal_the_operation() {
         let vault_temp = TempDir::new();
         let app_data_temp = TempDir::new();

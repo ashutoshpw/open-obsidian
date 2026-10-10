@@ -101,7 +101,18 @@
         }
       ]
     },
-    {"id": "cloud-placeholder", "fault_stage": null, "expected_outcome": "do-not-follow-unknown-link"},
+    {
+      "id": "cloud-placeholder",
+      "fault_stage": null,
+      "expected_outcome": "do-not-follow-unknown-link",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "relative_path": "Notes/CloudPlaceholder.md",
+      "cloud_uri_utf8": "cloud-placeholder://provider/object/123",
+      "markdown_bytes_utf8": "[Cloud placeholder](cloud-placeholder://provider/object/123)",
+      "expected_link_status": "external",
+      "expected_local_target_utf8": null,
+      "expected_candidate_count": 0
+    },
     {
       "id": "symlink",
       "fault_stage": null,
