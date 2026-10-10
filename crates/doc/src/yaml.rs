@@ -209,17 +209,26 @@ fn mapping_key(value: &str) -> Option<String> {
     }
 
     let bytes = trimmed.as_bytes();
-    let Some(&first) = bytes.first() else {
-        return None;
-    };
+    let &first = bytes.first()?;
     let reserved_indicator = matches!(
         first,
-        b'!' | b'&' | b'*' | b'[' | b']' | b'{' | b'}' | b',' | b'#' | b'|' | b'>'
-            | b'\'' | b'"' | b'%' | b'@' | b'`'
+        b'!' | b'&'
+            | b'*'
+            | b'['
+            | b']'
+            | b'{'
+            | b'}'
+            | b','
+            | b'#'
+            | b'|'
+            | b'>'
+            | b'\''
+            | b'"'
+            | b'%'
+            | b'@'
+            | b'`'
     ) || (matches!(first, b'-' | b'?' | b':')
-        && bytes
-            .get(1)
-            .is_none_or(|byte| byte.is_ascii_whitespace()));
+        && bytes.get(1).is_none_or(|byte| byte.is_ascii_whitespace()));
     let valid = !reserved_indicator;
     valid.then(|| trimmed.to_owned())
 }
