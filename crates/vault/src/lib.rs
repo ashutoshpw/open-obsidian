@@ -2735,9 +2735,7 @@ mod tests {
                 .iter()
                 .find(|scenario| scenario["id"] == scenario_id)
                 .unwrap_or_else(|| panic!("failure matrix is missing {scenario_id}"));
-            assert_eq!(
-                scenario["expected_outcome"],
-                "preserve-incoming-as-failed-history",
+            assert_eq!(scenario["expected_outcome"], "preserve-incoming-as-failed-history",
                 "{scenario_id}"
             );
             assert_eq!(
