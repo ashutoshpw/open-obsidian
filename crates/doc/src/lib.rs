@@ -346,7 +346,7 @@ impl MarkdownSource {
         let Some(bounds) = self.frontmatter_bounds() else {
             return YamlParseResult::empty();
         };
-        let content = &self.raw[bounds.content.start..bounds.content.end];
+        let content = &self.text()[bounds.content.start..bounds.content.end];
         yaml::parse_mapping(content)
     }
 
