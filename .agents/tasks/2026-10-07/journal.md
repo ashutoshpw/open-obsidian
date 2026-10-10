@@ -2855,3 +2855,5 @@ Accepted slice: the footnote fixture renders the reference and definition in the
 ### R2.8.61 in progress — inline and display math fixture preview
 
 Use the existing inline-and-display-math C02.1 fixture to verify the preview selects RenderMarkdown, exposes both formulas, and preserves the original source bytes. Move the existing egui case onto fixture-driven coverage, then push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.60 acceptance record is pushed.
+
+R2.8.61 tracker checkpoint: inventory [run 38089359790](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089359790), job 114322424595, passed for tracker SHA e43bad8df82ef5a8001ab624374db6f98ba2f993.
