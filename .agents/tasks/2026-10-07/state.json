@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T07:25:45Z",
+  "updated_at": "2026-10-10T07:45:46Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831",
+  "last_reconciled_head": "3356560c9212daf1c67d402ddde93314eeeb3380",
   "current_milestone": "R2.8.16",
-  "next_action": "R2.8.15 source and tracker checkpoint are accepted. Implement a bounded, read-only YAML projection for ordered property mappings and nested values; keep broader C04, C02 and editor integration pending.",
+  "next_action": "Review the remaining C04 requirements and linked YAML fixtures, then define the next focused parser or edit-safety slice. Keep broader C04, C02/C02.1 and editor integration pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -254,7 +254,7 @@
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
   ],
-  "push_status": "R2.8.15 implementation SHA a89574a0cfec01a20df9f525eff325a3d8a6139a and tracker checkpoint fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831 are on origin/main. All seven required source workflows passed on a89574a; all six path-eligible tracker workflows passed on fa9bbed. Evidence: evidence/r2.8.15-c04-unknown-preservation-a89574a.json. R2.8.16 bounded YAML projection is in progress; broader C04, C02 and editor integration remain pending.",
+  "push_status": "R2.8.16 bounded YAML projection source SHA 3356560c9212daf1c67d402ddde93314eeeb3380 is on origin/main; all seven required workflows passed on that exact SHA. This tracker checkpoint records the passing result. Evidence: evidence/r2.8.16-bounded-yaml-projection-3356560.json. Broader C04, C02/C02.1 and editor integration remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16094,7 +16094,7 @@
       "next_action": "Tracker checkpoint fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831 passed all six path-eligible workflows; continue with the bounded C04 YAML projection in R2.8.16."
     },
     "R2.8.16": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "fa9bbeda0af5c19ceca88349e65f1ee6cd8a1831",
       "scope": "Add a bounded, read-only YAML projection for Markdown frontmatter that retains ordered mappings and distinguishes supported scalar and collection types without changing the original source.",
       "accepted_slice": [
@@ -16110,9 +16110,43 @@
         "The fixture verifies comments, scalar types, arrays, nested mappings/sequences, unknown keys, BOM, CRLF, and byte-identical source after projection.",
         "All seven required GitHub Actions workflows pass on the exact source SHA; all testing and executable validation run in GitHub Actions only."
       ],
-      "implementation_commits": [],
-      "ci_attempts": [],
-      "next_action": "Commit and push the fixture-backed Rust YAML projection for exact-SHA GitHub Actions validation; keep the broader C04 requirement pending."
+      "implementation_commits": [
+        "8cba55471d374f16e4d6e46fe999a974ee750d85",
+        "18867c6c33cf3de035de13c2aa37cdfa73578ee6",
+        "3356560c9212daf1c67d402ddde93314eeeb3380"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "8cba55471d374f16e4d6e46fe999a974ee750d85",
+          "rust_ci_run_id": 38034401601,
+          "roundtrip_run_id": 38034401588,
+          "result": "Rust CI failed on Ubuntu formatting and macOS/Windows Clippy; workspace tests passed on all three OSes. The six other required workflows passed, and the vault round-trip passed on all three OSes.",
+          "correction_sha": "18867c6c33cf3de035de13c2aa37cdfa73578ee6"
+        },
+        {
+          "source_sha": "18867c6c33cf3de035de13c2aa37cdfa73578ee6",
+          "rust_ci_run_id": 38034736177,
+          "roundtrip_run_id": 38034736158,
+          "result": "Rust workspace tests and native preview builds failed on all OSes because RawDocument cannot be indexed. The six companion workflows passed; the round-trip jobs stopped at the preview build.",
+          "correction_sha": "3356560c9212daf1c67d402ddde93314eeeb3380"
+        },
+        {
+          "source_sha": "3356560c9212daf1c67d402ddde93314eeeb3380",
+          "workflow_run_ids": [
+            38034904956,
+            38034904909,
+            38034904930,
+            38034904932,
+            38034904903,
+            38034904924,
+            38034904908
+          ],
+          "result": "All seven required workflows passed on the exact source SHA.",
+          "evidence": "evidence/r2.8.16-bounded-yaml-projection-3356560.json"
+        }
+      ],
+      "evidence": "evidence/r2.8.16-bounded-yaml-projection-3356560.json",
+      "next_action": "Review the remaining C04 requirements and linked YAML fixtures, then define the next focused parser or edit-safety slice. Keep broader C04, C02/C02.1 and editor integration pending."
     }
   },
   "ci_preparation": {

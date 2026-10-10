@@ -1395,7 +1395,7 @@
       "sha256": "fa13c1e63094310ed24dbbc37bd166303e5516c237f944f395f850a2c43ce3ab",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
-      "status": "pending",
+      "status": "passing",
       "migration_phase": "R2",
       "purpose": "Read-only YAML projection retains property order, scalar types, nested collections, and the original Markdown source bytes.",
       "fixture_reader": "crates/testkit"
