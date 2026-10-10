@@ -127,7 +127,20 @@
       "expected_read_error": "symlink",
       "expected_write_error": "symlink"
     },
-    {"id": "case-only-rename", "fault_stage": null, "expected_outcome": "observe-path-change-without-content-rewrite"},
+    {
+      "id": "case-only-rename",
+      "fault_stage": null,
+      "expected_outcome": "rename-path-case-without-content-rewrite",
+      "applicable_platforms": ["Windows"],
+      "old_relative_path": "Notes/Title.md",
+      "new_relative_path": "Notes/title.md",
+      "initial_bytes_utf8": "\ufefftitle: preserved\r\nbody: untouched\r\n",
+      "expected_content_bytes_utf8": "\ufefftitle: preserved\r\nbody: untouched\r\n",
+      "expected_content_write": false,
+      "expected_content_revision_unchanged": true,
+      "expected_case_only": true,
+      "expected_journal_state": "committed"
+    },
     {"id": "windows-reserved-name", "fault_stage": null, "expected_outcome": "deny-on-windows"},
     {"id": "unicode-normalization", "fault_stage": null, "expected_outcome": "preserve-original-bytes"}
   ]

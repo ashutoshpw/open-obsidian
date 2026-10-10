@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T04:54:58Z",
+  "updated_at": "2026-10-10T05:10:05Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "23480420323466c3d8996889a21b0624f677a081",
-  "current_milestone": "R2.8.9",
-  "next_action": "Start R2.8.10 for the case-only-rename SYNC-004 scenario from the accepted tracker checkpoint. Three scenarios remain; keep full SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
+  "last_reconciled_head": "c7c04ec0198505f9def5ef0d1a426533ba8bc94d",
+  "current_milestone": "R2.8.10",
+  "next_action": "Push the Windows-only case-only-rename fixture and transaction test, then obtain exact-SHA GitHub Actions acceptance. Afterward cover Windows reserved names and Unicode normalization; keep aggregate SYNC-004, editor integration, and broader C01/C01.2 acceptance pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -37,7 +37,15 @@
     },
     "R2": {
       "status": "in_progress",
-      "required_ci": [],
+      "required_ci": [
+        "rust-ci",
+        "obsidian-vault-roundtrip",
+        "inventory",
+        "loaded-plugins",
+        "desktop-build",
+        "quality",
+        "plugin-renderer"
+      ],
       "implementation_sha": "23480420323466c3d8996889a21b0624f677a081"
     },
     "R3": {
@@ -243,7 +251,7 @@
     "R2.8.1 / SYNC-002 interrupted-write recovery passed on exact source SHA c340ff19de41f3266573aa2afc34dee95c06e996; evidence: evidence/r2.8.1-interrupted-write-c340ff1.json.",
     "R2.8.2 / SYNC-001 conservative revision-aware three-way merge passed all seven required GitHub Actions workflows on exact source SHA 638ba85dd94826b77623a43709d458d13fa1c1e7; evidence: evidence/r2.8.2-revision-merge-638ba85.json."
   ],
-  "push_status": "R2.8.2 / SYNC-001 passed on exact implementation SHA 638ba85dd94826b77623a43709d458d13fa1c1e7, pushed to origin/main in commits 3f6932cc981ce0b54b3589b288cb87f322b187bc, b2bb5ef7117a21e9ba0a4a87c7d2060437947599, and 638ba85dd94826b77623a43709d458d13fa1c1e7. All seven required workflows and all applicable jobs passed on Linux, macOS, and Windows. Broader R2 filesystem and C01/C01.2 acceptance remain pending.",
+  "push_status": "R2.8.9 source SHA 23480420323466c3d8996889a21b0624f677a081 passed all seven required workflows. CI optimization checkpoint c7c04ec0198505f9def5ef0d1a426533ba8bc94d is pushed to origin/main and all seven workflows passed; it is the starting checkpoint for R2.8.10. The case-only rename slice is now in progress. Broader R2 filesystem and C01/C01.2 acceptance remain pending.",
   "ci_results": [
     {
       "name": "inventory",

@@ -3723,6 +3723,105 @@ mod tests {
         assert!(journal.contains("\"operation\":\"rename\",\"state\":\"committed\""));
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn case_only_rename_matrix_preserves_content_revision_and_commits_path_change() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "case-only-rename")
+            .expect("failure matrix must contain case-only-rename");
+        assert_eq!(
+            scenario["expected_outcome"],
+            "rename-path-case-without-content-rewrite"
+        );
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["Windows"])
+        );
+        assert_eq!(scenario["expected_content_write"], false);
+        assert_eq!(scenario["expected_content_revision_unchanged"], true);
+        assert_eq!(scenario["expected_case_only"], true);
+
+        let old_path_text = scenario["old_relative_path"].as_str().unwrap();
+        let new_path_text = scenario["new_relative_path"].as_str().unwrap();
+        let old_path = PathBuf::from(old_path_text);
+        let new_path = PathBuf::from(new_path_text);
+        let initial_bytes = scenario["initial_bytes_utf8"]
+            .as_str()
+            .unwrap()
+            .as_bytes()
+            .to_vec();
+        let expected_bytes = scenario["expected_content_bytes_utf8"]
+            .as_str()
+            .unwrap()
+            .as_bytes();
+        assert_eq!(initial_bytes.as_slice(), expected_bytes);
+
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        fs::create_dir_all(vault_temp.0.join(old_path.parent().unwrap())).unwrap();
+        fs::write(vault_temp.0.join(&old_path), &initial_bytes).unwrap();
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        // Fail if the transaction tries to replace the moved source with a content write.
+        store.fail_replace_path = Some(new_path.clone());
+        let before = store.root().read(&old_path).unwrap();
+        let before_revision = before.revision_sha256;
+        assert_eq!(before_revision, sha256_hex(&initial_bytes));
+
+        let preview = store
+            .root()
+            .build_rename_preview(&old_path, &new_path)
+            .unwrap();
+        let result = store.apply_rename_preview(&preview).unwrap();
+
+        assert_eq!(result.old_path, old_path);
+        assert_eq!(result.new_path, new_path);
+        let after = store.root().read(&new_path).unwrap();
+        assert_eq!(after.document.as_bytes(), expected_bytes);
+        assert_eq!(after.revision_sha256, before_revision);
+        assert_eq!(result.read.document.as_bytes(), expected_bytes);
+
+        let names = fs::read_dir(vault_temp.0.join(new_path.parent().unwrap()))
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        assert_eq!(names.len(), 1);
+        assert_eq!(
+            names[0].as_encoded_bytes(),
+            new_path.file_name().unwrap().as_encoded_bytes()
+        );
+
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        let records = journal
+            .lines()
+            .map(serde_json::from_str::<Value>)
+            .collect::<Result<Vec<_>, _>>()
+            .expect("rename journal must contain valid JSON records");
+        let committed = records
+            .iter()
+            .find(|record| record["state"] == scenario["expected_journal_state"])
+            .expect("case-only rename must have a committed journal record");
+        assert_eq!(committed["old_path"].as_str(), Some(old_path_text));
+        assert_eq!(committed["new_path"].as_str(), Some(new_path_text));
+        assert_eq!(
+            committed["case_only"].as_bool(),
+            scenario["expected_case_only"].as_bool()
+        );
+        assert_eq!(committed["files"].as_array().map(Vec::len), Some(1));
+        assert_eq!(
+            committed["files"][0]["before_revision"].as_str(),
+            Some(before_revision.as_str())
+        );
+        assert_eq!(
+            committed["files"][0]["after_revision"].as_str(),
+            Some(before_revision.as_str())
+        );
+    }
+
     #[test]
     fn c03_fixture_failed_apply_restores_prior_reference_write_and_source_move() {
         let fixture: Value = serde_json::from_str(C03_RENAME_FIXTURE)
