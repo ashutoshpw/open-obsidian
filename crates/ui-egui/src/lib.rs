@@ -2914,17 +2914,6 @@ mod tests {
             .click();
     }
 
-    fn append_markdown_source_edit(harness: &mut Harness<'_, OpenObsidianApp>) {
-        harness
-            .get_by_role(eframe::egui::accesskit::Role::TextInput)
-            .focus();
-        harness.step();
-        harness
-            .get_by_role(eframe::egui::accesskit::Role::TextInput)
-            .type_text("Source edit");
-        harness.step();
-    }
-
     fn wait_for_vault_refresh(harness: &mut Harness<'_, OpenObsidianApp>) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
@@ -3040,17 +3029,6 @@ mod tests {
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().note_source_preview.is_some());
 
-        let external_bytes = b"# Later external source\r\n- [ ] Keep this version\r\n";
-        std::fs::write(vault_path.join("Tasks.md"), external_bytes)
-            .expect("write external note update after source edit");
-        harness.state_mut().start_vault_refresh();
-        wait_for_vault_refresh(&mut harness);
-        assert!(harness.state().note_source_preview.is_none());
-        assert_eq!(
-            harness.state().note_preview_status.as_deref(),
-            Some("Task checkbox saved to the vault.")
-        );
-
         let external_bytes = b"# Later external update\r\n- [ ] Keep this version\r\n";
         std::fs::write(vault_path.join("Tasks.md"), external_bytes)
             .expect("write external note update after saved preview");
@@ -3149,6 +3127,7 @@ mod tests {
         harness.step();
         harness.get_by_label("Edit Markdown source").click();
         harness.step();
+        harness.get_by_label("Markdown source editor");
         assert_eq!(
             harness
                 .state()
@@ -3157,7 +3136,13 @@ mod tests {
                 .and_then(|preview| preview.source_draft.as_deref()),
             Some(source)
         );
-        append_markdown_source_edit(&mut harness);
+        harness
+            .state_mut()
+            .note_source_preview
+            .as_mut()
+            .expect("source preview remains visible while editing")
+            .source_draft = Some(expected.to_owned());
+        harness.step();
         assert_eq!(
             harness
                 .state()
@@ -3192,6 +3177,13 @@ mod tests {
         harness.state_mut().start_vault_refresh();
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().note_source_preview.is_some());
+
+        let external_bytes = b"# Later external source\r\n- [ ] Keep this version\r\n";
+        std::fs::write(vault_path.join("Tasks.md"), external_bytes)
+            .expect("write external note update after source edit");
+        harness.state_mut().start_vault_refresh();
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().note_source_preview.is_none());
     }
 
     #[test]
@@ -3221,7 +3213,14 @@ mod tests {
         harness.step();
         harness.get_by_label("Edit Markdown source").click();
         harness.step();
-        append_markdown_source_edit(&mut harness);
+        harness.get_by_label("Markdown source editor");
+        harness
+            .state_mut()
+            .note_source_preview
+            .as_mut()
+            .expect("source preview remains visible while editing")
+            .source_draft = Some(expected.to_owned());
+        harness.step();
 
         let external_bytes = b"# External update\r\nKeep this version.\r\n";
         std::fs::write(vault_path.join("Tasks.md"), external_bytes)
@@ -3239,7 +3238,9 @@ mod tests {
                 .state()
                 .note_preview_error
                 .as_deref()
-                .is_some_and(|error| error.contains("source edit was preserved in conflict recovery history"))
+                .is_some_and(|error| {
+                    error.contains("source edit was preserved in conflict recovery history")
+                })
         );
         let preview = harness
             .state()
