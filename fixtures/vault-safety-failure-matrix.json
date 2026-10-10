@@ -43,7 +43,19 @@
       "expected_conflict_protected": true,
       "expected_journal_state": "conflict"
     },
-    {"id": "delete-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
+    {
+      "id": "delete-versus-edit",
+      "fault_stage": "after-base-read-before-delete",
+      "expected_outcome": "preserve-incoming-as-conflict",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "relative_path": "Notes/Deleted.md",
+      "initial_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "incoming_bytes_utf8": "\ufeffstatus: editor-candidate\r\n",
+      "expected_target_bytes_utf8": null,
+      "expected_conflict_bytes_utf8": "\ufeffstatus: editor-candidate\r\n",
+      "expected_conflict_protected": true,
+      "expected_journal_state": "conflict"
+    },
     {"id": "rename-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {
       "id": "partial-sync",
