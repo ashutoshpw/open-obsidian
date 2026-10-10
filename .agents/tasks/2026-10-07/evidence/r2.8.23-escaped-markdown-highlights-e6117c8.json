@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-10T11:15:39Z",
+  "milestone": "R2.8.23",
+  "accepted_slice": [
+    "C02.1:escaped-markdown-highlight-delimiters"
+  ],
+  "validated_source_sha": "e6117c8ce7e123ed34c2b143404cae15f8755a0a",
+  "starting_tracker_sha": "f0a668941739f31513e60082b89891b6684796f2",
+  "related_implementation_commits": [
+    "9bc9eaaa8161824018b546aa142736b2d7d228e8",
+    "e6117c8ce7e123ed34c2b143404cae15f8755a0a"
+  ],
+  "markdown_dialect_fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "cases": 14,
+    "sha256": "6a36f0fc09e200d3b806ea00785b19718888b79e318855e8c8bd28bb47154322",
+    "new_cases": [
+      "escaped-highlight-opener-is-literal",
+      "even-backslash-run-keeps-highlight-active"
+    ]
+  },
+  "contract": "Classify escaped Markdown highlight delimiters according to backslash parity without changing note source: odd-length runs leave the delimiter literal and allow normal Markdown rendering; even-length runs retain active syntax and visible source fallback.",
+  "implementation": {
+    "document_layer": "crates/doc counts a contiguous backslash run before a highlight opener. For an odd run it skips the first escaped equals sign before scanning for active highlight markers; for an even run it scans the opener normally.",
+    "fixture_and_docs": "The shared dialect fixture covers odd and even escape parity. The inventory SHA-256 and native Markdown preview architecture documentation were updated.",
+    "source_integrity": "Markdown analysis is read-only and does not normalize or mutate the source. Existing unescaped highlight syntax remains source-only."
+  },
+  "focused_tests": {
+    "command": "cargo test --workspace --locked (GitHub Actions only)",
+    "tests": [
+      "markdown_preview::tests::c02_safe_preview_dialect_fixtures_select_a_visible_fallback_without_mutating_source"
+    ],
+    "result": "The dialect fixture test and full workspace suites passed on Ubuntu, macOS, and Windows. Ubuntu formatting, Clippy, crate-layer checks, release build, and plugin runtime probes passed; formatting is skipped on macOS and Windows by workflow policy."
+  },
+  "versions": {
+    "rust_toolchain": "stable 1.99.0 (b940084d7 2026-09-28)",
+    "egui_commonmark": "0.25.0",
+    "egui_kittest": "0.36.2",
+    "pulldown_cmark": "0.13.4",
+    "sha2": "0.10.9",
+    "bun": "1.4.2",
+    "obsidian_reference": "1.14.4"
+  },
+  "ci": {
+    "event": "push",
+    "source_sha": "e6117c8ce7e123ed34c2b143404cae15f8755a0a",
+    "result": "All seven required workflows passed on the exact implementation SHA.",
+    "platforms": [
+      "ubuntu-24.04",
+      "macos-latest",
+      "windows-latest"
+    ],
+    "rust_jobs": [
+      {
+        "platform": "ubuntu-latest",
+        "job_id": 114199538459,
+        "conclusion": "success",
+        "formatting": "passed",
+        "workspace_tests": "passed",
+        "focused_dialect_fixture_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "macos-latest",
+        "job_id": 114199538327,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "focused_dialect_fixture_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      },
+      {
+        "platform": "windows-latest",
+        "job_id": 114199538556,
+        "conclusion": "success",
+        "formatting": "skipped by workflow policy",
+        "workspace_tests": "passed",
+        "focused_dialect_fixture_test": "passed",
+        "clippy": "passed",
+        "layer_check": "passed",
+        "release_build": "passed",
+        "plugin_runtime_probe": "passed"
+      }
+    ],
+    "required_workflows": {
+      "rust_ci": {
+        "run_id": 38047383822,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383822",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114199538459},
+          {"name": "rust (macos-latest)", "job_id": 114199538327},
+          {"name": "rust (windows-latest)", "job_id": 114199538556}
+        ]
+      },
+      "obsidian_vault_roundtrip": {
+        "run_id": 38047383751,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383751",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "job_id": 114199538042},
+          {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "job_id": 114199538159},
+          {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "job_id": 114199538246}
+        ]
+      },
+      "inventory": {
+        "run_id": 38047383815,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383815",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "inventory", "job_id": 114199538227}
+        ]
+      },
+      "loaded_plugins": {
+        "run_id": 38047383795,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383795",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114199538523},
+          {"name": "macos-latest", "job_id": 114199538479},
+          {"name": "windows-latest", "job_id": 114199538303}
+        ]
+      },
+      "desktop_build": {
+        "run_id": 38047383774,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383774",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114199538351},
+          {"name": "macos-latest", "job_id": 114199538346},
+          {"name": "windows-latest", "job_id": 114199538260}
+        ]
+      },
+      "quality": {
+        "run_id": 38047383835,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383835",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114199538713},
+          {"name": "macos-latest", "job_id": 114199538743},
+          {"name": "windows-latest", "job_id": 114199538496}
+        ]
+      },
+      "plugin_renderer": {
+        "run_id": 38047383857,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38047383857",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114199538977},
+          {"name": "macos-latest", "job_id": 114199538904},
+          {"name": "windows-latest", "job_id": 114199538754}
+        ]
+      }
+    },
+    "prior_attempts": [
+      {
+        "source_sha": "9bc9eaaa8161824018b546aa142736b2d7d228e8",
+        "result": "Six workflows and all platform workspace tests passed. Rust CI failed only on the Ubuntu rustfmt line-wrap check; its exact correction was applied in e6117c8.",
+        "run_ids": {
+          "rust_ci": 38047091161,
+          "obsidian_vault_roundtrip": 38047091229,
+          "inventory": 38047091127,
+          "loaded_plugins": 38047091211,
+          "desktop_build": 38047091149,
+          "quality": 38047091128,
+          "plugin_renderer": 38047091157
+        }
+      }
+    ]
+  },
+  "artifacts": [
+    {"artifact_id": 11668336649, "name": "rust-plugin-runtime-Linux-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 2695, "archive_sha256": "76291872cdd6cdf313ce4fc9a016e3ef9adcb787a0b15206a2fbc90502117b8e"},
+    {"artifact_id": 11668306521, "name": "rust-plugin-runtime-macOS-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 2698, "archive_sha256": "ac9fbbd6bb57ecce8d12758501ef8b9c7e91cda7f5af234bee7d7d1e8d974bae"},
+    {"artifact_id": 11668211747, "name": "openobsidian-rust-preview-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 9789095, "archive_sha256": "11c41f75ddccfe42feff9e3e61bc204ac03ffbe49d793c6e5032009a8aed66a9"},
+    {"artifact_id": 11667927272, "name": "rust-plugin-runtime-Windows-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 2715, "archive_sha256": "ec3b98d3c6f848856b7761a356b1ce2e354008ced1581f278d100af7470807c5"},
+    {"artifact_id": 11668805411, "name": "obsidian-vault-roundtrip-macOS-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 3520223, "archive_sha256": "e8dabb3073c747e4577be738d2ed74547878581cb0f08277ecb456dc78b80086"},
+    {"artifact_id": 11668301525, "name": "obsidian-vault-roundtrip-Linux-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 2706458, "archive_sha256": "50c7983ae379d77c3b77ef9e14c46777acbce4d270a0c597d2e8a8bf0b5ad174"},
+    {"artifact_id": 11667832201, "name": "obsidian-vault-roundtrip-Windows-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 3687020, "archive_sha256": "15c1124cfc7c728d7ad87a03740be80bc2460d7b40532df35207627feaf6651e"},
+    {"artifact_id": 11668925143, "name": "loaded-plugin-workflows-macOS-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 171493, "archive_sha256": "70eeb82ada431605d04067969bdae166ea793fbb50e243dedb590e859c7a2058"},
+    {"artifact_id": 11668920038, "name": "loaded-plugin-workflows-Linux-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 171456, "archive_sha256": "4753efcab0047328e9bd56b86512ca4908c52073a7c0529010caa1cb29782fed"},
+    {"artifact_id": 11668306380, "name": "loaded-plugin-workflows-Windows-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 171497, "archive_sha256": "834c8a86aea6bde693f55a760d4e20a9a903efc4fa2c9d7a0fd4e33e068edf05"},
+    {"artifact_id": 11668700375, "name": "openobsidian-macOS-preview-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 397395487, "archive_sha256": "bd2410efbeb2089642793ffdabc1928461791a3ae0d05567f6d7f303a9a79e97"},
+    {"artifact_id": 11667966791, "name": "openobsidian-Linux-preview-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 125946548, "archive_sha256": "d213173a76e8f26985db7b9b0b4d1baa16cabddb56d35ee97cdac64dc913132a"},
+    {"artifact_id": 11667931949, "name": "openobsidian-Windows-preview-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 163005824, "archive_sha256": "fe4e3aa70eb3debd3c6c6f05d7b5222947fd3d06de84c2c1f4d6ea195921837e"},
+    {"artifact_id": 11668785195, "name": "plugin-renderer-lifecycle-Linux-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 3221, "archive_sha256": "5d06c8bce32a0017ecf623a64bbc6230fabfdd3913d84a2aa6b96cbed40e2836"},
+    {"artifact_id": 11668221664, "name": "plugin-renderer-lifecycle-macOS-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 3238, "archive_sha256": "4dac506a9b1d1946d8d7c9e37c5fe220015e4db636a9cc46c6b815d6358c3f2d"},
+    {"artifact_id": 11668086825, "name": "plugin-renderer-lifecycle-Windows-e6117c8ce7e123ed34c2b143404cae15f8755a0a", "size_bytes": 3242, "archive_sha256": "c248f5ea24f22bf51bfb71a7f6877dacdb302dbcb48e18fa62387df9eb0a3924"}
+  ],
+  "limitations": [
+    "This accepts only the escape-parity preflight slice. Active Obsidian highlights remain source-only until native rendering is implemented.",
+    "C02.1 remains pending. Math, diagrams, raw HTML projection, wiki-link rendering, and freeform Markdown editing remain incomplete; unsupported syntax continues to show the bounded source with a visible reason."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, or application validation were run. All executable validation was performed in GitHub Actions."
+}
