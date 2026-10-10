@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T23:14:37Z",
+  "updated_at": "2026-10-10T23:15:35Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "4278a3f090561371f01af9d7101b4750db29aca1",
-  "current_milestone": "R2.8.68",
-  "next_action": "R2.8.68 audit evidence is complete on Rust source tree 71022bfb86eda820835a9e3e57f72a9bed271241. Commit and push the audit tracker update, obtain the GitHub Actions inventory result for that exact tracker SHA, then begin R2.8.69 to implement the three native Markdown modes. Keep parent C02 pending until mode-specific and byte-preservation acceptance passes on the supported desktop matrix. Use GitHub Actions only for executable validation.",
+  "last_reconciled_head": "54e9574d0235beaadb5e49f7b8850d973b028989",
+  "current_milestone": "R2.8.69",
+  "next_action": "R2.8.68 audit tracker checkpoint passed inventory on SHA 54e9574d0235beaadb5e49f7b8850d973b028989 (run 38094389705). Implement explicit Source, Live preview, and Reading modes in the native Markdown workflow. Preserve drafts and the existing revision-checked write path across mode switches; add cross-platform mode and byte-preservation UI coverage. Keep C02 pending until the whole parent criterion passes. Use GitHub Actions only for executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19704,13 +19704,27 @@
       "evidence": "evidence/r2.8.68-c02-three-mode-audit.md",
       "result": "Legacy source/live-preview/reading mode semantics and current Rust UI behavior are mapped. Rust already has fixture-backed byte-preserving reads and edits, but it lacks three explicit modes and mode-switch draft-retention coverage; parent C02 remains pending.",
       "tracker_checkpoint": {
-        "sha": "859bf5084a491aec2b9a1b2051db1479e879cdd7",
-        "inventory_run_id": 38094092569,
-        "inventory_job_id": 114336291041,
+        "sha": "54e9574d0235beaadb5e49f7b8850d973b028989",
+        "inventory_run_id": 38094389705,
+        "inventory_job_id": 114337166754,
         "conclusion": "success",
-        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38094092569"
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38094389705"
       },
-      "next_action": "Commit and push the audit tracker update, then record the inventory result for its exact SHA. After that checkpoint, begin R2.8.69: implement explicit Source, Live preview, and Reading modes with mode-switch draft retention and golden byte-preservation coverage. No local executable validation."
+      "next_action": "Audit complete and inventory checkpoint passed. R2.8.69 implements explicit Source, Live preview, and Reading modes with mode-switch draft retention and golden byte-preservation coverage. No local executable validation."
+    },
+    "R2.8.69": {
+      "status": "in_progress",
+      "starting_sha": "54e9574d0235beaadb5e49f7b8850d973b028989",
+      "scope": "Implement the three legacy Markdown editor workflows in the native Rust note UI while retaining exact-source and revision-safe editing behavior.",
+      "acceptance": [
+        "Expose explicit Source, Live preview, and Reading modes with mode-specific visibility matching the retained product contract.",
+        "Live preview shows the source editor and the rendered result together; Reading omits source-edit controls; Source focuses the raw Markdown editor.",
+        "Switching modes retains an unsaved draft and its original revision; only explicit save writes, using the revision-checked vault writer.",
+        "Fixture-driven UI tests cover each mode, mode switching, draft retention/cancellation, and an approved edit preserving BOM, CRLF, whitespace, comments, unknown syntax, and untouched bytes.",
+        "All seven required GitHub Actions workflows pass for the implementation SHA, including focused egui coverage on Ubuntu, macOS, and Windows. No local executable validation."
+      ],
+      "implementation_commits": [],
+      "next_action": "Inspect the current preview state, rendering helpers and egui test harness; then add a native mode enum and mode-specific UI/tests. Keep source writes revision-checked and keep drafts intact when changing modes."
     }
   },
   "ci_preparation": {
