@@ -3001,6 +3001,30 @@ mod tests {
     }
 
     #[test]
+    fn egui_renders_markdown_tables_without_source_fallback() {
+        let source = "| Name | Value |\n| --- | ---: |\n| note | 3 |";
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::RenderMarkdown
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("Name");
+        harness.get_by_label("Value");
+        harness.get_by_label("note");
+        harness.get_by_label("3");
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_renders_inline_and_display_math_through_the_preview_callback() {
         let source = "Inline $a + b$ and a display formula:\n\n$$\n\\frac{1}{2}\n$$";
         assert_eq!(
