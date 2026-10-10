@@ -18070,7 +18070,25 @@
         "The native UI exposes the highlighted phrase while keeping the original Markdown source bytes unchanged.",
         "Rust workspace tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
       ],
-      "next_action": "Implement conservative source-span recognition and native rendering for plain-text highlights, then push the source SHA and use only exact-SHA GitHub Actions for executable validation."
+      "implementation_commits": [
+        "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "a7a993ec9f5eda6efc589c69033e5ac17cf97ad0",
+          "rust_ci_run": 38065534531,
+          "result": "Ubuntu rustfmt requested the highlight-span push expression on one line; workspace tests passed on Ubuntu, and the full Rust job passed on macOS and Windows.",
+          "companion_runs": {
+            "obsidian_vault_roundtrip": 38065534494,
+            "inventory": 38065534504,
+            "plugin_renderer": 38065534493,
+            "loaded_plugins": 38065534517,
+            "desktop_build": 38065534519,
+            "quality": 38065534540
+          }
+        }
+      ],
+      "next_action": "Apply the exact Ubuntu rustfmt correction from run 38065534531, push a fresh implementation SHA, and rerun the seven required GitHub Actions workflows."
     }
   },
   "ci_preparation": {

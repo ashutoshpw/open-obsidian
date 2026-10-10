@@ -301,9 +301,8 @@ fn scan_source_only_syntax(
                     && let Some(close_start) = find_sequence(bytes, cursor + 2, b"==")
                     && text_between_is_not_blank(bytes, cursor + 2, close_start)
                 {
-                    inline_highlight_spans.push(
-                        source_offset + cursor..source_offset + close_start + 2,
-                    );
+                    inline_highlight_spans
+                        .push(source_offset + cursor..source_offset + close_start + 2);
                     cursor = close_start + 2;
                     continue;
                 }
