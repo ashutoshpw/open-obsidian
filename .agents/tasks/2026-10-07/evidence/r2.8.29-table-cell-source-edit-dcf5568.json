@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.29",
+  "status": "accepted",
+  "attempt": 1,
+  "source_sha": "dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+  "implementation_commits": [
+    "dcf5568011809e9b5f04d966e172a97f1ea5f6b0"
+  ],
+  "scope": "Verify revision-checked Markdown table cell edits through explicit source editing while preserving the original table syntax and untouched bytes.",
+  "test": "egui_source_edit_saves_a_table_cell_without_normalizing_markdown",
+  "fixture": {
+    "id": "fixture:c02-dialects",
+    "path": "fixtures/markdown-dialects.json",
+    "sha256": "96e94cb90ffd5b39115f1078d3fed9f6a114ab217ae1d8883fa21c9c139435a6",
+    "case": "table_editing"
+  },
+  "acceptance": [
+    "The preview renders the fixture table before editing and the changed cell after saving through the revision-checked vault writer.",
+    "The saved bytes exactly match the expected fixture, retaining the BOM, CRLF line endings, table separators, alignment row, and untouched cell content.",
+    "Rust workspace tests pass on Ubuntu, macOS, and Windows, and all seven required GitHub Actions workflows pass on the exact implementation SHA."
+  ],
+  "required_workflows": {
+    "rust_ci": {
+      "run_id": 38061007108,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114239090410,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/job/114239090410",
+          "formatting": "success",
+          "workspace_tests": "success",
+          "clippy": "success",
+          "crate_layers": "success",
+          "native_preview_build": "success",
+          "wry_compatibility_probe": "success"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114239090593,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/job/114239090593",
+          "formatting": "skipped",
+          "workspace_tests": "success",
+          "clippy": "success",
+          "crate_layers": "success",
+          "native_preview_build": "success",
+          "wry_compatibility_probe": "success"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114239090607,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/job/114239090607",
+          "formatting": "skipped",
+          "workspace_tests": "success",
+          "clippy": "success",
+          "crate_layers": "success",
+          "native_preview_build": "success",
+          "wry_compatibility_probe": "success"
+        }
+      ]
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38061007103,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114239090326,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103/job/114239090326"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114239090501,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103/job/114239090501"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114239090531,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103/job/114239090531"
+        }
+      ]
+    },
+    "inventory": {
+      "run_id": 38061007128,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007128",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114239090807,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007128/job/114239090807"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "run_id": 38061007135,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114239090481,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135/job/114239090481"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114239090608,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135/job/114239090608"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114239090647,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135/job/114239090647"
+        }
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38061007074,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114239090268,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074/job/114239090268"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114239090401,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074/job/114239090401"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114239090513,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074/job/114239090513"
+        }
+      ]
+    },
+    "quality": {
+      "run_id": 38061007174,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007174",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114239090840,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007174/job/114239090840"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114239091078,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007174/job/114239091078"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114239091159,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007174/job/114239091159"
+        }
+      ]
+    },
+    "plugin_renderer": {
+      "run_id": 38061007081,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114239090327,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/job/114239090327"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114239090493,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/job/114239090493"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114239090575,
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/job/114239090575"
+        }
+      ]
+    }
+  },
+  "toolchain": {
+    "rust_channel": "stable",
+    "rustc_ubuntu": "1.99.0 (b940084d7 2026-09-28)",
+    "markdown_renderer": "egui_commonmark 0.25.0",
+    "validation": "GitHub Actions only"
+  },
+  "artifacts": [
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11673445493,
+      "name": "rust-plugin-runtime-Linux-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "097c9c06e5ba5383b4e5906e34ad067112367adf800bf3ec0730bcbf1ade1558",
+      "size_bytes": 2695,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/artifacts/11673445493"
+    },
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11672972487,
+      "name": "rust-plugin-runtime-Windows-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "90e33d88d1ecab635f9aab34baf2b0cbf6e02e6a695f4aff56724d0b4d43fc36",
+      "size_bytes": 2715,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/artifacts/11672972487"
+    },
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11672937433,
+      "name": "rust-plugin-runtime-macOS-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "277f17983d8be33b79f378f7b6f6efb4510b1cb698c03a922a5deeeef74a5210",
+      "size_bytes": 2698,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/artifacts/11672937433"
+    },
+    {
+      "workflow": "rust_ci",
+      "artifact_id": 11672524955,
+      "name": "openobsidian-rust-preview-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "0bc561f34072aee5aec3197e09c38ee6bb8e4fea4ed74a32d7e419c2a6b9c0b6",
+      "size_bytes": 10747178,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007108/artifacts/11672524955"
+    },
+    {
+      "workflow": "obsidian_vault_roundtrip",
+      "artifact_id": 11673445582,
+      "name": "obsidian-vault-roundtrip-macOS-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "62aa96ee1c9d8d0fab175ef0b799e54829561074cb16a0b6bba3e03f9ce78f6f",
+      "size_bytes": 3524022,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103/artifacts/11673445582"
+    },
+    {
+      "workflow": "obsidian_vault_roundtrip",
+      "artifact_id": 11672644694,
+      "name": "obsidian-vault-roundtrip-Linux-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "b64d2d52fbfc7aa1a6229c03417f300c0b4abab0e7d6c8bc09e7213a27640f49",
+      "size_bytes": 2714734,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103/artifacts/11672644694"
+    },
+    {
+      "workflow": "obsidian_vault_roundtrip",
+      "artifact_id": 11672604888,
+      "name": "obsidian-vault-roundtrip-Windows-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "662a9560c000aa448fa76d5279352b0978936086123d79548085b2663b7f4f55",
+      "size_bytes": 3577199,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007103/artifacts/11672604888"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "artifact_id": 11673216819,
+      "name": "loaded-plugin-workflows-macOS-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "6f47a45e1cd2b82fcf599884a2706e0ae4654d9889ab436ad61c0b6dc1ea7c15",
+      "size_bytes": 171492,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135/artifacts/11673216819"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "artifact_id": 11672952174,
+      "name": "loaded-plugin-workflows-Linux-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "9a5c7cb4f74b5fc8fe7fdbf44343aed0ec5ded0490e1b0f696898a2976a4ddc5",
+      "size_bytes": 171460,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135/artifacts/11672952174"
+    },
+    {
+      "workflow": "loaded_plugins",
+      "artifact_id": 11672354968,
+      "name": "loaded-plugin-workflows-Windows-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "ca0e10a512c7665c90c23121b9368feef574a0f96db9ed8ccbab3dcf16d4ef50",
+      "size_bytes": 171510,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007135/artifacts/11672354968"
+    },
+    {
+      "workflow": "desktop_build",
+      "artifact_id": 11673251719,
+      "name": "openobsidian-macOS-preview-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "9cbd386acc6c1a7fbccbb64f46c775a04ce637c339f19abca307e9ac5f45a287",
+      "size_bytes": 397395487,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074/artifacts/11673251719"
+    },
+    {
+      "workflow": "desktop_build",
+      "artifact_id": 11672627998,
+      "name": "openobsidian-Linux-preview-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "08aa7c378702f0349eba5a80f7281668771212827d21808d1f0cf1d69673b1bb",
+      "size_bytes": 125946548,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074/artifacts/11672627998"
+    },
+    {
+      "workflow": "desktop_build",
+      "artifact_id": 11672449894,
+      "name": "openobsidian-Windows-preview-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "f484efd93841d614e7858a9bbc2e2ad8f284a0b4c68dd296020086cf9479fe81",
+      "size_bytes": 163005824,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007074/artifacts/11672449894"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "artifact_id": 11673425166,
+      "name": "plugin-renderer-lifecycle-Linux-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "a253225f253c7cc9308bc272727400a975a0dd020f59a1555c1f60c134abc0c5",
+      "size_bytes": 3221,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/artifacts/11673425166"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "artifact_id": 11672674529,
+      "name": "plugin-renderer-lifecycle-macOS-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "b4fd452486345e57a8586044bb4368052c956315775bb34f08348b532c41b0d9",
+      "size_bytes": 3238,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/artifacts/11672674529"
+    },
+    {
+      "workflow": "plugin_renderer",
+      "artifact_id": 11672309850,
+      "name": "plugin-renderer-lifecycle-Windows-dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
+      "archive_sha256": "3320c3d1643c68f7fac04a5bf4ee1ac3b9adecc5a5abdc5e8b393c58a20c0be9",
+      "size_bytes": 3242,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/artifacts/11672309850"
+    }
+  ],
+  "limitations": [
+    "This covers table edits through the explicit Markdown source editor; it does not add direct cell editing in reading view or claim all C02.1 dialects are complete.",
+    "Full C02.1 and later R3-R7 migration phases remain pending."
+  ],
+  "local_validation": "none; no local tests, builds, formatters, linters, or executable validation were run"
+}
