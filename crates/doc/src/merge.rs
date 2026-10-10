@@ -137,13 +137,12 @@ fn lines(bytes: &[u8]) -> Vec<&[u8]> {
             break;
         };
         let break_start = start + offset;
-        let break_width = if bytes[break_start] == b'\r'
-            && bytes.get(break_start + 1) == Some(&b'\n')
-        {
-            2
-        } else {
-            1
-        };
+        let break_width =
+            if bytes[break_start] == b'\r' && bytes.get(break_start + 1) == Some(&b'\n') {
+                2
+            } else {
+                1
+            };
         let end = break_start + break_width;
         result.push(&bytes[start..end]);
         start = end;
@@ -181,7 +180,8 @@ mod tests {
         assert_eq!(overlap.conflicts[0].local.as_slice(), b"ONE\n");
         assert_eq!(overlap.conflicts[0].current.as_slice(), b"CURRENT\n");
 
-        let insertion = three_way_merge_bytes(b"one\ntwo\n", b"one\ninserted\ntwo\n", b"one\nTWO\n");
+        let insertion =
+            three_way_merge_bytes(b"one\ntwo\n", b"one\ninserted\ntwo\n", b"one\nTWO\n");
         assert_eq!(insertion.status, MergeStatus::Conflict);
         assert!(insertion.bytes.is_none());
     }

@@ -2,8 +2,8 @@
 
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
-    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus, MergeConflict,
-    MergeStatus, ThreeWayMergeResult, LinkSubpathSlice, LinkSubpathStatus,
+    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+    LinkSubpathSlice, LinkSubpathStatus, MergeConflict, MergeStatus, ThreeWayMergeResult,
     TransclusionBlockReason, TransclusionGuard,
 };
 use openobsidian_doc::{
@@ -1159,15 +1159,11 @@ impl VaultStore {
         let current = self.read_if_present(&relative_path, &target_path)?;
         let base_revision = sha256_hex(base_bytes);
         let incoming_revision = sha256_hex(incoming_bytes);
-        let current_revision = current
-            .as_ref()
-            .map(|read| read.revision_sha256.clone());
+        let current_revision = current.as_ref().map(|read| read.revision_sha256.clone());
         let merge = match current.as_ref() {
-            Some(current) => three_way_merge_bytes(
-                base_bytes,
-                incoming_bytes,
-                current.document.as_bytes(),
-            ),
+            Some(current) => {
+                three_way_merge_bytes(base_bytes, incoming_bytes, current.document.as_bytes())
+            }
             None => ThreeWayMergeResult::conflict(base_bytes, incoming_bytes, &[]),
         };
 
@@ -1207,13 +1203,11 @@ impl VaultStore {
         let written = if current_revision.as_deref() == Some(merged_revision.as_str()) {
             None
         } else {
-            Some(
-                self.write(VaultWriteRequest {
-                    relative_path,
-                    expected_revision_sha256: current_revision,
-                    bytes: merged_bytes.to_vec(),
-                })?,
-            )
+            Some(self.write(VaultWriteRequest {
+                relative_path,
+                expected_revision_sha256: current_revision,
+                bytes: merged_bytes.to_vec(),
+            })?)
         };
 
         Ok(VaultMergeWriteResult {
@@ -2654,10 +2648,7 @@ mod tests {
                 let expected_current_revision = case["current_bytes"]
                     .as_str()
                     .map(|bytes| sha256_hex(bytes.as_bytes()));
-                assert_eq!(
-                    conflict.current_revision_sha256,
-                    expected_current_revision
-                );
+                assert_eq!(conflict.current_revision_sha256, expected_current_revision);
                 assert_eq!(
                     store.read_conflict(&conflict.id, &relative_path).unwrap().bytes,
                     expected_incoming
