@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T08:39:37Z",
+  "updated_at": "2026-10-10T08:45:21Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "182f3de99412b951845da7fe8e5b2cac6b5d85d5",
+  "last_reconciled_head": "7599ecd942a3b027686e3a8da055f9ec63c70201",
   "current_milestone": "R2.8.18",
-  "next_action": "Push the R2.8.18 scanner correction for exact-SHA GitHub Actions validation.",
+  "next_action": "Push the CI-reported Clippy corrections for exact-SHA GitHub Actions validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -16204,7 +16204,8 @@
       ],
       "implementation_commits": [
         "161656a7bc3a8fc547f2d7ccfdbab77051cdc262",
-        "182f3de99412b951845da7fe8e5b2cac6b5d85d5"
+        "182f3de99412b951845da7fe8e5b2cac6b5d85d5",
+        "7599ecd942a3b027686e3a8da055f9ec63c70201"
       ],
       "ci_attempts": [
         {
@@ -16235,9 +16236,24 @@
             "plugin_renderer": 38038351211
           },
           "failure_summary": "Vault round-trip passed on Ubuntu, macOS, and Windows; inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer also passed. Rust CI failed workspace tests because an empty mapping value before a comment produced a reversed source span and an indentationless block sequence after an empty mapping entry was rejected. Ubuntu rustfmt requested one closure-brace layout change. The scanner and formatting corrections are prepared from these GitHub diagnostics; no local executable validation was run."
+        },
+        {
+          "attempt": 3,
+          "source_sha": "7599ecd942a3b027686e3a8da055f9ec63c70201",
+          "conclusion": "failure",
+          "run_ids": {
+            "rust_ci": 38038697678,
+            "obsidian_vault_roundtrip": 38038697670,
+            "inventory": 38038697672,
+            "loaded_plugins": 38038697600,
+            "desktop_build": 38038697754,
+            "quality": 38038697569,
+            "plugin_renderer": 38038697605
+          },
+          "failure_summary": "Inventory, loaded-plugin workflows, desktop build, quality, and plugin renderer passed. Rust formatting passed on Ubuntu and workspace tests passed on Ubuntu, macOS, and Windows, but Clippy failed on all three platforms for one needless lifetime, one function with too many arguments, one needless range loop, and one needless borrow. The vault round-trip passed on Ubuntu, macOS, and Windows. The exact CI-requested Clippy corrections are prepared; no local executable validation was run."
         }
       ],
-      "next_action": "Commit and push the scanner and formatting corrections prepared from the second exact-SHA CI diagnostics, then inspect the seven required workflow results."
+      "next_action": "Commit and push the Clippy corrections prepared from the third exact-SHA CI diagnostics, then inspect the seven required workflow results."
     }
   },
   "ci_preparation": {

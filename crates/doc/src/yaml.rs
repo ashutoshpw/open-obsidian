@@ -1012,10 +1012,10 @@ fn source_line_property(
     .ok_or(super::MarkdownPropertyEditError::UnsupportedPath)
 }
 
-fn source_value<'a>(
-    bytes: &'a [u8],
+fn source_value(
+    bytes: &[u8],
     span: super::SourceSpan,
-) -> Result<&'a str, super::MarkdownPropertyEditError> {
+) -> Result<&str, super::MarkdownPropertyEditError> {
     std::str::from_utf8(
         bytes
             .get(span.start..span.end)
@@ -1065,7 +1065,6 @@ fn resolve_property_value(
     lines: &[SourceYamlLine],
     index: usize,
     end: usize,
-    parent_indent: usize,
     property: &super::MarkdownPropertySource,
     path: &[super::MarkdownPropertyPathSegment],
     path_index: usize,
@@ -1076,7 +1075,8 @@ fn resolve_property_value(
 
     let raw_value = source_value(bytes, property.value_span)?;
     if raw_value.is_empty() {
-        let (child, child_end) = next_block_child(bytes, lines, index, end, parent_indent)?;
+        let (child, child_end) =
+            next_block_child(bytes, lines, index, end, lines[index].indent)?;
         let child_line = lines[child];
         return match path.get(path_index + 1) {
             Some(super::MarkdownPropertyPathSegment::Index(_))
@@ -1212,9 +1212,7 @@ fn resolve_block_mapping(
     }
     let (index, property) =
         found.ok_or(super::MarkdownPropertyEditError::PropertyNotRepresented)?;
-    resolve_property_value(
-        bytes, lines, index, end, indent, &property, path, path_index,
-    )
+    resolve_property_value(bytes, lines, index, end, &property, path, path_index)
 }
 
 fn source_sequence_item_end(
@@ -1238,8 +1236,7 @@ fn sequence_continuation_has_key(
     mapping_indent: usize,
     wanted: &str,
 ) -> Result<bool, super::MarkdownPropertyEditError> {
-    for index in start + 1..item_end {
-        let line = lines[index];
+    for &line in lines.iter().take(item_end).skip(start + 1) {
         if line.indent < mapping_indent {
             break;
         }
@@ -1281,8 +1278,7 @@ fn resolve_block_sequence_item(
                 lines,
                 start,
                 item_end,
-                indent,
-                &head,
+                head,
                 path,
                 path_index + 1,
             );
