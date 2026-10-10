@@ -3460,6 +3460,38 @@ mod tests {
     }
 
     #[test]
+    fn egui_keeps_raw_html_script_fixture_source_only() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let case = fixture["rust_preview"]["cases"]
+            .as_array()
+            .expect("Markdown dialect fixture must include Rust preview cases")
+            .iter()
+            .find(|case| case["id"] == "raw-html")
+            .expect("Markdown dialect fixture must include raw HTML");
+        let source = case["source"]
+            .as_str()
+            .expect("raw HTML fixture must include source");
+        let original = source.as_bytes().to_vec();
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::ShowSource
+        );
+
+        let mut markdown_cache = CommonMarkCache::default();
+        let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
+        let mut harness = Harness::new_ui_state(
+            |ui, _app| show_markdown_preview(ui, &mut markdown_cache, &math_renderer_cache, source),
+            OpenObsidianApp::default(),
+        );
+
+        harness.step();
+        harness.get_by_label("Unsupported Markdown (raw HTML); showing the source as written.");
+        harness.get_by_label(source);
+        assert_eq!(source.as_bytes(), original.as_slice());
+    }
+
+    #[test]
     fn egui_renders_safe_inline_html_breaks_without_changing_source() {
         let source = "First line<br>Second line.";
         let original = source.as_bytes().to_vec();

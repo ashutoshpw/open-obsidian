@@ -2721,3 +2721,5 @@ Accepted slice: documents that mix supported Markdown with unsupported raw HTML 
 Use the existing `raw-html` C02.1 fixture, containing `<script>alert('not executed')</script>`, to verify the native preview explains the raw-HTML fallback and displays the exact script source as text without projecting or executing it. Add fixture-driven egui coverage and push for exact-SHA GitHub Actions; no executable validation runs locally.
 
 R2.8.52 tracker checkpoint: inventory [run 38083231666](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083231666), job 114304284483, passed for tracker SHA `30129623e4c1ff6ada96e7011d253cf3d4e987dc`.
+
+The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It checks the source-only disposition, explicit raw-HTML fallback message, literal script source in the accessibility tree, and unchanged source bytes. Push this focused change for exact-SHA GitHub Actions; no local executable validation runs.
