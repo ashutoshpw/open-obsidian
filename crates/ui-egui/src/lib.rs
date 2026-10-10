@@ -3790,7 +3790,10 @@ mod tests {
             analysis.disposition(),
             MarkdownPreviewDisposition::RenderMarkdown
         );
-        assert_eq!(analysis.inline_highlight_spans().len(), expected_highlights.len());
+        assert_eq!(
+            analysis.inline_highlight_spans().len(),
+            expected_highlights.len()
+        );
 
         let mut markdown_cache = CommonMarkCache::default();
         let math_renderer_cache = Rc::new(RefCell::new(MathRendererCache::default()));
@@ -3801,11 +3804,7 @@ mod tests {
 
         harness.step();
         for highlight in expected_highlights {
-            harness.get_by_label(
-                highlight
-                    .as_str()
-                    .expect("highlight text must be a string"),
-            );
+            harness.get_by_label(highlight.as_str().expect("highlight text must be a string"));
         }
         assert_eq!(source.as_bytes(), original.as_slice());
     }
