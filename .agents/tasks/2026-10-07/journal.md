@@ -2813,3 +2813,5 @@ Accepted slice: the allowlisted `<br/>` form renders as a native hard break whil
 ### R2.8.58 in progress — spaced self-closing safe HTML line break
 
 Use the existing safe-html-inline-break-spaced-self-closing C02.1 fixture to verify the preview selects RenderMarkdown and renders the expected two text lines while preserving the original source bytes. Add focused fixture-driven egui coverage and push for exact-SHA GitHub Actions; no local executable validation runs.
+
+R2.8.58 tracker checkpoint: inventory [run 38086875802](https://github.com/ashutoshpw/open-obsidian/actions/runs/38086875802), job 114315123074, passed for tracker SHA d165f95cce2645454b32cedb5585a84945e00ac8.
