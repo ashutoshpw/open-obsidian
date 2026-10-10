@@ -86,6 +86,7 @@
       "unresolved-or-complex-wiki-links",
       "block-context-wiki-links",
       "table-context-wiki-links",
+      "task-list-wiki-links",
       "complex-inline-highlights"
     ],
     "resolved_wiki_link_preview": {
@@ -184,6 +185,18 @@
       "expected_subpath": null,
       "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
       "remains_clickable": false,
+      "preserves_source_bytes": true
+    },
+    "task_list_wiki_link_preview": {
+      "source_path": "Index.md",
+      "source": "- [ ] Review [[Plans/Project]]",
+      "target_path": "Plans/Project.md",
+      "target_source": "# Project plan\nThe resolved target note.",
+      "expected_link_kind": "wiki_link",
+      "expected_subpath": null,
+      "expected_fallback": "Unsupported Markdown (wiki links); showing the source as written.",
+      "remains_clickable": false,
+      "expected_task_checkbox_interactive": false,
       "preserves_source_bytes": true
     },
     "safe_inline_html": {

@@ -3863,6 +3863,7 @@ mod tests {
             "mixed_formatting_wiki_link_preview",
             "block_context_wiki_link_preview",
             "table_context_wiki_link_preview",
+            "task_list_wiki_link_preview",
         ]
         .into_iter()
         .enumerate()
@@ -3944,8 +3945,17 @@ mod tests {
                     .query_all_by_role(eframe::egui::accesskit::Role::Link)
                     .next()
                     .is_none(),
-                "embedded, subpath, non-Markdown, mixed-formatting, list-context, and table-context wiki links must not be clickable"
+                "embedded, subpath, non-Markdown, mixed-formatting, list-context, table-context, and task-list wiki links must not be clickable"
             );
+            if case["expected_task_checkbox_interactive"].as_bool() == Some(false) {
+                assert!(
+                    harness
+                        .query_all_by_role(eframe::egui::accesskit::Role::CheckBox)
+                        .next()
+                        .is_none(),
+                    "source-only task-list wiki links must not expose an interactive task checkbox"
+                );
+            }
             assert_eq!(
                 harness
                     .state()

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T18:04:06Z",
+  "updated_at": "2026-10-10T18:06:09Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18574,7 +18574,7 @@
     },
     "R2.8.41": {
       "status": "in_progress",
-      "starting_sha": "ece927bb112ba037fe6cde6bd7bc189d22bcff7d",
+      "starting_sha": "5e4946822092f73b8f398549f5a9c55ce58ae01d",
       "scope": "Verify a simple wiki link inside a Markdown task-list item remains source-only and any task control stays read-only.",
       "acceptance": [
         "The Markdown dialect fixture declares a resolved task-list wiki link and source-only expectations.",
@@ -18583,7 +18583,7 @@
         "No local tests, builds, formatters, linters, or app launches are used."
       ],
       "implementation_commits": [],
-      "next_action": "Add a resolved wiki link inside a Markdown task-list item as a fixture case and extend the existing source-only UI test to verify the fallback exposes no interactive task control; reconcile the fixture inventory hash and push for exact-SHA GitHub Actions."
+      "next_action": "The resolved task-list wiki-link fixture and existing source-only UI test now verify there is no clickable link or interactive checkbox; the fixture inventory hash is reconciled. Push this focused slice for exact-SHA GitHub Actions."
     }
   },
   "ci_preparation": {
