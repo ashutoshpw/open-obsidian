@@ -2829,29 +2829,137 @@ mod tests {
     }
 
     #[test]
-    fn stale_writes_preserve_incoming_bytes_without_replacing_external_changes() {
+    fn concurrent_edit_matrix_preserves_external_target_and_incoming_conflict() {
+        let fixture: Value = serde_json::from_str(SYNC_FAILURE_MATRIX_FIXTURE)
+            .expect("vault safety failure-matrix fixture must be valid JSON");
+        let scenario = fixture["scenarios"]
+            .as_array()
+            .expect("failure matrix must contain scenarios")
+            .iter()
+            .find(|scenario| scenario["id"] == "concurrent-edit")
+            .expect("failure matrix must contain concurrent-edit");
+        assert_eq!(scenario["fault_stage"], "after-base-read-before-write");
+        assert_eq!(
+            scenario["expected_outcome"],
+            "preserve-incoming-as-conflict"
+        );
+        assert_eq!(
+            scenario["applicable_platforms"],
+            serde_json::json!(["macOS", "Windows", "Linux"])
+        );
+
+        let relative_path_text = scenario["relative_path"].as_str().unwrap();
+        let relative_path = PathBuf::from(relative_path_text);
+        let initial = scenario["initial_bytes_utf8"].as_str().unwrap().as_bytes();
+        let external = scenario["external_bytes_utf8"].as_str().unwrap().as_bytes();
+        let incoming = scenario["incoming_bytes_utf8"].as_str().unwrap().as_bytes();
         let vault_temp = TempDir::new();
         let app_data_temp = TempDir::new();
-        let note_path = vault_temp.0.join("note.md");
-        fs::write(&note_path, b"original\n").unwrap();
+        let target_path = vault_temp.0.join(&relative_path);
+        fs::create_dir_all(target_path.parent().unwrap()).unwrap();
+        fs::write(&target_path, initial).unwrap();
         let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
-        let stale = store.root().read("note.md").unwrap();
-        let external = b"external edit\n";
-        let incoming = b"agent edit\n";
-        fs::write(&note_path, external).unwrap();
+        let stale = store.root().read(&relative_path).unwrap();
+        let expected_revision = sha256_hex(initial);
+        let current_revision = sha256_hex(external);
+        assert_eq!(stale.revision_sha256, expected_revision);
+        fs::write(&target_path, external).unwrap();
 
-        let result = store.write(VaultWriteRequest {
-            relative_path: PathBuf::from("note.md"),
-            expected_revision_sha256: Some(stale.revision_sha256),
-            bytes: incoming.to_vec(),
-        });
-        let preserved_path = match result {
-            Err(VaultError::RevisionConflict { preserved_path, .. }) => preserved_path,
-            _ => panic!("stale write did not return a preserved revision conflict"),
-        };
+        let (conflict_path, recorded_expected, recorded_current, preserved_path) =
+            match store.write(VaultWriteRequest {
+                relative_path: relative_path.clone(),
+                expected_revision_sha256: Some(stale.revision_sha256),
+                bytes: incoming.to_vec(),
+            }) {
+                Err(VaultError::RevisionConflict {
+                    relative_path,
+                    expected_revision,
+                    current_revision,
+                    preserved_path,
+                }) => (
+                    relative_path,
+                    expected_revision,
+                    current_revision,
+                    preserved_path,
+                ),
+                Err(error) => panic!("stale concurrent edit returned the wrong error: {error}"),
+                Ok(_) => panic!("stale concurrent edit replaced the external target"),
+            };
 
-        assert_eq!(fs::read(&note_path).unwrap(), external);
-        assert_eq!(fs::read(preserved_path).unwrap(), incoming);
+        assert_eq!(conflict_path, relative_path);
+        assert_eq!(recorded_expected.as_deref(), Some(expected_revision.as_str()));
+        assert_eq!(recorded_current.as_deref(), Some(current_revision.as_str()));
+        assert_eq!(
+            fs::read(&target_path).unwrap(),
+            scenario["expected_target_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+        assert_eq!(
+            fs::read(&preserved_path).unwrap(),
+            scenario["expected_conflict_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+
+        let conflict = store
+            .history_records()
+            .unwrap()
+            .into_iter()
+            .find(|record| {
+                record.kind == VaultHistoryKind::Conflict && record.relative_path == relative_path
+            })
+            .expect("concurrent edit must create a protected conflict record");
+        assert_eq!(
+            conflict.protected,
+            scenario["expected_conflict_protected"].as_bool().unwrap()
+        );
+        assert_eq!(
+            conflict.expected_revision_sha256.as_deref(),
+            Some(expected_revision.as_str())
+        );
+        assert_eq!(
+            conflict.current_revision_sha256.as_deref(),
+            Some(current_revision.as_str())
+        );
+        let conflict_read = store
+            .read_conflict(&conflict.id, &relative_path)
+            .expect("conflict history must remain readable");
+        assert_eq!(
+            conflict_read.bytes,
+            scenario["expected_conflict_bytes_utf8"]
+                .as_str()
+                .unwrap()
+                .as_bytes()
+                .to_vec()
+        );
+
+        let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+        let entries = journal
+            .lines()
+            .map(serde_json::from_str::<Value>)
+            .collect::<Result<Vec<_>, _>>()
+            .expect("conflict journal must contain valid JSON");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0]["operation"], "write");
+        assert_eq!(entries[0]["state"], scenario["expected_journal_state"]);
+        assert_eq!(
+            entries[0]["relative_path"].as_str(),
+            Some(relative_path_text)
+        );
+        assert_eq!(
+            entries[0]["expected_revision"].as_str(),
+            Some(expected_revision.as_str())
+        );
+        let incoming_revision = sha256_hex(incoming);
+        assert_eq!(
+            entries[0]["next_revision"].as_str(),
+            Some(incoming_revision.as_str())
+        );
     }
 
     #[test]

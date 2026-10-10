@@ -29,7 +29,20 @@
       "expected_previous_recovery_bytes_utf8": "\ufeffstatus: saved\r\n",
       "expected_incoming_recovery_bytes_utf8": "\ufeffstatus: candidate\r\n"
     },
-    {"id": "concurrent-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
+    {
+      "id": "concurrent-edit",
+      "fault_stage": "after-base-read-before-write",
+      "expected_outcome": "preserve-incoming-as-conflict",
+      "applicable_platforms": ["macOS", "Windows", "Linux"],
+      "relative_path": "Notes/Concurrent.md",
+      "initial_bytes_utf8": "\ufeffstatus: saved\r\n",
+      "external_bytes_utf8": "\ufeffstatus: external-edit\r\n",
+      "incoming_bytes_utf8": "\ufeffstatus: editor-candidate\r\n",
+      "expected_target_bytes_utf8": "\ufeffstatus: external-edit\r\n",
+      "expected_conflict_bytes_utf8": "\ufeffstatus: editor-candidate\r\n",
+      "expected_conflict_protected": true,
+      "expected_journal_state": "conflict"
+    },
     {"id": "delete-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {"id": "rename-versus-edit", "fault_stage": null, "expected_outcome": "preserve-incoming-as-conflict"},
     {
