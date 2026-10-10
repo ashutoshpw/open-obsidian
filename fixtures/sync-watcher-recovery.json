@@ -16,6 +16,11 @@
       "id": "reconnect",
       "stimulus": "vault root is replaced at the same path",
       "expected": "verified_rescan_from_disk"
+    },
+    {
+      "id": "event",
+      "stimulus": "an external note change emits a filesystem notification while the vault is open",
+      "expected": "verified_rescan_from_disk"
     }
   ]
 }

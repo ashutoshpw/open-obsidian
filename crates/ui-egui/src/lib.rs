@@ -2630,6 +2630,85 @@ mod tests {
     }
 
     #[test]
+    fn egui_reconciles_an_external_note_change_from_the_watcher_without_manual_refresh() {
+        let fixture: serde_json::Value = serde_json::from_str(SYNC_WATCHER_RECOVERY_FIXTURE)
+            .expect("watcher recovery fixture must be valid JSON");
+        assert_eq!(fixture["fixture_id"], "fixture:sync-watcher-recovery");
+        assert!(
+            fixture["cases"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|case| case["id"] == "event")
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Watched Vault");
+        let app_data_path = temporary.0.join("App Data");
+        std::fs::create_dir_all(&vault_path).expect("create watched vault directory");
+        std::fs::create_dir_all(&app_data_path).expect("create separate app-data directory");
+        std::fs::write(vault_path.join("Before.md"), b"before\n")
+            .expect("write initial vault note");
+
+        let session = VaultSession::open(&vault_path, &app_data_path)
+            .expect("open vault before applying an external filesystem change");
+        assert_eq!(session.entries().len(), 1);
+        let watcher = VaultWatcher::watch(session.root_path()).expect("watch the open test vault");
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            vault_watcher: Some(watcher),
+            next_vault_reconciliation: Some(Instant::now() + Duration::from_secs(60)),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+        harness.step();
+        harness.get_by_label("1 Markdown files found.");
+
+        let external_source = b"# Added outside OpenObsidian\r\n";
+        std::fs::write(vault_path.join("After.md"), external_source)
+            .expect("create a note outside OpenObsidian");
+        let expected_vault = existing_vault_tree_snapshot(&vault_path);
+        let expected_app_data = existing_vault_tree_snapshot(&app_data_path);
+        let expected_status = "Note list refreshed: 2 Markdown files found.";
+        let deadline = Instant::now() + Duration::from_secs(15);
+        loop {
+            harness.step();
+            if harness.state().vault_refresh_status.as_deref() == Some(expected_status) {
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "filesystem watcher did not reconcile the external note within fifteen seconds"
+            );
+            std::thread::sleep(Duration::from_millis(10));
+        }
+
+        assert!(harness.state().vault_refresh_error.is_none());
+        let session = harness
+            .state()
+            .session
+            .as_ref()
+            .expect("watched vault remains open");
+        assert_eq!(session.entries().len(), 2);
+        assert_eq!(
+            session.read("After.md").unwrap().document.as_bytes(),
+            external_source
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            expected_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), expected_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path),
+            expected_app_data
+        );
+    }
+
+    #[test]
     fn egui_opens_and_refreshes_an_existing_empty_vault_without_changing_its_tree() {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("Existing Empty Vault");

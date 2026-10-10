@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T00:47:36Z",
+  "updated_at": "2026-10-10T00:54:16Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a301bfcee01d3a16c812c3eaa0f0859d9109e887",
-  "current_milestone": "R2.7.1",
-  "next_action": "Review the remaining R2 vault/filesystem requirements and choose the next small acceptance slice; keep broader C01 acceptance pending.",
+  "last_reconciled_head": "9f8a9f678bd3cd96f7e266a3418dfbefe8ea9f31",
+  "current_milestone": "R2.7.2",
+  "next_action": "Push the watcher event-to-UI reconciliation case, then validate its exact SHA in GitHub Actions; do not use local test, build, formatter, or lint commands.",
   "blockers": [],
   "phases": {
     "R0": {

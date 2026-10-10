@@ -2249,12 +2249,12 @@
     },
     {
       "path": "fixtures/sync-watcher-recovery.json",
-      "sha256": "68f9e0effd96ce653ecf1a720d71d0d0f8231133c8ab1a60c2d8c21c66ace1cd",
+      "sha256": "528f5dd741a9e0a8f5414982d0aba07308b0f7edac1bff5189b2b9b1c910532a",
       "rust_owner": "crates/vault",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "Synthetic overflow, sleep and root-reconnect cases require disk-verified vault reconciliation.",
+      "purpose": "Synthetic overflow, sleep, root-reconnect and external filesystem-event cases require disk-verified vault reconciliation.",
       "fixture_reader": "crates/vault"
     }
   ],
