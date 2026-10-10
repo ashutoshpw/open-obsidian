@@ -2723,3 +2723,15 @@ Use the existing `raw-html` C02.1 fixture, containing `<script>alert('not execut
 R2.8.52 tracker checkpoint: inventory [run 38083231666](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083231666), job 114304284483, passed for tracker SHA `30129623e4c1ff6ada96e7011d253cf3d4e987dc`.
 
 The fixture-driven egui test is added in `crates/ui-egui/src/lib.rs`. It checks the source-only disposition, explicit raw-HTML fallback message, literal script source in the accessibility tree, and unchanged source bytes. Push this focused change for exact-SHA GitHub Actions; no local executable validation runs.
+
+### R2.8.52 accepted — raw HTML script remains source-only — source SHA `50455182afb258eb221ba38bef9c77870ce1ab83`
+
+The existing `raw-html` C02.1 fixture now drives an egui preview test. It verifies `ShowSource`, the explicit raw-HTML fallback message, literal display of the exact `<script>` source, and unchanged source bytes. The focused test passed on Ubuntu, macOS, and Windows; each platform's `ui-egui` suite passed 90 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38083294837](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294837), loaded-plugin workflows [38083294763](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294763), desktop build [38083294813](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294813), quality [38083294694](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294694), Rust CI [38083294749](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294749), plugin renderer [38083294785](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294785), and Obsidian vault round-trip [38083294727](https://github.com/ashutoshpw/open-obsidian/actions/runs/38083294727). Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.52-raw-html-script-source-fallback-5045518.json](evidence/r2.8.52-raw-html-script-source-fallback-5045518.json). Native `parallel:` groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: raw HTML script content remains visible as source and is not projected in the native preview. Full C02.1 and migration phases R3-R7 remain pending. Next: verify unknown extension markup remains literal in R2.8.53.
+
+### R2.8.53 in progress — unknown extension markup remains literal
+
+Use the existing `unknown-markup-remains-literal` C02.1 fixture to confirm the `%%` extension marker stays visible as literal text under native CommonMark rendering, without triggering the unsupported-syntax fallback. Preserve the fixture source bytes and validate only through exact-SHA GitHub Actions.
