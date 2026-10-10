@@ -2,13 +2,15 @@
 
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
-    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
-    LinkSubpathSlice, LinkSubpathStatus, TransclusionBlockReason, TransclusionGuard,
+    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus, MergeConflict,
+    MergeStatus, ThreeWayMergeResult, LinkSubpathSlice, LinkSubpathStatus,
+    TransclusionBlockReason, TransclusionGuard,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
     RawDocument, RenamePlanFile, build_link_rename_plan, guard_note_transclusion, resolve_link,
     resolve_link_with_sources, resolve_link_with_subpath_statuses, slice_markdown_subpath,
+    three_way_merge_bytes,
 };
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -250,6 +252,13 @@ pub struct VaultWriteRequest {
 pub struct VaultWriteResult {
     pub read: VaultRead,
     pub operation_id: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultMergeWriteResult {
+    pub merge: ThreeWayMergeResult,
+    pub written: Option<VaultWriteResult>,
+    pub preserved_incoming_path: Option<PathBuf>,
 }
 
 #[derive(Clone, Debug)]
@@ -1131,6 +1140,89 @@ impl VaultStore {
         &self.root
     }
 
+    /// Reconcile an editor's base and incoming bytes with the current file.
+    ///
+    /// Disjoint line edits are written against the revision that was merged.
+    /// Overlapping, structural, binary or deleted-file cases preserve incoming
+    /// bytes in protected conflict history and leave the vault path untouched.
+    /// The final write still checks its revision to detect a concurrent change
+    /// that occurs after the merge read.
+    pub fn merge_write(
+        &self,
+        relative_path: impl AsRef<Path>,
+        base_bytes: &[u8],
+        incoming_bytes: &[u8],
+    ) -> Result<VaultMergeWriteResult, VaultError> {
+        let relative_path = normalize_relative_path(relative_path.as_ref())?;
+        let relative_path_text = path_to_slashes(&relative_path)?;
+        let target_path = self.root.resolve_vault_path(&relative_path, true)?;
+        let current = self.read_if_present(&relative_path, &target_path)?;
+        let base_revision = sha256_hex(base_bytes);
+        let incoming_revision = sha256_hex(incoming_bytes);
+        let current_revision = current
+            .as_ref()
+            .map(|read| read.revision_sha256.clone());
+        let merge = match current.as_ref() {
+            Some(current) => three_way_merge_bytes(
+                base_bytes,
+                incoming_bytes,
+                current.document.as_bytes(),
+            ),
+            None => ThreeWayMergeResult::conflict(base_bytes, incoming_bytes, &[]),
+        };
+
+        if merge.status == MergeStatus::Conflict {
+            let operation_id = next_operation_id();
+            let preserved_incoming_path = self.preserve_bytes(
+                "conflicts",
+                &operation_id,
+                ".incoming",
+                &relative_path_text,
+                incoming_bytes,
+                &incoming_revision,
+                Some(&base_revision),
+                current_revision.as_deref(),
+            )?;
+            self.append_journal(
+                &operation_id,
+                "conflict",
+                &relative_path_text,
+                Some(&base_revision),
+                &incoming_revision,
+                None,
+            )?;
+            return Ok(VaultMergeWriteResult {
+                merge,
+                written: None,
+                preserved_incoming_path: Some(preserved_incoming_path),
+            });
+        }
+
+        let merged_bytes = merge.bytes.as_deref().ok_or_else(|| {
+            VaultError::Journal(io::Error::other(
+                "non-conflicting merge result did not contain bytes",
+            ))
+        })?;
+        let merged_revision = sha256_hex(merged_bytes);
+        let written = if current_revision.as_deref() == Some(merged_revision.as_str()) {
+            None
+        } else {
+            Some(
+                self.write(VaultWriteRequest {
+                    relative_path,
+                    expected_revision_sha256: current_revision,
+                    bytes: merged_bytes.to_vec(),
+                })?,
+            )
+        };
+
+        Ok(VaultMergeWriteResult {
+            merge,
+            written,
+            preserved_incoming_path: None,
+        })
+    }
+
     /// Write a file only when its current SHA-256 revision matches the caller's
     /// expectation. Previous and incoming bytes are stored under app-owned data
     /// before the prepared journal entry; conflicts and failed writes keep their
@@ -1849,9 +1941,10 @@ fn sha256_hex(bytes: &[u8]) -> String {
 mod tests {
     use super::{
         LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES,
-        MarkdownSource, TransclusionBlockReason, VaultError, VaultNoteEmbedDisposition, VaultRoot,
-        VaultStore, VaultWriteRequest, sha256_hex,
+        MarkdownSource, TransclusionBlockReason, VaultError, VaultHistoryKind,
+        VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex,
     };
+    use openobsidian_doc::MergeStatus;
     use serde_json::Value;
     use std::fs;
     use std::path::PathBuf;
@@ -1862,6 +1955,8 @@ mod tests {
         include_str!("../../../fixtures/sync-atomic-write.json");
     const SYNC_INTERRUPTED_WRITE_FIXTURE: &str =
         include_str!("../../../fixtures/sync-interrupted-write.json");
+    const SYNC_REVISION_MERGE_FIXTURE: &str =
+        include_str!("../../../fixtures/sync-revision-merge.json");
 
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -2474,6 +2569,105 @@ mod tests {
                     .unwrap(),
                     previous
                 );
+            }
+        }
+    }
+
+    #[test]
+    fn sync_revision_merge_fixture_merges_safe_edits_and_preserves_conflicts() {
+        let fixture: Value = serde_json::from_str(SYNC_REVISION_MERGE_FIXTURE)
+            .expect("revision-merge fixture must be valid JSON");
+        assert_eq!(fixture["id"], "fixture:sync-revision-merge");
+        let relative_path = PathBuf::from(fixture["relative_path"].as_str().unwrap());
+
+        for case in fixture["cases"].as_array().expect("fixture cases") {
+            let vault_temp = TempDir::new();
+            let app_data_temp = TempDir::new();
+            let vault_path = vault_temp.0.join("vault");
+            fs::create_dir_all(vault_path.join("Notes")).unwrap();
+            let target_path = vault_path.join(&relative_path);
+            let base_bytes = case["base_bytes"].as_str().unwrap().as_bytes();
+            let incoming_bytes = case["incoming_bytes"].as_str().unwrap().as_bytes();
+            fs::write(&target_path, base_bytes).unwrap();
+            let store = VaultStore::open(&vault_path, &app_data_temp.0).unwrap();
+
+            if let Some(current_bytes) = case["current_bytes"].as_str() {
+                fs::write(&target_path, current_bytes.as_bytes()).unwrap();
+            } else {
+                fs::remove_file(&target_path).unwrap();
+            }
+
+            let result = store
+                .merge_write(&relative_path, base_bytes, incoming_bytes)
+                .unwrap();
+            let status = match result.merge.status {
+                MergeStatus::Unchanged => "unchanged",
+                MergeStatus::Merged => "merged",
+                MergeStatus::Conflict => "conflict",
+            };
+            assert_eq!(
+                status,
+                case["expected_status"].as_str().unwrap(),
+                "{}",
+                case["id"]
+            );
+
+            match case["expected_target"].as_str() {
+                Some(expected_target) => {
+                    assert_eq!(
+                        fs::read(&target_path).unwrap(),
+                        expected_target.as_bytes(),
+                        "{}",
+                        case["id"]
+                    );
+                }
+                None => assert!(!target_path.exists(), "{}", case["id"]),
+            }
+
+            if status == "conflict" {
+                assert!(result.written.is_none(), "{}", case["id"]);
+                let preserved_path = result
+                    .preserved_incoming_path
+                    .as_ref()
+                    .expect("conflict bytes must be preserved");
+                let expected_incoming = case["expected_preserved_incoming"]
+                    .as_str()
+                    .unwrap()
+                    .as_bytes();
+                assert_eq!(fs::read(preserved_path).unwrap(), expected_incoming);
+
+                let conflict = store
+                    .history_records()
+                    .unwrap()
+                    .into_iter()
+                    .find(|record| {
+                        record.kind == VaultHistoryKind::Conflict
+                            && record.relative_path == relative_path
+                    })
+                    .expect("unresolved merge must have an explicit protected conflict record");
+                assert!(conflict.protected);
+                let expected_base_revision = sha256_hex(base_bytes);
+                assert_eq!(
+                    conflict.expected_revision_sha256.as_deref(),
+                    Some(expected_base_revision.as_str())
+                );
+                let expected_current_revision = case["current_bytes"]
+                    .as_str()
+                    .map(|bytes| sha256_hex(bytes.as_bytes()));
+                assert_eq!(
+                    conflict.current_revision_sha256,
+                    expected_current_revision
+                );
+                assert_eq!(
+                    store.read_conflict(&conflict.id, &relative_path).unwrap().bytes,
+                    expected_incoming
+                );
+                let journal = fs::read_to_string(app_data_temp.0.join("journal.jsonl")).unwrap();
+                assert!(journal.contains("\"state\":\"conflict\""), "{}", case["id"]);
+            } else {
+                assert!(result.preserved_incoming_path.is_none(), "{}", case["id"]);
+                assert!(result.written.is_some(), "{}", case["id"]);
+                assert!(result.merge.bytes.is_some(), "{}", case["id"]);
             }
         }
     }

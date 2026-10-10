@@ -2276,6 +2276,16 @@
       "migration_phase": "R2",
       "purpose": "Covers crash-before-replace, crash-after-replace, external-edit preservation and the multi-file rename recovery case.",
       "fixture_reader": "crates/vault"
+    },
+    {
+      "path": "fixtures/sync-revision-merge.json",
+      "sha256": "2f1779df40afb673192dd3a683257aa002196c48f562ae599ef5c3a43411f736",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Fixtures for byte-preserving disjoint edits and explicit conflict preservation when concurrent note versions cannot be merged safely.",
+      "fixture_reader": "crates/vault"
     }
   ],
   "spec_hashes": {

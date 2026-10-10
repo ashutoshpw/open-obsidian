@@ -1,5 +1,9 @@
 //! Lossless document values shared by the vault engine and native UI.
 
+mod merge;
+
+pub use merge::{MergeConflict, MergeStatus, ThreeWayMergeResult, three_way_merge_bytes};
+
 use std::collections::HashMap;
 
 /// Original document bytes remain authoritative until an explicit transform is approved.

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "fixture:sync-revision-merge",
+  "purpose": "Detect editor revision drift, merge disjoint text edits and retain unresolved incoming versions without replacing current vault bytes.",
+  "relative_path": "Notes/Status.md",
+  "cases": [
+    {
+      "id": "disjoint-line-edits-preserve-source-terminators",
+      "base_bytes": "\uFEFFone\r\ntwo\nthree\r",
+      "incoming_bytes": "\uFEFFONE\r\ntwo\nthree\r",
+      "current_bytes": "\uFEFFone\r\ntwo\nTHREE\r",
+      "expected_status": "merged",
+      "expected_target": "\uFEFFONE\r\ntwo\nTHREE\r"
+    },
+    {
+      "id": "overlapping-line-edits-preserve-incoming-conflict",
+      "base_bytes": "one\ntwo\n",
+      "incoming_bytes": "ONE\ntwo\n",
+      "current_bytes": "CURRENT\ntwo\n",
+      "expected_status": "conflict",
+      "expected_target": "CURRENT\ntwo\n",
+      "expected_preserved_incoming": "ONE\ntwo\n"
+    },
+    {
+      "id": "line-insertion-conflicts-with-current-edit",
+      "base_bytes": "one\ntwo\n",
+      "incoming_bytes": "one\ninserted\ntwo\n",
+      "current_bytes": "one\nTWO\n",
+      "expected_status": "conflict",
+      "expected_target": "one\nTWO\n",
+      "expected_preserved_incoming": "one\ninserted\ntwo\n"
+    },
+    {
+      "id": "binary-edit-is-preserved-as-conflict",
+      "base_bytes": "\u0000base",
+      "incoming_bytes": "\u0000local",
+      "current_bytes": "\u0000current",
+      "expected_status": "conflict",
+      "expected_target": "\u0000current",
+      "expected_preserved_incoming": "\u0000local"
+    },
+    {
+      "id": "external-delete-does-not-resurrect-edited-note",
+      "base_bytes": "one\n",
+      "incoming_bytes": "ONE\n",
+      "current_bytes": null,
+      "expected_status": "conflict",
+      "expected_target": null,
+      "expected_preserved_incoming": "ONE\n"
+    }
+  ]
+}
