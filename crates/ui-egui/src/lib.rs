@@ -870,19 +870,16 @@ impl OpenObsidianApp {
                             preview.source_draft.as_mut(),
                             preview.revision_sha256.as_ref(),
                         ) {
-                            ui.label("Markdown source editor");
-                            let editor_response = ui.add(
+                            let editor_label = ui.label("Markdown source editor");
+                            ui.add(
                                 eframe::egui::TextEdit::multiline(draft)
                                     .id_salt("markdown-source-editor")
                                     .font(eframe::egui::TextStyle::Monospace)
                                     .desired_rows(16)
                                     .desired_width(f32::INFINITY)
                                     .cursor_at_end(true),
-                            );
-                            ui.ctx()
-                                .accesskit_node_builder(editor_response.id, |node| {
-                                    node.set_label("Markdown source editor");
-                                });
+                            )
+                            .labelled_by(editor_label.id);
                             let source_bytes = draft.as_bytes().to_vec();
                             let draft_fits_limit = source_bytes.len()
                                 <= MAX_NOTE_SOURCE_PREVIEW_BYTES;
