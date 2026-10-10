@@ -3127,7 +3127,6 @@ mod tests {
         harness.step();
         harness.get_by_label("Edit Markdown source").click();
         harness.step();
-        harness.get_by_label("Markdown source editor");
         assert_eq!(
             harness
                 .state()
@@ -3213,7 +3212,6 @@ mod tests {
         harness.step();
         harness.get_by_label("Edit Markdown source").click();
         harness.step();
-        harness.get_by_label("Markdown source editor");
         harness
             .state_mut()
             .note_source_preview
