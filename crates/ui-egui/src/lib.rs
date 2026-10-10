@@ -9,10 +9,10 @@ use openobsidian_engine::{
     MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
-    VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview,
-    VaultRenameRecoveryReport, VaultRenameResult, VaultSession, VaultWatcher,
-    VaultWriteRecoveryReport, VaultWriteRequest, analyze_markdown_preview, plan_history_retention,
+    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
+    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
+    VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport, VaultWriteRequest,
+    analyze_markdown_preview, plan_history_retention,
 };
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -2202,15 +2202,15 @@ impl OpenObsidianApp {
                     self.note_preview_error = None;
                     self.note_preview_status = None;
                     self.last_note_preview_write = None;
-                } else if let Some(preview) = &mut self.note_source_preview {
-                    if !preview.wiki_link_resolutions.is_empty() {
-                        preview.wiki_link_resolutions.clear();
-                        preview.wiki_links_revision_sha256 = None;
-                        preview.wiki_link_resolution_error = Some(
-                            "The vault changed. Read the note preview again to refresh resolved wiki links."
-                                .to_owned(),
-                        );
-                    }
+                } else if let Some(preview) = &mut self.note_source_preview
+                    && !preview.wiki_link_resolutions.is_empty()
+                {
+                    preview.wiki_link_resolutions.clear();
+                    preview.wiki_links_revision_sha256 = None;
+                    preview.wiki_link_resolution_error = Some(
+                        "The vault changed. Read the note preview again to refresh resolved wiki links."
+                            .to_owned(),
+                    );
                 }
                 self.note_embed_report = None;
                 self.note_embed_error = None;
@@ -2647,9 +2647,7 @@ fn show_resolved_wiki_link_preview(
                     .alias
                     .as_deref()
                     .unwrap_or(&link.reference.target);
-                let response = ui
-                    .link(label)
-                    .on_hover_text(format!("Open {target}"));
+                let response = ui.link(label).on_hover_text(format!("Open {target}"));
                 if response.clicked() && navigation.is_none() {
                     navigation = Some(std::path::PathBuf::from(target));
                 }
@@ -3137,16 +3135,16 @@ mod tests {
     ) -> OpenObsidianApp {
         std::fs::create_dir_all(vault_path).expect("create source-preview vault");
         std::fs::create_dir_all(app_data_path).expect("create source-preview app data");
-        for (relative_path, bytes) in std::iter::once((source_path, source))
-            .chain(additional_files.iter().copied())
+        for (relative_path, bytes) in
+            std::iter::once((source_path, source)).chain(additional_files.iter().copied())
         {
             let path = vault_path.join(relative_path);
             std::fs::create_dir_all(path.parent().expect("fixture file must have a parent"))
                 .expect("create source-preview file parents");
             std::fs::write(path, bytes).expect("write source-preview fixture bytes");
         }
-        let session = VaultSession::open(vault_path, app_data_path)
-            .expect("open source-preview vault");
+        let session =
+            VaultSession::open(vault_path, app_data_path).expect("open source-preview vault");
         OpenObsidianApp {
             session: Some(Arc::new(session)),
             link_source_path: Some(std::path::PathBuf::from(source_path)),
@@ -3673,10 +3671,7 @@ mod tests {
                 .map(|paths| {
                     paths
                         .iter()
-                        .map(|path| {
-                            path.as_str()
-                                .expect("candidate paths must be strings")
-                        })
+                        .map(|path| path.as_str().expect("candidate paths must be strings"))
                         .collect::<Vec<_>>()
                 })
                 .unwrap_or_default();
@@ -3684,7 +3679,9 @@ mod tests {
                 .iter()
                 .map(|path| (*path, &b"# Candidate note."[..]))
                 .collect::<Vec<_>>();
-            let scenario_path = temporary.0.join(format!("wiki-link-fallback-{scenario_index}"));
+            let scenario_path = temporary
+                .0
+                .join(format!("wiki-link-fallback-{scenario_index}"));
             let vault_path = scenario_path.join("vault");
             let app_data_path = scenario_path.join("app-data");
             let app = source_preview_test_app(

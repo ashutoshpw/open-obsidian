@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T16:33:46Z",
+  "updated_at": "2026-10-10T16:37:31Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18352,7 +18352,7 @@
       "implementation_commits": [
         "19fe5f059386ddc7c514466d18696d04d110ad0d"
       ],
-      "next_action": "Push the inventory hash reconciliation and collect fresh exact-SHA GitHub Actions results; do not accept the superseded inventory failure as milestone validation."
+      "next_action": "Apply GitHub's rustfmt and Clippy corrections, push a fresh implementation SHA, and collect exact-SHA results from all seven workflows."
     }
   },
   "ci_preparation": {
