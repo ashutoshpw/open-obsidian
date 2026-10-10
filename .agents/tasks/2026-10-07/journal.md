@@ -2587,3 +2587,11 @@ The R2.8.41 acceptance tracker commit [92ba28d09233621d17d5d60740f4d327aa0ccac4]
 ### R2.8.42 in progress — blockquote wiki-link fallback
 
 Starting from tracker SHA `92ba28d09233621d17d5d60740f4d327aa0ccac4`, add a fixture-driven case for a simple wiki link inside a Markdown blockquote whose target resolves to a local Markdown note. The existing egui source-only test checks that the resolved link exposes no clickable link and preserves source, vault, and app-data bytes. The fixture hash and inventory reconciliation reason are updated. Push this focused slice for exact-SHA GitHub Actions; no executable validation runs locally.
+
+### R2.8.42 accepted — blockquote-context wiki-link fallback — source SHA `e67e133d557526d1a4db355561136b09451683b8`
+
+The primary preview keeps a simple resolved wiki link inside a Markdown blockquote source-only. The fixture-driven egui test confirms that the target resolves, the preview exposes no clickable link, and source, vault, and app-data bytes remain unchanged. The focused test passed on Ubuntu, macOS, and Windows.
+
+All seven required workflows passed on this exact SHA: inventory [38074920910](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074920910), loaded-plugin workflows [38074920826](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074920826), desktop build [38074921009](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074921009), quality [38074920913](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074920913), Rust CI [38074920845](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074920845), plugin renderer [38074920844](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074920844), and Obsidian vault round-trip [38074920829](https://github.com/ashutoshpw/open-obsidian/actions/runs/38074920829). Rust CI and vault round-trip passed on all three platforms. Rust CI used rustc 1.99.0 (`b940084d7`, 2026-09-28); job IDs and artifact digests are recorded in [evidence/r2.8.42-blockquote-wiki-link-fallback-e67e133.json](evidence/r2.8.42-blockquote-wiki-link-fallback-e67e133.json). No local executable validation was used.
+
+Accepted slice: source-only handling for a resolved wiki link inside a Markdown blockquote. Full C02.1 and migration phases R3-R7 remain pending. Next: R2.8.43 checks a resolved wiki link inside a Markdown heading.
