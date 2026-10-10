@@ -1006,10 +1006,8 @@ impl OpenObsidianApp {
         if begin_source_edit && let Some(preview) = &mut self.note_source_preview {
             preview.source_draft = Some(preview.text.clone());
         }
-        if cancel_source_edit {
-            if let Some(preview) = &mut self.note_source_preview {
-                preview.source_draft = None;
-            }
+        if cancel_source_edit && let Some(preview) = &mut self.note_source_preview {
+            preview.source_draft = None;
         }
         if let Some((relative_path, bytes, expected_revision_sha256)) = task_write {
             self.start_note_task_write(relative_path, bytes, expected_revision_sha256);
