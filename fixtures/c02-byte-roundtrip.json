@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c02-byte-roundtrip",
+  "name": "source-preserving-markdown-property-edits",
+  "invariants": {
+    "bom_and_line_endings_survive": true,
+    "only_approved_value_spans_change": true,
+    "comments_and_unknown_content_survive": true,
+    "malformed_unknown_content_survives": true
+  },
+  "cases": [
+    {
+      "id": "existing-scalar-with-comments-and-unknown-yaml",
+      "before": "\uFEFF---\r\nstatus: open\r\nunknown: [keep, {nested: true}]\r\ncomment: # untouched\r\n---\r\nBody\r\n",
+      "edit": {"key": "status", "raw_value": "done"},
+      "after": "\uFEFF---\r\nstatus: done\r\nunknown: [keep, {nested: true}]\r\ncomment: # untouched\r\n---\r\nBody\r\n",
+      "approved_span": {"start_byte": 16, "delete": "open", "insert": "done"}
+    },
+    {
+      "id": "empty-scalar-before-comment-and-malformed-unknown-yaml",
+      "before": "\uFEFF---\r\nstatus: # keep this comment\r\nunknown: [unfinished\r\n---\r\nBody\r\n",
+      "edit": {"key": "status", "raw_value": "reviewed"},
+      "after": "\uFEFF---\r\nstatus: reviewed # keep this comment\r\nunknown: [unfinished\r\n---\r\nBody\r\n",
+      "approved_span": {"start_byte": 16, "delete": "", "insert": "reviewed "}
+    }
+  ]
+}

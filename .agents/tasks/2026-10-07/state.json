@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T06:08:16Z",
+  "updated_at": "2026-10-10T06:18:27Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6edc2979f7a5434ee89c9dd4ce0d42ab38326f21",
-  "current_milestone": "R2.8.12",
-  "next_action": "Commit and push the R2.8.12 evidence/state tracker checkpoint, wait for its path-eligible workflows, then continue the next R2 slice. Broader R2, editor integration, and C01/C01.2 acceptance remain pending.",
+  "last_reconciled_head": "992dfe13fa6ac2265e6542608072c983dc13ab2a",
+  "current_milestone": "R2.8.13",
+  "next_action": "Commit and push the R2.8.13 source-preserving Markdown property edit slice to origin/main; accept it only after all seven required GitHub Actions workflows pass on the exact source SHA. Broader R2 and editor integration remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -15945,7 +15945,25 @@
         }
       ],
       "evidence": "evidence/r2.8.12-unicode-normalization-6edc297.json",
-      "next_action": "Commit and push the R2.8.12 evidence/state tracker checkpoint, wait for its path-eligible workflows, then continue the next R2 slice. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
+      "next_action": "The R2.8.12 evidence checkpoint is on origin/main at 992dfe1 and its Rust CI plus all path-eligible tracker workflows passed; continue R2 with source-preserving Markdown property edits."
+    },
+    "R2.8.13": {
+      "status": "in_progress",
+      "starting_sha": "992dfe13fa6ac2265e6542608072c983dc13ab2a",
+      "scope": "Implement Rust source-preserving edits for represented top-level Markdown frontmatter properties and exercise the byte-span contract with a dedicated golden fixture.",
+      "accepted_slice": [],
+      "remaining": [
+        "Exact-SHA GitHub Actions acceptance is pending.",
+        "Broader R2 and editor integration remain pending."
+      ],
+      "acceptance": [
+        "Only the approved property value bytes change; BOM, line endings, comments, malformed or unknown content, and other bytes remain exact.",
+        "Missing properties, multiline values, and block scalars fail closed without rendering an edit.",
+        "All seven required GitHub Actions workflows pass on the exact source SHA; all validation runs in GitHub Actions only."
+      ],
+      "ci_attempts": [],
+      "evidence": null,
+      "next_action": "Push the source slice to origin/main and use only GitHub Actions results to resolve any compiler, formatting, Clippy, or test findings."
     }
   },
   "ci_preparation": {

@@ -1351,6 +1351,16 @@
       "fixture_reader": "crates/testkit"
     },
     {
+      "path": "fixtures/c02-byte-roundtrip.json",
+      "sha256": "6ad095d060a604a06edab4ee6e62d47650274fbdec398569e0bbece9ee38c673",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "Golden source-span edits preserve Markdown BOM, line endings, comments, unknown syntax, and malformed frontmatter bytes.",
+      "fixture_reader": "crates/testkit"
+    },
+    {
       "path": "fixtures/grounded-retrieval.json",
       "sha256": "712162792b2b4e2955bc884266bf061a1af8cccd6ea3b7092bcdf04aac3436a2",
       "rust_owner": "crates/engine",

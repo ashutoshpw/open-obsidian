@@ -67,6 +67,32 @@ pub struct MarkdownPropertySource {
     pub value_span: SourceSpan,
 }
 
+/// Why a source-preserving Markdown property edit could not be rendered.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MarkdownPropertyEditError {
+    PropertyNotRepresented,
+    MultilineValue,
+    StructuredValue,
+}
+
+impl std::fmt::Display for MarkdownPropertyEditError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PropertyNotRepresented => {
+                formatter.write_str("Markdown property is not represented")
+            }
+            Self::MultilineValue => {
+                formatter.write_str("Markdown property edits must use a single-line value")
+            }
+            Self::StructuredValue => formatter.write_str(
+                "Markdown block-scalar properties cannot be edited as inline values",
+            ),
+        }
+    }
+}
+
+impl std::error::Error for MarkdownPropertyEditError {}
+
 /// The source syntax used by an extracted Markdown reference.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LinkKind {
@@ -310,6 +336,20 @@ impl MarkdownSource {
         frontmatter_properties(self.raw.as_bytes(), bounds.content)
     }
 
+    /// Render an edit to one existing top-level frontmatter property.
+    ///
+    /// `raw_value` is a single-line YAML value fragment. Only the property's
+    /// recorded value bytes are replaced; a separator is inserted when filling
+    /// an empty value before an existing inline comment. Unsupported nested
+    /// entries remain untouched, as do all bytes outside the selected value.
+    pub fn render_property_edit(
+        &self,
+        key: &str,
+        raw_value: &str,
+    ) -> Result<Vec<u8>, MarkdownPropertyEditError> {
+        render_property_edit(self, key, raw_value)
+    }
+
     /// Extract supported wiki, Markdown and embed references outside Markdown code spans.
     ///
     /// Returned ranges are UTF-8 byte offsets. Fenced code blocks and matched inline
@@ -337,6 +377,54 @@ fn frontmatter_properties(bytes: &[u8], content: SourceSpan) -> Vec<MarkdownProp
     }
 
     properties
+}
+
+fn render_property_edit(
+    source: &MarkdownSource,
+    key: &str,
+    raw_value: &str,
+) -> Result<Vec<u8>, MarkdownPropertyEditError> {
+    if raw_value.contains('\r') || raw_value.contains('\n') {
+        return Err(MarkdownPropertyEditError::MultilineValue);
+    }
+
+    let bytes = source.as_bytes();
+    let property = source
+        .frontmatter_properties()
+        .into_iter()
+        .find(|property| property.key == key)
+        .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
+    let span = property.value_span;
+    let current_value = bytes
+        .get(span.start..span.end)
+        .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
+    if current_value == b"|" || current_value == b">" {
+        return Err(MarkdownPropertyEditError::StructuredValue);
+    }
+
+    let (line_end, _) = line_bounds(bytes, span.end);
+    let suffix = bytes
+        .get(span.end..line_end)
+        .ok_or(MarkdownPropertyEditError::PropertyNotRepresented)?;
+    let comment_follows_empty_value = span.start == span.end
+        && suffix
+            .iter()
+            .copied()
+            .find(|byte| !matches!(*byte, b' ' | b'\t'))
+            == Some(b'#');
+    let needs_comment_separator = comment_follows_empty_value
+        && !raw_value.trim().is_empty()
+        && !raw_value.ends_with(' ')
+        && !raw_value.ends_with('\t');
+
+    let mut rendered = Vec::new();
+    rendered.extend_from_slice(&bytes[..span.start]);
+    rendered.extend_from_slice(raw_value.as_bytes());
+    if needs_comment_separator {
+        rendered.push(b' ');
+    }
+    rendered.extend_from_slice(&bytes[span.end..]);
+    Ok(rendered)
 }
 
 fn source_property(line: &[u8], line_start: usize) -> Option<MarkdownPropertySource> {
