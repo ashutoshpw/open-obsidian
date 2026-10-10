@@ -149,7 +149,13 @@
     "evidence": "evidence/parallel-ci.json",
     "announcement": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/"
   },
-  "tracker_checkpoint": null,
+  "tracker_checkpoint": {
+    "sha": "68ce866fa3bc2f3c071a5a6e355e2c9fe7dfa5bc",
+    "inventory_run_id": 38070190720,
+    "inventory_job_id": 114265841500,
+    "conclusion": "success",
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38070190720"
+  },
   "limitations": [
     "This milestone verifies stale wiki-link revisions fail closed in the primary preview; it does not broaden the supported wiki-link syntax.",
     "This does not complete C02.1 or migration phases R3-R7.",

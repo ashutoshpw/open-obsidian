@@ -2,7 +2,7 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T17:03:11Z",
+  "updated_at": "2026-10-10T17:04:38Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
@@ -18406,7 +18406,7 @@
     },
     "R2.8.36": {
       "status": "in_progress",
-      "starting_sha": "07848e213417184734da29a4810762ecf9b3a106",
+      "starting_sha": "68ce866fa3bc2f3c071a5a6e355e2c9fe7dfa5bc",
       "scope": "Add fixture-driven UI evidence that embedded and subpath wiki links remain source-only when their underlying Markdown target resolves, without changing note, vault, or app-data bytes.",
       "acceptance": [
         "The Markdown dialect fixture declares an embedded wiki-link case and a subpath wiki-link case with explicit source-only expectations.",

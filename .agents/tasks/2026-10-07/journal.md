@@ -2492,6 +2492,8 @@ All seven required workflows passed on the exact source SHA: inventory [38069552
 
 Accepted slice: stale-resolution fail-closed behavior and accurate preview documentation. Full C02.1 and migration phases R3-R7 remain pending.
 
+The accepted evidence checkpoint at [68ce866fa3bc2f3c071a5a6e355e2c9fe7dfa5bc](https://github.com/ashutoshpw/open-obsidian/commit/68ce866fa3bc2f3c071a5a6e355e2c9fe7dfa5bc) passed the GitHub inventory workflow on that exact tracker SHA: [run 38070190720](https://github.com/ashutoshpw/open-obsidian/actions/runs/38070190720), job 114265841500. R2.8.36 starts from this accepted tracker checkpoint.
+
 ### R2.8.36 in progress — embedded and subpath wiki-link fallback
 
 Starting from accepted source SHA `07848e213417184734da29a4810762ecf9b3a106`, add fixture-driven egui evidence that embedded and subpath wiki links remain source-only even when their underlying Markdown target resolves. Verify no clickable link and unchanged source, vault, and app-data bytes. All executable validation remains limited to exact-SHA GitHub Actions.
