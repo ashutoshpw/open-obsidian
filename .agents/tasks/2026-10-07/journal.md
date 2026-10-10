@@ -2857,3 +2857,15 @@ Accepted slice: the footnote fixture renders the reference and definition in the
 Use the existing inline-and-display-math C02.1 fixture to verify the preview selects RenderMarkdown, exposes both formulas, and preserves the original source bytes. Move the existing egui case onto fixture-driven coverage, then push for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.60 acceptance record is pushed.
 
 R2.8.61 tracker checkpoint: inventory [run 38089359790](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089359790), job 114322424595, passed for tracker SHA e43bad8df82ef5a8001ab624374db6f98ba2f993.
+
+### R2.8.61 accepted — inline and display math fixture preview — source SHA 3b3aca73db358cea7a2e13c2d845162813471fec
+
+The existing inline-and-display-math C02.1 fixture now drives the egui preview test. It verifies RenderMarkdown, both rendered formulas, and unchanged fixture bytes. The focused Rust UI test passed on Ubuntu, macOS, and Windows; each platform's ui-egui suite passed 96 tests.
+
+All seven required workflows passed on this exact source SHA: inventory [38089475114](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475114), loaded-plugin workflows [38089475052](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475052), desktop build [38089475098](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475098), quality [38089475057](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475057), Rust CI [38089475061](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475061), plugin renderer [38089475075](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475075), and Obsidian vault round-trip [38089475072](https://github.com/ashutoshpw/open-obsidian/actions/runs/38089475072). Exact job IDs and artifact digests are in [evidence/r2.8.61-inline-display-math-fixture-3b3aca7.json](evidence/r2.8.61-inline-display-math-fixture-3b3aca7.json). Native parallel groups ran in Rust CI and the vault round-trip workflow. No local executable validation was used.
+
+Accepted slice: inline and display math from the shared C02.1 fixture render through the native preview while retaining the original source bytes. Full C02.1 and migration phases R3-R7 remain pending.
+
+### R2.8.62 in progress — CommonMark basics fixture table preview
+
+Use the existing commonmark-basics C02.1 fixture in the egui Markdown table preview test. Verify RenderMarkdown, the table headers and expected row values, and unchanged source bytes. Push the focused change for exact-SHA GitHub Actions; no local executable validation runs. The tracker inventory checkpoint is pending after the R2.8.61 acceptance record is pushed.
