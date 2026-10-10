@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T14:54:38Z",
+  "updated_at": "2026-10-10T15:32:28Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "dcf5568011809e9b5f04d966e172a97f1ea5f6b0",
-  "current_milestone": "R2.8.29",
-  "next_action": "R2.8.29 is accepted on exact source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0. Continue C02.1 with another meaningful Markdown preview or editing slice; full C02.1 and later R3-R7 remain pending.",
+  "last_reconciled_head": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+  "current_milestone": "R2.8.31",
+  "next_action": "Implement and validate the safe inline HTML line-break slice through GitHub Actions only.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -257,9 +257,10 @@
     "R2.8.26 latex-rust renderer feasibility probe passed all seven required GitHub Actions workflows on exact source SHA df0e02e55934fa26e6c9c5fb787a94772209d0c9 across Ubuntu, macOS, and Windows. This is development-only candidate evidence, not runtime integration; full C02.1 remains pending. Evidence: evidence/r2.8.26-latex-rust-feasibility-df0e02e.json.",
     "R2.8.27 bounded standard inline/display math renderer passed all seven required GitHub Actions workflows on exact source SHA e68b97aee09345ba857df1f91b2eb57d37c35ee7 across Ubuntu, macOS, and Windows. Exact job IDs, package versions, runner behavior, and artifact digests are in evidence/r2.8.27-latex-rust-runtime-e68b97a.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.28 native Markdown table preview UI contract passed all seven required GitHub Actions workflows on exact source SHA f2c5bfb459852a777c192697fece5731295628f8 across Ubuntu, macOS, and Windows. Rust workspace tests, including the accessible table header/body-cell and source-byte preservation assertions, passed on all three platforms. Job IDs and artifact digests are in evidence/r2.8.28-markdown-table-ui-contract-f2c5bfb.json. Full C02.1 and R3-R7 remain pending.",
-    "R2.8.29 revision-safe Markdown table cell source editing passed all seven required GitHub Actions workflows on exact source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0 across Ubuntu, macOS, and Windows. The fixture-driven UI test and full Rust workspace suite passed on all platforms; the table's BOM, CRLF, alignment row, delimiters, and untouched cell bytes were preserved. Job IDs and artifact digests are in evidence/r2.8.29-table-cell-source-edit-dcf5568.json. Full C02.1 and R3-R7 remain pending."
+    "R2.8.29 revision-safe Markdown table cell source editing passed all seven required GitHub Actions workflows on exact source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0 across Ubuntu, macOS, and Windows. The fixture-driven UI test and full Rust workspace suite passed on all platforms; the table's BOM, CRLF, alignment row, delimiters, and untouched cell bytes were preserved. Job IDs and artifact digests are in evidence/r2.8.29-table-cell-source-edit-dcf5568.json. Full C02.1 and R3-R7 remain pending.",
+    "R2.8.30 accessible, keyboard-driven Markdown table source editing passed all seven required GitHub Actions workflows on exact source SHA 51ac3ff929d4643eca3b9531ddb64aced988b67c; evidence: evidence/r2.8.30-markdown-source-editor-accessibility-51ac3ff.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. The next tracker commit contains this milestone's evidence and progress metadata only. No local tests or executable validation were used.",
+  "push_status": "R2.8.30 source SHA 51ac3ff929d4643eca3b9531ddb64aced988b67c is pushed to origin/main and passed all seven required GitHub Actions workflows. R2.8.31 is in progress; executable validation remains GitHub Actions only.",
   "ci_results": [
     {
       "name": "inventory",
@@ -10529,6 +10530,209 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38061007081/job/114239090575"
         }
       ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38062406417,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406417",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114243166055,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406417/job/114243166055"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114243166265,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406417/job/114243166265"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114243166315,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406417/job/114243166315"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38062406449,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406449",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114243913053,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406449/job/114243913053"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114243913229,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406449/job/114243913229"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114243913244,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406449/job/114243913244"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38062406447,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406447",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114243165540,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406447/job/114243165540"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38062406472,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406472",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114243165831,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406472/job/114243165831"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114243166053,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406472/job/114243166053"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114243166065,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406472/job/114243166065"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38062406402,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406402",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114243165702,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406402/job/114243165702"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114243165879,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406402/job/114243165879"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114243165888,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406402/job/114243165888"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38062406411,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406411",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114243165771,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406411/job/114243165771"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114243165920,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406411/job/114243165920"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114243166193,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406411/job/114243166193"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38062406464,
+      "head_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406464",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114243165838,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406464/job/114243165838"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114243166075,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406464/job/114243166075"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114243166109,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38062406464/job/114243166109"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -17528,6 +17732,54 @@
       },
       "evidence": "evidence/r2.8.29-table-cell-source-edit-dcf5568.json",
       "next_action": "R2.8.29 is accepted on exact source SHA dcf5568011809e9b5f04d966e172a97f1ea5f6b0. Continue C02.1 with another meaningful Markdown preview or editing slice; full C02.1 and later R3-R7 remain pending."
+    },
+    "R2.8.30": {
+      "status": "complete",
+      "starting_sha": "6a33cac840911cdc9cacb4fd78cabee558881b64",
+      "scope": "Make the native Markdown source editor accessible to the UI harness and verify table-cell source editing through real labeled multiline input interaction.",
+      "accepted_slice": [
+        "C02.1:revision-safe-source-editor-accessibility"
+      ],
+      "acceptance": [
+        "The table-cell source-edit UI test resolves the multiline editor through its visible accessible label, clicks it, selects and pastes the edited source, then saves using the revision-checked vault writer.",
+        "The editor accessibility tree refreshes before interaction; the test no longer supplies its draft by mutating harness state.",
+        "The edited table preview and vault bytes match the expected fixture, retaining the BOM, CRLF line endings, separators, alignment row, and untouched cell.",
+        "Rust workspace tests and all seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
+      ],
+      "implementation_commits": [
+        "c9f6d932a39e792a756dd8b4484e59b8cc6f0c31",
+        "04213728dba061e6c8dc75972da43d544852b6af",
+        "c133291b556dc23425b1cf387a944477d485b61a",
+        "51ac3ff929d4643eca3b9531ddb64aced988b67c"
+      ],
+      "validated_source_sha": "51ac3ff929d4643eca3b9531ddb64aced988b67c",
+      "ci_runs": {
+        "rust_ci": 38062406417,
+        "obsidian_vault_roundtrip": 38062406449,
+        "inventory": 38062406447,
+        "loaded_plugins": 38062406472,
+        "desktop_build": 38062406402,
+        "quality": 38062406411,
+        "plugin_renderer": 38062406464
+      },
+      "evidence": "evidence/r2.8.30-markdown-source-editor-accessibility-51ac3ff.json",
+      "next_action": "R2.8.31 is in progress: add a narrowly safe inline HTML line-break projection while keeping all other raw HTML source-only. C02.1 and later R3-R7 remain pending."
+    },
+    "R2.8.31": {
+      "status": "in_progress",
+      "starting_sha": "6c282d326e6da060909eee0f89032201efa0ce51",
+      "scope": "Render only attribute-free inline HTML line-break tags through a Markdown preview projection; keep unknown or active raw HTML visible as source and keep authoritative note bytes unchanged.",
+      "accepted_slice": [],
+      "acceptance": [
+        "The pinned Markdown dialect fixture classifies supported inline br spellings as renderable and unknown or active HTML as source-only.",
+        "The preview projection replaces supported inline break tags without mutating the source, while unsupported HTML remains visible verbatim with an explanatory notice.",
+        "The focused Rust tests and all seven required GitHub Actions workflows pass on the exact source SHA."
+      ],
+      "implementation_commits": [],
+      "validated_source_sha": null,
+      "ci_runs": {},
+      "evidence": null,
+      "next_action": "Implement and validate the safe inline HTML line-break slice through GitHub Actions only."
     }
   },
   "ci_preparation": {
