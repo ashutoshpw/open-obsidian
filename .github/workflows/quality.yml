@@ -72,12 +72,14 @@ jobs:
         run: |
           sudo chown root:root node_modules/electron/dist/chrome-sandbox
           sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
-      - name: Run Electron vault round-trip report
-        run: bun run audit:electron-vault
-      - name: Run synthetic plugin lifecycle audit
-        run: bun run audit:plugin-lifecycle
-      - name: Reconcile catalog-required plugin combinations
-        run: bun run audit:plugin-combinations
+      # These audits use isolated temporary state and only read the compiled application or fixtures.
+      - parallel:
+          - name: Run Electron vault round-trip report
+            run: bun run audit:electron-vault
+          - name: Run synthetic plugin lifecycle audit
+            run: bun run audit:plugin-lifecycle
+          - name: Reconcile catalog-required plugin combinations
+            run: bun run audit:plugin-combinations
       # These source audits report to the job log and do not share build outputs.
       - parallel:
           - name: Run Knip audit
