@@ -2152,3 +2152,11 @@ All seven required workflows passed on exact source SHA `3356560c9212daf1c67d402
 The fixture is passing, while broader C04 property semantics and editor integration remain pending. C02/C02.1 dialect rendering remains pending. No local tests, builds, formatters, linters or application launches were run.
 
 Next: review the remaining C04 requirements and linked YAML fixtures, then define the next focused parser or edit-safety slice. Keep broader C04, C02/C02.1 and editor integration pending.
+
+### R2.8.16 tracker checkpoint accepted — SHA `83e67dbf7815542975c6f4e405dc7005f7371276`
+
+All six path-eligible workflows passed on the tracker-only commit: Rust CI [38035588442](https://github.com/ashutoshpw/open-obsidian/actions/runs/38035588442), inventory [38035588475](https://github.com/ashutoshpw/open-obsidian/actions/runs/38035588475), loaded-plugin workflows [38035588492](https://github.com/ashutoshpw/open-obsidian/actions/runs/38035588492), desktop build [38035588497](https://github.com/ashutoshpw/open-obsidian/actions/runs/38035588497), quality [38035588530](https://github.com/ashutoshpw/open-obsidian/actions/runs/38035588530), and plugin renderer [38035588451](https://github.com/ashutoshpw/open-obsidian/actions/runs/38035588451). The path-filtered vault round-trip was not triggered for this task-record-only commit; it passed on source SHA `3356560c9212daf1c67d402ddde93314eeeb3380`. All applicable native parallel groups passed. No local tests or builds were run.
+
+### R2.8.17 started — Unicode and space-bearing YAML mapping keys
+
+Starting from tracker checkpoint SHA `83e67dbf7815542975c6f4e405dc7005f7371276`, this slice extends the bounded, read-only YAML projection to retain plain Unicode and space-bearing keys, quoted keys with colons, colon-bearing plain keys, and embedded apostrophes. Unsupported complex keys must produce an explicit issue. The fixture remains byte-preserving and the parser remains non-serializing. Exact-SHA GitHub Actions acceptance is pending; executable validation remains CI-only.

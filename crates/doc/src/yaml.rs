@@ -80,6 +80,13 @@ fn line_ranges(source: &str) -> Vec<(usize, usize)> {
     ranges
 }
 
+fn quote_starts(bytes: &[u8], index: usize) -> bool {
+    index == 0
+        || bytes.get(index - 1).is_some_and(|byte| {
+            byte.is_ascii_whitespace() || matches!(*byte, b'[' | b'{' | b',' | b':')
+        })
+}
+
 fn scan_top_level(value: &str, delimiter: u8) -> Option<usize> {
     let bytes = value.as_bytes();
     let mut quote = None;
@@ -114,7 +121,7 @@ fn scan_top_level(value: &str, delimiter: u8) -> Option<usize> {
         }
 
         match byte {
-            b'"' | b'\'' => quote = Some(byte),
+            b'"' | b'\'' if quote_starts(bytes, index) => quote = Some(byte),
             b'[' | b'{' | b'(' => depth = depth.saturating_add(1),
             b']' | b'}' | b')' => depth = depth.saturating_sub(1),
             _ if byte == delimiter && depth == 0 => return Some(index),
@@ -201,23 +208,42 @@ fn mapping_key(value: &str) -> Option<String> {
         return (!quoted.is_empty()).then_some(quoted);
     }
 
-    let valid = !trimmed.is_empty()
-        && trimmed
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'));
+    let bytes = trimmed.as_bytes();
+    let Some(&first) = bytes.first() else {
+        return None;
+    };
+    let reserved_indicator = matches!(
+        first,
+        b'!' | b'&' | b'*' | b'[' | b']' | b'{' | b'}' | b',' | b'#' | b'|' | b'>'
+            | b'\'' | b'"' | b'%' | b'@' | b'`'
+    ) || (matches!(first, b'-' | b'?' | b':')
+        && bytes
+            .get(1)
+            .is_none_or(|byte| byte.is_ascii_whitespace()));
+    let valid = !reserved_indicator;
     valid.then(|| trimmed.to_owned())
 }
 
-fn pair(value: &str) -> Option<YamlPair> {
-    let colon = scan_top_level(value, b':')?;
-    if colon == 0 {
-        return None;
+fn mapping_separator(value: &str) -> Option<usize> {
+    let bytes = value.as_bytes();
+    let mut search_start = 0;
+    while search_start < bytes.len() {
+        let relative = scan_top_level(&value[search_start..], b':')?;
+        let index = search_start + relative;
+        if bytes
+            .get(index + 1)
+            .is_none_or(|byte| byte.is_ascii_whitespace())
+        {
+            return Some(index);
+        }
+        search_start = index + 1;
     }
-    if value
-        .as_bytes()
-        .get(colon + 1)
-        .is_some_and(|byte| !byte.is_ascii_whitespace())
-    {
+    None
+}
+
+fn pair(value: &str) -> Option<YamlPair> {
+    let colon = mapping_separator(value)?;
+    if colon == 0 {
         return None;
     }
 
@@ -263,7 +289,7 @@ fn split_flow_parts(value: &str) -> Option<Vec<&str>> {
         }
 
         match byte {
-            b'"' | b'\'' => quote = Some(byte),
+            b'"' | b'\'' if quote_starts(bytes, index) => quote = Some(byte),
             b'[' | b'{' | b'(' => delimiters.push(byte),
             b']' | b'}' | b')' => {
                 let expected = match byte {

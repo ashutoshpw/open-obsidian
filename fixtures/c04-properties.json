@@ -82,6 +82,30 @@
       "expected_entries": [
         {"key": "value", "value": {"type": "unsupported", "value": "[broken, {nested: 1]"}}
       ]
+    },
+    {
+      "id": "unicode-spaced-and-quoted-property-keys",
+      "before": "---\nplain key with spaces: retained\n設定: 値\nowner's key: O'Brien's note\nservice https://example.test: destination\n\"quoted:key\": \"value: kept\"\nflow: {name with spaces: nested, \"colon:key\": 7}\n---\nBody\n",
+      "expected_issues": [],
+      "expected_entries": [
+        {"key": "plain key with spaces", "value": {"type": "string", "value": "retained"}},
+        {"key": "設定", "value": {"type": "string", "value": "値"}},
+        {"key": "owner's key", "value": {"type": "string", "value": "O'Brien's note"}},
+        {"key": "service https://example.test", "value": {"type": "string", "value": "destination"}},
+        {"key": "quoted:key", "value": {"type": "string", "value": "value: kept"}},
+        {"key": "flow", "value": {"type": "mapping", "entries": [
+          {"key": "name with spaces", "value": {"type": "string", "value": "nested"}},
+          {"key": "colon:key", "value": {"type": "number", "value": "7"}}
+        ]}}
+      ]
+    },
+    {
+      "id": "unsupported-complex-mapping-key-reported",
+      "before": "---\n? [complex, key]: value\n---\nBody\n",
+      "expected_issues": [
+        "line 1: YAML mapping entry is not supported"
+      ],
+      "expected_entries": []
     }
   ]
 }

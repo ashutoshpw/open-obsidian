@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T07:45:46Z",
+  "updated_at": "2026-10-10T07:56:24Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3356560c9212daf1c67d402ddde93314eeeb3380",
-  "current_milestone": "R2.8.16",
-  "next_action": "Review the remaining C04 requirements and linked YAML fixtures, then define the next focused parser or edit-safety slice. Keep broader C04, C02/C02.1 and editor integration pending.",
+  "last_reconciled_head": "83e67dbf7815542975c6f4e405dc7005f7371276",
+  "current_milestone": "R2.8.17",
+  "next_action": "Implement fixture-backed support for plain Unicode and space-bearing YAML mapping keys, colon-containing keys, and embedded apostrophes; report unsupported complex keys explicitly. Validate only in GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -254,7 +254,7 @@
     "R2.8.11 / SYNC-004 Windows-reserved-name validation passed all seven required GitHub Actions workflows on exact source SHA ad0147976f395ccd831351d6849d4c02cb339670; evidence: evidence/r2.8.11-sync-failure-matrix-ad01479.json.",
     "R2.8.12 / SYNC-004 Unicode normalization passed all seven required GitHub Actions workflows on exact source SHA 6edc2979f7a5434ee89c9dd4ce0d42ab38326f21; evidence: evidence/r2.8.12-unicode-normalization-6edc297.json. All eleven SYNC-004 scenarios now have executable Rust coverage and the requirement is passing. Broader R2, editor integration, and C01/C01.2 acceptance remain pending."
   ],
-  "push_status": "R2.8.16 bounded YAML projection source SHA 3356560c9212daf1c67d402ddde93314eeeb3380 is on origin/main; all seven required workflows passed on that exact SHA. This tracker checkpoint records the passing result. Evidence: evidence/r2.8.16-bounded-yaml-projection-3356560.json. Broader C04, C02/C02.1 and editor integration remain pending.",
+  "push_status": "R2.8.16 source SHA 3356560c9212daf1c67d402ddde93314eeeb3380 and tracker checkpoint 83e67dbf7815542975c6f4e405dc7005f7371276 are on origin/main. All seven source workflows and all six path-eligible tracker workflows passed; the path-filtered round-trip passed on the source SHA. R2.8.17 plain YAML mapping-key coverage is in progress. Broader C04, C02/C02.1 and editor integration remain pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16146,7 +16146,28 @@
         }
       ],
       "evidence": "evidence/r2.8.16-bounded-yaml-projection-3356560.json",
-      "next_action": "Review the remaining C04 requirements and linked YAML fixtures, then define the next focused parser or edit-safety slice. Keep broader C04, C02/C02.1 and editor integration pending."
+      "next_action": "Continue with the next C04 source-preservation slice; keep broader C04, C02/C02.1 and editor integration pending."
+    },
+    "R2.8.17": {
+      "status": "in_progress",
+      "starting_sha": "83e67dbf7815542975c6f4e405dc7005f7371276",
+      "scope": "Extend the bounded YAML projection to support plain Unicode and space-bearing mapping keys, colon-containing keys, and embedded apostrophes while reporting unsupported complex keys.",
+      "accepted_slice": [
+        "C04:plain-mapping-keys"
+      ],
+      "remaining": [
+        "Full C04 property semantics and structured editor integration remain pending.",
+        "C02/C02.1 dialect rendering remains pending."
+      ],
+      "acceptance": [
+        "Fixture-driven projection preserves plain Unicode and space-bearing keys, embedded apostrophes, quoted colon keys, and flow mapping keys in order.",
+        "Unsupported complex mapping keys produce an explicit issue; projection leaves the source bytes unchanged.",
+        "The focused fixture and full Rust workspace tests pass on Ubuntu, macOS, and Windows.",
+        "All seven required GitHub Actions workflows pass on the exact source SHA; executable validation runs in GitHub Actions only."
+      ],
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "next_action": "Commit and push the fixture-backed mapping-key parser change for exact-SHA GitHub Actions validation."
     }
   },
   "ci_preparation": {
