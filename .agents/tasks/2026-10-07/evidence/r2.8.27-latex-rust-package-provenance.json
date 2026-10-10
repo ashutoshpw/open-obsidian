@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "package": "latex-rust",
+  "version": "1.0.2",
+  "source_archive": "https://static.crates.io/crates/latex-rust/latex-rust-1.0.2.crate",
+  "archive_sha256": "002bcaf7505b3516103424d8211b44cc4eb401cec17d35283402882b403c11fc",
+  "cargo_lock_checksum": "002bcaf7505b3516103424d8211b44cc4eb401cec17d35283402882b403c11fc",
+  "archive_matches_cargo_lock": true,
+  "published_manifest": {
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/jscarr64/LaTeX-Rust",
+    "features": {
+      "std": [],
+      "png": ["dep:tiny-skia"],
+      "egui": ["dep:egui"]
+    },
+    "runtime_dependencies_for_selected_features": [
+      "tiny-skia",
+      "ttf-parser"
+    ]
+  },
+  "vcs_source": {
+    "commit": "b5391dd306a792a7327a0a76bfa84fb9827d77c5",
+    "path_in_vcs": "",
+    "commit_url": "https://github.com/jscarr64/LaTeX-Rust/tree/b5391dd306a792a7327a0a76bfa84fb9827d77c5"
+  },
+  "embedded_font": {
+    "name": "STIX Two Math",
+    "version": "2.13",
+    "license": "SIL Open Font License 1.1",
+    "redistribution_notice": "licenses/latex-rust/STIX-Two-Math-OFL-1.1.txt",
+    "license_sha256": "bec17cee6412788db45fd2644b301afbc99cc5d372ddd3345dc4a7bfdefb9f04"
+  },
+  "redistribution_files_copied_from_archive": {
+    "LICENSE-MIT.txt": "59cb79856d3f4913cf42114c61b65a4322519c7e57988483f2171df7f0c20d00",
+    "LICENSE-APACHE-2.0.txt": "0511b0565c65e2899fed9302a59eb5ba5dd26450df533ad1da8d6ac5fcce6620",
+    "NOTICE.txt": "5e1b9a2f0d89b241a86bf8b6ee3a655a46d907b215416043175af99bbf771f93",
+    "STIX-Two-Math-OFL-1.1.txt": "bec17cee6412788db45fd2644b301afbc99cc5d372ddd3345dc4a7bfdefb9f04"
+  },
+  "runtime_integration_ci": "pending",
+  "scope_note": "Exact published package provenance and redistribution notices are verified; math rendering runtime behavior remains pending exact-SHA GitHub Actions."
+}

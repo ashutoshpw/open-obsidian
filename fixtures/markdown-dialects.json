@@ -63,10 +63,11 @@
       "fenced-code",
       "thematic-breaks",
       "inline-formatting",
-      "footnotes"
+      "footnotes",
+      "inline-and-display-math"
     ],
     "source_only_blocks": [
-      "math",
+      "legacy-math-delimiters",
       "diagrams",
       "raw-html",
       "wiki-links",
@@ -89,14 +90,14 @@
       {
         "id": "inline-and-display-math",
         "source": "Inline $a + b$.\n\n$$\nc = 3\n$$",
-        "expected_disposition": "show-source",
-        "unsupported_syntax": ["math"]
+        "expected_disposition": "render-markdown",
+        "unsupported_syntax": []
       },
       {
         "id": "legacy-delimited-math",
         "source": "Legacy \\[x^2\\] and \\(y+1\\).",
         "expected_disposition": "show-source",
-        "unsupported_syntax": ["math"]
+        "unsupported_syntax": ["legacy-math"]
       },
       {
         "id": "mermaid-diagram",
@@ -138,7 +139,7 @@
         "id": "mixed-supported-and-unsupported",
         "source": "# Kept as source\n\n<script>unsafe()</script>\n\nA formula $x$.",
         "expected_disposition": "show-source",
-        "unsupported_syntax": ["raw-html", "math"]
+        "unsupported_syntax": ["raw-html"]
       },
       {
         "id": "literal-markers-inside-code",

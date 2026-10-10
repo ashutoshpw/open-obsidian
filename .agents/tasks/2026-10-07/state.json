@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T13:19:59Z",
+  "updated_at": "2026-10-10T13:36:14Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "df0e02e55934fa26e6c9c5fb787a94772209d0c9",
-  "current_milestone": "R2.8.26",
-  "next_action": "R2.8.26 is accepted on df0e02e55934fa26e6c9c5fb787a94772209d0c9. R2.8.27: integrate supported math through egui_commonmark's callback with visible renderer-error fallback and bounded formulas, raster output, and cache; include the embedded STIX Two Math OFL notice before making latex-rust a runtime dependency. Keep full C02.1 pending.",
+  "last_reconciled_head": "66572306b8918bb7d84cba413b4d34c2eda66c3f",
+  "current_milestone": "R2.8.27",
+  "next_action": "R2.8.27 implementation is prepared from 66572306b8918bb7d84cba413b4d34c2eda66c3f. Commit and push the bounded native math callback, source fallback, cache, tests, fixture and exact crate/font notices to origin/main; validate that exact SHA in all seven GitHub Actions workflows. Keep full C02.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -256,7 +256,7 @@
     "R2.8.20 safe Markdown preview preflight passed all seven required GitHub Actions workflows on exact source SHA d19d3d31e741d36d829f2eba5fb893e7453c70dc; evidence: evidence/r2.8.20-safe-preview-d19d3d3.json. C02.1 remains pending.",
     "R2.8.26 latex-rust renderer feasibility probe passed all seven required GitHub Actions workflows on exact source SHA df0e02e55934fa26e6c9c5fb787a94772209d0c9 across Ubuntu, macOS, and Windows. This is development-only candidate evidence, not runtime integration; full C02.1 remains pending. Evidence: evidence/r2.8.26-latex-rust-feasibility-df0e02e.json."
   ],
-  "push_status": "R2.8.26 implementation SHA df0e02e55934fa26e6c9c5fb787a94772209d0c9 is on origin/main; all seven required GitHub Actions workflows passed for that exact SHA. Evidence is recorded in evidence/r2.8.26-latex-rust-feasibility-df0e02e.json. The renderer remains development-only; full C02.1 is pending.",
+  "push_status": "R2.8.26 implementation SHA df0e02e55934fa26e6c9c5fb787a94772209d0c9 passed all seven required workflows. R2.8.27 is implemented on the worktree from 66572306b8918bb7d84cba413b4d34c2eda66c3f but is not yet committed or pushed; exact-SHA GitHub CI is pending. No local tests or executable validation were used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16862,7 +16862,27 @@
           }
         }
       ],
-      "next_action": "R2.8.26 is accepted. Implement the egui_commonmark math callback with visible source fallback and bounded formulas, raster output, and cache; add the embedded STIX Two Math OFL notice before runtime use. Full C02.1 remains pending."
+      "next_action": "R2.8.26 is accepted. R2.8.27 implements the bounded egui_commonmark math callback and awaits exact-SHA GitHub Actions. Full C02.1 remains pending."
+    },
+    "R2.8.27": {
+      "status": "pending",
+      "starting_sha": "66572306b8918bb7d84cba413b4d34c2eda66c3f",
+      "scope": "Promote latex-rust 1.0.2 to the Rust UI runtime for bounded standard inline/display math, preserve visible source fallback, and include exact package/font redistribution notices.",
+      "accepted_slice": [
+        "C02.1:standard-inline-display-math"
+      ],
+      "acceptance": [
+        "The egui_commonmark callback renders supported inline and display math in note and transclusion previews; malformed or unsupported formulas remain visible with surrounding Markdown.",
+        "The UI pass formula count, expression bytes/group depth, PNG bytes/dimensions/pixels, and texture cache have explicit bounded behavior covered by tests.",
+        "Legacy \\(...)\\) and \\[...\\] delimiters remain source-only; the underlying note bytes are not changed by rendering.",
+        "The exact latex-rust 1.0.2 package checksum and VCS source are recorded, and the crate plus embedded STIX Two Math license notices are included.",
+        "All seven required GitHub Actions workflows pass on the exact implementation SHA across Ubuntu, macOS, and Windows."
+      ],
+      "implementation_commits": [],
+      "validated_source_sha": null,
+      "ci_runs": {},
+      "evidence": "evidence/r2.8.27-latex-rust-package-provenance.json",
+      "next_action": "Commit and push the implementation slice; inspect the exact-SHA results for all seven required GitHub Actions workflows. Full C02.1 remains pending."
     }
   },
   "ci_preparation": {

@@ -5,7 +5,7 @@ use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
 /// Why the native preview must show the original Markdown source instead of rendering it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum MarkdownUnsupportedSyntax {
-    Math,
+    LegacyMath,
     Diagrams,
     RawHtml,
     WikiLinks,
@@ -16,7 +16,7 @@ impl MarkdownUnsupportedSyntax {
     /// A stable fixture key for this unsupported syntax.
     pub const fn key(self) -> &'static str {
         match self {
-            Self::Math => "math",
+            Self::LegacyMath => "legacy-math",
             Self::Diagrams => "diagrams",
             Self::RawHtml => "raw-html",
             Self::WikiLinks => "wiki-links",
@@ -27,7 +27,7 @@ impl MarkdownUnsupportedSyntax {
     /// A short label suitable for a user-visible preview notice.
     pub const fn label(self) -> &'static str {
         match self {
-            Self::Math => "math",
+            Self::LegacyMath => "legacy math delimiters",
             Self::Diagrams => "diagrams",
             Self::RawHtml => "raw HTML",
             Self::WikiLinks => "wiki links",
@@ -67,9 +67,10 @@ impl MarkdownPreviewAnalysis {
 
 /// Classify dialect syntax before rendering while leaving the borrowed source untouched.
 ///
-/// CommonMark-compatible content continues through the native `egui_commonmark` renderer.
-/// Known syntax outside that renderer's current contract takes a source-only fallback, so the
-/// UI does not silently flatten math, diagram fences, raw HTML, wiki links, or highlights.
+/// CommonMark-compatible content, including standard inline and display math, continues through
+/// the native `egui_commonmark` renderer. Known syntax outside that renderer's current contract
+/// takes a source-only fallback, so the UI does not silently flatten legacy math delimiters,
+/// diagram fences, raw HTML, wiki links, or highlights.
 /// Footnotes are supported by the pinned renderer. Inline markers inside fenced, indented, and
 /// inline code are not dialect syntax. Backslash-escaped highlight openers remain literal text
 /// and do not force the source-only fallback.
@@ -89,9 +90,6 @@ pub fn analyze_markdown_preview(source: &str) -> MarkdownPreviewAnalysis {
                 if is_diagram_fence(&language) {
                     push_once(&mut unsupported, MarkdownUnsupportedSyntax::Diagrams);
                 }
-            }
-            Event::InlineMath(_) | Event::DisplayMath(_) => {
-                push_once(&mut unsupported, MarkdownUnsupportedSyntax::Math);
             }
             Event::Html(_) | Event::InlineHtml(_) => {
                 push_once(&mut unsupported, MarkdownUnsupportedSyntax::RawHtml);
@@ -214,7 +212,7 @@ fn scan_source_only_syntax(
                     && run_end < bytes.len()
                     && matches!(bytes[run_end], b'(' | b'[' | b')' | b']')
                 {
-                    push_once(unsupported, MarkdownUnsupportedSyntax::Math);
+                    push_once(unsupported, MarkdownUnsupportedSyntax::LegacyMath);
                 }
                 // CommonMark's backslash escapes quote punctuation. Consume the first equals
                 // sign in an escaped highlight opener so the scanner does not mistake the second

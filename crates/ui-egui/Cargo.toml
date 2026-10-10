@@ -11,11 +11,11 @@ workspace = true
 [dependencies]
 eframe = { workspace = true }
 egui_commonmark = { version = "=0.25.0", default-features = false }
+image = { version = "=0.25.10", default-features = false, features = ["png"] }
+latex-rust = { version = "=1.0.2", default-features = false, features = ["std", "png"] }
 openobsidian-engine = { workspace = true }
 rayon = { workspace = true }
 
 [dev-dependencies]
 egui_kittest = { workspace = true }
-image = { workspace = true }
-latex-rust = { version = "=1.0.2", default-features = false, features = ["std", "png"] }
 serde_json = { workspace = true }
