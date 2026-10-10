@@ -40,6 +40,16 @@
     "source": "\uFEFF# Callout task byte preservation\r\n\r\n> [!NOTE] Action list\r\n> - [ ] Toggle only this callout marker\r\n> - [x] Preserve this checked callout marker\r\n\r\n%% Unknown extension remains literal.\r\n",
     "expected_after_toggle": "\uFEFF# Callout task byte preservation\r\n\r\n> [!NOTE] Action list\r\n> - [x] Toggle only this callout marker\r\n> - [x] Preserve this checked callout marker\r\n\r\n%% Unknown extension remains literal.\r\n"
   },
+  "source_editing": {
+    "mode": "explicit-source-draft",
+    "requires_complete_valid_utf8_revision": true,
+    "max_write_bytes": 16384,
+    "writes_through_revision_checked_vault_writer": true,
+    "preserves_bom_crlf_and_unrecognized_source": true,
+    "unsupported_markdown_can_be_edited_as_plain_text": true,
+    "source": "\uFEFF# Explicit source editing\r\n\r\nKeep this wiki embed literal: ![[Missing note]]\r\n\r\n%% Preserve this unknown extension.\r\n",
+    "expected_after_edit": "\uFEFF# Explicit source editing\r\n\r\nKeep this wiki embed literal: ![[Missing note]]\r\n\r\n%% Preserve this unknown extension.\r\nSource edit"
+  },
   "rust_preview": {
     "renderer": "egui_commonmark 0.25.0",
     "rendered_blocks": [

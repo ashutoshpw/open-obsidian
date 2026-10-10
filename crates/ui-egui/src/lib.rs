@@ -61,9 +61,16 @@ struct LinkTaskMessage {
 struct NoteSourcePreview {
     relative_path: std::path::PathBuf,
     text: String,
+    source_draft: Option<String>,
     total_size_bytes: u64,
     truncated: bool,
     revision_sha256: Option<String>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum NotePreviewWriteKind {
+    TaskCheckbox,
+    MarkdownSource,
 }
 
 struct HistoryPreview {
@@ -97,7 +104,7 @@ struct RenameApplyOutcome {
 
 struct VaultRefreshOutcome {
     session: VaultSession,
-    preserve_task_preview: bool,
+    preserve_note_preview: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -209,9 +216,10 @@ struct OpenObsidianApp {
     note_source_preview: Option<NoteSourcePreview>,
     note_preview_receiver: Option<NotePreviewReceiver>,
     note_preview_write_receiver: Option<NotePreviewWriteReceiver>,
+    note_preview_write_kind: Option<NotePreviewWriteKind>,
     note_preview_error: Option<String>,
     note_preview_status: Option<String>,
-    last_task_preview_write: Option<(std::path::PathBuf, String)>,
+    last_note_preview_write: Option<(std::path::PathBuf, String)>,
     note_embed_report: Option<VaultNoteEmbedReport>,
     note_embed_error: Option<String>,
     markdown_cache: CommonMarkCache,
@@ -244,7 +252,8 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some();
+            || self.rename_receiver.is_some()
+            || self.note_source_editing();
         let open_vault_button = self.open_vault_action.as_ref().map(|_| {
             ui.add_enabled(
                 !self.vault_opening && !vault_operation_busy,
@@ -336,9 +345,10 @@ impl OpenObsidianApp {
                 self.note_source_preview = None;
                 self.note_preview_receiver = None;
                 self.note_preview_write_receiver = None;
+                self.note_preview_write_kind = None;
                 self.note_preview_error = None;
                 self.note_preview_status = None;
-                self.last_task_preview_write = None;
+                self.last_note_preview_write = None;
                 self.note_embed_report = None;
                 self.note_embed_error = None;
                 self.inline_image_textures.clear();
@@ -457,7 +467,7 @@ impl OpenObsidianApp {
         }
         ui.small("This check covers only the reported system volume or root filesystem.");
         self.show_uninstall_cleanup(ui);
-        ui.label("Freeform editing and plugin compatibility are not available in this preview.");
+        ui.label("Full-featured Markdown editing and plugin compatibility are not available in this preview.");
     }
 
     fn log_ci_open_vault_availability(&self) {
@@ -496,7 +506,8 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some();
+            || self.rename_receiver.is_some()
+            || self.note_source_editing();
         eprintln!(
             "OpenObsidian CI UI state: session={}, vault_opening={}, vault_open_receiver={}, history_receiver={}, link_receiver={}, note_preview_receiver={}, note_preview_write_receiver={}, vault_refresh_receiver={}, rename_receiver={}, open_vault_enabled={}",
             self.session.is_some(),
@@ -535,6 +546,12 @@ impl OpenObsidianApp {
 }
 
 impl OpenObsidianApp {
+    fn note_source_editing(&self) -> bool {
+        self.note_source_preview
+            .as_ref()
+            .is_some_and(|preview| preview.source_draft.is_some())
+    }
+
     fn show_links(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
         ui.heading("Link status");
@@ -571,6 +588,7 @@ impl OpenObsidianApp {
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
             || self.rename_receiver.is_some();
+        let note_navigation_busy = operation_busy || self.note_source_editing();
         let selected_index = note_paths
             .iter()
             .position(|path| self.link_source_path.as_ref() == Some(path))
@@ -588,7 +606,7 @@ impl OpenObsidianApp {
         let mut next_requested = false;
         let mut source_changed = false;
         ui.horizontal(|ui| {
-            ui.add_enabled_ui(!operation_busy, |ui| {
+            ui.add_enabled_ui(!note_navigation_busy, |ui| {
                 if previous_path.is_some() {
                     previous_requested = ui.small_button("Previous note").clicked();
                 }
@@ -624,7 +642,7 @@ impl OpenObsidianApp {
                     next_requested = ui.small_button("Next note").clicked();
                 }
             });
-            let can_resolve = !operation_busy && self.link_source_path.is_some();
+            let can_resolve = !note_navigation_busy && self.link_source_path.is_some();
             if ui
                 .add_enabled(
                     can_resolve,
@@ -649,7 +667,7 @@ impl OpenObsidianApp {
             self.note_source_preview = None;
             self.note_preview_error = None;
             self.note_preview_status = None;
-            self.last_task_preview_write = None;
+            self.last_note_preview_write = None;
             self.note_embed_report = None;
             self.note_embed_error = None;
             self.inline_image_textures.clear();
@@ -659,6 +677,8 @@ impl OpenObsidianApp {
 
         if note_paths.is_empty() {
             ui.label("This vault has no Markdown notes to inspect.");
+        } else if self.note_source_editing() {
+            ui.label("Finish or cancel Markdown source editing before changing notes or starting other vault work.");
         } else if operation_busy {
             ui.label("Wait for the current vault operation to finish before checking link status.");
         }
@@ -776,18 +796,24 @@ impl OpenObsidianApp {
     fn show_note_source_preview(&mut self, ui: &mut eframe::egui::Ui, operation_busy: bool) {
         let mut request_preview = false;
         let mut close_preview = false;
+        let mut begin_source_edit = false;
+        let mut cancel_source_edit = false;
         let mut task_write = None;
+        let mut source_write = None;
         let write_busy = self.note_preview_write_receiver.is_some();
         eframe::egui::CollapsingHeader::new("Note source preview")
             .id_salt("note-source-preview")
             .default_open(false)
             .show(ui, |ui| {
                 ui.small(format!(
-                    "Read up to {} KiB of the selected note's original UTF-8 source. Complete, supported Markdown previews allow task checkbox edits; each change is saved only if the note revision still matches.",
+                    "Read up to {} KiB of the selected note's UTF-8 source. Task checkbox and source edits are saved only if the note revision still matches.",
                     MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
                 ));
 
-                let can_preview = !operation_busy && !write_busy && self.link_source_path.is_some();
+                let can_preview = !operation_busy
+                    && !write_busy
+                    && !self.note_source_editing()
+                    && self.link_source_path.is_some();
                 if ui
                     .add_enabled(
                         can_preview,
@@ -810,72 +836,160 @@ impl OpenObsidianApp {
 
                 if let Some(preview) = &mut self.note_source_preview {
                     ui.label(format!("Source: {}", preview.relative_path.display()));
+                    let source_editing = preview.source_draft.is_some();
                     close_preview = ui
                         .add_enabled(
-                            !operation_busy && !write_busy,
+                            !operation_busy && !write_busy && !source_editing,
                             eframe::egui::Button::new("Close source preview"),
                         )
                         .clicked();
 
                     if preview.truncated {
                         ui.small("This truncated preview is read-only.");
-                    } else if analyze_markdown_preview(&preview.text).disposition()
-                        == MarkdownPreviewDisposition::RenderMarkdown
-                    {
-                        ui.small("Markdown preview");
-                        ui.small(
-                            "Task checkboxes are read-only until this complete preview has a current revision and other vault work is idle.",
+                        ui.small("Original Markdown source");
+                        ui.add(
+                            eframe::egui::TextEdit::multiline(&mut preview.text)
+                                .font(eframe::egui::TextStyle::Monospace)
+                                .desired_rows(8)
+                                .desired_width(f32::INFINITY)
+                                .interactive(false),
                         );
-                        eframe::egui::ScrollArea::vertical()
-                            .id_salt("note-source-markdown-preview")
-                            .max_height(280.0)
-                            .show(ui, |ui| {
-                                if !operation_busy
+                    } else if source_editing {
+                        ui.small(format!(
+                            "Edit the complete note as plain UTF-8 source. The draft must fit within the {} KiB write limit; unsupported Markdown remains literal source.",
+                            MAX_NOTE_SOURCE_PREVIEW_BYTES / 1024
+                        ));
+                        if let (Some(draft), Some(revision_sha256)) = (
+                            preview.source_draft.as_mut(),
+                            preview.revision_sha256.as_ref(),
+                        ) {
+                            ui.label("Markdown source editor");
+                            ui.add(
+                                eframe::egui::TextEdit::multiline(draft)
+                                    .id_salt("markdown-source-editor")
+                                    .font(eframe::egui::TextStyle::Monospace)
+                                    .desired_rows(16)
+                                    .desired_width(f32::INFINITY)
+                                    .cursor_at_end(true),
+                            );
+                            let source_bytes = draft.as_bytes().to_vec();
+                            let draft_fits_limit = source_bytes.len()
+                                <= MAX_NOTE_SOURCE_PREVIEW_BYTES;
+                            if !draft_fits_limit {
+                                ui.colored_label(
+                                    eframe::egui::Color32::YELLOW,
+                                    "The edited source exceeds the 16 KiB write limit.",
+                                );
+                            }
+                            ui.horizontal(|ui| {
+                                let save_enabled = !operation_busy
                                     && !write_busy
-                                    && let Some(revision_sha256) =
-                                        preview.revision_sha256.as_ref()
+                                    && draft_fits_limit
+                                    && preview.revision_sha256.is_some();
+                                if ui
+                                    .add_enabled(
+                                        save_enabled,
+                                        eframe::egui::Button::new("Save source edits"),
+                                    )
+                                    .clicked()
                                 {
-                                    let response = CommonMarkViewer::new()
-                                        .show_mut(ui, &mut self.markdown_cache, &mut preview.text)
-                                        .response;
-                                    if response.changed() {
-                                        task_write = Some((
-                                            preview.relative_path.clone(),
-                                            preview.text.as_bytes().to_vec(),
-                                            revision_sha256.clone(),
-                                        ));
-                                    }
-                                } else {
-                                    CommonMarkViewer::new().show(
-                                        ui,
-                                        &mut self.markdown_cache,
-                                        &preview.text,
-                                    );
+                                    source_write = Some((
+                                        preview.relative_path.clone(),
+                                        source_bytes,
+                                        revision_sha256.clone(),
+                                    ));
+                                }
+                                if ui
+                                    .add_enabled(
+                                        !write_busy,
+                                        eframe::egui::Button::new("Cancel source edits"),
+                                    )
+                                    .clicked()
+                                {
+                                    cancel_source_edit = true;
                                 }
                             });
+                        } else {
+                            ui.colored_label(
+                                eframe::egui::Color32::YELLOW,
+                                "This preview no longer has a current revision. Read it again before editing.",
+                            );
+                        }
                     } else {
-                        let unsupported = analyze_markdown_preview(&preview.text)
-                            .unsupported()
-                            .iter()
-                            .map(|syntax| syntax.label())
-                            .collect::<Vec<_>>()
-                            .join(", ");
-                        ui.colored_label(
-                            eframe::egui::Color32::YELLOW,
-                            format!(
-                                "Unsupported Markdown ({unsupported}); showing the source as written."
-                            ),
+                        if !operation_busy
+                            && !write_busy
+                            && preview.revision_sha256.is_some()
+                            && ui.button("Edit Markdown source").clicked()
+                        {
+                            begin_source_edit = true;
+                        }
+                        if preview.revision_sha256.is_none() {
+                            ui.small("Read the preview again before editing its source.");
+                        }
+
+                        if analyze_markdown_preview(&preview.text).disposition()
+                            == MarkdownPreviewDisposition::RenderMarkdown
+                        {
+                            ui.small("Markdown preview");
+                            ui.small(
+                                "Task checkbox changes save only when this complete preview has a current revision and other vault work is idle.",
+                            );
+                            eframe::egui::ScrollArea::vertical()
+                                .id_salt("note-source-markdown-preview")
+                                .max_height(280.0)
+                                .show(ui, |ui| {
+                                    if !operation_busy
+                                        && !write_busy
+                                        && let Some(revision_sha256) =
+                                            preview.revision_sha256.as_ref()
+                                    {
+                                        let response = CommonMarkViewer::new()
+                                            .show_mut(
+                                                ui,
+                                                &mut self.markdown_cache,
+                                                &mut preview.text,
+                                            )
+                                            .response;
+                                        if response.changed() {
+                                            task_write = Some((
+                                                preview.relative_path.clone(),
+                                                preview.text.as_bytes().to_vec(),
+                                                revision_sha256.clone(),
+                                            ));
+                                        }
+                                    } else {
+                                        CommonMarkViewer::new().show(
+                                            ui,
+                                            &mut self.markdown_cache,
+                                            &preview.text,
+                                        );
+                                    }
+                                });
+                        } else {
+                            let unsupported = analyze_markdown_preview(&preview.text)
+                                .unsupported()
+                                .iter()
+                                .map(|syntax| syntax.label())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            ui.colored_label(
+                                eframe::egui::Color32::YELLOW,
+                                format!(
+                                    "Unsupported Markdown ({unsupported}); showing the source as written."
+                                ),
+                            );
+                        }
+
+                        ui.small("Original Markdown source");
+                        ui.add(
+                            eframe::egui::TextEdit::multiline(&mut preview.text)
+                                .font(eframe::egui::TextStyle::Monospace)
+                                .desired_rows(8)
+                                .desired_width(f32::INFINITY)
+                                .interactive(false),
                         );
                     }
 
-                    ui.small("Original Markdown source");
-                    ui.add(
-                        eframe::egui::TextEdit::multiline(&mut preview.text)
-                            .font(eframe::egui::TextStyle::Monospace)
-                            .desired_rows(8)
-                            .desired_width(f32::INFINITY)
-                            .interactive(false),
-                    );
                     if preview.truncated {
                         ui.small(format!(
                             "Showing the first {} of {} source bytes.",
@@ -889,14 +1003,38 @@ impl OpenObsidianApp {
         if request_preview {
             self.start_note_source_preview();
         }
+        if begin_source_edit {
+            if let Some(preview) = &mut self.note_source_preview {
+                preview.source_draft = Some(preview.text.clone());
+            }
+        }
+        if cancel_source_edit {
+            if let Some(preview) = &mut self.note_source_preview {
+                preview.source_draft = None;
+            }
+        }
         if let Some((relative_path, bytes, expected_revision_sha256)) = task_write {
             self.start_note_task_write(relative_path, bytes, expected_revision_sha256);
+        }
+        if let Some((relative_path, bytes, expected_revision_sha256)) = source_write {
+            if let Some(preview) = &mut self.note_source_preview {
+                preview.text = String::from_utf8(bytes.clone())
+                    .expect("source editor contents must remain valid UTF-8");
+                preview.total_size_bytes = bytes.len() as u64;
+                preview.source_draft = None;
+            }
+            self.start_note_preview_write(
+                relative_path,
+                bytes,
+                expected_revision_sha256,
+                NotePreviewWriteKind::MarkdownSource,
+            );
         }
         if close_preview {
             self.note_source_preview = None;
             self.note_preview_error = None;
             self.note_preview_status = None;
-            self.last_task_preview_write = None;
+            self.last_note_preview_write = None;
         }
     }
 
@@ -931,7 +1069,8 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some();
+            || self.rename_receiver.is_some()
+            || self.note_source_editing();
         let selected_label = self.rename_source_path.as_ref().map_or_else(
             || "Choose a note".to_owned(),
             |path| path.display().to_string(),
@@ -1115,7 +1254,8 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some();
+            || self.rename_receiver.is_some()
+            || self.note_source_editing();
         if ui
             .add_enabled(
                 !history_busy,
@@ -1196,7 +1336,8 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some();
+            || self.rename_receiver.is_some()
+            || self.note_source_editing();
         if self.history_records.is_empty() && self.history_plan.is_some() {
             ui.label("No recovery, failed-write, or conflict history records were found.");
         } else if !self.history_records.is_empty() {
@@ -1478,7 +1619,7 @@ impl OpenObsidianApp {
         self.note_source_preview = None;
         self.note_preview_error = None;
         self.note_preview_status = None;
-        self.last_task_preview_write = None;
+        self.last_note_preview_write = None;
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let result = session
@@ -1503,6 +1644,7 @@ impl OpenObsidianApp {
                     Ok(NoteSourcePreview {
                         relative_path,
                         text,
+                        source_draft: None,
                         total_size_bytes: preview.total_size_bytes,
                         truncated: preview.truncated,
                         revision_sha256: preview.revision_sha256,
@@ -1519,11 +1661,30 @@ impl OpenObsidianApp {
         bytes: Vec<u8>,
         expected_revision_sha256: String,
     ) {
+        self.start_note_preview_write(
+            relative_path,
+            bytes,
+            expected_revision_sha256,
+            NotePreviewWriteKind::TaskCheckbox,
+        );
+    }
+
+    fn start_note_preview_write(
+        &mut self,
+        relative_path: std::path::PathBuf,
+        bytes: Vec<u8>,
+        expected_revision_sha256: String,
+        kind: NotePreviewWriteKind,
+    ) {
         let Some(session) = self.session.as_ref().cloned() else {
             return;
         };
         self.note_preview_error = None;
-        self.note_preview_status = Some("Saving task checkbox change…".to_owned());
+        self.note_preview_status = Some(match kind {
+            NotePreviewWriteKind::TaskCheckbox => "Saving task checkbox change…".to_owned(),
+            NotePreviewWriteKind::MarkdownSource => "Saving Markdown source edits…".to_owned(),
+        });
+        self.note_preview_write_kind = Some(kind);
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let result = session
@@ -1533,7 +1694,7 @@ impl OpenObsidianApp {
                     bytes,
                 })
                 .map(|result| result.read.revision_sha256)
-                .map_err(note_task_write_error);
+                .map_err(|error| note_preview_write_error(error, kind));
             let _ = sender.send(result);
         });
         self.note_preview_write_receiver = Some(receiver);
@@ -1543,8 +1704,8 @@ impl OpenObsidianApp {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
         };
-        let task_preview_guard = self
-            .last_task_preview_write
+        let note_preview_guard = self
+            .last_note_preview_write
             .clone()
             .filter(|(path, revision)| {
                 self.note_source_preview.as_ref().is_some_and(|preview| {
@@ -1558,7 +1719,7 @@ impl OpenObsidianApp {
         rayon::spawn(move || {
             let result = match session.refresh_entries() {
                 Ok(()) => {
-                    let preserve_task_preview = task_preview_guard.as_ref().is_some_and(
+                    let preserve_note_preview = note_preview_guard.as_ref().is_some_and(
                         |(path, expected_revision)| {
                             session
                                 .read_preview(path)
@@ -1570,7 +1731,7 @@ impl OpenObsidianApp {
                     );
                     Ok(VaultRefreshOutcome {
                         session,
-                        preserve_task_preview,
+                        preserve_note_preview,
                     })
                 }
                 Err(_) => Err(
@@ -1620,7 +1781,8 @@ impl OpenObsidianApp {
             || self.note_preview_receiver.is_some()
             || self.note_preview_write_receiver.is_some()
             || self.vault_refresh_receiver.is_some()
-            || self.rename_receiver.is_some();
+            || self.rename_receiver.is_some()
+            || self.note_source_editing();
         if self.vault_rescan_pending && !operation_busy {
             self.vault_rescan_pending = false;
             self.start_vault_refresh();
@@ -1703,7 +1865,7 @@ impl OpenObsidianApp {
                 self.note_source_preview = None;
                 self.note_preview_error = None;
                 self.note_preview_status = None;
-                self.last_task_preview_write = None;
+                self.last_note_preview_write = None;
                 self.note_embed_report = None;
                 self.note_embed_error = None;
                 self.inline_image_textures.clear();
@@ -1829,6 +1991,10 @@ impl OpenObsidianApp {
         match result {
             Some(Ok(Ok(revision_sha256))) => {
                 self.note_preview_write_receiver = None;
+                let kind = self
+                    .note_preview_write_kind
+                    .take()
+                    .unwrap_or(NotePreviewWriteKind::TaskCheckbox);
                 let preview_path = self
                     .note_source_preview
                     .as_ref()
@@ -1836,13 +2002,21 @@ impl OpenObsidianApp {
                 if let Some(preview) = &mut self.note_source_preview {
                     preview.revision_sha256 = Some(revision_sha256.clone());
                 }
-                self.last_task_preview_write = preview_path.map(|path| (path, revision_sha256));
+                self.last_note_preview_write = preview_path.map(|path| (path, revision_sha256));
                 self.note_preview_error = None;
-                self.note_preview_status = Some("Task checkbox saved to the vault.".to_owned());
+                self.note_preview_status = Some(match kind {
+                    NotePreviewWriteKind::TaskCheckbox => {
+                        "Task checkbox saved to the vault.".to_owned()
+                    }
+                    NotePreviewWriteKind::MarkdownSource => {
+                        "Markdown source edits saved to the vault.".to_owned()
+                    }
+                });
             }
             Some(Ok(Err(error))) => {
                 self.note_preview_write_receiver = None;
-                self.last_task_preview_write = None;
+                self.note_preview_write_kind = None;
+                self.last_note_preview_write = None;
                 if let Some(preview) = &mut self.note_source_preview {
                     preview.revision_sha256 = None;
                 }
@@ -1851,15 +2025,19 @@ impl OpenObsidianApp {
             }
             Some(Err(TryRecvError::Disconnected)) => {
                 self.note_preview_write_receiver = None;
-                self.last_task_preview_write = None;
+                let kind = self
+                    .note_preview_write_kind
+                    .take()
+                    .unwrap_or(NotePreviewWriteKind::TaskCheckbox);
+                self.last_note_preview_write = None;
                 if let Some(preview) = &mut self.note_source_preview {
                     preview.revision_sha256 = None;
                 }
                 self.note_preview_status = None;
-                self.note_preview_error = Some(
-                    "The task change could not be confirmed. The edited source remains visible; reopen the preview before editing again."
-                        .to_owned(),
-                );
+                self.note_preview_error = Some(match kind {
+                    NotePreviewWriteKind::TaskCheckbox => "The task change could not be confirmed. The edited source remains visible; reopen the preview before editing again.".to_owned(),
+                    NotePreviewWriteKind::MarkdownSource => "The source edit could not be confirmed. The edited source remains visible; reopen the preview before editing again.".to_owned(),
+                });
             }
             Some(Err(TryRecvError::Empty)) => {
                 ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -1875,7 +2053,7 @@ impl OpenObsidianApp {
                 self.vault_refresh_receiver = None;
                 let VaultRefreshOutcome {
                     session,
-                    preserve_task_preview,
+                    preserve_note_preview,
                 } = outcome;
                 let note_paths: Vec<_> = session
                     .entries()
@@ -1900,11 +2078,11 @@ impl OpenObsidianApp {
                 self.link_resolutions.clear();
                 self.link_error = None;
                 self.link_status = None;
-                if !preserve_task_preview {
+                if !preserve_note_preview {
                     self.note_source_preview = None;
                     self.note_preview_error = None;
                     self.note_preview_status = None;
-                    self.last_task_preview_write = None;
+                    self.last_note_preview_write = None;
                 }
                 self.note_embed_report = None;
                 self.note_embed_error = None;
@@ -2149,6 +2327,30 @@ fn note_task_write_error(error: VaultError) -> String {
             "The task change could not be saved safely. The edited source remains visible; inspect the vault and reopen the preview before editing again."
                 .to_owned()
         }
+    }
+}
+
+fn note_source_write_error(error: VaultError) -> String {
+    match error {
+        VaultError::RevisionConflict { .. } => {
+            "The note changed after this preview was read. The source edit was preserved in conflict recovery history; reload the preview before editing again."
+                .to_owned()
+        }
+        VaultError::NotAFile(_) => {
+            "The selected note is no longer available. The edited source remains visible; reopen the vault before continuing."
+                .to_owned()
+        }
+        _ => {
+            "The source edit could not be saved safely. The edited source remains visible; inspect the vault and reopen the preview before editing again."
+                .to_owned()
+        }
+    }
+}
+
+fn note_preview_write_error(error: VaultError, kind: NotePreviewWriteKind) -> String {
+    match kind {
+        NotePreviewWriteKind::TaskCheckbox => note_task_write_error(error),
+        NotePreviewWriteKind::MarkdownSource => note_source_write_error(error),
     }
 }
 
@@ -2594,6 +2796,7 @@ mod tests {
             note_source_preview: Some(NoteSourcePreview {
                 relative_path: PathBuf::from("Tasks.md"),
                 text,
+                source_draft: None,
                 total_size_bytes: preview.total_size_bytes,
                 truncated: preview.truncated,
                 revision_sha256: preview.revision_sha256,
@@ -2697,7 +2900,7 @@ mod tests {
             }
             assert!(
                 std::time::Instant::now() < deadline,
-                "task checkbox write did not finish within five seconds"
+                "note preview write did not finish within five seconds"
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
@@ -2709,6 +2912,17 @@ mod tests {
             .next()
             .expect("task preview should render at least one task checkbox")
             .click();
+    }
+
+    fn append_markdown_source_edit(harness: &mut Harness<'_, OpenObsidianApp>) {
+        harness
+            .get_by_role(eframe::egui::accesskit::Role::TextInput)
+            .focus();
+        harness.step();
+        harness
+            .get_by_role(eframe::egui::accesskit::Role::TextInput)
+            .type_text("Source edit");
+        harness.step();
     }
 
     fn wait_for_vault_refresh(harness: &mut Harness<'_, OpenObsidianApp>) {
@@ -2825,6 +3039,13 @@ mod tests {
         harness.state_mut().start_vault_refresh();
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().note_source_preview.is_some());
+
+        let external_bytes = b"# Later external source\r\n- [ ] Keep this version\r\n";
+        std::fs::write(vault_path.join("Tasks.md"), external_bytes)
+            .expect("write external note update after source edit");
+        harness.state_mut().start_vault_refresh();
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().note_source_preview.is_none());
         assert_eq!(
             harness.state().note_preview_status.as_deref(),
             Some("Task checkbox saved to the vault.")
@@ -2896,6 +3117,141 @@ mod tests {
     }
 
     #[test]
+    fn egui_source_edit_saves_exact_bom_crlf_and_unsupported_markdown_bytes() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let editing = &fixture["source_editing"];
+        let source = editing["source"]
+            .as_str()
+            .expect("source editing fixture must include source");
+        let expected = editing["expected_after_edit"]
+            .as_str()
+            .expect("source editing fixture must include expected source");
+        assert_eq!(
+            analyze_markdown_preview(source).disposition(),
+            MarkdownPreviewDisposition::ShowSource
+        );
+
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_vault_refresh_task(ui);
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Edit Markdown source").click();
+        harness.step();
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(source)
+        );
+        append_markdown_source_edit(&mut harness);
+        assert_eq!(
+            harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .and_then(|preview| preview.source_draft.as_deref()),
+            Some(expected)
+        );
+        harness.get_by_label("Save source edits").click();
+        harness.step();
+        assert!(harness.state().note_preview_write_receiver.is_some());
+        wait_for_note_preview_write(&mut harness);
+
+        assert!(harness.state().note_preview_error.is_none());
+        assert_eq!(
+            harness.state().note_preview_status.as_deref(),
+            Some("Markdown source edits saved to the vault.")
+        );
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            expected.as_bytes().to_vec()
+        );
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("source preview remains visible after save");
+        assert_eq!(preview.text.as_bytes(), expected.as_bytes());
+        assert!(preview.revision_sha256.is_some());
+        assert!(preview.source_draft.is_none());
+
+        harness.state_mut().start_vault_refresh();
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().note_source_preview.is_some());
+    }
+
+    #[test]
+    fn egui_stale_source_edit_preserves_external_note_and_disables_retry() {
+        let fixture: serde_json::Value = serde_json::from_str(MARKDOWN_DIALECT_FIXTURE)
+            .expect("Markdown dialect fixture must be valid JSON");
+        let editing = &fixture["source_editing"];
+        let source = editing["source"]
+            .as_str()
+            .expect("source editing fixture must include source");
+        let expected = editing["expected_after_edit"]
+            .as_str()
+            .expect("source editing fixture must include expected source");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let app = task_preview_test_app(&vault_path, &app_data_path, source.as_bytes());
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_note_preview_write_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Edit Markdown source").click();
+        harness.step();
+        append_markdown_source_edit(&mut harness);
+
+        let external_bytes = b"# External update\r\nKeep this version.\r\n";
+        std::fs::write(vault_path.join("Tasks.md"), external_bytes)
+            .expect("write external note update after source preview");
+        harness.get_by_label("Save source edits").click();
+        harness.step();
+        wait_for_note_preview_write(&mut harness);
+
+        assert_eq!(
+            std::fs::read(vault_path.join("Tasks.md")).unwrap(),
+            external_bytes.to_vec()
+        );
+        assert!(
+            harness
+                .state()
+                .note_preview_error
+                .as_deref()
+                .is_some_and(|error| error.contains("source edit was preserved in conflict recovery history"))
+        );
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("failed source draft stays visible");
+        assert_eq!(preview.text.as_bytes(), expected.as_bytes());
+        assert!(preview.revision_sha256.is_none());
+        assert!(preview.source_draft.is_none());
+    }
+
+    #[test]
     fn egui_keeps_task_checkbox_read_only_for_unsupported_markdown() {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("vault");
@@ -2947,6 +3303,7 @@ mod tests {
         harness.get_by_label("Note source preview").click();
         harness.step();
         harness.get_by_label("This truncated preview is read-only.");
+        assert!(harness.query_by_label("Edit Markdown source").is_none());
         assert!(
             harness
                 .query_by_role(eframe::egui::accesskit::Role::CheckBox)
