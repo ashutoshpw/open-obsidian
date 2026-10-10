@@ -2942,3 +2942,9 @@ R2.8.67 tracker checkpoint: inventory [run 38094092569](https://github.com/ashut
 ### R2.8.68 in progress — parent C02 mode and round-trip acceptance
 
 Audit source, live-preview, and reading workflows against their Rust UI behavior and fixtures. Reconcile BOM, line ending, whitespace, comment, unknown-syntax, and untouched-span preservation to direct round-trip/edit evidence. Keep C02 pending until all criteria have direct cross-platform evidence; choose a bounded implementation change for any gap. The tracker inventory checkpoint passed on SHA 859bf5084a491aec2b9a1b2051db1479e879cdd7. No local executable validation runs.
+
+### R2.8.68 audit complete — parent C02 mode and round-trip gap
+
+Mapped the three legacy editor modes to the Rust note preview UI, existing fixture coverage, and explicit UI tests. Rust currently renders Markdown and supports revision-checked source drafts, but has no selected Source/Live preview/Reading modes; editing currently replaces its preview presentation. Existing C02.2 and C02.1 evidence covers BOM, CRLF, comments, unknown syntax, approved frontmatter spans, exact task/table/source edits, and stale-write protection across the supported CI platforms. It does not prove mode-switch draft retention or the complete parent golden workflow. Parent C02 remains pending. The detailed matrix and next implementation slice are in [evidence/r2.8.68-c02-three-mode-audit.md](evidence/r2.8.68-c02-three-mode-audit.md). No local executable validation was run.
+
+Next: push this tracker update and obtain its exact-SHA inventory result. Then implement the three explicit native modes and a composite byte-preservation fixture as R2.8.69; keep validation in GitHub Actions only.

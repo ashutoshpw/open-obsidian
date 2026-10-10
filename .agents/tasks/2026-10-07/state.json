@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T23:10:52Z",
+  "updated_at": "2026-10-10T23:14:37Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "859bf5084a491aec2b9a1b2051db1479e879cdd7",
+  "last_reconciled_head": "4278a3f090561371f01af9d7101b4750db29aca1",
   "current_milestone": "R2.8.68",
-  "next_action": "The Rust migration inventory passed on tracker SHA 859bf5084a491aec2b9a1b2051db1479e879cdd7 and records C02.1 as passing on tested source SHA 71022bfb86eda820835a9e3e57f72a9bed271241. Continue R2.8.68 by auditing the parent C02 three-mode workflow and byte-preserving golden round-trip criteria; keep C02 pending until every clause has direct evidence. Use GitHub Actions only for executable validation.",
+  "next_action": "R2.8.68 audit evidence is complete on Rust source tree 71022bfb86eda820835a9e3e57f72a9bed271241. Commit and push the audit tracker update, obtain the GitHub Actions inventory result for that exact tracker SHA, then begin R2.8.69 to implement the three native Markdown modes. Keep parent C02 pending until mode-specific and byte-preservation acceptance passes on the supported desktop matrix. Use GitHub Actions only for executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -19690,7 +19690,7 @@
       "requirement_id": "C02.1"
     },
     "R2.8.68": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
       "scope": "Audit parent C02's source, live-preview, and reading workflows and its golden round-trip byte-preservation requirement to identify remaining Rust acceptance gaps.",
       "acceptance": [
@@ -19700,6 +19700,9 @@
         "Document the audit and choose a bounded implementation slice for any uncovered behavior; use GitHub Actions only for executable validation."
       ],
       "implementation_commits": [],
+      "audited_source_sha": "71022bfb86eda820835a9e3e57f72a9bed271241",
+      "evidence": "evidence/r2.8.68-c02-three-mode-audit.md",
+      "result": "Legacy source/live-preview/reading mode semantics and current Rust UI behavior are mapped. Rust already has fixture-backed byte-preserving reads and edits, but it lacks three explicit modes and mode-switch draft-retention coverage; parent C02 remains pending.",
       "tracker_checkpoint": {
         "sha": "859bf5084a491aec2b9a1b2051db1479e879cdd7",
         "inventory_run_id": 38094092569,
@@ -19707,7 +19710,7 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38094092569"
       },
-      "next_action": "The inventory checkpoint passed on tracker SHA 859bf5084a491aec2b9a1b2051db1479e879cdd7. Reconcile C02's source, live-preview, and reading workflows plus byte-preserving golden round trips against current Rust behavior; select the next implementation slice from any remaining gap. No local executable validation."
+      "next_action": "Commit and push the audit tracker update, then record the inventory result for its exact SHA. After that checkpoint, begin R2.8.69: implement explicit Source, Live preview, and Reading modes with mode-switch draft retention and golden byte-preservation coverage. No local executable validation."
     }
   },
   "ci_preparation": {
