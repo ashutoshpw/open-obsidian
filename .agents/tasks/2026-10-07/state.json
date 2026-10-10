@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-10T22:47:33Z",
+  "updated_at": "2026-10-10T22:50:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "885fb20208c7390d483e4a9d32136d63600d6b44",
+  "last_reconciled_head": "bb61601e1a8358c665cebd3cda544782c497a585",
   "current_milestone": "R2.8.65",
-  "next_action": "R2.8.64 is accepted on exact source SHA 885fb20208c7390d483e4a9d32136d63600d6b44; all seven required GitHub Actions workflows passed, including native parallel groups in Rust CI and the vault round-trip workflow. R2.8.65 reconciles all 21 Rust preview cases against the broader pending C02.1 render/edit acceptance before selecting the next focused implementation. GitHub Actions remains the only executable validation.",
+  "next_action": "R2.8.64 is accepted on implementation SHA 885fb20208c7390d483e4a9d32136d63600d6b44; all seven required GitHub Actions workflows passed. R2.8.65 tracker SHA bb61601e1a8358c665cebd3cda544782c497a585 passed the GitHub inventory checkpoint. Reconcile all 21 shared C02.1 preview fixture cases against explicit egui test coverage, and record the broader render/edit gaps before selecting the next implementation slice.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -289,7 +289,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "Accepted Rust implementation source SHA 885fb20208c7390d483e4a9d32136d63600d6b44 is pushed to origin/main; all seven required GitHub Actions workflows passed on that exact SHA. Rust CI and Obsidian vault round-trip native parallel groups passed. No local executable validation was used.",
+  "push_status": "R2.8.64 acceptance evidence is pushed; inventory passed on tracker SHA bb61601e1a8358c665cebd3cda544782c497a585. The accepted implementation SHA 885fb20208c7390d483e4a9d32136d63600d6b44 passed all seven required GitHub Actions workflows. No local executable validation was used.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19390,8 +19390,14 @@
         "Choose and document the next scoped Rust implementation slice from the remaining C02.1 gaps."
       ],
       "implementation_commits": [],
-      "tracker_checkpoint": null,
-      "next_action": "After the R2.8.64 acceptance record is pushed, run the Rust migration inventory workflow on that tracker SHA. Use the inventory checkpoint to reconcile the shared C02.1 dialect fixture cases and select the next implementation scope. Do not run local executable validation."
+      "tracker_checkpoint": {
+        "sha": "bb61601e1a8358c665cebd3cda544782c497a585",
+        "inventory_run_id": 38092858681,
+        "inventory_job_id": 114332692803,
+        "conclusion": "success",
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38092858681"
+      },
+      "next_action": "The tracker inventory passed on SHA bb61601e1a8358c665cebd3cda544782c497a585. Reconcile all 21 shared C02.1 Rust preview cases with explicit egui coverage, record the render/edit acceptance gaps, and select the next bounded implementation slice. Do not run local executable validation."
     }
   },
   "ci_preparation": {

@@ -2912,3 +2912,5 @@ Accepted slice: simple wiki links remain visible as source with an explicit unsu
 ### R2.8.65 in progress — C02.1 preview coverage reconciliation
 
 Reconcile each of the 21 shared Rust Markdown preview fixture cases with its egui coverage, then distinguish this read-only preview coverage from C02.1's broader render/edit acceptance. Keep C02.1 pending until the whole criterion is evidenced, and select the next bounded implementation slice from the remaining gaps. Push the R2.8.64 acceptance record and run the Rust migration inventory checkpoint on its tracker SHA; no local executable validation runs.
+
+R2.8.65 tracker checkpoint: inventory [run 38092858681](https://github.com/ashutoshpw/open-obsidian/actions/runs/38092858681), job 114332692803, passed for tracker SHA bb61601e1a8358c665cebd3cda544782c497a585.
