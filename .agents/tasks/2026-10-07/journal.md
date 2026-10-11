@@ -4293,8 +4293,11 @@ require explicit recovery and that directory-entry durability is not guaranteed
 across power loss. No local tests, builds, formatters, validators, or application
 launches were run.
 
-The Rust dependency lockfile still needs resolution in GitHub Actions because
-Cargo is unavailable in the workspace. Next: commit and push this coherent
-source checkpoint to `origin/main`, run the manual lockfile resolver on that
-SHA, commit its artifact as `Cargo.lock`, then obtain all seven required
-R2.8.91 workflows on the exact implementation SHA before acceptance.
+The source checkpoint was committed and pushed as exact SHA
+`15b8eef965fb3ab6e21394ffcb8fad68c8c3f038`. Rust 1.95 resolver run
+`38171266213` passed on that SHA and uploaded artifact `11714340044`; the
+archive digest, extracted 152,006-byte `Cargo.lock` digest, run URL, and job ID
+are recorded in `evidence/r2.8.91-cargo-lock-resolution-15b8eef.json`. This was
+metadata resolution only, not compilation or tests. Next: commit and push the
+lockfile, then obtain all seven required R2.8.91 workflows on the exact locked
+implementation SHA before acceptance.
