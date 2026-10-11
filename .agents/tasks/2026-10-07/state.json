@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T00:45:39Z",
+  "updated_at": "2026-10-11T00:58:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "cd9137d0f45f5927aa891c24ac82a63f26489d32",
-  "current_milestone": "R2.8.71",
-  "next_action": "R2.8.71 is complete. Continue C01/C01.2 by selecting the next uncovered reference-app read-only flow; use GitHub Actions only for executable validation.",
+  "last_reconciled_head": "a3aafa3ef954093239a4d128d81de6ec1622fe5f",
+  "current_milestone": "R2.8.72",
+  "next_action": "Implement C01.2-40 in the pinned Obsidian reference round-trip: create a note externally after OpenObsidian startup, refresh and select it through the UI, verify exact snapshots, then reopen in Obsidian. Push the coherent slice and use GitHub Actions only for executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -295,7 +295,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.71 implementation SHA ddfee6f6459ef15598337bdebe7b8367fc3b2539 and tracker checkpoint SHA cd9137d0f45f5927aa891c24ac82a63f26489d32 are pushed to origin/main. All seven required workflows passed on the implementation SHA, and Rust migration inventory run 38099452203 passed on the exact tracker SHA. All executable validation used GitHub Actions only.",
+  "push_status": "R2.8.71 implementation SHA ddfee6f6459ef15598337bdebe7b8367fc3b2539 and tracker checkpoint SHA cd9137d0f45f5927aa891c24ac82a63f26489d32 are pushed to origin/main. All seven required workflows passed on the implementation SHA, and Rust migration inventory run 38099452203 passed on the exact tracker SHA. R2.8.72 C01.2-40 is being implemented from starting SHA a3aafa3ef954093239a4d128d81de6ec1622fe5f. All executable validation uses GitHub Actions only.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19910,6 +19910,20 @@
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38099452203"
       },
       "next_action": "C01.2-39 is accepted with exact-SHA cross-platform evidence. Keep parent C01/C01.2 pending and select the next uncovered reference-app read-only flow."
+    },
+    "R2.8.72": {
+      "status": "in_progress",
+      "starting_sha": "a3aafa3ef954093239a4d128d81de6ec1622fe5f",
+      "scope": "Exercise external note creation, explicit note-list refresh, note selection, source preview, and Obsidian reopen in the actual cross-platform desktop round-trip.",
+      "acceptance": [
+        "Create one deterministic BOM/CRLF note after OpenObsidian opens the Obsidian-authored vault, and verify the external write changed only that expected path and hash.",
+        "Refresh the OpenObsidian note list through its native UI, verify the updated count, select the new note through the inspector menu, and display then close its source preview.",
+        "Preserve exact vault snapshots from the deliberate external creation through preview, picker cancellation, teardown, and Obsidian reopen; retain the separate app-data policy, allowing only validated macOS app.ron eframe UI state.",
+        "Verify the new note appears in Obsidian after reopen with its original bytes and pass all seven required GitHub Actions workflows on the exact implementation SHA across Linux, macOS, and Windows.",
+        "Keep parent C01/C01.2 pending for broader reference-app read-only coverage; perform no local executable validation."
+      ],
+      "implementation_commits": [],
+      "next_action": "Implement C01.2-40 in the reference round-trip driver, document the pending matrix case, then push the coherent slice to origin/main and inspect exact-SHA GitHub Actions results."
     }
   },
   "ci_preparation": {

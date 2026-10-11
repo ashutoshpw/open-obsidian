@@ -45,13 +45,17 @@ const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
 const obsidianSourcePlatform = requiredEnv("OBSIDIAN_SOURCE_PLATFORM");
 const seedMarkdownPath = "Nested Ω/space note.md";
 const seedMarkdown = "\uFEFF---\r\ntitle: Original CRLF note\r\nunknown_nested:\r\n  keep: [true, 7, 'opaque']\r\n---\r\n\r\nOriginal bytes stay untouched.\r\n";
+const externalRefreshMarkdownPath = "After refresh.md";
+const externalRefreshMarkdown = "\uFEFF---\r\ntitle: External refresh note\r\nunknown_nested:\r\n  keep: [true, 13, 'external']\r\n---\r\n\r\nExternal note source stays exact.\r\n";
+const externalRefreshMarkdownBytes = Buffer.from(externalRefreshMarkdown, "utf8");
+const externalRefreshMarker = "External note source stays exact.";
 const workspaceStateAllowlist = [".obsidian/workspace.json", ".obsidian/workspace-mobile.json"];
 const startedAt = new Date().toISOString();
 const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.8.71-C01.2-reference-app-source-preview-and-no-op-close",
+  milestone: "R2.8.72-C01.2-reference-app-external-note-refresh",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -85,7 +89,8 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves read-only startup, source preview and close, native folder-picker selection and cancellation, and reopen workflow on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves read-only startup, source preview and close, external note creation followed by explicit UI refresh and preview, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The deliberate external note creation is captured as a new baseline; all later OpenObsidian and Obsidian actions must preserve its exact bytes and the rest of the vault.",
     "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -1227,6 +1232,10 @@ function ensureExactSnapshot(before: SnapshotEntry[], after: SnapshotEntry[], la
   if (changes.length > 0) throw new Error(`${label} changed ${changes.length} vault path(s): ${JSON.stringify(changes).slice(0, 6_000)}`);
 }
 
+function countMarkdownFiles(snapshot: SnapshotEntry[]): number {
+  return snapshot.filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md")).length;
+}
+
 function ensureAppDataChangesAreMacEframeUiStateOnly(
   changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
   eframeFiles: Array<{path: string; bytes: number; sha256: string; content: string}>,
@@ -1739,6 +1748,7 @@ async function cancelOpenObsidianNativePicker(
   appDataSnapshotBeforePickerOpen: SnapshotEntry[],
   vaultRoot: string,
   canonicalVault: string,
+  expectedMarkdownCount: number,
 ): Promise<Record<string, unknown>> {
   const screenshots: string[] = [];
   const linuxWindowsBefore = process.platform === "linux" ? x11WindowInventory() : null;
@@ -1885,7 +1895,7 @@ async function cancelOpenObsidianNativePicker(
   }
   const restoredWindow = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-after-picker-cancelled");
   const restoredVaultVisible = restoredWindow.ocrText.toLowerCase().includes("roundtrip fixture");
-  const expectedNoteCountVisible = /2\s+Markdown files found/i.test(restoredWindow.ocrText);
+  const expectedNoteCountVisible = new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(restoredWindow.ocrText);
   if (!restoredVaultVisible || !expectedNoteCountVisible) {
     throw new Error(`OpenObsidian did not restore the active vault after picker cancellation; OCR=${JSON.stringify(restoredWindow.ocrText.slice(0, 2_000))}`);
   }
@@ -1987,7 +1997,13 @@ function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: numb
   return {x: bounds[0] ?? 0, y: bounds[1] ?? 0, width: bounds[2] ?? 0, height: bounds[3] ?? 0};
 }
 
-async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: string, controlName: string, accessibilityFailure: string): Promise<string> {
+async function clickVisibleOpenObsidianControl(
+  child: ChildProcess,
+  windowId: string,
+  controlName: string,
+  accessibilityFailure: string,
+  fallbackAnchorPhrase?: string,
+): Promise<string> {
   const capture = await captureOpenObsidianScreenshot(windowId, child, "openobsidian-control-target");
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const candidates = ["11", "6"].map((mode) => execFileSync(tesseract, [capture.ocrPngPath, "stdout", "--psm", mode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}));
@@ -2004,7 +2020,7 @@ async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: st
     const anchorPhrase = controlName === "Read note source preview"
       ? "Read up to 16 KiB"
       : controlName === "Close source preview"
-        ? "Source Nested"
+        ? fallbackAnchorPhrase ?? "Source"
         : null;
     let anchor: OcrWordBounds | null = null;
     if (anchorPhrase) {
@@ -2098,7 +2114,12 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
   return `Visible OCR fallback after accessibility failure ${JSON.stringify(accessibilityFailure)}; ${interaction}; screenshot=${relative(reportDirectory, capture.windowPngPath)}`;
 }
 
-async function invokeNativeAccessibleControl(child: ChildProcess, windowId: string, controlName: string): Promise<string> {
+async function invokeNativeAccessibleControl(
+  child: ChildProcess,
+  windowId: string,
+  controlName: string,
+  fallbackAnchorPhrase?: string,
+): Promise<string> {
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for native accessibility automation");
 
@@ -2164,7 +2185,7 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Linux AT-SPI: ${output || failure.message}`);
+      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Linux AT-SPI: ${output || failure.message}`, fallbackAnchorPhrase);
     }
   }
 
@@ -2207,7 +2228,7 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `macOS Accessibility: ${output || failure.message}`);
+      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `macOS Accessibility: ${output || failure.message}`, fallbackAnchorPhrase);
     }
   }
 
@@ -2279,7 +2300,7 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Windows UI Automation: ${output || failure.message}`);
+      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Windows UI Automation: ${output || failure.message}`, fallbackAnchorPhrase);
     }
   }
 
@@ -2347,7 +2368,7 @@ async function runReferenceSourcePreview(
   );
   previewReport.app_data_change_policy_passed_after_preview = true;
 
-  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview");
+  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", `Source ${seedMarkdownPath}`);
   const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
@@ -2380,6 +2401,161 @@ async function runReferenceSourcePreview(
   previewReport.app_data_change_policy_passed_after_close = true;
   previewReport.status = "passed";
   await saveReport();
+}
+
+async function runReferenceExternalNoteRefresh(
+  child: ChildProcess,
+  window: {window_id: string},
+  appDataRoot: string,
+  vaultBaseline: SnapshotEntry[],
+): Promise<SnapshotEntry[]> {
+  const open = report.openobsidian_open as Record<string, unknown>;
+  const refreshReport: Record<string, unknown> = {
+    status: "in_progress",
+    note_path: externalRefreshMarkdownPath,
+    note_bytes: externalRefreshMarkdownBytes.length,
+    note_sha256: createHash("sha256").update(externalRefreshMarkdownBytes).digest("hex"),
+    expected_source_marker: externalRefreshMarker,
+  };
+  open.external_note_refresh = refreshReport;
+
+  const vaultBeforeCreation = await snapshotTree(vaultRoot);
+  ensureExactSnapshot(vaultBaseline, vaultBeforeCreation, "OpenObsidian vault before deliberate external note creation");
+  const appDataBeforeCreation = await snapshotTree(appDataRoot);
+  await writeFile(join(vaultRoot, externalRefreshMarkdownPath), externalRefreshMarkdownBytes, {flag: "wx"});
+
+  const vaultAfterCreation = await snapshotTree(vaultRoot);
+  const changesFromExternalCreation = changedPaths(vaultBeforeCreation, vaultAfterCreation);
+  const expectedNoteSha256 = createHash("sha256").update(externalRefreshMarkdownBytes).digest("hex");
+  if (
+    changesFromExternalCreation.length !== 1
+    || changesFromExternalCreation[0]?.path !== externalRefreshMarkdownPath
+    || changesFromExternalCreation[0]?.after?.kind !== "file"
+    || changesFromExternalCreation[0]?.after?.bytes !== externalRefreshMarkdownBytes.length
+    || changesFromExternalCreation[0]?.after?.sha256 !== expectedNoteSha256
+  ) {
+    throw new Error(`External note creation changed unexpected vault entries: ${JSON.stringify(changesFromExternalCreation).slice(0, 6_000)}`);
+  }
+  const expectedMarkdownCount = countMarkdownFiles(vaultAfterCreation);
+  if (expectedMarkdownCount !== countMarkdownFiles(vaultBaseline) + 1) {
+    throw new Error(`External note creation produced ${expectedMarkdownCount} Markdown files; expected exactly one additional note`);
+  }
+  const appDataAfterCreation = await snapshotTree(appDataRoot);
+  ensureExactSnapshot(appDataBeforeCreation, appDataAfterCreation, "OpenObsidian app data during deliberate external note creation");
+  refreshReport.vault_snapshot_before_creation = vaultBeforeCreation;
+  refreshReport.vault_snapshot_after_creation = vaultAfterCreation;
+  refreshReport.vault_changes_from_external_creation = changesFromExternalCreation;
+  refreshReport.expected_markdown_count_after_refresh = expectedMarkdownCount;
+  refreshReport.app_data_snapshot_before_creation = appDataBeforeCreation;
+  refreshReport.app_data_snapshot_after_creation = appDataAfterCreation;
+  refreshReport.app_data_unchanged_during_external_creation = true;
+  const vaultSnapshots = report.vault_snapshots as Record<string, unknown>;
+  vaultSnapshots.before_external_note_creation = vaultBeforeCreation;
+  vaultSnapshots.after_external_note_creation = vaultAfterCreation;
+  await writeFile(join(reportDirectory, "vault-after-external-note-creation.json"), `${JSON.stringify(vaultAfterCreation, null, 2)}\n`);
+  await saveReport();
+
+  refreshReport.refresh_action = await invokeNativeAccessibleControl(child, window.window_id, "Refresh note list");
+  const refreshedList = await waitFor("OpenObsidian to finish refreshing its note list after external creation", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-refresh");
+    refreshReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => (
+    ocrTextContainsPhrase(capture.ocrText, "Note list refreshed")
+    && new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText)
+  ), 30_000);
+  refreshReport.refreshed_list_screenshot = relative(reportDirectory, refreshedList.pngPath);
+  refreshReport.refreshed_list_window_screenshot = relative(reportDirectory, refreshedList.windowPngPath);
+  refreshReport.refreshed_markdown_count_visible = true;
+
+  refreshReport.open_note_selector_action = await invokeNativeAccessibleControl(child, window.window_id, "Note to inspect");
+  const visibleMenuOption = await waitFor("OpenObsidian to expose the externally added note in its inspector menu", async () => {
+    await delay(250);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
+    refreshReport.selector_menu_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
+  refreshReport.selector_menu_screenshot = relative(reportDirectory, visibleMenuOption.pngPath);
+  refreshReport.external_note_visible_in_selector = true;
+  refreshReport.select_external_note_action = await invokeNativeAccessibleControl(child, window.window_id, externalRefreshMarkdownPath);
+  const selectedNote = await waitFor("OpenObsidian to select the externally added note", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selected");
+    refreshReport.selected_note_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
+  refreshReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
+  refreshReport.external_note_selected = true;
+
+  refreshReport.read_source_action = await invokeNativeAccessibleControl(child, window.window_id, "Read note source preview");
+  const visiblePreview = await waitFor("OpenObsidian to preview the externally added note source", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-source-preview");
+    refreshReport.preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker), 30_000);
+  refreshReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
+  refreshReport.preview_window_screenshot = relative(reportDirectory, visiblePreview.windowPngPath);
+  refreshReport.external_source_marker_visible = true;
+
+  const canonicalVaultRoot = await realpath(vaultRoot);
+  const canonicalAppDataRoot = await realpath(appDataRoot);
+  const forbiddenPersistencePaths = [vaultRoot, canonicalVaultRoot, appDataRoot, canonicalAppDataRoot];
+  const vaultAfterPreview = await snapshotTree(vaultRoot);
+  const appDataAfterPreview = await snapshotTree(appDataRoot);
+  const vaultChangesAfterPreview = changedPaths(vaultAfterCreation, vaultAfterPreview);
+  const appDataChangesAfterPreview = changedPaths(appDataAfterCreation, appDataAfterPreview);
+  const eframeFilesAfterPreview = await readSnapshotTextFiles(appDataRoot, appDataAfterPreview, (path) => path.toLowerCase().endsWith(".ron"));
+  refreshReport.vault_snapshot_after_preview = vaultAfterPreview;
+  refreshReport.vault_changes_after_preview = vaultChangesAfterPreview;
+  refreshReport.app_data_snapshot_after_preview = appDataAfterPreview;
+  refreshReport.app_data_changes_after_preview = appDataChangesAfterPreview;
+  refreshReport.eframe_persistence_files_after_preview = eframeFilesAfterPreview;
+  await saveReport();
+  ensureExactSnapshot(vaultAfterCreation, vaultAfterPreview, "OpenObsidian external note refresh and source preview");
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterPreview,
+    eframeFilesAfterPreview,
+    "OpenObsidian external note refresh and source preview app data",
+    forbiddenPersistencePaths,
+  );
+  refreshReport.vault_unchanged_after_preview = true;
+  refreshReport.app_data_change_policy_passed_after_preview = true;
+
+  refreshReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", `Source ${externalRefreshMarkdownPath}`);
+  const closedPreview = await waitFor("OpenObsidian to close the externally added note preview", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-preview-closed");
+    refreshReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker), 30_000);
+  refreshReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
+  refreshReport.preview_closed = true;
+
+  const vaultAfterClose = await snapshotTree(vaultRoot);
+  const appDataAfterClose = await snapshotTree(appDataRoot);
+  const vaultChangesAfterClose = changedPaths(vaultAfterCreation, vaultAfterClose);
+  const appDataChangesAfterClose = changedPaths(appDataAfterCreation, appDataAfterClose);
+  const eframeFilesAfterClose = await readSnapshotTextFiles(appDataRoot, appDataAfterClose, (path) => path.toLowerCase().endsWith(".ron"));
+  refreshReport.vault_snapshot_after_close = vaultAfterClose;
+  refreshReport.vault_changes_after_close = vaultChangesAfterClose;
+  refreshReport.app_data_snapshot_after_close = appDataAfterClose;
+  refreshReport.app_data_changes_after_close = appDataChangesAfterClose;
+  refreshReport.eframe_persistence_files_after_close = eframeFilesAfterClose;
+  await saveReport();
+  ensureExactSnapshot(vaultAfterCreation, vaultAfterClose, "OpenObsidian external note preview close");
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterClose,
+    eframeFilesAfterClose,
+    "OpenObsidian external note preview close app data",
+    forbiddenPersistencePaths,
+  );
+  refreshReport.vault_unchanged_after_close = true;
+  refreshReport.app_data_change_policy_passed_after_close = true;
+  refreshReport.status = "passed";
+  await saveReport();
+  return vaultAfterCreation;
 }
 
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
@@ -2442,6 +2618,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
       (report.openobsidian_open as Record<string, unknown>).native_window = window;
     }
     const open = report.openobsidian_open as Record<string, unknown>;
+    const expectedInitialMarkdownCount = countMarkdownFiles(noOpBaseline);
     open.folder_picker = await selectOpenObsidianVaultFromNativePicker(child, window);
     let renderAttempt = 0;
     await waitFor("OpenObsidian to render the selected vault and note count", async () => {
@@ -2454,7 +2631,10 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
       open.screen_ocr = captured.ocrText;
       open.render_attempts = renderAttempt;
       return captured;
-    }, (candidate) => candidate.ocrText.toLowerCase().includes("roundtrip fixture") && /2\s+Markdown files found/i.test(candidate.ocrText), 30_000);
+    }, (candidate) => (
+      candidate.ocrText.toLowerCase().includes("roundtrip fixture")
+      && new RegExp(`${expectedInitialMarkdownCount}\\s+Markdown files found`, "i").test(candidate.ocrText)
+    ), 30_000);
     const initialAppData = await snapshotTree(appDataRoot);
     const canonicalVault = await realpath(vaultRoot);
     const canonicalAppData = await realpath(appDataRoot);
@@ -2471,11 +2651,21 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     await saveReport();
 
     await runReferenceSourcePreview(child, window, appDataRoot, noOpBaseline);
-    const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(child, window, appDataRoot, noOpBaseline, initialAppData);
+    const vaultBaselineAfterExternalCreation = await runReferenceExternalNoteRefresh(child, window, appDataRoot, noOpBaseline);
+    const expectedMarkdownCountAfterExternalCreation = countMarkdownFiles(vaultBaselineAfterExternalCreation);
+    open.expected_markdown_count_after_external_refresh = expectedMarkdownCountAfterExternalCreation;
+    const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(
+      child,
+      window,
+      appDataRoot,
+      vaultBaselineAfterExternalCreation,
+      initialAppData,
+      expectedMarkdownCountAfterExternalCreation,
+    );
     await delay(2_000);
     await stopProcess(child);
     const afterVault = await snapshotTree(vaultRoot);
-    ensureExactSnapshot(noOpBaseline, afterVault, "OpenObsidian no-op open, picker cancellation, and close");
+    ensureExactSnapshot(vaultBaselineAfterExternalCreation, afterVault, "OpenObsidian no-op open, external note refresh, picker cancellation, and close");
     const afterAppData = await snapshotTree(appDataRoot);
     const appDataChangesAfterClose = changedPaths(appDataBaselineAfterPickerCancellation, afterAppData);
     const eframePersistenceFilesAfterClose = await readSnapshotTextFiles(appDataRoot, afterAppData, (path) => path.toLowerCase().endsWith(".ron"));
@@ -2516,11 +2706,15 @@ async function runOpenObsidianPickerCancellation(
   appDataRoot: string,
   vaultBeforeCancellation: SnapshotEntry[],
   appDataBeforeCancellation: SnapshotEntry[],
+  expectedMarkdownCount: number,
 ): Promise<SnapshotEntry[]> {
   const open = report.openobsidian_open as Record<string, unknown>;
   await delay(1_500);
   const startupScreen = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-vault-before-picker-cancel");
-  if (!startupScreen.ocrText.toLowerCase().includes("roundtrip fixture") || !/2\s+Markdown files found/i.test(startupScreen.ocrText)) {
+  if (
+    !startupScreen.ocrText.toLowerCase().includes("roundtrip fixture")
+    || !new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(startupScreen.ocrText)
+  ) {
     throw new Error(`OpenObsidian did not display the active vault before picker cancellation; OCR=${JSON.stringify(startupScreen.ocrText.slice(0, 2_000))}`);
   }
 
@@ -2553,7 +2747,15 @@ async function runOpenObsidianPickerCancellation(
     throw new Error(`OpenObsidian app data changed before picker cancellation outside eframe app.ron persistence: ${JSON.stringify(unexpectedAppDataStartupChanges).slice(0, 6_000)}`);
   }
 
-  const pickerCancellation = await cancelOpenObsidianNativePicker(child, window, appDataRoot, appDataSnapshotBeforePickerOpen, vaultRoot, canonicalVault);
+  const pickerCancellation = await cancelOpenObsidianNativePicker(
+    child,
+    window,
+    appDataRoot,
+    appDataSnapshotBeforePickerOpen,
+    vaultRoot,
+    canonicalVault,
+    expectedMarkdownCount,
+  );
   const appDataSnapshotBeforeCancel = pickerCancellation.app_data_snapshot_before_cancel as SnapshotEntry[];
   const appRonFilesBeforeCancel = pickerCancellation.eframe_persistence_files_before_cancel as Array<{path: string; bytes: number; sha256: string; content: string}>;
   const appDataChangesOnPickerOpen = pickerCancellation.app_data_changes_on_picker_open as Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>;
@@ -2637,6 +2839,18 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
     );
   }
 
+  visible = await waitFor(
+    "Obsidian to list the externally added note after reopening the vault",
+    readVisible,
+    (value) => value.paths.includes(externalRefreshMarkdownPath),
+    20_000,
+  );
+  const externalNoteAfterReopen = await readFile(join(vaultRoot, externalRefreshMarkdownPath));
+  const externalNoteSha256 = createHash("sha256").update(externalNoteAfterReopen).digest("hex");
+  if (!externalNoteAfterReopen.equals(externalRefreshMarkdownBytes)) {
+    throw new Error(`Obsidian reopen changed the externally created note bytes at ${externalRefreshMarkdownPath}`);
+  }
+
   const noteSource = await readFile(join(vaultRoot, notePath), "utf8");
   const attachmentLinkPersistedInSource = noteSource.includes(noteEmbed);
   if (!attachmentLinkPersistedInSource) {
@@ -2671,6 +2885,11 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   reopen.attachment_link_persisted_in_note_source = attachmentLinkPersistedInSource;
   reopen.attachment_path_visible_in_file_explorer = exactAttachmentListed;
   reopen.attachment_path_visible_in_editor_text = attachmentPathVisibleInRenderedNote;
+  reopen.external_note_path = externalRefreshMarkdownPath;
+  reopen.external_note_path_visible_in_file_explorer = visible.paths.includes(externalRefreshMarkdownPath);
+  reopen.external_note_bytes = externalNoteAfterReopen.length;
+  reopen.external_note_sha256 = externalNoteSha256;
+  reopen.external_note_source_unchanged = true;
   reopen.editor_text = visible.editor.slice(0, 2_000);
   reopen.visible_vault_text = visible.body.slice(0, 4_000);
   reopen.final_file_tree_paths = pathsAfterExpand;
@@ -2705,8 +2924,10 @@ async function run(): Promise<void> {
     await writeFile(join(reportDirectory, "vault-before-openobsidian.json"), `${JSON.stringify(beforeRust, null, 2)}\n`);
     await saveReport();
 
-    await runOpenObsidian(beforeRust);
+    const expectedBeforeObsidianReopen = await runOpenObsidian(beforeRust);
+    (report.vault_snapshots as Record<string, unknown>).expected_before_obsidian_reopen = expectedBeforeObsidianReopen;
     await writeFile(join(reportDirectory, "vault-after-openobsidian.json"), `${JSON.stringify(report.vault_snapshots && (report.vault_snapshots as Record<string, unknown>).after_openobsidian, null, 2)}\n`);
+    await writeFile(join(reportDirectory, "vault-before-obsidian-reopen.json"), `${JSON.stringify(expectedBeforeObsidianReopen, null, 2)}\n`);
 
     reopenProcess = await createObsidianProfile(join(workDirectory, "obsidian-profile"), 9223);
     reopenConnection = await reopenInObsidian(reopenProcess, authored.notePath);
@@ -2716,7 +2937,7 @@ async function run(): Promise<void> {
     reopenConnection = undefined;
 
     const afterReopen = await snapshotTree(vaultRoot);
-    const reopenChanges = changedPaths(beforeRust, afterReopen);
+    const reopenChanges = changedPaths(expectedBeforeObsidianReopen, afterReopen);
     const allowedChanges = reopenChanges.filter((change) => workspaceStateAllowlist.includes(change.path));
     const unapprovedChanges = reopenChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
     if (unapprovedChanges.length > 0) {
