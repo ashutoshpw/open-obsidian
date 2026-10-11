@@ -2772,13 +2772,25 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.refreshed_list_window_screenshot = relative(reportDirectory, refreshedList.windowPngPath);
   refreshReport.refreshed_markdown_count_visible = true;
 
-  const selectorBefore = await captureOpenObsidianScreenshot(
-    window.window_id,
-    child,
-    "openobsidian-external-note-selector-before",
-  );
-  refreshReport.selector_before_screen_ocr = selectorBefore.ocrText.slice(0, 4_000);
-  refreshReport.selector_before_screenshot = relative(reportDirectory, selectorBefore.pngPath);
+  if (process.platform === "win32") {
+    refreshReport.open_note_selector_action = await invokeNativeAccessibleControl(
+      child,
+      window.window_id,
+      "Note to inspect",
+      "Nested",
+    );
+    const visibleMenu = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
+    refreshReport.selector_menu_screen_ocr = visibleMenu.ocrText.slice(0, 4_000);
+    refreshReport.selector_menu_screenshot = relative(reportDirectory, visibleMenu.pngPath);
+  } else {
+    const selectorBefore = await captureOpenObsidianScreenshot(
+      window.window_id,
+      child,
+      "openobsidian-external-note-selector-before",
+    );
+    refreshReport.selector_before_screen_ocr = selectorBefore.ocrText.slice(0, 4_000);
+    refreshReport.selector_before_screenshot = relative(reportDirectory, selectorBefore.pngPath);
+  }
   const sortedNotePaths = vaultAfterCreation
     .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
     .map((entry) => entry.path)
@@ -2797,14 +2809,25 @@ async function runReferenceExternalNoteRefresh(
   const selectedByWindowsUiAutomation = process.platform === "win32"
     && windowsSelectionConfirmsPath(refreshReport.select_external_note_action, externalRefreshMarkdownPath);
   refreshReport.external_note_selected_by_exact_windows_uia = selectedByWindowsUiAutomation;
-  refreshReport.external_note_selected_by_previous_button = (process.platform === "linux" || process.platform === "darwin")
-    && String(refreshReport.select_external_note_action).includes('for "Previous note"');
+  let selectedByPreviousButton = false;
+  if (process.platform === "linux" || process.platform === "darwin") {
+    const expectedNavigationLog = `OpenObsidian CI note navigation: source=previous_button, selected=${externalRefreshMarkdownPath}`;
+    const navigationLog = await waitFor(
+      "OpenObsidian to apply the Previous note button selection",
+      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+      (lines) => lines.includes(expectedNavigationLog),
+      15_000,
+    );
+    refreshReport.previous_note_selection_diagnostic = navigationLog.find((line) => line === expectedNavigationLog);
+    selectedByPreviousButton = true;
+  }
+  refreshReport.external_note_selected_by_previous_button = selectedByPreviousButton;
   const selectedNote = await waitFor("OpenObsidian to select the externally added note", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selected");
     refreshReport.selected_note_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => selectedByWindowsUiAutomation
+  }, (capture) => selectedByWindowsUiAutomation || selectedByPreviousButton
     || ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath)
     || ocrTextContainsFuzzyPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
   refreshReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);

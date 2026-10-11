@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T02:35:45Z",
+  "updated_at": "2026-10-11T02:44:53Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "be082a4864b38d28cf2ab15489d7ed84c47b5271",
+  "last_reconciled_head": "be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0",
   "current_milestone": "R2.8.72",
-  "next_action": "Push the sorted-order Previous note selection correction and inspect exact-SHA GitHub Actions, including the Linux Obsidian round-trip.",
+  "next_action": "Commit and push the exact-path navigation diagnostics and Windows menu-open correction; inspect the resulting exact-SHA GitHub Actions runs.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -295,7 +295,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.72 implementation SHA be082a4864b38d28cf2ab15489d7ed84c47b5271 is pushed to origin/main. Inventory, plugin renderer, loaded-plugin, quality, desktop build, and Rust CI passed across all required OSes. The Obsidian 1.14.4 round-trip passed on macOS/Windows; Linux completed refresh but its menu-row click closed the selector without changing the selected note. Run/job IDs and artifact hashes are in evidence/r2.8.72-roundtrip-ci-be082a4.json. A focused Previous note control correction is in progress. GitHub Actions remains the only executable validation environment.",
+  "push_status": "R2.8.72 implementation SHA be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0 is pushed to origin/main. Inventory, plugin renderer, loaded-plugin workflows, quality, desktop build, and Rust CI passed; Obsidian 1.14.4 round-trip passed on macOS and failed on Linux/Windows. Exact run/job IDs and artifact digests are recorded in evidence/r2.8.72-roundtrip-ci-be4cbc0.json. The next correction records the exact selected path after Previous note and opens the Windows selector before UI Automation. GitHub Actions remains the only executable validation environment.",
   "ci_results": [
     {
       "name": "inventory",
@@ -25157,7 +25157,12 @@
         "507ef57c6e0773325b15c37a818ddf6483926075",
         "4fa4fdf5e3b588341e1f2aa044513833b12f068e",
         "3afdfb605f826474ca4e11c5b9467ea3011a6cdb",
-        "3ed950ee7e5f0ff1623aea0ec050a9a595fa1bd3"
+        "3ed950ee7e5f0ff1623aea0ec050a9a595fa1bd3",
+        "6c17d27c9bc41386e6a169e0259420bf2ecf7c83",
+        "5788a79c46e2aeb56abf34590754ccc6cb789e53",
+        "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+        "be082a4864b38d28cf2ab15489d7ed84c47b5271",
+        "be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0"
       ],
       "ci_attempts": [
         {
@@ -25358,9 +25363,68 @@
           },
           "finding": "Windows passed the full external-note refresh and Obsidian reopen flow. Linux failed while closing the initial source preview because OCR missed the Source Nested anchor. macOS created the exact external note and consumed two successful watcher refreshes, but the OCR click did not activate the manual refresh button and no manual_button request was logged.",
           "evidence": "evidence/r2.8.72-roundtrip-ci-3ed950e.json"
+        },
+        {
+          "source_sha": "be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0",
+          "workflow": "Obsidian vault round-trip acceptance",
+          "run_id": 38105693878,
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": {
+            "ubuntu-24.04": {
+              "job_id": 114370642181,
+              "conclusion": "failure",
+              "artifact_id": 11690121267,
+              "artifact_digest": "sha256:da43ba3531af53082cb2351ccfc92656c90302babcf7720c3842b1b34b9e36f9"
+            },
+            "windows-latest": {
+              "job_id": 114370642090,
+              "conclusion": "failure",
+              "artifact_id": 11689646723,
+              "artifact_digest": "sha256:6e8ee0bde280fb8daee5a20e63cd8944962869af7d7b3ea94212920987763506"
+            },
+            "macos-latest": {
+              "job_id": 114370642029,
+              "conclusion": "success",
+              "artifact_id": 11689641726,
+              "artifact_digest": "sha256:a708aed712cf520ed05e78837ee82e0164643b567e769bf05db2f9459805047e"
+            }
+          },
+          "required_workflow_runs": {
+            "inventory": {
+              "run_id": 38105693872,
+              "conclusion": "success"
+            },
+            "plugin_renderer": {
+              "run_id": 38105693874,
+              "conclusion": "success"
+            },
+            "loaded_plugin_workflows": {
+              "run_id": 38105693903,
+              "conclusion": "success"
+            },
+            "quality": {
+              "run_id": 38105693855,
+              "conclusion": "success"
+            },
+            "desktop_build": {
+              "run_id": 38105693873,
+              "conclusion": "success"
+            },
+            "rust_ci": {
+              "run_id": 38105693861,
+              "conclusion": "success"
+            },
+            "obsidian_vault_roundtrip": {
+              "run_id": 38105693878,
+              "conclusion": "failure"
+            }
+          },
+          "finding": "The macOS reference-app round-trip passed. The Windows lookup ran while the Note to inspect popup was closed. The Linux screenshot visibly showed After refresh.md as selected, but OCR did not recognize the label and stopped before source-marker validation.",
+          "evidence": "evidence/r2.8.72-roundtrip-ci-be4cbc0.json"
         }
       ],
-      "next_action": "Use the stable Note source preview title and calibrated offset for the Linux close button, and compare macOS refresh click coordinates with the CI-only egui response rectangle and pointer event; push a focused correction and inspect exact-SHA GitHub Actions."
+      "next_action": "Commit and push the exact-path navigation diagnostics and Windows menu-open correction; inspect the resulting exact-SHA GitHub Actions runs."
     }
   },
   "ci_preparation": {

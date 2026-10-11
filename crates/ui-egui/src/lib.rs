@@ -643,7 +643,21 @@ impl OpenObsidianApp {
         ui.horizontal(|ui| {
             ui.add_enabled_ui(!note_navigation_busy, |ui| {
                 if previous_path.is_some() {
-                    previous_requested = ui.small_button("Previous note").clicked();
+                    let previous_response = ui.small_button("Previous note");
+                    previous_requested = previous_response.clicked();
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                        && ui.input(|input| !input.raw.events.is_empty())
+                    {
+                        eprintln!(
+                            "OpenObsidian CI previous-note input: enabled={}, response_rect={:?}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                            !note_navigation_busy,
+                            previous_response.rect,
+                            ui.input(|input| input.pointer.hover_pos()),
+                            previous_response.hovered(),
+                            previous_response.clicked(),
+                            ui.input(|input| input.raw.events.clone()),
+                        );
+                    }
                 }
                 let note_menu = ui.menu_button("Note to inspect", |ui| {
                     for path in &note_paths {
@@ -696,6 +710,20 @@ impl OpenObsidianApp {
             source_changed = true;
         }
         if source_changed {
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                let source = if previous_requested {
+                    "previous_button"
+                } else if next_requested {
+                    "next_button"
+                } else {
+                    "selector_menu"
+                };
+                let selected = self
+                    .link_source_path
+                    .as_ref()
+                    .map_or_else(|| "<none>".to_owned(), |path| path.display().to_string());
+                eprintln!("OpenObsidian CI note navigation: source={source}, selected={selected}");
+            }
             self.link_resolutions.clear();
             self.link_error = None;
             self.link_status = None;
