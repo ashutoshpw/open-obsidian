@@ -2339,15 +2339,6 @@
       "fixture_reader": "crates/vault"
     },
     {
-      "path": "crates/vault/src/configuration.rs",
-      "sha256": "4b9a0138fe1b0d5572cab3bb59a4d88384dc6d5c8bfed09b08c21605e3c8db20",
-      "rust_owner": "crates/vault",
-      "mapping_status": "reviewed",
-      "status": "pending",
-      "migration_phase": "R2",
-      "purpose": "Confined read-only discovery of root Obsidian configuration folders and exact-byte-preserving JSON objects."
-    },
-    {
       "path": "fixtures/configuration-inventory.json",
       "sha256": "e78f68fe2de50d82f81bf35b76140165af818ae80c32fdfda97342a67cd6da95",
       "rust_owner": "crates/vault",

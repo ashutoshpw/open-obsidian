@@ -3338,7 +3338,7 @@ in run 38123850667, attempt 2. Exact run/job IDs and the trigger explanation
 are in `evidence/r2.8.77-tracker-checkpoint-ca02f5b.json`. No local executable
 validation was run.
 
-### R2.8.78 / C09.2 implementation in progress
+### R2.8.78 / C09 configuration discovery slice in progress
 
 Added vault-owned, read-only configuration discovery for root `.obsidian` and
 `.obsidian-*` directories. The result sorts folder names and vault-relative JSON
@@ -3352,3 +3352,17 @@ The tracker now assigns pending AI grounding row Q-009 to R5, and the duplicate
 status/evidence quartet in SYNC-001 was removed while retaining its passing
 evidence. Exact-SHA GitHub Actions are the only executable validation for this
 milestone; no local tests, builds, formatters or validators were run.
+
+Attempt 1 was pushed as exact source SHA
+`b0b855771467233df38354f0da26bdce1594a243`. Quality, desktop build, plugin
+renderer and loaded-plugin workflows passed; the migration inventory and
+Ubuntu Rust formatting checks failed. Rust workspace tests passed on Ubuntu,
+Windows and macOS, the Rust 1.95 MSRV job passed, and Windows/macOS Rust CI
+passed. The first Obsidian round-trip attempt failed only on the Windows
+source-preview UI step while Linux and macOS passed; retrying the round-trip on
+the same SHA passed all three operating systems. The first attempt remains
+not accepted because inventory and formatting failed. Exact job IDs, findings
+and round-trip artifact digests are recorded in
+`evidence/r2.8.78-c09-attempt-1-b0b8557.json`. The inventory and formatter
+corrections are prepared for a new exact-SHA GitHub Actions attempt. No local
+tests, builds, formatters or validators were run.

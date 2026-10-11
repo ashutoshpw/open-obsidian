@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.78 / C09 read-only configuration discovery slice",
+  "attempt": 1,
+  "tested_source_sha": "b0b855771467233df38354f0da26bdce1594a243",
+  "recorded_at": "2026-10-11T09:09:31Z",
+  "conclusion": "not_accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38126414441,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414441",
+      "conclusion": "failure",
+      "jobs": {
+        "inventory": {
+          "job_id": 114431596310,
+          "conclusion": "failure",
+          "findings": [
+            "The inventory requires exactly 16 goal-specific requirements, MIG-001 through MIG-016; C09.2 created an invalid seventeenth goal-specific row.",
+            "The new crates/vault/src/configuration.rs path is outside the legacy file-inventory scan set and must not be listed there."
+          ]
+        }
+      }
+    },
+    "quality": {
+      "run_id": 38126414455,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414455",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114431596178, "conclusion": "success"},
+        "macos": {"job_id": 114431596316, "conclusion": "success"},
+        "windows": {"job_id": 114431596389, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38126414425,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414425",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114431596029, "conclusion": "success"},
+        "ubuntu": {"job_id": 114431596226, "conclusion": "success"},
+        "windows": {"job_id": 114431596239, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38126414438,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414438",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114431596322, "conclusion": "success"},
+        "ubuntu": {"job_id": 114431596506, "conclusion": "success"},
+        "macos": {"job_id": 114431596602, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38126414412,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414412",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114431596296, "conclusion": "success"},
+        "ubuntu": {"job_id": 114431596422, "conclusion": "success"},
+        "macos": {"job_id": 114431596425, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38126414429,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414429",
+      "conclusion": "failure",
+      "jobs": {
+        "ubuntu": {
+          "job_id": 114431595952,
+          "conclusion": "failure",
+          "workspace_tests": "success",
+          "format": "failure",
+          "format_finding": "cargo fmt --all -- --check reported layout changes only in crates/vault/src/configuration.rs and crates/vault/src/lib.rs."
+        },
+        "windows": {"job_id": 114431596113, "conclusion": "success"},
+        "macos": {"job_id": 114431596130, "conclusion": "success"},
+        "minimum_supported_rust_1_95": {
+          "job_id": 114431596150,
+          "conclusion": "success",
+          "toolchain": "Rust 1.95.0",
+          "command": "cargo test --workspace --locked"
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38126414398,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38126414398",
+      "run_attempt_1_conclusion": "failure",
+      "jobs": {
+        "linux": {"job_id": 114431596166, "conclusion": "success"},
+        "windows": {
+          "job_id": 114431596287,
+          "conclusion": "failure",
+          "finding": "The native note source preview did not expose the expected source/close controls during the vault round-trip UI step."
+        },
+        "macos": {"job_id": 114431596385, "conclusion": "success"}
+      },
+      "failed_attempt_artifact": {
+        "artifact_id": 11697037854,
+        "name": "obsidian-vault-roundtrip-Windows-b0b855771467233df38354f0da26bdce1594a243",
+        "size_bytes": 4260307,
+        "sha256_digest": "a3c1f47ed8ac8eca4ecd1a45f22a845f82176bc1e66e7eda12bcb7a477a15a04"
+      },
+      "same_sha_retry": {
+        "run_attempt": 2,
+        "conclusion": "success",
+        "jobs": {
+          "windows": {"job_id": 114433302394, "conclusion": "success"},
+          "macos": {"job_id": 114433303200, "conclusion": "success"},
+          "linux": {"job_id": 114433318355, "conclusion": "success"}
+        },
+        "artifacts": {
+          "linux": {
+            "artifact_id": 11697807266,
+            "size_bytes": 8293291,
+            "sha256_digest": "ef89095645f45cdad7286de4443716db53fe6a0a01ca82d3e5a947fd4b66ab85"
+          },
+          "windows": {
+            "artifact_id": 11697797933,
+            "size_bytes": 9313862,
+            "sha256_digest": "daac4233ad85474002ae44f08dd7c5ac60ecf9688ecd03d8da419087292d30b2"
+          },
+          "macos": {
+            "artifact_id": 11697288119,
+            "size_bytes": 9383001,
+            "sha256_digest": "65fcd7b538bc9778d494c1ce4b5b0d6ffb3e12471069fa903cfde288d99e1eb0"
+          }
+        },
+        "finding": "The same-SHA rerun passed the Windows preview flow and all Linux, macOS, and Windows round-trip checks; the first Windows UI failure is treated as transient and remains recorded."
+      }
+    }
+  },
+  "corrections_prepared_from_ci": [
+    "Remove C09.2 as a seventeenth goal-specific requirement and preserve its discovery criteria under parent C09.",
+    "Remove crates/vault/src/configuration.rs from the legacy file inventory while retaining the configuration fixture record.",
+    "Apply the exact rustfmt layout changes reported by the Ubuntu GitHub Actions job."
+  ],
+  "acceptance_status": "C09 remains pending until all seven required workflows pass on a corrected exact source SHA. No local tests, builds, formatters, or validators were run."
+}

@@ -3366,9 +3366,10 @@
       "checkpoint": "P2.1",
       "owner": "vault-filesystem",
       "mandatory": true,
-      "acceptance_criteria": "Configuration discovery is read-only, supported settings are mapped explicitly and app metadata lives outside the vault unless portability is explicitly selected.",
+      "acceptance_criteria": "Configuration discovery is read-only: return sorted root .obsidian and .obsidian-* directories and recursively discovered valid JSON object files keyed by vault-relative path, preserve exact source bytes and unknown keys, skip symlinks and malformed or non-object JSON, and leave the vault snapshot unchanged. Map supported settings explicitly and keep app metadata outside the vault unless portability is explicitly selected.",
       "fixture_ids": [
-        "fixture:c09-configuration"
+        "fixture:c09-configuration",
+        "fixture:c09-configuration-inventory"
       ],
       "reference_versions": [
         {
@@ -3401,7 +3402,7 @@
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Port C09 behavior to crates/platform, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
+      "migration_acceptance": "Implement confined, deterministic read-only configuration discovery in crates/vault with exact JSON byte and unknown-key preservation, vault-relative paths, symlink and invalid JSON exclusions, and GitHub CI evidence. This is a partial C09 slice; full C09 acceptance also requires CSS/theme analysis, explicit supported-settings mapping, and the app-metadata policy."
     },
     {
       "id": "C09.1",
@@ -3447,54 +3448,6 @@
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
       "migration_acceptance": "Port C09 behavior to crates/platform, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
-    },
-    {
-      "id": "C09.2",
-      "parent_id": "C09",
-      "source": {
-        "path": ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md",
-        "heading": "C09 Configuration",
-        "clause": "Discover root .obsidian and alternate configuration folders and recursively read valid JSON object files without modifying vault content."
-      },
-      "checkpoint": "P2.1",
-      "owner": "vault-filesystem",
-      "mandatory": true,
-      "acceptance_criteria": "Read-only Rust discovery returns sorted root .obsidian and .obsidian-* directories and recursively discovered valid top-level JSON objects keyed by vault-relative paths, retains exact source bytes and unknown keys, skips symlinks and malformed or non-object JSON, and leaves the complete vault snapshot unchanged.",
-      "fixture_ids": [
-        "fixture:c09-configuration-inventory"
-      ],
-      "reference_versions": [
-        {
-          "kind": "vault-spec",
-          "version": "v0.3",
-          "sha256": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
-        }
-      ],
-      "applicable_platforms": [
-        "macOS",
-        "Windows",
-        "Linux"
-      ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
-      "blocker": null,
-      "gate_class": "implementation",
-      "decision_id": "D03",
-      "legacy_status": "implemented",
-      "legacy_evidence_paths": [
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-10-p2.1-foundation-slice.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-theme-contract.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-minimal-pair.json",
-        ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p3.3-minimal-pair-ci.json"
-      ],
-      "legacy_checkpoint": "P2.1",
-      "migration_phase": "R2",
-      "rust_owner": "crates/vault",
-      "mapping_status": "reviewed",
-      "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
-      "migration_disposition": "retained",
-      "migration_acceptance": "Implement confined, deterministic, read-only vault configuration discovery with exact JSON byte preservation and GitHub CI evidence; CSS/theme analysis and settings mapping remain separate acceptance work."
     },
     {
       "id": "C10",
@@ -10583,12 +10536,12 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-11T08:52:22+00:00",
+  "reviewed_at": "2026-10-11T09:10:56+00:00",
   "mapping_review": {
     "status": "complete",
-    "reviewed_requirement_count": 213,
+    "reviewed_requirement_count": 212,
     "legacy_requirement_count": 196,
-    "new_migration_requirement_count": 17,
+    "new_migration_requirement_count": 16,
     "r0_2_reviewed_requirement_count": 211,
     "post_r0_2_additions": [
       "MIG-016: maintain current, accurate documentation throughout migration and audit it at cutover."

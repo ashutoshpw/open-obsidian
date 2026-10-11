@@ -2645,7 +2645,11 @@ mod tests {
         let outside_path = temp.0.join("outside");
         fs::create_dir_all(vault_path.join(".obsidian/plugins")).unwrap();
         fs::create_dir_all(outside_path.join("plugin")).unwrap();
-        fs::write(vault_path.join(".obsidian/app.json"), b"{\"inside\":true}\n").unwrap();
+        fs::write(
+            vault_path.join(".obsidian/app.json"),
+            b"{\"inside\":true}\n",
+        )
+        .unwrap();
         let outside_bytes = b"{\"outside\":true}\n";
         fs::write(outside_path.join("linked.json"), outside_bytes).unwrap();
         fs::write(outside_path.join("plugin/data.json"), outside_bytes).unwrap();
@@ -2657,11 +2661,8 @@ mod tests {
         std::os::windows::fs::symlink_file(outside_path.join("linked.json"), &file_link).unwrap();
 
         let nested_directory_link = vault_path.join(".obsidian/plugins/linked-plugin");
-        let nested_directory_link_created = create_directory_symlink(
-            &outside_path.join("plugin"),
-            &nested_directory_link,
-        )
-        .is_ok();
+        let nested_directory_link_created =
+            create_directory_symlink(&outside_path.join("plugin"), &nested_directory_link).is_ok();
         let root_directory_link = vault_path.join(".obsidian-external");
         let root_directory_link_created =
             create_directory_symlink(&outside_path, &root_directory_link).is_ok();
@@ -2672,24 +2673,40 @@ mod tests {
 
         assert_eq!(discovered.folders, vec![".obsidian".to_owned()]);
         assert!(discovered.json.contains_key(".obsidian/app.json"));
-        assert!(!discovered.json.contains_key(".obsidian/plugins/linked.json"));
-        assert!(!discovered
-            .json
-            .contains_key(".obsidian/plugins/linked-plugin/data.json"));
-        assert_eq!(fs::read(outside_path.join("linked.json")).unwrap(), outside_bytes);
-        assert_eq!(fs::read(outside_path.join("plugin/data.json")).unwrap(), outside_bytes);
+        assert!(
+            !discovered
+                .json
+                .contains_key(".obsidian/plugins/linked.json")
+        );
+        assert!(
+            !discovered
+                .json
+                .contains_key(".obsidian/plugins/linked-plugin/data.json")
+        );
+        assert_eq!(
+            fs::read(outside_path.join("linked.json")).unwrap(),
+            outside_bytes
+        );
+        assert_eq!(
+            fs::read(outside_path.join("plugin/data.json")).unwrap(),
+            outside_bytes
+        );
         assert_eq!(before, vault.snapshot().unwrap());
         if nested_directory_link_created {
-            assert!(fs::symlink_metadata(nested_directory_link)
-                .unwrap()
-                .file_type()
-                .is_symlink());
+            assert!(
+                fs::symlink_metadata(nested_directory_link)
+                    .unwrap()
+                    .file_type()
+                    .is_symlink()
+            );
         }
         if root_directory_link_created {
-            assert!(fs::symlink_metadata(root_directory_link)
-                .unwrap()
-                .file_type()
-                .is_symlink());
+            assert!(
+                fs::symlink_metadata(root_directory_link)
+                    .unwrap()
+                    .file_type()
+                    .is_symlink()
+            );
         }
     }
 

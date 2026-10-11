@@ -99,10 +99,7 @@ fn discover_directory(
     Ok(())
 }
 
-fn confined_directory(
-    vault: &VaultRoot,
-    directory: &Path,
-) -> Result<Option<PathBuf>, VaultError> {
+fn confined_directory(vault: &VaultRoot, directory: &Path) -> Result<Option<PathBuf>, VaultError> {
     let metadata = fs::symlink_metadata(directory)?;
     if metadata.file_type().is_symlink() || !metadata.is_dir() {
         return Ok(None);
