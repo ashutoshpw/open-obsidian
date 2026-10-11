@@ -2059,12 +2059,12 @@ impl OpenObsidianApp {
             let revision = preview.revision_sha256.as_ref()?;
             let embed_state_is_clear =
                 self.note_embed_report.is_none() && self.note_embed_error.is_none();
-            let last_write_matches = self
-                .last_note_preview_write
-                .as_ref()
-                .map_or(embed_state_is_clear, |(path, written_revision)| {
+            let last_write_matches = self.last_note_preview_write.as_ref().map_or(
+                embed_state_is_clear,
+                |(path, written_revision)| {
                     path == &preview.relative_path && written_revision == revision
-                });
+                },
+            );
             last_write_matches.then(|| (preview.relative_path.clone(), revision.clone()))
         });
         self.vault_refresh_error = None;
@@ -7901,14 +7901,10 @@ mod tests {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("vault");
         let app_data_path = temporary.0.join("app-data");
-        let source = b"# Stable note\n\nThis read-only preview should survive an unchanged refresh.\n";
-        let app = source_preview_test_app(
-            &vault_path,
-            &app_data_path,
-            "Notes/Stable.md",
-            source,
-            &[],
-        );
+        let source =
+            b"# Stable note\n\nThis read-only preview should survive an unchanged refresh.\n";
+        let app =
+            source_preview_test_app(&vault_path, &app_data_path, "Notes/Stable.md", source, &[]);
         let mut harness = Harness::new_ui_state(
             |ui, app| {
                 app.poll_vault_refresh_task(ui);
