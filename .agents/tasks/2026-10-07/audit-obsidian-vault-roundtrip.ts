@@ -2801,6 +2801,23 @@ async function clickLinuxNoteNavigationButtonFromCiGeometry(
   return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${bounds.diagnostic}`;
 }
 
+async function clickMacOsNoteNavigationButtonFromCiGeometry(
+  child: ChildProcess,
+  direction: "previous" | "next",
+): Promise<string> {
+  await focusOpenObsidian(child);
+  const window = macOSOpenObsidianWindowBounds(child);
+  const macOSRunnerTitlebarHeightPoints = 32;
+  await postMacOsPointerEvent(window.x + 5, window.y + macOSRunnerTitlebarHeightPoints + 5, false);
+  const controlName = direction === "previous" ? "Previous note" : "Next note";
+  const diagnosticPrefix = `OpenObsidian CI ${direction}-note input:`;
+  const bounds = await readOpenObsidianCiButtonBounds(controlName, diagnosticPrefix);
+  const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
+  const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
+  await postMacOsPointerEvent(x, y, true);
+  return `CoreGraphics clicked ${controlName} at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
+}
+
 async function clickLinuxResolveButtonFromCiGeometry(windowId: string, authoredNotePath: string): Promise<string> {
   xdotool("windowfocus", "--sync", windowId);
   xdotool("mousemove", "--sync", "--window", windowId, "1", "1");
@@ -2952,12 +2969,14 @@ async function selectReferenceNoteForEmbedResolution(
     const navigationControl = direction === "previous" ? "Previous note" : "Next note";
     const navigationAction = process.platform === "linux"
       ? await clickLinuxNoteNavigationButtonFromCiGeometry(windowId, direction)
-      : await invokeNativeAccessibleControl(
-        child,
-        windowId,
-        navigationControl,
-        sortedNotePaths[selectedIndex],
-      );
+      : process.platform === "darwin"
+      ? await clickMacOsNoteNavigationButtonFromCiGeometry(child, direction)
+        : await invokeNativeAccessibleControl(
+          child,
+          windowId,
+          navigationControl,
+          sortedNotePaths[selectedIndex],
+        );
     actions.push(navigationAction);
     const expectedLog = `OpenObsidian CI note navigation: source=${source}, selected=${selectedPath}`;
     const navigationLog = await waitFor(
@@ -3862,6 +3881,14 @@ async function runReferenceExternalNoteRename(
     .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
     .map((entry) => entry.path)
     .sort((left, right) => left.localeCompare(right, "en"));
+  if (process.platform === "win32") {
+    renameReport.open_note_selector_action = await invokeNativeAccessibleControl(
+      child,
+      window.window_id,
+      "Note to inspect",
+      authoredNotePath,
+    );
+  }
   renameReport.select_note_action = await selectReferenceNoteForEmbedResolution(
     child,
     window.window_id,
