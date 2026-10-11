@@ -3707,3 +3707,39 @@ results, followed by the six required GitHub workflows. Parallel read-only
 research is underway for the next bounded candidate, a vault `hotkeys.json`
 data-only projection kept separate from app-owned shortcut dispatch. No local
 tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T12:48:18Z — R2.8.83 hotkeys source research and implementation started
+
+Two independent read-only reviews established that this repository has no vault
+`hotkeys.json` parser or fixture. The legacy loader recursively inventories
+configuration JSON but only adds a typed `appearance.json` projection; the
+app-owned shortcut catalog remains a separate concern. Obsidian's public API
+defines a hotkey as ordered modifier strings plus a key string and documents
+platform aliases; the Help page allows multiple combinations per command. The
+public docs do not specify the complete on-disk serialization, so the new
+fixture pins only the narrow supported shape and original JSON/bytes remain
+authoritative. Research and boundaries are in
+`evidence/r2.8.83-hotkeys-source-research.md`.
+
+The selected slice projects only root-level `hotkeys.json`, preserves root
+identity, empty command arrays, order, unknown command/modifier strings and
+raw malformed entries, and does not register or normalize imported bindings.
+Fixture-backed parser and vault assertions are being prepared. Tracker
+checkpoint SHA `4f798c2c78f109903d19d6d8d2921f3a3b538901` has passed inventory and plugin renderer;
+quality, desktop build, loaded plugins and Rust CI are still running. No local
+tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T12:52:09Z — R2.8.82 tracker checkpoint passed
+
+Tracker checkpoint SHA `4f798c2c78f109903d19d6d8d2921f3a3b538901` passed all six required
+documentation workflows: inventory, quality on all three OSes, desktop build
+on all three OSes, plugin renderer on all three OSes, loaded plugins on all
+three OSes, and Rust CI on Ubuntu, macOS, Windows and Rust 1.95. Exact run/job
+IDs and URLs are in `evidence/r2.8.82-tracker-checkpoint-4f798c2.json`. The path-filtered Obsidian
+round-trip passed on implementation SHA
+`8c1ae9f4300f113b54e3cc02073f7af2dda49514`; it was not expected on this
+documentation-only commit. No local executable validation was run.
+
+R2.8.83 source review found no apparent type/API issue; its root-path guard and
+fixture ordering match the inventory contract. The bounded source slice is
+ready for its exact-SHA seven-workflow CI push. C09 and C09.1 remain pending.

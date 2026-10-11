@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T12:44:04Z",
+  "updated_at": "2026-10-11T12:52:09Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8c1ae9f4300f113b54e3cc02073f7af2dda49514",
-  "current_milestone": "R2.8.82",
-  "next_action": "Commit and push the R2.8.82 exact-SHA CI evidence as a documentation-only tracker checkpoint and validate all six required GitHub workflows. Then complete read-only source-shape research for R2.8.83 hotkeys.json projection; keep C09 and C09.1 pending.",
-  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five workflows but failed Rust CI and the round-trip preview build due to a borrowed CSS byte buffer being moved before analysis completed; Ubuntu also reported formatting changes. Follow-up SHA fe57d3061d0ee379846b1f8e07337a1a2029b552 passed five workflows, passed macOS and Windows round-trip, but Rust CI failed on a selector-order fixture mismatch and one remaining Ubuntu formatting change; the Ubuntu round-trip could not find a visible window with xdotool. SHA b7ccff97711f8c411bd3c39dc6c43726128b7ea3 passed six workflows, including all three round-trip jobs and Rust 1.95, but stable Rust CI failed Clippy on macOS, Ubuntu and Windows due to a let-and-return lint in selector_has_class_word. Exact run/job results are recorded in the attempt evidence. The direct-return Clippy correction is prepared locally. No local executable validation was run. R2.8.82 implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514 passed all seven required workflows, including the Windows round-trip on GitHub rerun attempt 2; exact run/job results are in evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. No local executable validation was run. The documentation-only tracker checkpoint is next.",
+  "last_reconciled_head": "4f798c2c78f109903d19d6d8d2921f3a3b538901",
+  "current_milestone": "R2.8.83",
+  "next_action": "Commit and push the R2.8.83 hotkeys.json data-only projection, source research and completed R2.8.82 tracker evidence; inspect all seven exact-SHA source workflows. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five workflows but failed Rust CI and the round-trip preview build due to a borrowed CSS byte buffer being moved before analysis completed; Ubuntu also reported formatting changes. Follow-up SHA fe57d3061d0ee379846b1f8e07337a1a2029b552 passed five workflows, passed macOS and Windows round-trip, but Rust CI failed on a selector-order fixture mismatch and one remaining Ubuntu formatting change; the Ubuntu round-trip could not find a visible window with xdotool. SHA b7ccff97711f8c411bd3c39dc6c43726128b7ea3 passed six workflows, including all three round-trip jobs and Rust 1.95, but stable Rust CI failed Clippy on macOS, Ubuntu and Windows due to a let-and-return lint in selector_has_class_word. Exact run/job results are recorded in the attempt evidence. The direct-return Clippy correction is prepared locally. No local executable validation was run. R2.8.82 implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514 passed all seven required workflows, including the Windows round-trip on GitHub rerun attempt 2; exact run/job results are in evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. No local executable validation was run. The documentation-only tracker checkpoint is next. Documentation-only tracker checkpoint SHA 4f798c2c78f109903d19d6d8d2921f3a3b538901 passed all six required workflows, including Rust CI across Ubuntu, macOS, Windows and Rust 1.95. Exact run/job results are in evidence/r2.8.82-tracker-checkpoint-4f798c2.json. The path-filtered round-trip passed on implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -304,7 +304,8 @@
     "R2.8.80 tracker evidence checkpoint SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation-triggered workflows, including Rust 1.95 and Ubuntu/macOS/Windows Rust CI. The path-filtered Obsidian round-trip remains covered by implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. Evidence: evidence/r2.8.80-tracker-checkpoint-21c801a.json.",
     "R2.8.81 app-owned per-vault data path preparation was accepted as a partial C09 app-metadata boundary slice on exact source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e. All seven required GitHub Actions workflows passed, including Rust 1.95 and the Linux/macOS/Windows Obsidian round-trip. The first attempt's Clippy issue was corrected, and its transient Electron and UI automation failures did not reproduce. Evidence: evidence/r2.8.81-c09-app-data-separation-fb51058.json. C09 and C09.1 remain pending; no local executable validation was run.",
     "R2.8.81 tracker checkpoint SHA 5587460c9adb5858562bbb21e2fe059e989f34fd passed all six documentation workflows, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. Exact run/job IDs are recorded in evidence/r2.8.81-tracker-checkpoint-5587460.json; the path-filtered Obsidian round-trip remains covered by implementation SHA fb5105853f7e7a34ea64acc5c095e5358e44791e.",
-    "R2.8.82 accepted as a partial C09 settings/style slice on exact implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514; all seven required GitHub workflows passed, with the initial Windows round-trip UIA issue passing on GitHub same-SHA retry attempt 2. Evidence: evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. C09 and C09.1 remain pending; no local executable validation was run."
+    "R2.8.82 accepted as a partial C09 settings/style slice on exact implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514; all seven required GitHub workflows passed, with the initial Windows round-trip UIA issue passing on GitHub same-SHA retry attempt 2. Evidence: evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. C09 and C09.1 remain pending; no local executable validation was run.",
+    "R2.8.82 tracker checkpoint SHA 4f798c2c78f109903d19d6d8d2921f3a3b538901 passed all six documentation workflows; Rust CI passed on Ubuntu, macOS, Windows and Rust 1.95. The path-filtered round-trip was covered by implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514. Evidence: evidence/r2.8.82-tracker-checkpoint-4f798c2.json. No local executable validation was run."
   ],
   "ci_results": [
     {
@@ -28093,7 +28094,7 @@
       "implementation_sha": "8c1ae9f4300f113b54e3cc02073f7af2dda49514",
       "evidence": "evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json",
       "tracker_checkpoint_validation": {
-        "status": "pending",
+        "status": "complete",
         "required_workflows": [
           "Rust migration inventory",
           "OpenObsidian quality",
@@ -28102,12 +28103,79 @@
           "OpenObsidian loaded plugin workflows",
           "OpenObsidian Rust CI"
         ],
-        "path_filtered_workflow": "Obsidian vault round-trip passed on implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514; it is not expected to trigger for this documentation-only checkpoint.",
+        "path_filtered_workflow": "Obsidian vault round-trip passed on implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514 and is not expected to trigger for this documentation-only tracker checkpoint.",
         "prior_checkpoint": {
           "validated_sha": "51b523a38cbacba3f0b03d718daacd9e086156c6",
           "evidence": "evidence/r2.8.81-tracker-checkpoint-51b523a.json"
+        },
+        "validated_sha": "4f798c2c78f109903d19d6d8d2921f3a3b538901",
+        "workflow_runs": {
+          "inventory": 38140428224,
+          "quality": 38140428256,
+          "desktop-build": 38140428215,
+          "plugin-renderer": 38140428231,
+          "loaded-plugins": 38140428309,
+          "rust-ci": 38140428237
+        },
+        "evidence": "evidence/r2.8.82-tracker-checkpoint-4f798c2.json",
+        "job_conclusions": {
+          "inventory": {
+            "114473007402": "success"
+          },
+          "quality": {
+            "114473007641": "success",
+            "114473007716": "success",
+            "114473007776": "success"
+          },
+          "desktop-build": {
+            "114473007655": "success",
+            "114473007791": "success",
+            "114473007885": "success"
+          },
+          "plugin-renderer": {
+            "114473007663": "success",
+            "114473007810": "success",
+            "114473007820": "success"
+          },
+          "loaded-plugins": {
+            "114473007915": "success",
+            "114473008036": "success",
+            "114473008228": "success"
+          },
+          "rust-ci": {
+            "114473007495": "success",
+            "114473007721": "success",
+            "114473007751": "success",
+            "114473008020": "success"
+          }
         }
       }
+    },
+    "R2.8.83": {
+      "status": "in_progress",
+      "starting_sha": "4f798c2c78f109903d19d6d8d2921f3a3b538901",
+      "scope": "Add a read-only, data-only projection of root-level vault hotkeys.json files, keyed by configuration-relative path. Preserve command IDs, binding order, modifier strings and key strings; retain the complete source object and bytes; keep these imported vault bindings separate from OpenObsidian app shortcut dispatch.",
+      "acceptance": [
+        "Only <configuration-folder>/hotkeys.json is projected; nested plugin JSON remains available in the generic JSON inventory but is not treated as vault-global hotkeys.",
+        "Each root configuration folder has an independent projection keyed by its normalized vault-relative path.",
+        "Command IDs whose values are arrays project to ordered bindings; empty arrays remain observable, modifier order/spelling and key strings remain exact, and unknown command IDs/modifier names are retained without platform normalization.",
+        "Malformed command values and malformed binding entries are omitted only from the typed view; the parsed source object and exact file bytes retain all unknown and malformed data.",
+        "Projection does not merge default bindings, validate commands against installed plugins, resolve keyboard layouts, detect conflicts, register bindings, or route vault commands through app-owned shortcut dispatch.",
+        "Fixture-backed document and vault checks cover multiple roots, nested plugin JSON, opaque IDs, multiple ordered bindings, empty arrays, platform modifier aliases, unknown values, malformed entries, exact raw-byte/object preservation and unchanged vault snapshots.",
+        "All seven required GitHub Actions workflows pass on the exact source SHA, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 plus the path-triggered Obsidian round-trip. No local executable validation is allowed.",
+        "Accept only as a partial C09 settings slice; keep C09 and C09.1 pending."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "source_research": "evidence/r2.8.83-hotkeys-source-research.md",
+      "next_action": "The read-only implementation review found no apparent Rust type/API or scoping issue. Commit and push the R2.8.83 source and fixture slice with the completed R2.8.82 tracker evidence, then inspect all seven exact-SHA GitHub Actions workflows."
     }
   },
   "ci_preparation": {

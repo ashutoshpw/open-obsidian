@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "fixture:c09-configuration-inventory",
   "covers": ["C09"],
-  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project supported appearance settings without following symlinks or creating files.",
+  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project supported appearance settings and data-only hotkey overrides without following symlinks or creating files.",
   "directories": [
     ".obsidian",
     ".obsidian-broken",
@@ -35,6 +35,14 @@
     {
       "relative_path": ".obsidian/plugins/sample/data.json",
       "source": "{\"enabled\":false,\"pluginFutureOption\":\"keep\"}\n"
+    },
+    {
+      "relative_path": ".obsidian/hotkeys.json",
+      "source": "{\"editor:open-settings\":[{\"modifiers\":[\"Mod\",\"Shift\"],\"key\":\"K\"},{\"modifiers\":[\"Ctrl\",\"Meta\",\"Alt\"],\"key\":\"ArrowDown\"}],\"plugin:quick-action\":[],\"future:unknown-modifier\":[{\"modifiers\":[\"Hyper\"],\"key\":\"PageDown\",\"futureBindingField\":true},{\"modifiers\":[\"Shift\",7],\"key\":\"Broken\"},{\"modifiers\":[\"Alt\"],\"key\":\"ArrowUp\"}],\"malformed-command\":\"not-an-array\"}\n"
+    },
+    {
+      "relative_path": ".obsidian/plugins/sample/hotkeys.json",
+      "source": "{\"plugin:nested-file\":[{\"modifiers\":[\"Ctrl\"],\"key\":\"N\"}]}\n"
     },
     {
       "relative_path": ".obsidian/data.bin",
@@ -103,6 +111,10 @@
     {
       "relative_path": ".obsidian-mobile/appearance.json",
       "source": "{\"mode\":\" dark \",\"themeMode\":\"light\",\"colorScheme\":\"system\",\"theme\":\"Northstar\",\"cssTheme\":\" Custom \",\"enabledCssSnippets\":[\" Minimal \",\"Readable\",\"\",\"Minimal\",9],\"accentColor\":\" #3366ff \",\"baseFontSize\":15,\"futureAppearanceKey\":7}\n"
+    },
+    {
+      "relative_path": ".obsidian-mobile/hotkeys.json",
+      "source": "{\"editor:open-settings\":[{\"modifiers\":[\"Shift\"],\"key\":\"K\"}],\"editor:other\":[]}\n"
     },
     {
       "relative_path": ".obsidianx/decoy.json",
@@ -205,13 +217,58 @@
       }
     }
   ],
+  "hotkeys_cases": [
+    {
+      "source": {
+        "editor:open-settings": [
+          {"modifiers": ["Mod", "Shift"], "key": "K"},
+          {"modifiers": ["Ctrl", "Meta", "Alt"], "key": "ArrowDown"}
+        ],
+        "plugin:quick-action": [],
+        "future:unknown-modifier": [
+          {"modifiers": ["Hyper"], "key": "PageDown", "futureBindingField": true},
+          {"modifiers": ["Shift", 7], "key": "Broken"},
+          {"modifiers": ["Alt"], "key": "ArrowUp"}
+        ],
+        "malformed-command": "not-an-array"
+      },
+      "expected": {
+        "editor:open-settings": [
+          {"modifiers": ["Mod", "Shift"], "key": "K"},
+          {"modifiers": ["Ctrl", "Meta", "Alt"], "key": "ArrowDown"}
+        ],
+        "plugin:quick-action": [],
+        "future:unknown-modifier": [
+          {"modifiers": ["Hyper"], "key": "PageDown"},
+          {"modifiers": ["Alt"], "key": "ArrowUp"}
+        ]
+      }
+    },
+    {
+      "source": {
+        "editor:open-settings": [{"modifiers": ["Shift"], "key": "K"}],
+        "editor:other": []
+      },
+      "expected": {
+        "editor:open-settings": [{"modifiers": ["Shift"], "key": "K"}],
+        "editor:other": []
+      }
+    }
+  ],
   "expected": {
     "folders": [".obsidian", ".obsidian-broken", ".obsidian-mobile"],
     "json_paths": [
       ".obsidian-mobile/appearance.json",
+      ".obsidian-mobile/hotkeys.json",
       ".obsidian/app.json",
+      ".obsidian/hotkeys.json",
       ".obsidian/plugins/sample/data.json",
+      ".obsidian/plugins/sample/hotkeys.json",
       ".obsidian/themes/Solarized/manifest.json"
+    ],
+    "hotkeys_paths": [
+      ".obsidian-mobile/hotkeys.json",
+      ".obsidian/hotkeys.json"
     ],
     "style_assets": [
       {

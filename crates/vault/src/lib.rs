@@ -2,10 +2,11 @@
 
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
-    AppearanceMode, AppearanceSettings, LinkKind, LinkReference, LinkRenameAction, LinkResolution,
-    LinkResolutionStatus, LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis,
-    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, MergeConflict, MergeStatus,
-    ThreeWayMergeResult, TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
+    AppearanceMode, AppearanceSettings, HotkeyBinding, HotkeysSettings, LinkKind, LinkReference,
+    LinkRenameAction, LinkResolution, LinkResolutionStatus, LinkSubpathSlice,
+    LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
+    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, ThreeWayMergeResult,
+    TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
@@ -2095,7 +2096,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        AppearanceMode, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+        AppearanceMode, HotkeyBinding, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
         MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason, VaultError,
         VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultStyleAssetKind,
         VaultWriteRequest, sha256_hex,
@@ -2624,6 +2625,77 @@ mod tests {
             discovered.json[".obsidian/app.json"].object["unknownFutureKey"]["keep"],
             serde_json::json!([1, 2])
         );
+        let expected_hotkeys_paths = expected["hotkeys_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|path| path.as_str().unwrap().to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            discovered.hotkeys.keys().cloned().collect::<Vec<_>>(),
+            expected_hotkeys_paths
+        );
+        let desktop_hotkeys = &discovered.hotkeys[".obsidian/hotkeys.json"];
+        assert_eq!(
+            desktop_hotkeys.command_bindings["editor:open-settings"],
+            vec![
+                HotkeyBinding {
+                    modifiers: vec!["Mod".to_owned(), "Shift".to_owned()],
+                    key: "K".to_owned(),
+                },
+                HotkeyBinding {
+                    modifiers: vec![
+                        "Ctrl".to_owned(),
+                        "Meta".to_owned(),
+                        "Alt".to_owned()
+                    ],
+                    key: "ArrowDown".to_owned(),
+                },
+            ]
+        );
+        assert!(desktop_hotkeys.command_bindings["plugin:quick-action"].is_empty());
+        assert_eq!(
+            desktop_hotkeys.command_bindings["future:unknown-modifier"][0],
+            HotkeyBinding {
+                modifiers: vec!["Hyper".to_owned()],
+                key: "PageDown".to_owned(),
+            }
+        );
+        assert_eq!(
+            desktop_hotkeys.command_bindings["future:unknown-modifier"][1],
+            HotkeyBinding {
+                modifiers: vec!["Alt".to_owned()],
+                key: "ArrowUp".to_owned(),
+            }
+        );
+        assert!(!desktop_hotkeys
+            .command_bindings
+            .contains_key("malformed-command"));
+        assert_eq!(
+            discovered.json[".obsidian/hotkeys.json"].object["future:unknown-modifier"][0]
+                ["futureBindingField"],
+            true
+        );
+        assert_eq!(
+            discovered.json[".obsidian/hotkeys.json"].object["future:unknown-modifier"][1]
+                ["modifiers"][1],
+            7
+        );
+        let mobile_hotkeys = &discovered.hotkeys[".obsidian-mobile/hotkeys.json"];
+        assert_eq!(
+            mobile_hotkeys.command_bindings["editor:open-settings"],
+            vec![HotkeyBinding {
+                modifiers: vec!["Shift".to_owned()],
+                key: "K".to_owned(),
+            }]
+        );
+        assert!(mobile_hotkeys.command_bindings["editor:other"].is_empty());
+        assert!(!discovered
+            .hotkeys
+            .contains_key(".obsidian/plugins/sample/hotkeys.json"));
+        assert!(discovered
+            .json
+            .contains_key(".obsidian/plugins/sample/hotkeys.json"));
         let appearance = &discovered.appearance[".obsidian-mobile/appearance.json"];
         assert_eq!(appearance.mode, AppearanceMode::Dark);
         assert_eq!(appearance.css_theme.as_deref(), Some("Custom"));
