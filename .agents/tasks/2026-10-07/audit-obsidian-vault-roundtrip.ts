@@ -2215,7 +2215,9 @@ async function clickVisibleOpenObsidianControl(
       xFraction = (anchor.left - 58 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else if (controlName === "Note to inspect") {
-      xFraction = (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
+      xFraction = anchorPhrase === "Nested"
+        ? (anchor.left - 55 * scaleX) / ocrSize.width
+        : (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
       const verticalControlOffset = controlName === "Close source preview"
@@ -2767,7 +2769,7 @@ async function runReferenceExternalNoteRefresh(
     refreshReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
   }, (capture) => (
-    ocrTextContainsPhrase(capture.ocrText, "Note list refreshed")
+    ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
     && new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText)
   ), 30_000);
   refreshReport.refreshed_list_screenshot = relative(reportDirectory, refreshedList.pngPath);
@@ -2778,7 +2780,7 @@ async function runReferenceExternalNoteRefresh(
     child,
     window.window_id,
     "Note to inspect",
-    "Previous note",
+    "Nested",
   );
   const visibleMenu = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
   refreshReport.selector_menu_screen_ocr = visibleMenu.ocrText.slice(0, 4_000);

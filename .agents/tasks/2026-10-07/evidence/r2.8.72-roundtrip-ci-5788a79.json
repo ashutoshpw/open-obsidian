@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T02:19:08Z",
+  "milestone": "R2.8.72",
+  "source_sha": "5788a79c46e2aeb56abf34590754ccc6cb789e53",
+  "source_commit": "[rust R2.8.72] Retry refresh control after watcher updates",
+  "required_workflows": [
+    {"name": "Rust migration inventory", "run_id": 38104461259, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461259", "conclusion": "success", "jobs": [{"name": "inventory", "job_id": 114366889392, "conclusion": "success"}]},
+    {"name": "OpenObsidian plugin renderer matrix", "run_id": 38104461267, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461267", "conclusion": "success", "jobs": [{"name": "macos-latest", "job_id": 114366889676, "conclusion": "success"}, {"name": "windows-latest", "job_id": 114366889823, "conclusion": "success"}, {"name": "ubuntu-latest", "job_id": 114366889872, "conclusion": "success"}]},
+    {"name": "OpenObsidian loaded plugin workflows", "run_id": 38104461274, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461274", "conclusion": "success", "jobs": [{"name": "windows-latest", "job_id": 114366889756, "conclusion": "success"}, {"name": "macos-latest", "job_id": 114366889849, "conclusion": "success"}, {"name": "ubuntu-latest", "job_id": 114366889934, "conclusion": "success"}]},
+    {"name": "OpenObsidian quality", "run_id": 38104461291, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461291", "conclusion": "success", "jobs": [{"name": "macos-latest", "job_id": 114366890326, "conclusion": "success"}, {"name": "windows-latest", "job_id": 114366890539, "conclusion": "success"}, {"name": "ubuntu-latest", "job_id": 114366890542, "conclusion": "success"}]},
+    {"name": "OpenObsidian desktop build", "run_id": 38104461139, "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461139", "conclusion": "success", "jobs": [{"name": "ubuntu-latest", "job_id": 114366889260, "conclusion": "success"}, {"name": "macos-latest", "job_id": 114366889351, "conclusion": "success"}, {"name": "windows-latest", "job_id": 114366889363, "conclusion": "success"}]},
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38104461384,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461384",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 114366890002, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114366890093, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 114366890116, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38104461234,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461234",
+      "conclusion": "failure",
+      "reference_app_version": "Obsidian 1.14.4",
+      "jobs": [
+        {
+          "name": "Linux",
+          "job_id": 114366889744,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11689325695,
+            "name": "obsidian-vault-roundtrip-Linux-5788a79c46e2aeb56abf34590754ccc6cb789e53",
+            "size_in_bytes": 3065089,
+            "digest": "sha256:0417293a4818a61d8e53d7016a68127576ac7d4b9384d990d12a52c60ffd51f5"
+          },
+          "finding": "Watcher debounce, retry, and the manual refresh request passed. The run stopped when OCR read the refreshed status as 'Nove list refreshedt', which did not satisfy the exact status phrase."
+        },
+        {
+          "name": "Windows",
+          "job_id": 114366889729,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11689023733,
+            "name": "obsidian-vault-roundtrip-Windows-5788a79c46e2aeb56abf34590754ccc6cb789e53",
+            "size_in_bytes": 2717195,
+            "digest": "sha256:fa328d201cc44cedeff73a4a6afa48d98ad08ae9ebda0b22f826663b92bbd906"
+          },
+          "finding": "UI Automation invoked the manual refresh and the worker succeeded. The run stopped when OCR read the refreshed status as 'jote list refreshed', which did not satisfy the exact status phrase."
+        },
+        {
+          "name": "macOS",
+          "job_id": 114366889580,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11689133140,
+            "name": "obsidian-vault-roundtrip-macOS-5788a79c46e2aeb56abf34590754ccc6cb789e53",
+            "size_in_bytes": 3655430,
+            "digest": "sha256:114c76d80166e0f83f49651f78efc4207e2ae53cc041097b6d50405e1a679833"
+          },
+          "finding": "The corrected pointer triggered a successful manual refresh and OCR recognized the refreshed count. The next control action timed out because OCR did not recognize the low-contrast 'Previous note' label."
+        }
+      ]
+    }
+  ],
+  "next_action": "Use the visible ASCII note name 'Nested' as the note-selector fallback anchor and accept the refreshed status with bounded fuzzy OCR matching; validate all OSes on a new exact SHA."
+}
