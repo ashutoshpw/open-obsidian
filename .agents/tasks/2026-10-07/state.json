@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T18:19:44+00:00",
+  "updated_at": "2026-10-11T18:40:00+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bdfe5c18c44ed25fcfabcad256624f8db51da2c0",
+  "last_reconciled_head": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
   "current_milestone": "R2.8.90",
-  "next_action": "Push this documentation-only reconciliation and confirm its six required workflows on the exact SHA. Then push the R2.8.90 VaultSession Canvas edit slice to origin/main and inspect all seven required exact-SHA workflows.",
-  "push_status": "R2.8.89 source SHA c74d27860f7c60459373887bf85caec2c3af2182 and tracker checkpoint SHA bdfe5c18c44ed25fcfabcad256624f8db51da2c0 are pushed to origin/main. All six tracker checkpoint workflows passed on attempt 1; exact runs, jobs, artifacts and links are recorded in evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json. R2.8.90 source changes are being prepared separately and have not been pushed.",
+  "next_action": "Commit and push the R2.8.90 VaultSession Canvas edit slice to origin/main. Inspect all seven required workflows on the exact pushed SHA before accepting it.",
+  "push_status": "R2.8.89 tracker reconciliation SHA bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618 is pushed to origin/main. All six documentation workflows passed; quality required a same-SHA attempt-2 retry after its Ubuntu Electron retrieval-boundary timeout. Exact run/job IDs and artifact links/digests are in evidence/r2.8.89-tracker-checkpoint-bf03563.json. R2.8.90 source changes are in the working tree and not yet pushed.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -314,7 +314,8 @@
     "R2.8.86 preview-refresh preservation was accepted on exact source SHA a7d718c9d216df26776c2022a29d6d9e1babb66d after all seven required workflows passed, including the three-OS Obsidian round-trip. C01/C01.2 remain pending. Exact run/job IDs and artifact digests are in evidence/r2.8.86-attempt-3-a7d718c.json.",
     "R2.8.87 accepted on exact source SHA 8891393ff5955a1797a8d6626c2d4d17d6509552: all seven required GitHub Actions workflows passed, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 and the Obsidian 1.14.4 round-trip on all three platforms. Quality attempt 1 had a transient macOS retrieval-boundary timeout; attempt 2 passed on the same SHA. Exact run/job IDs are in evidence/r2.8.87-attempt-3-8891393.json. C09 and C09.1 remain pending until Rust discovery/enablement callsites use and surface the deny policy. No local executable validation was used for acceptance.",
     "R2.8.87 documentation-only tracker checkpoint SHA ce59d7399caf58d498529dd29794c2c2c44c93dd passed all six required workflows on the first attempt, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. Exact run/job IDs are in evidence/r2.8.87-tracker-checkpoint-ce59d73.json. The path-filtered round-trip remains covered by implementation SHA 8891393ff5955a1797a8d6626c2d4d17d6509552.",
-    "R2.8.89 tracker checkpoint SHA bdfe5c18c44ed25fcfabcad256624f8db51da2c0 passed all six documentation workflows on attempt 1. Exact run/job IDs and artifact URLs/digests are in evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json; the path-filtered Obsidian round-trip remains covered by accepted source SHA c74d27860f7c60459373887bf85caec2c3af2182."
+    "R2.8.89 tracker checkpoint SHA bdfe5c18c44ed25fcfabcad256624f8db51da2c0 passed all six documentation workflows on attempt 1. Exact run/job IDs and artifact URLs/digests are in evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json; the path-filtered Obsidian round-trip remains covered by accepted source SHA c74d27860f7c60459373887bf85caec2c3af2182.",
+    "R2.8.89 tracker reconciliation SHA bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618 passed all six documentation workflows. Quality attempt 1 failed only the Ubuntu Electron retrieval-boundary audit and passed on same-SHA attempt 2; other five workflows passed on attempt 1. Exact run/job IDs and artifact links/digests are in evidence/r2.8.89-tracker-checkpoint-bf03563.json."
   ],
   "ci_results": [
     {
@@ -18371,6 +18372,174 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326313/job/114537654119"
         }
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38163383300,
+      "head_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383300",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383300/job/114540798419"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38163383304,
+      "head_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383304",
+      "attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383304/job/114541183923"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383304/job/114541184570"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383304/job/114541184968"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38163383158,
+      "head_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383158",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383158/job/114540798246"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383158/job/114540798255"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383158/job/114540798081"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38163383265,
+      "head_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383265",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383265/job/114540798632"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383265/job/114540798626"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383265/job/114540798457"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38163383152,
+      "head_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383152",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383152/job/114540798187"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383152/job/114540798302"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383152/job/114540798347"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38163383291,
+      "head_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383291",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383291/job/114540798480"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383291/job/114540798429"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383291/job/114540798489"
+        },
+        {
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383291/job/114540798245"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -29587,33 +29756,33 @@
           "correction": "Applied the three rustfmt layout changes reported on attempt 1; no behavior changed. The pure document-layer edit is accepted; persisted Canvas editing and explicit note creation remain future slices."
         }
       ],
-      "next_action": "R2.8.89 source and tracker checkpoints are accepted. R2.8.90 is in progress as a persisted, revision-checked Canvas text edit through VaultSession; keep C06 and C06.1 pending.",
-      "tracker_checkpoint_sha": "bdfe5c18c44ed25fcfabcad256624f8db51da2c0",
+      "next_action": "R2.8.89 source and documentation checkpoints are accepted. R2.8.90 source is ready to push as a persisted, revision-checked Canvas text edit through VaultSession; keep C06 and C06.1 pending.",
+      "tracker_checkpoint_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
       "tracker_checkpoint_outcome": "accepted",
-      "tracker_checkpoint_evidence": "evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json",
-      "previous_tracker_checkpoint_sha": "a1600c8f918f4e540dcb0b66b894986aab375a2f",
-      "previous_tracker_checkpoint_evidence": "evidence/r2.8.88-tracker-checkpoint-a1600c8.json",
+      "tracker_checkpoint_evidence": "evidence/r2.8.89-tracker-checkpoint-bf03563.json",
+      "previous_tracker_checkpoint_sha": "bdfe5c18c44ed25fcfabcad256624f8db51da2c0",
+      "previous_tracker_checkpoint_evidence": "evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json",
       "tracker_checkpoint_result": {
-        "tracker_sha": "bdfe5c18c44ed25fcfabcad256624f8db51da2c0",
+        "tracker_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
         "outcome": "accepted",
-        "evidence": "evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json",
+        "evidence": "evidence/r2.8.89-tracker-checkpoint-bf03563.json",
         "workflow_runs": {
-          "inventory": 38162326307,
-          "quality": 38162326292,
-          "desktop_build": 38162326331,
-          "plugin_renderer": 38162326343,
-          "loaded_plugins": 38162326324,
-          "rust_ci": 38162326313
+          "inventory": 38163383300,
+          "quality": 38163383304,
+          "desktop_build": 38163383158,
+          "plugin_renderer": 38163383265,
+          "loaded_plugins": 38163383152,
+          "rust_ci": 38163383291
         },
         "roundtrip_implementation_sha": "c74d27860f7c60459373887bf85caec2c3af2182"
       }
     },
     "R2.8.90": {
       "status": "in_progress",
-      "starting_sha": "bdfe5c18c44ed25fcfabcad256624f8db51da2c0",
-      "scope": "Persist revision-checked Canvas text-card edits through VaultSession using the Canvas document API and journaled vault write. This slice does not create notes or add a UI action.",
+      "starting_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+      "scope": "Persist revision-checked Canvas text-card edits through VaultSession using the Canvas document API and journaled vault write. Normalize portable path separators consistently for reads and writes. This slice does not create notes or add a UI action.",
       "acceptance": [
-        "A caller-observed Canvas SHA-256 is checked before parsing/editing and passed unchanged to the journaled write, so stale content and read/write races are rejected by the vault boundary.",
+        "A caller-observed Canvas SHA-256 is checked before parsing/editing and passed unchanged to the journaled write, so stale content and read/write races are rejected by the vault boundary. Session read and read-preview paths normalize portable separators consistently with journaled writes.",
         "A fixture-backed edit persists only the selected text value while preserving unknown Canvas fields, sibling nodes, and unrelated note bytes; editing never creates a Markdown note.",
         "Missing, duplicate, non-text, malformed, invalid-shape, stale-revision, and outside-root edits return typed errors without changing the Canvas or creating a note.",
         "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 and the Obsidian round-trip on all three platforms.",
@@ -29634,7 +29803,7 @@
       ],
       "attempts": [],
       "implementation_sha": null,
-      "push_status": "Source changes are in the working tree and will be pushed as a separate implementation commit after the tracker checkpoint reconciliation."
+      "push_status": "Source changes are in the working tree and will be pushed as a separate implementation commit now that the exact-SHA documentation checkpoint workflows have settled."
     }
   },
   "ci_preparation": {

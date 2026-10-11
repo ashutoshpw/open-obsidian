@@ -1301,6 +1301,16 @@
       "fixture_reader": "crates/doc"
     },
     {
+      "path": "fixtures/c06-text-card-vault.json",
+      "sha256": "924d83ca8b44b65fecb6edff4f3fcf20b6528ca8ed0bbe31fead8123171bce54",
+      "rust_owner": "crates/engine",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "C06.1 VaultSession fixture covers persisted revision-checked Canvas text edits, semantic unknown-field preservation, stale/malformed/invalid/path failures, and no note creation.",
+      "fixture_reader": "crates/engine"
+    },
+    {
       "path": "fixtures/delivery-workflows.json",
       "sha256": "244c13d01f27b0e1dae57f8bb65c7f1dce211e4d87259c041b2df8f001e3ae39",
       "rust_owner": "xtask",
@@ -2387,7 +2397,7 @@
     ".agents/tasks/2026-09-09/01-init/references/ux-accessibility/index.md": "7f9d020434c29fc661a7ebe500f5e93dc3721477e358b54675446719f99f0ccd",
     ".agents/tasks/2026-09-09/01-init/references/vault-compatibility/index.md": "ba0aeafa795b36ce0d0756d847386aeb068f5811187f5b267ba1fc2e90a79b8c"
   },
-  "reviewed_at": "2026-10-07T18:43:14.593997+00:00",
+  "reviewed_at": "2026-10-11T18:40:00+00:00",
   "mapping_policy": "Source and acceptance rows were manually reconciled to Rust responsibility boundaries. Test/fixture owners name their semantic target; test_harness/fixture_reader name the shared testkit. Mapping does not imply implementation or acceptance.",
   "target_architecture": {
     "crates/doc": "Lossless Markdown/YAML/link/Canvas/Bases document models and source transforms.",

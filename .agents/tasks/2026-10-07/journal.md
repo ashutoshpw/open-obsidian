@@ -1529,18 +1529,30 @@ all passed on attempt 1. Exact job IDs, artifact IDs, links, and SHA-256 digests
 are in `evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json`; the path-filtered
 Obsidian round-trip remains covered by accepted source SHA
 `c74d27860f7c60459373887bf85caec2c3af2182`. This checkpoint reconciliation is
-being committed separately from the R2.8.90 source slice.
+recorded separately from the R2.8.90 source slice.
+
+The follow-up R2.8.89 documentation checkpoint was pushed on exact SHA
+`bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618`. Inventory, desktop build, plugin
+renderer, loaded-plugin workflows, and Rust CI passed on attempt 1. Quality
+attempt 1 failed only the Ubuntu Electron retrieval-boundary check; all three
+quality jobs passed on same-SHA attempt 2. Exact run/job IDs, artifacts, links,
+and digests are in
+[`evidence/r2.8.89-tracker-checkpoint-bf03563.json`](evidence/r2.8.89-tracker-checkpoint-bf03563.json).
+The path-filtered Obsidian round-trip remains covered by accepted source SHA
+`c74d27860f7c60459373887bf85caec2c3af2182`.
 
 R2.8.90 begins as a narrow persisted text-card edit through `VaultSession`:
 check the caller-observed SHA-256, use the document-layer edit, and pass that
-same SHA to the journaled write. Fixture coverage now includes semantic
+same SHA to the journaled write. Session reads normalize portable path
+separators to the same form used by journaled writes; a parallel source review
+found and prompted a fixture case for the Unix backslash-alias mismatch. Fixture coverage now includes semantic
 preservation, untouched note bytes, no note creation, invalid node IDs/types,
-stale revisions, malformed JSON, invalid Canvas shape, and an exact outside-root
-path error. Read-only parallel reviews found no obvious API/type blocker and
-prompted the invalid-shape and typed traversal assertions. C06/C06.1 remain
+stale revisions, malformed JSON, invalid Canvas shape, and the exact `InvalidPath`
+error for `..` traversal. Read-only parallel reviews found no obvious API/type
+blocker and prompted the invalid-shape and typed traversal assertions. C06/C06.1 remain
 pending until native editing and the explicit note-creation action are complete.
-The source changes are not yet pushed; GitHub Actions will provide all phase
-validation.
+The source slice is prepared for its own small commit and push; GitHub Actions
+will provide all phase validation.
 
 Process exception: during source review, `git diff --check` was inadvertently
 run locally as a whitespace check. No local tests, builds, formatters, Clippy,

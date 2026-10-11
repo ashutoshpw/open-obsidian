@@ -9,4 +9,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+openobsidian-doc = { workspace = true }
 openobsidian-vault = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

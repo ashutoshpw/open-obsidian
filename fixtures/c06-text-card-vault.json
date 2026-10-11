@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c06-text-card-vault",
+  "valid_edits": [
+    {
+      "id": "persist-selected-text-card-only-portable-backslash-path",
+      "canvas_path": "Boards\\Board.canvas",
+      "storage_path": "Boards/Board.canvas",
+      "node_id": "text-1",
+      "new_text": "edited text card",
+      "note_path": "Notes/Created.md",
+      "before": {
+        "nodes": [
+          {
+            "id": "text-1",
+            "type": "text",
+            "x": 10,
+            "y": 20,
+            "width": 320,
+            "height": 140,
+            "text": "draft text card",
+            "color": "1",
+            "unknownNode": {"keep": true, "nested": ["opaque", 7]}
+          },
+          {
+            "id": "file-1",
+            "type": "file",
+            "x": 370,
+            "y": 20,
+            "width": 240,
+            "height": 150,
+            "file": "Notes/Target.md",
+            "subpath": "#^block-id",
+            "label": "Target note",
+            "unknownFileMetadata": {"keep": [true, null]}
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-1",
+            "fromNode": "text-1",
+            "fromSide": "right",
+            "toNode": "file-1",
+            "toSide": "left",
+            "label": "supports",
+            "unknownEdge": {"keep": true}
+          }
+        ],
+        "unknownRoot": {"keep": true, "items": ["opaque", {"future": false}]}
+      },
+      "after": {
+        "nodes": [
+          {
+            "id": "text-1",
+            "type": "text",
+            "x": 10,
+            "y": 20,
+            "width": 320,
+            "height": 140,
+            "text": "edited text card",
+            "color": "1",
+            "unknownNode": {"keep": true, "nested": ["opaque", 7]}
+          },
+          {
+            "id": "file-1",
+            "type": "file",
+            "x": 370,
+            "y": 20,
+            "width": 240,
+            "height": 150,
+            "file": "Notes/Target.md",
+            "subpath": "#^block-id",
+            "label": "Target note",
+            "unknownFileMetadata": {"keep": [true, null]}
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-1",
+            "fromNode": "text-1",
+            "fromSide": "right",
+            "toNode": "file-1",
+            "toSide": "left",
+            "label": "supports",
+            "unknownEdge": {"keep": true}
+          }
+        ],
+        "unknownRoot": {"keep": true, "items": ["opaque", {"future": false}]}
+      },
+      "untouched_files": [
+        {"path": "Notes/Target.md", "text": "# Target\r\n\r\nPreserve this note.\r\n"}
+      ]
+    }
+  ],
+  "invalid_edits": [
+    {
+      "id": "missing-node-id",
+      "canvas_path": "Board.canvas",
+      "node_id": "absent",
+      "error": "node_not_found",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "unchanged"}], "edges": []}
+    },
+    {
+      "id": "duplicate-node-id",
+      "canvas_path": "Board.canvas",
+      "node_id": "duplicate",
+      "error": "ambiguous_node_id",
+      "before": {
+        "nodes": [
+          {"id": "duplicate", "type": "text", "text": "first"},
+          {"id": "duplicate", "type": "text", "text": "second"}
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "non-text-node-id",
+      "canvas_path": "Board.canvas",
+      "node_id": "file-1",
+      "error": "not_text_node",
+      "before": {"nodes": [{"id": "file-1", "type": "file", "file": "Notes/Target.md"}], "edges": []}
+    }
+  ],
+  "stale_edits": [
+    {
+      "id": "stale-observed-canvas-revision",
+      "canvas_path": "Board.canvas",
+      "node_id": "text-1",
+      "new_text": "must not replace external edit",
+      "note_path": "Notes/Created.md",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "draft"}], "edges": []},
+      "external_after": {"nodes": [{"id": "text-1", "type": "text", "text": "external change"}], "edges": []}
+    }
+  ],
+  "malformed_documents": [
+    {
+      "id": "malformed-canvas-json",
+      "canvas_path": "Board.canvas",
+      "source": "{\"nodes\":[",
+      "error": "malformed_json"
+    },
+    {
+      "id": "canvas-missing-edges-array",
+      "canvas_path": "Board.canvas",
+      "source": "{\"nodes\":[]}",
+      "error": "invalid_document_shape"
+    }
+  ],
+  "unsafe_paths": [
+    {
+      "id": "outside-vault-canvas-path",
+      "canvas_path": "../outside.canvas",
+      "error": "invalid_path"
+    }
+  ],
+  "invariants": {
+    "edit_changes_only_the_selected_text_value": true,
+    "unknown_root_node_edge_and_sibling_fields_survive": true,
+    "invalid_or_stale_edits_leave_canvas_bytes_unchanged": true,
+    "unsafe_paths_are_rejected_before_read_or_write": true,
+    "text_card_edit_never_creates_a_markdown_note": true
+  }
+}

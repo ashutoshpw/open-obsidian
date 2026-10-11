@@ -3114,11 +3114,11 @@
       ],
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/doc",
+      "rust_owner": "crates/doc, crates/vault, crates/engine, crates/ui-egui",
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Port C06 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
+      "migration_acceptance": "Implement the Canvas document model and unknown-field preservation in crates/doc; perform root-confined, revision-checked persistence through crates/vault as orchestrated by crates/engine; provide native editing and reference-app acceptance through crates/ui-egui. Verify linked fixtures and reopening through GitHub CI. Keep C06 pending until complete."
     },
     {
       "id": "C06.1",
@@ -3133,7 +3133,8 @@
       "mandatory": true,
       "acceptance_criteria": "Editing a text card changes only the canvas JSON and creates a note only after an explicit user action.",
       "fixture_ids": [
-        "fixture:c06-text-card"
+        "fixture:c06-text-card",
+        "fixture:c06-text-card-vault"
       ],
       "reference_versions": [
         {
@@ -3160,11 +3161,11 @@
       ],
       "legacy_checkpoint": "P3.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/doc",
+      "rust_owner": "crates/doc, crates/vault, crates/engine, crates/ui-egui",
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Port C06 behavior to crates/doc, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
+      "migration_acceptance": "Keep text-card JSON edits distinct from note creation. Persist revision-checked edits from crates/engine through crates/vault, with pure edits and extraction in crates/doc and an explicit create-note user action in crates/ui-egui; assert non-mutating failures and no note on edit, then verify linked fixtures through GitHub CI. Keep C06.1 pending until edit and explicit-create behavior are complete."
     },
     {
       "id": "C07",
