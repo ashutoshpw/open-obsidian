@@ -1991,18 +1991,42 @@ async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: st
   const capture = await captureOpenObsidianScreenshot(windowId, child, "openobsidian-control-target");
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const candidates = ["11", "6"].map((mode) => execFileSync(tesseract, [capture.ocrPngPath, "stdout", "--psm", mode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}));
+  const ocrSize = await pngDimensions(capture.ocrPngPath);
   let bounds: OcrWordBounds | null = null;
   for (const candidate of candidates) {
     bounds = findOcrPhraseBounds(candidate, controlName);
     if (bounds) break;
   }
+  let clickDescription = `OCR label ${JSON.stringify(bounds?.text ?? controlName)}`;
+  let xFraction: number;
+  let yFraction: number;
   if (!bounds) {
-    const detectedWords = candidates.map((candidate) => candidate.split(/\r?\n/).slice(1).map((line) => line.split("\t")[11]?.trim()).filter(Boolean).join(" ")).join(" | ");
-    throw new Error(`Accessibility failed (${accessibilityFailure}); OCR could not locate ${JSON.stringify(controlName)}; detected words=${JSON.stringify(detectedWords.slice(0, 2_000))}; OCR=${JSON.stringify(capture.ocrText.slice(0, 2_000))}`);
+    const anchorPhrase = controlName === "Read note source preview"
+      ? "Read up to 16 KiB"
+      : controlName === "Close source preview"
+        ? "Source Nested"
+        : null;
+    let anchor: OcrWordBounds | null = null;
+    if (anchorPhrase) {
+      for (const candidate of candidates) {
+        anchor = findOcrPhraseBounds(candidate, anchorPhrase);
+        if (anchor) break;
+      }
+    }
+    if (!anchorPhrase || !anchor) {
+      const detectedWords = candidates.map((candidate) => candidate.split(/\r?\n/).slice(1).map((line) => line.split("\t")[11]?.trim()).filter(Boolean).join(" ")).join(" | ");
+      throw new Error(`Accessibility failed (${accessibilityFailure}); OCR could not locate ${JSON.stringify(controlName)} or anchor ${JSON.stringify(anchorPhrase)}; detected words=${JSON.stringify(detectedWords.slice(0, 2_000))}; OCR=${JSON.stringify(capture.ocrText.slice(0, 2_000))}`);
+    }
+    const windowSize = await pngDimensions(capture.windowPngPath);
+    const scaleX = ocrSize.width / windowSize.width;
+    const scaleY = ocrSize.height / windowSize.height;
+    xFraction = (anchor.left + 75 * scaleX) / ocrSize.width;
+    yFraction = (anchor.top + 18 * scaleY) / ocrSize.height;
+    clickDescription = `OCR layout anchor ${JSON.stringify(anchor.text)} for ${JSON.stringify(controlName)}`;
+  } else {
+    xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
+    yFraction = (bounds.top + bounds.height / 2) / ocrSize.height;
   }
-  const ocrSize = await pngDimensions(capture.ocrPngPath);
-  const xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
-  const yFraction = (bounds.top + bounds.height / 2) / ocrSize.height;
   let interaction: string;
 
   if (process.platform === "linux") {
@@ -2016,7 +2040,7 @@ async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: st
     xdotool("windowfocus", "--sync", windowId);
     xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
     xdotool("click", "1");
-    interaction = `xdotool clicked OCR match ${JSON.stringify(bounds.text)} at window coordinates (${x}, ${y}) in ${windowId}`;
+    interaction = `xdotool clicked ${clickDescription} at window coordinates (${x}, ${y}) in ${windowId}`;
   } else if (process.platform === "darwin") {
     const window = macOSOpenObsidianWindowBounds(child);
     const x = Math.round(window.x + xFraction * window.width);
@@ -2041,7 +2065,7 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
 }
 `);
     execFileSync("swift", [swiftPath, String(x), String(y)], {stdio: "ignore"});
-    interaction = `CoreGraphics clicked OCR match ${JSON.stringify(bounds.text)} at screen coordinates (${x}, ${y})`;
+    interaction = `CoreGraphics clicked ${clickDescription} at screen coordinates (${x}, ${y})`;
   } else if (process.platform === "win32") {
     const geometry = capture.windowGeometry?.match(/x=(-?\d+) y=(-?\d+) width=(\d+) height=(\d+)/);
     if (!geometry) throw new Error(`Could not read OpenObsidian window geometry for OCR click: ${capture.windowGeometry ?? "unavailable"}`);
@@ -2066,7 +2090,7 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
       Write-Output "Clicked OCR matched control at (${x}, ${y})."
     `;
     const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
-    interaction = `${output} OCR match=${JSON.stringify(bounds.text)}`;
+    interaction = `${output} ${clickDescription}`;
   } else {
     throw new Error(`OCR control activation is not configured for ${process.platform}`);
   }
