@@ -4504,3 +4504,32 @@ through Quartz display bounds. A targeted CI diagnostic records source-preview
 geometry and event counts without including typed or pasted text. No local tests,
 builds, formatters, validators, or application launches were run. The corrected
 phase still requires all seven workflows to pass on one exact pushed SHA.
+
+## 2026-10-12 — R2.8.94 attempt 3 CI findings and correction
+
+Attempt 3 ran on exact source SHA
+`95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29`. Inventory, quality, desktop build,
+plugin renderer, and loaded-plugin workflows passed. Rust CI failed on Ubuntu,
+macOS, Windows, and Rust 1.95 with 102 passed and four failed UI Harness tests
+on each target. Three tests queried the Canvas confirmation button from a stale
+frame after changing confirmation state. The combined existing-vault link and
+rename test ended without a rename preview after clicking the preview action;
+CI logs did not distinguish a missed click from a worker error, while source
+layout and the populated transclusion report support a clipped-button diagnosis.
+The Obsidian round-trip failed on all three operating systems: macOS clicked
+above the refresh button, Windows UI Automation did not change the Canvas path
+field, and Linux AT-SPI exposed no editable roles. Exact run/job IDs and the
+three artifact digests are recorded in
+[`evidence/r2.8.94-attempt-3-95c67a5.json`](evidence/r2.8.94-attempt-3-95c67a5.json).
+
+The focused correction advances the egui Harness after each confirmation-state
+transition, places rename controls before the long link/transclusion report,
+uses the macOS OCR anchor center without the 17-point upward adjustment, adds a
+bounded Windows keyboard fallback with exact UIA readback, and uses measured
+800x600 Linux field centers with screenshot OCR readback after AT-SPI fails. The
+Linux verifier requires exact normalized field values and permits the immediate
+next OCR line only for the wrapped New Markdown path field observed in CI.
+No local tests, builds, formatters, or application launches were run. An
+accidental non-executable `git diff --check` ran on the intermediate working
+tree and returned clean; the correction still requires the seven GitHub Actions
+workflows on its exact pushed SHA. Canvas editing and C06/C06.1 remain pending.

@@ -2486,17 +2486,15 @@ async function clickVisibleOpenObsidianControl(
     xdotool("mouseup", "1");
     interaction = `xdotool clicked ${clickDescription} at window coordinates (${x}, ${y}) in ${windowId}`;
   } else if (process.platform === "darwin") {
-    const refreshButtonOffsetPoints = controlName === "Refresh note list" ? 17 : 0;
     const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
     await writeFile(swiftPath, `import AppKit
 import CoreGraphics
 import Foundation
 
-guard CommandLine.arguments.count == 4,
+guard CommandLine.arguments.count == 3,
       let xFraction = Double(CommandLine.arguments[1]),
-      let yFraction = Double(CommandLine.arguments[2]),
-      let yOffsetPoints = Double(CommandLine.arguments[3]) else {
-    fatalError("Expected desktop OCR fractions and a Quartz-point y offset")
+      let yFraction = Double(CommandLine.arguments[2]) else {
+    fatalError("Expected desktop OCR click fractions")
 }
 guard NSScreen.screens.count == 1 else {
     fatalError("Desktop OCR click mapping requires the single-display macOS CI screen")
@@ -2510,7 +2508,7 @@ guard (0.0...1.0).contains(xFraction), (0.0...1.0).contains(yFraction) else {
 }
 let point = CGPoint(
     x: displayBounds.origin.x + CGFloat(xFraction) * displayBounds.width,
-    y: displayBounds.origin.y + CGFloat(yFraction) * displayBounds.height - CGFloat(yOffsetPoints)
+    y: displayBounds.origin.y + CGFloat(yFraction) * displayBounds.height
 )
 for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
     guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
@@ -2521,7 +2519,7 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
 }
 print("\(point.x),\(point.y)")
 `);
-    const quartzPoint = execFileSync("swift", [swiftPath, String(xFraction), String(yFraction), String(refreshButtonOffsetPoints)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    const quartzPoint = execFileSync("swift", [swiftPath, String(xFraction), String(yFraction)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
     interaction = `CoreGraphics clicked ${clickDescription} at desktop fractions (${xFraction}, ${yFraction}), mapped to Quartz screen coordinates (${quartzPoint})`;
   } else if (process.platform === "win32") {
     const geometry = capture.windowGeometry?.match(/x=(-?\d+) y=(-?\d+) width=(\d+) height=(\d+)/);
@@ -2583,7 +2581,7 @@ import pyatspi
 
 process_id = int(sys.argv[1])
 target_name = sys.argv[2]
-deadline = time.monotonic() + 20
+deadline = time.monotonic() + 5
 last_names = []
 while time.monotonic() < deadline:
     desktop = pyatspi.Registry.getDesktop(0)
@@ -4877,8 +4875,118 @@ async function verifyCanvasCreatedNoteVisible(
   return visible;
 }
 
+function normalizeVisibleInputOcr(value: string): string {
+  return value.toLowerCase()
+    .replace(/[‐‑‒–—−]/g, "-")
+    .replace(/\s*([/\\._-])\s*/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function visibleInputValueOcrLineDistance(ocrText: string, controlName: string, value: string): number | null {
+  const normalizedLabel = normalizeVisibleInputOcr(controlName);
+  const expected = normalizeVisibleInputOcr(value);
+  const lines = ocrText.split(/\r?\n/).map(normalizeVisibleInputOcr);
+  const maximumDistance = controlName === "New Markdown path" ? 1 : 0;
+  for (let labelIndex = 0; labelIndex < lines.length; labelIndex += 1) {
+    if (!lines[labelIndex]?.includes(normalizedLabel)) continue;
+    for (let distance = 0; distance <= maximumDistance; distance += 1) {
+      const valueLine = lines[labelIndex + distance];
+      if (valueLine && ` ${valueLine} `.includes(` ${expected} `)) return distance;
+    }
+  }
+  return null;
+}
+
+async function replaceLinuxOpenObsidianTextInputWithKeyboard(
+  child: ChildProcess,
+  windowId: string,
+  controlName: string,
+  value: string,
+): Promise<string> {
+  const calibratedFields: Record<string, {x: number; y: number}> = {
+    "Canvas path": {x: 201, y: 146},
+    "Text card ID": {x: 460, y: 146},
+    "New Markdown path": {x: 123, y: 168},
+  };
+  const calibratedPoint = calibratedFields[controlName];
+  if (!calibratedPoint) throw new Error(`No Linux Canvas input position is configured for ${controlName}`);
+
+  const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
+  const labelOcrFound = before.ocrText.includes(controlName);
+  const screenshotSize = await pngDimensions(before.windowPngPath);
+  const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+  const readGeometry = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(\\d+)$`, "m"))?.[1] ?? NaN);
+  const windowWidth = readGeometry("WIDTH");
+  const windowHeight = readGeometry("HEIGHT");
+  if (!(windowWidth > 0 && windowHeight > 0 && screenshotSize.width > 0 && screenshotSize.height > 0)) {
+    throw new Error(`Could not map Linux Canvas input coordinates for ${controlName}: geometry=${geometry.trim()}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
+  }
+  if (!labelOcrFound) {
+    throw new Error(`Linux screenshot did not show the ${controlName} label before text entry: screenshot=${relative(reportDirectory, before.windowPngPath)}`);
+  }
+  if (screenshotSize.width !== 800 || screenshotSize.height !== 600 || windowWidth !== 800 || windowHeight !== 600) {
+    throw new Error(`Linux Canvas field coordinates require the captured 800x600 CI layout: window=${windowWidth}x${windowHeight}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
+  }
+
+  // These centers were measured from the 800x600 expanded-form screenshot; keep clicks inside each edit field.
+  const screenshotX = Math.round(calibratedPoint.x * screenshotSize.width / 800);
+  const screenshotY = Math.round(calibratedPoint.y * screenshotSize.height / 600);
+  const clickX = Math.round(screenshotX * windowWidth / screenshotSize.width);
+  const clickY = Math.round(screenshotY * windowHeight / screenshotSize.height);
+
+  try {
+    xdotool("windowfocus", "--sync", windowId);
+    xdotool("mousemove", "--sync", "--window", windowId, String(clickX), String(clickY));
+    xdotool("click", "--clearmodifiers", "1");
+    xdotool("key", "--clearmodifiers", "ctrl+a");
+    execFileSync("xdotool", ["type", "--clearmodifiers", "--delay", "1", value], {stdio: "ignore"});
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException;
+    throw new Error(`Linux keyboard entry failed for ${controlName}: code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}; click=(${clickX},${clickY})`);
+  }
+
+  const verificationDeadline = Date.now() + 5_000;
+  let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
+  let verificationAttempts = 0;
+  while (Date.now() < verificationDeadline) {
+    verificationAttempts += 1;
+    verification = await captureOpenObsidianScreenshot(
+      windowId,
+      child,
+      `openobsidian-canvas-input-${fileSafeName}-readback-${verificationAttempts}`,
+    );
+    if (visibleInputValueOcrLineDistance(verification.ocrText, controlName, value) !== null) break;
+    await delay(200);
+  }
+  const verificationLine = verification?.ocrText.split(/\r?\n/).map(normalizeVisibleInputOcr).find((line) => line.includes(normalizeVisibleInputOcr(controlName)));
+  const readbackLineDistance = verification
+    ? visibleInputValueOcrLineDistance(verification.ocrText, controlName, value)
+    : null;
+  if (!verification || readbackLineDistance === null) {
+    throw new Error(`Linux screenshot readback did not confirm the exact ${controlName} field value: expected_length=${value.length}; observed_row_length=${verificationLine?.length ?? 0}; click=(${clickX},${clickY}); attempts=${verificationAttempts}; screenshot=${verification ? relative(reportDirectory, verification.windowPngPath) : "unavailable"}`);
+  }
+
+  return JSON.stringify({
+    name: controlName,
+    action: "focused the measured-coordinate field after OCR label confirmation, then Ctrl+A and keyboard entry",
+    normalized_field_label_value_readback: true,
+    label_to_value_ocr_line_distance: readbackLineDistance,
+    expected_length: value.length,
+    click_x: clickX,
+    click_y: clickY,
+    position_source: "measured 800x600 field center",
+    ocr_label_found: labelOcrFound,
+    readback_attempts: verificationAttempts,
+    before_screenshot: relative(reportDirectory, before.windowPngPath),
+    readback_screenshot: relative(reportDirectory, verification.windowPngPath),
+  });
+}
+
 async function replaceOpenObsidianTextInput(
   child: ChildProcess,
+  windowId: string,
   controlName: string,
   value: string,
 ): Promise<string> {
@@ -4948,7 +5056,12 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      throw new Error(`Could not set the accessible OpenObsidian ${controlName} field: ${output || failure.message}`);
+      try {
+        return await replaceLinuxOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value);
+      } catch (fallbackError) {
+        const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : "unknown keyboard fallback error";
+        throw new Error(`Could not set the accessible OpenObsidian ${controlName} field: ${output || failure.message}; screenshot-verified keyboard fallback failed: ${fallbackMessage}`);
+      }
     }
   } else if (process.platform === "darwin") {
     const script = `on run argv
@@ -4979,6 +5092,7 @@ sys.exit(1)
       $ErrorActionPreference = "Stop"
       Add-Type -AssemblyName UIAutomationClient
       Add-Type -AssemblyName UIAutomationTypes
+      Add-Type -AssemblyName System.Windows.Forms
       $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
       $targetName = $env:OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME
       $replacement = $env:OPENOBSIDIAN_CANVAS_TEXT_ENTRY
@@ -4999,11 +5113,59 @@ sys.exit(1)
             $pattern.SetValue($replacement)
             Start-Sleep -Milliseconds 150
             $actual = [string]$pattern.Current.Value
-            if ($actual -cne $replacement) { throw "Accessible value did not match after replacement: $targetName" }
-            [pscustomobject]@{name = $targetName; action = "ValuePattern.SetValue"; value = $actual} | ConvertTo-Json -Compress
+            $initialReadbackLength = $actual.Length
+            $keyboardFallback = $actual -cne $replacement
+            $readbackPolls = 1
+            if ($keyboardFallback) {
+              $focusSet = $false
+              try {
+                $element.SetFocus()
+                $focusSet = $true
+                Start-Sleep -Milliseconds 120
+                [System.Windows.Forms.SendKeys]::SendWait("^a")
+                $sendKeys = [System.Text.StringBuilder]::new()
+                foreach ($character in $replacement.ToCharArray()) {
+                  switch -CaseSensitive ([string]$character) {
+                    "+" { $null = $sendKeys.Append("{+}") }
+                    "^" { $null = $sendKeys.Append("{^}") }
+                    "%" { $null = $sendKeys.Append("{%}") }
+                    "~" { $null = $sendKeys.Append("{~}") }
+                    "(" { $null = $sendKeys.Append("{(}") }
+                    ")" { $null = $sendKeys.Append("{)}") }
+                    "[" { $null = $sendKeys.Append("{[}") }
+                    "]" { $null = $sendKeys.Append("{]}") }
+                    "{" { $null = $sendKeys.Append("{{}") }
+                    "}" { $null = $sendKeys.Append("{}}") }
+                    default { $null = $sendKeys.Append($character) }
+                  }
+                }
+                [System.Windows.Forms.SendKeys]::SendWait($sendKeys.ToString())
+              } catch {
+                throw "OpenObsidian keyboard fallback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
+              }
+              $readbackDeadline = [DateTime]::UtcNow.AddSeconds(5)
+              do {
+                Start-Sleep -Milliseconds 100
+                $readbackPolls++
+                try { $actual = [string]$pattern.Current.Value } catch { $actual = "" }
+                if ($actual -ceq $replacement) { break }
+              } while ([DateTime]::UtcNow -lt $readbackDeadline)
+              if ($actual -cne $replacement) {
+                throw "OpenObsidian exact readback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; final_readback_length=$($actual.Length); keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
+              }
+            }
+            [pscustomobject]@{
+              name = $targetName
+              action = if ($keyboardFallback) { "ValuePattern.SetValue + focused Ctrl+A and keyboard entry" } else { "ValuePattern.SetValue" }
+              exact_readback = $true
+              keyboard_fallback = $keyboardFallback
+              expected_length = $replacement.Length
+              readback_length = $actual.Length
+              readback_polls = $readbackPolls
+            } | ConvertTo-Json -Compress
             exit 0
           } catch {
-            if ($_.Exception.Message -like "The accessible edit field is read-only:*" -or $_.Exception.Message -like "Accessible value did not match*" ) { throw }
+            if ($_.Exception.Message -like "The accessible edit field is read-only:*" -or $_.Exception.Message -like "OpenObsidian keyboard fallback failed*" -or $_.Exception.Message -like "OpenObsidian exact readback failed*" ) { throw }
           }
         }
         Start-Sleep -Milliseconds 250
@@ -5162,9 +5324,9 @@ async function runOpenObsidianCanvasNoteCreation(
     );
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
     noteReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
-    interactions.canvas_path = await replaceOpenObsidianTextInput(child, "Canvas path", canvasPath);
-    interactions.text_card_id = await replaceOpenObsidianTextInput(child, "Text card ID", "text-1");
-    interactions.new_markdown_path = await replaceOpenObsidianTextInput(child, "New Markdown path", canvasNotePath);
+    interactions.canvas_path = await replaceOpenObsidianTextInput(child, window!.window_id, "Canvas path", canvasPath);
+    interactions.text_card_id = await replaceOpenObsidianTextInput(child, window!.window_id, "Text card ID", "text-1");
+    interactions.new_markdown_path = await replaceOpenObsidianTextInput(child, window!.window_id, "New Markdown path", canvasNotePath);
     const ready = await waitFor(
       "OpenObsidian to show the entered Canvas card and new note path",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-form", noteReport),

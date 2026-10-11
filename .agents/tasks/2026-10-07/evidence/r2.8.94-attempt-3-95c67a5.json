@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.94",
+  "attempt": 3,
+  "captured_at": "2026-10-11T23:15:35+00:00",
+  "source_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38182281160,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281160",
+      "jobs": [
+        { "id": 114597171641, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    "quality": {
+      "id": 38182281179,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281179",
+      "jobs": [
+        { "id": 114597171947, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114597172034, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114597172154, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "desktop_build": {
+      "id": 38182281154,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281154",
+      "jobs": [
+        { "id": 114597171781, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114597171937, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114597171982, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38182281196,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281196",
+      "jobs": [
+        { "id": 114597172130, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114597172136, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114597172158, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38182281185,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281185",
+      "jobs": [
+        { "id": 114597171922, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114597171960, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114597172121, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "rust_ci": {
+      "id": 38182281162,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281162",
+      "jobs": [
+        { "id": 114597171782, "name": "rust (ubuntu-latest)", "conclusion": "failure" },
+        { "id": 114597171691, "name": "rust (macos-latest)", "conclusion": "failure" },
+        { "id": 114597171772, "name": "rust (windows-latest)", "conclusion": "failure" },
+        { "id": 114597171804, "name": "minimum supported Rust (1.95)", "conclusion": "failure" }
+      ],
+      "failure_detail": "Each Rust job reported 102 passed and 4 failed UI Harness tests. Three Canvas creation tests could not find the confirmation button after a state transition; the combined existing-vault link/rename test had no rename preview after clicking Build rename preview."
+    },
+    "vault_roundtrip": {
+      "id": 38182281167,
+      "head_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38182281167",
+      "jobs": [
+        { "id": 114597171998, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure" },
+        { "id": 114597171778, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure" },
+        { "id": 114597171930, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure" }
+      ],
+      "failure_detail": "macOS OCR clicked y=55 while the Refresh note list button occupied y=64.5-79.5; the run timed out with manualRequest=null. Windows UI Automation ValuePattern.SetValue did not update the Canvas path edit. Linux AT-SPI found no editable roles for Canvas path; the 800x600 form screenshot and X11 window geometry match, with field centers at (201,146), (460,146), and (123,168)."
+    }
+  },
+  "roundtrip_artifacts": [
+    {
+      "job_id": 114597171778,
+      "artifact_id": 11717854144,
+      "archive_sha256": "cede65f167d32b6ebb8ba833abd9aeccd75822a21559fd8ab1ff838f2b0122c1",
+      "report_sha256": "603e8866bb0c4a6cd7f037442b9149ca26630ec37072dee2b8c5acf1cbf7456f"
+    },
+    {
+      "job_id": 114597171930,
+      "artifact_id": 11718383126,
+      "archive_sha256": "5105c47ae4658ed88cebd37167a78117543358dd72b6f5efbdcc266aefec4b6f",
+      "report_sha256": "706c827583f02acc23ff5c86332f905852fdf375e2bf1c22d8851c9466915b72"
+    },
+    {
+      "job_id": 114597171998,
+      "artifact_id": 11718408666,
+      "archive_sha256": "ef838111398d197f7319b3111a312a9d6f7203ac39b752092521987a08ee5c04",
+      "report_sha256": "386b8e925868c205dca641e9c39c9a80ce01dfec8defa4889584f7eb87c490ac"
+    }
+  ],
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions. An accidental non-executable git diff --check also ran in the working worktree and returned clean."
+}

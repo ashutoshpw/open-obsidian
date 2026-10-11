@@ -550,8 +550,8 @@ impl OpenObsidianApp {
         }
         if self.session.is_some() {
             self.show_canvas_note_creation(ui);
-            self.show_links(ui);
             self.show_rename(ui);
+            self.show_links(ui);
             self.show_history(ui);
         }
         ui.separator();
@@ -5037,6 +5037,7 @@ mod tests {
         assert!(harness.state().canvas_note_confirmation);
         assert!(!destination.exists(), "review must not create a note");
 
+        harness.step();
         harness.get_by_label("Confirm and create note").click();
         harness.step();
         assert!(harness.state().canvas_note_receiver.is_some());
@@ -5090,6 +5091,7 @@ mod tests {
             .get_by_label("Review and confirm note creation")
             .click();
         harness.step();
+        harness.step();
         std::fs::write(vault_path.join("Boards/Idea.canvas"), external_canvas)
             .expect("simulate a Canvas edit after preview");
 
@@ -5136,6 +5138,7 @@ mod tests {
         harness
             .get_by_label("Review and confirm note creation")
             .click();
+        harness.step();
         harness.step();
         harness.get_by_label("Confirm and create note").click();
         harness.step();
