@@ -3258,23 +3258,59 @@ async function runReferenceImageEmbedResolution(
   resolutionReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
   resolutionReport.selected_note_window_screenshot = relative(reportDirectory, selectedNote.windowPngPath);
 
-  resolutionReport.resolve_link_status_action = process.platform === "linux"
+  const invokeResolveLinkStatus = async (): Promise<string> => process.platform === "linux"
     ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
     : process.platform === "darwin"
       ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
       : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
+  resolutionReport.resolve_link_status_action = await invokeResolveLinkStatus();
   const expectedSummary = `OpenObsidian CI link resolution: source=${authoredNotePath}, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false`;
   const expectedReference = `OpenObsidian CI link reference: source=${authoredNotePath}, kind=Embed, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}`;
   const expectedEmbedPrefix = `OpenObsidian CI note embed: source=${authoredNotePath}, index=0, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}, disposition=image, revision_sha256=${attachmentEntry.sha256}, `;
-  const diagnostics = await waitFor(
+  let diagnostics = await waitFor(
     "OpenObsidian to resolve the authored image embed against the exact vault attachment",
     async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
     (lines) => lines.includes(expectedSummary)
       && lines.includes(expectedReference)
-      && lines.some((line) => line.startsWith(expectedEmbedPrefix)),
+    && lines.some((line) => line.startsWith(expectedEmbedPrefix)),
     30_000,
   );
-  const embedDiagnostic = diagnostics.find((line) => line.startsWith(expectedEmbedPrefix));
+
+  // The periodic vault reconciliation is deferred while link resolution is busy.
+  // If it was already due, it runs immediately afterward and clears the displayed
+  // result. Wait for that refresh to settle, then resolve again for stable UI proof.
+  const settledRefresh = await waitForOpenObsidianRefreshIdle(
+    0,
+    countMarkdownFiles(vaultBaseline),
+    false,
+  );
+  const initialResolutionLine = diagnostics.findIndex((line) => line === expectedSummary);
+  const refreshAfterInitialResolution = settledRefresh.requests.some((request) => (
+    request.source === "watcher_reconciliation" && request.line > initialResolutionLine
+  ));
+  if (refreshAfterInitialResolution) {
+    resolutionReport.post_resolution_watcher_refresh = {
+      request: settledRefresh.requests.find((request) => (
+        request.source === "watcher_reconciliation" && request.line > initialResolutionLine
+      )) ?? null,
+      consumed_result: settledRefresh.consumedResults.at(-1) ?? null,
+      receiver_busy: settledRefresh.receiverStates.at(-1)?.busy ?? false,
+    };
+    const previousLogLineCount = diagnostics.length;
+    resolutionReport.resolve_link_status_retry_action = await invokeResolveLinkStatus();
+    diagnostics = await waitFor(
+      "OpenObsidian to restore the resolved image-embed result after vault reconciliation",
+      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+      (lines) => {
+        const retryLines = lines.slice(previousLogLineCount);
+        return retryLines.includes(expectedSummary)
+          && retryLines.includes(expectedReference)
+          && retryLines.some((line) => line.startsWith(expectedEmbedPrefix));
+      },
+      30_000,
+    );
+  }
+  const embedDiagnostic = diagnostics.filter((line) => line.startsWith(expectedEmbedPrefix)).at(-1);
   const imageDetails = embedDiagnostic?.match(/dimensions=(\d+)x(\d+), decoded_rgba_bytes=(\d+), alt=(.+)$/);
   if (!embedDiagnostic || !imageDetails) {
     throw new Error(`OpenObsidian did not report decoded image dimensions and accessible alt text: ${embedDiagnostic ?? "missing image diagnostic"}`);
