@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T00:37:00Z",
+  "milestone": "R2.8.71",
+  "accepted_slice": "C01.2-39",
+  "source_sha": "ddfee6f6459ef15598337bdebe7b8367fc3b2539",
+  "source_commit": "[rust R2.8.71] Center macOS preview close control",
+  "starting_sha": "93ca0f24325176e0ea7f7b34d5a5fe1e088e9fc6",
+  "implementation_commits": [
+    "08adb56403ea220456c5ee251d273fddcbc906cb",
+    "b8aa187d7485a5d3eb7c3dba25ccb749b03a3486",
+    "5fe29fad38749aa8b2d36376edd53e1627202b6c",
+    "ef502e2d8b01e9b71814049ce6d979d0dd54e721",
+    "6b23e2eefd6acb6a4e7b090f148ac1c75cbc9e60",
+    "a00ae7342a53aa007d9e562a40dfefdf0cf218ee",
+    "ddfee6f6459ef15598337bdebe7b8367fc3b2539"
+  ],
+  "change": "Drive the actual OpenObsidian desktop through source preview and close against a BOM/CRLF note in a vault authored by pinned Obsidian 1.14.4. Verify marker visibility, no-op behavior, unchanged vault contents and app-data policy, then reopen the vault in Obsidian.",
+  "scenario_result": {
+    "fixture": "Synthetic vault authored through the pinned Obsidian desktop on GitHub Actions; no personal data.",
+    "reference_application_version": "1.14.4",
+    "selected_note_path": "Nested Ω/space note.md",
+    "selected_note_bytes": 120,
+    "selected_note_sha256": "2b9a7f859bfa7f0c67c847cdd6b08d2afe027467134d6b54d35556fb6aa1ae03",
+    "source_marker": "Original bytes stay untouched.",
+    "all_platforms": {
+      "source_marker_visible_during_preview": true,
+      "source_marker_disappeared_after_close": true,
+      "vault_snapshot_unchanged_during_preview_and_close": true,
+      "obsidian_reopen_passed": true
+    },
+    "control_activation": {
+      "Linux": "AT-SPI exposed no egui controls; visible screenshot OCR anchors and xdotool clicks activated the source-preview controls.",
+      "macOS": "Accessibility exposed no egui controls; visible screenshot OCR anchors and CoreGraphics clicks activated the source-preview controls.",
+      "Windows": "Windows UI Automation activated the source-preview controls."
+    },
+    "app_data_policy": {
+      "Linux": "Exact app-data snapshots remained unchanged through preview and close.",
+      "Windows": "Exact app-data snapshots remained unchanged through preview and close.",
+      "macOS": "The only difference was app.ron eframe UI-state persistence (1829 bytes, SHA-256 6427e80e90d41f9fff5ef8af02ee13fb9a98663ff671aa2201a753b79216a8c8). The state contained the expected window and egui fields and no vault or app-data paths. All other app-data paths were unchanged; the same app.ron snapshot remained after close."
+    }
+  },
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 38098596467,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596467",
+    "head_sha": "ddfee6f6459ef15598337bdebe7b8367fc3b2539",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "os": "Linux",
+        "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+        "job_id": 114349622664,
+        "conclusion": "success",
+        "runner_image": "ubuntu24",
+        "runner_image_version": "20261004.327.1",
+        "architecture": "x64",
+        "reference_asset": "Obsidian-1.14.4.AppImage",
+        "reference_asset_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+        "artifact": {
+          "id": 11686853673,
+          "name": "obsidian-vault-roundtrip-Linux-ddfee6f6459ef15598337bdebe7b8367fc3b2539",
+          "size_in_bytes": 3799409,
+          "digest": "sha256:7eddfe3d2dbf71c80b3861069ad31d08e9428764e237ab1cb0d1cc1e4839dbe9"
+        }
+      },
+      {
+        "os": "Windows",
+        "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+        "job_id": 114349622783,
+        "conclusion": "success",
+        "runner_image": "win25-vs2026",
+        "runner_image_version": "20260925.250.1",
+        "architecture": "x64",
+        "reference_asset": "Obsidian-1.14.4.exe",
+        "reference_asset_sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "artifact": {
+          "id": 11686963456,
+          "name": "obsidian-vault-roundtrip-Windows-ddfee6f6459ef15598337bdebe7b8367fc3b2539",
+          "size_in_bytes": 4193624,
+          "digest": "sha256:07b96328d70a119ed382d05590fd03d66843c0639b9b997696a7943d4190323d"
+        }
+      },
+      {
+        "os": "macOS",
+        "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+        "job_id": 114349622796,
+        "conclusion": "success",
+        "runner_image": "macos26",
+        "runner_image_version": "20260907.0351.1",
+        "architecture": "arm64",
+        "reference_asset": "Obsidian-1.14.4.dmg",
+        "reference_asset_sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "artifact": {
+          "id": 11686763776,
+          "name": "obsidian-vault-roundtrip-macOS-ddfee6f6459ef15598337bdebe7b8367fc3b2539",
+          "size_in_bytes": 4513698,
+          "digest": "sha256:631c773f2f82310697aaf57b633656154ce18c3d3fce8b010522255a22218dac"
+        }
+      }
+    ]
+  },
+  "ci": {
+    "conclusion": "All seven required workflows and every job passed on the exact implementation SHA. Rust CI used stable rustc 1.99.0 (b940084d7 2026-09-28).",
+    "workflows": [
+      {
+        "name": "Rust migration inventory",
+        "run_id": 38098596385,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596385",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "inventory", "job_id": 114349622348, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian Rust CI",
+        "run_id": 38098596520,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596520",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "rust (ubuntu-latest)", "job_id": 114349622712, "conclusion": "success"},
+          {"name": "rust (windows-latest)", "job_id": 114349622844, "conclusion": "success"},
+          {"name": "rust (macos-latest)", "job_id": 114349622907, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian quality",
+        "run_id": 38098596388,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596388",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114349622332, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 114349622490, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 114349622510, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian desktop build",
+        "run_id": 38098596447,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596447",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "macos-latest", "job_id": 114349622497, "conclusion": "success"},
+          {"name": "ubuntu-latest", "job_id": 114349622637, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 114349622649, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian plugin renderer matrix",
+        "run_id": 38098596414,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596414",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114349622485, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 114349622574, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 114349622598, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "OpenObsidian loaded plugin workflows",
+        "run_id": 38098596375,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596375",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "ubuntu-latest", "job_id": 114349622362, "conclusion": "success"},
+          {"name": "macos-latest", "job_id": 114349622441, "conclusion": "success"},
+          {"name": "windows-latest", "job_id": 114349622480, "conclusion": "success"}
+        ]
+      },
+      {
+        "name": "Obsidian vault round-trip acceptance",
+        "run_id": 38098596467,
+        "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38098596467",
+        "conclusion": "success",
+        "jobs": [
+          {"name": "Ubuntu", "job_id": 114349622664, "conclusion": "success"},
+          {"name": "Windows", "job_id": 114349622783, "conclusion": "success"},
+          {"name": "macOS", "job_id": 114349622796, "conclusion": "success"}
+        ]
+      }
+    ],
+    "parallel_step_groups": "The native Actions parallel groups in Rust CI, quality, desktop build, and vault round-trip completed successfully. See evidence/parallel-ci.json for the preparation milestone.",
+    "local_validation": "None. All executable validation was performed only in GitHub Actions; no local tests, builds, formatters, linters, or application launches were run."
+  },
+  "limitations": [
+    "This accepts only C01.2-39. Broader C01/C01.2 read-only reference-app flows remain pending.",
+    "The OpenObsidian preview is read-only here; this does not certify edit/save, which remains deferred to C02/C14.",
+    "macOS app.ron eframe UI-state persistence is a separate app-data policy exception; vault content and other app-data paths remain unchanged."
+  ]
+}

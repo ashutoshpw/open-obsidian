@@ -6,9 +6,9 @@
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "93ca0f24325176e0ea7f7b34d5a5fe1e088e9fc6",
+  "last_reconciled_head": "ddfee6f6459ef15598337bdebe7b8367fc3b2539",
   "current_milestone": "R2.8.71",
-  "next_action": "R2.8.71 native source-preview automation is prepared in the round-trip driver and C01.2-39 matrix row. Commit and push for exact-SHA GitHub Actions validation on Ubuntu, macOS, and Windows; use CI output to correct any platform automation issues. Keep C01/C01.2 pending and do not run local executable validation.",
+  "next_action": "Push the R2.8.71 evidence and tracker updates, run Rust migration inventory on that tracker SHA, then record its result and complete the milestone. Keep parent C01/C01.2 pending and select the next uncovered reference-app read-only flow; do not run local executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -294,7 +294,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.66 and R2.8.67 acceptance records were pushed in commit 859bf5084a491aec2b9a1b2051db1479e879cdd7. Rust migration inventory run 38094092569, job 114336291041, passed on that exact tracker SHA. C02.1 is passing; parent C02 remains pending. No local executable validation was used.",
+  "push_status": "R2.8.71 implementation SHA ddfee6f6459ef15598337bdebe7b8367fc3b2539 is pushed to origin/main. All seven required workflows, including the pinned Obsidian source-preview round trip on Ubuntu, macOS, and Windows, passed on that exact SHA. Evidence is recorded; the tracker checkpoint and its migration-inventory validation are pending. All executable validation used GitHub Actions only.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19859,12 +19859,32 @@
       "scope": "Exercise source preview and no-op close in the actual OpenObsidian desktop against the Obsidian-authored vault in the pinned reference-app workflow.",
       "acceptance": [
         "Drive the actual desktop UI to display the Obsidian-authored note source and close the preview/session without edits.",
-        "Compare complete vault path, kind, content, and symlink-target snapshots plus separate app-data snapshots before and after the OpenObsidian read-only flow.",
+        "Keep complete vault path, kind, content, and symlink-target snapshots byte-identical. App-data remains byte-identical except macOS app.ron eframe window/egui UI-state persistence validated to contain no vault or app-data paths.",
         "Pass on Ubuntu, macOS, and Windows with exact-SHA GitHub Actions artifacts and preserve the existing Obsidian reopen assertion.",
         "Keep C01 and C01.2 pending until their broader reference-app read-only flows have direct cross-platform evidence; no local executable validation."
       ],
-      "implementation_commits": [],
-      "next_action": "Native source-preview/no-op-close automation and matrix case C01.2-39 are prepared. Commit and push the workflow/driver change for exact-SHA GitHub Actions round-trip validation on Ubuntu, macOS, and Windows. Use CI diagnostics only to correct platform interactions; no local executable validation."
+      "implementation_commits": [
+        "08adb56403ea220456c5ee251d273fddcbc906cb",
+        "b8aa187d7485a5d3eb7c3dba25ccb749b03a3486",
+        "5fe29fad38749aa8b2d36376edd53e1627202b6c",
+        "ef502e2d8b01e9b71814049ce6d979d0dd54e721",
+        "6b23e2eefd6acb6a4e7b090f148ac1c75cbc9e60",
+        "a00ae7342a53aa007d9e562a40dfefdf0cf218ee",
+        "ddfee6f6459ef15598337bdebe7b8367fc3b2539"
+      ],
+      "tested_source_sha": "ddfee6f6459ef15598337bdebe7b8367fc3b2539",
+      "evidence": "evidence/r2.8.71-reference-source-preview-ddfee6f.json",
+      "roundtrip_workflow_run_id": 38098596467,
+      "required_workflow_runs": {
+        "rust_ci": 38098596520,
+        "inventory": 38098596385,
+        "quality": 38098596388,
+        "desktop_build": 38098596447,
+        "plugin_renderer": 38098596414,
+        "loaded_plugin_workflows": 38098596375,
+        "obsidian_vault_roundtrip": 38098596467
+      },
+      "next_action": "The C01.2-39 implementation and exact-SHA cross-platform CI evidence are complete and recorded. Push the tracker checkpoint and run Rust migration inventory on that tracker SHA; after it passes, mark R2.8.71 complete. Keep parent C01/C01.2 pending and select the next uncovered reference-app read-only flow."
     }
   },
   "ci_preparation": {
