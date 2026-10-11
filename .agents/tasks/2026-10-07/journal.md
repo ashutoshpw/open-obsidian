@@ -3935,3 +3935,24 @@ The follow-up groups recursive discovery output through `VaultConfiguration`,
 applies the two rustfmt changes from CI, and updates the fixture SHA and purpose
 in `inventory.json`. R2.8.85 remains in progress; C09 and C09.1 remain pending.
 No local project tests, builds, formatters, or application launches were run.
+
+## 2026-10-11T14:53:31Z — R2.8.85 accepted after same-SHA retries
+
+Correction SHA `26c3363b1bc07eac10c56a7a258b914bc36f67f3` passed all seven
+required workflows. Inventory, desktop build, plugin renderer, loaded-plugin
+workflows, and Rust CI passed on attempt 1. Quality passed on same-SHA attempt
+2 after its first macOS job timed out at the local retrieval boundary. The
+Obsidian 1.14.4 round-trip passed on same-SHA attempt 2 after the first Windows
+job timed out waiting for a preview after external note rename. Ubuntu,
+macOS, Windows, and Rust 1.95 Rust CI jobs passed. Exact job IDs, report hashes,
+artifact IDs, and digests are in
+`evidence/r2.8.85-attempt-2-26c3363.json`.
+
+The Windows artifact review showed that rename bytes/hash, refreshed note
+count, renamed-path selection, vault bytes, and app-data bytes were correct.
+A parallel read-only code audit identified that a delayed watcher refresh can
+clear an unchanged read-only preview. R2.8.85 is accepted as a partial C09
+data-only settings slice; C09 and C09.1 remain pending. R2.8.86 will make the
+refresh preserve an open preview only while its path and revision still match.
+No local tests, builds, formatters, validators, or application launches were
+run.

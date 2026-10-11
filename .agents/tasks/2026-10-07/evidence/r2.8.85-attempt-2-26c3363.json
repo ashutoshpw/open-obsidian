@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.85",
+  "attempt": 2,
+  "source_sha": "26c3363b1bc07eac10c56a7a258b914bc36f67f3",
+  "outcome": "accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38147763585,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763585",
+      "jobs": [
+        {"id": 114494598098, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38147763553,
+      "attempt": 2,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763553",
+      "initial_attempt": {
+        "job_id": 114494598212,
+        "name": "macos-latest",
+        "conclusion": "failure",
+        "finding": "The local Electron retrieval-boundary check timed out after indexing completed; the same-SHA retry passed."
+      },
+      "jobs": [
+        {"id": 114494990489, "name": "macos-latest", "conclusion": "success", "attempt": 2},
+        {"id": 114494991703, "name": "ubuntu-latest", "conclusion": "success", "attempt": 2},
+        {"id": 114494991946, "name": "windows-latest", "conclusion": "success", "attempt": 2}
+      ]
+    },
+    "desktop_build": {
+      "id": 38147763543,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763543",
+      "jobs": [
+        {"id": 114494597924, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114494598038, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114494598086, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38147763527,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763527",
+      "jobs": [
+        {"id": 114494597925, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114494598050, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114494598060, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38147763555,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763555",
+      "jobs": [
+        {"id": 114494598486, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114494598708, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114494598726, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38147763480,
+      "attempt": 1,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763480",
+      "jobs": [
+        {"id": 114494597658, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114494597733, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 114494597778, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114494597802, "name": "minimum supported Rust (1.95)", "conclusion": "success"}
+      ],
+      "checks": "Formatting, workspace tests, Clippy, dependency layers, native builds and locked Rust 1.95 tests passed on GitHub Actions."
+    },
+    "vault_roundtrip": {
+      "id": 38147763591,
+      "attempt": 2,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38147763591",
+      "first_attempt": {
+        "windows_job_id": 114494598633,
+        "conclusion": "failure",
+        "finding": "Timed out waiting for the unchanged source bytes to appear in preview after external rename and refresh; the same-SHA rerun passed."
+      },
+      "jobs": [
+        {"id": 114496663099, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success", "attempt": 2},
+        {"id": 114496664031, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success", "attempt": 2},
+        {"id": 114496662392, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success", "attempt": 2}
+      ],
+      "reports": [
+        {
+          "runner_os": "Linux",
+          "status": "passed",
+          "source_sha": "26c3363b1bc07eac10c56a7a258b914bc36f67f3",
+          "reference_version": "1.14.4",
+          "report_sha256": "07e9e2d8562c46d28408d2498aad833455588a01cdfff31de3ecfa9e1a342ba2",
+          "artifact_id": 11705870161,
+          "artifact_sha256": "fd85773b93becd2fcad53ba971d33186fc2f9ad79eb80f2602241c1b299eb907"
+        },
+        {
+          "runner_os": "macOS",
+          "status": "passed",
+          "source_sha": "26c3363b1bc07eac10c56a7a258b914bc36f67f3",
+          "reference_version": "1.14.4",
+          "report_sha256": "cb1a2452f62903e7bc57526bb720a4ae6d59a7680bc98722122fde157bd439ff",
+          "artifact_id": 11705630532,
+          "artifact_sha256": "a72739d7b8e5f14a5c3d9f3990ef5660a7548b7e94cde5b464653139e3cc77d3"
+        },
+        {
+          "runner_os": "Windows",
+          "status": "passed",
+          "source_sha": "26c3363b1bc07eac10c56a7a258b914bc36f67f3",
+          "reference_version": "1.14.4",
+          "report_sha256": "2f7b545f8563e4811dd6bb6173b4dd9557a3ee3a878c331cf9e456ebef4fa67e",
+          "artifact_id": 11706550544,
+          "artifact_sha256": "c67a81532499f5c786f6878ee3bd94e8212a35c6b06d1e383593998fce4c73f5"
+        }
+      ],
+      "acceptance_limits": [
+        "Reports cover only the pinned Obsidian 1.14.4 synthetic-vault scenarios on these runner platforms; they do not certify every C01 workflow or general plugin/theme compatibility.",
+        "The first Windows run exposed a preview-refresh timing race; it passed on the same-SHA retry. A focused preview-reconciliation fix is tracked as the next source slice."
+      ]
+    }
+  },
+  "local_executable_validation": "none",
+  "accepted_scope": "R2.8.85 is accepted as a partial C09 data-only templates and daily-notes settings slice. The projections do not create notes, expand dates, execute templates, or make paths authoritative. C09 and C09.1 remain pending."
+}
