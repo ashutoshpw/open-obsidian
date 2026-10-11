@@ -2,8 +2,9 @@
 
 use super::{VaultError, VaultRoot, path_to_slashes, sha256_hex};
 use openobsidian_doc::{
-    AppearanceSettings, HotkeysSettings, ThemeStyleAnalysis, analyze_theme_stylesheet,
-    parse_appearance_settings, parse_hotkeys_settings,
+    AppSettings, AppearanceSettings, HotkeysSettings, ThemeStyleAnalysis,
+    analyze_theme_stylesheet, parse_app_settings, parse_appearance_settings,
+    parse_hotkeys_settings,
 };
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
@@ -82,6 +83,8 @@ pub struct VaultConfiguration {
     pub json: BTreeMap<String, VaultConfigurationFile>,
     /// Supported fields from valid `appearance.json` objects, keyed by vault-relative path.
     pub appearance: BTreeMap<String, AppearanceSettings>,
+    /// Supported fields from root `app.json` objects, keyed by vault-relative path.
+    pub app_settings: BTreeMap<String, AppSettings>,
     /// Data-only command bindings from root `hotkeys.json` files, keyed by vault-relative path.
     pub hotkeys: BTreeMap<String, HotkeysSettings>,
     /// Raw CSS theme and snippet assets, sorted by vault-relative path.
@@ -146,6 +149,7 @@ impl VaultRoot {
                 &directory,
                 &mut result.json,
                 &mut result.appearance,
+                &mut result.app_settings,
                 &mut result.hotkeys,
             )?;
             discover_style_assets(self, &directory, &mut result.styles)?;
@@ -163,6 +167,7 @@ fn discover_directory(
     directory: &Path,
     json: &mut BTreeMap<String, VaultConfigurationFile>,
     appearance: &mut BTreeMap<String, AppearanceSettings>,
+    app_settings: &mut BTreeMap<String, AppSettings>,
     hotkeys: &mut BTreeMap<String, HotkeysSettings>,
 ) -> Result<(), VaultError> {
     let Some(directory) = confined_directory(vault, directory)? else {
@@ -176,7 +181,14 @@ fn discover_directory(
         let file_type = entry.file_type()?;
         if file_type.is_dir() {
             if let Some(child_directory) = confined_directory(vault, &path)? {
-                discover_directory(vault, &child_directory, json, appearance, hotkeys)?;
+                discover_directory(
+                    vault,
+                    &child_directory,
+                    json,
+                    appearance,
+                    app_settings,
+                    hotkeys,
+                )?;
             }
             continue;
         }
@@ -196,7 +208,10 @@ fn discover_directory(
         if relative_path.ends_with("/appearance.json") {
             appearance.insert(relative_path.clone(), parse_appearance_settings(&object));
         }
-        if is_root_hotkeys_path(&relative_path) {
+        if is_root_configuration_file(&relative_path, "app.json") {
+            app_settings.insert(relative_path.clone(), parse_app_settings(&object));
+        }
+        if is_root_configuration_file(&relative_path, "hotkeys.json") {
             hotkeys.insert(relative_path.clone(), parse_hotkeys_settings(&object));
         }
         json.insert(relative_path, VaultConfigurationFile { raw_bytes, object });
@@ -204,11 +219,11 @@ fn discover_directory(
     Ok(())
 }
 
-fn is_root_hotkeys_path(relative_path: &str) -> bool {
-    let Some((configuration_folder, file_name)) = relative_path.split_once('/') else {
+fn is_root_configuration_file(relative_path: &str, expected_file_name: &str) -> bool {
+    let Some((configuration_folder, actual_file_name)) = relative_path.split_once('/') else {
         return false;
     };
-    is_configuration_folder(configuration_folder) && file_name == "hotkeys.json"
+    is_configuration_folder(configuration_folder) && actual_file_name == expected_file_name
 }
 
 fn discover_style_assets(

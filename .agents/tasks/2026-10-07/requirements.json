@@ -3390,7 +3390,10 @@
         "evidence/r2.8.79-c09-appearance-e3de21b.json",
         "evidence/r2.8.80-c09-style-inventory-b6f0bbb.json",
         "evidence/r2.8.81-attempt-1-64fdca0.json",
-        "evidence/r2.8.81-c09-app-data-separation-fb51058.json"
+        "evidence/r2.8.81-c09-app-data-separation-fb51058.json",
+        "evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json",
+        "evidence/r2.8.83-attempt-2-6d4d891.json",
+        "evidence/r2.8.83-tracker-checkpoint-9176467.json"
       ],
       "tested_source_tree": null,
       "blocker": null,
@@ -3409,7 +3412,7 @@
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Implement confined, deterministic read-only configuration discovery in crates/vault and typed supported appearance-settings projection in crates/doc, preserving exact JSON bytes and unknown keys with vault-relative paths and symlink/invalid JSON exclusions. This is a partial C09 slice; full C09 acceptance also requires CSS/theme analysis, broader supported-settings mapping, and the app-metadata policy."
+      "migration_acceptance": "Implement confined, deterministic read-only configuration discovery in crates/vault and typed supported appearance, root app.json, and data-only hotkeys projections in crates/doc, preserving exact JSON bytes and unknown keys with vault-relative paths and symlink/invalid JSON exclusions. These remain partial C09 slices; full C09 acceptance also requires CSS/theme analysis, broader supported-settings mapping, and the app-metadata policy."
     },
     {
       "id": "C09.1",

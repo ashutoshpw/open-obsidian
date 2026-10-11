@@ -3,6 +3,26 @@
 use serde_json::{Map, Value};
 use std::collections::HashSet;
 
+/// A small, data-only projection of supported fields in an Obsidian `app.json` file.
+///
+/// The original JSON object and bytes remain authoritative. This type does not
+/// apply these preferences to OpenObsidian's current UI.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct AppSettings {
+    /// An explicitly stored line-number preference, if it is a JSON boolean.
+    pub show_line_number: Option<bool>,
+}
+
+/// Projects the explicitly supported `app.json` fields from a parsed object.
+///
+/// Missing and non-boolean values remain absent from the typed view and are
+/// still available in the source object held by the caller.
+pub fn parse_app_settings(raw: &Map<String, Value>) -> AppSettings {
+    AppSettings {
+        show_line_number: raw.get("showLineNumber").and_then(Value::as_bool),
+    }
+}
+
 /// The appearance mode requested by an Obsidian vault configuration file.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AppearanceMode {
@@ -113,11 +133,40 @@ fn is_ecmascript_whitespace(character: char) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{AppearanceMode, AppearanceSettings, parse_appearance_settings};
+    use super::{
+        AppSettings, AppearanceMode, AppearanceSettings, parse_app_settings,
+        parse_appearance_settings,
+    };
     use serde_json::{Map, Value};
 
     const CONFIGURATION_FIXTURE: &str =
         include_str!("../../../fixtures/configuration-inventory.json");
+
+    #[test]
+    fn projects_only_supported_app_settings_from_fixture_cases() {
+        let fixture: Value = serde_json::from_str(CONFIGURATION_FIXTURE)
+            .expect("configuration fixture must be valid JSON");
+
+        for case in fixture["app_settings_cases"]
+            .as_array()
+            .expect("app settings cases must be an array")
+        {
+            let raw: Map<String, Value> = case["source"]
+                .as_object()
+                .expect("app settings source must be a JSON object")
+                .clone();
+            let original = raw.clone();
+            let projected = parse_app_settings(&raw);
+
+            assert_eq!(
+                projected.show_line_number,
+                case["expected"]["showLineNumber"].as_bool()
+            );
+            assert_eq!(raw, original);
+        }
+
+        assert_eq!(parse_app_settings(&Map::new()), AppSettings::default());
+    }
 
     #[test]
     fn projects_only_supported_appearance_fields_from_fixture_cases() {

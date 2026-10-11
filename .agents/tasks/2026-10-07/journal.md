@@ -3784,3 +3784,23 @@ C09 settings/hotkeys data-only slice; C09 and C09.1 remain pending. The next
 action is a documentation-only tracker checkpoint, followed by the next
 bounded settings slice selected from parallel read-only research. No local
 tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T13:27:00Z — R2.8.83 tracker checkpoint passed; R2.8.84 scoped
+
+Documentation-only tracker SHA `9176467a8b77bc1963352421867cc87f7dfc9798` passed
+all six required documentation workflows, including Rust CI on Ubuntu, macOS,
+Windows and Rust 1.95. Its path-filtered Obsidian round-trip was not triggered;
+that workflow passed on implementation SHA
+`6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef`. Exact run/job IDs are recorded in
+`evidence/r2.8.83-tracker-checkpoint-9176467.json`.
+
+Two independent read-only reviews compared the remaining app, workspace, and
+plugin configuration candidates. The next slice is limited to the existing
+fixture-backed `showLineNumber` Boolean in root `app.json` files. The typed view
+will preserve true/false while treating missing or incorrectly typed values as
+absent, retain exact JSON bytes and unknown fields, and leave nested plugin
+`app.json` files generic. It does not change UI behavior or claim a complete
+Obsidian `app.json` schema. Scope and review rationale are in
+`evidence/r2.8.84-app-json-source-research.md`. C09 and C09.1 remain pending.
+No local tests, builds, formatters, validators, or application launches were
+run.

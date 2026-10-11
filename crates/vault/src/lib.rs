@@ -2625,6 +2625,38 @@ mod tests {
             discovered.json[".obsidian/app.json"].object["unknownFutureKey"]["keep"],
             serde_json::json!([1, 2])
         );
+        let expected_app_settings_paths = expected["app_settings_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|path| path.as_str().unwrap().to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            discovered.app_settings.keys().cloned().collect::<Vec<_>>(),
+            expected_app_settings_paths
+        );
+        assert_eq!(
+            discovered.app_settings[".obsidian/app.json"].show_line_number,
+            Some(true)
+        );
+        assert_eq!(
+            discovered.app_settings[".obsidian-mobile/app.json"].show_line_number,
+            Some(false)
+        );
+        assert_eq!(
+            discovered.json[".obsidian-mobile/app.json"].object["futureMobileOption"],
+            serde_json::json!("keep")
+        );
+        assert!(
+            !discovered
+                .app_settings
+                .contains_key(".obsidian/plugins/sample/app.json")
+        );
+        assert!(
+            discovered
+                .json
+                .contains_key(".obsidian/plugins/sample/app.json")
+        );
         let expected_hotkeys_paths = expected["hotkeys_paths"]
             .as_array()
             .unwrap()

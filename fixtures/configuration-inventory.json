@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "fixture:c09-configuration-inventory",
   "covers": ["C09"],
-  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project supported appearance settings and data-only hotkey overrides without following symlinks or creating files.",
+  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project the fixture-backed root app.json line-number field, supported appearance settings, and data-only root hotkey bindings without following symlinks or creating files.",
   "directories": [
     ".obsidian",
     ".obsidian-broken",
@@ -25,6 +25,10 @@
       "source": "{\"showLineNumber\":true,\r\n\"unknownFutureKey\":{\"keep\":[1,2]}}\r\n"
     },
     {
+      "relative_path": ".obsidian-mobile/app.json",
+      "source": "{\"showLineNumber\":false,\"futureMobileOption\":\"keep\"}\n"
+    },
+    {
       "relative_path": ".obsidian/workspace.json",
       "source": "[]\n"
     },
@@ -35,6 +39,10 @@
     {
       "relative_path": ".obsidian/plugins/sample/data.json",
       "source": "{\"enabled\":false,\"pluginFutureOption\":\"keep\"}\n"
+    },
+    {
+      "relative_path": ".obsidian/plugins/sample/app.json",
+      "source": "{\"showLineNumber\":true,\"pluginOnlyOption\":true}\n"
     },
     {
       "relative_path": ".obsidian/hotkeys.json",
@@ -127,6 +135,28 @@
     {
       "relative_path": ".hidden/settings.json",
       "source": "{\"ignored\":true}\n"
+    }
+  ],
+  "app_settings_cases": [
+    {
+      "source": {"showLineNumber": true, "unknownFutureKey": {"keep": [1, 2]}},
+      "expected": {"showLineNumber": true}
+    },
+    {
+      "source": {"showLineNumber": false},
+      "expected": {"showLineNumber": false}
+    },
+    {
+      "source": {"unknownFutureKey": true},
+      "expected": {"showLineNumber": null}
+    },
+    {
+      "source": {"showLineNumber": null},
+      "expected": {"showLineNumber": null}
+    },
+    {
+      "source": {"showLineNumber": "enabled"},
+      "expected": {"showLineNumber": null}
     }
   ],
   "appearance_cases": [
@@ -258,13 +288,19 @@
   "expected": {
     "folders": [".obsidian", ".obsidian-broken", ".obsidian-mobile"],
     "json_paths": [
+      ".obsidian-mobile/app.json",
       ".obsidian-mobile/appearance.json",
       ".obsidian-mobile/hotkeys.json",
       ".obsidian/app.json",
       ".obsidian/hotkeys.json",
+      ".obsidian/plugins/sample/app.json",
       ".obsidian/plugins/sample/data.json",
       ".obsidian/plugins/sample/hotkeys.json",
       ".obsidian/themes/Solarized/manifest.json"
+    ],
+    "app_settings_paths": [
+      ".obsidian-mobile/app.json",
+      ".obsidian/app.json"
     ],
     "hotkeys_paths": [
       ".obsidian-mobile/hotkeys.json",
