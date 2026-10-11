@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.76-C01.2-44-external-note-rename-reference-roundtrip",
+  "source_sha": "f231a119edea037fd27abb8caf8968f3b8223d8f",
+  "status": "not_accepted",
+  "workflow_runs": {
+    "inventory": {"run_id": 38120311848, "conclusion": "success"},
+    "quality": {"run_id": 38120311891, "conclusion": "success"},
+    "desktop_build": {"run_id": 38120311884, "conclusion": "success"},
+    "plugin_renderer": {"run_id": 38120311851, "conclusion": "success"},
+    "loaded_plugin_workflows": {"run_id": 38120311852, "conclusion": "success"},
+    "rust_ci": {"run_id": 38120311869, "conclusion": "success"},
+    "obsidian_vault_roundtrip": {
+      "run_id": 38120311853,
+      "conclusion": "failure",
+      "jobs": {
+        "windows-latest": {"job_id": 114413484081, "conclusion": "failure", "finding": "The note selector was collapsed; UI Automation timed out waiting for After refresh.md. The case stopped before changing the vault."},
+        "ubuntu-24.04": {"job_id": 114413484189, "conclusion": "success", "finding": "C01.2-44 passed on Linux."},
+        "macos-latest": {"job_id": 114413484219, "conclusion": "failure", "finding": "Accessibility did not expose Next note and OCR did not locate the button or anchor; the case stopped before changing the vault."}
+      },
+      "artifacts": {
+        "Linux": {"artifact_id": 11694952131, "artifact_digest": "sha256:3bf4313a8ff17b16f385c2d2430ab319a066934b19d415e9ecf1c1be6d36fa11", "report_sha256": "da2575d60f39fbdaeee9177f6e36284ea57faab33110a5a08a9907bcfc668f64", "status": "passed"},
+        "macOS": {"artifact_id": 11695720943, "artifact_digest": "sha256:8370156bdcb41c10bb0a03aea26fbf63e5bc801afd752277ef66643214770df9", "report_sha256": "f2b50763624cae23f810dfe4248feb34071a56d1c6835dce62e24de35d6b8bd0", "status": "failed_before_rename"},
+        "Windows": {"artifact_id": 11695306462, "artifact_digest": "sha256:fce002854534525962372275e3f68ca76f0ba33c7f54bb7ea186f36e244b6c36", "report_sha256": "ff71a153bed43170611175c2d85caa94c696c558bdd186613a4751db01109363", "status": "failed_before_rename"}
+      }
+    }
+  },
+  "correction": {
+    "source_sha": "6d3ac642fd3b10052d4f41e9b6274654bc54e786",
+    "changes": [
+      "Open the Windows note selector before selecting the exact note path.",
+      "Use the egui-reported Next/Previous button geometry and CoreGraphics pointer events on macOS instead of the failed accessibility/OCR fallback."
+    ]
+  },
+  "parallel_step_groups": "Applicable native GitHub Actions parallel groups passed; no local timing or execution claim is made.",
+  "no_local_executable_validation": true
+}

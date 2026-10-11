@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T07:06:27Z",
+  "updated_at": "2026-10-11T07:39:08Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3354878b1ef3fd45f42d9604f35ba65e613a9def",
+  "last_reconciled_head": "6d3ac642fd3b10052d4f41e9b6274654bc54e786",
   "current_milestone": "R2.8.76",
-  "next_action": "Inspect all seven exact-SHA GitHub Actions workflows and the Linux, macOS, and Windows round-trip artifacts for R2.8.76. Keep C01.2-44 and parent C01/C01.2 pending until the evidence passes.",
+  "next_action": "Commit and push the R2.8.76 evidence/tracker checkpoint and inspect its path-eligible GitHub Actions workflows. Then begin R2.8.77 for C08.1, the Rust safe external-open path for unknown vault files; reconcile the six pending R1-tagged requirement rows in a separate tracker slice. Use GitHub CI only for executable validation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "938f4cda4885efc09d75e6d1eeb182398cacf229"
+      "implementation_sha": "6d3ac642fd3b10052d4f41e9b6274654bc54e786"
     },
     "R3": {
       "status": "pending",
@@ -75,6 +75,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.76 / C01.2-44 passed on exact implementation SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786 after the first attempt exposed Windows/macOS navigation failures before mutation. All seven required workflows passed on the correction SHA; Linux, macOS, and Windows round trips preserved the 142-byte source hash across the external rename, cleared stale preview, selected the renamed path, preserved snapshots, and reopened in Obsidian Restricted Mode. Exact run IDs, job IDs, artifact/report/screenshot hashes, and both attempts are recorded in evidence/r2.8.76-c01.2-44-attempt-1-f231a11.json and evidence/r2.8.76-c01.2-44-attempt-2-6d3ac64.json. C01.2-44 only is accepted; parent C01/C01.2 remain pending. No local executable validation was run.",
     "R2.8.73 tracker checkpoint SHA 616920d3f807672fbc72619f4560ba1f04f7ca8e passed Rust migration inventory run 38112650345, job 114391230743; desktop build, Rust CI, quality, plugin renderer, and loaded-plugin workflows also passed. The initial 3b8ef4e inventory JSON punctuation failure was fixed and retained as CI evidence. No local executable validation was run.",
     "R2.8.73 / C01.2-41 passed on exact implementation SHA e78409a4c721e63c866ee6b7fd4411d96c277ded: the pinned Obsidian 1.14.4-authored Untitled.md was selected and its single image embed resolved to the snapshot-matching attachment, with decoded dimensions/alt text and visible result on Linux, macOS, and Windows. Vault snapshots stayed unchanged; picker cancellation and Obsidian reopen passed; macOS app.ron UI-state persistence was within policy. All seven required workflows passed. Evidence: evidence/r2.8.73-c01.2-41-e78409a.json. Parent C01/C01.2 remain pending; no local executable validation was run.",
     "R2.8.71 completed C01.2-39: the actual OpenObsidian desktop previewed and closed the BOM/CRLF note from a pinned Obsidian 1.14.4-authored vault on Linux, macOS, and Windows; vault snapshots stayed byte-identical, Obsidian reopen passed, and macOS app.ron UI-state persistence was validated. All seven required workflows passed on implementation SHA ddfee6f6459ef15598337bdebe7b8367fc3b2539. Tracker checkpoint SHA cd9137d0f45f5927aa891c24ac82a63f26489d32 passed Rust migration inventory run 38099452203, job 114352164752. Evidence: evidence/r2.8.71-reference-source-preview-ddfee6f.json. C01/C01.2 remain pending for broader reference-app read-only coverage; no local executable validation was run.",
@@ -298,7 +299,7 @@
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.74 / C01.2-42 passed on exact implementation SHA 79526587c3ed3ead47a0cc682baa4a8f92ecb26b. All seven required GitHub Actions workflows passed, with the quality workflow passing on same-SHA attempt 2 after a transient Ubuntu Electron retrieval-boundary timeout. Obsidian 1.14.4-authored image removal, fresh Unresolved/targetless/not_rendered diagnostics, unchanged note source, snapshots, and reopen passed on Linux, macOS, and Windows. Evidence: evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json. Parent C01/C01.2 remain pending; no local executable validation was used."
   ],
-  "push_status": "R2.8.76 C01.2-44 is the active slice; exact-SHA GitHub Actions results and cross-platform artifact inspection are required before acceptance. All executable validation remains in CI.",
+  "push_status": "R2.8.76 C01.2-44 implementation accepted on exact SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786; evidence/tracker checkpoint is being prepared for origin/main and its path-eligible CI. All executable validation remains in GitHub Actions.",
   "ci_results": [
     {
       "name": "inventory",
@@ -26666,10 +26667,63 @@
       }
     },
     "R2.8.76": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "3354878b1ef3fd45f42d9604f35ba65e613a9def",
-      "implementation_commits": [],
-      "ci_attempts": [],
+      "implementation_commits": [
+        "f231a119edea037fd27abb8caf8968f3b8223d8f",
+        "6d3ac642fd3b10052d4f41e9b6274654bc54e786"
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "implementation_sha": "f231a119edea037fd27abb8caf8968f3b8223d8f",
+          "conclusion": "not_accepted",
+          "workflow_runs": {
+            "inventory": 38120311848,
+            "quality": 38120311891,
+            "desktop_build": 38120311884,
+            "plugin_renderer": 38120311851,
+            "loaded_plugin_workflows": 38120311852,
+            "rust_ci": 38120311869,
+            "obsidian_vault_roundtrip": 38120311853
+          },
+          "findings": "The six companion workflows passed and Linux completed the round trip. Windows failed before mutation because the note selector was collapsed; macOS failed before mutation because accessibility/OCR did not locate Next note. The correction stabilized navigation before accepting the slice.",
+          "evidence": "evidence/r2.8.76-c01.2-44-attempt-1-f231a11.json"
+        },
+        {
+          "attempt": 2,
+          "implementation_sha": "6d3ac642fd3b10052d4f41e9b6274654bc54e786",
+          "conclusion": "accepted",
+          "workflow_runs": {
+            "inventory": 38120913923,
+            "quality": 38120913936,
+            "desktop_build": 38120913958,
+            "plugin_renderer": 38120913859,
+            "loaded_plugin_workflows": 38120913920,
+            "rust_ci": 38120913925,
+            "obsidian_vault_roundtrip": 38120913943
+          },
+          "findings": "All seven required workflows passed on this exact SHA. Linux, macOS, and Windows verified the external path-only rename, preserved 142-byte source SHA-256, unchanged app data during rename, stale-preview clearing, exact fallback selection, snapshot-preserving re-preview/close, and Obsidian 1.14.4 Restricted Mode reopen. Applicable native parallel step groups passed.",
+          "roundtrip_artifacts": {
+            "Linux": {
+              "artifact_id": 11695138147,
+              "artifact_digest": "sha256:68d1b2c9f88568b1516115fc718d7e636031e86afe2267fa127c1fadb78292ee",
+              "report_sha256": "ce26c914389863062249efa2dda32d4c0d9b622f09e0b184ee591475e7d06afd"
+            },
+            "macOS": {
+              "artifact_id": 11694873400,
+              "artifact_digest": "sha256:5a0efcec29564509eaf3a1c446294386002a23de96feadda20c7017564851cb2",
+              "report_sha256": "f881c1df3d0f098927cfd52fc41c94b632f42a979b951fe35f94f2c3363ade10"
+            },
+            "Windows": {
+              "artifact_id": 11695612108,
+              "artifact_digest": "sha256:87e03ce2a5b23ad3467f36ac805805dd95b8391f727ee0b5e9e9073bbd76eb05",
+              "report_sha256": "a9cb71d62a7e4f67fe24c66a7092a6249bbf05f2e7c828e4ce8640ff8afc27b9"
+            }
+          },
+          "evidence": "evidence/r2.8.76-c01.2-44-attempt-2-6d3ac64.json"
+        }
+      ],
       "scope": "Exercise an external rename of the selected, visibly previewed, Obsidian-authored BOM/CRLF note in the running OpenObsidian desktop; verify the rename changes only its path, refresh clears stale preview and selects the renamed path, no-op reads preserve snapshots, and Obsidian 1.14.4 reopens the renamed note.",
       "acceptance": [
         "On Ubuntu, macOS, and Windows, renaming After refresh.md to After refresh renamed.md while its source preview is open changes only those two vault paths and preserves the exact byte length and SHA-256.",
@@ -26687,8 +26741,9 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Inspect all seven exact-SHA GitHub Actions workflows and each Linux, macOS, and Windows round-trip artifact. Correct only from CI evidence; do not use local executable validation.",
-      "evidence": "evidence/r2.8.76-c01-readonly-audit.md"
+      "next_action": "Commit and push this accepted tracker checkpoint, wait for its path-eligible GitHub Actions workflows, then start the bounded R2.8.77 C08.1 external-open slice. Keep parent C01/C01.2 pending.",
+      "evidence": "evidence/r2.8.76-c01-readonly-audit.md",
+      "roadmap_audit": "evidence/r2.8.76-parallel-roadmap-audit.md"
     }
   },
   "ci_preparation": {

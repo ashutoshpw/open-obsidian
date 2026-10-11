@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.76-C01.2-44-external-note-rename-reference-roundtrip",
+  "source_sha": "6d3ac642fd3b10052d4f41e9b6274654bc54e786",
+  "status": "accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38120913923,
+      "jobs": {"inventory": {"job_id": 114415279344, "conclusion": "success"}},
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38120913936,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114415279573, "conclusion": "success"},
+        "macos-latest": {"job_id": 114415279577, "conclusion": "success"},
+        "windows-latest": {"job_id": 114415279887, "conclusion": "success"}
+      },
+      "conclusion": "success"
+    },
+    "desktop_build": {
+      "run_id": 38120913958,
+      "jobs": {
+        "windows-latest": {"job_id": 114415279765, "conclusion": "success"},
+        "macos-latest": {"job_id": 114415279842, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114415279914, "conclusion": "success"}
+      },
+      "conclusion": "success"
+    },
+    "plugin_renderer": {
+      "run_id": 38120913859,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114415279139, "conclusion": "success"},
+        "windows-latest": {"job_id": 114415279195, "conclusion": "success"},
+        "macos-latest": {"job_id": 114415279311, "conclusion": "success"}
+      },
+      "conclusion": "success"
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38120913920,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114415279463, "conclusion": "success"},
+        "windows-latest": {"job_id": 114415279630, "conclusion": "success"},
+        "macos-latest": {"job_id": 114415279640, "conclusion": "success"}
+      },
+      "conclusion": "success"
+    },
+    "rust_ci": {
+      "run_id": 38120913925,
+      "jobs": {
+        "rust (macos-latest)": {"job_id": 114415279235, "conclusion": "success"},
+        "rust (windows-latest)": {"job_id": 114415279354, "conclusion": "success"},
+        "rust (ubuntu-latest)": {"job_id": 114415279472, "conclusion": "success"}
+      },
+      "conclusion": "success"
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38120913943,
+      "jobs": {
+        "windows-latest": {"job_id": 114415279705, "conclusion": "success"},
+        "ubuntu-24.04": {"job_id": 114415279805, "conclusion": "success"},
+        "macos-latest": {"job_id": 114415279947, "conclusion": "success"}
+      },
+      "conclusion": "success",
+      "artifacts": {
+        "Linux": {
+          "artifact_id": 11695138147,
+          "artifact_digest": "sha256:68d1b2c9f88568b1516115fc718d7e636031e86afe2267fa127c1fadb78292ee",
+          "report_sha256": "ce26c914389863062249efa2dda32d4c0d9b622f09e0b184ee591475e7d06afd",
+          "size_bytes": 8352403,
+          "status": "passed",
+          "selected_fallback_path": "After refresh renamed.md",
+          "app_data_unchanged_during_rename": true,
+          "old_path_absent_after_rename": true,
+          "source_hash_preserved": true,
+          "stale_preview_cleared": true,
+          "reopen_in_restricted_mode_passed": true,
+          "old_path_absent_after_reopen": true,
+          "renamed_source_visible_after_reopen": true,
+          "screenshots": {
+            "preview_before_rename": {"path": "openobsidian-external-note-before-rename.png", "sha256": "3226cb4a04e782cfaa668dac5e69720860f04eb146f0b3881db35091482b5e06"},
+            "refresh_after_rename": {"path": "openobsidian-after-external-note-rename-refresh.png", "sha256": "a3140bbb3c42f422f9b1e280a16986d2feef369736bdf411ca54350147f66f5d"},
+            "renamed_source_preview": {"path": "openobsidian-renamed-note-source-preview.png", "sha256": "6bac7e67839c07a707c1ef9cabe802b0846fc438563f46d0e6e10702c206852c"},
+            "preview_closed": {"path": "openobsidian-renamed-note-preview-closed.png", "sha256": "3759bcf73bccf95238512e69bdd85fe5ada8f65c39a39101e24448b94aef29f1"},
+            "obsidian_reopen": {"path": "obsidian-reopened-external-note.png", "sha256": "efaf3a008155134414d9f93eab21ac2d39821e2c3d7296c95cc80fa6b64194ee"}
+          }
+        },
+        "macOS": {
+          "artifact_id": 11694873400,
+          "artifact_digest": "sha256:5a0efcec29564509eaf3a1c446294386002a23de96feadda20c7017564851cb2",
+          "report_sha256": "f881c1df3d0f098927cfd52fc41c94b632f42a979b951fe35f94f2c3363ade10",
+          "size_bytes": 9407571,
+          "status": "passed",
+          "selected_fallback_path": "After refresh renamed.md",
+          "app_data_unchanged_during_rename": true,
+          "old_path_absent_after_rename": true,
+          "source_hash_preserved": true,
+          "stale_preview_cleared": true,
+          "reopen_in_restricted_mode_passed": true,
+          "old_path_absent_after_reopen": true,
+          "renamed_source_visible_after_reopen": true,
+          "screenshots": {
+            "preview_before_rename": {"path": "openobsidian-external-note-before-rename-window.png", "sha256": "aae3766cc17480c4239a1e6d52fd038bc11059516e1bc0ade4f119a475730652"},
+            "refresh_after_rename": {"path": "openobsidian-after-external-note-rename-refresh-window.png", "sha256": "561f1c5d0cc85bc3808f62d50d1bec799813334503a3d954a341aea8cdc199fe"},
+            "renamed_source_preview": {"path": "openobsidian-renamed-note-source-preview-window.png", "sha256": "367e08aeffbbe2b6d16eae5c93af656a862a23256e91333a0ca699eb0b55bbb4"},
+            "preview_closed": {"path": "openobsidian-renamed-note-preview-closed-window.png", "sha256": "afdc340a3d3905d2e8d5d8418ecbff1f1a4b58fdb45aed80963f6b6091b67a29"},
+            "obsidian_reopen": {"path": "obsidian-reopened-external-note.png", "sha256": "518d8d8677c99a1f000cf7eaf2a99e30e78bdf95b02de57b6529e09caf73458b"}
+          }
+        },
+        "Windows": {
+          "artifact_id": 11695612108,
+          "artifact_digest": "sha256:87e03ce2a5b23ad3467f36ac805805dd95b8391f727ee0b5e9e9073bbd76eb05",
+          "report_sha256": "a9cb71d62a7e4f67fe24c66a7092a6249bbf05f2e7c828e4ce8640ff8afc27b9",
+          "size_bytes": 9338488,
+          "status": "passed",
+          "selected_fallback_path": "After refresh renamed.md",
+          "app_data_unchanged_during_rename": true,
+          "old_path_absent_after_rename": true,
+          "source_hash_preserved": true,
+          "stale_preview_cleared": true,
+          "reopen_in_restricted_mode_passed": true,
+          "old_path_absent_after_reopen": true,
+          "renamed_source_visible_after_reopen": true,
+          "screenshots": {
+            "preview_before_rename": {"path": "openobsidian-external-note-before-rename-window.png", "sha256": "280d3227727af24010b80ecb5aaa21c66a1193cfb979c001547f01dfaeef24e6"},
+            "refresh_after_rename": {"path": "openobsidian-after-external-note-rename-refresh-window.png", "sha256": "e948c2a5ea0bbcc11e01b5e1312f4ece6cdd32b49c1ce435cbb05dbab64a0188"},
+            "renamed_source_preview": {"path": "openobsidian-renamed-note-source-preview-window.png", "sha256": "155b0ecbaad12a9bfb48312d6f70390db5201059bb5636dd8e70e04fe8d17b8b"},
+            "preview_closed": {"path": "openobsidian-renamed-note-preview-closed-window.png", "sha256": "e948c2a5ea0bbcc11e01b5e1312f4ece6cdd32b49c1ce435cbb05dbab64a0188"},
+            "obsidian_reopen": {"path": "obsidian-reopened-external-note.png", "sha256": "dd87f4c5e0f79ae0b637d9ae4552d65e43f1569db4abc90405a3ba65bdf6c00a"}
+          }
+        }
+      }
+    }
+  },
+  "cross_platform_assertions": {
+    "selected_external_note_path": "After refresh.md",
+    "renamed_note_path": "After refresh renamed.md",
+    "renamed_source_bytes": 142,
+    "renamed_source_sha256": "225d6216fad51e43994e3ddc2a29411ff003a6ed0336d7c8f4fd13f4e7b39309",
+    "external_rename_changes_only_expected_old_and_new_paths": true,
+    "markdown_count_unchanged_at_three": true,
+    "app_data_unchanged_during_rename": true,
+    "refresh_clears_old_preview_and_selects_renamed_path": true,
+    "repreview_and_noop_close_preserve_post_rename_snapshots": true,
+    "obsidian_1_14_4_reopen_passed_on_all_platforms": true,
+    "restricted_mode_selected_on_all_platforms": true,
+    "old_path_absent_and_new_path_visible_after_reopen": true,
+    "renamed_source_bytes_and_marker_visible_after_reopen": true,
+    "workspace_state_changes_only": ".obsidian/workspace.json",
+    "screenshots_visually_inspected_on_all_three_platforms": true
+  },
+  "parallel_step_groups": {
+    "quality": {"success": 12, "platforms": 3},
+    "desktop_build": {"success": 6, "platforms": 3},
+    "rust_ci": {"success": 9, "platforms": 3},
+    "obsidian_vault_roundtrip": {"success": 9, "platforms": 3},
+    "no_named_parallel_groups": ["inventory", "plugin_renderer", "loaded_plugin_workflows"],
+    "no_local_timing_or_execution_claim": true
+  },
+  "no_local_executable_validation": true
+}

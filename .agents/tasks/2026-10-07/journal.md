@@ -3219,4 +3219,39 @@ Next: audit the remaining C01/C01.2 read-only requirements and choose the next
 bounded gap. Parent C01/C01.2 remain pending; executable validation stays in
 GitHub Actions.
 
-R2.8.76 is in progress. The fresh C01/C01.2 read-only audit found that C01.2-24 covers external note rename only in the synthetic egui harness, not in the pinned Obsidian-authored reference-app flow. C01.2-44 now adds an external rename while the edited note source preview is open, exact path/hash snapshots, refresh fallback and stale-preview checks, no-op read/close snapshots, and Obsidian 1.14.4 reopen. Seven-workflow exact-SHA CI and all three platform artifacts are pending. Parent C01/C01.2 remain pending; no local executable validation was run. See evidence/r2.8.76-c01-readonly-audit.md.
+### R2.8.76 / C01.2-44 accepted on 6d3ac64
+
+The first implementation SHA `f231a119edea037fd27abb8caf8968f3b8223d8f`
+passed the six companion workflows and Linux round trip, but Windows' note
+selector was collapsed and macOS accessibility/OCR did not locate the next-note
+button. Both failed before mutating the vault. Correction SHA
+`6d3ac642fd3b10052d4f41e9b6274654bc54e786` opens the Windows selector and uses
+the reported native button geometry for macOS navigation.
+
+All seven required workflows passed on the correction SHA. Linux, macOS, and
+Windows confirmed the external path-only rename, unchanged 142-byte SHA-256,
+stale-preview clearing, exact fallback selection, snapshot-preserving
+re-preview/close, and Obsidian 1.14.4 Restricted Mode reopen. Applicable
+GitHub Actions parallel groups passed. Exact run/job IDs, artifact/report and
+screenshot hashes, and both attempts are in
+`evidence/r2.8.76-c01.2-44-attempt-1-f231a11.json` and
+`evidence/r2.8.76-c01.2-44-attempt-2-6d3ac64.json`. The matrix and requirement
+tracker accept C01.2-44 only; parent C01/C01.2 remain pending. No local
+executable validation was run.
+
+### Parallel roadmap audit
+
+Three read-only agents compared remaining R2 gaps and phase assignments. The
+recommended next slice is C08.1: add a vault-confined regular-file resolver, a
+platform opener, and a native action, with an injected CI opener asserting the
+exact original path and denials for missing paths, directories, traversal, and
+symlinks. C09's read-only `.obsidian` inventory is another bounded candidate;
+C06/C07 are larger uncovered document/workspace areas. The audit also records
+six pending requirement rows still labeled R1 although `state.json` marks R1
+complete. They remain pending until mappings and criteria are reconciled.
+Details: `evidence/r2.8.76-parallel-roadmap-audit.md`.
+
+Next: commit and push this tracker/evidence checkpoint, inspect the path-eligible
+CI workflows, then begin R2.8.77 for C08.1. Reconcile the R1 row assignments in
+a separate tracker slice; do not treat partial or legacy-only evidence as
+acceptance. All executable validation remains in GitHub Actions.
