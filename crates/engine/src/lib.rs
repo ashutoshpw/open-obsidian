@@ -145,11 +145,12 @@ impl VaultSession {
         if snapshot.truncated {
             return Err(CanvasTextNodePreviewError::TooLarge { relative_path });
         }
-        let revision_sha256 = snapshot
-            .revision_sha256
-            .ok_or_else(|| CanvasTextNodePreviewError::TooLarge {
-                relative_path: relative_path.clone(),
-            })?;
+        let revision_sha256 =
+            snapshot
+                .revision_sha256
+                .ok_or_else(|| CanvasTextNodePreviewError::TooLarge {
+                    relative_path: relative_path.clone(),
+                })?;
         let document = parse_canvas(snapshot.source.as_bytes())?;
         let text = document.extract_text_node(node_id)?.to_owned();
 

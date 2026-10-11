@@ -6,10 +6,9 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
     CanvasNoteCreateResult, LinkKind, LinkRenameAction, LinkResolutionStatus,
-    MAX_NOTE_SOURCE_PREVIEW_BYTES,
-    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
-    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
+    TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
+    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
     VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport, VaultWriteRequest,
@@ -993,7 +992,13 @@ impl OpenObsidianApp {
 
     fn show_canvas_note_creation(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
-        ui.heading("Create note from Canvas text card");
+        eframe::egui::CollapsingHeader::new("Create note from Canvas text card")
+            .id_salt("canvas-note-creation")
+            .default_open(false)
+            .show(ui, |ui| self.show_canvas_note_creation_contents(ui));
+    }
+
+    fn show_canvas_note_creation_contents(&mut self, ui: &mut eframe::egui::Ui) {
         ui.small(
             "Enter a vault-relative Canvas path, text-card ID, and new Markdown path. Preview and confirm the exact text before creating a note. The destination folder must already exist; existing notes are never overwritten.",
         );
@@ -1034,11 +1039,9 @@ impl OpenObsidianApp {
             inputs_changed |= ui
                 .add_enabled(
                     !operation_busy,
-                    eframe::egui::TextEdit::singleline(
-                        &mut self.canvas_note_destination_path,
-                    )
-                    .hint_text("Notes/Created.md")
-                    .desired_width(210.0),
+                    eframe::egui::TextEdit::singleline(&mut self.canvas_note_destination_path)
+                        .hint_text("Notes/Created.md")
+                        .desired_width(210.0),
                 )
                 .labelled_by(destination_path_label.id)
                 .changed();
@@ -1094,11 +1097,11 @@ impl OpenObsidianApp {
                 ui.label("Exact note body");
                 let mut exact_text = preview.text.clone();
                 eframe::egui::ScrollArea::vertical()
-                    .max_height(180.0)
+                    .max_height(96.0)
                     .show(ui, |ui| {
                         ui.add(
                             eframe::egui::TextEdit::multiline(&mut exact_text)
-                                .desired_rows(6)
+                                .desired_rows(3)
                                 .interactive(false),
                         );
                     });
@@ -2084,9 +2087,8 @@ impl OpenObsidianApp {
         let Some(session) = self.session.as_ref().cloned() else {
             return;
         };
-        let canvas_relative_path = std::path::PathBuf::from(
-            self.canvas_note_canvas_path.trim().replace('\\', "/"),
-        );
+        let canvas_relative_path =
+            std::path::PathBuf::from(self.canvas_note_canvas_path.trim().replace('\\', "/"));
         let node_id = self.canvas_note_node_id.trim().to_owned();
         let destination_text = self.canvas_note_destination_path.trim().replace('\\', "/");
         let note_relative_path = std::path::PathBuf::from(destination_text);
@@ -2103,9 +2105,9 @@ impl OpenObsidianApp {
             return;
         }
         if note_relative_path.is_absolute()
-            || note_relative_path.components().any(|component| {
-                !matches!(component, std::path::Component::Normal(_))
-            })
+            || note_relative_path
+                .components()
+                .any(|component| !matches!(component, std::path::Component::Normal(_)))
         {
             self.canvas_note_preview = None;
             self.canvas_note_confirmation = false;
@@ -2592,10 +2594,7 @@ impl OpenObsidianApp {
     }
 
     fn poll_canvas_note_task(&mut self, ui: &mut eframe::egui::Ui) {
-        let result = self
-            .canvas_note_receiver
-            .as_ref()
-            .map(Receiver::try_recv);
+        let result = self.canvas_note_receiver.as_ref().map(Receiver::try_recv);
         match result {
             Some(Ok(CanvasNoteTaskMessage::Preview(Ok(preview)))) => {
                 self.canvas_note_receiver = None;
@@ -3900,8 +3899,8 @@ mod tests {
         std::fs::create_dir_all(vault_path.join("Notes")).expect("create Notes folder");
         std::fs::write(vault_path.join("Boards/Idea.canvas"), canvas_source)
             .expect("write Canvas-note test Canvas");
-        let session = VaultSession::open(vault_path, app_data_path)
-            .expect("open Canvas-note test vault");
+        let session =
+            VaultSession::open(vault_path, app_data_path).expect("open Canvas-note test vault");
         OpenObsidianApp {
             session: Some(Arc::new(session)),
             canvas_note_canvas_path: "Boards/Idea.canvas".to_owned(),
@@ -3980,6 +3979,13 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
+    }
+
+    fn expand_canvas_note_creation(harness: &mut Harness<'_, OpenObsidianApp>) {
+        harness
+            .get_by_label("Create note from Canvas text card")
+            .click();
+        harness.step();
     }
 
     fn wait_for_rename(harness: &mut Harness<'_, OpenObsidianApp>) {
@@ -4981,10 +4987,14 @@ mod tests {
         let destination = vault_path.join("Notes/Created.md");
 
         harness.step();
+        expand_canvas_note_creation(&mut harness);
         harness.get_by_label("Canvas path");
         harness.get_by_label("Text card ID");
         harness.get_by_label("New Markdown path");
-        assert!(!destination.exists(), "showing the action never creates a note");
+        assert!(
+            !destination.exists(),
+            "showing the action never creates a note"
+        );
         harness.get_by_label("Preview note creation").click();
         harness.step();
         assert!(harness.state().canvas_note_receiver.is_some());
@@ -4995,13 +5005,21 @@ mod tests {
             .canvas_note_preview
             .as_ref()
             .expect("preview click should load the exact Canvas text card");
-        assert_eq!(preview.canvas_relative_path, PathBuf::from("Boards/Idea.canvas"));
+        assert_eq!(
+            preview.canvas_relative_path,
+            PathBuf::from("Boards/Idea.canvas")
+        );
         assert_eq!(preview.node_id, "text-1");
-        assert_eq!(preview.note_relative_path, PathBuf::from("Notes/Created.md"));
+        assert_eq!(
+            preview.note_relative_path,
+            PathBuf::from("Notes/Created.md")
+        );
         assert_eq!(preview.text.as_bytes(), expected_text.as_slice());
         assert!(!destination.exists(), "preview must not create a note");
 
-        harness.get_by_label("Review and confirm note creation").click();
+        harness
+            .get_by_label("Review and confirm note creation")
+            .click();
         harness.step();
         assert!(harness.state().canvas_note_confirmation);
         assert!(!destination.exists(), "review must not create a note");
@@ -5017,17 +5035,25 @@ mod tests {
             canvas_source,
             "note creation leaves the Canvas bytes unchanged"
         );
-        assert!(harness.state().canvas_note_status.as_deref().is_some_and(
-            |status| status.replace('\\', "/").contains("Created Notes/Created.md")
-        ));
-        assert!(harness
-            .state()
-            .session
-            .as_ref()
-            .unwrap()
-            .entries()
-            .iter()
-            .any(|entry| entry.relative_path == Path::new("Notes/Created.md")));
+        assert!(
+            harness
+                .state()
+                .canvas_note_status
+                .as_deref()
+                .is_some_and(|status| status
+                    .replace('\\', "/")
+                    .contains("Created Notes/Created.md"))
+        );
+        assert!(
+            harness
+                .state()
+                .session
+                .as_ref()
+                .unwrap()
+                .entries()
+                .iter()
+                .any(|entry| entry.relative_path == Path::new("Notes/Created.md"))
+        );
     }
 
     #[test]
@@ -5035,16 +5061,21 @@ mod tests {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("vault");
         let app_data_path = temporary.0.join("app-data");
-        let canvas_source = br#"{"nodes":[{"id":"text-1","type":"text","text":"original body"}],"edges":[]}"#;
-        let external_canvas = br#"{"nodes":[{"id":"text-1","type":"text","text":"external body"}],"edges":[]}"#;
+        let canvas_source =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"original body"}],"edges":[]}"#;
+        let external_canvas =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"external body"}],"edges":[]}"#;
         let app = canvas_note_test_app(&vault_path, &app_data_path, canvas_source);
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
         let destination = vault_path.join("Notes/Created.md");
 
+        expand_canvas_note_creation(&mut harness);
         harness.get_by_label("Preview note creation").click();
         harness.step();
         wait_for_canvas_note_task(&mut harness);
-        harness.get_by_label("Review and confirm note creation").click();
+        harness
+            .get_by_label("Review and confirm note creation")
+            .click();
         harness.step();
         std::fs::write(vault_path.join("Boards/Idea.canvas"), external_canvas)
             .expect("simulate a Canvas edit after preview");
@@ -5054,17 +5085,22 @@ mod tests {
         assert!(harness.state().canvas_note_receiver.is_some());
         wait_for_canvas_note_task(&mut harness);
 
-        assert!(!destination.exists(), "stale preview must not create a note");
+        assert!(
+            !destination.exists(),
+            "stale preview must not create a note"
+        );
         assert_eq!(
             std::fs::read(vault_path.join("Boards/Idea.canvas")).unwrap(),
             external_canvas,
             "an external Canvas edit remains authoritative"
         );
-        assert!(harness
-            .state()
-            .canvas_note_error
-            .as_deref()
-            .is_some_and(|error| error.contains("revision changed")));
+        assert!(
+            harness
+                .state()
+                .canvas_note_error
+                .as_deref()
+                .is_some_and(|error| error.contains("revision changed"))
+        );
     }
 
     #[test]
@@ -5072,17 +5108,21 @@ mod tests {
         let temporary = UiTempDir::new();
         let vault_path = temporary.0.join("vault");
         let app_data_path = temporary.0.join("app-data");
-        let canvas_source = br#"{"nodes":[{"id":"text-1","type":"text","text":"new body"}],"edges":[]}"#;
+        let canvas_source =
+            br#"{"nodes":[{"id":"text-1","type":"text","text":"new body"}],"edges":[]}"#;
         let app = canvas_note_test_app(&vault_path, &app_data_path, canvas_source);
         let destination = vault_path.join("Notes/Created.md");
         let existing_note = b"keep existing body";
         std::fs::write(&destination, existing_note).expect("write existing destination note");
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
+        expand_canvas_note_creation(&mut harness);
         harness.get_by_label("Preview note creation").click();
         harness.step();
         wait_for_canvas_note_task(&mut harness);
-        harness.get_by_label("Review and confirm note creation").click();
+        harness
+            .get_by_label("Review and confirm note creation")
+            .click();
         harness.step();
         harness.get_by_label("Confirm and create note").click();
         harness.step();

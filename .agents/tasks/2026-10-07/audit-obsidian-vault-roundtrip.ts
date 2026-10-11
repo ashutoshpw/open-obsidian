@@ -5069,6 +5069,7 @@ async function runOpenObsidianCanvasNoteCreation(
   noteReport.expected_note_sha256 = expectedNoteSha256;
   noteReport.body_is_exact_canvas_text = true;
   noteReport.accessible_labels = [
+    "Create note from Canvas text card",
     "Canvas path",
     "Text card ID",
     "New Markdown path",
@@ -5147,6 +5148,23 @@ async function runOpenObsidianCanvasNoteCreation(
 
     const interactions: Record<string, string> = {};
     noteReport.interactions = interactions;
+    interactions.expand_canvas_creation = await invokeNativeAccessibleControl(
+      child,
+      window.window_id,
+      "Create note from Canvas text card",
+      undefined,
+      true,
+    );
+    const expandedForm = await waitFor(
+      "OpenObsidian to expose the Canvas note-creation fields",
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-expanded-form", noteReport),
+      (capture) => capture.ocrText.includes("Canvas path")
+        && capture.ocrText.includes("Text card ID")
+        && capture.ocrText.includes("New Markdown path"),
+      30_000,
+    );
+    screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
+    noteReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
     interactions.canvas_path = await replaceOpenObsidianTextInput(child, "Canvas path", canvasPath);
     interactions.text_card_id = await replaceOpenObsidianTextInput(child, "Text card ID", "text-1");
     interactions.new_markdown_path = await replaceOpenObsidianTextInput(child, "New Markdown path", canvasNotePath);
