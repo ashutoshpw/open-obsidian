@@ -4010,3 +4010,24 @@ tests passed, but `cargo fmt --all -- --check` reported one line-wrap difference
 in `crates/plugins/src/lib.rs`. The exact CI correction is applied for attempt
 3. Run and job IDs are in `evidence/r2.8.87-attempt-2-99eb225.json`. No local
 executable validation or formatter run was performed.
+
+R2.8.87 attempt 3 was accepted on exact source SHA
+`8891393ff5955a1797a8d6626c2d4d17d6509552`. All seven required GitHub
+Actions workflows passed, including Rust CI on Ubuntu, macOS, Windows, and Rust
+1.95 and the pinned Obsidian 1.14.4 round-trip on all three platforms. Quality
+attempt 1 had a transient macOS retrieval-boundary timeout; the same-SHA failed-job
+retry passed. Run and job IDs are in
+`evidence/r2.8.87-attempt-3-8891393.json`. No local executable validation was
+used for acceptance. C09 and C09.1 remain pending because real Rust discovery and
+enablement callsites do not yet consume and surface the deny policy. The
+six-workflow documentation checkpoint is next.
+
+R2.8.88 C06 Canvas work was reviewed in parallel before the source push. The
+bounded codec retains unknown JSON values semantically, and the pinned Obsidian
+reopen audit seeds the referenced note/background, checks the visible Canvas
+marker and exact path, and compares Canvas bytes before and after reopen. Keep
+C06 and C06.1 pending for broader editing/writing and explicit-action behavior.
+One audit agent accidentally ran `git diff --check` on this uncommitted work; it
+produced no output and was not used as validation evidence. No repository code
+was changed by that command. All acceptance validation remains assigned to
+GitHub Actions.

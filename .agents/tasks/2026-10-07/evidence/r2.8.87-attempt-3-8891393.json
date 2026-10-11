@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.87",
+  "source_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+  "attempt": 3,
+  "outcome": "accepted",
+  "accepted_scope": "Add a pure deny-only configuration.write policy and fixture-backed D15 record coverage in crates/plugins and crates/testkit. This does not establish host enforcement or user-facing display because Rust discovery and enablement callsites do not yet consult the policy.",
+  "attempt_history": [
+    {
+      "attempt": 1,
+      "source_sha": "dac76cc1b08d47c84667785cea8cad1fb2e86ff2",
+      "outcome": "not_accepted",
+      "evidence": "evidence/r2.8.87-attempt-1-dac76cc.json",
+      "finding": "Six of seven required workflows passed. Ubuntu Rust CI reported two rustfmt line-wrap differences; the other Rust CI platforms and the three-platform Obsidian round-trip passed."
+    },
+    {
+      "attempt": 2,
+      "source_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "outcome": "not_accepted",
+      "evidence": "evidence/r2.8.87-attempt-2-99eb225.json",
+      "finding": "Six of seven required workflows passed. Ubuntu Rust CI reported one remaining rustfmt line-wrap difference; the other Rust CI platforms and all three Obsidian round-trip jobs passed."
+    },
+    {
+      "attempt": 3,
+      "source_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "outcome": "accepted",
+      "finding": "All seven required workflows passed on the exact pushed SHA. Quality attempt 1 had a transient macOS retrieval-boundary timeout; the same-SHA failed-job retry passed."
+    }
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38153596626,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596626",
+      "jobs": [
+        {"id": 114511910247, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38153596784,
+      "attempt": 2,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596784",
+      "attempt_1": {
+        "conclusion": "failure",
+        "jobs": [
+          {"id": 114511910692, "name": "windows-latest", "conclusion": "success"},
+          {"id": 114511910830, "name": "ubuntu-latest", "conclusion": "success"},
+          {"id": 114511910947, "name": "macos-latest", "conclusion": "failure", "finding": "Transient wait for Electron's local retrieval boundary timed out after indexing completed."}
+        ]
+      },
+      "jobs": [
+        {"id": 114513637242, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114513637799, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114513638123, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38153596779,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596779",
+      "jobs": [
+        {"id": 114511910818, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114511910967, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114511911016, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38153596812,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596812",
+      "jobs": [
+        {"id": 114511910980, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114511911179, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114511911186, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38153596724,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596724",
+      "jobs": [
+        {"id": 114511910569, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114511910723, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114511910797, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38153596646,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596646",
+      "jobs": [
+        {"id": 114511910214, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114511910311, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114511910390, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 114511910456, "name": "rust (macos-latest)", "conclusion": "success"}
+      ],
+      "checks": "Formatting, workspace tests, Clippy, dependency layers, native builds, and locked Rust 1.95 tests passed on GitHub Actions."
+    },
+    "vault_roundtrip": {
+      "id": 38153596753,
+      "head_sha": "8891393ff5955a1797a8d6626c2d4d17d6509552",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38153596753",
+      "jobs": [
+        {"id": 114511910802, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"},
+        {"id": 114511910928, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"},
+        {"id": 114511911037, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"}
+      ],
+      "acceptance_limits": [
+        "This run validates the required existing pinned Obsidian round-trip workflow on the source SHA; it does not validate the uncommitted R2.8.88 Canvas changes.",
+        "Quality passed on a same-SHA retry after a transient macOS retrieval-boundary timeout."
+      ]
+    }
+  },
+  "local_executable_validation": "none"
+}
