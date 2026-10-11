@@ -4002,3 +4002,11 @@ macOS, and Rust 1.95; Ubuntu tests, Clippy, layer checks, and build passed but
 workflow/job results are in `evidence/r2.8.87-attempt-1-dac76cc.json`. The
 formatter corrections are taken directly from GitHub's output. No local
 executable validation or formatter run was performed.
+
+R2.8.87 attempt 2 was pushed as `99eb225f652ee6c0cbdb3dc935d0f99da5c0874b`.
+Six of seven required workflows passed, including all three Obsidian 1.14.4
+round-trip jobs. Rust CI passed macOS, Windows, and Rust 1.95; Ubuntu workspace
+tests passed, but `cargo fmt --all -- --check` reported one line-wrap difference
+in `crates/plugins/src/lib.rs`. The exact CI correction is applied for attempt
+3. Run and job IDs are in `evidence/r2.8.87-attempt-2-99eb225.json`. No local
+executable validation or formatter run was performed.

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.87",
+  "attempt": 2,
+  "source_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38152827761,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 114509624131, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38152827750,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 114509624241, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114509624353, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114509624365, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38152827736,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 114509623970, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114509624185, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114509624211, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38152827759,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 114509624251, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114509624393, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114509624407, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38152827775,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 114509624326, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114509624476, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114509624480, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38152827763,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "failure",
+      "jobs": [
+        {"id": 114509624044, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114509624230, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114509624255, "name": "rust (ubuntu-latest)", "conclusion": "failure"},
+        {"id": 114509624276, "name": "minimum supported Rust (1.95)", "conclusion": "success"}
+      ],
+      "failure": "Ubuntu cargo fmt --all -- --check reported one line-wrap difference for CONFIGURATION_WRITE_SAFE_ALTERNATIVES in crates/plugins/src/lib.rs. Workspace tests passed; macOS, Windows, and Rust 1.95 jobs passed. The other six required workflows passed, including all three Obsidian 1.14.4 reopen jobs."
+    },
+    "vault_roundtrip": {
+      "id": 38152827760,
+      "head_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+      "conclusion": "success",
+      "jobs": [
+        {"id": 114509624356, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {"id": 114509624449, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"},
+        {"id": 114509624502, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"}
+      ]
+    }
+  },
+  "rustfmt_correction": "Apply the exact Ubuntu CI output: place the assignment on the constant declaration line and the array value on the following indented line.",
+  "local_executable_validation": "none"
+}

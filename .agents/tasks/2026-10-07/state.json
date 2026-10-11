@@ -28829,9 +28829,24 @@
           },
           "evidence": "evidence/r2.8.87-attempt-1-dac76cc.json",
           "findings": "Six of seven workflows passed, including the three-platform Obsidian round-trip. Rust CI passed Windows, macOS, and Rust 1.95. Ubuntu tests, Clippy, dependency-layer checks, and native build passed; cargo fmt --all -- --check reported two line-wrap differences. Only those formatter changes are needed before a follow-up attempt."
+        },
+        {
+          "source_sha": "99eb225f652ee6c0cbdb3dc935d0f99da5c0874b",
+          "status": "not_accepted",
+          "workflow_runs": {
+            "inventory": 38152827761,
+            "quality": 38152827750,
+            "desktop_build": 38152827736,
+            "plugin_renderer": 38152827759,
+            "loaded_plugins": 38152827775,
+            "rust_ci": 38152827763,
+            "vault_roundtrip": 38152827760
+          },
+          "evidence": "evidence/r2.8.87-attempt-2-99eb225.json",
+          "findings": "Six of seven workflows passed, including all three Obsidian 1.14.4 round-trip jobs. Rust CI passed macOS, Windows, and Rust 1.95; Ubuntu workspace tests passed but cargo fmt --all -- --check reported one line-wrap difference in crates/plugins/src/lib.rs. The exact GitHub-requested correction is applied for the next attempt."
         }
       ],
-      "next_action": "Push the two GitHub-reported rustfmt line-wrap corrections with this attempt evidence, then inspect all seven required workflows on the new exact source SHA. Keep C09/C09.1 pending.",
+      "next_action": "Commit and push the exact GitHub-reported rustfmt line-wrap correction with attempt 2 evidence, then inspect all seven required workflows on the new exact source SHA. Keep C09/C09.1 pending.",
       "implementation_sha": "dac76cc1b08d47c84667785cea8cad1fb2e86ff2"
     }
   },
