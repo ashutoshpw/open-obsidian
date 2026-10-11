@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T02:12:58Z",
+  "milestone": "R2.8.72",
+  "source_sha": "6c17d27c9bc41386e6a169e0259420bf2ecf7c83",
+  "source_commit": "[rust R2.8.72] Diagnose refresh interaction targets",
+  "required_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38103900769,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900769",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114365254028, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38103900762,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900762",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114365254219, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114365254290, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114365254317, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38103900959,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900959",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114365254915, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114365255029, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114365255085, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38103900856,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900856",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114365254445, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114365254581, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114365254617, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38103900868,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900868",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114365254612, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114365254743, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114365254962, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38103900803,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900803",
+      "conclusion": "failure",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 114365254244, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114365254351, "conclusion": "failure", "finding": "The empty-vault refresh test assumed the refresh receiver must still be pending after one UI step. On this runner the refresh had already completed successfully before the assertion."},
+        {"name": "rust (windows-latest)", "job_id": 114365254426, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38103900898,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103900898",
+      "conclusion": "failure",
+      "reference_app_version": "Obsidian 1.14.4",
+      "jobs": [
+        {
+          "name": "Linux",
+          "job_id": 114365254627,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11688144673,
+            "name": "obsidian-vault-roundtrip-Linux-6c17d27c9bc41386e6a169e0259420bf2ecf7c83",
+            "size_in_bytes": 2843283,
+            "digest": "sha256:c23b005e7ed34f5c0e0dbb519fa0e717fa0bc945b753e7f00506cd57b3f63001"
+          },
+          "finding": "The external note was observed and a watcher refresh updated the note count, but its delayed refresh event overlapped the OCR click. The click was delivered while the refresh button was disabled; no manual_button request was logged before timeout."
+        },
+        {
+          "name": "macOS",
+          "job_id": 114365254498,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11688244631,
+            "name": "obsidian-vault-roundtrip-macOS-6c17d27c9bc41386e6a169e0259420bf2ecf7c83",
+            "size_in_bytes": 3385099,
+            "digest": "sha256:c02a76612e088157604a02f4b8baa1e465943e68f3dd926bbfc92c3e92b39bca"
+          },
+          "finding": "CI diagnostics recorded pointer y=89 while the Refresh note list egui response rectangle spanned y=64.5–79.5. The OCR-derived CoreGraphics click landed below the button; no manual_button request was logged."
+        },
+        {
+          "name": "Windows",
+          "job_id": 114365254653,
+          "conclusion": "success",
+          "artifact": {
+            "id": 11688284681,
+            "name": "obsidian-vault-roundtrip-Windows-6c17d27c9bc41386e6a169e0259420bf2ecf7c83",
+            "size_in_bytes": 5923124,
+            "digest": "sha256:3cb83523bf65c7c6b80844931d7450ace95b5c2f9dbd226d927f9788ba9a25ed"
+          },
+          "finding": "The complete vault round-trip acceptance passed."
+        }
+      ]
+    }
+  ],
+  "next_action": "Debounce delayed watcher updates and retry the visible manual refresh until CI diagnostics confirm the manual request; correct the macOS pointer offset; accept a completed refresh in the egui test."
+}

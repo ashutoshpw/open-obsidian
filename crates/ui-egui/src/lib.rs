@@ -5971,7 +5971,11 @@ mod tests {
 
         harness.get_by_label("Refresh note list").click();
         harness.step();
-        assert!(harness.state().vault_refresh_receiver.is_some());
+        assert!(
+            harness.state().vault_refresh_receiver.is_some()
+                || harness.state().vault_refresh_status.is_some(),
+            "manual refresh should be running or already complete"
+        );
         wait_for_vault_refresh(&mut harness);
         harness.get_by_label("Note list refreshed: 0 Markdown files found.");
         assert!(

@@ -275,6 +275,49 @@ async function waitForOpenObsidianRefreshIdle(
   );
 }
 
+async function clickManualRefreshUntilRequested(
+  child: ChildProcess,
+  windowId: string,
+  previousRequestCount: number,
+): Promise<string> {
+  const clickActions: string[] = [];
+  let lastClickAt = 0;
+  const result = await waitFor(
+    "OpenObsidian to receive the explicit manual note-list refresh",
+    async () => {
+      const diagnostics = await readOpenObsidianRefreshDiagnostics();
+      const manualRequest = diagnostics.requests.find((request, index) => (
+        index >= previousRequestCount && request.source === "manual_button"
+      ));
+      if (manualRequest) return {diagnostics, manualRequest};
+
+      const latestRequest = diagnostics.requests.at(-1);
+      const latestResult = diagnostics.consumedResults.at(-1);
+      const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
+      const latestRequestConsumed = !latestRequest || Boolean(latestResult && latestResult.line > latestRequest.line);
+      if (
+        !receiverBusy
+        && latestRequestConsumed
+        && clickActions.length < 4
+        && Date.now() - lastClickAt >= 500
+      ) {
+        clickActions.push(await invokeNativeAccessibleControl(
+          child,
+          windowId,
+          "Refresh note list",
+          "Markdown files found",
+          true,
+        ));
+        lastClickAt = Date.now();
+      }
+      return {diagnostics, manualRequest: null};
+    },
+    (value) => value.manualRequest !== null,
+    30_000,
+  );
+  return clickActions.at(-1) ?? `Manual refresh request observed at log line ${result.manualRequest?.line ?? "unknown"}`;
+}
+
 async function waitForDevToolsVersion(port: number): Promise<{Browser?: string; "Protocol-Version"?: string}> {
   const value = await waitFor<{Browser?: string; "Protocol-Version"?: string} | null>(`Obsidian DevTools port ${port}`, async () => {
     try {
@@ -2198,13 +2241,20 @@ async function clickVisibleOpenObsidianControl(
     const y = Math.round(yFraction * height);
     xdotool("windowfocus", "--sync", windowId);
     xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
-    xdotool("click", "1");
+    xdotool("mousedown", "1");
+    await delay(80);
+    xdotool("mouseup", "1");
     interaction = `xdotool clicked ${clickDescription} at window coordinates (${x}, ${y}) in ${windowId}`;
   } else if (process.platform === "darwin") {
     const window = ocrSource.kind === "window" ? macOSOpenObsidianWindowBounds(child) : null;
     const screen = ocrSource.kind === "desktop" ? await pngDimensions(capture.pngPath) : null;
+    const imageSize = await pngDimensions(ocrSource.imagePath);
     const x = Math.round(window ? window.x + xFraction * window.width : xFraction * (screen?.width ?? 0));
-    const y = Math.round(window ? window.y + yFraction * window.height : yFraction * (screen?.height ?? 0));
+    const refreshButtonOffset = controlName === "Refresh note list"
+      ? 17 * (window ? window.height / imageSize.height : 1)
+      : 0;
+    const y = Math.round(window ? window.y + yFraction * window.height : yFraction * (screen?.height ?? 0))
+      - Math.round(refreshButtonOffset);
     const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
     await writeFile(swiftPath, `import AppKit
 import CoreGraphics
@@ -2683,7 +2733,7 @@ async function runReferenceExternalNoteRefresh(
   await writeFile(join(reportDirectory, "vault-after-external-note-creation.json"), `${JSON.stringify(vaultAfterCreation, null, 2)}\n`);
   await saveReport();
 
-  if (process.platform !== "win32") await delay(750);
+  if (process.platform !== "win32") await delay(2_000);
   const settledWatcherRefresh = await waitForOpenObsidianRefreshIdle(
     refreshRequestCountBeforeCreation,
     expectedMarkdownCount,
@@ -2695,12 +2745,10 @@ async function runReferenceExternalNoteRefresh(
     latest_consumed_result: settledWatcherRefresh.consumedResults.at(-1) ?? null,
   };
   const refreshRequestCountBeforeManual = settledWatcherRefresh.requests.length;
-  refreshReport.refresh_action = await invokeNativeAccessibleControl(
+  refreshReport.refresh_action = await clickManualRefreshUntilRequested(
     child,
     window.window_id,
-    "Refresh note list",
-    "Markdown files found",
-    true,
+    refreshRequestCountBeforeManual,
   );
   const settledManualRefresh = await waitForOpenObsidianRefreshIdle(
     refreshRequestCountBeforeManual,
