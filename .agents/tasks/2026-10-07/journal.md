@@ -3594,3 +3594,17 @@ C09 and C09.1 remain pending. After the tracker checkpoint passes, the next
 bounded candidate is R2.8.82: canonical theme identity with read-only CSS
 safety analysis. No local tests, builds, formatters, validators, or application
 launches were run.
+
+## 2026-10-11T11:48:25Z — R2.8.81 tracker checkpoint passed
+
+Tracker checkpoint SHA `5587460c9adb5858562bbb21e2fe059e989f34fd` passed all
+six required documentation workflows: inventory run 38136037616, quality
+38136037614, desktop build 38136037621, plugin renderer 38136037596,
+loaded-plugin workflows 38136037665, and Rust CI 38136037601. Rust CI passed
+on Ubuntu, macOS, Windows, and Rust 1.95. Exact job IDs and run URLs are in
+`evidence/r2.8.81-tracker-checkpoint-5587460.json`. The path-filtered Obsidian
+round-trip remains covered by implementation SHA
+`fb5105853f7e7a34ea64acc5c095e5358e44791e`. Next, push this tracker evidence
+checkpoint and validate its documentation workflows, then submit R2.8.82 for
+all seven required source workflows. C09 and C09.1 remain pending. No local
+tests, builds, formatters, validators, or application launches were run.

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.81",
+  "checkpoint_sha": "5587460c9adb5858562bbb21e2fe059e989f34fd",
+  "implementation_sha": "fb5105853f7e7a34ea64acc5c095e5358e44791e",
+  "conclusion": "success",
+  "validation_scope": "Documentation-only tracker checkpoint; the source implementation SHA already passed all seven required workflows, including the path-filtered Obsidian round-trip.",
+  "workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38136037616,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38136037616",
+      "jobs": [
+        {"name": "inventory", "job_id": 114459979765, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38136037614,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38136037614",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114459979975, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114459980065, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114459980135, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38136037621,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38136037621",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114459979844, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114459980062, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114459980132, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38136037596,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38136037596",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114459979920, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114459980080, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114459980149, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38136037665,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38136037665",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114459980020, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114459980188, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114459980223, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38136037601,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38136037601",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 114459979836, "conclusion": "success"},
+        {"name": "minimum supported Rust (1.95)", "job_id": 114459979887, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 114459979896, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114459980079, "conclusion": "success"}
+      ]
+    }
+  ],
+  "roundtrip": {
+    "status": "covered-on-implementation-sha",
+    "run_id": 38134923134,
+    "implementation_sha": "fb5105853f7e7a34ea64acc5c095e5358e44791e",
+    "reason_not_repeated": "The documentation-only tracker checkpoint does not match the workflow's source-path filter."
+  },
+  "local_executable_validation": "not-run"
+}
