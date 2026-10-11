@@ -3148,3 +3148,33 @@ Reopen assertions compare exact edited bytes and render the new marker in Obsidi
 The matrix row and audit are recorded in
 evidence/r2.8.75-c01-readonly-audit.md. Parent C01/C01.2 remain pending. All
 executable validation remains limited to GitHub Actions.
+
+### R2.8.75 / C01.2-43 attempt 1 on `64f77e7`
+
+All six companion workflows passed on exact SHA
+`64f77e7200829dde897ec43bde0b0fef49d0b3ac`: inventory
+[38117308220](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308220),
+quality [38117308234](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308234),
+desktop build [38117308265](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308265),
+plugin renderer [38117308231](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308231),
+loaded plugins [38117308228](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308228),
+and Rust CI [38117308257](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308257).
+Obsidian round-trip [38117308222](https://github.com/ashutoshpw/open-obsidian/actions/runs/38117308222) passed macOS and Windows and failed Ubuntu because OCR missed the
+selected path after refresh. Linux had the exact external edit, count and
+app-data checks, but did not continue to updated preview/reopen. macOS and
+Windows reports contained the exact 142-byte edited note and updated marker;
+their reopened screenshots show Obsidian's trust prompt covering the note, so
+the visible reopen acceptance is incomplete. Evidence, artifact digests, report
+hashes and screenshot hashes are in
+`evidence/r2.8.75-c01.2-43-attempt-1-64f77e7.json`.
+
+The correction logs the selected note path from the applied refresh state under
+the CI diagnostics flag and requires that exact path after the edit refresh. The
+reopen harness now waits for the trust decision, chooses Restricted Mode, and
+requires the prompt to be gone before accepting or capturing the updated note.
+C01.2-43 remains pending until all seven workflows and the three platform
+screenshots pass on a new exact SHA. No local product build, test, typecheck,
+application launch, or runtime audit was run. During preparation only, I ran
+`git diff --check` and `python3 -m json.tool` on changed tracker files; these
+did not validate application behavior and are not acceptance evidence. All
+application validation remains in GitHub Actions.

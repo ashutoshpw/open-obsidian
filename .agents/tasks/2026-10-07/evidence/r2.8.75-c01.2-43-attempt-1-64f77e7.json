@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.75-C01.2-43-reference-app-external-note-edit-refresh",
+  "attempt": 1,
+  "source_sha": "64f77e7200829dde897ec43bde0b0fef49d0b3ac",
+  "status": "not_accepted",
+  "local_executable_validation": false,
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38117308220,
+      "job_id": 114404664107,
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38117308234,
+      "jobs": {
+        "windows-latest": {"job_id": 114404664248, "conclusion": "success"},
+        "macos-latest": {"job_id": 114404664338, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114404664339, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38117308265,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114404664458, "conclusion": "success"},
+        "windows-latest": {"job_id": 114404664556, "conclusion": "success"},
+        "macos-latest": {"job_id": 114404664631, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38117308231,
+      "jobs": {
+        "macos-latest": {"job_id": 114404664298, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114404664442, "conclusion": "success"},
+        "windows-latest": {"job_id": 114404664507, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38117308228,
+      "jobs": {
+        "windows-latest": {"job_id": 114404664408, "conclusion": "success"},
+        "macos-latest": {"job_id": 114404664459, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114404664484, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38117308257,
+      "jobs": {
+        "macos-latest": {"job_id": 114404664347, "conclusion": "success"},
+        "windows-latest": {"job_id": 114404664432, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114404664461, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38117308222,
+      "jobs": {
+        "windows-latest": {"job_id": 114404664354, "conclusion": "success"},
+        "macos-latest": {"job_id": 114404664406, "conclusion": "success"},
+        "ubuntu-24.04": {
+          "job_id": 114404664426,
+          "conclusion": "failure",
+          "finding": "The note-list refresh completed and cleared stale preview text, but Linux OCR did not recognize the selected path in the visible combo box. The exact post-refresh selection was not independently recorded."
+        }
+      },
+      "artifacts": {
+        "Linux": {
+          "artifact_id": 11694556117,
+          "artifact_digest": "sha256:37be938434e48bf7f3cae23c6989d6a65d54539f9c3e3d7480cd05e1493db33f",
+          "report_sha256": "fc83fdab442ace3066feb65ccac5c03ee800ea73413122e187fc973657f097cb",
+          "status": "failed_before_updated_preview_and_reopen",
+          "external_edit_bytes": 142,
+          "external_edit_sha256": "225d6216fad51e43994e3ddc2a29411ff003a6ed0336d7c8f4fd13f4e7b39309",
+          "only_after_refresh_md_changed": true,
+          "markdown_count_preserved_at": 3,
+          "app_data_unchanged_during_edit": true,
+          "stale_preview_cleared_after_refresh": true,
+          "selected_path_ocr_confirmation": false,
+          "post_refresh_window_screenshot": "openobsidian-after-external-note-edit-refresh-window.png",
+          "post_refresh_window_screenshot_sha256": "1b7521fcadc5a75a57fd7e692f6e826b3ffcce17436290a40a42faba062fb83e"
+        },
+        "macOS": {
+          "artifact_id": 11694516335,
+          "artifact_digest": "sha256:7d8d1c9a5a45934f695da8a57fb44fab678ce17269583ba6f34f0a51a07e1544",
+          "report_sha256": "ec9eba5b6585a5bbd1c8c45d699211128da71b4b74852846769cd8e9a818a79d",
+          "status": "harness_passed_visual_reopen_evidence_incomplete",
+          "external_edit_bytes": 142,
+          "external_edit_sha256": "225d6216fad51e43994e3ddc2a29411ff003a6ed0336d7c8f4fd13f4e7b39309",
+          "only_after_refresh_md_changed": true,
+          "markdown_count_preserved_at": 3,
+          "app_data_unchanged_during_edit": true,
+          "vault_unchanged_through_updated_preview": true,
+          "reopened_bytes_match_external_edit": true,
+          "updated_marker_reported_in_dom": true,
+          "reopened_screenshot": "obsidian-reopened-external-note.png",
+          "reopened_screenshot_sha256": "4458bfda15cf28ec520715b8f4d1a02ebe7892faf3c4a38eda513f2d43bf442c",
+          "visual_finding": "Obsidian's first-run trust dialog covers the edited note. The updated marker is not visually inspectable until the vault is opened in Restricted Mode."
+        },
+        "Windows": {
+          "artifact_id": 11694156725,
+          "artifact_digest": "sha256:0cdd1aa9688763f47d2e63544789bf82e5cfe3965c1af84a2cc5d15d45fafa3b",
+          "report_sha256": "6c31754e961d87a66fd55b109d9ffd90fd8508c85aaa45ffa30cc251dab02464",
+          "status": "harness_passed_visual_reopen_evidence_incomplete",
+          "external_edit_bytes": 142,
+          "external_edit_sha256": "225d6216fad51e43994e3ddc2a29411ff003a6ed0336d7c8f4fd13f4e7b39309",
+          "only_after_refresh_md_changed": true,
+          "markdown_count_preserved_at": 3,
+          "app_data_unchanged_during_edit": true,
+          "vault_unchanged_through_updated_preview": true,
+          "reopened_bytes_match_external_edit": true,
+          "updated_marker_reported_in_dom": true,
+          "reopened_screenshot": "obsidian-reopened-external-note.png",
+          "reopened_screenshot_sha256": "e9a77b1b41bb32cdbcef0970c75dca1a37a562df6f3eee100cdafc67b775add5",
+          "visual_finding": "Obsidian's first-run trust dialog covers the edited note. The updated marker is not visually inspectable until the vault is opened in Restricted Mode."
+        }
+      }
+    }
+  },
+  "correction": "Record the selected note path in the CI-only refresh diagnostic and require the exact post-refresh selection in the audit. On Obsidian reopen, wait for the vault trust decision, choose Browse vault in Restricted Mode, and capture the rendered note after the dialog is gone.",
+  "acceptance": "C01.2-43 remains pending. The C01 and C01.2 parent requirements remain pending."
+}

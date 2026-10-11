@@ -1347,22 +1347,33 @@ async function chooseVaultDirectory(connection: DevToolsConnection, port: number
   throw new Error(`Unsupported Obsidian folder picker platform ${process.platform}`);
 }
 
-async function chooseRestrictedMode(connection: DevToolsConnection): Promise<void> {
-  const authoring = report.obsidian_authoring as Record<string, unknown>;
-  const state = await connection.evaluateJson<{body: string; buttons: string[]}>(`(() => {
+async function chooseRestrictedMode(
+  connection: DevToolsConnection,
+  reporter: Record<string, unknown> = report.obsidian_authoring as Record<string, unknown>,
+): Promise<void> {
+  const readTrustState = async () => await connection.evaluateJson<{body: string; buttons: string[]; editor: string}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
     return {
       body: document.body?.innerText ?? '',
       buttons: buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean),
+      editor: [...document.querySelectorAll('[contenteditable="true"]')].map((element) => element.innerText ?? '').join('\\n'),
     };
   })()`);
+  const state = await waitFor(
+    "the reopened fixture vault trust decision",
+    readTrustState,
+    (value) => value.buttons.includes("Browse vault in Restricted Mode")
+      || (!value.body.includes("Do you trust the author of this vault?")
+        && (value.editor.includes(noteMarker) || value.editor.includes(externalEditedMarker))),
+    30_000,
+  );
   const restrictedModeLabel = "Browse vault in Restricted Mode";
-  authoring.trust_prompt_buttons = state.buttons;
+  reporter.trust_prompt_buttons = state.buttons;
   if (!state.buttons.includes(restrictedModeLabel)) {
     if (state.body.includes("Do you trust the author of this vault?")) {
       throw new Error("Obsidian displayed the vault trust prompt without its Restricted Mode button");
     }
-    authoring.restricted_mode_selected = false;
+    reporter.restricted_mode_selected = false;
     return;
   }
 
@@ -1372,8 +1383,8 @@ async function chooseRestrictedMode(connection: DevToolsConnection): Promise<voi
     returnByValue: true,
   });
   const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", (value) => !value.includes("Do you trust the author of this vault?") && value.includes("C01.2 Roundtrip Fixture"), "Obsidian to browse the fixture in Restricted Mode", 30_000);
-  authoring.restricted_mode_selected = true;
-  authoring.restricted_mode_text = body.slice(0, 2_000);
+  reporter.restricted_mode_selected = true;
+  reporter.restricted_mode_text = body.slice(0, 2_000);
 }
 
 async function createFixture(): Promise<void> {
@@ -3286,10 +3297,17 @@ async function runReferenceExternalNoteRefresh(
   editReport.updated_source_marker_absent_before_repreview = true;
   const selectedEditedNoteVisible = ocrTextContainsPhrase(editedRefresh.ocrText, externalRefreshMarkdownPath)
     || ocrTextContainsFuzzyPhrase(editedRefresh.ocrText, externalRefreshMarkdownPath);
-  editReport.selected_note_path_visible_after_refresh = selectedEditedNoteVisible;
-  if (!selectedEditedNoteVisible) {
-    throw new Error("OpenObsidian did not visibly retain the externally edited note selection after refresh");
-  }
+  editReport.selected_note_path_ocr_confirmation_after_refresh = selectedEditedNoteVisible;
+  const expectedSelectionAfterRefresh = `OpenObsidian CI vault refresh selection applied: selected=${externalRefreshMarkdownPath}`;
+  const refreshSelectionLog = await waitFor(
+    "OpenObsidian to retain the externally edited note selection after refresh",
+    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+    (lines) => lines.includes(expectedSelectionAfterRefresh),
+    15_000,
+  );
+  editReport.selected_note_path_retained_after_refresh = true;
+  editReport.selection_after_refresh_diagnostic = refreshSelectionLog.find((line) => line === expectedSelectionAfterRefresh);
+  editReport.selection_after_refresh_screenshot = relative(reportDirectory, editedRefresh.windowPngPath);
   editReport.refreshed_markdown_count_visible = true;
   editReport.stale_preview_cleared = true;
 
@@ -4059,6 +4077,12 @@ async function reopenInObsidian(child: ChildProcess, notePath: string, expectedA
   const reopen = report.obsidian_reopen as Record<string, unknown>;
   reopen.devtools_browser = browserVersion;
   reopen.first_target = {title: target.title ?? "", url: target.url ?? ""};
+  await chooseRestrictedMode(connection, reopen);
+  const trustPromptHidden = await connection.evaluateJson<boolean>(
+    "!(document.body?.innerText ?? '').includes('Do you trust the author of this vault?')",
+  );
+  reopen.trust_prompt_hidden = trustPromptHidden;
+  if (!trustPromptHidden) throw new Error("Obsidian's first-run trust prompt still covers the reopened vault");
   const notePathJson = JSON.stringify(notePath);
   const readVisible = async () => await connection.evaluateJson<{
     body: string;
@@ -4115,7 +4139,8 @@ async function reopenInObsidian(child: ChildProcess, notePath: string, expectedA
     "Obsidian to render the externally edited note after reopening the vault",
     readVisible,
     (value) => value.paths.includes(externalRefreshMarkdownPath)
-      && value.editor.includes(externalEditedMarker),
+      && value.editor.includes(externalEditedMarker)
+      && !value.body.includes("Do you trust the author of this vault?"),
     20_000,
   );
 
@@ -4161,6 +4186,7 @@ async function reopenInObsidian(child: ChildProcess, notePath: string, expectedA
   reopen.external_note_path = externalRefreshMarkdownPath;
   reopen.external_note_path_visible_in_file_explorer = visible.paths.includes(externalRefreshMarkdownPath);
   reopen.external_note_source_marker_visible_after_reopen = externalEditedNoteVisible.editor.includes(externalEditedMarker);
+  reopen.external_note_trust_prompt_hidden = !externalEditedNoteVisible.body.includes("Do you trust the author of this vault?");
   reopen.external_note_source_bytes_match_external_edit = externalNoteAfterReopen.equals(externalEditedMarkdownBytes);
   reopen.external_note_bytes = externalNoteAfterReopen.length;
   reopen.external_note_sha256 = externalNoteSha256;

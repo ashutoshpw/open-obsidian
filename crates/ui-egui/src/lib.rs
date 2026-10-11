@@ -2399,6 +2399,15 @@ impl OpenObsidianApp {
                     self.rename_source_path = note_paths.first().cloned();
                 }
                 self.session = Some(Arc::new(session));
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    let selected_note = self
+                        .link_source_path
+                        .as_ref()
+                        .map_or_else(|| "<none>".to_owned(), |path| path.display().to_string());
+                    eprintln!(
+                        "OpenObsidian CI vault refresh selection applied: selected={selected_note}"
+                    );
+                }
                 self.link_resolutions.clear();
                 self.link_error = None;
                 self.link_status = None;
