@@ -4257,3 +4257,19 @@ digests, round-trip report hashes, and exact job IDs are in
 The correction updates the architecture allow-map so the engine can compose
 the pure document operation with the revision-checked vault write. No local
 executable validation was run.
+
+R2.8.90 attempt 3 was accepted on exact source SHA
+`612fc550c7061d751672790f2b2b21869e990a9d`. All seven required workflows
+passed: inventory, quality, desktop build, plugin renderer, loaded plugins,
+Rust CI, and the Obsidian 1.14.4 vault round-trip. Rust CI passed formatting,
+workspace tests, Clippy, dependency-layer checks, native builds, and Wry probes
+on Ubuntu, macOS, and Windows; Rust 1.95 locked workspace tests passed. Because
+the xtask-only correction was outside the round-trip push path filters, that
+workflow was manually dispatched and confirmed the same SHA; Linux, macOS, and
+Windows all passed. The reports confirm the known-field reference Canvas
+reopened with its linked target visible and unchanged source bytes. Exact run
+and job IDs, artifact digests, and report hashes are in
+[`evidence/r2.8.90-attempt-3-612fc55.json`](evidence/r2.8.90-attempt-3-612fc55.json).
+This accepts the persisted Canvas edit slice only; native Canvas UI and
+explicit note creation remain pending. No local executable validation was
+run.
