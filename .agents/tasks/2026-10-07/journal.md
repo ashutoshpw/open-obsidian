@@ -3850,3 +3850,46 @@ R2.8.84 is accepted as a partial C09 app-settings projection. C09 and C09.1
 remain pending. The documentation-only tracker checkpoint is next; the passed
 path-filtered round-trip remains covered by implementation SHA
 `16b5f362ba2ca922bcac4a492248e09a7dbfcd8f`.
+
+
+## 2026-10-11T14:00:22Z — R2.8.84 tracker checkpoint pushed for CI
+
+Documentation-only tracker checkpoint SHA
+`da3f8908ba1f8ea06a7a633abe075b300826e6e1` was pushed after source acceptance.
+The six exact-SHA workflow runs are inventory `38145363300`, quality
+`38145363315`, desktop build `38145363393`, plugin renderer
+`38145363350`, loaded plugins `38145363345`, and Rust CI `38145363322`.
+Their results are pending. The path-filtered Obsidian round-trip remains covered
+by implementation SHA `16b5f362ba2ca922bcac4a492248e09a7dbfcd8f`. No local
+tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T14:09:33Z — R2.8.84 tracker checkpoint accepted; R2.8.85 scoped
+
+Documentation-only tracker SHA
+`da3f8908ba1f8ea06a7a633abe075b300826e6e1` passed all six required
+documentation workflows. Inventory run `38145363300` passed job
+`114487459845`; desktop build `38145363393`, plugin renderer `38145363350`,
+and loaded plugin workflows `38145363345` passed all their OS jobs. Rust CI
+`38145363322` passed Ubuntu `114487460167`, macOS `114487460072`, Windows
+`114487459904`, and Rust 1.95 `114487460133`.
+
+Quality run `38145363315` passed on attempt 2: macOS `114487946021`, Ubuntu
+`114487946774`, and Windows `114487972443`. Its initial macOS job
+`114487460243` timed out while waiting for the local retrieval boundary after
+indexing had completed; the same-SHA rerun passed, indicating a transient
+timing delay. The path-filtered Obsidian round-trip did not run for this
+documentation-only commit and remains covered by implementation SHA
+`16b5f362ba2ca922bcac4a492248e09a7dbfcd8f`. Exact run and job results are in
+`evidence/r2.8.84-tracker-checkpoint-da3f890.json`. C09 and C09.1 remain
+pending. No local executable validation was run.
+
+Parallel read-only audits selected R2.8.85 as a data-only projection of the
+legacy template folder and daily-note folder, date format, and optional
+template path settings. The parser will retain source objects/bytes and
+unknown fields, report legacy path issues, and keep projected paths inert.
+Nested plugin files remain generic JSON only. Recognized alternate
+`.obsidian-*` roots follow the existing Rust C09 discovery policy; this is
+broader than the legacy workflow's `.obsidian`-only read path and will not be
+described as exact workflow parity. Template execution, date expansion,
+planning, writes, and UI behavior are out of scope. No local tests,
+builds, formatters, validators, or application launches were run.
