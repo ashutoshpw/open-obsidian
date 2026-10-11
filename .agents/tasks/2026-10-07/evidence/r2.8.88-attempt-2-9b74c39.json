@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.88",
+  "source_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+  "attempt": 2,
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38156539343,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539343",
+      "jobs": [{"id": 114520576832, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38156539318,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539318",
+      "jobs": [
+        {"id": 114520576996, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114520577151, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114520577210, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38156539371,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539371",
+      "jobs": [
+        {"id": 114520577876, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114520577814, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114520577755, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38156539242,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539242",
+      "jobs": [
+        {"id": 114520576605, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114520576733, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114520576764, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38156539417,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539417",
+      "jobs": [
+        {"id": 114520577829, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114520577981, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114520578000, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38156539262,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539262",
+      "jobs": [
+        {"id": 114520577064, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114520577218, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 114520577177, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114520577217, "name": "rust (windows-latest)", "conclusion": "success"}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38156539309,
+      "head_sha": "9b74c39858ea1576791b83ad4f3d6d6bb5af197c",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38156539309",
+      "jobs": [
+        {
+          "id": 114520577183,
+          "name": "Obsidian vault round-trip on ubuntu-24.04",
+          "conclusion": "failure",
+          "artifact_id": 11708851163,
+          "artifact_zip_sha256": "7a38d2d428a661d502ae8ab98c67503fb840092a925588a10e6e011f3f0e90b5",
+          "finding": "Canvas reopened visibly and passed the immediate source check, but final post-shutdown snapshot found it changed from 1,818 bytes / fb2523fb5328b3df233fda21fb31acf5dcecd6fc5028d41a5d38d8b3a8584479 to 1,345 bytes / 0ada29494f95af2572b28af1117a4ff4b0d89436e07da06572815c16f80c1535."
+        },
+        {
+          "id": 114520577190,
+          "name": "Obsidian vault round-trip on macos-latest",
+          "conclusion": "failure",
+          "artifact_id": 11709195272,
+          "artifact_zip_sha256": "48ce94c924b97467decce11c5d2291030f391ba6e15810ca23cdccff48e7da0a",
+          "finding": "Canvas reopened visibly and passed the immediate source check, but final post-shutdown snapshot found it changed from 1,818 bytes / fb2523fb5328b3df233fda21fb31acf5dcecd6fc5028d41a5d38d8b3a8584479 to 1,345 bytes / 0ada29494f95af2572b28af1117a4ff4b0d89436e07da06572815c16f80c1535."
+        },
+        {
+          "id": 114520577241,
+          "name": "Obsidian vault round-trip on windows-latest",
+          "conclusion": "failure",
+          "artifact_id": 11709490067,
+          "artifact_zip_sha256": "231755914b883802d198143bae4efa8eea8266c51cbaab68bd642faaca80a24e",
+          "finding": "Canvas reopened visibly and passed the immediate source check, but final post-shutdown snapshot found it changed from 1,818 bytes / fb2523fb5328b3df233fda21fb31acf5dcecd6fc5028d41a5d38d8b3a8584479 to 1,345 bytes / 0ada29494f95af2572b28af1117a4ff4b0d89436e07da06572815c16f80c1535."
+        }
+      ],
+      "artifacts": [
+        {"id": 11708851163, "runner_os": "Linux", "bytes": 8596392, "zip_sha256": "7a38d2d428a661d502ae8ab98c67503fb840092a925588a10e6e011f3f0e90b5"},
+        {"id": 11709195272, "runner_os": "macOS", "bytes": 9638459, "zip_sha256": "48ce94c924b97467decce11c5d2291030f391ba6e15810ca23cdccff48e7da0a"},
+        {"id": 11709490067, "runner_os": "Windows", "bytes": 9729605, "zip_sha256": "231755914b883802d198143bae4efa8eea8266c51cbaab68bd642faaca80a24e"}
+      ]
+    }
+  },
+  "finding": "Six workflows passed, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. All three round-trip jobs visibly reopened the Canvas and passed their in-process byte check, but Obsidian changed the Canvas during shutdown before the final vault snapshot. The external renamed note remained at 142 bytes with its expected SHA-256. The logs do not capture the post-save Canvas JSON, so the cause of the normalization is not proven.",
+  "correction_plan": [
+    "Keep the rich unknown-field Canvas fixture in Rust codec coverage and do not open it in the reference application.",
+    "Use a reference-compatible known-field Canvas fixture in a dedicated vault with a fresh Obsidian profile.",
+    "Keep Canvas selected through shutdown, verify bytes after process exit, reopen the same vault in a second app process, and verify bytes again after the second shutdown.",
+    "Keep the C01.2 whole-vault snapshot strict and do not allowlist Canvas source changes."
+  ],
+  "local_executable_validation": "none"
+}

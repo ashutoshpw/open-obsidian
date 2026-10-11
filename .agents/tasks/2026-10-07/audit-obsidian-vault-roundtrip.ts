@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
 import {lstat, mkdir, readFile, readdir, readlink, realpath, rename, unlink, writeFile} from "node:fs/promises";
 import {createWriteStream} from "node:fs";
-import {join, relative, resolve, sep} from "node:path";
+import {basename, join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
 
 type CdpTarget = {
@@ -30,6 +30,8 @@ type SnapshotEntry = {
 const reportDirectory = resolve(requiredEnv("OBSIDIAN_REPORT_DIRECTORY"));
 const workDirectory = resolve(requiredEnv("OBSIDIAN_ROUNDTRIP_WORK_DIRECTORY"));
 const vaultRoot = join(workDirectory, "C01.2 Roundtrip Fixture");
+const canvasVaultName = "C06 Canvas Reference Fixture";
+const canvasVaultRoot = join(workDirectory, canvasVaultName);
 const obsidianBinary = resolve(requiredEnv("OBSIDIAN_BINARY"));
 const openObsidianBinary = resolve(requiredEnv("OPENOBSIDIAN_BINARY"));
 const obsidianVersion = requiredEnv("OBSIDIAN_RELEASE_VERSION");
@@ -43,9 +45,9 @@ const noteEmbed = "![[Assets/roundtrip image.png]]";
 const noteContents = `${noteMarker}\n\n${noteEmbed}\n`;
 const canvasPath = "C06 Reference.canvas";
 const canvasMarker = "Canvas text card";
-const canvasFixtureCaseId = "all-node-and-edge-fields-with-unknown-values";
 const canvasTargetPath = "Notes/Target.md";
 const canvasTargetMarkdown = "# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n";
+const canvasTargetText = "Target for the C06 Canvas fixture subpath.";
 const canvasTargetMarkdownBytes = Buffer.from(canvasTargetMarkdown, "utf8");
 const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
 const obsidianSourcePlatform = requiredEnv("OBSIDIAN_SOURCE_PLATFORM");
@@ -90,23 +92,19 @@ const report: Record<string, unknown> = {
     seed_markdown_path: seedMarkdownPath,
     authored_note_path: null,
     attachment_path: attachmentPath,
-    canvas_path: canvasPath,
-    canvas_fixture_case: canvasFixtureCaseId,
-    canvas_marker: canvasMarker,
-    canvas_bytes: null,
-    canvas_sha256: null,
     content_hashes: {},
   },
   obsidian_authoring: {status: "pending"},
   openobsidian_open: {status: "pending"},
   obsidian_reopen: {status: "pending"},
+  canvas_reference_reopen: {status: "pending"},
   vault_snapshots: {},
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, native folder-picker selection and cancellation, and Obsidian reopen including the pinned Canvas fixture on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
-    "The Canvas check proves the pinned app opens the seeded fixture, exposes its text marker, and preserves its bytes across reopen; it does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
+    "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, exposes its text marker and referenced block content, and checks exact source bytes after both shutdowns; the codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
     "This run does not certify native in-app note editing or saving, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -1149,14 +1147,27 @@ function nativeFolderPickerVisibleInOcr(text: string): boolean {
   return hasCancel && hasPickerAction;
 }
 
-async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<void> {
+type VaultDirectoryOptions = {
+  targetRoot?: string;
+  reporter?: Record<string, unknown>;
+  screenshotPrefix?: string;
+};
+
+function vaultPickerScreenshotName(prefix: string, filename: string): string {
+  return prefix.length > 0 ? `${prefix}-${filename}` : filename;
+}
+
+async function clickFirstRunOpenButton(
+  connection: DevToolsConnection,
+  reporter: Record<string, unknown> = report.obsidian_authoring as Record<string, unknown>,
+): Promise<void> {
   const visible = await connection.evaluateJson<{matched: boolean; buttons: string[]}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
     const summary = buttons.map((button) => (button.innerText || button.textContent || '').trim()).filter(Boolean);
     const target = buttons.find((button) => (button.innerText || button.textContent || '').trim() === 'Open');
     return {matched:Boolean(target),buttons:summary};
   })()`);
-  (report.obsidian_authoring as Record<string, unknown>).first_run_buttons = visible.buttons;
+  reporter.first_run_buttons = visible.buttons;
   if (!visible.matched) throw new Error(`Could not find Obsidian's exact Open button; visible button labels=${visible.buttons.join(" | ")}`);
   // Electron's native folder picker blocks the renderer thread while it is open, so
   // dispatch the click without waiting for Runtime.evaluate's response.
@@ -1167,15 +1178,22 @@ async function clickFirstRunOpenButton(connection: DevToolsConnection): Promise<
   });
 }
 
-async function finishVaultDirectorySelection(connection: DevToolsConnection, port: number, pickerEvidence: Record<string, unknown>): Promise<DevToolsConnection> {
+async function finishVaultDirectorySelection(
+  connection: DevToolsConnection,
+  port: number,
+  pickerEvidence: Record<string, unknown>,
+  options: VaultDirectoryOptions = {},
+): Promise<DevToolsConnection> {
+  const targetRoot = options.targetRoot ?? vaultRoot;
+  const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
+  const targetVaultName = basename(targetRoot);
   const vaultTarget = await waitForPageTarget(
     port,
     (candidate) => typeof candidate.url === "string" && candidate.url.startsWith("app://obsidian.md/") && !candidate.url.includes("/starter.html"),
     "Obsidian vault renderer after folder selection",
   );
   const pageTargets = await readPageTargets(port);
-  const authoring = report.obsidian_authoring as Record<string, unknown>;
-  authoring.folder_picker = {
+  reporter.folder_picker = {
     ...pickerEvidence,
     page_targets_after_folder_selection: pageTargets.map(({id, title, url, type}) => ({id, title, url, type})),
     vault_renderer_target: {id: vaultTarget.id ?? null, title: vaultTarget.title ?? "", url: vaultTarget.url ?? ""},
@@ -1183,36 +1201,39 @@ async function finishVaultDirectorySelection(connection: DevToolsConnection, por
   connection.close();
   connection = await connectTarget(vaultTarget);
 
-  const isVaultLoaded = (body: string) => body.includes("C01.2 Roundtrip Fixture") && !body.includes("Open folder as vault") && !body.includes("Create new vault");
-  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, "Obsidian to open the selected folder", 45_000);
-  authoring.selected_vault_text = body.slice(0, 2_000);
-  authoring.selected_vault_in_ui = true;
+  const isVaultLoaded = (body: string) => body.includes(targetVaultName) && !body.includes("Open folder as vault") && !body.includes("Create new vault");
+  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", isVaultLoaded, `Obsidian to open the selected ${targetVaultName} folder`, 45_000);
+  reporter.selected_vault_text = body.slice(0, 2_000);
+  reporter.selected_vault_in_ui = true;
   return connection;
 }
 
-async function chooseVaultDirectoryLinux(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
+async function chooseVaultDirectoryLinux(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+  const targetRoot = options.targetRoot ?? vaultRoot;
+  const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
+  const screenshotPrefix = options.screenshotPrefix ?? "";
   const initialWindowId = activeWindowId();
   const initialTitle = activeWindowTitle();
-  await clickFirstRunOpenButton(connection);
+  await clickFirstRunOpenButton(connection, reporter);
   const pickerWindow = await waitFor("Obsidian folder picker", async () => {
     await delay(250);
     return {windowId: activeWindowId(), title: activeWindowTitle()};
   }, (value) => value.windowId.length > 0 && value.windowId !== initialWindowId, 20_000).catch(() => ({windowId: activeWindowId(), title: activeWindowTitle()}));
-  (report.obsidian_authoring as Record<string, unknown>).folder_picker = {
+  reporter.folder_picker = {
     initial_window_id: initialWindowId,
     initial_window_title: initialTitle,
     picker_window_id: pickerWindow.windowId,
     picker_window_title: pickerWindow.title,
   };
-  const pickerScreenshots = [await captureDesktopScreenshot("obsidian-folder-picker-initial.png")];
+  const pickerScreenshots = [await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png"))];
 
   xdotool("key", "ctrl+l");
-  xdotool("type", "--clearmodifiers", "--delay", "2", vaultRoot);
-  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-path-entered.png"));
+  xdotool("type", "--clearmodifiers", "--delay", "2", targetRoot);
+  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-path-entered.png")));
   const pickerStillActive = () => activeWindowId() === pickerWindow.windowId;
   const openButtonClick = clickWindowOpenButton(pickerWindow.windowId);
   await delay(1_000);
-  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-open-click.png"));
+  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-open-click.png")));
   if (pickerStillActive()) {
     xdotool("key", "Return");
     await delay(1_000);
@@ -1228,7 +1249,7 @@ async function chooseVaultDirectoryLinux(connection: DevToolsConnection, port: n
   if (pickerStillActive()) {
     await waitFor("Obsidian folder picker to close", async () => activeWindowId(), (windowId) => windowId !== pickerWindow.windowId, 15_000);
   }
-  (report.obsidian_authoring as Record<string, unknown>).folder_picker_closed = true;
+  reporter.folder_picker_closed = true;
 
   return await finishVaultDirectorySelection(connection, port, {
     initial_window_id: initialWindowId,
@@ -1238,13 +1259,16 @@ async function chooseVaultDirectoryLinux(connection: DevToolsConnection, port: n
     open_button_click: openButtonClick,
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
     picker_closed: true,
-  });
+  }, options);
 }
 
-async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
-  await clickFirstRunOpenButton(connection);
+async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+  const targetRoot = options.targetRoot ?? vaultRoot;
+  const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
+  const screenshotPrefix = options.screenshotPrefix ?? "";
+  await clickFirstRunOpenButton(connection, reporter);
   await delay(1_000);
-  const pickerScreenshots = [await captureDesktopScreenshot("obsidian-folder-picker-initial.png")];
+  const pickerScreenshots = [await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png"))];
   const script = `on run argv
     tell application "System Events"
       keystroke "g" using {command down, shift down}
@@ -1256,19 +1280,22 @@ async function chooseVaultDirectoryMacOS(connection: DevToolsConnection, port: n
       key code 36
     end tell
   end run`;
-  execFileSync("osascript", ["-e", script, vaultRoot], {stdio: "ignore"});
+  execFileSync("osascript", ["-e", script, targetRoot], {stdio: "ignore"});
   await delay(1_000);
-  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-path.png"));
+  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png")));
   return await finishVaultDirectorySelection(connection, port, {
     interaction: "macOS Open panel: Go to Folder (Command-Shift-G), enter the fixture path, and confirm folder selection",
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
-  });
+  }, options);
 }
 
-async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
-  await clickFirstRunOpenButton(connection);
+async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+  const targetRoot = options.targetRoot ?? vaultRoot;
+  const reporter = options.reporter ?? report.obsidian_authoring as Record<string, unknown>;
+  const screenshotPrefix = options.screenshotPrefix ?? "";
+  await clickFirstRunOpenButton(connection, reporter);
   await delay(1_000);
-  const pickerScreenshots = [await captureDesktopScreenshot("obsidian-folder-picker-initial.png")];
+  const pickerScreenshots = [await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-initial.png"))];
   const script = `
     $ErrorActionPreference = "Stop"
     $shell = New-Object -ComObject WScript.Shell
@@ -1280,11 +1307,11 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
     $shell.SendKeys("{ENTER}")
   `;
   execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
-    env: {...process.env, OBSIDIAN_PICKER_VAULT_PATH: vaultRoot},
+    env: {...process.env, OBSIDIAN_PICKER_VAULT_PATH: targetRoot},
     stdio: "ignore",
   });
   await delay(750);
-  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-path.png"));
+  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-path.png")));
   const selectionScript = `
     $ErrorActionPreference = "Stop"
     Add-Type -AssemblyName UIAutomationClient
@@ -1345,24 +1372,26 @@ async function chooseVaultDirectoryWindows(connection: DevToolsConnection, port:
     throw new Error(`Windows native folder selection failed: ${output || failure.message}`);
   }
   await delay(1_000);
-  pickerScreenshots.push(await captureDesktopScreenshot("obsidian-folder-picker-after-select.png"));
+  pickerScreenshots.push(await captureDesktopScreenshot(vaultPickerScreenshotName(screenshotPrefix, "obsidian-folder-picker-after-select.png")));
   return await finishVaultDirectorySelection(connection, port, {
     interaction: "Windows folder picker: navigate to the fixture path and invoke Select Folder through UI Automation, with focused Enter fallback",
     selection_result: selectionResult,
     picker_screenshots: pickerScreenshots.map((path) => relative(reportDirectory, path)),
-  });
+  }, options);
 }
 
-async function chooseVaultDirectory(connection: DevToolsConnection, port: number): Promise<DevToolsConnection> {
-  if (process.platform === "linux") return await chooseVaultDirectoryLinux(connection, port);
-  if (process.platform === "darwin") return await chooseVaultDirectoryMacOS(connection, port);
-  if (process.platform === "win32") return await chooseVaultDirectoryWindows(connection, port);
+async function chooseVaultDirectory(connection: DevToolsConnection, port: number, options: VaultDirectoryOptions = {}): Promise<DevToolsConnection> {
+  if (process.platform === "linux") return await chooseVaultDirectoryLinux(connection, port, options);
+  if (process.platform === "darwin") return await chooseVaultDirectoryMacOS(connection, port, options);
+  if (process.platform === "win32") return await chooseVaultDirectoryWindows(connection, port, options);
   throw new Error(`Unsupported Obsidian folder picker platform ${process.platform}`);
 }
 
 async function chooseRestrictedMode(
   connection: DevToolsConnection,
   reporter: Record<string, unknown> = report.obsidian_authoring as Record<string, unknown>,
+  vaultName = "C01.2 Roundtrip Fixture",
+  expectedEditorText = noteMarker,
 ): Promise<void> {
   const readTrustState = async () => await connection.evaluateJson<{body: string; buttons: string[]; editor: string}>(`(() => {
     const buttons = [...document.querySelectorAll('button,[role="button"]')];
@@ -1377,7 +1406,7 @@ async function chooseRestrictedMode(
     readTrustState,
     (value) => value.buttons.includes("Browse vault in Restricted Mode")
       || (!value.body.includes("Do you trust the author of this vault?")
-        && (value.editor.includes(noteMarker) || value.editor.includes(externalEditedMarker))),
+        && (value.editor.includes(expectedEditorText) || value.body.includes(vaultName))),
     30_000,
   );
   const restrictedModeLabel = "Browse vault in Restricted Mode";
@@ -1395,49 +1424,98 @@ async function chooseRestrictedMode(
       .find((button) => (button.innerText || button.textContent || '').trim() === '${restrictedModeLabel}')?.click())()`,
     returnByValue: true,
   });
-  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", (value) => !value.includes("Do you trust the author of this vault?") && value.includes("C01.2 Roundtrip Fixture"), "Obsidian to browse the fixture in Restricted Mode", 30_000);
+  const body = await waitForRenderer(connection, "document.body?.innerText ?? ''", (value) => !value.includes("Do you trust the author of this vault?") && value.includes(vaultName), `Obsidian to browse ${vaultName} in Restricted Mode`, 30_000);
   reporter.restricted_mode_selected = true;
   reporter.restricted_mode_text = body.slice(0, 2_000);
 }
 
-async function readCanvasFixtureBytes(): Promise<Buffer> {
-  const fixture = JSON.parse(await readFile(resolve("fixtures/c06-canvas.json"), "utf8")) as {
-    id?: unknown;
-    valid_cases?: Array<{id?: unknown; document?: unknown}>;
+function readCanvasReferenceFixtureBytes(): Buffer {
+  const document = {
+    nodes: [
+      {
+        id: "text-1",
+        type: "text",
+        x: 10,
+        y: 20,
+        width: 320,
+        height: 140,
+        text: canvasMarker,
+        color: "1",
+      },
+      {
+        id: "file-1",
+        type: "file",
+        x: 370,
+        y: 20,
+        width: 240,
+        height: 150,
+        file: canvasTargetPath,
+        subpath: "#^block-id",
+        color: "2",
+      },
+      {
+        id: "group-1",
+        type: "group",
+        x: 10,
+        y: 220,
+        width: 620,
+        height: 260,
+        label: "Reference group",
+        children: ["text-1", "file-1"],
+        background: "Assets/group-background.png",
+        backgroundStyle: "cover",
+      },
+    ],
+    edges: [],
   };
-  if (fixture.id !== "fixture:c06-canvas" || !Array.isArray(fixture.valid_cases)) {
-    throw new Error("C06 Canvas fixture is missing its expected identity or valid cases");
-  }
-  const validCase = fixture.valid_cases.find((candidate) => candidate.id === canvasFixtureCaseId);
-  if (
-    !validCase
-    || validCase.document === null
-    || typeof validCase.document !== "object"
-    || Array.isArray(validCase.document)
-  ) {
-    throw new Error(`C06 Canvas fixture case ${canvasFixtureCaseId} is missing a document object`);
-  }
-  const serializedDocument = JSON.stringify(validCase.document, null, 2);
-  if (typeof serializedDocument !== "string" || !serializedDocument.includes(canvasMarker)) {
-    throw new Error(`C06 Canvas fixture case ${canvasFixtureCaseId} does not include the expected text marker`);
-  }
-  return Buffer.from(`${serializedDocument}\n`, "utf8");
+  return Buffer.from(`${JSON.stringify(document, null, 2)}\n`, "utf8");
+}
+
+async function createCanvasReferenceFixture(): Promise<{bytes: number; sha256: string}> {
+  await mkdir(join(canvasVaultRoot, "Notes"), {recursive: true});
+  await mkdir(join(canvasVaultRoot, "Assets"), {recursive: true});
+  await mkdir(join(canvasVaultRoot, ".obsidian"), {recursive: true});
+  await mkdir(join(canvasVaultRoot, ".obsidian", "plugins"), {recursive: true});
+  await mkdir(join(canvasVaultRoot, ".obsidian", "themes"), {recursive: true});
+  const canvasBytes = readCanvasReferenceFixtureBytes();
+  const files: Record<string, Buffer> = {
+    [canvasPath]: canvasBytes,
+    [canvasTargetPath]: canvasTargetMarkdownBytes,
+    "Assets/group-background.png": await readFile(resolve("assets/openobsidian-icon.png")),
+    ".obsidian/app.json": await readFile(join(vaultRoot, ".obsidian", "app.json")),
+    ".obsidian/appearance.json": await readFile(join(vaultRoot, ".obsidian", "appearance.json")),
+    ".obsidian/community-plugins.json": await readFile(join(vaultRoot, ".obsidian", "community-plugins.json")),
+    ".obsidian/core-plugins.json": await readFile(join(vaultRoot, ".obsidian", "core-plugins.json")),
+  };
+  for (const [path, bytes] of Object.entries(files)) await writeFile(join(canvasVaultRoot, path), bytes);
+  const canvasHash = createHash("sha256").update(canvasBytes).digest("hex");
+  await writeFile(join(reportDirectory, "canvas-reference-seed.canvas"), canvasBytes);
+  const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
+  canvasReport.vault_name = canvasVaultName;
+  canvasReport.vault_path = "$RUNNER_TEMP/openobsidian-c01-roundtrip/C06 Canvas Reference Fixture";
+  canvasReport.fixture_profile = "Reference-compatible known-field Canvas document; the Rust codec's unknown-field fixture remains in fixtures/c06-canvas.json and is not opened by Obsidian.";
+  canvasReport.path = canvasPath;
+  canvasReport.marker = canvasMarker;
+  canvasReport.target_path = canvasTargetPath;
+  canvasReport.target_subpath = "#^block-id";
+  canvasReport.seeded_files = Object.fromEntries(Object.entries(files).map(([path, bytes]) => [path, {
+    bytes: bytes.length,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  }]));
+  canvasReport.source_before_first_open = {bytes: canvasBytes.length, sha256: canvasHash};
+  return {bytes: canvasBytes.length, sha256: canvasHash};
 }
 
 async function createFixture(): Promise<void> {
   await mkdir(join(vaultRoot, "Nested Ω"), {recursive: true});
-  await mkdir(join(vaultRoot, "Notes"), {recursive: true});
   await mkdir(join(vaultRoot, "Assets"), {recursive: true});
   await mkdir(join(vaultRoot, ".opaque"), {recursive: true});
   await mkdir(join(vaultRoot, ".obsidian", "themes", "CI Minimal"), {recursive: true});
   await mkdir(join(vaultRoot, ".obsidian", "plugins", "disabled-fixture"), {recursive: true});
 
-  const canvasBytes = await readCanvasFixtureBytes();
   const files: Record<string, Buffer> = {
     [seedMarkdownPath]: Buffer.from(seedMarkdown, "utf8"),
-    [canvasPath]: canvasBytes,
     "Assets/roundtrip image.png": await readFile(resolve("assets/openobsidian-icon.png")),
-    "Assets/group-background.png": await readFile(resolve("assets/openobsidian-icon.png")),
     ".opaque/unknown.bin": Buffer.from([0x00, 0x7f, 0xff, 0x4f, 0x4f, 0x42, 0x01, 0x02, 0x00, 0x10]),
     ".obsidian/app.json": Buffer.from('{"newFileLocation":"root","defaultViewMode":"source","unknown_roundtrip_setting":{"keep":[true,7,"opaque"]}}\n'),
     ".obsidian/appearance.json": Buffer.from('{"accentColor":"#8b5cf6","unknownAppearanceSetting":"preserve-me"}\n'),
@@ -1454,8 +1532,6 @@ async function createFixture(): Promise<void> {
     sha256: createHash("sha256").update(bytes).digest("hex"),
   }]));
   (report.fixture as Record<string, unknown>).content_hashes = hashes;
-  (report.fixture as Record<string, unknown>).canvas_bytes = canvasBytes.length;
-  (report.fixture as Record<string, unknown>).canvas_sha256 = createHash("sha256").update(canvasBytes).digest("hex");
   (report.fixture as Record<string, unknown>).provenance = {
     authored_by: "GitHub Actions fixture generator plus pinned Obsidian Desktop UI",
     generator_source_sha: sourceSha,
@@ -1560,7 +1636,11 @@ function ensureAppDataChangesAreMacEframeUiStateOnly(
   }
 }
 
-async function createObsidianProfile(profileDirectory: string, port: number): Promise<ChildProcess> {
+async function createObsidianProfile(
+  profileDirectory: string,
+  port: number,
+  logFilename = port === 9222 ? "obsidian-author.log" : "obsidian-reopen.log",
+): Promise<ChildProcess> {
   await mkdir(profileDirectory, {recursive: true});
   const homeRoot = join(profileDirectory, "home");
   const env: NodeJS.ProcessEnv = {
@@ -1590,7 +1670,7 @@ async function createObsidianProfile(profileDirectory: string, port: number): Pr
     `--remote-debugging-port=${port}`,
     `--user-data-dir=${join(profileDirectory, "user-data")}`,
   );
-  return launchLogged(obsidianBinary, args, join(reportDirectory, port === 9222 ? "obsidian-author.log" : "obsidian-reopen.log"), env);
+  return launchLogged(obsidianBinary, args, join(reportDirectory, logFilename), env);
 }
 
 async function authorFixtureThroughObsidian(child: ChildProcess): Promise<{connection: DevToolsConnection; browserVersion: string; notePath: string}> {
@@ -4457,7 +4537,6 @@ async function reopenInObsidian(
   notePath: string,
   expectedAttachmentPresent: boolean,
   externalNotePath: string,
-  canvasBeforeReopen: {bytes: number; sha256: string},
 ): Promise<DevToolsConnection> {
   if (child.exitCode !== null) throw new Error(`Pinned Obsidian exited before reopen (code ${child.exitCode})`);
   const {connection, browserVersion, target} = await connectObsidian(9223);
@@ -4518,52 +4597,9 @@ async function reopenInObsidian(
     throw new Error("Obsidian reopen changed the externally edited note bytes at " + externalNotePath);
   }
 
-  const canvasPathJson = JSON.stringify(canvasPath);
-  const canvasSelectionAction = await connection.evaluateJson<boolean>(`(() => {
-    const target = [...document.querySelectorAll('[data-path]')]
-      .find((element) => element.getAttribute('data-path') === ${canvasPathJson});
-    target?.click();
-    return Boolean(target);
-  })()`);
-  if (!canvasSelectionAction) {
-    throw new Error(`Obsidian did not expose the Canvas fixture at ${canvasPath} for selection after reopen`);
-  }
-  const canvasVisible = await waitFor(
-    "Obsidian to render the C06 Canvas fixture text marker after reopening the vault",
-    readVisible,
-    (value) => value.paths.includes(canvasPath)
-      && value.body.includes(canvasMarker)
-      && !value.body.includes("Do you trust the author of this vault?"),
-    30_000,
-  );
-  if (canvasVisible.body.includes("Unable to find")) {
-    throw new Error(`Obsidian could not resolve the C06 Canvas file subpath: ${canvasVisible.body.slice(0, 2_000)}`);
-  }
-  const canvasBytesAfterReopen = await readFile(join(vaultRoot, canvasPath));
-  const canvasSha256AfterReopen = createHash("sha256").update(canvasBytesAfterReopen).digest("hex");
-  const canvasSourceUnchanged = canvasBytesAfterReopen.length === canvasBeforeReopen.bytes
-    && canvasSha256AfterReopen === canvasBeforeReopen.sha256;
-  if (!canvasSourceUnchanged) {
-    throw new Error(`Obsidian reopen changed Canvas fixture bytes at ${canvasPath}`);
-  }
-  await captureObsidianScreenshot(connection, "obsidian-reopened-c06-canvas.png");
-  reopen.canvas_reference_reopen = {
-    status: "passed",
-    milestone: "R2.8.88-C06-pinned-reference-reopen",
-    path: canvasPath,
-    marker: canvasMarker,
-    marker_visible_in_body: canvasVisible.body.includes(canvasMarker),
-    path_visible_in_file_explorer: canvasVisible.paths.includes(canvasPath),
-    bytes_before_reopen: canvasBeforeReopen.bytes,
-    sha256_before_reopen: canvasBeforeReopen.sha256,
-    bytes_after_reopen: canvasBytesAfterReopen.length,
-    sha256_after_reopen: canvasSha256AfterReopen,
-    source_unchanged: canvasSourceUnchanged,
-    screenshot: "obsidian-reopened-c06-canvas.png",
-  };
-  reopen.editor_text = canvasVisible.editor.slice(0, 2_000);
-  reopen.visible_vault_text = canvasVisible.body.slice(0, 4_000);
-  reopen.final_file_tree_paths = canvasVisible.paths;
+  reopen.editor_text = authoredNoteVisible.editor.slice(0, 2_000);
+  reopen.visible_vault_text = authoredNoteVisible.body.slice(0, 4_000);
+  reopen.final_file_tree_paths = authoredNoteVisible.paths;
   await captureObsidianScreenshot(connection, "obsidian-reopened-vault.png");
   reopen.screenshot = "obsidian-reopened-vault.png";
 
@@ -4639,6 +4675,213 @@ async function reopenInObsidian(
   return connection;
 }
 
+async function verifyCanvasReferenceVisible(
+  connection: DevToolsConnection,
+  expectedCanvas: {bytes: number; sha256: string},
+  screenshot: string,
+  label: string,
+): Promise<{body: string; editor: string; title: string; paths: string[]; bytes: number; sha256: string}> {
+  const readVisible = async () => await connection.evaluateJson<{
+    body: string;
+    editor: string;
+    title: string;
+    paths: string[];
+  }>(`(() => ({
+    body: document.body?.innerText ?? '',
+    editor: [...document.querySelectorAll('[contenteditable="true"]')].map((element) => element.innerText ?? '').join('\\n'),
+    title: document.title,
+    paths: [...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || '')
+  }))()`);
+  let visible = await waitFor(
+    `${label}: Obsidian to list the reference Canvas path`,
+    readVisible,
+    (value) => value.paths.includes(canvasPath),
+    45_000,
+  );
+  const expectedCanvasContentVisible = (value: {body: string; paths: string[]}) => value.paths.includes(canvasPath)
+    && value.body.includes(canvasMarker)
+    && value.body.includes(canvasTargetText)
+    && !value.body.includes("Do you trust the author of this vault?");
+  if (!expectedCanvasContentVisible(visible)) {
+    const selectionAction = await connection.evaluateJson<boolean>(`(() => {
+      const target = [...document.querySelectorAll('[data-path]')]
+        .find((element) => element.getAttribute('data-path') === ${JSON.stringify(canvasPath)});
+      target?.click();
+      return Boolean(target);
+    })()`);
+    if (!selectionAction) {
+      throw new Error(`${label}: Obsidian did not expose ${canvasPath} for selection`);
+    }
+    visible = await waitFor(
+      `${label}: Obsidian to render the Canvas marker and path`,
+      readVisible,
+      expectedCanvasContentVisible,
+      30_000,
+    );
+  }
+  if (!expectedCanvasContentVisible(visible)) {
+    throw new Error(`${label}: Obsidian did not visibly render ${canvasMarker} and the ${canvasTargetPath} block subpath at ${canvasPath}`);
+  }
+  if (visible.body.includes("Unable to find")) {
+    throw new Error(`${label}: Obsidian could not resolve the Canvas file subpath: ${visible.body.slice(0, 2_000)}`);
+  }
+  const bytes = await readFile(join(canvasVaultRoot, canvasPath));
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  if (bytes.length !== expectedCanvas.bytes || sha256 !== expectedCanvas.sha256) {
+    await writeFile(join(reportDirectory, "canvas-reference-before-shutdown-check.canvas"), bytes);
+    throw new Error(`${label}: Obsidian changed Canvas fixture bytes before shutdown at ${canvasPath}`);
+  }
+  await captureObsidianScreenshot(connection, screenshot);
+  return {...visible, bytes: bytes.length, sha256};
+}
+
+async function assertCanvasReferenceSource(
+  expectedCanvas: {bytes: number; sha256: string},
+  stage: string,
+): Promise<{bytes: number; sha256: string}> {
+  const bytes = await readFile(join(canvasVaultRoot, canvasPath));
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  if (bytes.length !== expectedCanvas.bytes || sha256 !== expectedCanvas.sha256) {
+    const evidenceFilename = stage.includes("first")
+      ? "canvas-reference-after-first-close.canvas"
+      : "canvas-reference-after-reopen-close.canvas";
+    await writeFile(join(reportDirectory, evidenceFilename), bytes);
+    throw new Error(`Obsidian changed the reference Canvas source after ${stage}: expected ${expectedCanvas.bytes} bytes / ${expectedCanvas.sha256}, got ${bytes.length} bytes / ${sha256}`);
+  }
+  return {bytes: bytes.length, sha256};
+}
+
+async function runCanvasReferenceProbe(): Promise<void> {
+  const profileDirectory = join(workDirectory, "canvas-obsidian-profile");
+  const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
+  const snapshots = report.vault_snapshots as Record<string, unknown>;
+  canvasReport.status = "running";
+  let firstProcess: ChildProcess | undefined;
+  let firstConnection: DevToolsConnection | undefined;
+  let secondProcess: ChildProcess | undefined;
+  let secondConnection: DevToolsConnection | undefined;
+  try {
+    const expectedCanvas = await createCanvasReferenceFixture();
+    const seedSnapshot = await snapshotTree(canvasVaultRoot);
+    snapshots.canvas_reference_seed = seedSnapshot;
+    firstProcess = await createObsidianProfile(profileDirectory, 9224, "obsidian-canvas-first-open.log");
+    const first = await connectObsidian(9224);
+    firstConnection = first.connection;
+    const firstSession: Record<string, unknown> = {
+      devtools_browser: first.browserVersion,
+      first_target: {title: first.target.title ?? "", url: first.target.url ?? ""},
+      source_before_open: expectedCanvas,
+    };
+    canvasReport.first_session = firstSession;
+    const firstRunBody = await waitForRenderer(
+      firstConnection,
+      "document.body?.innerText ?? ''",
+      (body) => body.includes("Open folder as vault"),
+      "Obsidian's first-run Canvas reference vault screen",
+    );
+    firstSession.first_run_text = firstRunBody.slice(0, 2_000);
+    await captureObsidianScreenshot(firstConnection, "obsidian-canvas-first-run.png");
+    firstConnection = await chooseVaultDirectory(firstConnection, 9224, {
+      targetRoot: canvasVaultRoot,
+      reporter: canvasReport,
+      screenshotPrefix: "obsidian-canvas",
+    });
+    await chooseRestrictedMode(firstConnection, firstSession, canvasVaultName, canvasMarker);
+    const firstView = await verifyCanvasReferenceVisible(
+      firstConnection,
+      expectedCanvas,
+      "obsidian-canvas-first-open.png",
+      "Canvas reference first open",
+    );
+    firstSession.canvas_view = {
+      marker_visible_in_body: firstView.body.includes(canvasMarker),
+      path_visible_in_file_explorer: firstView.paths.includes(canvasPath),
+      target_subpath_content_visible: firstView.body.includes(canvasTargetText),
+      target_subpath_resolution_error_absent: !firstView.body.includes("Unable to find"),
+      title: firstView.title,
+      body: firstView.body.slice(0, 4_000),
+      bytes: firstView.bytes,
+      sha256: firstView.sha256,
+      screenshot: "obsidian-canvas-first-open.png",
+    };
+    await delay(2_000);
+    await stopProcess(firstProcess, firstConnection);
+    firstProcess = undefined;
+    firstConnection = undefined;
+
+    const afterFirstClose = await snapshotTree(canvasVaultRoot);
+    snapshots.canvas_reference_after_first_close = afterFirstClose;
+    const firstCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, "the first Obsidian shutdown");
+    const firstCloseChanges = changedPaths(seedSnapshot, afterFirstClose);
+    const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    if (firstCloseUnexpectedChanges.length > 0) {
+      throw new Error(`Canvas reference first open changed non-workspace vault content: ${JSON.stringify(firstCloseUnexpectedChanges).slice(0, 6_000)}`);
+    }
+    snapshots.canvas_reference_first_open_workspace_changes = firstCloseChanges;
+    firstSession.source_after_close = firstCloseCanvas;
+    firstSession.workspace_changes_from_seed = firstCloseChanges;
+
+    const beforeSecondOpen = afterFirstClose;
+    snapshots.canvas_reference_before_second_open = beforeSecondOpen;
+    secondProcess = await createObsidianProfile(profileDirectory, 9225, "obsidian-canvas-reopen.log");
+    const second = await connectObsidian(9225);
+    secondConnection = second.connection;
+    const secondSession: Record<string, unknown> = {
+      devtools_browser: second.browserVersion,
+      first_target: {title: second.target.title ?? "", url: second.target.url ?? ""},
+      source_before_reopen: expectedCanvas,
+    };
+    canvasReport.second_session = secondSession;
+    await chooseRestrictedMode(secondConnection, secondSession, canvasVaultName, canvasMarker);
+    const secondView = await verifyCanvasReferenceVisible(
+      secondConnection,
+      expectedCanvas,
+      "obsidian-canvas-reopened.png",
+      "Canvas reference reopen",
+    );
+    secondSession.canvas_view = {
+      marker_visible_in_body: secondView.body.includes(canvasMarker),
+      path_visible_in_file_explorer: secondView.paths.includes(canvasPath),
+      target_subpath_content_visible: secondView.body.includes(canvasTargetText),
+      target_subpath_resolution_error_absent: !secondView.body.includes("Unable to find"),
+      title: secondView.title,
+      body: secondView.body.slice(0, 4_000),
+      bytes: secondView.bytes,
+      sha256: secondView.sha256,
+      screenshot: "obsidian-canvas-reopened.png",
+    };
+    await delay(2_000);
+    await stopProcess(secondProcess, secondConnection);
+    secondProcess = undefined;
+    secondConnection = undefined;
+
+    const afterSecondClose = await snapshotTree(canvasVaultRoot);
+    snapshots.canvas_reference_after_reopen = afterSecondClose;
+    const secondCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, "the reopened Obsidian shutdown");
+    const reopenChanges = changedPaths(beforeSecondOpen, afterSecondClose);
+    const allowedWorkspaceChanges = reopenChanges.filter((change) => workspaceStateAllowlist.includes(change.path));
+    const unexpectedChanges = reopenChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
+    if (unexpectedChanges.length > 0) {
+      throw new Error(`Canvas reference reopen changed non-workspace vault content: ${JSON.stringify(unexpectedChanges).slice(0, 6_000)}`);
+    }
+    snapshots.canvas_reference_workspace_changes = allowedWorkspaceChanges;
+    canvasReport.source_after_reopen = secondCloseCanvas;
+    canvasReport.source_unchanged_after_both_shutdowns = true;
+    canvasReport.marker_visible_after_reopen = secondView.body.includes(canvasMarker);
+    canvasReport.path_visible_after_reopen = secondView.paths.includes(canvasPath);
+    canvasReport.target_subpath_content_visible_after_reopen = secondView.body.includes(canvasTargetText);
+    canvasReport.reopen_workspace_changes = allowedWorkspaceChanges;
+    canvasReport.status = "passed";
+  } catch (error) {
+    canvasReport.status = "failed";
+    canvasReport.error = error instanceof Error ? error.message : String(error);
+    throw error;
+  } finally {
+    await stopProcess(firstProcess, firstConnection).catch(() => undefined);
+    await stopProcess(secondProcess, secondConnection).catch(() => undefined);
+  }
+}
+
 async function run(): Promise<void> {
   await mkdir(reportDirectory, {recursive: true});
   await mkdir(workDirectory, {recursive: true});
@@ -4666,35 +4909,10 @@ async function run(): Promise<void> {
     await saveReport();
 
     await runOpenObsidian(beforeRust);
-    await writeFile(join(vaultRoot, canvasTargetPath), canvasTargetMarkdownBytes);
-    const canvasTargetSha256 = createHash("sha256").update(canvasTargetMarkdownBytes).digest("hex");
-    const fixtureReport = report.fixture as Record<string, unknown>;
-    const fixtureContentHashes = fixtureReport.content_hashes as Record<string, {bytes: number; sha256: string}>;
-    fixtureContentHashes[canvasTargetPath] = {
-      bytes: canvasTargetMarkdownBytes.length,
-      sha256: canvasTargetSha256,
-    };
-    fixtureReport.canvas_target_note_seed = {
-      path: canvasTargetPath,
-      bytes: canvasTargetMarkdownBytes.length,
-      sha256: canvasTargetSha256,
-      created_after_openobsidian_roundtrip: true,
-    };
     const expectedBeforeObsidianReopen = await snapshotTree(vaultRoot);
     (report.vault_snapshots as Record<string, unknown>).expected_before_obsidian_reopen = expectedBeforeObsidianReopen;
     await writeFile(join(reportDirectory, "vault-after-openobsidian.json"), `${JSON.stringify(report.vault_snapshots && (report.vault_snapshots as Record<string, unknown>).after_openobsidian, null, 2)}\n`);
     await writeFile(join(reportDirectory, "vault-before-obsidian-reopen.json"), `${JSON.stringify(expectedBeforeObsidianReopen, null, 2)}\n`);
-
-    const canvasSnapshotEntry = expectedBeforeObsidianReopen.find((entry) => entry.path === canvasPath && entry.kind === "file");
-    if (typeof canvasSnapshotEntry?.bytes !== "number" || typeof canvasSnapshotEntry.sha256 !== "string") {
-      throw new Error(`Canvas fixture ${canvasPath} is missing from the pre-reopen vault snapshot`);
-    }
-    const canvasBytesBeforeReopen = await readFile(join(vaultRoot, canvasPath));
-    const canvasSha256BeforeReopen = createHash("sha256").update(canvasBytesBeforeReopen).digest("hex");
-    if (canvasBytesBeforeReopen.length !== canvasSnapshotEntry.bytes || canvasSha256BeforeReopen !== canvasSnapshotEntry.sha256) {
-      throw new Error(`Canvas fixture ${canvasPath} changed after the pre-reopen vault snapshot`);
-    }
-    const canvasBeforeReopen = {bytes: canvasBytesBeforeReopen.length, sha256: canvasSha256BeforeReopen};
 
     reopenProcess = await createObsidianProfile(join(workDirectory, "obsidian-profile"), 9223);
     const expectedAttachmentPresent = expectedBeforeObsidianReopen.some((entry) => entry.path === attachmentPath && entry.kind === "file");
@@ -4703,7 +4921,6 @@ async function run(): Promise<void> {
       authored.notePath,
       expectedAttachmentPresent,
       externalRenamedMarkdownPath,
-      canvasBeforeReopen,
     );
     await delay(2_000);
     await stopProcess(reopenProcess, reopenConnection);
@@ -4724,6 +4941,8 @@ async function run(): Promise<void> {
     (report.obsidian_reopen as Record<string, unknown>).status = "passed";
     await writeFile(join(reportDirectory, "vault-after-obsidian-reopen.json"), `${JSON.stringify(afterReopen, null, 2)}\n`);
     await writeFile(join(reportDirectory, "vault-reopen-workspace-changes.json"), `${JSON.stringify(allowedChanges, null, 2)}\n`);
+
+    await runCanvasReferenceProbe();
 
     report.status = "passed";
     report.completed_at = new Date().toISOString();

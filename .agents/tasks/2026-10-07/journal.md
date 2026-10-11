@@ -4063,3 +4063,29 @@ Canvas check before selecting the edited note, and uses the standard
 `#^block-id` Canvas subpath with an unresolved-link assertion. The edited-note
 byte check remains enabled. All acceptance validation remains on GitHub Actions;
 no local tests, builds, formatters, validators, or app launches were run.
+
+R2.8.88 attempt 2 was committed and pushed as
+`9b74c39858ea1576791b83ad4f3d6d6bb5af197c`. Exact-SHA runs are inventory
+38156539343, quality 38156539318, desktop build 38156539371, plugin renderer
+38156539242, loaded-plugin workflows 38156539417, Rust CI 38156539262, and
+Obsidian round-trip 38156539309. Six workflows passed, including all Rust jobs
+on Ubuntu, macOS, Windows, and Rust 1.95. The three round-trip jobs visibly
+opened the Canvas and passed the immediate byte check, but the final post-close
+snapshot found the same rewrite on Linux, macOS, and Windows: 1,818 bytes / SHA
+`fb2523fb5328b3df233fda21fb31acf5dcecd6fc5028d41a5d38d8b3a8584479` became
+1,345 bytes / SHA
+`0ada29494f95af2572b28af1117a4ff4b0d89436e07da06572815c16f80c1535`. The
+renamed external note remained exact. Job IDs and artifact archive digests are
+in `evidence/r2.8.88-attempt-2-9b74c39.json`. No local executable validation
+was run.
+
+Attempt 3 isolates the pinned-app probe in a dedicated vault and fresh profile,
+using a known-field Canvas fixture. The codec's rich unknown-field fixture stays
+in Rust coverage; the app probe checks the reference fixture after first
+shutdown, opens the same vault in a second process, and checks it again after
+shutdown. It checks the target paragraph and rejects Obsidian's unresolved
+subpath error while retaining `#^block-id` in the Canvas source; it does not
+expect the renderer to display Markdown's hidden block-ID syntax. Both C01.2's
+whole-vault check and the Canvas source checks remain strict. No local tests,
+builds, formatters, validators, or app launches were run. C06 and C06.1 remain
+pending.
