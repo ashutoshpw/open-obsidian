@@ -64,6 +64,16 @@ impl VaultSession {
         self.store.root().path()
     }
 
+    /// Resolves an existing regular file beneath the vault without following symlinks.
+    pub fn resolve_regular_file_path(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<std::path::PathBuf, VaultError> {
+        self.store
+            .root()
+            .resolve_regular_file_path(relative_path)
+    }
+
     /// Reads a note through the vault's root-confinement and revision-hashing boundary.
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         self.store.root().read(relative_path)

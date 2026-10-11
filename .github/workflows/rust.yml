@@ -82,3 +82,23 @@ jobs:
           name: openobsidian-rust-preview-${{ github.sha }}
           path: target/release/openobsidian
           if-no-files-found: error
+
+  msrv:
+    name: minimum supported Rust (1.95)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - parallel:
+          - name: Install Linux system dependencies (egui/winit/Wry)
+            run: |
+              sudo apt-get update
+              sudo apt-get install -y --no-install-recommends \
+                libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxrandr-dev libxi-dev \
+                libgl1-mesa-dev libgtk-3-dev libwebkit2gtk-4.1-dev xvfb
+          - name: Set up minimum Rust toolchain
+            uses: dtolnay/rust-toolchain@1.95.0
+
+      - name: Run locked workspace tests at the declared MSRV
+        run: cargo test --workspace --locked

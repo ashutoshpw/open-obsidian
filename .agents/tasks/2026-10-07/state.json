@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T07:39:08Z",
+  "updated_at": "2026-10-11T07:57:13Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6d3ac642fd3b10052d4f41e9b6274654bc54e786",
-  "current_milestone": "R2.8.76",
-  "next_action": "Commit and push the R2.8.76 evidence/tracker checkpoint and inspect its path-eligible GitHub Actions workflows. Then begin R2.8.77 for C08.1, the Rust safe external-open path for unknown vault files; reconcile the six pending R1-tagged requirement rows in a separate tracker slice. Use GitHub CI only for executable validation.",
+  "last_reconciled_head": "f00e67b3a293f22c5794295a437ac3ff9e4b321c",
+  "current_milestone": "R2.8.77",
+  "next_action": "Finish R2.8.77 C08.1 external-open implementation, commit the bounded source slice, and push to origin/main for all seven required workflows plus the Rust 1.95 MSRV job. Wait for exact-SHA CI before any further push; keep C08.1 pending until the required results pass. All executable validation stays in GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -299,7 +299,7 @@
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.74 / C01.2-42 passed on exact implementation SHA 79526587c3ed3ead47a0cc682baa4a8f92ecb26b. All seven required GitHub Actions workflows passed, with the quality workflow passing on same-SHA attempt 2 after a transient Ubuntu Electron retrieval-boundary timeout. Obsidian 1.14.4-authored image removal, fresh Unresolved/targetless/not_rendered diagnostics, unchanged note source, snapshots, and reopen passed on Linux, macOS, and Windows. Evidence: evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json. Parent C01/C01.2 remain pending; no local executable validation was used."
   ],
-  "push_status": "R2.8.76 C01.2-44 implementation accepted on exact SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786; evidence/tracker checkpoint is being prepared for origin/main and its path-eligible CI. All executable validation remains in GitHub Actions.",
+  "push_status": "R2.8.76 tracker checkpoint passed all six path-eligible workflows on exact SHA f00e67b3a293f22c5794295a437ac3ff9e4b321c; Obsidian round-trip was path-filtered out and passed on implementation SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786. R2.8.77 C08.1 implementation is in progress locally from f00e67b; next source push triggers all seven required workflows and the Rust 1.95 MSRV job. All executable validation remains in GitHub Actions.",
   "ci_results": [
     {
       "name": "inventory",
@@ -26741,9 +26741,52 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Commit and push this accepted tracker checkpoint, wait for its path-eligible GitHub Actions workflows, then start the bounded R2.8.77 C08.1 external-open slice. Keep parent C01/C01.2 pending.",
+      "next_action": "Checkpoint accepted. R2.8.77 implements C08.1 with confined regular-file resolution, immediate revalidation, injected OS opener and denial/preservation coverage; keep C08.1 and parent C08 pending until exact-SHA GitHub CI passes.",
       "evidence": "evidence/r2.8.76-c01-readonly-audit.md",
-      "roadmap_audit": "evidence/r2.8.76-parallel-roadmap-audit.md"
+      "roadmap_audit": "evidence/r2.8.76-parallel-roadmap-audit.md",
+      "tracker_checkpoint_validation": {
+        "source_sha": "f00e67b3a293f22c5794295a437ac3ff9e4b321c",
+        "conclusion": "passed",
+        "workflow_runs": {
+          "inventory": 38122116827,
+          "quality": 38122116874,
+          "desktop_build": 38122116853,
+          "plugin_renderer": 38122116850,
+          "loaded_plugin_workflows": 38122116854,
+          "rust_ci": 38122116836
+        },
+        "evidence": "evidence/r2.8.76-tracker-checkpoint-f00e67b.json",
+        "finding": "All six documentation-triggered workflows passed. The path-filtered Obsidian round-trip workflow did not trigger on this tracker-only commit; its Linux, macOS, and Windows jobs passed on implementation SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786."
+      }
+    },
+    "R2.8.77": {
+      "status": "in_progress",
+      "starting_sha": "f00e67b3a293f22c5794295a437ac3ff9e4b321c",
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "scope": "Port the C08.1 unknown-binary external-open flow: resolve only an existing regular vault file through the confined vault boundary, revalidate immediately before handing its canonical absolute path to an injected OS default-app opener, preserve exact bytes and vault/app-data snapshots, and deny missing, directory, traversal and symlink targets.",
+      "acceptance": [
+        "The headless UI offers Open externally only for a resolved non-Markdown regular file and invokes the injected opener with its canonical absolute path after revalidation.",
+        "Fixture-backed tests verify exact opaque bytes/hash and unchanged vault/app-data snapshots, and deny missing files, directories, traversal, symlinks and a stale target removed after link resolution.",
+        "The desktop app injects the platform default-app opener; ui-egui remains independent of the platform crate.",
+        "All seven required GitHub Actions workflows pass on the exact pushed implementation SHA, including Linux, macOS and Windows round-trip jobs, and the Rust CI MSRV job passes with Rust 1.95.0. No local executable validation is allowed.",
+        "Accept C08.1 only; keep parent C08 pending until its broader acceptance criteria pass."
+      ],
+      "known_limitations": [
+        "The cross-platform default-app API consumes a canonical path. A race between final vault revalidation and the operating system consuming that path cannot be excluded; this slice does not claim handle-based TOCTOU protection."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance",
+        "OpenObsidian Rust CI minimum supported Rust 1.95 job"
+      ],
+      "next_action": "Review the final source diff, commit the coherent C08.1 implementation, push to origin/main, and inspect every required exact-SHA workflow and platform job before any subsequent push."
+    }
     }
   },
   "ci_preparation": {

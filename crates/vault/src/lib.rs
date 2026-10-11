@@ -328,6 +328,14 @@ impl VaultRoot {
         &self.canonical_root
     }
 
+    /// Resolves an existing regular file beneath the vault without following symlinks.
+    pub fn resolve_regular_file_path(
+        &self,
+        relative_path: impl AsRef<Path>,
+    ) -> Result<PathBuf, VaultError> {
+        self.resolve_vault_path(relative_path.as_ref(), false)
+    }
+
     pub fn read(&self, relative_path: impl AsRef<Path>) -> Result<VaultRead, VaultError> {
         let relative_path = relative_path.as_ref();
         let canonical = self.resolve_vault_path(relative_path, false)?;
@@ -2230,6 +2238,46 @@ mod tests {
         assert_eq!(preview.source.as_bytes(), original);
         assert!(!preview.truncated);
         assert_eq!(preview.revision_sha256, Some(sha256_hex(original)));
+    }
+
+    #[test]
+    fn external_file_resolution_returns_original_bytes_and_denies_unsafe_paths() {
+        let temp = TempDir::new();
+        let vault_path = temp.0.join("vault");
+        let attachments = vault_path.join("Attachments");
+        fs::create_dir_all(&attachments).unwrap();
+        let binary_bytes = [0, 255, 7, 10, 128];
+        let binary_path = attachments.join("unknown.dat");
+        fs::write(&binary_path, binary_bytes).unwrap();
+        fs::create_dir(vault_path.join("Folder")).unwrap();
+        let outside_path = temp.0.join("outside.dat");
+        fs::write(&outside_path, b"outside vault").unwrap();
+
+        let vault = VaultRoot::open(&vault_path).unwrap();
+        let before = vault.snapshot().unwrap();
+        let resolved = vault
+            .resolve_regular_file_path("Attachments/unknown.dat")
+            .unwrap();
+
+        assert_eq!(resolved, fs::canonicalize(&binary_path).unwrap());
+        assert_eq!(fs::read(&resolved).unwrap(), binary_bytes);
+        assert_eq!(sha256_hex(&fs::read(&resolved).unwrap()), sha256_hex(&binary_bytes));
+        assert_eq!(vault.snapshot().unwrap(), before);
+        assert!(vault.resolve_regular_file_path("Missing.dat").is_err());
+        assert!(vault.resolve_regular_file_path("Folder").is_err());
+        assert!(vault
+            .resolve_regular_file_path("../outside.dat")
+            .is_err());
+
+        let symlink_path = attachments.join("external.dat");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&outside_path, &symlink_path).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(&outside_path, &symlink_path).unwrap();
+        assert!(matches!(
+            vault.resolve_regular_file_path("Attachments/external.dat"),
+            Err(VaultError::Symlink(_))
+        ));
     }
 
     #[test]

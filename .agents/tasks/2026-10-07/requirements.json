@@ -3317,9 +3317,9 @@
       "checkpoint": "P2.1",
       "owner": "vault-filesystem",
       "mandatory": true,
-      "acceptance_criteria": "Unknown binary hashes are unchanged after scan/open/close and an external-open action uses the original path.",
+      "acceptance_criteria": "Unknown binary bytes and hashes are unchanged after scan/open/close. External open is offered only for a resolved non-Markdown regular file, revalidates immediately before handoff, passes its canonical absolute path to the injected opener, and denies missing files, directories, traversal, and symlinks.",
       "fixture_ids": [
-        "fixture:c08-unknown-binary"
+        "fixture:existing-vault"
       ],
       "reference_versions": [
         {
@@ -3351,7 +3351,7 @@
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Port C08 behavior to crates/vault, preserving existing formats and observable workflow; verify its linked fixtures through GitHub CI."
+      "migration_acceptance": "Resolve a regular vault file through the confined path boundary, revalidate it immediately before invoking the injected OS default-app opener, and verify exact path handoff, byte/hash preservation and denial cases through GitHub CI."
     },
     {
       "id": "C09",
@@ -8275,7 +8275,7 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-11-p5.1-cross-platform-ci.json"
       ],
       "legacy_checkpoint": "P5.1",
-      "migration_phase": "R1",
+      "migration_phase": "R3",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
@@ -8912,7 +8912,7 @@
         ".agents/tasks/2026-09-09/01-init/evidence/2026-09-09-p0.1-reconciliation.json"
       ],
       "legacy_checkpoint": "P0.1",
-      "migration_phase": "R0",
+      "migration_phase": "R5",
       "rust_owner": "xtask",
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
@@ -9880,9 +9880,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json"
+      ],
+      "tested_source_tree": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D19",
@@ -9907,7 +9909,7 @@
       "checkpoint": "R1",
       "owner": "apps/openobsidian",
       "mandatory": true,
-      "acceptance_criteria": "CI builds the desktop workspace with --locked under the declared minimum toolchain policy.",
+      "acceptance_criteria": "GitHub CI runs the locked workspace test suite with Rust 1.95.0 on Linux; the stable Rust matrix builds the desktop workspace with --locked on Linux, macOS and Windows.",
       "fixture_ids": [
         "fixture:mig-004"
       ],
@@ -10002,7 +10004,7 @@
         "heading": "Reference stack: source-verified Photocraft analysis",
         "clause": "Use typed Serde data models, thiserror errors, log logging and Rayon for bounded CPU-parallel domain work; keep UI work cancellable."
       },
-      "checkpoint": "R1",
+      "checkpoint": "R3",
       "owner": "crates/engine",
       "mandatory": true,
       "acceptance_criteria": "Layer checks and Rust CI validate dependency boundaries and cancellable work units.",
@@ -10035,7 +10037,7 @@
       "legacy_status": null,
       "legacy_evidence_paths": [],
       "legacy_checkpoint": null,
-      "migration_phase": "R1",
+      "migration_phase": "R3",
       "rust_owner": "crates/engine",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
@@ -10444,7 +10446,7 @@
       "checkpoint": "R1",
       "owner": "crates/plugins",
       "mandatory": true,
-      "acceptance_criteria": "GitHub CI on Linux, macOS and Windows records runtime identity and artifact hashes, exercises representative JavaScript API, DOM/theme and editor workflows, verifies denied filesystem/process/network/credential capabilities, and records unsupported paths under D15 without counting mock projections as unchanged-artifact certification.",
+      "acceptance_criteria": "The R1 feasibility gate uses GitHub CI on Linux, macOS and Windows to record candidate WebView/runtime identity and artifact hashes, exercise representative unchanged JavaScript API, DOM/theme and editor callbacks, and verify denied filesystem/process/network/credential capabilities without counting mocks as unchanged-artifact certification. Per-path D15 disposition remains a separate R4 acceptance requirement.",
       "fixture_ids": [
         "fixture:compatibility-manifest",
         "fixture:plugin-renderer-probe",
@@ -10473,9 +10475,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        "evidence/r1.2-plugin-runtime-desktop-5ea3ea6.json"
+      ],
+      "tested_source_tree": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D15",
@@ -10486,7 +10490,7 @@
       "rust_owner": "crates/plugins",
       "mapping_status": "reviewed",
       "migration_disposition": "retained",
-      "migration_acceptance": "Complete the compatibility feasibility gate before broad native UI investment; all acceptance execution occurs on GitHub Actions.",
+      "migration_acceptance": "The R1 feasibility probes pass on all three operating systems. This does not certify broad legacy compatibility, Wayland support, WebView isolation or per-path D15 dispositions; those remain R4 work.",
       "runtime_override": "Rust migration-specific acceptance requirement; verify only in GitHub CI."
     },
     {

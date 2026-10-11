@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.76 tracker checkpoint",
+  "tested_source_sha": "f00e67b3a293f22c5794295a437ac3ff9e4b321c",
+  "recorded_at": "2026-10-11T07:57:13Z",
+  "conclusion": "passed",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38122116827,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38122116827",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": 114418822663
+      }
+    },
+    "quality": {
+      "run_id": 38122116874,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38122116874",
+      "conclusion": "success",
+      "jobs": {
+        "windows": 114418823032,
+        "ubuntu": 114418823235,
+        "macos": 114418823244
+      }
+    },
+    "desktop_build": {
+      "run_id": 38122116853,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38122116853",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": 114418822929,
+        "macos": 114418822996,
+        "windows": 114418823011
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38122116850,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38122116850",
+      "conclusion": "success",
+      "jobs": {
+        "windows": 114418822941,
+        "macos": 114418823170,
+        "ubuntu": 114418823194
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38122116854,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38122116854",
+      "conclusion": "success",
+      "jobs": {
+        "macos": 114418822796,
+        "ubuntu": 114418822967,
+        "windows": 114418823027
+      }
+    },
+    "rust_ci": {
+      "run_id": 38122116836,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38122116836",
+      "conclusion": "success",
+      "jobs": {
+        "windows": 114418822647,
+        "ubuntu": 114418822799,
+        "macos": 114418822921
+      }
+    }
+  },
+  "path_filtered_workflow": {
+    "workflow": "Obsidian vault round-trip acceptance",
+    "triggered": false,
+    "reason": "The tracker checkpoint changed only documentation and evidence paths, outside the workflow's source trigger paths.",
+    "implementation_sha_with_required_platform_results": "6d3ac642fd3b10052d4f41e9b6274654bc54e786",
+    "implementation_run_id": 38120913943,
+    "implementation_job_conclusions": {
+      "linux": "success",
+      "macos": "success",
+      "windows": "success"
+    }
+  },
+  "notes": [
+    "All six triggered documentation-checkpoint workflows passed on the exact tracker SHA.",
+    "This checkpoint validates its own tracker changes. The path-filtered round-trip evidence belongs to the accepted R2.8.76 implementation SHA, not this tracker-only SHA.",
+    "The repository uses native GitHub Actions parallel step groups for independent setup and checks; applicable groups passed on the recorded runs."
+  ]
+}

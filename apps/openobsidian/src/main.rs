@@ -1,10 +1,11 @@
 use openobsidian_engine::VaultSession;
 use openobsidian_platform::{
     StorageProtectionStatus, UserDataCleanupOutcome, UserDataCleanupSelection, cleanup_user_data,
-    inspect_storage_protection, prepare_vault_app_data,
+    inspect_storage_protection, open_external_file, prepare_vault_app_data,
 };
 use openobsidian_ui_egui::{
-    StorageProtectionDisplay, StorageProtectionDisplayStatus, run_with_desktop_services_and_session,
+    StorageProtectionDisplay, StorageProtectionDisplayStatus,
+    run_with_desktop_services_and_session_and_external_opener,
 };
 use rfd::FileDialog;
 use std::ffi::OsString;
@@ -74,7 +75,12 @@ fn main() -> ExitCode {
         });
         Some(receiver)
     };
-    if let Err(error) = run_with_desktop_services_and_session(probe, open_vault, initial_session) {
+    if let Err(error) = run_with_desktop_services_and_session_and_external_opener(
+        probe,
+        open_vault,
+        initial_session,
+        |path| open_external_file(path),
+    ) {
         eprintln!("OpenObsidian could not start: {error}");
         return ExitCode::FAILURE;
     }

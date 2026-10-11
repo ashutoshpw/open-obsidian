@@ -3255,3 +3255,31 @@ Next: commit and push this tracker/evidence checkpoint, inspect the path-eligibl
 CI workflows, then begin R2.8.77 for C08.1. Reconcile the R1 row assignments in
 a separate tracker slice; do not treat partial or legacy-only evidence as
 acceptance. All executable validation remains in GitHub Actions.
+
+### R2.8.76 tracker checkpoint accepted on f00e67b
+
+The tracker checkpoint passed all six documentation-triggered GitHub Actions
+workflows on exact SHA `f00e67b3a293f22c5794295a437ac3ff9e4b321c`: inventory
+38122116827, quality 38122116874, desktop build 38122116853, plugin renderer
+38122116850, loaded-plugin workflows 38122116854, and Rust CI 38122116836. All
+platform matrix jobs passed. The path-filtered Obsidian round-trip workflow did
+not trigger for this tracker-only commit; all three round-trip jobs passed on
+implementation SHA `6d3ac642fd3b10052d4f41e9b6274654bc54e786`. Exact run/job IDs
+and the path-filter explanation are recorded in
+`evidence/r2.8.76-tracker-checkpoint-f00e67b.json`.
+
+The requirement audit keeps MIG-004 pending until its new Rust 1.95.0 CI job
+passes, narrows MIG-003 and MIG-015 to their observed R1 feasibility evidence,
+and moves MIG-006, Q-006 and Q-009 to their actual later-phase owners. These
+row changes do not claim broader migration acceptance.
+
+### R2.8.77 / C08.1 implementation in progress
+
+The current bounded slice adds a vault-confined regular-file resolver, a
+Photocraft-aligned `open` platform adapter, and a desktop-injected action in
+the native UI. It revalidates the target just before handoff, tests the opaque
+fixture's exact path and bytes, and denies missing, directory, traversal,
+symlink and stale targets. Rust CI also gains a locked workspace test job at
+the declared Rust 1.95 MSRV. C08.1 remains pending until the seven required
+workflows and this MSRV job pass on the exact source SHA. No local executable
+validation was run.

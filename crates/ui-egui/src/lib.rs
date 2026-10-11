@@ -54,6 +54,7 @@ pub type VaultOpenReceiver = Receiver<Result<VaultSession, String>>;
 type VaultOpenAction = dyn Fn() -> Option<VaultOpenReceiver> + Send + Sync;
 type HistoryReceiver = Receiver<HistoryTaskMessage>;
 type LinkReceiver = Receiver<LinkTaskMessage>;
+type ExternalFileOpenAction = dyn Fn(&Path) -> Result<(), String> + Send + Sync;
 type NotePreviewReceiver = Receiver<Result<NoteSourcePreview, String>>;
 type NotePreviewWriteReceiver = Receiver<Result<String, String>>;
 type VaultRefreshReceiver = Receiver<Result<VaultRefreshOutcome, String>>;
@@ -185,6 +186,30 @@ pub fn run_with_desktop_services_and_session(
     open_vault: impl Fn() -> Option<VaultOpenReceiver> + Send + Sync + 'static,
     initial_session: Option<VaultSession>,
 ) -> eframe::Result {
+    run_with_desktop_services_and_session_internal(probe, open_vault, initial_session, None)
+}
+
+/// Creates the desktop shell with an injected action for validated external files.
+pub fn run_with_desktop_services_and_session_and_external_opener(
+    probe: impl Fn() -> StorageProtectionDisplay + Send + Sync + 'static,
+    open_vault: impl Fn() -> Option<VaultOpenReceiver> + Send + Sync + 'static,
+    initial_session: Option<VaultSession>,
+    external_file_opener: impl Fn(&Path) -> Result<(), String> + Send + Sync + 'static,
+) -> eframe::Result {
+    run_with_desktop_services_and_session_internal(
+        probe,
+        open_vault,
+        initial_session,
+        Some(Box::new(external_file_opener)),
+    )
+}
+
+fn run_with_desktop_services_and_session_internal(
+    probe: impl Fn() -> StorageProtectionDisplay + Send + Sync + 'static,
+    open_vault: impl Fn() -> Option<VaultOpenReceiver> + Send + Sync + 'static,
+    initial_session: Option<VaultSession>,
+    external_file_opener: Option<Box<ExternalFileOpenAction>>,
+) -> eframe::Result {
     let options = eframe::NativeOptions::default();
     eframe::run_native(
         "OpenObsidian",
@@ -194,6 +219,7 @@ pub fn run_with_desktop_services_and_session(
                 session: initial_session.map(Arc::new),
                 storage_protection_probe: Some(Box::new(probe)),
                 open_vault_action: Some(Box::new(open_vault)),
+                external_file_opener,
                 ..OpenObsidianApp::default()
             }))
         }),
@@ -206,6 +232,9 @@ struct OpenObsidianApp {
     storage_protection_report: Option<StorageProtectionDisplay>,
     storage_protection_probe: Option<Box<dyn Fn() -> StorageProtectionDisplay + Send + Sync>>,
     open_vault_action: Option<Box<VaultOpenAction>>,
+    external_file_opener: Option<Box<ExternalFileOpenAction>>,
+    external_open_error: Option<String>,
+    external_open_status: Option<String>,
     vault_open_receiver: Option<VaultOpenReceiver>,
     vault_opening: bool,
     vault_open_error: Option<String>,
@@ -361,6 +390,8 @@ impl OpenObsidianApp {
                 self.link_receiver = None;
                 self.link_error = None;
                 self.link_status = None;
+                self.external_open_error = None;
+                self.external_open_status = None;
                 self.note_source_preview = None;
                 self.note_preview_receiver = None;
                 self.note_preview_write_receiver = None;
@@ -612,6 +643,8 @@ impl OpenObsidianApp {
         {
             self.link_source_path = note_paths.first().cloned();
             self.link_resolutions.clear();
+            self.external_open_error = None;
+            self.external_open_status = None;
             self.note_embed_report = None;
             self.note_embed_error = None;
             self.inline_image_textures.clear();
@@ -760,6 +793,8 @@ impl OpenObsidianApp {
             self.link_resolutions.clear();
             self.link_error = None;
             self.link_status = None;
+            self.external_open_error = None;
+            self.external_open_status = None;
             self.note_source_preview = None;
             self.note_preview_error = None;
             self.note_preview_status = None;
@@ -784,10 +819,17 @@ impl OpenObsidianApp {
         if let Some(status) = &self.link_status {
             ui.label(status);
         }
+        if let Some(error) = &self.external_open_error {
+            ui.colored_label(eframe::egui::Color32::RED, error);
+        }
+        if let Some(status) = &self.external_open_status {
+            ui.small(status);
+        }
         if self.link_receiver.is_some() {
             ui.label("Resolving links against a stable vault snapshot…");
         }
 
+        let mut external_open_target = None;
         if self.link_status.is_some() {
             if self.link_resolutions.is_empty() {
                 ui.label("No Markdown links or embeds were found in this note.");
@@ -845,6 +887,19 @@ impl OpenObsidianApp {
                                 if let Some(subpath) = &resolved.reference.subpath {
                                     ui.small(format!("Heading or block: {subpath}"));
                                 }
+                                if self.external_file_opener.is_some()
+                                    && resolved.resolution.status
+                                        == LinkResolutionStatus::Resolved
+                                    && let Some(target) = &resolved.resolution.target
+                                    && !Path::new(target)
+                                        .extension()
+                                        .is_some_and(|extension| {
+                                            extension.eq_ignore_ascii_case("md")
+                                        })
+                                    && ui.button("Open externally").clicked()
+                                {
+                                    external_open_target = Some(std::path::PathBuf::from(target));
+                                }
                             });
                         }
                     });
@@ -855,6 +910,10 @@ impl OpenObsidianApp {
                     ));
                 }
             }
+        }
+
+        if let Some(target) = external_open_target {
+            self.open_external_file(&target);
         }
 
         if self.link_status.is_some()
@@ -886,6 +945,38 @@ impl OpenObsidianApp {
                             }
                         });
                 }
+            }
+        }
+    }
+
+    fn open_external_file(&mut self, relative_path: &Path) {
+        let result = (|| {
+            let session = self
+                .session
+                .as_ref()
+                .ok_or_else(|| "Open a vault before opening an attachment.".to_owned())?;
+            let canonical_path = session
+                .resolve_regular_file_path(relative_path)
+                .map_err(|_| {
+                    "The selected attachment is no longer a safe regular file in this vault."
+                        .to_owned()
+                })?;
+            let opener = self
+                .external_file_opener
+                .as_ref()
+                .ok_or_else(|| "External file opening is unavailable.".to_owned())?;
+            opener(&canonical_path)
+                .map_err(|_| "The system could not open the selected file.".to_owned())
+        })();
+
+        match result {
+            Ok(()) => {
+                self.external_open_error = None;
+                self.external_open_status = Some("Opened the file with its default app.".to_owned());
+            }
+            Err(error) => {
+                self.external_open_status = None;
+                self.external_open_error = Some(error);
             }
         }
     }
@@ -1806,6 +1897,8 @@ impl OpenObsidianApp {
         self.link_resolutions.clear();
         self.link_error = None;
         self.link_status = None;
+        self.external_open_error = None;
+        self.external_open_status = None;
         self.note_embed_report = None;
         self.note_embed_error = None;
         self.inline_image_textures.clear();
@@ -11052,6 +11145,117 @@ mod tests {
             existing_vault_tree_snapshot(&app_data_path.0),
             before_app_data
         );
+    }
+
+    #[test]
+    fn egui_external_open_hands_off_the_resolved_fixture_path_without_mutating_the_vault() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        assert_eq!(fixture["id"], "fixture:existing-vault");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = UiTempDir::new();
+        std::fs::create_dir_all(&vault_path).unwrap();
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+        std::fs::create_dir_all(vault_path.join("Notes")).unwrap();
+        std::fs::write(
+            vault_path.join("Notes/Open unknown binary.md"),
+            b"[[Attachments/unknown.dat]]\n",
+        )
+        .unwrap();
+        let expected_path =
+            std::fs::canonicalize(vault_path.join("Attachments/unknown.dat")).unwrap();
+        let before_vault = existing_vault_tree_snapshot(&vault_path);
+        let before_app_data = existing_vault_tree_snapshot(&app_data_path.0);
+        let session = VaultSession::open(&vault_path, &app_data_path.0).unwrap();
+        let opened_paths = Arc::new(std::sync::Mutex::new(Vec::<PathBuf>::new()));
+        let opener_paths = Arc::clone(&opened_paths);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(Path::new("Notes/Open unknown binary.md").to_path_buf()),
+            external_file_opener: Some(Box::new(move |path| {
+                opener_paths.lock().unwrap().push(path.to_path_buf());
+                Ok(())
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        wait_for_links(&mut harness);
+        assert_eq!(harness.state().link_resolutions.len(), 1);
+        assert_eq!(
+            harness.state().link_resolutions[0].resolution.status,
+            LinkResolutionStatus::Resolved
+        );
+        harness.get_by_label("Open externally").click();
+        harness.step();
+
+        assert_eq!(*opened_paths.lock().unwrap(), vec![expected_path]);
+        assert_eq!(
+            harness.state().external_open_status.as_deref(),
+            Some("Opened the file with its default app.")
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path.0),
+            before_app_data
+        );
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
+        assert_eq!(
+            existing_vault_tree_snapshot(&app_data_path.0),
+            before_app_data
+        );
+    }
+
+    #[test]
+    fn egui_external_open_revalidates_a_stale_target_before_handoff() {
+        let fixture: serde_json::Value = serde_json::from_str(EXISTING_VAULT_FIXTURE)
+            .expect("existing-vault fixture must be valid JSON");
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("Existing Vault");
+        let app_data_path = UiTempDir::new();
+        std::fs::create_dir_all(&vault_path).unwrap();
+        materialize_existing_vault_fixture(&vault_path, &fixture);
+        std::fs::create_dir_all(vault_path.join("Notes")).unwrap();
+        std::fs::write(
+            vault_path.join("Notes/Open unknown binary.md"),
+            b"[[Attachments/unknown.dat]]\n",
+        )
+        .unwrap();
+        let attachment_path = vault_path.join("Attachments/unknown.dat");
+        let session = VaultSession::open(&vault_path, &app_data_path.0).unwrap();
+        let opened_paths = Arc::new(std::sync::Mutex::new(Vec::<PathBuf>::new()));
+        let opener_paths = Arc::clone(&opened_paths);
+        let app = OpenObsidianApp {
+            session: Some(Arc::new(session)),
+            link_source_path: Some(Path::new("Notes/Open unknown binary.md").to_path_buf()),
+            external_file_opener: Some(Box::new(move |path| {
+                opener_paths.lock().unwrap().push(path.to_path_buf());
+                Ok(())
+            })),
+            ..OpenObsidianApp::default()
+        };
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
+
+        harness.get_by_label("Resolve link status").click();
+        wait_for_links(&mut harness);
+        std::fs::remove_file(&attachment_path).unwrap();
+        let after_external_removal = existing_vault_tree_snapshot(&vault_path);
+        harness.get_by_label("Open externally").click();
+        harness.step();
+
+        assert!(opened_paths.lock().unwrap().is_empty());
+        assert_eq!(
+            harness.state().external_open_error.as_deref(),
+            Some("The selected attachment is no longer a safe regular file in this vault.")
+        );
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), after_external_removal);
+
+        drop(harness);
+        assert_eq!(existing_vault_tree_snapshot(&vault_path), after_external_removal);
     }
 
     #[test]

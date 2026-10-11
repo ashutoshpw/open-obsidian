@@ -1,8 +1,10 @@
 //! Native operating-system service interfaces.
 
+mod external_open;
 mod storage_protection;
 mod user_data;
 
+pub use external_open::open_external_file;
 pub use storage_protection::{
     StorageProtectionPlatform, StorageProtectionReport, StorageProtectionStatus,
     inspect_storage_protection,
