@@ -292,15 +292,19 @@ mod tests {
             .expect("C06.1 vault edit fixture must be valid JSON");
         assert_eq!(fixture["schema_version"], 1);
         assert_eq!(fixture["id"], "fixture:c06-text-card-vault");
-        assert!(fixture["invariants"]["text_card_edit_never_creates_a_markdown_note"]
-            .as_bool()
-            .expect("fixture note-creation invariant must be a boolean"));
+        assert!(
+            fixture["invariants"]["text_card_edit_never_creates_a_markdown_note"]
+                .as_bool()
+                .expect("fixture note-creation invariant must be a boolean")
+        );
 
         for case in fixture["valid_edits"]
             .as_array()
             .expect("C06.1 fixture must contain valid edits")
         {
-            let case_id = case["id"].as_str().expect("valid edit case must have an id");
+            let case_id = case["id"]
+                .as_str()
+                .expect("valid edit case must have an id");
             let canvas_path = case["canvas_path"]
                 .as_str()
                 .expect("valid edit case must have a Canvas path");
@@ -314,8 +318,9 @@ mod tests {
             let new_text = case["new_text"]
                 .as_str()
                 .expect("valid edit case must have replacement text");
-            let source = serde_json::to_vec(&case["before"])
-                .unwrap_or_else(|error| panic!("{case_id}: Canvas before value must encode: {error}"));
+            let source = serde_json::to_vec(&case["before"]).unwrap_or_else(|error| {
+                panic!("{case_id}: Canvas before value must encode: {error}")
+            });
 
             let temporary = TempTree::new();
             let (vault, app_data) = temporary.layout();
@@ -347,21 +352,24 @@ mod tests {
                 .read(canvas_path)
                 .unwrap_or_else(|error| panic!("{case_id}: read Canvas: {error}"));
             let result = session
-                .edit_canvas_text_node(
-                    canvas_path,
-                    &observed.revision_sha256,
-                    node_id,
-                    new_text,
-                )
+                .edit_canvas_text_node(canvas_path, &observed.revision_sha256, node_id, new_text)
                 .unwrap_or_else(|error| panic!("{case_id}: persist Canvas edit: {error}"));
             let persisted = session
                 .read(canvas_path)
                 .unwrap_or_else(|error| panic!("{case_id}: read persisted Canvas: {error}"));
             let actual: Value = serde_json::from_slice(persisted.document.as_bytes())
-                .unwrap_or_else(|error| panic!("{case_id}: persisted Canvas must be JSON: {error}"));
+                .unwrap_or_else(|error| {
+                    panic!("{case_id}: persisted Canvas must be JSON: {error}")
+                });
 
-            assert_eq!(actual, case["after"], "{case_id}: only expected Canvas JSON is persisted");
-            assert_eq!(result.read, persisted, "{case_id}: write result matches vault readback");
+            assert_eq!(
+                actual, case["after"],
+                "{case_id}: only expected Canvas JSON is persisted"
+            );
+            assert_eq!(
+                result.read, persisted,
+                "{case_id}: write result matches vault readback"
+            );
             assert_ne!(
                 persisted.revision_sha256, observed.revision_sha256,
                 "{case_id}: persisted text edit has a new revision"
@@ -391,12 +399,15 @@ mod tests {
             .as_array()
             .expect("C06.1 fixture must contain invalid edits")
         {
-            let case_id = case["id"].as_str().expect("invalid edit case must have an id");
+            let case_id = case["id"]
+                .as_str()
+                .expect("invalid edit case must have an id");
             let canvas_path = case["canvas_path"].as_str().unwrap();
             let node_id = case["node_id"].as_str().unwrap();
             let expected_error = case["error"].as_str().unwrap();
-            let source = serde_json::to_vec(&case["before"])
-                .unwrap_or_else(|error| panic!("{case_id}: Canvas before value must encode: {error}"));
+            let source = serde_json::to_vec(&case["before"]).unwrap_or_else(|error| {
+                panic!("{case_id}: Canvas before value must encode: {error}")
+            });
             let temporary = TempTree::new();
             let (vault, app_data) = temporary.layout();
             fs::write(vault.join(canvas_path), &source)
@@ -417,10 +428,9 @@ mod tests {
                     &error,
                     CanvasEditError::Canvas(CanvasError::AmbiguousNodeId(_))
                 ),
-                "not_text_node" => matches!(
-                    &error,
-                    CanvasEditError::Canvas(CanvasError::NotTextNode(_))
-                ),
+                "not_text_node" => {
+                    matches!(&error, CanvasEditError::Canvas(CanvasError::NotTextNode(_)))
+                }
                 other => panic!("{case_id}: unsupported error fixture {other}"),
             };
             assert!(expected_error_matches, "{case_id}: received {error:?}");
@@ -452,8 +462,9 @@ mod tests {
             let session = VaultSession::open(&vault, &app_data)
                 .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
             let observed = session.read(canvas_path).unwrap();
-            fs::write(vault.join(canvas_path), &external_bytes)
-                .unwrap_or_else(|error| panic!("{case_id}: simulate an external Canvas edit: {error}"));
+            fs::write(vault.join(canvas_path), &external_bytes).unwrap_or_else(|error| {
+                panic!("{case_id}: simulate an external Canvas edit: {error}")
+            });
             let external_revision = session.read(canvas_path).unwrap().revision_sha256;
             let error = session
                 .edit_canvas_text_node(
@@ -470,9 +481,19 @@ mod tests {
                     expected_revision,
                     current_revision,
                 } => {
-                    assert_eq!(relative_path, PathBuf::from(canvas_path), "{case_id}: stale path");
-                    assert_eq!(expected_revision, observed.revision_sha256, "{case_id}: observed revision");
-                    assert_eq!(current_revision, external_revision, "{case_id}: current revision");
+                    assert_eq!(
+                        relative_path,
+                        PathBuf::from(canvas_path),
+                        "{case_id}: stale path"
+                    );
+                    assert_eq!(
+                        expected_revision, observed.revision_sha256,
+                        "{case_id}: observed revision"
+                    );
+                    assert_eq!(
+                        current_revision, external_revision,
+                        "{case_id}: current revision"
+                    );
                 }
                 other => panic!("{case_id}: expected stale revision error, received {other:?}"),
             }
@@ -537,7 +558,9 @@ mod tests {
             .as_array()
             .expect("C06.1 fixture must contain unsafe paths")
         {
-            let case_id = case["id"].as_str().expect("unsafe path case must have an id");
+            let case_id = case["id"]
+                .as_str()
+                .expect("unsafe path case must have an id");
             let expected_error = case["error"].as_str().unwrap();
             let error = session
                 .edit_canvas_text_node(
@@ -548,10 +571,7 @@ mod tests {
                 )
                 .expect_err("outside-vault Canvas path must be rejected");
             let expected_error_matches = match expected_error {
-                "invalid_path" => matches!(
-                    &error,
-                    CanvasEditError::Vault(VaultError::InvalidPath)
-                ),
+                "invalid_path" => matches!(&error, CanvasEditError::Vault(VaultError::InvalidPath)),
                 other => panic!("{case_id}: unsupported error fixture {other}"),
             };
             assert!(expected_error_matches, "{case_id}: received {error:?}");

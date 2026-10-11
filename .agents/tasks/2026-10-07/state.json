@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T18:40:00+00:00",
+  "updated_at": "2026-10-11T18:48:41+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
+  "last_reconciled_head": "cec7fc052ad1769fc536f1cc4823480688246026",
   "current_milestone": "R2.8.90",
-  "next_action": "Commit and push the R2.8.90 VaultSession Canvas edit slice to origin/main. Inspect all seven required workflows on the exact pushed SHA before accepting it.",
-  "push_status": "R2.8.89 tracker reconciliation SHA bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618 is pushed to origin/main. All six documentation workflows passed; quality required a same-SHA attempt-2 retry after its Ubuntu Electron retrieval-boundary timeout. Exact run/job IDs and artifact links/digests are in evidence/r2.8.89-tracker-checkpoint-bf03563.json. R2.8.90 source changes are in the working tree and not yet pushed.",
+  "next_action": "Push the corrected R2.8.90 retry after fixing the singular owner mapping, version-qualified thiserror lock entry, and Rust CI formatting reported on attempt 1. Inspect all seven required workflows on the new exact SHA.",
+  "push_status": "R2.8.90 attempt 1 SHA cec7fc052ad1769fc536f1cc4823480688246026 is pushed. Quality, desktop build, plugin renderer, and loaded-plugin workflows passed; inventory, Rust CI, and the Obsidian round-trip failed. The round-trip did not launch Obsidian because preview compilation stopped at the stale Cargo.lock. Exact runs, jobs, artifacts, and failure findings are in evidence/r2.8.90-attempt-1-cec7fc0.json. Corrections are prepared for a fresh exact-SHA attempt.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -18540,6 +18540,108 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38163383291/job/114540798245"
         }
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38164793880,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793880",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793880/job/114544995842"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38164793906,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906/job/114544996431"},
+        {"name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906/job/114544996437"},
+        {"name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906/job/114544996334"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38164793916,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/job/114544996297"},
+        {"name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/job/114544996086"},
+        {"name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/job/114544996359"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38164793884,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/job/114544996091"},
+        {"name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/job/114544995806"},
+        {"name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/job/114544996080"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38164793929,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/job/114544996120"},
+        {"name": "windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/job/114544996052"},
+        {"name": "macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/job/114544995868"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38164793886,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {"name": "minimum supported Rust (1.95)", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995804"},
+        {"name": "rust (macos-latest)", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995883"},
+        {"name": "rust (windows-latest)", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995904"},
+        {"name": "rust (ubuntu-latest)", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995943"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38164793893,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893/job/114544996242"},
+        {"name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893/job/114544996331"},
+        {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "status": "completed", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893/job/114544996403"}
+      ]
     }
   ],
   "milestones": {
@@ -29756,7 +29858,7 @@
           "correction": "Applied the three rustfmt layout changes reported on attempt 1; no behavior changed. The pure document-layer edit is accepted; persisted Canvas editing and explicit note creation remain future slices."
         }
       ],
-      "next_action": "R2.8.89 source and documentation checkpoints are accepted. R2.8.90 source is ready to push as a persisted, revision-checked Canvas text edit through VaultSession; keep C06 and C06.1 pending.",
+      "next_action": "R2.8.90 attempt 1 was not accepted on exact source SHA cec7fc052ad1769fc536f1cc4823480688246026. Correct the tracker owner mapping, lockfile dependency disambiguation, and CI-reported formatting, then push a fresh exact-SHA attempt. Keep C06 and C06.1 pending.",
       "tracker_checkpoint_sha": "bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618",
       "tracker_checkpoint_outcome": "accepted",
       "tracker_checkpoint_evidence": "evidence/r2.8.89-tracker-checkpoint-bf03563.json",
@@ -29801,9 +29903,27 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.90-attempt-1-cec7fc0.json",
+          "workflow_runs": {
+            "inventory": 38164793880,
+            "quality": 38164793906,
+            "desktop_build": 38164793916,
+            "plugin_renderer": 38164793884,
+            "loaded_plugins": 38164793929,
+            "rust_ci": 38164793886,
+            "vault_roundtrip": 38164793893
+          },
+          "finding": "Four workflows passed. Inventory rejected comma-separated owners for C06 and C06.1; Cargo could not resolve the unqualified thiserror lock entry because two versions are present; Ubuntu Rust CI also reported formatting differences. The round-trip preview build stopped at the same Cargo.lock error before Obsidian launched.",
+          "correction": "Use the allowed coordinating owner crates/engine; qualify thiserror 2.0.21 in Cargo.lock; apply the formatting changes shown by GitHub Rust CI. Push a new source SHA for all seven workflows."
+        }
+      ],
       "implementation_sha": null,
-      "push_status": "Source changes are in the working tree and will be pushed as a separate implementation commit now that the exact-SHA documentation checkpoint workflows have settled."
+      "push_status": "Attempt 1 cec7fc052ad1769fc536f1cc4823480688246026 was not accepted. Inventory, lockfile, and CI formatting corrections are prepared for the next source commit and exact-SHA run."
     }
   },
   "ci_preparation": {

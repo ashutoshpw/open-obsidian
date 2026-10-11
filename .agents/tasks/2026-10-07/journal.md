@@ -4218,3 +4218,25 @@ in `evidence/r2.8.89-attempt-2-c74d278.json`. R2.8.89 is accepted as a pure
 document-layer edit; persisted Canvas edits, explicit note creation, and UI
 integration remain pending under C06/C06.1. No local executable validation was
 run.
+
+R2.8.90 adds a revision-checked `VaultSession::edit_canvas_text_node` operation.
+It checks the supplied SHA-256 before parsing and uses that same revision for
+the journaled write. Fixture-backed coverage checks persisted text edits,
+unknown-field and sibling preservation, invalid nodes and IDs, stale revisions,
+malformed Canvas data, unsafe paths, and that editing never creates a Markdown
+note. Portable slash normalization prevents Windows-style path aliases from
+reading or writing a different file on Unix. C06 and C06.1 remain pending until
+native Canvas UI and the explicit note-creation action are implemented.
+
+R2.8.90 attempt 1 was pushed as exact source SHA
+`cec7fc052ad1769fc536f1cc4823480688246026`. Quality, desktop build, plugin
+renderer, and loaded-plugin workflows passed. Inventory rejected the
+comma-separated owner values for C06 and C06.1. Rust CI and the three-platform
+vault round-trip failed because Cargo could not resolve the unqualified
+`thiserror` lock entry while two versions were present; Ubuntu Rust CI also
+reported formatting changes. The preview build stopped before Obsidian
+launched. Exact run/job IDs and successful artifact digests are in
+[`evidence/r2.8.90-attempt-1-cec7fc0.json`](evidence/r2.8.90-attempt-1-cec7fc0.json).
+The retry uses the allowed single `crates/engine` tracker owner, qualifies
+`thiserror 2.0.21`, and applies the formatter layout shown in CI logs. No local
+executable validation was run.

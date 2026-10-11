@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.90",
+  "source_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+  "attempt": 1,
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38164793880,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793880",
+      "jobs": [
+        {
+          "id": 114544995842,
+          "name": "inventory",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793880/job/114544995842"
+        }
+      ],
+      "failure": "The inventory check rejected comma-separated rust_owner values for C06 and C06.1; each owner must be one allowed crate."
+    },
+    "quality": {
+      "id": 38164793906,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906",
+      "jobs": [
+        {"id": 114544996431, "name": "ubuntu-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906/job/114544996431"},
+        {"id": 114544996437, "name": "windows-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906/job/114544996437"},
+        {"id": 114544996334, "name": "macos-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793906/job/114544996334"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38164793916,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916",
+      "jobs": [
+        {"id": 114544996297, "name": "ubuntu-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/job/114544996297"},
+        {"id": 114544996086, "name": "windows-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/job/114544996086"},
+        {"id": 114544996359, "name": "macos-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/job/114544996359"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38164793884,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884",
+      "jobs": [
+        {"id": 114544996091, "name": "ubuntu-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/job/114544996091"},
+        {"id": 114544995806, "name": "windows-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/job/114544995806"},
+        {"id": 114544996080, "name": "macos-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/job/114544996080"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38164793929,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929",
+      "jobs": [
+        {"id": 114544996120, "name": "ubuntu-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/job/114544996120"},
+        {"id": 114544996052, "name": "windows-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/job/114544996052"},
+        {"id": 114544995868, "name": "macos-latest", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/job/114544995868"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38164793886,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886",
+      "jobs": [
+        {"id": 114544995943, "name": "rust (ubuntu-latest)", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995943"},
+        {"id": 114544995883, "name": "rust (macos-latest)", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995883"},
+        {"id": 114544995904, "name": "rust (windows-latest)", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995904"},
+        {"id": 114544995804, "name": "minimum supported Rust (1.95)", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793886/job/114544995804"}
+      ],
+      "failure": "Cargo rejected the unqualified thiserror lock entry because thiserror 1.0.69 and 2.0.21 are both locked. Ubuntu additionally reported rustfmt differences in the new engine fixture tests."
+    },
+    "vault_roundtrip": {
+      "id": 38164793893,
+      "head_sha": "cec7fc052ad1769fc536f1cc4823480688246026",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893",
+      "jobs": [
+        {"id": 114544996242, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893/job/114544996242"},
+        {"id": 114544996331, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893/job/114544996331"},
+        {"id": 114544996403, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793893/job/114544996403"}
+      ],
+      "failure": "All platforms failed while compiling the native preview because of the stale Cargo.lock. Obsidian was not launched, so the round-trip acceptance did not execute."
+    }
+  },
+  "artifacts": [
+    {"id": 11711662752, "workflow": "desktop_build", "runner_os": "macOS", "name": "openobsidian-macOS-preview-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 397395487, "sha256": "b5d98252cb66b03976314ebb28d181fd75d929e12a1ece847c88d71c37453656", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/artifacts/11711662752", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711662752/zip"},
+    {"id": 11711562982, "workflow": "desktop_build", "runner_os": "Linux", "name": "openobsidian-Linux-preview-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 125946548, "sha256": "83d0b96220f626bb8de5e0cdd664c7aabcd2a7adcf8b2065ae22260509c338c5", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/artifacts/11711562982", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711562982/zip"},
+    {"id": 11711408428, "workflow": "desktop_build", "runner_os": "Windows", "name": "openobsidian-Windows-preview-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 163005824, "sha256": "941dd235a8a033b506863ab92cb3f8d84507aa66ba41e22f0a65d2ec9149d4f0", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793916/artifacts/11711408428", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711408428/zip"},
+    {"id": 11712040477, "workflow": "plugin_renderer", "runner_os": "macOS", "name": "plugin-renderer-lifecycle-macOS-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 3238, "sha256": "04c2ea4f8a45a1c4cb8fe0a5197afe6969cb72793452abff0b4639d0f3158ace", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/artifacts/11712040477", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11712040477/zip"},
+    {"id": 11711865988, "workflow": "plugin_renderer", "runner_os": "Linux", "name": "plugin-renderer-lifecycle-Linux-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 3221, "sha256": "277525431cbd36b129db591d7ae5b4dc223e5714c56b0343a77126b57ae9f0f3", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/artifacts/11711865988", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711865988/zip"},
+    {"id": 11711323633, "workflow": "plugin_renderer", "runner_os": "Windows", "name": "plugin-renderer-lifecycle-Windows-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 3242, "sha256": "dd4301aeea550b86e8cae6b38b481f5f8060b40a0c00f08273fc5f43f538a3b7", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793884/artifacts/11711323633", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711323633/zip"},
+    {"id": 11711807226, "workflow": "loaded_plugins", "runner_os": "macOS", "name": "loaded-plugin-workflows-macOS-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 171498, "sha256": "64db22faa6bdf6c7727dac4365177fede0c94ea2f02c0c391e66bcacde05aa5a", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/artifacts/11711807226", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711807226/zip"},
+    {"id": 11711617985, "workflow": "loaded_plugins", "runner_os": "Linux", "name": "loaded-plugin-workflows-Linux-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 171465, "sha256": "6158fe454b991ad7a47ff607f41df8ede165cf703c33ee0072c45ef56d22e6d9", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/artifacts/11711617985", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711617985/zip"},
+    {"id": 11711044786, "workflow": "loaded_plugins", "runner_os": "Windows", "name": "loaded-plugin-workflows-Windows-cec7fc052ad1769fc536f1cc4823480688246026", "size_bytes": 171491, "sha256": "212f739be51489da26cb4dcdefc314a12a360e714c63371d719303072d8d5bb1", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38164793929/artifacts/11711044786", "archive_url": "https://api.github.com/repos/ashutoshpw/open-obsidian/actions/artifacts/11711044786/zip"}
+  ],
+  "finding": "Four of seven required workflows passed on the exact source SHA. Inventory failed because the C06 rust_owner values were not valid single-owner entries; Rust CI failed because Cargo could not resolve the unqualified thiserror dependency in Cargo.lock and Ubuntu also reported formatting diffs. The three-platform Obsidian round-trip failed while building the preview on the same lockfile issue, before launching Obsidian.",
+  "correction": "Set C06 and C06.1 rust_owner to crates/engine, qualify thiserror as version 2.0.21 in Cargo.lock, and apply the formatting changes reported by the GitHub Rust CI run.",
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions."
+}
