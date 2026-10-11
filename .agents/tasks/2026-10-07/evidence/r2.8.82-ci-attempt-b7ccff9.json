@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.82",
+  "source_sha": "b7ccff97711f8c411bd3c39dc6c43726128b7ea3",
+  "outcome": "failed",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38138638870,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638870",
+      "jobs": [{"id": 114467661427, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38138638786,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638786",
+      "jobs": [
+        {"id": 114467661487, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114467661586, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114467661602, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38138638797,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638797",
+      "jobs": [
+        {"id": 114467661361, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114467661505, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114467661662, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38138638852,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638852",
+      "jobs": [
+        {"id": 114467661598, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114467661674, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114467661726, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38138638762,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638762",
+      "jobs": [
+        {"id": 114467661403, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114467661471, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114467661483, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38138638755,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638755",
+      "jobs": [
+        {"id": 114467661333, "name": "rust (macos-latest)", "conclusion": "failure", "cause": "Clippy rejected the let-and-return pattern in selector_has_class_word with -D warnings."},
+        {"id": 114467661401, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114467661411, "name": "rust (ubuntu-latest)", "conclusion": "failure", "cause": "Clippy rejected the let-and-return pattern in selector_has_class_word with -D warnings."},
+        {"id": 114467661450, "name": "rust (windows-latest)", "conclusion": "failure", "cause": "Clippy rejected the let-and-return pattern in selector_has_class_word with -D warnings."}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38138638787,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38138638787",
+      "jobs": [
+        {"id": 114467661383, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"},
+        {"id": 114467661538, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {"id": 114467661555, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"}
+      ]
+    }
+  },
+  "correction": "Return the selector class boundary predicate directly instead of storing it in a temporary next_ok binding.",
+  "local_executable_validation": "none"
+}

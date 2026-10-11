@@ -3677,3 +3677,16 @@ formatting layout are corrected locally and the fixture hash is refreshed.
 The next exact-SHA run must confirm the retry of all seven required workflows.
 C09 and C09.1 remain pending. No local tests, builds, formatters, validators,
 or application launches were run.
+
+## 2026-10-11T12:26:02Z — R2.8.82 third CI attempt isolated one Clippy lint
+
+Source SHA `b7ccff97711f8c411bd3c39dc6c43726128b7ea3` passed inventory,
+quality, desktop build, plugin renderer, loaded-plugin workflows and all three
+Obsidian round-trip jobs. Rust 1.95 tests also passed. Stable Rust CI failed
+Clippy on Ubuntu, macOS and Windows because `selector_has_class_word` returned
+a temporary `next_ok` binding directly; the lint is denied by the workspace
+CI command. Exact run/job results are in
+`evidence/r2.8.82-ci-attempt-b7ccff9.json`. The predicate now returns directly
+from its closure. The follow-up source SHA and exact-SHA CI results are
+pending. C09 and C09.1 remain pending. No local tests, builds, formatters,
+validators, or application launches were run.

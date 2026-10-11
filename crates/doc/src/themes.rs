@@ -347,11 +347,10 @@ fn selector_has_class_word(selector: &str, class: &str) -> bool {
     let class = class.to_ascii_lowercase();
     lower.match_indices(&class).any(|(start, _)| {
         let after = start + class.len();
-        let next_ok = lower
+        lower
             .as_bytes()
             .get(after)
-            .is_none_or(|byte| !is_ascii_word(*byte));
-        next_ok
+            .is_none_or(|byte| !is_ascii_word(*byte))
     })
 }
 
