@@ -4120,3 +4120,17 @@ R2.8.88 is accepted as a bounded Canvas codec and pinned reference-reopen slice;
 full Canvas editing/writing, note creation, and explicit-action behavior remain
 pending under C06/C06.1. No local executable validation was run; the downloaded
 CI artifacts were inspected as evidence only.
+
+The documentation-only R2.8.88 tracker checkpoint was pushed as exact SHA
+`a051739cd366310715b1cac8353752921dd05ab0`. Inventory
+[38159101527](https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101527),
+quality [38159101521](https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101521),
+desktop build [38159101524](https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101524),
+plugin renderer [38159101522](https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101522),
+loaded plugin workflows [38159101529](https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101529),
+and Rust CI [38159101583](https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101583)
+all passed on attempt 1, including Rust 1.95 and every OS matrix job. Exact job
+IDs are recorded in `evidence/r2.8.88-tracker-checkpoint-a051739.json`. The
+path-filtered Obsidian round-trip remains covered by accepted source SHA
+`260d095f42ef5c4d6a237e59b58058975482ab2c`. No local executable validation
+was run.

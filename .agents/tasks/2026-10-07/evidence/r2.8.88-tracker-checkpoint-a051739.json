@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.88",
+  "implementation_sha": "260d095f42ef5c4d6a237e59b58058975482ab2c",
+  "tracker_checkpoint_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+  "outcome": "accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38159101527,
+      "attempt": 1,
+      "head_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101527",
+      "jobs": [
+        {"id": 114528078854, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38159101521,
+      "attempt": 1,
+      "head_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101521",
+      "jobs": [
+        {"id": 114528079099, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114528079317, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114528079389, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38159101524,
+      "attempt": 1,
+      "head_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101524",
+      "jobs": [
+        {"id": 114528079034, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114528079180, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114528079204, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38159101522,
+      "attempt": 1,
+      "head_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101522",
+      "jobs": [
+        {"id": 114528079288, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114528079456, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114528079501, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38159101529,
+      "attempt": 1,
+      "head_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101529",
+      "jobs": [
+        {"id": 114528079189, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114528079318, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114528079493, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38159101583,
+      "attempt": 1,
+      "head_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38159101583",
+      "jobs": [
+        {"id": 114528079109, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 114528079279, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114528079263, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114528079350, "name": "minimum supported Rust (1.95)", "conclusion": "success"}
+      ]
+    }
+  },
+  "roundtrip_implementation_sha": "260d095f42ef5c4d6a237e59b58058975482ab2c",
+  "roundtrip_note": "The tracker-only commit did not match the Obsidian round-trip workflow path filter. The accepted implementation SHA has its own passing three-platform round-trip in evidence/r2.8.88-attempt-3-260d095.json.",
+  "local_executable_validation": "none"
+}
