@@ -3915,6 +3915,23 @@ non-object inputs before projection. C09 and C09.1 remain pending. Only
 GitHub Actions will validate the source SHA; the seven required workflows
 include the path-filtered Obsidian round-trip.
 
-Process note: a local `git diff --check` was accidentally run during review.
-No project tests, builds, formatters, or application launches were run; all
+Process note: two local `git diff --check` commands were accidentally run
+during review (one by the root agent and one by a parallel reviewer). No
+project tests, builds, formatters, or application launches were run; all
 project validation remains assigned to GitHub Actions.
+
+## 2026-10-11T14:34:26Z — R2.8.85 source attempt 1 CI findings
+
+Source SHA `d7d46b610004c3705ba3427c6e7eaed57fe9020f` passed the quality,
+desktop build, plugin renderer, loaded-plugin, and Obsidian 1.14.4 round-trip
+workflows. The round-trip passed on Windows, Ubuntu, and macOS. Rust workspace
+tests passed on Ubuntu, macOS, Windows, and Rust 1.95. Inventory failed because
+the changed configuration fixture digest had not yet been reconciled. Clippy
+reported eight arguments on `discover_directory` for macOS and Windows;
+Ubuntu rustfmt reported one assertion wrap and one import reflow. Exact run
+and job results are in `evidence/r2.8.85-attempt-1-d7d46b6.json`.
+
+The follow-up groups recursive discovery output through `VaultConfiguration`,
+applies the two rustfmt changes from CI, and updates the fixture SHA and purpose
+in `inventory.json`. R2.8.85 remains in progress; C09 and C09.1 remain pending.
+No local project tests, builds, formatters, or application launches were run.

@@ -5,8 +5,8 @@ pub use openobsidian_doc::{
     AppearanceMode, AppearanceSettings, DailyNoteSettings, HotkeyBinding, HotkeysSettings,
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
     LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
-    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, TemplateSettings,
-    ThreeWayMergeResult, TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
+    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, TemplateSettings, ThreeWayMergeResult,
+    TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,

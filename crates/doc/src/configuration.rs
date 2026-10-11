@@ -332,7 +332,10 @@ mod tests {
             assert_eq!(raw, original);
         }
 
-        assert_eq!(parse_template_settings(&Map::new()), TemplateSettings::default());
+        assert_eq!(
+            parse_template_settings(&Map::new()),
+            TemplateSettings::default()
+        );
     }
 
     #[test]

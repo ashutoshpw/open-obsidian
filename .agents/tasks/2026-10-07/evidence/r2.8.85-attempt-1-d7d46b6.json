@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.85",
+  "attempt": 1,
+  "source_sha": "d7d46b610004c3705ba3427c6e7eaed57fe9020f",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38146988763,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988763",
+      "jobs": [
+        {"id": 114492321766, "name": "inventory", "conclusion": "failure"}
+      ],
+      "failure": "The configuration inventory fixture changed without updating its recorded SHA-256. GitHub reported old digest 56cddb3779ea7833b22a998304dfe375a600baf828e8a41a3a0b85286909d2fe; corrected digest is 480ba9cfd82e7476591a38e4de8b8e9e0fec329d79b1a4f8004ec40f5db7831e."
+    },
+    "quality": {
+      "id": 38146988742,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988742",
+      "jobs": [
+        {"id": 114492321988, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114492322107, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114492322264, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38146988713,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988713",
+      "jobs": [
+        {"id": 114492321824, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114492321985, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114492322089, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38146988711,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988711",
+      "jobs": [
+        {"id": 114492321904, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114492321975, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114492322050, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38146988743,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988743",
+      "jobs": [
+        {"id": 114492321849, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114492321933, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114492322038, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38146988739,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988739",
+      "jobs": [
+        {"id": 114492321726, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114492321880, "name": "rust (macos-latest)", "conclusion": "failure"},
+        {"id": 114492321891, "name": "rust (windows-latest)", "conclusion": "failure"},
+        {"id": 114492322301, "name": "rust (ubuntu-latest)", "conclusion": "failure"}
+      ],
+      "failure": {
+        "clippy": "macOS and Windows rejected crates/vault/src/configuration.rs:171 because discover_directory had 8 arguments (Clippy too_many_arguments under -D warnings).",
+        "formatting": "Ubuntu rustfmt requested wrapping parse_template_settings's Map::new assertion in crates/doc/src/configuration.rs and reflowing the openobsidian_doc re-export list in crates/vault/src/lib.rs.",
+        "workspace_tests": "passed on Ubuntu, macOS, Windows, and Rust 1.95."
+      }
+    },
+    "vault_roundtrip": {
+      "id": 38146988750,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146988750",
+      "jobs": [
+        {"id": 114492321900, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"},
+        {"id": 114492322128, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {"id": 114492322185, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"}
+      ]
+    }
+  },
+  "local_executable_validation": "none",
+  "accepted_scope": "The fixture-driven template and daily-note projections are not accepted yet because inventory reconciliation, Clippy, and formatting gates failed. C09 and C09.1 remain pending."
+}

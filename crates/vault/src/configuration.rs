@@ -148,16 +148,7 @@ impl VaultRoot {
                 continue;
             };
             result.folders.push(name);
-            discover_directory(
-                self,
-                &directory,
-                &mut result.json,
-                &mut result.appearance,
-                &mut result.app_settings,
-                &mut result.hotkeys,
-                &mut result.template_settings,
-                &mut result.daily_note_settings,
-            )?;
+            discover_directory(self, &directory, &mut result)?;
             discover_style_assets(self, &directory, &mut result.styles)?;
         }
         Ok(result)
@@ -171,12 +162,7 @@ fn is_configuration_folder(name: &str) -> bool {
 fn discover_directory(
     vault: &VaultRoot,
     directory: &Path,
-    json: &mut BTreeMap<String, VaultConfigurationFile>,
-    appearance: &mut BTreeMap<String, AppearanceSettings>,
-    app_settings: &mut BTreeMap<String, AppSettings>,
-    hotkeys: &mut BTreeMap<String, HotkeysSettings>,
-    template_settings: &mut BTreeMap<String, TemplateSettings>,
-    daily_note_settings: &mut BTreeMap<String, DailyNoteSettings>,
+    configuration: &mut VaultConfiguration,
 ) -> Result<(), VaultError> {
     let Some(directory) = confined_directory(vault, directory)? else {
         return Ok(());
@@ -189,16 +175,7 @@ fn discover_directory(
         let file_type = entry.file_type()?;
         if file_type.is_dir() {
             if let Some(child_directory) = confined_directory(vault, &path)? {
-                discover_directory(
-                    vault,
-                    &child_directory,
-                    json,
-                    appearance,
-                    app_settings,
-                    hotkeys,
-                    template_settings,
-                    daily_note_settings,
-                )?;
+                discover_directory(vault, &child_directory, configuration)?;
             }
             continue;
         }
@@ -216,21 +193,33 @@ fn discover_directory(
         };
         let relative_path = path_to_slashes(relative_path)?;
         if relative_path.ends_with("/appearance.json") {
-            appearance.insert(relative_path.clone(), parse_appearance_settings(&object));
+            configuration
+                .appearance
+                .insert(relative_path.clone(), parse_appearance_settings(&object));
         }
         if is_root_configuration_file(&relative_path, "app.json") {
-            app_settings.insert(relative_path.clone(), parse_app_settings(&object));
+            configuration
+                .app_settings
+                .insert(relative_path.clone(), parse_app_settings(&object));
         }
         if is_root_configuration_file(&relative_path, "hotkeys.json") {
-            hotkeys.insert(relative_path.clone(), parse_hotkeys_settings(&object));
+            configuration
+                .hotkeys
+                .insert(relative_path.clone(), parse_hotkeys_settings(&object));
         }
         if is_root_configuration_file(&relative_path, "templates.json") {
-            template_settings.insert(relative_path.clone(), parse_template_settings(&object));
+            configuration
+                .template_settings
+                .insert(relative_path.clone(), parse_template_settings(&object));
         }
         if is_root_configuration_file(&relative_path, "daily-notes.json") {
-            daily_note_settings.insert(relative_path.clone(), parse_daily_note_settings(&object));
+            configuration
+                .daily_note_settings
+                .insert(relative_path.clone(), parse_daily_note_settings(&object));
         }
-        json.insert(relative_path, VaultConfigurationFile { raw_bytes, object });
+        configuration
+            .json
+            .insert(relative_path, VaultConfigurationFile { raw_bytes, object });
     }
     Ok(())
 }
