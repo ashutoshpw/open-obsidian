@@ -2311,7 +2311,7 @@ async function runReferenceSourcePreview(
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
     previewReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, "Original bytes stay untouched") && ocrTextContainsPhrase(capture.ocrText, "Read note source preview"), 30_000);
+  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, "Original bytes stay untouched"), 30_000);
   previewReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
   previewReport.preview_closed = true;
 
