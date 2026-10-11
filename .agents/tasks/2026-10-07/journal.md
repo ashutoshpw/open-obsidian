@@ -4403,3 +4403,28 @@ builds, formatters, validators, or application launches were run.
 
 R2.8.93 source and fixture changes are included in the current checkpoint for
 exact-SHA GitHub Actions validation. No local executable validation was run.
+
+## 2026-10-12 — R2.8.93 attempt 1 and tracker reconciliation
+
+Attempt 1 ran on exact source SHA
+`392014b2481975adfc7e07a7c8aff3ad3648e3eb`. Six of seven required workflows
+passed: inventory, quality, desktop build, plugin renderer, loaded plugins,
+and the Obsidian 1.14.4 round-trip on Linux, macOS, and Windows. Rust CI passed
+workspace tests on Ubuntu and all jobs on macOS, Windows, and Rust 1.95. Its
+Ubuntu formatting check requested two layout-only changes in
+`crates/engine/src/lib.rs`: reorder/wrap the public import list and collapse
+the `canvas_storage_path` fallback expression to one line. Those exact CI
+changes are applied in the correction checkpoint. Workflow/job IDs, artifact
+IDs, archive digests, and failure details are recorded in
+[`evidence/r2.8.93-attempt-1-392014b.json`](evidence/r2.8.93-attempt-1-392014b.json).
+Attempt 1 is not accepted until the correction passes all required workflows
+on its own exact SHA.
+
+This checkpoint also reconciles `state.json`: R2.8.92 is marked complete on
+accepted SHA `1a025db5ef713eb6e89c4f7654e97e125af9d992`, and R2.8.93 records its
+first attempt and pending correction. The R2.8.94 draft is being prepared in
+an isolated worktree: an engine-owned preview retains the Canvas revision,
+then a separate explicit egui action creates a note from the reviewed text.
+It does not include Canvas editing or the reference-app create-note scenario;
+C06/C06.1 remain pending. No local tests, builds, formatters, validators, or
+application launches were run.

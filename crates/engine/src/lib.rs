@@ -5,11 +5,11 @@ pub use openobsidian_vault::{
     LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
     LinkSubpathSlice, LinkSubpathStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewAnalysis,
     MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
-    TransclusionGuard, VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
-    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
-    VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
-    VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
-    VaultCreateResult, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
+    TransclusionGuard, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
+    VaultCreateResult, VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan,
+    VaultHistoryPolicy, VaultHistoryRecord, VaultInlineImage, VaultLinkResolution,
+    VaultNoteEmbedDisposition, VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution,
+    VaultReadPreview, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
     VaultRenameResult, VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
     VaultWriteRecoveryReport, VaultWriteRequest, VaultWriteResult, analyze_markdown_preview,
     plan_history_retention,
@@ -588,9 +588,7 @@ mod tests {
         {
             let case_id = case["id"].as_str().unwrap();
             let canvas_path = case["canvas_path"].as_str().unwrap();
-            let canvas_storage_path = case["canvas_storage_path"]
-                .as_str()
-                .unwrap_or(canvas_path);
+            let canvas_storage_path = case["canvas_storage_path"].as_str().unwrap_or(canvas_path);
             let note_path = case["note_path"].as_str().unwrap();
             let note_storage_path = case["note_storage_path"].as_str().unwrap_or(note_path);
             let node_id = case["node_id"].as_str().unwrap();

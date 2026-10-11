@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T21:47:08+00:00",
+  "updated_at": "2026-10-12T00:00:08+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "1a025db5ef713eb6e89c4f7654e97e125af9d992",
+  "last_reconciled_head": "392014b2481975adfc7e07a7c8aff3ad3648e3eb",
   "current_milestone": "R2.8.93",
-  "next_action": "Run all seven required GitHub Actions workflows on the pushed R2.8.93 engine implementation SHA. Keep native UI integration, Obsidian create-note acceptance, and C06/C06.1 acceptance pending.",
-  "push_status": "R2.8.92 was accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven required workflows passed; see evidence/r2.8.92-attempt-2-1a025db.json. The R2.8.93 engine-only note-creation slice is included in the current source checkpoint and its exact-SHA GitHub Actions CI is pending. No local executable validation was run. Native UI integration and C06/C06.1 acceptance remain pending.",
+  "next_action": "Push the exact Ubuntu rustfmt correction with reconciled R2.8.92/R2.8.93 tracker evidence, then run all seven required GitHub Actions workflows on that new exact SHA. After acceptance, continue with the isolated R2.8.94 engine-preview and explicit egui create action; keep Canvas editing and C06/C06.1 acceptance pending.",
+  "push_status": "R2.8.92 is accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven required workflows passed; its previously stale structured tracker status is now reconciled. R2.8.93 attempt 1 on exact SHA 392014b2481975adfc7e07a7c8aff3ad3648e3eb passed six workflows and failed only Ubuntu Rust formatting; see evidence/r2.8.93-attempt-1-392014b.json. The exact correction and evidence are prepared for push. No local executable validation was run. Native UI and C06/C06.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -318,7 +318,9 @@
     "R2.8.87 accepted on exact source SHA 8891393ff5955a1797a8d6626c2d4d17d6509552: all seven required GitHub Actions workflows passed, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 and the Obsidian 1.14.4 round-trip on all three platforms. Quality attempt 1 had a transient macOS retrieval-boundary timeout; attempt 2 passed on the same SHA. Exact run/job IDs are in evidence/r2.8.87-attempt-3-8891393.json. C09 and C09.1 remain pending until Rust discovery/enablement callsites use and surface the deny policy. No local executable validation was used for acceptance.",
     "R2.8.87 documentation-only tracker checkpoint SHA ce59d7399caf58d498529dd29794c2c2c44c93dd passed all six required workflows on the first attempt, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. Exact run/job IDs are in evidence/r2.8.87-tracker-checkpoint-ce59d73.json. The path-filtered round-trip remains covered by implementation SHA 8891393ff5955a1797a8d6626c2d4d17d6509552.",
     "R2.8.89 tracker checkpoint SHA bdfe5c18c44ed25fcfabcad256624f8db51da2c0 passed all six documentation workflows on attempt 1. Exact run/job IDs and artifact URLs/digests are in evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json; the path-filtered Obsidian round-trip remains covered by accepted source SHA c74d27860f7c60459373887bf85caec2c3af2182.",
-    "R2.8.89 tracker reconciliation SHA bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618 passed all six documentation workflows. Quality attempt 1 failed only the Ubuntu Electron retrieval-boundary audit and passed on same-SHA attempt 2; other five workflows passed on attempt 1. Exact run/job IDs and artifact links/digests are in evidence/r2.8.89-tracker-checkpoint-bf03563.json."
+    "R2.8.89 tracker reconciliation SHA bf03563a1ac2bc7ba24cee88ff0ee1212bbd8618 passed all six documentation workflows. Quality attempt 1 failed only the Ubuntu Electron retrieval-boundary audit and passed on same-SHA attempt 2; other five workflows passed on attempt 1. Exact run/job IDs and artifact links/digests are in evidence/r2.8.89-tracker-checkpoint-bf03563.json.",
+    "R2.8.92 accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven workflows passed; structured tracker status reconciled in this checkpoint. See evidence/r2.8.92-attempt-2-1a025db.json.",
+    "R2.8.93 attempt 1 completed on exact source SHA 392014b2481975adfc7e07a7c8aff3ad3648e3eb: six workflows passed and Rust CI failed only Ubuntu formatting. Full workflow/job/artifact evidence is in evidence/r2.8.93-attempt-1-392014b.json; exact correction prepared for the next push."
   ],
   "ci_results": [
     {
@@ -30505,7 +30507,7 @@
       }
     },
     "R2.8.92": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
       "scope": "Add pure Canvas text-node extraction to the document crate. It returns the exact stored text for one uniquely identified text node and does not mutate the Canvas document. This slice does not add engine orchestration, vault writes, a native UI action, or explicit note creation.",
       "acceptance": [
@@ -30527,9 +30529,91 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
-      "implementation_sha": null,
-      "push_status": "The pure extraction API, fixture-driven immutable success/failure coverage, fixture inventory digest, and tracker update are prepared in the working tree. Not committed or pushed; all seven exact-SHA GitHub Actions workflows remain pending. Engine, vault, UI, and C06/C06.1 acceptance remain out of scope."
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.92-attempt-1-e5ee89a.json",
+          "workflow_runs": {
+            "inventory": 38176400620,
+            "quality": 38176400593,
+            "desktop_build": 38176400601,
+            "plugin_renderer": 38176400580,
+            "loaded_plugins": 38176400609,
+            "rust_ci": 38176400637,
+            "vault_roundtrip": 38176400592
+          },
+          "finding": "Ubuntu workspace tests passed, but Rust CI failed only the formatting check at crates/doc/src/canvas.rs:404. The other required workflows passed; the exact formatter layout was applied before attempt 2."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "1a025db5ef713eb6e89c4f7654e97e125af9d992",
+          "outcome": "accepted",
+          "evidence": "evidence/r2.8.92-attempt-2-1a025db.json",
+          "workflow_runs": {
+            "inventory": 38176871665,
+            "quality": 38176871669,
+            "desktop_build": 38176871694,
+            "plugin_renderer": 38176871707,
+            "loaded_plugins": 38176871682,
+            "rust_ci": 38176871655,
+            "vault_roundtrip": 38176871663
+          },
+          "finding": "All seven required GitHub Actions workflows passed on the exact source SHA, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95, and Obsidian round-trip on Linux, macOS, and Windows."
+        }
+      ],
+      "implementation_sha": "1a025db5ef713eb6e89c4f7654e97e125af9d992",
+      "evidence": "evidence/r2.8.92-attempt-2-1a025db.json",
+      "accepted_attempt": 2,
+      "push_status": "Accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven required GitHub Actions workflows passed. Attempt 1 failed only Ubuntu formatting and is retained in evidence/r2.8.92-attempt-1-e5ee89a.json; accepted attempt 2 is recorded in evidence/r2.8.92-attempt-2-1a025db.json. C06/C06.1 and native Canvas UI remain pending."
+    },
+    "R2.8.93": {
+      "status": "in_progress",
+      "starting_sha": "1a025db5ef713eb6e89c4f7654e97e125af9d992",
+      "scope": "Add an engine-only, revision-checked operation that creates a new Markdown note from the exact text of a selected Canvas text node. The Canvas is read from one validated snapshot and is never modified; this slice adds no native UI action.",
+      "acceptance": [
+        "VaultSession::create_canvas_note_from_text_node validates the observed Canvas SHA-256, extracts exactly one text node, and creates the requested Markdown note from the exact UTF-8 text bytes.",
+        "Creation is create-only and does not overwrite existing notes or implicitly create parent directories; portable traversal, invalid node types, malformed Canvas data, stale revisions, and non-Markdown destinations fail with typed errors.",
+        "Fixture-driven engine coverage verifies exact text bytes and unchanged Canvas/source siblings for success and non-mutating failures, and inventory records the current fixture digest.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95, and Obsidian round-trip on Linux, macOS, and Windows.",
+        "All executable validation runs only in GitHub Actions; no local tests, builds, formatters, validators, or application launches."
+      ],
+      "known_limits": [
+        "This milestone is an engine API only. Native Canvas browsing, preview/confirmation, UI create action, Canvas editing, pinned create-note round-trip, and C06/C06.1 acceptance remain pending.",
+        "Creation validates one Canvas snapshot; an external Canvas edit after that read is not atomically excluded across the subsequent note creation."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "392014b2481975adfc7e07a7c8aff3ad3648e3eb",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.93-attempt-1-392014b.json",
+          "workflow_runs": {
+            "inventory": 38177994042,
+            "quality": 38177994134,
+            "desktop_build": 38177993997,
+            "plugin_renderer": 38177994091,
+            "loaded_plugins": 38177994002,
+            "rust_ci": 38177994070,
+            "vault_roundtrip": 38177993976
+          },
+          "finding": "Six of seven required workflows passed. Rust CI workspace tests passed on Ubuntu and all Rust jobs passed on macOS, Windows, and Rust 1.95; Ubuntu formatting failed on two layout-only changes in crates/engine/src/lib.rs. The three-platform Obsidian round-trip passed."
+        }
+      ],
+      "implementation_sha": "392014b2481975adfc7e07a7c8aff3ad3648e3eb",
+      "evidence": "evidence/r2.8.93-attempt-1-392014b.json",
+      "accepted_attempt": null,
+      "push_status": "Attempt 1 on exact SHA 392014b2481975adfc7e07a7c8aff3ad3648e3eb was not accepted because Ubuntu Rust CI requested two formatting-only changes in crates/engine/src/lib.rs. The exact requested layout is prepared in the current correction checkpoint; all other workflows, including the three-platform round-trip, passed. Push the correction and obtain fresh results on its exact SHA."
     }
   },
   "ci_preparation": {
