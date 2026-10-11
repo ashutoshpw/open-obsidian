@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.80 / C09 theme and snippet CSS asset inventory",
+  "attempt": 1,
+  "tested_source_sha": "b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee",
+  "recorded_at": "2026-10-11T10:40:39Z",
+  "conclusion": "accepted",
+  "fixture_inventory_sha256": "92f0a39b7a7d7dd05c3924b8c9f170d47a892f4552e65231d127f13320665347",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38132088472,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088472",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": {"job_id": 114448342259, "conclusion": "success"}
+      }
+    },
+    "quality": {
+      "run_id": 38132088509,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088509",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114448342400, "conclusion": "success"},
+        "windows": {"job_id": 114448342516, "conclusion": "success"},
+        "ubuntu": {"job_id": 114448342605, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38132088487,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088487",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114448342371, "conclusion": "success"},
+        "macos": {"job_id": 114448342438, "conclusion": "success"},
+        "windows": {"job_id": 114448342483, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38132088436,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088436",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114448342612, "conclusion": "success"},
+        "windows": {"job_id": 114448342779, "conclusion": "success"},
+        "ubuntu": {"job_id": 114448342800, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38132088488,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088488",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114448342364, "conclusion": "success"},
+        "macos": {"job_id": 114448342462, "conclusion": "success"},
+        "ubuntu": {"job_id": 114448342494, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38132088474,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088474",
+      "conclusion": "success",
+      "jobs": {
+        "minimum_supported_rust_1_95": {
+          "job_id": 114448342224,
+          "conclusion": "success",
+          "toolchain": "Rust 1.95.0",
+          "command": "cargo test --workspace --locked"
+        },
+        "ubuntu": {"job_id": 114448342309, "conclusion": "success"},
+        "windows": {"job_id": 114448342338, "conclusion": "success"},
+        "macos": {"job_id": 114448342386, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38132088454,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132088454",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114448342244, "conclusion": "success"},
+        "linux": {"job_id": 114448342395, "conclusion": "success"},
+        "windows": {"job_id": 114448342427, "conclusion": "success"}
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11699617529,
+          "name": "obsidian-vault-roundtrip-Linux-b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee",
+          "size_bytes": 8345782,
+          "sha256_digest": "67bc49dac1fcc96dbd5a999b3ac97064e9ad5522d5b0c14bfa70ea0b73a1541d"
+        },
+        "macos": {
+          "artifact_id": 11699562728,
+          "name": "obsidian-vault-roundtrip-macOS-b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee",
+          "size_bytes": 9395664,
+          "sha256_digest": "09c9aae796cd98ffe5de6af12ee1a355435ca6996f57852abe1a2e3dfa9b0c24"
+        },
+        "windows": {
+          "artifact_id": 11699492555,
+          "name": "obsidian-vault-roundtrip-Windows-b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee",
+          "size_bytes": 9291529,
+          "sha256_digest": "25df801c80b7cc5da29b946d6d4bc04dfe9d5b244932096a2c28d50ea2c40669"
+        }
+      }
+    }
+  },
+  "acceptance_status": "R2.8.80 is accepted as a partial C09 asset-inventory slice on exact source SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. All seven required GitHub Actions workflows passed, including Rust 1.95 and Linux/macOS/Windows Obsidian 1.14.4 vault round-trip. The raw stylesheet inventory preserves paths, bytes and hashes without parsing, applying or rendering CSS. The standard named-folder theme.css entrypoint extends the legacy direct-child inventory and should be paired with canonical parent-folder theme identity in a later analysis slice. Parent C09 and C09.1 remain pending. No local executable validation was run."
+}

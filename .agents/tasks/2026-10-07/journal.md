@@ -3485,3 +3485,30 @@ and snippet CSS plus the standard one-level `themes/<name>/theme.css` entrypoint
 Fixture inventory and state are updated; C09 and C09.1 remain pending. Exact-SHA
 GitHub Actions validation is pending. No local tests, builds, formatters,
 validators, or application launch were run.
+
+## 2026-10-11T10:40:39Z — R2.8.80 accepted
+
+R2.8.80 passed all seven required GitHub Actions workflows on exact source SHA
+`b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee`: inventory 38132088472, quality
+38132088509, desktop build 38132088487, plugin renderer 38132088436, loaded
+plugin workflows 38132088488, Rust CI 38132088474, and Obsidian vault round-trip
+38132088454. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95. The
+round-trip passed on Linux, macOS, and Windows; all run/job IDs and artifact
+digests are in `evidence/r2.8.80-c09-style-inventory-b6f0bbb.json`.
+
+R2.8.80 accepts the raw, read-only CSS inventory as a partial C09 slice. The
+inventory covers direct theme/snippet CSS plus the standard named-folder
+`themes/<name>/theme.css` entrypoint. The parallel legacy audit found that the
+TypeScript inventory recognizes only direct CSS children, so the standard
+entrypoint is additional coverage; a later analyzer must derive theme identity
+from the parent folder to match `appearance.json`. The legacy analyzer is
+regex-based and its browser preview sanitizer is a separate behavior. CSS
+analysis/application, app-metadata policy, and C09.1's mediated plugin-write
+policy remain pending. A Rust 1.95/MSRV and cross-platform review found no
+blocking issue. The fixture digest is `92f0a39b7a7d7dd05c3924b8c9f170d47a892f4552e65231d127f13320665347`.
+
+The next bounded candidate is R2.8.81: exercise and enforce the default
+app-metadata separation boundary in `crates/platform` with an injected user-data
+root and CI-only tests. Keep portable selection unavailable, and keep C09 and
+C09.1 pending. No local tests, builds, formatters, validators, or application
+launch were run.

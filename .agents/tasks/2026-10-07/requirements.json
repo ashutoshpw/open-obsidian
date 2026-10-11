@@ -3387,7 +3387,8 @@
       "evidence_paths": [
         "evidence/r2.8.78-c09-attempt-1-b0b8557.json",
         "evidence/r2.8.78-c09-discovery-c9ce4a0.json",
-        "evidence/r2.8.79-c09-appearance-e3de21b.json"
+        "evidence/r2.8.79-c09-appearance-e3de21b.json",
+        "evidence/r2.8.80-c09-style-inventory-b6f0bbb.json"
       ],
       "tested_source_tree": null,
       "blocker": null,
