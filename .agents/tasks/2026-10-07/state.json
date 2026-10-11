@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T11:46:01Z",
+  "updated_at": "2026-10-11T11:59:51Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "5587460c9adb5858562bbb21e2fe059e989f34fd",
-  "current_milestone": "R2.8.81",
-  "next_action": "Commit and push the R2.8.81 tracker evidence for checkpoint SHA 5587460c9adb5858562bbb21e2fe059e989f34fd, which passed all six required documentation workflows. Validate the tracker evidence commit with the six documentation workflows, then push the prepared R2.8.82 theme identity and read-only CSS analysis slice for exact-SHA validation on all seven required workflows. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.81 corrected source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 5587460c9adb5858562bbb21e2fe059e989f34fd passed all six documentation workflows; exact run/job evidence is recorded in evidence/r2.8.81-tracker-checkpoint-5587460.json. The tracker evidence commit is pending. No local executable validation was run.",
+  "last_reconciled_head": "51b523a38cbacba3f0b03d718daacd9e086156c6",
+  "current_milestone": "R2.8.82",
+  "next_action": "Commit and push the prepared R2.8.82 theme identity and read-only CSS analysis slice, then validate its exact source SHA through all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 implementation is prepared locally and its source validation is pending. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -27978,7 +27978,7 @@
           "evidence": "evidence/r2.8.81-c09-app-data-separation-fb51058.json"
         }
       ],
-      "next_action": "The R2.8.81 tracker checkpoint at 5587460c9adb5858562bbb21e2fe059e989f34fd passed all six required documentation workflows. Record these exact-SHA results in a tracker evidence commit, push it to origin/main, and validate that checkpoint with the six documentation workflows. Then push the prepared R2.8.82 theme identity and read-only CSS analysis slice for its seven-workflow exact-SHA validation. Keep C09 and C09.1 pending.",
+      "next_action": "R2.8.81 tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows. R2.8.82 is the current bounded C09 slice; commit and push its theme identity and read-only CSS analysis, then validate the exact implementation SHA on all seven required workflows. Keep C09 and C09.1 pending.",
       "tracker_checkpoint_validation": {
         "status": "complete",
         "required_workflows": [
@@ -27990,17 +27990,46 @@
           "OpenObsidian Rust CI"
         ],
         "path_filtered_workflow": "Obsidian vault round-trip is covered on implementation SHA fb5105853f7e7a34ea64acc5c095e5358e44791e and is not expected to trigger for this documentation-only tracker checkpoint.",
-        "validated_sha": "5587460c9adb5858562bbb21e2fe059e989f34fd",
-        "workflow_runs": {
-          "inventory": 38136037616,
-          "quality": 38136037614,
-          "desktop-build": 38136037621,
-          "plugin-renderer": 38136037596,
-          "loaded-plugins": 38136037665,
-          "rust-ci": 38136037601
+        "validated_sha": "51b523a38cbacba3f0b03d718daacd9e086156c6",
+        "prior_checkpoint": {
+          "validated_sha": "5587460c9adb5858562bbb21e2fe059e989f34fd",
+          "evidence": "evidence/r2.8.81-tracker-checkpoint-5587460.json"
         },
-        "evidence": "evidence/r2.8.81-tracker-checkpoint-5587460.json"
+        "workflow_runs": {
+          "inventory": 38136938907,
+          "quality": 38136938968,
+          "desktop-build": 38136938888,
+          "plugin-renderer": 38136938894,
+          "loaded-plugins": 38136938861,
+          "rust-ci": 38136938850
+        },
+        "quality_retry": "Attempt 1 failed only on macOS when the Electron vault audit did not observe the local retrieval boundary after indexing. GitHub reran the failed job; attempt 2 passed.",
+        "evidence": "evidence/r2.8.81-tracker-checkpoint-51b523a.json"
       }
+    },
+    "R2.8.82": {
+      "status": "in_progress",
+      "starting_sha": "51b523a38cbacba3f0b03d718daacd9e086156c6",
+      "scope": "Add canonical vault-relative identity and scoped display-name matching for discovered theme and snippet assets, then expose read-only heuristic CSS metadata for compatibility and safety review. Preserve the original source bytes and SHA-256 and do not execute CSS or claim renderer certification.",
+      "acceptance": [
+        "Every discovered style keeps its normalized vault-relative path as the canonical identity and retains its exact original bytes and SHA-256.",
+        "Direct CSS assets use the filename stem as their display name. Folder theme entrypoints use the parent theme folder name, intentionally resolving paths such as Solarized/theme.css to Solarized while preserving the full path as identity.",
+        "Name matching trims ECMAScript whitespace, compares case-insensitively, scopes to a discovered configuration folder and returns all same-name matches without silently choosing one.",
+        "A typed read-only analyzer reports variables, selectors, mode hints, layout/plugin/popout/accessibility contracts, imports, URL assets, executable constructs and privileged selectors as heuristic metadata; it does not fetch, execute, sanitize or certify CSS.",
+        "Fixture-backed checks cover duplicate names within and across configuration folders, appearance theme and enabled-snippet matching, safe and blocked CSS cases, comment-hidden text, and the BOM/CRLF source while preserving the vault snapshot.",
+        "All seven required GitHub Actions workflows pass for the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95, plus the path-triggered Obsidian round-trip. No local executable validation is allowed.",
+        "Accept only as a partial C09 settings/style slice; keep C09 and C09.1 pending."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "next_action": "Push the R2.8.82 source commit to origin/main and inspect the seven exact-SHA workflow outcomes before accepting this partial C09 slice."
     }
   },
   "ci_preparation": {

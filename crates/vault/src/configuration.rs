@@ -1,7 +1,9 @@
 //! Read-only discovery of Obsidian-compatible vault configuration files.
 
 use super::{VaultError, VaultRoot, path_to_slashes, sha256_hex};
-use openobsidian_doc::{AppearanceSettings, parse_appearance_settings};
+use openobsidian_doc::{
+    AppearanceSettings, ThemeStyleAnalysis, analyze_theme_stylesheet, parse_appearance_settings,
+};
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::ffi::OsStr;
@@ -28,10 +30,46 @@ pub enum VaultStyleAssetKind {
 /// One raw CSS file discovered in a theme or CSS snippets folder.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultStyleAsset {
+    /// Canonical identity for this discovered asset, relative to the vault root.
     pub relative_path: String,
     pub kind: VaultStyleAssetKind,
     pub raw_bytes: Vec<u8>,
     pub sha256: String,
+    /// Inert metadata derived from a lossy text decoding of `raw_bytes`.
+    pub analysis: ThemeStyleAnalysis,
+}
+
+impl VaultStyleAsset {
+    /// A user-facing name derived from the path without replacing path identity.
+    ///
+    /// Folder themes use the directory name for their `theme.css` entrypoint;
+    /// direct themes and snippets use the CSS filename stem.
+    pub fn display_name(&self) -> String {
+        let segments = self.relative_path.split('/').collect::<Vec<_>>();
+        let Some(file_name) = segments.last().copied() else {
+            return String::new();
+        };
+        if self.kind == VaultStyleAssetKind::Theme
+            && file_name.eq_ignore_ascii_case("theme.css")
+            && segments.len() >= 4
+            && segments[segments.len() - 3] == "themes"
+        {
+            return segments[segments.len() - 2].to_owned();
+        }
+        file_name
+            .rsplit_once('.')
+            .filter(|(_, extension)| extension.eq_ignore_ascii_case("css"))
+            .map(|(stem, _)| stem)
+            .unwrap_or(file_name)
+            .to_owned()
+    }
+
+    /// Compares a requested name using deterministic, locale-independent case folding.
+    pub fn matches_display_name(&self, requested_name: &str) -> bool {
+        let requested_name = requested_name.trim_matches(is_ecmascript_whitespace);
+        !requested_name.is_empty()
+            && self.display_name().to_lowercase() == requested_name.to_lowercase()
+    }
 }
 
 /// A stable, read-only inventory of root configuration folders, JSON files, and styles.
@@ -45,6 +83,36 @@ pub struct VaultConfiguration {
     pub appearance: BTreeMap<String, AppearanceSettings>,
     /// Raw CSS theme and snippet assets, sorted by vault-relative path.
     pub styles: Vec<VaultStyleAsset>,
+}
+
+impl VaultConfiguration {
+    /// Returns every style matching a name within one discovered configuration folder.
+    ///
+    /// Returning all matches keeps same-name assets explicit instead of silently
+    /// choosing the first path. `configuration_folder` must be one of `folders`.
+    pub fn matching_styles(
+        &self,
+        configuration_folder: &str,
+        kind: VaultStyleAssetKind,
+        requested_name: &str,
+    ) -> Vec<&VaultStyleAsset> {
+        if !self
+            .folders
+            .iter()
+            .any(|folder| folder == configuration_folder)
+        {
+            return Vec::new();
+        }
+        let prefix = format!("{configuration_folder}/");
+        self.styles
+            .iter()
+            .filter(|style| {
+                style.kind == kind
+                    && style.relative_path.starts_with(&prefix)
+                    && style.matches_display_name(requested_name)
+            })
+            .collect()
+    }
 }
 
 impl VaultRoot {
@@ -202,13 +270,32 @@ fn push_style_asset(
         .map_err(|_| VaultError::OutsideRoot(path.to_path_buf()))?;
     let resolved_path = vault.resolve_regular_file_path(relative_path)?;
     let raw_bytes = fs::read(resolved_path)?;
+    let decoded_source = String::from_utf8_lossy(&raw_bytes);
     styles.push(VaultStyleAsset {
         relative_path: path_to_slashes(relative_path)?,
         kind,
         sha256: sha256_hex(&raw_bytes),
         raw_bytes,
+        analysis: analyze_theme_stylesheet(decoded_source.as_ref()),
     });
     Ok(())
+}
+
+fn is_ecmascript_whitespace(character: char) -> bool {
+    matches!(
+        character,
+        '\u{0009}'..='\u{000D}'
+            | '\u{0020}'
+            | '\u{00A0}'
+            | '\u{1680}'
+            | '\u{2000}'..='\u{200A}'
+            | '\u{2028}'
+            | '\u{2029}'
+            | '\u{202F}'
+            | '\u{205F}'
+            | '\u{3000}'
+            | '\u{FEFF}'
+    )
 }
 
 fn confined_directory(vault: &VaultRoot, directory: &Path) -> Result<Option<PathBuf>, VaultError> {

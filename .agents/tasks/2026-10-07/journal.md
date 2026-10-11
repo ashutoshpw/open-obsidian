@@ -3608,3 +3608,41 @@ round-trip remains covered by implementation SHA
 checkpoint and validate its documentation workflows, then submit R2.8.82 for
 all seven required source workflows. C09 and C09.1 remain pending. No local
 tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T11:57:33Z — R2.8.81 tracker evidence passed; R2.8.82 prepared
+
+Tracker evidence commit SHA `51b523a38cbacba3f0b03d718daacd9e086156c6` passed
+all six documentation workflows. The first quality attempt failed only on
+macOS because the Electron vault audit indexed its fixture but did not observe
+the local retrieval boundary before the assertion timed out; GitHub reran the
+failed job and the second attempt passed. The other quality OS jobs and the
+inventory, desktop build, plugin renderer, loaded-plugin workflows and Rust CI
+passed. Run IDs, job IDs and the retry finding are recorded in
+`evidence/r2.8.81-tracker-checkpoint-51b523a.json`. The path-filtered Obsidian
+round-trip remains covered by R2.8.81 source SHA
+`fb5105853f7e7a34ea64acc5c095e5358e44791e`.
+
+R2.8.82 is prepared as a partial C09 style/settings slice. It keeps normalized
+vault-relative paths as canonical asset IDs, adds folder-aware display names
+and scoped duplicate matching, and exposes explicitly heuristic read-only CSS
+analysis. The folder entrypoint rule intentionally corrects `theme.css` to use
+its parent theme folder name (for example, `Solarized`) while retaining the
+full path as identity. Fixture coverage connects `appearance.json` theme and
+snippet settings to discovered assets and covers multiple same-name styles.
+The source SHA and all seven required workflows are pending. C09 and C09.1
+remain pending. The next small C09 candidate is a data-only projection of
+vault `hotkeys.json`, kept separate from app-owned shortcut dispatch. No local
+tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T11:59:51Z — R2.8.82 static parity review
+
+Parallel static reviews compared the CSS metadata heuristics against the
+existing TypeScript analyzer and checked the configuration asset mappings.
+The final CSS custom property now matches the legacy analyzer's requirement
+for a semicolon or end-of-input, and `.workspace` detection accepts the full
+ECMAScript whitespace set. Fixture cases cover those boundaries, selected
+appearance theme and enabled snippet resolution, duplicate display names, and
+the folder-entrypoint display-name correction. The configuration fixture
+digest in the inventory is refreshed. Changes remain source-reviewed only;
+the exact-SHA GitHub CI gate is pending. No local tests, builds, formatters,
+validators, or application launches were run.

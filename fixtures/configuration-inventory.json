@@ -8,7 +8,9 @@
     ".obsidian-broken",
     ".obsidian-mobile",
     ".obsidian-mobile/snippets",
+    ".obsidian-mobile/themes",
     ".obsidian/themes",
+    ".obsidian/themes/Minimal",
     ".obsidian/themes/nested",
     ".obsidian/themes/Solarized",
     ".obsidian/themes/Solarized/nested",
@@ -41,6 +43,10 @@
     {
       "relative_path": ".obsidian/themes/Minimal.css",
       "source": "/* Minimal theme */\nbody { color: #222; }\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/Minimal/theme.css",
+      "source": ".workspace .mod-popout { color: #111; }\n"
     },
     {
       "relative_path": ".obsidian/themes/.CSS",
@@ -81,6 +87,14 @@
     {
       "relative_path": ".obsidian-mobile/snippets/Readable.css",
       "source": "\uFEFFbody {\r\n  color: #fff;\r\n}"
+    },
+    {
+      "relative_path": ".obsidian-mobile/themes/Minimal.css",
+      "source": ".workspace { color: #444; }\n"
+    },
+    {
+      "relative_path": ".obsidian-mobile/themes/Custom.css",
+      "source": ".workspace-leaf { color: #555; }\n"
     },
     {
       "relative_path": ".obsidian-broken/invalid.json",
@@ -203,33 +217,174 @@
       {
         "relative_path": ".obsidian-mobile/snippets/Readable.css",
         "kind": "snippet",
+        "display_name": "Readable",
         "sha256": "8861e8feeae987250ff696ef1f027a7f2b6bb1ae5ea471a296feb4a5ee3a2760"
+      },
+      {
+        "relative_path": ".obsidian-mobile/themes/Custom.css",
+        "kind": "theme",
+        "display_name": "Custom",
+        "sha256": "db10e594c4f2972b4508cc55397542ffe2e72ffe66ff758d1e7ad107e477f88f"
+      },
+      {
+        "relative_path": ".obsidian-mobile/themes/Minimal.css",
+        "kind": "theme",
+        "display_name": "Minimal",
+        "sha256": "922b6a4d7ef417bbbe50cdac1cebc687366b218ce67c36820f5a2257cc90466c"
       },
       {
         "relative_path": ".obsidian/snippets/outline.css",
         "kind": "snippet",
+        "display_name": "outline",
         "sha256": "672d728a3a4eecfee9ef3ac2dea434deb33813776865a34b34b4d3d1e67d899b"
       },
       {
         "relative_path": ".obsidian/themes/.CSS",
         "kind": "theme",
+        "display_name": "",
         "sha256": "de1704714a75c5657d8b5d421826a5fec0dbac54829646ad86c361256dbb5b4e"
       },
       {
         "relative_path": ".obsidian/themes/HighContrast.CSS",
         "kind": "theme",
+        "display_name": "HighContrast",
         "sha256": "ab1d7614a9cb5afe9b956a37d93c8385560d5674ed6e90ed6d0c797df2a4810b"
       },
       {
         "relative_path": ".obsidian/themes/Minimal.css",
         "kind": "theme",
+        "display_name": "Minimal",
         "sha256": "988fb2c0ed788534afdcef130497128f8b3f1eba2053145f8bee77232fb88c8a"
+      },
+      {
+        "relative_path": ".obsidian/themes/Minimal/theme.css",
+        "kind": "theme",
+        "display_name": "Minimal",
+        "sha256": "48e0947cf2dc8f12d4d2dc5da78cf42c7907ee2b7b207ecdf534011baac02568"
       },
       {
         "relative_path": ".obsidian/themes/Solarized/theme.css",
         "kind": "theme",
+        "display_name": "Solarized",
         "sha256": "1e3e61b152e4046a3e1314a5d16d783ae8e782ab2b2665e0e3173c6a32f3d6be"
       }
     ]
-  }
+  },
+  "theme_analysis_cases": [
+    {
+      "id": "safe-theme-contracts-and-variables",
+      "source": "/* hidden @import url(x) #safe-mode { */\nbody.theme-dark { --accent: #abc; --accent: #def; font-size: 14px; }\nbody\u00a0.workspace .workspace-leaf, .view-header { outline: 1px solid; }\n@media (prefers-reduced-motion: reduce) { :focus-visible { transition: none; } }",
+      "expected": {
+        "variables": {"--accent": "#def"},
+        "selectors": ["body\u00a0.workspace .workspace-leaf", ".view-header", "body.theme-dark", ":focus-visible"],
+        "mode_support": {"light": false, "dark": true},
+        "layout_contracts": ["workspace-shell", "workspace-leaf", "view-header"],
+        "plugin_view_contracts": [],
+        "popout_contracts": [],
+        "accessibility_contracts": ["focus-visible", "reduced-motion", "font-scaling"],
+        "safety": {
+          "raw_css_execution": "not-executed",
+          "external_imports": "denied",
+          "url_assets": "denied",
+          "privileged_selector_policy": "host-review-required",
+          "privileged_selectors": [],
+          "static_precheck_passed": true
+        },
+        "issues": []
+      }
+    },
+    {
+      "id": "blocked-import-url-executable-and-privileged-rules",
+      "source": "@import url(\"https://example.test/theme.css\");\n#provider-mode, [data-type=\"plugin\"] { background: url(../image.png); width: expression(alert(1)); }\na { color: javascript:alert(1); behavior: url(x); }",
+      "expected": {
+        "variables": {},
+        "selectors": ["#provider-mode", "[data-type=\"plugin\"]", "a"],
+        "mode_support": {"light": true, "dark": true},
+        "layout_contracts": [],
+        "plugin_view_contracts": ["data-view"],
+        "popout_contracts": [],
+        "accessibility_contracts": [],
+        "safety": {
+          "raw_css_execution": "not-executed",
+          "external_imports": "denied",
+          "url_assets": "denied",
+          "privileged_selector_policy": "host-review-required",
+          "privileged_selectors": ["#provider-mode"],
+          "static_precheck_passed": false
+        },
+        "issues": [
+          "CSS @import is not resolved during a safe preview",
+          "remote, file and data URL assets are not fetched during a safe preview",
+          "executable CSS expressions are not accepted",
+          "selectors targeting privileged or AI controls require host review"
+        ]
+      }
+    },
+    {
+      "id": "comments-hide-unsafe-tokens",
+      "source": "/* @import url(https://example.test) expression(1) #provider-mode { */\nbody { color: black; }",
+      "expected": {
+        "variables": {},
+        "selectors": ["body"],
+        "mode_support": {"light": true, "dark": true},
+        "layout_contracts": [],
+        "plugin_view_contracts": [],
+        "popout_contracts": [],
+        "accessibility_contracts": [],
+        "safety": {
+          "raw_css_execution": "not-executed",
+          "external_imports": "denied",
+          "url_assets": "denied",
+          "privileged_selector_policy": "host-review-required",
+          "privileged_selectors": [],
+          "static_precheck_passed": true
+        },
+        "issues": []
+      }
+    },
+    {
+      "id": "light-mode-plugin-popout-and-accessibility-hints",
+      "source": ":root[data-theme=\"light\"] { --accent: blue; }\n@media (prefers-color-scheme: light) { [data-type=\"plugin\"], body .mod-popout .titlebar { font-size: 14px; } .nav-file { color: black; } }",
+      "expected": {
+        "variables": {"--accent": "blue"},
+        "selectors": [":root[data-theme=\"light\"]", "[data-type=\"plugin\"]", "body .mod-popout .titlebar", ".nav-file"],
+        "mode_support": {"light": true, "dark": false},
+        "layout_contracts": ["file-explorer", "titlebar"],
+        "plugin_view_contracts": ["data-view"],
+        "popout_contracts": ["popout-surface"],
+        "accessibility_contracts": ["font-scaling"],
+        "safety": {
+          "raw_css_execution": "not-executed",
+          "external_imports": "denied",
+          "url_assets": "denied",
+          "privileged_selector_policy": "host-review-required",
+          "privileged_selectors": [],
+          "static_precheck_passed": true
+        },
+        "issues": []
+      }
+    },
+    {
+      "id": "custom-property-without-terminating-semicolon-matches-legacy",
+      "source": ":root { --accent: red }",
+      "expected": {
+        "variables": {},
+        "selectors": [":root"],
+        "mode_support": {"light": true, "dark": true},
+        "layout_contracts": [],
+        "plugin_view_contracts": [],
+        "popout_contracts": [],
+        "accessibility_contracts": [],
+        "safety": {
+          "raw_css_execution": "not-executed",
+          "external_imports": "denied",
+          "url_assets": "denied",
+          "privileged_selector_policy": "host-review-required",
+          "privileged_selectors": [],
+          "static_precheck_passed": true
+        },
+        "issues": []
+      }
+    }
+  ]
 }

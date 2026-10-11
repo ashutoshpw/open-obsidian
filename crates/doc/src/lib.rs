@@ -3,6 +3,7 @@
 mod configuration;
 mod markdown_preview;
 mod merge;
+mod themes;
 mod yaml;
 
 pub use configuration::{AppearanceMode, AppearanceSettings, parse_appearance_settings};
@@ -11,6 +12,10 @@ pub use markdown_preview::{
     analyze_markdown_preview,
 };
 pub use merge::{MergeConflict, MergeStatus, ThreeWayMergeResult, three_way_merge_bytes};
+pub use themes::{
+    ThemeCssExecution, ThemeCssPrivilegedSelectorPolicy, ThemeCssResourcePolicy,
+    ThemeStyleAnalysis, ThemeStyleModeSupport, ThemeStyleSafety, analyze_theme_stylesheet,
+};
 pub use yaml::{YamlMappingEntry, YamlParseResult, YamlValue};
 
 use std::collections::HashMap;

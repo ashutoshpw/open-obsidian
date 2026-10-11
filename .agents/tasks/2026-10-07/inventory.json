@@ -2340,12 +2340,12 @@
     },
     {
       "path": "fixtures/configuration-inventory.json",
-      "sha256": "92f0a39b7a7d7dd05c3924b8c9f170d47a892f4552e65231d127f13320665347",
+      "sha256": "1281e2cd9102b6cab39d35385b5e8f336d1e6fdc7920892f6ec325f3c522274b",
       "rust_owner": "crates/vault",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "Configuration discovery, JSON byte preservation, supported appearance projection, raw theme/snippet CSS inventory, unknown-key, invalid-input and exclusion contract fixture.",
+      "purpose": "Configuration discovery, JSON byte preservation, supported appearance projection, byte-preserving theme/snippet CSS inventory, canonical style-name matching, inert CSS analysis and safety metadata, unknown-key, invalid-input and exclusion contract fixture.",
       "fixture_reader": "crates/vault"
     }
   ],
