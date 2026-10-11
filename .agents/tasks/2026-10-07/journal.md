@@ -4361,7 +4361,14 @@ case asserts the document remains unchanged. Updated the existing `crates/doc`
 inventory entry and fixture SHA-256. Engine orchestration, vault writes, native
 UI, explicit note creation, and C06/C06.1 acceptance remain pending.
 
-These changes are prepared in the working tree and have not been committed or
-pushed. No local tests, builds, formatters, validators, or application launches
-were run. Next: commit and push the coherent slice, then obtain all seven
-required workflows on its exact SHA through GitHub Actions.
+The implementation was pushed on exact source SHA
+`e5ee89a48f50e43026953e6361bb7312b58b16fa`. Attempt 1 passed inventory,
+quality, desktop build, plugin renderer, and loaded-plugin workflows. Ubuntu
+Rust CI failed only the formatting check at `crates/doc/src/canvas.rs:404`
+after workspace tests passed; macOS and Windows Rust jobs passed. MSRV and the
+three vault round-trip jobs were still running at evidence capture. Exact run
+and job IDs and captured statuses are in
+[`evidence/r2.8.92-attempt-1-e5ee89a.json`](evidence/r2.8.92-attempt-1-e5ee89a.json).
+This attempt is not accepted. The exact formatting layout requested by GitHub
+CI is applied in the working tree for a correction push. No local tests,
+builds, formatters, validators, or application launches were run.

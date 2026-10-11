@@ -404,7 +404,10 @@ mod tests {
                 ),
                 other => panic!("{case_id}: unsupported expected error {other:?}"),
             }
-            assert_eq!(document, original, "{case_id}: failed extraction is immutable");
+            assert_eq!(
+                document, original,
+                "{case_id}: failed extraction is immutable"
+            );
         }
     }
 

@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.92",
+  "attempt": 1,
+  "source_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+  "outcome": "not_accepted",
+  "captured_at": "2026-10-11T21:32:00+00:00",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38176400620,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400620",
+      "jobs": [
+        { "id": 114579602526, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    "quality": {
+      "id": 38176400593,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400593",
+      "jobs": [
+        { "id": 114579602577, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114579602689, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114579602757, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    "desktop_build": {
+      "id": 38176400601,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400601",
+      "jobs": [
+        { "id": 114579602500, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114579602659, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114579602773, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38176400609,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400609",
+      "jobs": [
+        { "id": 114579602564, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114579602731, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114579602819, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38176400580,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400580",
+      "jobs": [
+        { "id": 114579602342, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114579602433, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114579602516, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    "rust_ci": {
+      "id": 38176400637,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "in_progress_at_capture",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400637",
+      "jobs": [
+        { "id": 114579602496, "name": "rust (ubuntu-latest)", "conclusion": "failure", "finding": "Check formatting reported one rustfmt layout change in crates/doc/src/canvas.rs:404. Workspace tests passed." },
+        { "id": 114579602569, "name": "rust (macos-latest)", "conclusion": "success" },
+        { "id": 114579602599, "name": "rust (windows-latest)", "conclusion": "success" },
+        { "id": 114579602431, "name": "minimum supported Rust (1.95)", "conclusion": "in_progress" }
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38176400592,
+      "head_sha": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
+      "conclusion": "in_progress_at_capture",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38176400592",
+      "jobs": [
+        { "id": 114579602871, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "in_progress" },
+        { "id": 114579602866, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "in_progress" },
+        { "id": 114579602677, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "in_progress" }
+      ]
+    }
+  },
+  "finding": "Attempt 1 is not accepted because Ubuntu Rust CI failed its formatting check. The reported layout was manually applied exactly in the correction. The Rust MSRV and three vault round-trip jobs were still running at capture; their eventual results do not change the formatting failure on this source SHA.",
+  "local_executable_validation": "none; executable validation ran only in GitHub Actions CI."
+}
