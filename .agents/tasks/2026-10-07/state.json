@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T12:04:48Z",
+  "updated_at": "2026-10-11T12:16:14Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "77f174934bfcbc509d9f0436bdbd25c5e66f9728",
+  "last_reconciled_head": "fe57d3061d0ee379846b1f8e07337a1a2029b552",
   "current_milestone": "R2.8.82",
-  "next_action": "Commit and push the R2.8.82 ownership and formatting correction with the failed first-attempt evidence, then validate the exact follow-up source SHA through all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five required workflows but failed Rust CI and Obsidian round-trip because a borrowed CSS byte buffer was moved before analysis completed; Ubuntu also reported Rust formatting changes. Exact run and job IDs are in evidence/r2.8.82-ci-attempt-77f1749.json. The scoped-borrow and CI-reported formatting correction is prepared locally for exact-SHA CI. No local executable validation was run.",
+  "next_action": "Commit and push the R2.8.82 selector-order and remaining formatting correction with evidence for the fe57d30 CI attempt, then validate the exact follow-up source SHA through all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five workflows but failed Rust CI and the round-trip preview build due to a borrowed CSS byte buffer being moved before analysis completed; Ubuntu also reported formatting changes. Follow-up SHA fe57d3061d0ee379846b1f8e07337a1a2029b552 passed five workflows, passed macOS and Windows round-trip, but Rust CI failed on a selector-order fixture mismatch and one remaining Ubuntu formatting change; the Ubuntu round-trip could not find a visible window with xdotool. Exact run and job IDs are recorded in the R2.8.82 attempt evidence. The selector-order expectation and remaining formatting layout are corrected locally, with the fixture digest refreshed. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -28043,9 +28043,23 @@
             "vault_roundtrip": 38137641399
           },
           "evidence": "evidence/r2.8.82-ci-attempt-77f1749.json"
+        },
+        {
+          "source_sha": "fe57d3061d0ee379846b1f8e07337a1a2029b552",
+          "status": "failed",
+          "workflow_runs": {
+            "inventory": 38137969926,
+            "quality": 38137969944,
+            "desktop_build": 38137969929,
+            "plugin_renderer": 38137970002,
+            "loaded_plugins": 38137969923,
+            "rust_ci": 38137969924,
+            "vault_roundtrip": 38137969919
+          },
+          "evidence": "evidence/r2.8.82-ci-attempt-fe57d30.json"
         }
       ],
-      "next_action": "Push the R2.8.82 ownership and formatting correction to origin/main and inspect all seven exact-SHA workflow outcomes before accepting this partial C09 slice."
+      "next_action": "Push the R2.8.82 selector-order and formatting correction to origin/main and inspect all seven exact-SHA workflow outcomes before accepting this partial C09 slice."
     }
   },
   "ci_preparation": {

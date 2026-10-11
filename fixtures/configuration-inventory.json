@@ -276,7 +276,7 @@
       "source": "/* hidden @import url(x) #safe-mode { */\nbody.theme-dark { --accent: #abc; --accent: #def; font-size: 14px; }\nbody\u00a0.workspace .workspace-leaf, .view-header { outline: 1px solid; }\n@media (prefers-reduced-motion: reduce) { :focus-visible { transition: none; } }",
       "expected": {
         "variables": {"--accent": "#def"},
-        "selectors": ["body\u00a0.workspace .workspace-leaf", ".view-header", "body.theme-dark", ":focus-visible"],
+        "selectors": ["body.theme-dark", "body\u00a0.workspace .workspace-leaf", ".view-header", ":focus-visible"],
         "mode_support": {"light": false, "dark": true},
         "layout_contracts": ["workspace-shell", "workspace-leaf", "view-header"],
         "plugin_view_contracts": [],

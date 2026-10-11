@@ -2716,13 +2716,15 @@ mod tests {
                 .matching_styles(".obsidian-mobile", VaultStyleAssetKind::Snippet, "outline")
                 .is_empty()
         );
-        assert!(discovered
-            .matching_styles(
-                "not-a-configuration-folder",
-                VaultStyleAssetKind::Theme,
-                "Minimal"
-            )
-            .is_empty());
+        assert!(
+            discovered
+                .matching_styles(
+                    "not-a-configuration-folder",
+                    VaultStyleAssetKind::Theme,
+                    "Minimal"
+                )
+                .is_empty()
+        );
         let readable = discovered
             .styles
             .iter()

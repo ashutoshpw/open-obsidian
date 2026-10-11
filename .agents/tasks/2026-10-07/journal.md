@@ -3661,3 +3661,19 @@ analysis inside a scoped borrow and applies the formatter's reported layouts.
 The follow-up source SHA and its seven-workflow CI results are pending. C09
 and C09.1 remain pending. No local tests, builds, formatters, validators, or
 application launches were run.
+
+## 2026-10-11T12:15:12Z — R2.8.82 second CI attempt found fixture order and UI harness issue
+
+Follow-up SHA `fe57d3061d0ee379846b1f8e07337a1a2029b552` passed inventory,
+quality, desktop build, plugin renderer and loaded-plugin workflows. Its Rust
+CI jobs reached the theme fixtures but found that the safe-theme selector
+expectation did not follow first-seen source order; Ubuntu also requested one
+remaining rustfmt layout. The macOS and Windows Obsidian round-trip jobs
+passed. The Linux round-trip report records that the xdotool visible-window
+search could not find a visible window. Workflow/job IDs and
+the Linux artifact reference are in
+`evidence/r2.8.82-ci-attempt-fe57d30.json`. The fixture expectation and final
+formatting layout are corrected locally and the fixture hash is refreshed.
+The next exact-SHA run must confirm the retry of all seven required workflows.
+C09 and C09.1 remain pending. No local tests, builds, formatters, validators,
+or application launches were run.

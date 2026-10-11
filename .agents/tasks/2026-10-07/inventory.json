@@ -2340,7 +2340,7 @@
     },
     {
       "path": "fixtures/configuration-inventory.json",
-      "sha256": "1281e2cd9102b6cab39d35385b5e8f336d1e6fdc7920892f6ec325f3c522274b",
+      "sha256": "dbb553a19d310212a0903eab3212265bafad25411af4eeb8da104c70aac476ca",
       "rust_owner": "crates/vault",
       "mapping_status": "reviewed",
       "status": "pending",

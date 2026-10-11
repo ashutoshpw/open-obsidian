@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.82",
+  "source_sha": "fe57d3061d0ee379846b1f8e07337a1a2029b552",
+  "outcome": "failed",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38137969926,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137969926",
+      "jobs": [{"id": 114465662004, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38137969944,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137969944",
+      "jobs": [
+        {"id": 114465662297, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114465662410, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114465662451, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38137969929,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137969929",
+      "jobs": [
+        {"id": 114465662364, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114465662404, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114465662437, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38137970002,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137970002",
+      "jobs": [
+        {"id": 114465662779, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114465662913, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114465663084, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38137969923,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137969923",
+      "jobs": [
+        {"id": 114465662176, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114465662332, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114465662382, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38137969924,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137969924",
+      "jobs": [
+        {"id": 114465662178, "name": "minimum supported Rust (1.95)", "conclusion": "failure", "cause": "The CSS analysis fixture expected different selector order than the analyzer's first-seen order."},
+        {"id": 114465662298, "name": "rust (macos-latest)", "conclusion": "failure", "cause": "The CSS analysis fixture expected different selector order than the analyzer's first-seen order."},
+        {"id": 114465662339, "name": "rust (ubuntu-latest)", "conclusion": "failure", "cause": "The CSS analysis fixture expected different selector order than the analyzer's first-seen order; rustfmt also requested a multiline assertion layout."},
+        {"id": 114465662345, "name": "rust (windows-latest)", "conclusion": "failure", "cause": "The CSS analysis fixture expected different selector order than the analyzer's first-seen order."}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38137969919,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137969919",
+      "jobs": [
+        {"id": 114465662147, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"},
+        {"id": 114465662325, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"},
+        {"id": 114465662371, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure", "cause": "The UI harness failed to find a visible X window with xdotool search --onlyvisible --name ."}
+      ],
+      "linux_artifact": {
+        "id": 11702147659,
+        "name": "obsidian-vault-roundtrip-Linux-fe57d3061d0ee379846b1f8e07337a1a2029b552",
+        "report": "The generated round-trip report records an xdotool visible-window search failure; macOS and Windows jobs passed."
+      }
+    }
+  },
+  "correction": "Order the safe-theme selectors in source first-seen order, expand the remaining not-a-configuration-folder assertion to match rustfmt, and update the inventory digest for the configuration fixture.",
+  "updated_fixture_sha256": "dbb553a19d310212a0903eab3212265bafad25411af4eeb8da104c70aac476ca",
+  "local_executable_validation": "none"
+}
