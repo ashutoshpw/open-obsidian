@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T12:26:02Z",
+  "updated_at": "2026-10-11T12:44:04Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b7ccff97711f8c411bd3c39dc6c43726128b7ea3",
+  "last_reconciled_head": "8c1ae9f4300f113b54e3cc02073f7af2dda49514",
   "current_milestone": "R2.8.82",
-  "next_action": "Commit and push the R2.8.82 Clippy correction with evidence for the b7ccff9 CI attempt, then validate the exact follow-up source SHA through all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five workflows but failed Rust CI and the round-trip preview build due to a borrowed CSS byte buffer being moved before analysis completed; Ubuntu also reported formatting changes. Follow-up SHA fe57d3061d0ee379846b1f8e07337a1a2029b552 passed five workflows, passed macOS and Windows round-trip, but Rust CI failed on a selector-order fixture mismatch and one remaining Ubuntu formatting change; the Ubuntu round-trip could not find a visible window with xdotool. SHA b7ccff97711f8c411bd3c39dc6c43726128b7ea3 passed six workflows, including all three round-trip jobs and Rust 1.95, but stable Rust CI failed Clippy on macOS, Ubuntu and Windows due to a let-and-return lint in selector_has_class_word. Exact run/job results are recorded in the attempt evidence. The direct-return Clippy correction is prepared locally. No local executable validation was run.",
+  "next_action": "Commit and push the R2.8.82 exact-SHA CI evidence as a documentation-only tracker checkpoint and validate all six required GitHub workflows. Then complete read-only source-shape research for R2.8.83 hotkeys.json projection; keep C09 and C09.1 pending.",
+  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five workflows but failed Rust CI and the round-trip preview build due to a borrowed CSS byte buffer being moved before analysis completed; Ubuntu also reported formatting changes. Follow-up SHA fe57d3061d0ee379846b1f8e07337a1a2029b552 passed five workflows, passed macOS and Windows round-trip, but Rust CI failed on a selector-order fixture mismatch and one remaining Ubuntu formatting change; the Ubuntu round-trip could not find a visible window with xdotool. SHA b7ccff97711f8c411bd3c39dc6c43726128b7ea3 passed six workflows, including all three round-trip jobs and Rust 1.95, but stable Rust CI failed Clippy on macOS, Ubuntu and Windows due to a let-and-return lint in selector_has_class_word. Exact run/job results are recorded in the attempt evidence. The direct-return Clippy correction is prepared locally. No local executable validation was run. R2.8.82 implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514 passed all seven required workflows, including the Windows round-trip on GitHub rerun attempt 2; exact run/job results are in evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. No local executable validation was run. The documentation-only tracker checkpoint is next.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -303,7 +303,8 @@
     "R2.8.80 tracker checkpoint SHA 9a00847a683450aa667d74805f07c9ed98d1cb66 passed all six documentation-triggered workflows, including the Rust 1.95, Ubuntu, macOS, and Windows jobs. The path-filtered Obsidian round-trip remains covered by implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. Evidence: evidence/r2.8.80-tracker-checkpoint-9a00847.json.",
     "R2.8.80 tracker evidence checkpoint SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation-triggered workflows, including Rust 1.95 and Ubuntu/macOS/Windows Rust CI. The path-filtered Obsidian round-trip remains covered by implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. Evidence: evidence/r2.8.80-tracker-checkpoint-21c801a.json.",
     "R2.8.81 app-owned per-vault data path preparation was accepted as a partial C09 app-metadata boundary slice on exact source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e. All seven required GitHub Actions workflows passed, including Rust 1.95 and the Linux/macOS/Windows Obsidian round-trip. The first attempt's Clippy issue was corrected, and its transient Electron and UI automation failures did not reproduce. Evidence: evidence/r2.8.81-c09-app-data-separation-fb51058.json. C09 and C09.1 remain pending; no local executable validation was run.",
-    "R2.8.81 tracker checkpoint SHA 5587460c9adb5858562bbb21e2fe059e989f34fd passed all six documentation workflows, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. Exact run/job IDs are recorded in evidence/r2.8.81-tracker-checkpoint-5587460.json; the path-filtered Obsidian round-trip remains covered by implementation SHA fb5105853f7e7a34ea64acc5c095e5358e44791e."
+    "R2.8.81 tracker checkpoint SHA 5587460c9adb5858562bbb21e2fe059e989f34fd passed all six documentation workflows, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. Exact run/job IDs are recorded in evidence/r2.8.81-tracker-checkpoint-5587460.json; the path-filtered Obsidian round-trip remains covered by implementation SHA fb5105853f7e7a34ea64acc5c095e5358e44791e.",
+    "R2.8.82 accepted as a partial C09 settings/style slice on exact implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514; all seven required GitHub workflows passed, with the initial Windows round-trip UIA issue passing on GitHub same-SHA retry attempt 2. Evidence: evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. C09 and C09.1 remain pending; no local executable validation was run."
   ],
   "ci_results": [
     {
@@ -28008,7 +28009,7 @@
       }
     },
     "R2.8.82": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "51b523a38cbacba3f0b03d718daacd9e086156c6",
       "scope": "Add canonical vault-relative identity and scoped display-name matching for discovered theme and snippet assets, then expose read-only heuristic CSS metadata for compatibility and safety review. Preserve the original source bytes and SHA-256 and do not execute CSS or claim renderer certification.",
       "acceptance": [
@@ -28071,9 +28072,42 @@
             "vault_roundtrip": 38138638787
           },
           "evidence": "evidence/r2.8.82-ci-attempt-b7ccff9.json"
+        },
+        {
+          "source_sha": "8c1ae9f4300f113b54e3cc02073f7af2dda49514",
+          "status": "accepted",
+          "workflow_runs": {
+            "inventory": 38139278539,
+            "quality": 38139278409,
+            "desktop_build": 38139278382,
+            "plugin_renderer": 38139278461,
+            "loaded_plugins": 38139278427,
+            "rust_ci": 38139278451,
+            "vault_roundtrip": 38139278404
+          },
+          "findings": "All seven required workflows passed on the exact source SHA, including Rust 1.95 and all three Obsidian round-trip jobs. The first Windows round-trip attempt could not find Close source preview; GitHub reran the failed job on the same SHA and attempt 2 passed.",
+          "evidence": "evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json"
         }
       ],
-      "next_action": "Push the R2.8.82 Clippy correction to origin/main and inspect all seven exact-SHA workflow outcomes before accepting this partial C09 slice."
+      "next_action": "Commit the exact-SHA result evidence in a documentation-only tracker checkpoint and validate its six required GitHub workflows. Then finish source-shape research for the bounded R2.8.83 hotkeys.json data-only projection; keep vault bindings separate from app-owned shortcut dispatch.",
+      "implementation_sha": "8c1ae9f4300f113b54e3cc02073f7af2dda49514",
+      "evidence": "evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json",
+      "tracker_checkpoint_validation": {
+        "status": "pending",
+        "required_workflows": [
+          "Rust migration inventory",
+          "OpenObsidian quality",
+          "OpenObsidian desktop build",
+          "OpenObsidian plugin renderer matrix",
+          "OpenObsidian loaded plugin workflows",
+          "OpenObsidian Rust CI"
+        ],
+        "path_filtered_workflow": "Obsidian vault round-trip passed on implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514; it is not expected to trigger for this documentation-only checkpoint.",
+        "prior_checkpoint": {
+          "validated_sha": "51b523a38cbacba3f0b03d718daacd9e086156c6",
+          "evidence": "evidence/r2.8.81-tracker-checkpoint-51b523a.json"
+        }
+      }
     }
   },
   "ci_preparation": {

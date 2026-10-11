@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.82",
+  "implementation_sha": "8c1ae9f4300f113b54e3cc02073f7af2dda49514",
+  "outcome": "accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38139278539,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278539",
+      "jobs": [{"id": 114469585988, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38139278409,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278409",
+      "jobs": [
+        {"id": 114469585760, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114469585944, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114469585958, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38139278382,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278382",
+      "jobs": [
+        {"id": 114469585548, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114469585628, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114469585886, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38139278461,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278461",
+      "jobs": [
+        {"id": 114469585708, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114469585836, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114469585849, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38139278427,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278427",
+      "jobs": [
+        {"id": 114469586038, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114469586220, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114469586229, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38139278451,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278451",
+      "jobs": [
+        {"id": 114469585696, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114469585830, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114469585887, "name": "rust (ubuntu-latest)", "conclusion": "success"},
+        {"id": 114469585937, "name": "minimum supported Rust (1.95)", "conclusion": "success"}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38139278404,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38139278404",
+      "run_attempt": 2,
+      "jobs": [
+        {"id": 114471172539, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success", "attempt": 2},
+        {"id": 114471173210, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success", "attempt": 2},
+        {"id": 114471173475, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success", "attempt": 2}
+      ],
+      "first_attempt": {
+        "windows_job_id": 114469585768,
+        "conclusion": "failure",
+        "cause": "Windows UI Automation did not find the Close source preview control. The app and main vault controls were present in the report.",
+        "artifact_id": 11702039859
+      },
+      "retry": "GitHub reran the failed job on the same source SHA; the Windows round-trip passed on attempt 2. Linux and macOS round-trip jobs also passed."
+    }
+  },
+  "local_executable_validation": "none",
+  "accepted_scope": "Partial C09 settings/style slice only. C09 and C09.1 remain pending."
+}

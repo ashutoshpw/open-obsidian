@@ -3690,3 +3690,20 @@ CI command. Exact run/job results are in
 from its closure. The follow-up source SHA and exact-SHA CI results are
 pending. C09 and C09.1 remain pending. No local tests, builds, formatters,
 validators, or application launches were run.
+
+## 2026-10-11T12:44:04Z — R2.8.82 source validation passed
+
+Implementation SHA `8c1ae9f4300f113b54e3cc02073f7af2dda49514` passed all seven required GitHub Actions workflows:
+inventory, quality, desktop build, plugin renderer, loaded plugins, Rust CI
+(including Rust 1.95), and the Linux/macOS/Windows Obsidian round-trip. The
+first Windows round-trip attempt could not find the Close source preview
+control; GitHub reran the failed job on the same SHA and attempt 2 passed.
+Exact workflow and job IDs, URLs, and retry details are recorded in
+`evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json`. R2.8.82 is accepted as a partial C09 settings/style slice; C09
+and C09.1 remain pending.
+
+The next action is a documentation-only tracker checkpoint for the exact-SHA
+results, followed by the six required GitHub workflows. Parallel read-only
+research is underway for the next bounded candidate, a vault `hotkeys.json`
+data-only projection kept separate from app-owned shortcut dispatch. No local
+tests, builds, formatters, validators, or application launches were run.
