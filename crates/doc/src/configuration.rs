@@ -86,9 +86,26 @@ pub fn parse_appearance_settings(raw: &Map<String, Value>) -> AppearanceSettings
 fn optional_string(value: Option<&Value>) -> Option<String> {
     value
         .and_then(Value::as_str)
-        .map(str::trim)
+        .map(|value| value.trim_matches(is_ecmascript_whitespace))
         .filter(|value| !value.is_empty())
         .map(str::to_owned)
+}
+
+fn is_ecmascript_whitespace(character: char) -> bool {
+    matches!(
+        character,
+        '\u{0009}'..='\u{000D}'
+            | '\u{0020}'
+            | '\u{00A0}'
+            | '\u{1680}'
+            | '\u{2000}'..='\u{200A}'
+            | '\u{2028}'
+            | '\u{2029}'
+            | '\u{202F}'
+            | '\u{205F}'
+            | '\u{3000}'
+            | '\u{FEFF}'
+    )
 }
 
 #[cfg(test)]

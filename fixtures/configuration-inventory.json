@@ -122,6 +122,23 @@
         "accentColor": null,
         "baseFontSize": null
       }
+    },
+    {
+      "source": {
+        "mode": "\uFEFF DARK\u00A0",
+        "theme": "\uFEFF Solarized \uFEFF",
+        "cssTheme": "\uFEFF",
+        "enabledCssSnippets": ["\uFEFF Minimal \uFEFF", "Minimal", "\u0085preserved\u0085"],
+        "accentColor": "\uFEFF #3366ff \uFEFF",
+        "baseFontSize": 14
+      },
+      "expected": {
+        "mode": "dark",
+        "cssTheme": "Solarized",
+        "enabledCssSnippets": ["Minimal", "\u0085preserved\u0085"],
+        "accentColor": "#3366ff",
+        "baseFontSize": 14
+      }
     }
   ],
   "expected": {

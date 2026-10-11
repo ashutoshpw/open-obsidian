@@ -52,12 +52,7 @@ impl VaultRoot {
                 continue;
             };
             result.folders.push(name);
-            discover_directory(
-                self,
-                &directory,
-                &mut result.json,
-                &mut result.appearance,
-            )?;
+            discover_directory(self, &directory, &mut result.json, &mut result.appearance)?;
         }
         Ok(result)
     }

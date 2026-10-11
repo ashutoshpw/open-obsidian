@@ -3398,3 +3398,23 @@ configuration bytes and unknown keys authoritative, and does not apply CSS or
 modify the vault. C09 remains pending for broader appearance/theme and
 app-metadata work; C09.1 remains pending for its plugin-write policy. No local
 tests, builds, formatters, validators, or application launch were run.
+
+## 2026-10-11T09:45:01Z — R2.8.79 attempt 1 review
+
+Source SHA `35719d51be1cbc91ee71c72a1c2a45edb7fac253` completed all seven
+required workflows. Migration inventory 38128877217 failed because the
+configuration fixture changed without its baseline digest being reconciled.
+Rust CI 38128877234 failed on Ubuntu, macOS, Windows, and Rust 1.95 because
+`AppearanceMode` was missing from the vault test-module imports; Ubuntu also
+reported rustfmt layout changes in `crates/vault/src/configuration.rs` and
+`crates/vault/src/lib.rs`. Quality 38128877259, desktop build 38128877243,
+plugin renderer 38128877236, loaded-plugin workflows 38128877246, and Obsidian
+round-trip 38128877245 passed. The round-trip jobs passed on Linux, macOS, and
+Windows. Full job IDs and findings are in
+`evidence/r2.8.79-attempt-1-35719d5.json`.
+
+Applied the reported import and formatting corrections and updated the
+configuration fixture digest in the migration inventory. The ECMAScript trim
+parity fixture now covers BOM trimming and U+0085 preservation. These changes
+will be committed and pushed as a small corrective phase for a fresh exact-SHA
+GitHub Actions run. No local tests, builds, formatters, or validators were run.

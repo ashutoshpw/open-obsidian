@@ -3,10 +3,10 @@
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
     AppearanceMode, AppearanceSettings, LinkKind, LinkReference, LinkRenameAction,
-    LinkResolution, LinkResolutionStatus,
-    LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
-    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, ThreeWayMergeResult,
-    TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
+    LinkResolution, LinkResolutionStatus, LinkSubpathSlice, LinkSubpathStatus,
+    MarkdownPreviewAnalysis, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, MergeConflict,
+    MergeStatus, ThreeWayMergeResult, TransclusionBlockReason, TransclusionGuard,
+    analyze_markdown_preview,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
@@ -2094,7 +2094,8 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES,
+        AppearanceMode, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES,
         MarkdownSource, TransclusionBlockReason, VaultError, VaultHistoryKind,
         VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest, sha256_hex,
     };

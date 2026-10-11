@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.79 / C09 typed appearance settings projection",
+  "attempt": 1,
+  "tested_source_sha": "35719d51be1cbc91ee71c72a1c2a45edb7fac253",
+  "recorded_at": "2026-10-11T09:45:01Z",
+  "conclusion": "not_accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38128877217,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877217",
+      "conclusion": "failure",
+      "jobs": {
+        "inventory": {
+          "job_id": 114438870510,
+          "conclusion": "failure",
+          "finding": "Baseline file changed without inventory reconciliation: fixtures/configuration-inventory.json."
+        }
+      }
+    },
+    "quality": {
+      "run_id": 38128877259,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877259",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114438870890, "conclusion": "success"},
+        "macos": {"job_id": 114438871108, "conclusion": "success"},
+        "ubuntu": {"job_id": 114438871137, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38128877243,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877243",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114438870834, "conclusion": "success"},
+        "windows": {"job_id": 114438870947, "conclusion": "success"},
+        "ubuntu": {"job_id": 114438870975, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38128877236,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877236",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114438870697, "conclusion": "success"},
+        "macos": {"job_id": 114438870843, "conclusion": "success"},
+        "windows": {"job_id": 114438870870, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38128877246,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877246",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114438870895, "conclusion": "success"},
+        "macos": {"job_id": 114438870969, "conclusion": "success"},
+        "ubuntu": {"job_id": 114438871056, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38128877234,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877234",
+      "conclusion": "failure",
+      "jobs": {
+        "minimum_supported_rust_1_95": {
+          "job_id": 114438870589,
+          "conclusion": "failure",
+          "findings": [
+            "The vault test module references AppearanceMode without importing it (E0433, crates/vault/src/lib.rs:2626).",
+            "The locked Rust 1.95.0 workspace test command failed."
+          ]
+        },
+        "macos": {
+          "job_id": 114438870712,
+          "conclusion": "failure",
+          "finding": "Workspace test compilation failed because AppearanceMode was not imported in the vault test module."
+        },
+        "ubuntu": {
+          "job_id": 114438870830,
+          "conclusion": "failure",
+          "findings": [
+            "cargo fmt --all -- --check reported formatting changes in crates/vault/src/configuration.rs and crates/vault/src/lib.rs.",
+            "Workspace test compilation failed because AppearanceMode was not imported in the vault test module."
+          ]
+        },
+        "windows": {
+          "job_id": 114438870835,
+          "conclusion": "failure",
+          "finding": "Workspace test compilation failed because AppearanceMode was not imported in the vault test module."
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38128877245,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38128877245",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114438870869, "conclusion": "success"},
+        "macos": {"job_id": 114438871060, "conclusion": "success"},
+        "ubuntu": {"job_id": 114438871119, "conclusion": "success"}
+      }
+    }
+  },
+  "corrections_prepared_from_ci": [
+    "Import AppearanceMode into the vault test module.",
+    "Apply the rustfmt layout reported by the Ubuntu Rust CI job.",
+    "Reconcile the configuration-inventory.json fixture digest in the migration inventory after adding the ECMAScript whitespace parity case."
+  ],
+  "acceptance_status": "The typed appearance projection remains unaccepted until all seven required workflows pass on a corrected exact source SHA. No local tests, builds, formatters, or validators were run."
+}
