@@ -3817,3 +3817,36 @@ SHA and `status: passed`; report and artifact hashes are recorded in
 by GitHub are corrected locally. R2.8.84 remains pending until a fresh exact
 source SHA passes all seven workflows. C09 and C09.1 remain pending. No local
 tests, builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T13:45:10Z — R2.8.84 attempt 2 pushed for CI
+
+Formatting-only correction source SHA
+`16b5f362ba2ca922bcac4a492248e09a7dbfcd8f` was pushed to `origin/main`.
+The exact-SHA workflow runs are inventory `38144412216`, quality
+`38144412181`, desktop build `38144412227`, plugin renderer `38144412219`,
+loaded plugins `38144412166`, Rust CI `38144412174`, and vault round-trip
+`38144412179`. Results are pending. R2.8.84 remains in progress; C09 and C09.1
+remain pending. No local tests, builds, formatters, validators, or application
+launches were run.
+
+
+## 2026-10-11T13:55:34Z — R2.8.84 accepted; tracker checkpoint next
+
+The formatting-correction source SHA
+`16b5f362ba2ca922bcac4a492248e09a7dbfcd8f` passed all seven required
+GitHub Actions workflows. Rust CI passed on Ubuntu, macOS, and Windows, plus
+the Rust 1.95 job. The pinned Obsidian 1.14.4 round-trip passed on Linux,
+macOS, and Windows. Exact run and job IDs, round-trip artifact IDs and archive
+digests, report hashes, and CI limitations are in
+`evidence/r2.8.84-attempt-2-16b5f36.json`.
+
+Each round-trip report records this exact source SHA, passed status, and
+unchanged non-workspace vault paths after reopen. The macOS report records
+initial `app.ron` persistence; app data remained separate from the vault and
+unchanged after the later picker baseline and close. No local executable
+validation was run.
+
+R2.8.84 is accepted as a partial C09 app-settings projection. C09 and C09.1
+remain pending. The documentation-only tracker checkpoint is next; the passed
+path-filtered round-trip remains covered by implementation SHA
+`16b5f362ba2ca922bcac4a492248e09a7dbfcd8f`.
