@@ -3309,3 +3309,18 @@ OSes, but Ubuntu formatting failed on the six CI-reported hunks and macOS and
 Windows Clippy rejected the redundant closure. Inventory also failed on the
 extra state brace. This attempt is not accepted; the CI-directed corrections
 are ready for a new exact-SHA push. No local executable validation was run.
+
+### R2.8.77 / C08.1 accepted on 9de1895
+
+The corrected implementation SHA `9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5`
+passed all seven required GitHub Actions workflows: inventory 38123850648,
+quality 38123850670, desktop build 38123850723, plugin renderer 38123850656,
+loaded-plugin workflows 38123850621, Rust CI 38123850685, and Obsidian
+round-trip 38123850667. All matrix jobs passed, including the Rust 1.95.0
+locked workspace test job (114423978108). Windows' first round-trip attempt
+timed out while waiting for the renamed-note source preview; rerunning that
+job on the same SHA passed (114425824311). No source changes were made between
+the two Windows attempts. Successful round-trip artifact IDs and digests are
+recorded in `evidence/r2.8.77-c08.1-9de1895.json` alongside all run/job IDs and
+the failed first Windows artifact. C08.1 and MIG-004 now pass on this source
+SHA; parent C08 remains pending. No local executable validation was run.

@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.77 / C08.1 external file opening",
+  "attempt": 2,
+  "tested_source_sha": "9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5",
+  "recorded_at": "2026-10-11T08:29:32Z",
+  "conclusion": "passed",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38123850648,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850648",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": {"job_id": 114423978013, "conclusion": "success"}
+      }
+    },
+    "quality": {
+      "run_id": 38123850670,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850670",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114423978244, "conclusion": "success"},
+        "ubuntu": {"job_id": 114423978325, "conclusion": "success"},
+        "macos": {"job_id": 114423978329, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38123850723,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850723",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114423978200, "conclusion": "success"},
+        "macos": {"job_id": 114423978337, "conclusion": "success"},
+        "windows": {"job_id": 114423978439, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38123850656,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850656",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114423978060, "conclusion": "success"},
+        "ubuntu": {"job_id": 114423978102, "conclusion": "success"},
+        "windows": {"job_id": 114423978222, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38123850621,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850621",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114423977884, "conclusion": "success"},
+        "windows": {"job_id": 114423977966, "conclusion": "success"},
+        "macos": {"job_id": 114423978041, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38123850685,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850685",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114423978040, "conclusion": "success"},
+        "macos": {"job_id": 114423978150, "conclusion": "success"},
+        "windows": {"job_id": 114423978144, "conclusion": "success"},
+        "minimum_supported_rust_1_95": {
+          "job_id": 114423978108,
+          "conclusion": "success",
+          "toolchain": "Rust 1.95.0",
+          "command": "cargo test --workspace --locked"
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38123850667,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123850667",
+      "run_attempt": 2,
+      "conclusion": "success",
+      "obsidian_version": "1.14.4",
+      "jobs": {
+        "linux": {"job_id": 114425824965, "conclusion": "success"},
+        "windows": {"job_id": 114425824311, "conclusion": "success", "rerun": true},
+        "macos": {"job_id": 114425825658, "conclusion": "success"}
+      },
+      "same_sha_retry": {
+        "initial_windows_job_id": 114423977913,
+        "initial_conclusion": "failure",
+        "finding": "The Windows job timed out waiting for the source preview through the renamed note path. The failed job was rerun without changing source and passed on the exact same SHA.",
+        "rerun_job_id": 114425824311,
+        "rerun_conclusion": "success"
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11696925132,
+          "sha256_digest": "c5b8d293632469fd01390a632341d39323b75538f1cca19a3c0a457a13cf1b80"
+        },
+        "windows": {
+          "artifact_id": 11696855974,
+          "sha256_digest": "8ee244caf29df373e70ef15142cd624bc28e56ca396183eeee83b5bd97cbfb7f"
+        },
+        "macos": {
+          "artifact_id": 11696363031,
+          "sha256_digest": "fe9130b3da63ed0ab43e03643ee5f615140eaa6830bfcfaafae2a766654489e5"
+        },
+        "initial_failed_windows": {
+          "artifact_id": 11696303061,
+          "sha256_digest": "0b23c555e99c77f9997c8c963f0036265c1cf08f9d52d1029c73053b51a50aac"
+        }
+      }
+    }
+  },
+  "acceptance": {
+    "c08_1": "The confined resolver, immediate revalidation and canonical path handoff passed the Rust workspace tests on the three-OS stable matrix. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, Rust CI and the Obsidian round-trip workflow passed on this exact source SHA.",
+    "mig_004": "The locked workspace test suite passed under Rust 1.95.0 on Linux; the stable Rust matrix and desktop build passed on Linux, macOS and Windows.",
+    "parent_c08": "Remains pending; this evidence accepts C08.1 only."
+  },
+  "known_limitation": "The cross-platform default-app API consumes a canonical path. A race between final vault revalidation and the operating system consuming that path cannot be excluded; this slice does not claim handle-based TOCTOU protection.",
+  "validation_policy": "All executable testing, formatting, linting, builds and app validation were performed by GitHub Actions. No local executable validation was run.",
+  "supersedes_attempt": "evidence/r2.8.77-c08.1-attempt-1-859b411.json"
+}

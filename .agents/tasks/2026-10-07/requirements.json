@@ -3333,9 +3333,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r2.8.77-c08.1-9de1895.json"
+      ],
+      "tested_source_tree": "9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",
@@ -9930,9 +9932,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r2.8.77-c08.1-9de1895.json"
+      ],
+      "tested_source_tree": "9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D17",
@@ -10535,7 +10539,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-08T22:30:40+00:00",
+  "reviewed_at": "2026-10-11T08:29:32+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,
