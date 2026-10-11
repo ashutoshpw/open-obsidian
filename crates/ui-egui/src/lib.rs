@@ -2182,16 +2182,15 @@ impl OpenObsidianApp {
         match result {
             Some(Ok(message)) => {
                 self.link_receiver = None;
-                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
-                    if let (Ok(resolutions), Ok(note_embeds)) =
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                    && let (Ok(resolutions), Ok(note_embeds)) =
                         (&message.resolutions, &message.note_embeds)
-                    {
-                        log_ci_link_resolution_results(
-                            self.link_source_path.as_deref(),
-                            resolutions,
-                            note_embeds,
-                        );
-                    }
+                {
+                    log_ci_link_resolution_results(
+                        self.link_source_path.as_deref(),
+                        resolutions,
+                        note_embeds,
+                    );
                 }
                 match message.resolutions {
                     Ok(resolutions) => {
