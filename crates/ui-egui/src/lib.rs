@@ -2057,10 +2057,12 @@ impl OpenObsidianApp {
         }
         let note_preview_guard = self.note_source_preview.as_ref().and_then(|preview| {
             let revision = preview.revision_sha256.as_ref()?;
+            let embed_state_is_clear =
+                self.note_embed_report.is_none() && self.note_embed_error.is_none();
             let last_write_matches = self
                 .last_note_preview_write
                 .as_ref()
-                .is_none_or(|(path, written_revision)| {
+                .map_or(embed_state_is_clear, |(path, written_revision)| {
                     path == &preview.relative_path && written_revision == revision
                 });
             last_write_matches.then(|| (preview.relative_path.clone(), revision.clone()))
