@@ -3956,3 +3956,32 @@ data-only settings slice; C09 and C09.1 remain pending. R2.8.86 will make the
 refresh preserve an open preview only while its path and revision still match.
 No local tests, builds, formatters, validators, or application launches were
 run.
+
+## 2026-10-11T15:19:47Z — R2.8.85 checkpoint and R2.8.86 acceptance
+
+The R2.8.85 tracker checkpoint `9558a9a09c5bf9f9f9778c1b6c1679259290b66d`
+passed all six documentation workflows on the exact SHA. The source SHA
+`26c3363b1bc07eac10c56a7a258b914bc36f67f3` had already passed its seven
+required workflows, including the three-platform Obsidian 1.14.4 round-trip.
+Run and job IDs are in `evidence/r2.8.85-tracker-checkpoint-9558a9a.json`.
+
+R2.8.86 preserves an open read-only note preview during refresh when the
+previewed file's path and disk revision are unchanged. External note edits or
+deletions still clear it, and an active embed report/error retains the prior
+attachment invalidation behavior. The first source attempt failed nine
+attachment-embed UI cases because it preserved stale previews too broadly. The
+second attempt restored those cases and passed workspace tests, but Ubuntu
+rustfmt reported two layout changes. The formatted correction
+`a7d718c9d216df26776c2022a29d6d9e1babb66d` passed all seven required workflows
+on the exact SHA, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95,
+and the pinned Obsidian round-trip on all three platforms. Exact run/job IDs
+and artifact digests are in `evidence/r2.8.86-attempt-3-a7d718c.json`.
+
+R2.8.86 is accepted as a bounded C01 preview-refresh slice. C01 and C01.2 remain
+pending because this case does not close their broader read-only acceptance
+matrix. C09 and C09.1 also remain pending. The C09.1 Rust policy owner is
+corrected to `crates/plugins`; R2.8.87 will add a pure deny-only
+`configuration.write` policy and fixture-backed denial record coverage. It
+will not claim full enforcement until Rust discovery and enablement callsites
+route through the policy and present the decision. No local tests, builds,
+formatters, validators, or application launches were run.

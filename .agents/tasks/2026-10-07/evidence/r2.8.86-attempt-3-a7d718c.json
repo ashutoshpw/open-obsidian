@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.86",
+  "source_sha": "a7d718c9d216df26776c2022a29d6d9e1babb66d",
+  "attempt": 3,
+  "outcome": "accepted",
+  "accepted_scope": "Preserve the open read-only note preview across a refresh when the on-disk note revision is unchanged. Clear it when the note changes or disappears, and retain attachment-embed invalidation when embed state is active. This is a focused C01 preview-refresh behavior slice; C01 and C01.2 remain pending.",
+  "implementation_summary": [
+    "The refresh snapshots the selected preview path and revision and preserves that preview only while the disk revision remains unchanged.",
+    "New read-only previews without a prior preview-write marker can now survive a refresh.",
+    "When a note embed report or embed error is active, refresh retains the established invalidation behavior for attachment changes.",
+    "The existing post-write preview guard remains in place.",
+    "Focused regression coverage is egui_refresh_preserves_unchanged_preview_draft_and_clears_stale_preview."
+  ],
+  "attempt_history": [
+    {
+      "attempt": 1,
+      "source_sha": "c1c035e575b0a23ea0a0f73ad321b6c3a3a4416c",
+      "outcome": "not_accepted",
+      "workflow_runs": {
+        "rust_ci": {
+          "id": 38149377830,
+          "run_conclusion": "cancelled",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149377830",
+          "jobs": [
+            {"id": 114499420989, "name": "rust (ubuntu-latest)", "conclusion": "failure"},
+            {"id": 114499420998, "name": "rust (windows-latest)", "conclusion": "failure"},
+            {"id": 114499421059, "name": "rust (macos-latest)", "conclusion": "failure"},
+            {"id": 114499420921, "name": "minimum supported Rust (1.95)", "conclusion": "cancelled"}
+          ]
+        }
+      },
+      "finding": "The first implementation cleared previews too broadly. CI reported nine attachment-embed regression failures: those cases load an embed report or error before refreshing and require stale preview invalidation after attachment changes. The active Rust CI jobs had 94 passing tests and nine failures."
+    },
+    {
+      "attempt": 2,
+      "source_sha": "e1f538e73b53d9adca5b07dd55bce4ff96dd3d4b",
+      "outcome": "not_accepted",
+      "workflow_runs": {
+        "rust_ci": {
+          "id": 38149680462,
+          "run_conclusion": "cancelled",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149680462",
+          "jobs": [
+            {"id": 114500333307, "name": "minimum supported Rust (1.95)", "conclusion": "cancelled"},
+            {"id": 114500333409, "name": "rust (macos-latest)", "conclusion": "success"},
+            {"id": 114500333419, "name": "rust (windows-latest)", "conclusion": "success"},
+            {"id": 114500333550, "name": "rust (ubuntu-latest)", "conclusion": "failure"}
+          ]
+        },
+        "vault_roundtrip": "The queued round-trip workflow was cancelled by workflow concurrency before its result was available."
+      },
+      "finding": "The embed-state guard restored the nine attachment-embed cases and workspace tests passed on Ubuntu, macOS, and Windows. Ubuntu rustfmt reported two source layout changes, so this SHA was not accepted."
+    },
+    {
+      "attempt": 3,
+      "source_sha": "a7d718c9d216df26776c2022a29d6d9e1babb66d",
+      "outcome": "accepted",
+      "finding": "The exact source SHA passed all seven required workflows on the first attempt; every job concluded success."
+    }
+  ],
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38149891488,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891488",
+      "jobs": [
+        {"id": 114500959093, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38149891547,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891547",
+      "jobs": [
+        {"id": 114500959648, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114500959753, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114500959800, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38149891611,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891611",
+      "jobs": [
+        {"id": 114500959768, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114500959949, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114500959960, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38149891602,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891602",
+      "jobs": [
+        {"id": 114500960394, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114500960535, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114500960629, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38149891483,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891483",
+      "jobs": [
+        {"id": 114500959233, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114500959418, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114500959423, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38149891489,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891489",
+      "jobs": [
+        {"id": 114500959126, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114500959280, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114500959310, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114500959313, "name": "rust (ubuntu-latest)", "conclusion": "success"}
+      ],
+      "checks": "Formatting, workspace tests, Clippy, dependency layers, native builds, and locked Rust 1.95 tests passed on GitHub Actions."
+    },
+    "vault_roundtrip": {
+      "id": 38149891585,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38149891585",
+      "jobs": [
+        {"id": 114501343147, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {"id": 114501343255, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"},
+        {"id": 114501343326, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"}
+      ],
+      "artifacts": [
+        {
+          "name": "obsidian-vault-roundtrip-Linux-a7d718c9d216df26776c2022a29d6d9e1babb66d",
+          "runner_os": "Linux",
+          "status": "passed",
+          "source_sha": "a7d718c9d216df26776c2022a29d6d9e1babb66d",
+          "reference_version": "1.14.4",
+          "artifact_id": 11706553657,
+          "artifact_sha256": "ac493f365e35dc8b0b139ff94a1f6c7699d6fb1b14c3bf03ec5fcc9765635a5a"
+        },
+        {
+          "name": "obsidian-vault-roundtrip-Windows-a7d718c9d216df26776c2022a29d6d9e1babb66d",
+          "runner_os": "Windows",
+          "status": "passed",
+          "source_sha": "a7d718c9d216df26776c2022a29d6d9e1babb66d",
+          "reference_version": "1.14.4",
+          "artifact_id": 11706273802,
+          "artifact_sha256": "33aabfb48f80aa0ec4bfe4a1584cb88681fdb7277923c58abfe5bd5d4adf65e0"
+        },
+        {
+          "name": "obsidian-vault-roundtrip-macOS-a7d718c9d216df26776c2022a29d6d9e1babb66d",
+          "runner_os": "macOS",
+          "status": "passed",
+          "source_sha": "a7d718c9d216df26776c2022a29d6d9e1babb66d",
+          "reference_version": "1.14.4",
+          "artifact_id": 11705533420,
+          "artifact_sha256": "c577accbde75e485d40108a88fa35f8b77a7f99b577d2075bb8746c413c93d8d"
+        }
+      ],
+      "acceptance_limits": [
+        "Reports cover the pinned Obsidian 1.14.4 synthetic-vault scenarios on the configured Linux, macOS, and Windows runners; they do not certify every C01 workflow or general plugin/theme compatibility.",
+        "The first implementation attempt failed the attachment-embed invalidation tests; this accepted SHA preserves those existing tests through the embed-state guard."
+      ]
+    }
+  },
+  "local_executable_validation": "none"
+}
