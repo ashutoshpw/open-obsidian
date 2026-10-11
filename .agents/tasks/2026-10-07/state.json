@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T09:57:16Z",
+  "updated_at": "2026-10-11T10:08:49Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "b61541bd8f6842d600ad264e72e29b03759857ab",
   "current_milestone": "R2.8.79",
-  "next_action": "R2.8.79 attempt 2 completed on a4406a7aaa57deac9b5716cd88a225c05c371112. Record the failed Rust CI findings, then push the mode-trim and rustfmt corrections to main for a fresh exact-SHA run of all seven required workflows. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.79 source SHA a4406a7aaa57deac9b5716cd88a225c05c371112 is pushed. Six of seven workflows passed, including all three Obsidian round-trip jobs; Rust CI failed on the BOM mode fixture, and Ubuntu also reported formatting differences. Corrective changes and attempt evidence are prepared locally. No local executable validation was run.",
+  "next_action": "R2.8.79 passed all seven required workflows on exact source SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b. Record the tracker checkpoint in a documentation-only commit, then start R2.8.80 as a separate read-only theme/snippet CSS asset inventory slice. Keep parent C09 and C09.1 pending.",
+  "push_status": "R2.8.79 source SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b is pushed and all seven required GitHub Actions workflows passed, including Rust 1.95 and Linux/macOS/Windows Obsidian round-trip. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -27006,11 +27006,12 @@
       }
     },
     "R2.8.79": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "b61541bd8f6842d600ad264e72e29b03759857ab",
       "implementation_commits": [
         "35719d51be1cbc91ee71c72a1c2a45edb7fac253",
-        "a4406a7aaa57deac9b5716cd88a225c05c371112"
+        "a4406a7aaa57deac9b5716cd88a225c05c371112",
+        "e3de21b265ad0de3f0ae213c7d314fe66f45636b"
       ],
       "ci_attempts": [
         {
@@ -27062,6 +27063,31 @@
           },
           "findings": "Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the Linux/macOS/Windows Obsidian round-trip passed. Rust CI failed on all platforms and Rust 1.95 because the fixture-backed projection returned Unknown rather than Dark for the BOM-prefixed mode; Ubuntu also reported rustfmt reflow changes in crates/vault/src/lib.rs. Round-trip artifact metadata and exact job details are in the attempt evidence.",
           "evidence": "evidence/r2.8.79-attempt-2-a4406a7.json"
+        },
+        {
+          "attempt": 3,
+          "implementation_sha": "e3de21b265ad0de3f0ae213c7d314fe66f45636b",
+          "conclusion": "accepted",
+          "workflow_runs": {
+            "inventory": 38130253619,
+            "quality": 38130253546,
+            "desktop_build": 38130253592,
+            "plugin_renderer": 38130253593,
+            "loaded_plugin_workflows": 38130253618,
+            "rust_ci": 38130253599,
+            "obsidian_vault_roundtrip": 38130253621
+          },
+          "job_conclusions": {
+            "inventory": {"114442906419": "success"},
+            "quality": {"114442906585": "success", "114442906750": "success", "114442906761": "success"},
+            "desktop_build": {"114442906468": "success", "114442906560": "success", "114442906686": "success"},
+            "plugin_renderer": {"114442906604": "success", "114442906707": "success", "114442906815": "success"},
+            "loaded_plugin_workflows": {"114442907066": "success", "114442907248": "success", "114442907357": "success"},
+            "rust_ci": {"114442906374": "success", "114442906548": "success", "114442906556": "success", "114442906598": "success"},
+            "obsidian_vault_roundtrip": {"114442907147": "success", "114442907255": "success", "114442907271": "success"}
+          },
+          "findings": "All seven required GitHub Actions workflows passed on exact source SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b, including locked Rust 1.95.0 workspace tests and Obsidian 1.14.4 round-trip on Linux, macOS, and Windows. The typed appearance projection is accepted as a partial C09 slice; broader C09 and C09.1 remain pending.",
+          "evidence": "evidence/r2.8.79-c09-appearance-e3de21b.json"
         }
       ],
       "scope": "Add a typed, read-only projection of explicitly supported appearance.json settings in crates/doc and expose it from vault configuration discovery. Retain exact source bytes and unknown JSON keys; do not apply CSS or modify vault files.",
@@ -27080,7 +27106,7 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Push the targeted ECMAScript mode-trimming and rustfmt corrections, then capture every required GitHub Actions job on the corrected exact source SHA."
+      "next_action": "Record the successful R2.8.79 tracker checkpoint, then start R2.8.80 as a read-only theme/snippet CSS asset inventory slice; keep C09 and C09.1 pending."
     }
   },
   "ci_preparation": {

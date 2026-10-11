@@ -3437,3 +3437,27 @@ round-trip artifact IDs and digests are also recorded in its evidence file.
 These changes will be pushed as a small correction for a fresh exact-SHA run
 of all seven workflows. No local tests, builds, formatters, or validators were
 run.
+
+## 2026-10-11T10:08:49Z — R2.8.79 accepted
+
+Corrected source SHA `e3de21b265ad0de3f0ae213c7d314fe66f45636b` passed all
+seven required workflows: inventory 38130253619, quality 38130253546, desktop
+build 38130253592, plugin renderer 38130253593, loaded-plugin workflows
+38130253618, Rust CI 38130253599, and Obsidian round-trip 38130253621. Rust CI
+passed on Ubuntu, macOS, Windows, and Rust 1.95.0; Obsidian 1.14.4 round-trip
+passed on Linux, macOS, and Windows. Exact job IDs and artifact digests are in
+`evidence/r2.8.79-c09-appearance-e3de21b.json`.
+
+R2.8.79 is complete as a partial C09 mapping slice. The supported appearance
+fields are projected into typed settings while raw configuration bytes and
+unknown keys remain authoritative. C09 remains pending for safe CSS/theme
+analysis, broader supported settings, and app-metadata policy; C09.1 remains
+pending for its mediated plugin-write policy. No local tests, builds,
+formatters, validators, or application launch were run.
+
+Parallel read-only reviews recommend R2.8.80 as a direct theme/snippet CSS
+asset inventory in `crates/vault`: retain vault-relative paths, exact bytes,
+kind, and SHA-256; include only direct regular `.css` files in real
+`themes/`/`snippets/` folders; exclude symlinks, nested assets, and non-CSS
+files. Keep parsing and CSS application in later slices. Reconcile the fixture
+digest in `inventory.json`, and keep C09 and C09.1 pending.

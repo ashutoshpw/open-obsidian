@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.79 / C09 typed appearance settings projection",
+  "attempt": 3,
+  "tested_source_sha": "e3de21b265ad0de3f0ae213c7d314fe66f45636b",
+  "recorded_at": "2026-10-11T10:08:49Z",
+  "conclusion": "accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38130253619,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253619",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 114442906419, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 38130253546,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253546",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114442906585, "conclusion": "success"},
+        "ubuntu": {"job_id": 114442906750, "conclusion": "success"},
+        "macos": {"job_id": 114442906761, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38130253592,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253592",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114442906468, "conclusion": "success"},
+        "ubuntu": {"job_id": 114442906560, "conclusion": "success"},
+        "macos": {"job_id": 114442906686, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38130253593,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253593",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114442906604, "conclusion": "success"},
+        "windows": {"job_id": 114442906707, "conclusion": "success"},
+        "ubuntu": {"job_id": 114442906815, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38130253618,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253618",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114442907066, "conclusion": "success"},
+        "windows": {"job_id": 114442907248, "conclusion": "success"},
+        "ubuntu": {"job_id": 114442907357, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38130253599,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253599",
+      "conclusion": "success",
+      "jobs": {
+        "minimum_supported_rust_1_95": {
+          "job_id": 114442906374,
+          "conclusion": "success",
+          "toolchain": "Rust 1.95.0",
+          "command": "cargo test --workspace --locked"
+        },
+        "macos": {"job_id": 114442906548, "conclusion": "success"},
+        "ubuntu": {"job_id": 114442906556, "conclusion": "success"},
+        "windows": {"job_id": 114442906598, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38130253621,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38130253621",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114442907147, "conclusion": "success"},
+        "macos": {"job_id": 114442907255, "conclusion": "success"},
+        "linux": {"job_id": 114442907271, "conclusion": "success"}
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11699270145,
+          "name": "obsidian-vault-roundtrip-Linux-e3de21b265ad0de3f0ae213c7d314fe66f45636b",
+          "size_bytes": 8348228,
+          "sha256_digest": "9140aefda0b3b0e4dd9da54e3c50c5d1c3d983b660903e04e8e825ba5e8221b1"
+        },
+        "macos": {
+          "artifact_id": 11697978697,
+          "name": "obsidian-vault-roundtrip-macOS-e3de21b265ad0de3f0ae213c7d314fe66f45636b",
+          "size_bytes": 9384273,
+          "sha256_digest": "d547d9fed59983537be062d2e55a12f535163a9f73225179ca63edffbb37d7b3"
+        },
+        "windows": {
+          "artifact_id": 11698918960,
+          "name": "obsidian-vault-roundtrip-Windows-e3de21b265ad0de3f0ae213c7d314fe66f45636b",
+          "size_bytes": 9488853,
+          "sha256_digest": "79b4b16c166919653e893a4af04b5a6862d08c6d849a1b79294bacff44418089"
+        }
+      }
+    }
+  },
+  "acceptance_status": "R2.8.79 is accepted as a partial C09 implementation slice: typed appearance projection passed all seven required GitHub Actions workflows on the exact source SHA. Parent C09 and C09.1 remain pending. CSS/theme inventory and analysis, broader settings, app-metadata policy, and mediated plugin-write policy remain separate work. No local executable validation was run."
+}
