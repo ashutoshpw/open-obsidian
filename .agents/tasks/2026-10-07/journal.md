@@ -3040,3 +3040,20 @@ The tracker commit `3b8ef4e` inventory run [38112305700](https://github.com/ashu
 ### R2.8.73 tracker checkpoint on `616920d`
 
 After correcting the missing commas reported by the first tracker inventory attempt, exact tracker SHA `616920d3f807672fbc72619f4560ba1f04f7ca8e` passed Rust migration inventory [run 38112650345, job 114391230743](https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650345). The five companion workflows triggered by the correction commit also passed: [quality](https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650355), [Rust CI](https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650405), [desktop build](https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650371), [plugin renderer](https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650333), and [loaded plugins](https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650351). Parallel groups ran successfully in the applicable workflows. The original image-resolution implementation remains accepted on `e78409a`; C01/C01.2 remain pending.
+
+### R2.8.74 audit — C01.2-42 selected
+
+The read-only reference-app audit found that C01.2-39 through C01.2-41 cover
+source preview/close, external Markdown note creation and refresh, and
+Obsidian-authored image embed resolution. Attachment removal is currently
+covered by synthetic egui behavior but has not been driven through the active
+desktop and reopened in Obsidian. The next slice removes the resolved image
+externally in the isolated CI vault, explicitly refreshes and re-resolves the
+embed, checks stale output and byte/snapshot safety, and verifies that the note
+link persists while the file remains absent after Obsidian reopen. C01.2-42
+remains pending exact-SHA GitHub Actions on Linux, macOS, and Windows.
+
+The linked GitHub Actions `parallel:` step feature is already implemented in
+the applicable workflows and has exact-SHA CI evidence; remaining single
+validation/setup flows have dependencies that do not admit a safe additional
+parallel group. No local executable validation was run.

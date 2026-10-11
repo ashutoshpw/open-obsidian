@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T04:52:06Z",
+  "updated_at": "2026-10-11T05:02:06Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e78409a4c721e63c866ee6b7fd4411d96c277ded",
-  "current_milestone": "R2.8.73",
-  "next_action": "Audit the remaining C01/C01.2 reference-app read-only gaps and define the next bounded matrix flow; keep both parent requirements pending until their broader acceptance criteria are met.",
+  "last_reconciled_head": "8d7ed2f0d657bf25defe06458101bd7d8234f619",
+  "current_milestone": "R2.8.74",
+  "next_action": "Implement the C01.2-42 pinned Obsidian reference-app flow for external image-attachment removal, refresh, fresh unresolved rendering, and reopen; validate only in GitHub Actions and keep C01/C01.2 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -25959,7 +25959,7 @@
       ],
       "evidence": "evidence/r2.8.73-c01.2-41-e78409a.json",
       "parallel_step_groups": "Native parallel groups in Rust CI, quality, desktop build, and Obsidian round-trip passed in these exact-SHA runs.",
-      "next_action": "Audit remaining C01/C01.2 read-only reference-app gaps and define the next bounded matrix flow.",
+      "next_action": "R2.8.73 is accepted. R2.8.74 adds the next bounded C01.2 reference-app flow for external image-attachment removal; keep parent C01/C01.2 pending.",
       "completed_at": "2026-10-11T04:38:32Z",
       "tracker_checkpoint_attempts": [
         {
@@ -26008,6 +26008,30 @@
         "conclusion": "success",
         "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112650345"
       }
+    },
+    "R2.8.74": {
+      "status": "in_progress",
+      "starting_sha": "8d7ed2f0d657bf25defe06458101bd7d8234f619",
+      "scope": "Against the Obsidian 1.14.4-authored vault, remove the rendered image attachment externally while OpenObsidian is active, refresh and re-resolve to prove stale image state clears, then reopen in Obsidian and verify the embed source persists while the file stays absent.",
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, begin from the successful C01.2-41 authored note/image state; remove only Assets/roundtrip image.png externally and prove the note bytes/embed source remain unchanged.",
+        "Exercise watcher settlement and the native manual refresh; prove there is no stale resolved count/image, and that fresh link/embed diagnostics are Unresolved, targetless, and not_rendered with the missing-attachment message visible.",
+        "Preserve exact post-removal vault snapshots and the separate app-data policy through re-resolution, picker cancellation, OpenObsidian close, and Obsidian 1.14.4 reopen; verify the authored embed remains in the note source and the image remains absent.",
+        "Pass all seven required GitHub Actions workflows on the exact implementation SHA; use no local executable validation.",
+        "Accept C01.2-42 only; keep parent C01/C01.2 pending until their broader acceptance criteria pass."
+      ],
+      "implementation_commits": [],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "evidence": "evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json",
+      "next_action": "Push the bounded harness change, inspect exact-SHA CI and cross-platform artifacts, then update acceptance and tracker evidence."
     }
   },
   "ci_preparation": {

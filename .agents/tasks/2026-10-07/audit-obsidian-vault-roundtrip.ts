@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import {execFileSync} from "node:child_process";
-import {lstat, mkdir, readFile, readdir, readlink, realpath, writeFile} from "node:fs/promises";
+import {lstat, mkdir, readFile, readdir, readlink, realpath, unlink, writeFile} from "node:fs/promises";
 import {createWriteStream} from "node:fs";
 import {join, relative, resolve, sep} from "node:path";
 import {spawn, type ChildProcess} from "node:child_process";
@@ -55,7 +55,7 @@ const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.8.73-C01.2-reference-app-image-embed-resolution",
+  milestone: "R2.8.74-C01.2-reference-app-image-attachment-removal",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -89,8 +89,8 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves read-only startup, source preview and close, external note creation followed by explicit UI refresh and preview, native image-embed link resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
-    "The deliberate external note creation is captured as a new baseline; all later OpenObsidian and Obsidian actions must preserve its exact bytes and the rest of the vault.",
+    "The run proves read-only startup, source preview and close, external note creation followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The deliberate external note creation and later attachment removal each establish a new baseline; all following OpenObsidian and Obsidian actions must preserve that baseline exactly.",
     "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -3379,6 +3379,224 @@ async function runReferenceImageEmbedResolution(
   await saveReport();
 }
 
+async function runReferenceImageAttachmentRemoval(
+  child: ChildProcess,
+  window: {window_id: string},
+  appDataRoot: string,
+  vaultBaseline: SnapshotEntry[],
+): Promise<SnapshotEntry[]> {
+  const open = report.openobsidian_open as Record<string, unknown>;
+  const fixture = report.fixture as Record<string, unknown>;
+  const authoredNotePath = fixture.authored_note_path;
+  if (typeof authoredNotePath !== "string" || authoredNotePath.length === 0) {
+    throw new Error("The pinned Obsidian authoring step did not record the authored note path before attachment removal");
+  }
+  const noteEntry = vaultBaseline.find((entry) => entry.path === authoredNotePath && entry.kind === "file");
+  const attachmentEntry = vaultBaseline.find((entry) => entry.path === attachmentPath && entry.kind === "file");
+  if (!noteEntry?.sha256 || !attachmentEntry?.sha256) {
+    throw new Error(`The authored note or its attachment is missing before external removal: note=${authoredNotePath}, attachment=${attachmentPath}`);
+  }
+
+  const removalReport: Record<string, unknown> = {
+    status: "in_progress",
+    selected_note_path: authoredNotePath,
+    selected_note_sha256: noteEntry.sha256,
+    attachment_path: attachmentPath,
+    attachment_sha256_before_removal: attachmentEntry.sha256,
+    expected_embed_source: noteEmbed,
+    expected_link_status_after_refresh: "Unresolved",
+    expected_embed_disposition_after_refresh: "not_rendered",
+  };
+  open.reference_image_attachment_removal = removalReport;
+
+  const refreshRequestCountBeforeRemoval = (await readOpenObsidianRefreshDiagnostics()).requests.length;
+  const vaultBeforeRemoval = await snapshotTree(vaultRoot);
+  ensureExactSnapshot(vaultBaseline, vaultBeforeRemoval, "OpenObsidian vault before deliberate external image-attachment removal");
+  const appDataBeforeRemoval = await snapshotTree(appDataRoot);
+  removalReport.vault_snapshot_before_external_removal = vaultBeforeRemoval;
+  removalReport.app_data_snapshot_before_external_removal = appDataBeforeRemoval;
+  await saveReport();
+
+  await unlink(join(vaultRoot, attachmentPath));
+  const vaultAfterExternalRemoval = await snapshotTree(vaultRoot);
+  const vaultChangesFromExternalRemoval = changedPaths(vaultBeforeRemoval, vaultAfterExternalRemoval);
+  if (
+    vaultChangesFromExternalRemoval.length !== 1
+    || vaultChangesFromExternalRemoval[0]?.path !== attachmentPath
+    || vaultChangesFromExternalRemoval[0]?.before?.sha256 !== attachmentEntry.sha256
+    || vaultChangesFromExternalRemoval[0]?.after !== undefined
+  ) {
+    throw new Error(`External attachment removal changed unexpected vault entries: ${JSON.stringify(vaultChangesFromExternalRemoval).slice(0, 6_000)}`);
+  }
+  const noteAfterRemoval = await readFile(join(vaultRoot, authoredNotePath));
+  const noteAfterRemovalSha256 = createHash("sha256").update(noteAfterRemoval).digest("hex");
+  if (noteAfterRemovalSha256 !== noteEntry.sha256 || !noteAfterRemoval.includes(Buffer.from(noteEmbed, "utf8"))) {
+    throw new Error(`External attachment removal changed the Obsidian-authored note or its embed source: ${authoredNotePath}`);
+  }
+  const appDataAfterExternalRemoval = await snapshotTree(appDataRoot);
+  ensureExactSnapshot(appDataBeforeRemoval, appDataAfterExternalRemoval, "Separate OpenObsidian app data during deliberate external image-attachment removal");
+  const expectedMarkdownCount = countMarkdownFiles(vaultAfterExternalRemoval);
+  removalReport.vault_snapshot_after_external_removal = vaultAfterExternalRemoval;
+  removalReport.vault_changes_from_external_removal = vaultChangesFromExternalRemoval;
+  removalReport.note_sha256_after_removal = noteAfterRemovalSha256;
+  removalReport.note_embed_source_preserved = true;
+  removalReport.expected_markdown_count_after_refresh = expectedMarkdownCount;
+  removalReport.app_data_snapshot_after_external_removal = appDataAfterExternalRemoval;
+  removalReport.app_data_unchanged_during_external_removal = true;
+  const vaultSnapshots = report.vault_snapshots as Record<string, unknown>;
+  vaultSnapshots.before_external_attachment_removal = vaultBeforeRemoval;
+  vaultSnapshots.after_external_attachment_removal = vaultAfterExternalRemoval;
+  await writeFile(join(reportDirectory, "vault-after-external-attachment-removal.json"), `${JSON.stringify(vaultAfterExternalRemoval, null, 2)}\n`);
+  await saveReport();
+
+  if (process.platform !== "win32") await delay(2_000);
+  const settledWatcherRefresh = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeRemoval,
+    expectedMarkdownCount,
+    false,
+  );
+  removalReport.watcher_refresh_settled_before_manual = {
+    settled_for_ms: settledWatcherRefresh.settled_for_ms,
+    latest_receiver_busy: settledWatcherRefresh.receiverStates.at(-1)?.busy ?? false,
+    latest_consumed_result: settledWatcherRefresh.consumedResults.at(-1) ?? null,
+  };
+  const refreshRequestCountBeforeManual = settledWatcherRefresh.requests.length;
+  removalReport.refresh_action = await clickManualRefreshUntilRequested(
+    child,
+    window.window_id,
+    refreshRequestCountBeforeManual,
+  );
+  const settledManualRefresh = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeManual,
+    expectedMarkdownCount,
+    true,
+  );
+  removalReport.manual_refresh_diagnostics = {
+    action_request: settledManualRefresh.requests.at(-1) ?? null,
+    result: settledManualRefresh.consumedResults.at(-1) ?? null,
+    receiver_busy_after_result: settledManualRefresh.receiverStates.at(-1)?.busy ?? false,
+    settled_for_ms: settledManualRefresh.settled_for_ms,
+  };
+
+  const refreshed = await waitFor("OpenObsidian to refresh after external image-attachment removal", async () => {
+    await delay(350);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-attachment-removal-refresh");
+    removalReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
+    return capture;
+  }, (capture) => (
+    ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
+    && new RegExp(`${expectedMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText)
+  ), 30_000);
+  removalReport.refreshed_markdown_count_visible = true;
+  removalReport.refresh_screenshot = relative(reportDirectory, refreshed.pngPath);
+  removalReport.refresh_window_screenshot = relative(reportDirectory, refreshed.windowPngPath);
+  const staleResolvedCountVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, "Resolved: 1");
+  const staleImageVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, `Vault image: ${attachmentPath}`);
+  removalReport.stale_resolved_count_visible_after_refresh = staleResolvedCountVisible;
+  removalReport.stale_image_visible_after_refresh = staleImageVisible;
+  if (staleResolvedCountVisible || staleImageVisible) {
+    throw new Error(`OpenObsidian retained stale resolved-image output after refresh: ${JSON.stringify(refreshed.ocrText.slice(0, 2_000))}`);
+  }
+
+  const resolveAction = process.platform === "linux"
+    ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
+    : process.platform === "darwin"
+      ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
+      : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
+  removalReport.resolve_link_status_action = resolveAction;
+  const expectedSummary = `OpenObsidian CI link resolution: source=${authoredNotePath}, total=1, resolved=0, unresolved=1, ambiguous=0, external=0, embed_roots=1, truncated=false`;
+  const expectedReference = `OpenObsidian CI link reference: source=${authoredNotePath}, kind=Embed, raw=${JSON.stringify(noteEmbed)}, status=Unresolved, target=<none>`;
+  const expectedEmbed = `OpenObsidian CI note embed: source=${authoredNotePath}, index=0, raw=${JSON.stringify(noteEmbed)}, status=Unresolved, target=<none>, disposition=not_rendered`;
+  let diagnostics = await waitFor(
+    "OpenObsidian to report the externally removed authored attachment as unresolved",
+    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+    (lines) => lines.includes(expectedSummary) && lines.includes(expectedReference) && lines.includes(expectedEmbed),
+    30_000,
+  );
+  const settledResolutionRefresh = await waitForOpenObsidianRefreshIdle(
+    0,
+    expectedMarkdownCount,
+    false,
+  );
+  const initialResolutionLine = diagnostics.findIndex((line) => line === expectedSummary);
+  const refreshAfterInitialResolution = settledResolutionRefresh.requests.some((request) => (
+    request.source === "watcher_reconciliation" && request.line > initialResolutionLine
+  ));
+  if (refreshAfterInitialResolution) {
+    removalReport.post_resolution_watcher_refresh = {
+      request: settledResolutionRefresh.requests.find((request) => (
+        request.source === "watcher_reconciliation" && request.line > initialResolutionLine
+      )) ?? null,
+      consumed_result: settledResolutionRefresh.consumedResults.at(-1) ?? null,
+      receiver_busy: settledResolutionRefresh.receiverStates.at(-1)?.busy ?? false,
+    };
+    const previousLogLineCount = diagnostics.length;
+    removalReport.resolve_link_status_retry_action = process.platform === "linux"
+      ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
+      : process.platform === "darwin"
+        ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
+        : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
+    diagnostics = await waitFor(
+      "OpenObsidian to restore the unresolved image-embed result after vault reconciliation",
+      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+      (lines) => {
+        const retryLines = lines.slice(previousLogLineCount);
+        return retryLines.includes(expectedSummary)
+          && retryLines.includes(expectedReference)
+          && retryLines.includes(expectedEmbed);
+      },
+      30_000,
+    );
+  }
+  removalReport.link_resolution_diagnostic = diagnostics.find((line) => line === expectedSummary);
+  removalReport.link_reference_diagnostic = diagnostics.find((line) => line === expectedReference);
+  removalReport.note_embed_diagnostic = diagnostics.find((line) => line === expectedEmbed);
+  removalReport.unresolved_target_is_absent = true;
+  removalReport.embed_is_not_rendered = true;
+
+  const unresolved = await waitFor("OpenObsidian to display the unresolved attachment with no stale image", async () => {
+    await delay(350);
+    return await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-attachment-unresolved");
+  }, (capture) => (
+    ocrTextContainsFuzzyPhrase(capture.ocrText, `Link status refreshed for ${authoredNotePath}`)
+    && ocrTextContainsFuzzyPhrase(capture.ocrText, "Unresolved: 1")
+    && ocrTextContainsFuzzyPhrase(capture.ocrText, "Not rendered: no matching Markdown note or vault attachment was found")
+    && !ocrTextContainsFuzzyPhrase(capture.ocrText, `Vault image: ${attachmentPath}`)
+  ), 30_000);
+  removalReport.unresolved_screen_ocr = unresolved.ocrText.slice(0, 4_000);
+  removalReport.unresolved_screenshot = relative(reportDirectory, unresolved.pngPath);
+  removalReport.unresolved_window_screenshot = relative(reportDirectory, unresolved.windowPngPath);
+  removalReport.unresolved_count_visible = true;
+  removalReport.missing_attachment_message_visible = true;
+  removalReport.stale_image_absent = true;
+
+  const vaultAfterResolution = await snapshotTree(vaultRoot);
+  const appDataAfterResolution = await snapshotTree(appDataRoot);
+  const vaultChangesAfterResolution = changedPaths(vaultAfterExternalRemoval, vaultAfterResolution);
+  const appDataChangesAfterResolution = changedPaths(appDataAfterExternalRemoval, appDataAfterResolution);
+  const eframeFilesAfterResolution = await readSnapshotTextFiles(appDataRoot, appDataAfterResolution, (path) => path.toLowerCase().endsWith(".ron"));
+  removalReport.vault_snapshot_after_resolution = vaultAfterResolution;
+  removalReport.vault_changes_after_resolution = vaultChangesAfterResolution;
+  removalReport.app_data_snapshot_after_resolution = appDataAfterResolution;
+  removalReport.app_data_changes_after_resolution = appDataChangesAfterResolution;
+  removalReport.eframe_persistence_files_after_resolution = eframeFilesAfterResolution;
+  await saveReport();
+  ensureExactSnapshot(vaultAfterExternalRemoval, vaultAfterResolution, "OpenObsidian refresh and unresolved image-embed report after external attachment removal");
+  const canonicalVaultRoot = await realpath(vaultRoot);
+  const canonicalAppDataRoot = await realpath(appDataRoot);
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterResolution,
+    eframeFilesAfterResolution,
+    "OpenObsidian app data after external attachment removal and re-resolution",
+    [vaultRoot, canonicalVaultRoot, appDataRoot, canonicalAppDataRoot],
+  );
+  removalReport.vault_unchanged_after_external_removal = true;
+  removalReport.app_data_change_policy_passed = true;
+  removalReport.status = "passed";
+  await saveReport();
+  return vaultAfterExternalRemoval;
+}
+
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
   const userConfigRoot = join(workDirectory, "openobsidian-user-config");
   const homeRoot = join(workDirectory, "openobsidian-home");
@@ -3476,18 +3694,24 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     const expectedMarkdownCountAfterExternalCreation = countMarkdownFiles(vaultBaselineAfterExternalCreation);
     open.expected_markdown_count_after_external_refresh = expectedMarkdownCountAfterExternalCreation;
     await runReferenceImageEmbedResolution(child, window, appDataRoot, vaultBaselineAfterExternalCreation);
-    const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(
+    const vaultBaselineAfterAttachmentRemoval = await runReferenceImageAttachmentRemoval(
       child,
       window,
       appDataRoot,
       vaultBaselineAfterExternalCreation,
+    );
+    const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(
+      child,
+      window,
+      appDataRoot,
+      vaultBaselineAfterAttachmentRemoval,
       initialAppData,
       expectedMarkdownCountAfterExternalCreation,
     );
     await delay(2_000);
     await stopProcess(child);
     const afterVault = await snapshotTree(vaultRoot);
-    ensureExactSnapshot(vaultBaselineAfterExternalCreation, afterVault, "OpenObsidian no-op open, external note refresh, picker cancellation, and close");
+    ensureExactSnapshot(vaultBaselineAfterAttachmentRemoval, afterVault, "OpenObsidian no-op open, external note refresh, image attachment removal, picker cancellation, and close");
     const afterAppData = await snapshotTree(appDataRoot);
     const appDataChangesAfterClose = changedPaths(appDataBaselineAfterPickerCancellation, afterAppData);
     const eframePersistenceFilesAfterClose = await readSnapshotTextFiles(appDataRoot, afterAppData, (path) => path.toLowerCase().endsWith(".ron"));
@@ -3623,7 +3847,7 @@ async function runOpenObsidianPickerCancellation(
   return appDataAfterCancellation;
 }
 
-async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<DevToolsConnection> {
+async function reopenInObsidian(child: ChildProcess, notePath: string, expectedAttachmentPresent: boolean): Promise<DevToolsConnection> {
   if (child.exitCode !== null) throw new Error(`Pinned Obsidian exited before reopen (code ${child.exitCode})`);
   const {connection, browserVersion, target} = await connectObsidian(9223);
   const reopen = report.obsidian_reopen as Record<string, unknown>;
@@ -3680,7 +3904,7 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   }
 
   const attachmentFolderJson = JSON.stringify(attachmentPath.split("/")[0]);
-  if (!visible.paths.includes(attachmentPath)) {
+  if (expectedAttachmentPresent && !visible.paths.includes(attachmentPath)) {
     await connection.evaluate(`(() => {
       const folder = [...document.querySelectorAll('[data-path]')].find((element) => element.getAttribute('data-path') === ${attachmentFolderJson});
       folder?.click();
@@ -3690,8 +3914,11 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   const pathsAfterExpand = await connection.evaluateJson<string[]>(`[...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || '')`);
   const exactAttachmentListed = pathsAfterExpand.includes(attachmentPath);
   const attachmentPathVisibleInRenderedNote = visible.editor.includes(attachmentPath);
-  if (!exactAttachmentListed && !attachmentPathVisibleInRenderedNote) {
+  if (expectedAttachmentPresent && !exactAttachmentListed && !attachmentPathVisibleInRenderedNote) {
     throw new Error(`Obsidian does not display attachment path ${attachmentPath} in either the file explorer or the reopened note; paths=${JSON.stringify(pathsAfterExpand).slice(0, 2_000)}`);
+  }
+  if (!expectedAttachmentPresent && exactAttachmentListed) {
+    throw new Error(`Obsidian unexpectedly restored externally removed attachment ${attachmentPath}`);
   }
 
   const selectedVaultNameVisible = visible.title.includes("Roundtrip Fixture") || visible.body.includes("Roundtrip Fixture");
@@ -3704,9 +3931,11 @@ async function reopenInObsidian(child: ChildProcess, notePath: string): Promise<
   reopen.note_path = notePath;
   reopen.note_path_visible_in_file_explorer = true;
   reopen.attachment_path = attachmentPath;
+  reopen.attachment_path_expected_present = expectedAttachmentPresent;
   reopen.attachment_link_persisted_in_note_source = attachmentLinkPersistedInSource;
   reopen.attachment_path_visible_in_file_explorer = exactAttachmentListed;
   reopen.attachment_path_visible_in_editor_text = attachmentPathVisibleInRenderedNote;
+  reopen.attachment_remains_absent_after_reopen = !expectedAttachmentPresent && !exactAttachmentListed;
   reopen.external_note_path = externalRefreshMarkdownPath;
   reopen.external_note_path_visible_in_file_explorer = visible.paths.includes(externalRefreshMarkdownPath);
   reopen.external_note_bytes = externalNoteAfterReopen.length;
@@ -3752,7 +3981,8 @@ async function run(): Promise<void> {
     await writeFile(join(reportDirectory, "vault-before-obsidian-reopen.json"), `${JSON.stringify(expectedBeforeObsidianReopen, null, 2)}\n`);
 
     reopenProcess = await createObsidianProfile(join(workDirectory, "obsidian-profile"), 9223);
-    reopenConnection = await reopenInObsidian(reopenProcess, authored.notePath);
+    const expectedAttachmentPresent = expectedBeforeObsidianReopen.some((entry) => entry.path === attachmentPath && entry.kind === "file");
+    reopenConnection = await reopenInObsidian(reopenProcess, authored.notePath, expectedAttachmentPresent);
     await delay(2_000);
     await stopProcess(reopenProcess, reopenConnection);
     reopenProcess = undefined;
