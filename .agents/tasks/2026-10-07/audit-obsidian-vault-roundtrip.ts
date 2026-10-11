@@ -1035,22 +1035,19 @@ function windowsSelectionConfirmsPath(action: unknown, expectedPath: string): bo
   }
 }
 
-function windowsSelectorDismissConfirmsPath(action: unknown, expectedPath: string): boolean {
+function windowsSelectorDismissConfirmsClosed(action: unknown): boolean {
   if (typeof action !== "string") return false;
   try {
     const dismissal = JSON.parse(action) as {
       action?: unknown;
       control_type?: unknown;
       name?: unknown;
-      selected_value?: unknown;
+      target_option_visible_after_dismissal?: unknown;
     };
-    const selectedValue = typeof dismissal.selected_value === "string"
-      ? dismissal.selected_value.replaceAll("\\", "/")
-      : "";
     return dismissal.name === "Note to inspect"
       && dismissal.control_type === "ControlType.Button"
-      && dismissal.action === "InvokePattern.Invoke"
-      && (selectedValue === expectedPath || selectedValue.endsWith(`/${expectedPath}`));
+      && dismissal.action === "WScript.Shell.SendKeys(Escape)"
+      && dismissal.target_option_visible_after_dismissal === false;
   } catch {
     return false;
   }
@@ -1064,37 +1061,57 @@ async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath:
     Add-Type -AssemblyName UIAutomationClient
     Add-Type -AssemblyName UIAutomationTypes
     $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+    $expectedPath = $env:OPENOBSIDIAN_EXPECTED_NOTE_PATH.Replace([string][char]92, "/")
+    $shell = New-Object -ComObject WScript.Shell
+    if (-not $shell.AppActivate($processId)) { throw "Could not focus OpenObsidian before dismissing the expanded note selector" }
+    Start-Sleep -Milliseconds 100
+    $shell.SendKeys("{ESC}")
+    Start-Sleep -Milliseconds 150
     $root = [System.Windows.Automation.AutomationElement]::RootElement
     $condition = [System.Windows.Automation.PropertyCondition]::new(
       [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
       $processId
     )
-    $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
     $selector = $null
-    foreach ($element in $elements) {
-      try {
-        $current = $element.Current
-        if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
-          $selector = $element
-          break
-        }
-      } catch {}
-    }
+    $targetOptionVisible = $false
+    $deadline = [DateTime]::UtcNow.AddSeconds(3)
+    do {
+      $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+      $targetOptionVisible = $false
+      foreach ($element in $elements) {
+        try {
+          $current = $element.Current
+          $normalizedName = $current.Name.Replace([string][char]92, "/")
+          if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
+            $selector = $element
+          }
+          if ($current.ControlType.ProgrammaticName -eq "ControlType.RadioButton" -and
+              $normalizedName -eq $expectedPath -and -not $current.IsOffscreen) {
+            $targetOptionVisible = $true
+          }
+        } catch {}
+      }
+      if ($targetOptionVisible) {
+        Start-Sleep -Milliseconds 100
+      }
+    } while ($targetOptionVisible -and [DateTime]::UtcNow -lt $deadline)
     if ($null -eq $selector) { throw "UI Automation did not expose the Note to inspect button" }
-    $selector.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-    Start-Sleep -Milliseconds 150
-    $selectedValue = $selector.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value
+    if ($targetOptionVisible) { throw "Escape did not dismiss the expanded note selector" }
     [pscustomobject]@{
       name = $selector.Current.Name
       control_type = $selector.Current.ControlType.ProgrammaticName
-      action = "InvokePattern.Invoke"
-      selected_value = $selectedValue
+      action = "WScript.Shell.SendKeys(Escape)"
+      target_option_visible_after_dismissal = $targetOptionVisible
     } | ConvertTo-Json -Compress
   `;
   try {
     return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
       encoding: "utf8",
-      env: {...process.env, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId)},
+      env: {
+        ...process.env,
+        OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
+        OPENOBSIDIAN_EXPECTED_NOTE_PATH: expectedPath,
+      },
       stdio: ["ignore", "pipe", "pipe"],
     }).trim();
   } catch (error) {
@@ -2888,8 +2905,8 @@ async function selectReferenceNoteForEmbedResolution(
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
     }
     const dismissAction = await dismissWindowsNoteSelectorMenu(child, targetPath);
-    if (!windowsSelectorDismissConfirmsPath(dismissAction, targetPath)) {
-      throw new Error(`Windows UI Automation did not dismiss the selector while retaining ${targetPath}: ${dismissAction}`);
+    if (!windowsSelectorDismissConfirmsClosed(dismissAction)) {
+      throw new Error(`Windows UI Automation did not dismiss the selector after confirming ${targetPath}: ${dismissAction}`);
     }
     return {
       strategy: "windows_ui_automation_exact_path_from_expanded_selector",
