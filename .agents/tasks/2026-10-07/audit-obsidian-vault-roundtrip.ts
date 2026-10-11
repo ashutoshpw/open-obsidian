@@ -3280,7 +3280,9 @@ async function runReferenceImageEmbedResolution(
 
   // The periodic vault reconciliation is deferred while link resolution is busy.
   // If it was already due, it runs immediately afterward and clears the displayed
-  // result. Wait for that refresh to settle, then resolve again for stable UI proof.
+  // result. Give the deferred reconciliation a chance to arrive, wait for it to
+  // settle, then resolve again for stable UI proof.
+  await delay(2_000);
   const settledRefresh = await waitForOpenObsidianRefreshIdle(
     0,
     countMarkdownFiles(vaultBaseline),
@@ -3492,7 +3494,9 @@ async function runReferenceImageAttachmentRemoval(
   removalReport.refreshed_markdown_count_visible = true;
   removalReport.refresh_screenshot = relative(reportDirectory, refreshed.pngPath);
   removalReport.refresh_window_screenshot = relative(reportDirectory, refreshed.windowPngPath);
-  const staleResolvedCountVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, "Resolved: 1", 1);
+  const staleResolvedCountVisible = refreshed.ocrText.split(/\r?\n/).some((line) => (
+    /(?:^|[^a-z])resolved\s*:?\s*1(?:$|[^0-9])/i.test(line)
+  ));
   const staleImageVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, `Vault image: ${attachmentPath}`);
   removalReport.stale_resolved_count_visible_after_refresh = staleResolvedCountVisible;
   removalReport.stale_image_visible_after_refresh = staleImageVisible;
@@ -3515,6 +3519,7 @@ async function runReferenceImageAttachmentRemoval(
     (lines) => lines.includes(expectedSummary) && lines.includes(expectedReference) && lines.includes(expectedEmbed),
     30_000,
   );
+  await delay(2_000);
   const settledResolutionRefresh = await waitForOpenObsidianRefreshIdle(
     0,
     expectedMarkdownCount,

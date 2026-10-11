@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.74-C01.2-42-reference-app-image-attachment-removal",
+  "source_sha": "f4b570e241c2ec46074170804b34c166d1673edb",
+  "status": "partial",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38113940910,
+      "job_id": 114394969949,
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38113940951,
+      "jobs": {
+        "macos-latest": {"job_id": 114394970559, "conclusion": "success"},
+        "windows-latest": {"job_id": 114394970646, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114394970660, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38113940896,
+      "jobs": {
+        "windows-latest": {"job_id": 114394970065, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114394970110, "conclusion": "success"},
+        "macos-latest": {"job_id": 114394970139, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38113940890,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114394970014, "conclusion": "success"},
+        "macos-latest": {"job_id": 114394970242, "conclusion": "success"},
+        "windows-latest": {"job_id": 114394970262, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38113940909,
+      "jobs": {
+        "macos-latest": {"job_id": 114394970011, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114394970120, "conclusion": "success"},
+        "windows-latest": {"job_id": 114394970168, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38113940905,
+      "jobs": {
+        "windows-latest": {"job_id": 114394970025, "conclusion": "success"},
+        "macos-latest": {"job_id": 114394970229, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114394970236, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38113940920,
+      "jobs": {
+        "macos-latest": {"job_id": 114394970104, "conclusion": "failure"},
+        "ubuntu-24.04": {"job_id": 114394970220, "conclusion": "success"},
+        "windows-latest": {"job_id": 114394970252, "conclusion": "failure"}
+      }
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu-24.04": {
+      "artifact_id": 11693450402,
+      "artifact_digest": "sha256:4d11859148b7055564cb6a0b960bf27cf093ec0c1305036c37191e0c21fa0bbc",
+      "report_sha256": "bbb3f309e4bf26c051f1036fa31f81ac007d239c16fb9a0de72be799d4865d08",
+      "conclusion": "success",
+      "attachment_absent_after_external_removal": true,
+      "authored_embed_persisted": true,
+      "fresh_resolution": "Unresolved, target=<none>, disposition=not_rendered",
+      "missing_attachment_message_visible": true,
+      "vault_and_app_data_policy_passed": true,
+      "obsidian_reopen_passed": true
+    },
+    "windows-latest": {
+      "artifact_id": 11693385479,
+      "artifact_digest": "sha256:b86b715df01fda8c2d69d36c0802d9be990a36b15a86534c8580980218edf7c2",
+      "report_sha256": "baf7f4d3cb3da6a200e1c667adea0e110b32c0b649175378d32a20f5f7f0f7ff",
+      "finding": "The C01.2-41 resolved embed diagnostics passed, then a deferred 60-second watcher reconciliation ran at log line 123 and cleared the displayed result before the screenshot gate. C01.2-42 did not start."
+    },
+    "macos-latest": {
+      "artifact_id": 11692657330,
+      "artifact_digest": "sha256:8d3f0c502275512ae36277e9e9d79ec850281b5fc1a73083eb6e0bf862a3ad1",
+      "report_sha256": "add88ad15d146926cc8ed3f1581a97f480e5a875bdf43c5abe143e44302ec834",
+      "finding": "The macOS preview-close fallback succeeded at screen y=319. The stale-count OCR check still falsely matched the word Resolved inside Unresolved references. C01.2-42 did not start."
+    }
+  },
+  "correction": {
+    "stale_count_ocr": "Use a line-anchored Resolved: 1 pattern with a non-letter boundary so Unresolved cannot match.",
+    "periodic_refresh": "Wait 2 seconds for deferred periodic reconciliation before checking settled state and re-resolving on both image resolution flows.",
+    "next_validation": "Push a focused correction and rerun all seven required workflows on its exact SHA."
+  },
+  "parallel_step_groups": "Existing GitHub Actions native parallel groups passed in all applicable workflow runs on this source SHA.",
+  "no_local_executable_validation": true
+}

@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T05:10:03Z",
+  "updated_at": "2026-10-11T05:19:25Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "3232359881d19960862279bfee0a78af38c014e3",
+  "last_reconciled_head": "f4b570e241c2ec46074170804b34c166d1673edb",
   "current_milestone": "R2.8.74",
-  "next_action": "Correct the C01.2-42 OCR false positive and macOS source-preview close fallback from GitHub Actions evidence, then rerun all seven required workflows on a fresh exact SHA.",
+  "next_action": "Replace fuzzy stale-count OCR with a line-anchored status check and allow the deferred 60-second vault reconciliation to settle before stable image-resolution capture; then rerun all seven required workflows on a fresh exact SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -26044,7 +26044,50 @@
         "Pass all seven required GitHub Actions workflows on the exact implementation SHA; use no local executable validation.",
         "Accept C01.2-42 only; keep parent C01/C01.2 pending until their broader acceptance criteria pass."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "3232359881d19960862279bfee0a78af38c014e3",
+        "f4b570e241c2ec46074170804b34c166d1673edb"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "3232359881d19960862279bfee0a78af38c014e3",
+          "workflow_run_ids": {
+            "inventory": 38113516716,
+            "quality": 38113516707,
+            "desktop_build": 38113516711,
+            "plugin_renderer": 38113516710,
+            "loaded_plugin_workflows": 38113516720,
+            "rust_ci": 38113516715,
+            "obsidian_vault_roundtrip": 38113516719
+          },
+          "companion_workflows": "All six companion workflows passed, including every three-platform matrix.",
+          "roundtrip_platform_conclusions": {
+            "ubuntu-24.04": "failure: two-edit fuzzy OCR matched Resolve wiki links as Resolved: 1",
+            "windows-latest": "failure: same two-edit fuzzy OCR false positive; screenshot contained no resolved image output",
+            "macos-latest": "failure: OCR fallback click landed above Close source preview; the preceding external-note preview stayed open"
+          },
+          "evidence": "evidence/r2.8.74-c01.2-42-attempt-1-3232359.json"
+        },
+        {
+          "source_sha": "f4b570e241c2ec46074170804b34c166d1673edb",
+          "workflow_run_ids": {
+            "inventory": 38113940910,
+            "quality": 38113940951,
+            "desktop_build": 38113940896,
+            "plugin_renderer": 38113940890,
+            "loaded_plugin_workflows": 38113940909,
+            "rust_ci": 38113940905,
+            "obsidian_vault_roundtrip": 38113940920
+          },
+          "companion_workflows": "All six companion workflows passed, including all three-platform matrices.",
+          "roundtrip_platform_conclusions": {
+            "ubuntu-24.04": "success: full C01.2-42 attachment-removal and Obsidian reopen flow passed",
+            "windows-latest": "failure: deferred 60-second reconciliation cleared the earlier resolved image before its screenshot gate; C01.2-42 did not start",
+            "macos-latest": "failure: line-ambiguous fuzzy OCR matched Resolved inside Unresolved; macOS close click succeeded; C01.2-42 did not start"
+          },
+          "evidence": "evidence/r2.8.74-c01.2-42-attempt-2-f4b570e.json"
+        }
+      ],
       "required_workflows": [
         "Rust migration inventory",
         "OpenObsidian quality",
@@ -26055,7 +26098,7 @@
         "Obsidian vault round-trip acceptance"
       ],
       "evidence": "evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json",
-      "next_action": "Push the focused CI-evidence corrections, inspect exact-SHA CI and all three round-trip artifacts, then update acceptance and tracker evidence."
+      "next_action": "Push the line-anchored stale-count check and deferred-reconciliation grace period, then rerun and inspect all seven exact-SHA workflows and all three round-trip artifacts."
     }
   },
   "ci_preparation": {

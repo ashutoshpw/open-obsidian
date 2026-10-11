@@ -3072,3 +3072,21 @@ are in [evidence/r2.8.74-c01.2-42-attempt-1-3232359.json](evidence/r2.8.74-c01.2
 The next commit narrows stale-count OCR matching and corrects the macOS click
 offset, then reruns all seven workflows on its exact SHA. No local executable
 validation was run.
+
+### R2.8.74 / C01.2-42 attempt 2 on `f4b570e`
+
+Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows,
+and Rust CI passed again on exact SHA
+`f4b570e241c2ec46074170804b34c166d1673edb`. Linux completed the full C01.2-42
+round trip: external removal changed only the image path, fresh resolution was
+Unresolved with no target and `not_rendered`, app-data policy passed, and
+Obsidian reopened with the note embed intact and attachment absent. The macOS
+close-preview click now succeeded, but stale-count fuzzy OCR matched
+“Unresolved references.” Windows recorded the correct C01.2-41 resolved-image
+diagnostics, then a deferred 60-second vault reconciliation ran and cleared the
+image before the screenshot gate. Mac/Windows did not reach C01.2-42. Exact job
+IDs, all three reports, hashes, and artifact digests are in
+[evidence/r2.8.74-c01.2-42-attempt-2-f4b570e.json](evidence/r2.8.74-c01.2-42-attempt-2-f4b570e.json).
+The next exact-SHA correction line-anchors the negative OCR check and gives the
+deferred reconciliation time to finish before the final resolution screenshot.
+No local executable validation was run.
