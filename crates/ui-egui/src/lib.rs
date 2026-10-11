@@ -2182,6 +2182,17 @@ impl OpenObsidianApp {
         match result {
             Some(Ok(message)) => {
                 self.link_receiver = None;
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    if let (Ok(resolutions), Ok(note_embeds)) =
+                        (&message.resolutions, &message.note_embeds)
+                    {
+                        log_ci_link_resolution_results(
+                            self.link_source_path.as_deref(),
+                            resolutions,
+                            note_embeds,
+                        );
+                    }
+                }
                 match message.resolutions {
                     Ok(resolutions) => {
                         let source_label = self.link_source_path.as_deref().map_or_else(
@@ -3056,6 +3067,68 @@ fn inline_image_alt_text(alias: Option<&str>) -> String {
         })
         .unwrap_or("Vault image attachment")
         .to_owned()
+}
+
+fn log_ci_link_resolution_results(
+    source_path: Option<&Path>,
+    resolutions: &[VaultLinkResolution],
+    note_embeds: &VaultNoteEmbedReport,
+) {
+    let source = source_path.map_or_else(|| "<none>".to_owned(), |path| path.display().to_string());
+    let count_status = |status| {
+        resolutions
+            .iter()
+            .filter(|resolved| resolved.resolution.status == status)
+            .count()
+    };
+    eprintln!(
+        "OpenObsidian CI link resolution: source={source}, total={}, resolved={}, unresolved={}, ambiguous={}, external={}, embed_roots={}, truncated={}",
+        resolutions.len(),
+        count_status(LinkResolutionStatus::Resolved),
+        count_status(LinkResolutionStatus::Unresolved),
+        count_status(LinkResolutionStatus::Ambiguous),
+        count_status(LinkResolutionStatus::External),
+        note_embeds.embeds.len(),
+        note_embeds.truncated,
+    );
+    for resolved in resolutions {
+        eprintln!(
+            "OpenObsidian CI link reference: source={source}, kind={}, raw={:?}, status={}, target={}",
+            link_kind_label(resolved.reference.kind),
+            resolved.reference.raw,
+            link_resolution_status_label(resolved.resolution.status),
+            resolved.resolution.target.as_deref().unwrap_or("<none>"),
+        );
+    }
+    for (index, embed) in note_embeds.embeds.iter().enumerate() {
+        let target = embed
+            .resolution
+            .resolution
+            .target
+            .as_deref()
+            .unwrap_or("<none>");
+        let raw = &embed.resolution.reference.raw;
+        let status = link_resolution_status_label(embed.resolution.resolution.status);
+        match &embed.resolution.disposition {
+            VaultNoteEmbedDisposition::Attachment(image) => eprintln!(
+                "OpenObsidian CI note embed: source={source}, index={index}, raw={raw:?}, status={status}, target={target}, disposition=image, revision_sha256={}, dimensions={}x{}, decoded_rgba_bytes={}, alt={:?}",
+                image.revision_sha256,
+                image.width,
+                image.height,
+                image.rgba_bytes.len(),
+                inline_image_alt_text(embed.resolution.reference.alias.as_deref()),
+            ),
+            VaultNoteEmbedDisposition::Included(_) => eprintln!(
+                "OpenObsidian CI note embed: source={source}, index={index}, raw={raw:?}, status={status}, target={target}, disposition=included"
+            ),
+            VaultNoteEmbedDisposition::Blocked(_) => eprintln!(
+                "OpenObsidian CI note embed: source={source}, index={index}, raw={raw:?}, status={status}, target={target}, disposition=blocked"
+            ),
+            VaultNoteEmbedDisposition::NotRendered => eprintln!(
+                "OpenObsidian CI note embed: source={source}, index={index}, raw={raw:?}, status={status}, target={target}, disposition=not_rendered"
+            ),
+        }
+    }
 }
 
 fn link_resolution_status_label(status: LinkResolutionStatus) -> &'static str {

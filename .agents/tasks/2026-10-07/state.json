@@ -6,9 +6,9 @@
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
-  "current_milestone": "R2.8.72",
-  "next_action": "Select the next uncovered reference-app read-only flow for R2.8.73; keep parent C01/C01.2 pending and run executable validation only in GitHub Actions.",
+  "last_reconciled_head": "dee88f4b770ba09b8c6546875676131b8979d2e3",
+  "current_milestone": "R2.8.73",
+  "next_action": "Push the C01.2-41 native authored-image-embed resolution slice to origin/main; accept it only after all seven required GitHub Actions workflows pass on the exact implementation SHA across Linux, macOS and Windows.",
   "blockers": [],
   "phases": {
     "R0": {

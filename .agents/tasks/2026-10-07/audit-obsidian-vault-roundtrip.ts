@@ -55,7 +55,7 @@ const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.8.72-C01.2-reference-app-external-note-refresh",
+  milestone: "R2.8.73-C01.2-reference-app-image-embed-resolution",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -89,7 +89,7 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves read-only startup, source preview and close, external note creation followed by explicit UI refresh and preview, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves read-only startup, source preview and close, external note creation followed by explicit UI refresh and preview, native image-embed link resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation is captured as a new baseline; all later OpenObsidian and Obsidian actions must preserve its exact bytes and the rest of the vault.",
     "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
   ],
@@ -2219,8 +2219,11 @@ async function clickVisibleOpenObsidianControl(
         ? (anchor.left - 55 * scaleX) / ocrSize.width
         : (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
-    } else if (controlName === "Previous note" && anchorPhrase === "Nested") {
+    } else if (controlName === "Previous note") {
       xFraction = (anchor.left - 155 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
+    } else if (controlName === "Next note") {
+      xFraction = (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
       const verticalControlOffset = controlName === "Close source preview"
@@ -2678,6 +2681,82 @@ async function selectFirstNoteWithPreviousButton(
   throw new Error(`Keyboard inspector selection is not configured for ${process.platform}`);
 }
 
+async function selectReferenceNoteForEmbedResolution(
+  child: ChildProcess,
+  windowId: string,
+  currentPath: string,
+  targetPath: string,
+  sortedNotePaths: string[],
+): Promise<Record<string, unknown>> {
+  const currentIndex = sortedNotePaths.indexOf(currentPath);
+  const targetIndex = sortedNotePaths.indexOf(targetPath);
+  if (currentIndex < 0 || targetIndex < 0) {
+    throw new Error(`Reference note selection requires current and target paths in the refreshed list; current=${currentPath}, target=${targetPath}, paths=${JSON.stringify(sortedNotePaths)}`);
+  }
+  if (currentPath === targetPath) {
+    throw new Error(`Reference image-embed resolution must switch notes before selecting ${targetPath}`);
+  }
+
+  if (process.platform === "win32") {
+    const openMenuAction = await invokeNativeAccessibleControl(
+      child,
+      windowId,
+      "Note to inspect",
+      currentPath,
+    );
+    const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath);
+    if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
+      throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
+    }
+    return {
+      strategy: "windows_ui_automation_exact_path",
+      open_menu_action: openMenuAction,
+      selection_action: selectionAction,
+      exact_selected_path: targetPath,
+    };
+  }
+
+  const previousSteps = (currentIndex - targetIndex + sortedNotePaths.length) % sortedNotePaths.length;
+  const nextSteps = (targetIndex - currentIndex + sortedNotePaths.length) % sortedNotePaths.length;
+  const direction = previousSteps <= nextSteps ? "previous" : "next";
+  const stepCount = Math.min(previousSteps, nextSteps);
+  const selectedPaths: string[] = [];
+  const actions: string[] = [];
+  let selectedIndex = currentIndex;
+  for (let step = 0; step < stepCount; step += 1) {
+    const nextIndex = direction === "previous"
+      ? (selectedIndex - 1 + sortedNotePaths.length) % sortedNotePaths.length
+      : (selectedIndex + 1) % sortedNotePaths.length;
+    const selectedPath = sortedNotePaths[nextIndex];
+    if (!selectedPath) throw new Error(`Reference note navigation produced no path at index ${nextIndex}`);
+    const source = `${direction}_button`;
+    actions.push(await invokeNativeAccessibleControl(
+      child,
+      windowId,
+      direction === "previous" ? "Previous note" : "Next note",
+      sortedNotePaths[selectedIndex],
+    ));
+    const expectedLog = `OpenObsidian CI note navigation: source=${source}, selected=${selectedPath}`;
+    const navigationLog = await waitFor(
+      `OpenObsidian to select ${selectedPath} through the ${direction} note button`,
+      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+      (lines) => lines.includes(expectedLog),
+      15_000,
+    );
+    selectedPaths.push(navigationLog.find((line) => line === expectedLog) ?? "");
+    selectedIndex = nextIndex;
+  }
+  if (sortedNotePaths[selectedIndex] !== targetPath) {
+    throw new Error(`Reference note navigation stopped at ${sortedNotePaths[selectedIndex] ?? "<none>"}; expected ${targetPath}`);
+  }
+  return {
+    strategy: `${direction}_button`,
+    actions,
+    selected_paths: selectedPaths,
+    exact_selected_path: targetPath,
+  };
+}
+
 async function runReferenceExternalNoteRefresh(
   child: ChildProcess,
   window: {window_id: string},
@@ -2908,6 +2987,154 @@ async function runReferenceExternalNoteRefresh(
   return vaultAfterCreation;
 }
 
+async function runReferenceImageEmbedResolution(
+  child: ChildProcess,
+  window: {window_id: string},
+  appDataRoot: string,
+  vaultBaseline: SnapshotEntry[],
+): Promise<void> {
+  const open = report.openobsidian_open as Record<string, unknown>;
+  const fixture = report.fixture as Record<string, unknown>;
+  const authoredNotePath = fixture.authored_note_path;
+  if (typeof authoredNotePath !== "string" || authoredNotePath.length === 0) {
+    throw new Error("The pinned Obsidian authoring step did not record the authored note path");
+  }
+  const noteEntry = vaultBaseline.find((entry) => entry.path === authoredNotePath && entry.kind === "file");
+  const attachmentEntry = vaultBaseline.find((entry) => entry.path === attachmentPath && entry.kind === "file");
+  if (!noteEntry?.sha256 || !attachmentEntry?.sha256) {
+    throw new Error(`The Obsidian-authored note or image attachment is missing from the read-only baseline: note=${authoredNotePath}, attachment=${attachmentPath}`);
+  }
+  const authoredNoteReport = report.obsidian_authoring as Record<string, unknown>;
+  if (authoredNoteReport.note_sha256 !== noteEntry.sha256) {
+    throw new Error(`The authored note hash changed before reference image-embed resolution: report=${String(authoredNoteReport.note_sha256)}, baseline=${noteEntry.sha256}`);
+  }
+
+  const resolutionReport: Record<string, unknown> = {
+    status: "in_progress",
+    selected_note_path: authoredNotePath,
+    selected_note_sha256: noteEntry.sha256,
+    attachment_path: attachmentPath,
+    attachment_sha256: attachmentEntry.sha256,
+    expected_embed_source: noteEmbed,
+    expected_link_status: "Resolved",
+    expected_embed_disposition: "image",
+  };
+  open.reference_image_embed_resolution = resolutionReport;
+
+  const vaultBefore = await snapshotTree(vaultRoot);
+  ensureExactSnapshot(vaultBaseline, vaultBefore, "OpenObsidian vault before native image-embed resolution");
+  const appDataBefore = await snapshotTree(appDataRoot);
+  resolutionReport.vault_snapshot_before = vaultBefore;
+  resolutionReport.app_data_snapshot_before = appDataBefore;
+  await saveReport();
+
+  const sortedNotePaths = vaultBaseline
+    .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
+    .map((entry) => entry.path)
+    .sort();
+  const noteSelection = await selectReferenceNoteForEmbedResolution(
+    child,
+    window.window_id,
+    externalRefreshMarkdownPath,
+    authoredNotePath,
+    sortedNotePaths,
+  );
+  resolutionReport.note_selection = noteSelection;
+  resolutionReport.exact_authored_note_selected = noteSelection.exact_selected_path === authoredNotePath;
+  const selectedNote = await waitFor("OpenObsidian to display the Obsidian-authored image note", async () => {
+    await delay(350);
+    return await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-authored-image-note-selected");
+  }, (capture) => ocrTextContainsPhrase(capture.ocrText, authoredNotePath), 15_000);
+  resolutionReport.selected_note_screen_ocr = selectedNote.ocrText.slice(0, 4_000);
+  resolutionReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
+  resolutionReport.selected_note_window_screenshot = relative(reportDirectory, selectedNote.windowPngPath);
+
+  resolutionReport.resolve_link_status_action = await invokeNativeAccessibleControl(
+    child,
+    window.window_id,
+    "Resolve link status",
+    authoredNotePath,
+  );
+  const expectedSummary = `OpenObsidian CI link resolution: source=${authoredNotePath}, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false`;
+  const expectedReference = `OpenObsidian CI link reference: source=${authoredNotePath}, kind=Embed, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}`;
+  const expectedEmbedPrefix = `OpenObsidian CI note embed: source=${authoredNotePath}, index=0, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}, disposition=image, revision_sha256=${attachmentEntry.sha256}, `;
+  const diagnostics = await waitFor(
+    "OpenObsidian to resolve the authored image embed against the exact vault attachment",
+    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+    (lines) => lines.includes(expectedSummary)
+      && lines.includes(expectedReference)
+      && lines.some((line) => line.startsWith(expectedEmbedPrefix)),
+    30_000,
+  );
+  const embedDiagnostic = diagnostics.find((line) => line.startsWith(expectedEmbedPrefix));
+  const imageDetails = embedDiagnostic?.match(/dimensions=(\d+)x(\d+), decoded_rgba_bytes=(\d+), alt=(.+)$/);
+  if (!embedDiagnostic || !imageDetails) {
+    throw new Error(`OpenObsidian did not report decoded image dimensions and accessible alt text: ${embedDiagnostic ?? "missing image diagnostic"}`);
+  }
+  const imageWidth = Number(imageDetails[1]);
+  const imageHeight = Number(imageDetails[2]);
+  const decodedRgbaBytes = Number(imageDetails[3]);
+  const imageAltText = JSON.parse(imageDetails[4] ?? "null") as unknown;
+  if (
+    imageWidth < 1
+    || imageHeight < 1
+    || decodedRgbaBytes !== imageWidth * imageHeight * 4
+    || imageAltText !== "Vault image attachment"
+  ) {
+    throw new Error(`OpenObsidian's native image result did not match its bounded RGBA/alt-text contract: ${embedDiagnostic}`);
+  }
+  resolutionReport.link_resolution_diagnostic = expectedSummary;
+  resolutionReport.link_reference_diagnostic = expectedReference;
+  resolutionReport.note_embed_diagnostic = embedDiagnostic;
+  resolutionReport.decoded_image = {
+    width: imageWidth,
+    height: imageHeight,
+    rgba_bytes: decodedRgbaBytes,
+    revision_sha256_matches_attachment: true,
+    alt_text: imageAltText,
+  };
+
+  const rendered = await waitFor("OpenObsidian to show resolved link status and the image attachment in its native window", async () => {
+    await delay(350);
+    return await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-resolved-image-embed");
+  }, (capture) => (
+    ocrTextContainsFuzzyPhrase(capture.ocrText, `Link status refreshed for ${authoredNotePath}`)
+    && ocrTextContainsFuzzyPhrase(capture.ocrText, "Resolved: 1")
+    && ocrTextContainsFuzzyPhrase(capture.ocrText, `Vault image: ${attachmentPath}`)
+  ), 30_000);
+  resolutionReport.result_screen_ocr = rendered.ocrText.slice(0, 4_000);
+  resolutionReport.result_screenshot = relative(reportDirectory, rendered.pngPath);
+  resolutionReport.result_window_screenshot = relative(reportDirectory, rendered.windowPngPath);
+  resolutionReport.link_status_visible = true;
+  resolutionReport.resolved_count_visible = true;
+  resolutionReport.image_attachment_visible = true;
+
+  const vaultAfter = await snapshotTree(vaultRoot);
+  const appDataAfter = await snapshotTree(appDataRoot);
+  const vaultChanges = changedPaths(vaultBefore, vaultAfter);
+  const appDataChanges = changedPaths(appDataBefore, appDataAfter);
+  const eframeFilesAfter = await readSnapshotTextFiles(appDataRoot, appDataAfter, (path) => path.toLowerCase().endsWith(".ron"));
+  resolutionReport.vault_snapshot_after = vaultAfter;
+  resolutionReport.vault_changes = vaultChanges;
+  resolutionReport.app_data_snapshot_after = appDataAfter;
+  resolutionReport.app_data_changes = appDataChanges;
+  resolutionReport.eframe_persistence_files_after = eframeFilesAfter;
+  await saveReport();
+  ensureExactSnapshot(vaultBefore, vaultAfter, "OpenObsidian native image-embed link resolution");
+  const canonicalVaultRoot = await realpath(vaultRoot);
+  const canonicalAppDataRoot = await realpath(appDataRoot);
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChanges,
+    eframeFilesAfter,
+    "OpenObsidian app data during native image-embed link resolution",
+    [vaultRoot, canonicalVaultRoot, appDataRoot, canonicalAppDataRoot],
+  );
+  resolutionReport.vault_unchanged = true;
+  resolutionReport.app_data_change_policy_passed = true;
+  resolutionReport.status = "passed";
+  await saveReport();
+}
+
 async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotEntry[]> {
   const userConfigRoot = join(workDirectory, "openobsidian-user-config");
   const homeRoot = join(workDirectory, "openobsidian-home");
@@ -3004,6 +3231,7 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     const vaultBaselineAfterExternalCreation = await runReferenceExternalNoteRefresh(child, window, appDataRoot, noOpBaseline);
     const expectedMarkdownCountAfterExternalCreation = countMarkdownFiles(vaultBaselineAfterExternalCreation);
     open.expected_markdown_count_after_external_refresh = expectedMarkdownCountAfterExternalCreation;
+    await runReferenceImageEmbedResolution(child, window, appDataRoot, vaultBaselineAfterExternalCreation);
     const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(
       child,
       window,
