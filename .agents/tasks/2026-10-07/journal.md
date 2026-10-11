@@ -1512,6 +1512,41 @@ string. Exact-SHA CI and artifact details are in
 The required parallel setup groups passed. No local executable validation was
 run.
 
+The R2.8.89 documentation-only tracker checkpoint was pushed on exact SHA
+`bdfe5c18c44ed25fcfabcad256624f8db51da2c`. Inventory
+[38162326307](https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326307),
+quality
+[38162326292](https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326292),
+desktop build
+[38162326331](https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326331),
+plugin renderer
+[38162326343](https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326343),
+loaded-plugin workflows
+[38162326324](https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326324),
+and Rust CI
+[38162326313](https://github.com/ashutoshpw/open-obsidian/actions/runs/38162326313)
+all passed on attempt 1. Exact job IDs, artifact IDs, links, and SHA-256 digests
+are in `evidence/r2.8.89-tracker-checkpoint-bdfe5c1.json`; the path-filtered
+Obsidian round-trip remains covered by accepted source SHA
+`c74d27860f7c60459373887bf85caec2c3af2182`. This checkpoint reconciliation is
+being committed separately from the R2.8.90 source slice.
+
+R2.8.90 begins as a narrow persisted text-card edit through `VaultSession`:
+check the caller-observed SHA-256, use the document-layer edit, and pass that
+same SHA to the journaled write. Fixture coverage now includes semantic
+preservation, untouched note bytes, no note creation, invalid node IDs/types,
+stale revisions, malformed JSON, invalid Canvas shape, and an exact outside-root
+path error. Read-only parallel reviews found no obvious API/type blocker and
+prompted the invalid-shape and typed traversal assertions. C06/C06.1 remain
+pending until native editing and the explicit note-creation action are complete.
+The source changes are not yet pushed; GitHub Actions will provide all phase
+validation.
+
+Process exception: during source review, `git diff --check` was inadvertently
+run locally as a whitespace check. No local tests, builds, formatters, Clippy,
+application launches, or runtime probes were run. Future executable validation
+continues to use GitHub Actions only.
+
 ### R2.6.65 attempt 10 result and focused diagnostics — SHA `f32dd3d`
 
 The exact-SHA round-trip run [37921995802](https://github.com/ashutoshpw/open-obsidian/actions/runs/37921995802) did not pass cancellation on all platforms. Windows job `113791877859` passed the complete native picker cancellation flow: the fixture opened, Escape closed the picker, the original two-note vault returned, and vault/app-data snapshots remained unchanged. Ubuntu job `113791878091` failed while canonicalizing the selected vault path (`ENOENT`); its screenshot OCR reported that private per-vault storage could not be prepared. macOS job `113791878385` showed the native panel and navigated to the fixture path, but the AppleScript lookup did not find its Open button.
