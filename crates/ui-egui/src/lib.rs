@@ -2055,15 +2055,16 @@ impl OpenObsidianApp {
         if ci_diagnostics {
             eprintln!("OpenObsidian CI vault refresh scheduled: entries_before={entries_before}");
         }
-        let note_preview_guard = self
-            .last_note_preview_write
-            .clone()
-            .filter(|(path, revision)| {
-                self.note_source_preview.as_ref().is_some_and(|preview| {
-                    preview.relative_path == *path
-                        && preview.revision_sha256.as_deref() == Some(revision.as_str())
-                })
-            });
+        let note_preview_guard = self.note_source_preview.as_ref().and_then(|preview| {
+            let revision = preview.revision_sha256.as_ref()?;
+            let last_write_matches = self
+                .last_note_preview_write
+                .as_ref()
+                .is_none_or(|(path, written_revision)| {
+                    path == &preview.relative_path && written_revision == revision
+                });
+            last_write_matches.then(|| (preview.relative_path.clone(), revision.clone()))
+        });
         self.vault_refresh_error = None;
         self.vault_refresh_status = None;
         let (sender, receiver) = mpsc::channel();
@@ -7891,6 +7892,74 @@ mod tests {
             existing_vault_tree_snapshot(&app_data_path),
             before_app_data
         );
+    }
+
+    #[test]
+    fn egui_refresh_preserves_unchanged_preview_draft_and_clears_stale_preview() {
+        let temporary = UiTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        let app_data_path = temporary.0.join("app-data");
+        let source = b"# Stable note\n\nThis read-only preview should survive an unchanged refresh.\n";
+        let app = source_preview_test_app(
+            &vault_path,
+            &app_data_path,
+            "Notes/Stable.md",
+            source,
+            &[],
+        );
+        let mut harness = Harness::new_ui_state(
+            |ui, app| {
+                app.poll_vault_refresh_task(ui);
+                app.poll_note_preview_task(ui);
+                app.show_note_source_preview(ui, false);
+            },
+            app,
+        );
+
+        harness.get_by_label("Note source preview").click();
+        harness.step();
+        harness.get_by_label("Read note source preview").click();
+        harness.step();
+        assert!(harness.state().note_preview_receiver.is_some());
+        wait_for_note_preview(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the read-only source preview should be open");
+        let revision = preview
+            .revision_sha256
+            .clone()
+            .expect("the bounded preview should have a source revision");
+        assert_eq!(preview.relative_path, PathBuf::from("Notes/Stable.md"));
+        assert_eq!(preview.text.as_bytes(), source);
+        assert!(preview.source_draft.is_none());
+        let draft = "# Unsaved draft\n\nThe source draft should survive an unchanged refresh.\n";
+        harness
+            .state_mut()
+            .note_source_preview
+            .as_mut()
+            .expect("the read-only source preview should still be open")
+            .source_draft = Some(draft.to_owned());
+
+        harness.state_mut().start_vault_refresh();
+        wait_for_vault_refresh(&mut harness);
+        let preview = harness
+            .state()
+            .note_source_preview
+            .as_ref()
+            .expect("the preview should survive refresh while its source is unchanged");
+        assert_eq!(preview.relative_path, PathBuf::from("Notes/Stable.md"));
+        assert_eq!(preview.revision_sha256.as_deref(), Some(revision.as_str()));
+        assert_eq!(preview.text.as_bytes(), source);
+        assert_eq!(preview.source_draft.as_deref(), Some(draft));
+
+        let changed_source = b"# Changed note\n\nThe old preview is now stale.\n";
+        std::fs::write(vault_path.join("Notes/Stable.md"), changed_source)
+            .expect("simulate an external note edit");
+        harness.state_mut().start_vault_refresh();
+        wait_for_vault_refresh(&mut harness);
+        assert!(harness.state().note_source_preview.is_none());
     }
 
     #[test]
