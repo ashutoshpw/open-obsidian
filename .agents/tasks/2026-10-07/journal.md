@@ -3993,3 +3993,12 @@ Exact run and job IDs are in
 `evidence/r2.8.86-tracker-checkpoint-c09cc90.json`. The Obsidian round-trip
 remains covered by implementation SHA `a7d718c9d216df26776c2022a29d6d9e1babb66d`.
 No local executable validation was run.
+
+R2.8.87 attempt 1 was pushed as `dac76cc1b08d47c84667785cea8cad1fb2e86ff2`.
+Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows,
+and the three-platform Obsidian round-trip passed. Rust CI passed Windows,
+macOS, and Rust 1.95; Ubuntu tests, Clippy, layer checks, and build passed but
+`cargo fmt --all -- --check` reported two line-wrap differences. The exact
+workflow/job results are in `evidence/r2.8.87-attempt-1-dac76cc.json`. The
+formatter corrections are taken directly from GitHub's output. No local
+executable validation or formatter run was performed.

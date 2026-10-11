@@ -47,11 +47,7 @@ pub struct ConfigurationWriteDenial {
 const CONFIGURATION_WRITE_CAPABILITY: &str = "configuration.write";
 const D15_STATUS_UNSUPPORTED_SECURITY: &str = "unsupported_security";
 const PLUGIN_RUNTIME_SCOPE: &str = "plugin-runtime";
-const CONFIGURATION_WRITE_SAFE_ALTERNATIVES: &[&str] = &[
-    "mediated vault read",
-    "preview broker",
-    "workflow disabled",
-];
+const CONFIGURATION_WRITE_SAFE_ALTERNATIVES: &[&str] = &["mediated vault read", "preview broker", "workflow disabled"];
 
 /// Denies a request to write shared plugin configuration and returns its D15 record.
 ///

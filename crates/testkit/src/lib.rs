@@ -1615,8 +1615,7 @@ mod plugin_config_policy_fixture_tests {
     use openobsidian_plugins::{ConfigurationWriteRequest, deny_configuration_write};
     use serde_json::Value;
 
-    const PLUGIN_ISOLATION_FIXTURE: &str =
-        include_str!("../../../fixtures/plugin-isolation.json");
+    const PLUGIN_ISOLATION_FIXTURE: &str = include_str!("../../../fixtures/plugin-isolation.json");
 
     #[test]
     fn c09_policy_fixture_denies_discovery_and_enablement_requests() {
