@@ -3324,3 +3324,31 @@ the two Windows attempts. Successful round-trip artifact IDs and digests are
 recorded in `evidence/r2.8.77-c08.1-9de1895.json` alongside all run/job IDs and
 the failed first Windows artifact. C08.1 and MIG-004 now pass on this source
 SHA; parent C08 remains pending. No local executable validation was run.
+
+### R2.8.77 tracker checkpoint accepted on ca02f5b
+
+All six documentation-triggered GitHub Actions workflows passed on exact
+tracker SHA `ca02f5b155396b325a1159d8a2c4b36282a8df6d`: inventory 38125089316,
+quality 38125089306, desktop build 38125089323, plugin renderer 38125089314,
+loaded-plugin workflows 38125089301 and Rust CI 38125089304. Every matrix job
+passed, including the Rust 1.95.0 job. The path-filtered Obsidian round-trip
+workflow did not trigger for this documentation-only commit; Linux, macOS and
+Windows passed on implementation SHA `9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5`
+in run 38123850667, attempt 2. Exact run/job IDs and the trigger explanation
+are in `evidence/r2.8.77-tracker-checkpoint-ca02f5b.json`. No local executable
+validation was run.
+
+### R2.8.78 / C09.2 implementation in progress
+
+Added vault-owned, read-only configuration discovery for root `.obsidian` and
+`.obsidian-*` directories. The result sorts folder names and vault-relative JSON
+paths, retains exact bytes and unknown object keys, skips symlinks and malformed
+or non-object JSON, and does not create configuration. Added a fixture and
+cross-platform Rust coverage for nested settings, decoys, invalid inputs,
+symlinks and unchanged vault snapshots. Parent C09 and policy row C09.1 remain
+pending; theme/style analysis and settings mapping are later work.
+
+The tracker now assigns pending AI grounding row Q-009 to R5, and the duplicate
+status/evidence quartet in SYNC-001 was removed while retaining its passing
+evidence. Exact-SHA GitHub Actions are the only executable validation for this
+milestone; no local tests, builds, formatters or validators were run.

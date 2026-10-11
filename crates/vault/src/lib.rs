@@ -286,10 +286,12 @@ pub struct VaultStore {
     external_change_on_failure: Option<(PathBuf, Vec<u8>)>,
 }
 
+mod configuration;
 mod history;
 mod rename_transaction;
 mod watcher;
 mod write_recovery;
+pub use configuration::{VaultConfiguration, VaultConfigurationFile};
 pub use history::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
     VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
@@ -2110,6 +2112,8 @@ mod tests {
         include_str!("../../../fixtures/sync-revision-merge.json");
     const SYNC_FAILURE_MATRIX_FIXTURE: &str =
         include_str!("../../../fixtures/vault-safety-failure-matrix.json");
+    const CONFIGURATION_INVENTORY_FIXTURE: &str =
+        include_str!("../../../fixtures/configuration-inventory.json");
 
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -2549,6 +2553,154 @@ mod tests {
         fs::write(&asset, [0, 255, 7, 11]).unwrap();
         let after = vault.snapshot().unwrap();
         assert_ne!(before.revision_sha256, after.revision_sha256);
+    }
+
+    #[test]
+    fn discovers_configuration_folders_and_json_objects_without_changing_vault_bytes() {
+        let fixture: Value = serde_json::from_str(CONFIGURATION_INVENTORY_FIXTURE)
+            .expect("configuration inventory fixture must be valid JSON");
+        let temp = TempDir::new();
+        for directory in fixture["directories"].as_array().unwrap() {
+            fs::create_dir_all(temp.0.join(directory.as_str().unwrap())).unwrap();
+        }
+        let files = fixture["files"].as_array().unwrap();
+        for file in files {
+            let relative_path = file["relative_path"].as_str().unwrap();
+            let path = temp.0.join(relative_path);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            let bytes = if let Some(source) = file["source"].as_str() {
+                source.as_bytes().to_vec()
+            } else {
+                file["bytes"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|byte| byte.as_u64().unwrap() as u8)
+                    .collect()
+            };
+            fs::write(path, bytes).unwrap();
+        }
+
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let before = vault.snapshot().unwrap();
+        let discovered = vault.discover_configuration().unwrap();
+        let after = vault.snapshot().unwrap();
+        let expected = &fixture["expected"];
+
+        assert_eq!(
+            discovered.folders,
+            expected["folders"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|folder| folder.as_str().unwrap().to_owned())
+                .collect::<Vec<_>>()
+        );
+        let expected_paths = expected["json_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|path| path.as_str().unwrap().to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            discovered.json.keys().cloned().collect::<Vec<_>>(),
+            expected_paths
+        );
+        for relative_path in &expected_paths {
+            let fixture_file = files
+                .iter()
+                .find(|file| file["relative_path"] == relative_path.as_str())
+                .expect("expected JSON path must exist in the fixture");
+            let source_bytes = fixture_file["source"].as_str().unwrap().as_bytes();
+            let entry = &discovered.json[relative_path];
+            let source_value: Value = serde_json::from_slice(source_bytes).unwrap();
+            assert_eq!(entry.raw_bytes.as_slice(), source_bytes);
+            assert_eq!(Value::Object(entry.object.clone()), source_value);
+        }
+        assert_eq!(
+            discovered.json[".obsidian/app.json"].object["unknownFutureKey"]["keep"],
+            serde_json::json!([1, 2])
+        );
+        assert_eq!(before, after);
+    }
+
+    #[test]
+    fn empty_configuration_discovery_does_not_create_vault_entries() {
+        let temp = TempDir::new();
+        let vault = VaultRoot::open(&temp.0).unwrap();
+        let before = vault.snapshot().unwrap();
+
+        let discovered = vault.discover_configuration().unwrap();
+
+        assert!(discovered.folders.is_empty());
+        assert!(discovered.json.is_empty());
+        assert_eq!(before, vault.snapshot().unwrap());
+        assert!(!temp.0.join(".obsidian").exists());
+    }
+
+    #[test]
+    fn configuration_discovery_skips_symlinked_roots_and_descendants() {
+        let temp = TempDir::new();
+        let vault_path = temp.0.join("vault");
+        let outside_path = temp.0.join("outside");
+        fs::create_dir_all(vault_path.join(".obsidian/plugins")).unwrap();
+        fs::create_dir_all(outside_path.join("plugin")).unwrap();
+        fs::write(vault_path.join(".obsidian/app.json"), b"{\"inside\":true}\n").unwrap();
+        let outside_bytes = b"{\"outside\":true}\n";
+        fs::write(outside_path.join("linked.json"), outside_bytes).unwrap();
+        fs::write(outside_path.join("plugin/data.json"), outside_bytes).unwrap();
+
+        let file_link = vault_path.join(".obsidian/plugins/linked.json");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(outside_path.join("linked.json"), &file_link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(outside_path.join("linked.json"), &file_link).unwrap();
+
+        let nested_directory_link = vault_path.join(".obsidian/plugins/linked-plugin");
+        let nested_directory_link_created = create_directory_symlink(
+            &outside_path.join("plugin"),
+            &nested_directory_link,
+        )
+        .is_ok();
+        let root_directory_link = vault_path.join(".obsidian-external");
+        let root_directory_link_created =
+            create_directory_symlink(&outside_path, &root_directory_link).is_ok();
+
+        let vault = VaultRoot::open(&vault_path).unwrap();
+        let before = vault.snapshot().unwrap();
+        let discovered = vault.discover_configuration().unwrap();
+
+        assert_eq!(discovered.folders, vec![".obsidian".to_owned()]);
+        assert!(discovered.json.contains_key(".obsidian/app.json"));
+        assert!(!discovered.json.contains_key(".obsidian/plugins/linked.json"));
+        assert!(!discovered
+            .json
+            .contains_key(".obsidian/plugins/linked-plugin/data.json"));
+        assert_eq!(fs::read(outside_path.join("linked.json")).unwrap(), outside_bytes);
+        assert_eq!(fs::read(outside_path.join("plugin/data.json")).unwrap(), outside_bytes);
+        assert_eq!(before, vault.snapshot().unwrap());
+        if nested_directory_link_created {
+            assert!(fs::symlink_metadata(nested_directory_link)
+                .unwrap()
+                .file_type()
+                .is_symlink());
+        }
+        if root_directory_link_created {
+            assert!(fs::symlink_metadata(root_directory_link)
+                .unwrap()
+                .file_type()
+                .is_symlink());
+        }
+    }
+
+    #[cfg(unix)]
+    fn create_directory_symlink(target: &Path, link: &Path) -> std::io::Result<()> {
+        std::os::unix::fs::symlink(target, link)
+    }
+
+    #[cfg(windows)]
+    fn create_directory_symlink(target: &Path, link: &Path) -> std::io::Result<()> {
+        std::os::windows::fs::symlink_dir(target, link)
     }
 
     #[test]

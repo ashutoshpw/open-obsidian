@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T08:29:32Z",
+  "updated_at": "2026-10-11T08:52:22Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5",
-  "current_milestone": "R2.8.77",
-  "next_action": "Commit and push the R2.8.77 evidence and requirement checkpoint. Wait for all six documentation-triggered workflows on that exact tracker SHA, then reconcile their results before beginning R2.8.78.",
+  "last_reconciled_head": "ca02f5b155396b325a1159d8a2c4b36282a8df6d",
+  "current_milestone": "R2.8.78",
+  "next_action": "R2.8.78 implements read-only vault configuration discovery under C09.2. Push the bounded source milestone and use only exact-SHA GitHub Actions for validation; keep broader C09 and C09.1 pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -299,7 +299,7 @@
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.74 / C01.2-42 passed on exact implementation SHA 79526587c3ed3ead47a0cc682baa4a8f92ecb26b. All seven required GitHub Actions workflows passed, with the quality workflow passing on same-SHA attempt 2 after a transient Ubuntu Electron retrieval-boundary timeout. Obsidian 1.14.4-authored image removal, fresh Unresolved/targetless/not_rendered diagnostics, unchanged note source, snapshots, and reopen passed on Linux, macOS, and Windows. Evidence: evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json. Parent C01/C01.2 remain pending; no local executable validation was used."
   ],
-  "push_status": "R2.8.77 implementation SHA 9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5 is accepted: all seven required workflows passed, including the Rust 1.95.0 workspace test job and Linux/macOS/Windows round-trip jobs. The first Windows round-trip attempt timed out; a same-SHA rerun passed. C08.1 and MIG-004 are passing with evidence recorded. The tracker checkpoint is ready to push; wait for its six documentation workflows before the next source milestone.",
+  "push_status": "R2.8.77 implementation SHA 9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5 is accepted: all seven required workflows passed, including the Rust 1.95.0 workspace test job and Linux/macOS/Windows round-trip jobs. The first Windows round-trip attempt timed out; a same-SHA rerun passed. C08.1 and MIG-004 are passing. Tracker checkpoint SHA ca02f5b155396b325a1159d8a2c4b36282a8df6d passed all six documentation-triggered workflows; the path-filtered round-trip did not trigger and retains its passing implementation-SHA evidence.",
   "ci_results": [
     {
       "name": "inventory",
@@ -26897,7 +26897,44 @@
         "Obsidian vault round-trip acceptance",
         "OpenObsidian Rust CI minimum supported Rust 1.95 job"
       ],
-      "next_action": "Commit and push the C08.1 evidence and requirement checkpoint. Wait for six documentation-triggered workflows on that exact tracker SHA, then record the checkpoint result before starting R2.8.78."
+      "next_action": "The implementation and tracker checkpoint passed. Reconcile the pending requirements still assigned to completed phase R1, then select the next bounded R2 slice.",
+      "tracker_checkpoint_validation": {
+        "tracker_sha": "ca02f5b155396b325a1159d8a2c4b36282a8df6d",
+        "conclusion": "passed",
+        "workflow_runs": {
+          "inventory": 38125089316,
+          "quality": 38125089306,
+          "desktop_build": 38125089323,
+          "plugin_renderer": 38125089314,
+          "loaded_plugin_workflows": 38125089301,
+          "rust_ci": 38125089304
+        },
+        "evidence": "evidence/r2.8.77-tracker-checkpoint-ca02f5b.json",
+        "finding": "All six documentation-triggered workflows passed on the exact tracker SHA. The path-filtered Obsidian round-trip did not trigger; Linux, macOS and Windows passed on implementation SHA 9de1895c1a0a8f6eaa2730a05c7a6d6226cc3fc5."
+      }
+    },
+    "R2.8.78": {
+      "status": "in-progress",
+      "starting_sha": "ca02f5b155396b325a1159d8a2c4b36282a8df6d",
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "scope": "Add deterministic, read-only discovery of root .obsidian and .obsidian-* folders and their recursively nested valid JSON object files. Preserve original bytes and unknown keys, skip symlinks and malformed or non-object JSON, and prove the vault snapshot is unchanged.",
+      "acceptance": [
+        "C09.2 fixture tests cover alternate configuration directories, stable folder/path ordering, nested plugin JSON, exact JSON byte retention, unknown keys, non-object and malformed JSON, extension case, and unrelated path exclusions.",
+        "Symlink tests prove file and directory links are not traversed or included in configuration results; empty discovery does not create configuration.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS and Windows, Rust 1.95 MSRV, and the path-triggered Obsidian round-trip workflow. No local executable validation is allowed.",
+        "Accept C09.2 only. Keep parent C09 and C09.1 pending; CSS/theme analysis, settings mapping and shared plugin write policy remain separate work."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "next_action": "Commit and push the implementation milestone, inspect every exact-SHA GitHub Actions workflow and round-trip artifact, then record evidence and accept C09.2 only if all required results pass."
     }
   },
   "ci_preparation": {
@@ -26961,5 +26998,5 @@
       "evidence": "evidence/parallel-quality-checks-8c84978.json"
     }
   },
-  "current_requirement_count": 212
+  "current_requirement_count": 213
 }

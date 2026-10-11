@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c09-configuration-inventory",
+  "covers": ["C09.2"],
+  "purpose": "Discover existing root Obsidian configuration folders and preserve valid JSON object bytes without following symlinks or creating files.",
+  "directories": [
+    ".obsidian",
+    ".obsidian-broken",
+    ".obsidian-mobile",
+    ".obsidianx",
+    ".hidden",
+    "Notes/.obsidian"
+  ],
+  "files": [
+    {
+      "relative_path": ".obsidian/app.json",
+      "source": "{\"showLineNumber\":true,\r\n\"unknownFutureKey\":{\"keep\":[1,2]}}\r\n"
+    },
+    {
+      "relative_path": ".obsidian/workspace.json",
+      "source": "[]\n"
+    },
+    {
+      "relative_path": ".obsidian/application.JSON",
+      "source": "{\"upperCaseExtension\":true}\n"
+    },
+    {
+      "relative_path": ".obsidian/plugins/sample/data.json",
+      "source": "{\"enabled\":false,\"pluginFutureOption\":\"keep\"}\n"
+    },
+    {
+      "relative_path": ".obsidian/data.bin",
+      "bytes": [0, 255, 7, 10]
+    },
+    {
+      "relative_path": ".obsidian-broken/invalid.json",
+      "source": "{invalid json}\n"
+    },
+    {
+      "relative_path": ".obsidian-mobile/appearance.json",
+      "source": "{\"theme\":\"dark\",\"futureAppearanceKey\":7}\n"
+    },
+    {
+      "relative_path": ".obsidianx/decoy.json",
+      "source": "{\"ignored\":true}\n"
+    },
+    {
+      "relative_path": "Notes/.obsidian/nested.json",
+      "source": "{\"ignored\":true}\n"
+    },
+    {
+      "relative_path": ".hidden/settings.json",
+      "source": "{\"ignored\":true}\n"
+    }
+  ],
+  "expected": {
+    "folders": [".obsidian", ".obsidian-broken", ".obsidian-mobile"],
+    "json_paths": [
+      ".obsidian-mobile/appearance.json",
+      ".obsidian/app.json",
+      ".obsidian/plugins/sample/data.json"
+    ]
+  }
+}
