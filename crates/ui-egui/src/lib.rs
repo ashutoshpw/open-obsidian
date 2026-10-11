@@ -649,9 +649,10 @@ impl OpenObsidianApp {
                         && ui.input(|input| !input.raw.events.is_empty())
                     {
                         eprintln!(
-                            "OpenObsidian CI previous-note input: enabled={}, response_rect={:?}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                            "OpenObsidian CI previous-note input: enabled={}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
                             !note_navigation_busy,
                             previous_response.rect,
+                            ui.ctx().pixels_per_point(),
                             ui.input(|input| input.pointer.hover_pos()),
                             previous_response.hovered(),
                             previous_response.clicked(),
@@ -688,7 +689,22 @@ impl OpenObsidianApp {
                     });
                 ui.label(&selected_label);
                 if next_path.is_some() {
-                    next_requested = ui.small_button("Next note").clicked();
+                    let next_response = ui.small_button("Next note");
+                    next_requested = next_response.clicked();
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                        && ui.input(|input| !input.raw.events.is_empty())
+                    {
+                        eprintln!(
+                            "OpenObsidian CI next-note input: enabled={}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                            !note_navigation_busy,
+                            next_response.rect,
+                            ui.ctx().pixels_per_point(),
+                            ui.input(|input| input.pointer.hover_pos()),
+                            next_response.hovered(),
+                            next_response.clicked(),
+                            ui.input(|input| input.raw.events.clone()),
+                        );
+                    }
                 }
             });
             let can_resolve = !note_navigation_busy && self.link_source_path.is_some();

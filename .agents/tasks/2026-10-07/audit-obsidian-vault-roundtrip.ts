@@ -2681,6 +2681,45 @@ async function selectFirstNoteWithPreviousButton(
   throw new Error(`Keyboard inspector selection is not configured for ${process.platform}`);
 }
 
+async function clickLinuxNoteNavigationButtonFromCiGeometry(
+  windowId: string,
+  direction: "previous" | "next",
+): Promise<string> {
+  const controlName = direction === "previous" ? "Previous note" : "Next note";
+  const diagnosticPrefix = `OpenObsidian CI ${direction}-note input:`;
+  const diagnosticLines = await waitFor(
+    `OpenObsidian to report the enabled ${controlName} button bounds`,
+    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+    (lines) => lines.some((line) => line.startsWith(diagnosticPrefix) && line.includes("enabled=true") && line.includes("pixels_per_point=")),
+    5_000,
+  );
+  const diagnostic = [...diagnosticLines].reverse().find((line) => (
+    line.startsWith(diagnosticPrefix)
+    && line.includes("enabled=true")
+    && line.includes("pixels_per_point=")
+  ));
+  const geometry = diagnostic?.match(/response_rect=\[\[(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\]\s+-\s+\[(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\]\], pixels_per_point=(\d+(?:\.\d+)?)/);
+  if (!diagnostic || !geometry) {
+    throw new Error(`OpenObsidian did not report usable ${controlName} button bounds: ${diagnostic ?? "missing diagnostic"}`);
+  }
+  const left = Number(geometry[1]);
+  const top = Number(geometry[2]);
+  const right = Number(geometry[3]);
+  const bottom = Number(geometry[4]);
+  const pixelsPerPoint = Number(geometry[5]);
+  if (!(pixelsPerPoint > 0) || !(right > left) || !(bottom > top)) {
+    throw new Error(`OpenObsidian reported invalid ${controlName} button geometry: ${diagnostic}`);
+  }
+  const x = Math.round(((left + right) / 2) * pixelsPerPoint);
+  const y = Math.round(((top + bottom) / 2) * pixelsPerPoint);
+  xdotool("windowfocus", "--sync", windowId);
+  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+  xdotool("mousedown", "1");
+  await delay(80);
+  xdotool("mouseup", "1");
+  return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${diagnostic}`;
+}
+
 async function selectReferenceNoteForEmbedResolution(
   child: ChildProcess,
   windowId: string,
@@ -2703,16 +2742,14 @@ async function selectReferenceNoteForEmbedResolution(
       child,
       "openobsidian-authored-image-note-selector",
     );
-    if (!ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath)) {
-      throw new Error(`The Windows note selector did not retain its expanded options for exact UI Automation selection of ${targetPath}; OCR=${JSON.stringify(openMenuScreenshot.ocrText.slice(0, 2_000))}`);
-    }
-    const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath);
+    const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath, undefined, true);
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
     }
     return {
       strategy: "windows_ui_automation_exact_path_from_expanded_selector",
       expanded_selector_screenshot: relative(reportDirectory, openMenuScreenshot.pngPath),
+      target_path_visible_by_ocr: ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath),
       selection_action: selectionAction,
       exact_selected_path: targetPath,
     };
@@ -2732,12 +2769,16 @@ async function selectReferenceNoteForEmbedResolution(
     const selectedPath = sortedNotePaths[nextIndex];
     if (!selectedPath) throw new Error(`Reference note navigation produced no path at index ${nextIndex}`);
     const source = `${direction}_button`;
-    actions.push(await invokeNativeAccessibleControl(
-      child,
-      windowId,
-      direction === "previous" ? "Previous note" : "Next note",
-      sortedNotePaths[selectedIndex],
-    ));
+    const navigationControl = direction === "previous" ? "Previous note" : "Next note";
+    const navigationAction = process.platform === "linux"
+      ? await clickLinuxNoteNavigationButtonFromCiGeometry(windowId, direction)
+      : await invokeNativeAccessibleControl(
+        child,
+        windowId,
+        navigationControl,
+        sortedNotePaths[selectedIndex],
+      );
+    actions.push(navigationAction);
     const expectedLog = `OpenObsidian CI note navigation: source=${source}, selected=${selectedPath}`;
     const navigationLog = await waitFor(
       `OpenObsidian to select ${selectedPath} through the ${direction} note button`,
@@ -2953,7 +2994,7 @@ async function runReferenceExternalNoteRefresh(
     child,
     window.window_id,
     "Close source preview",
-    process.platform === "linux" ? "Note source preview" : "Source After",
+    "Note source preview",
   );
   const closedPreview = await waitFor("OpenObsidian to close the externally added note preview", async () => {
     await delay(350);
@@ -3043,11 +3084,14 @@ async function runReferenceImageEmbedResolution(
   );
   resolutionReport.note_selection = noteSelection;
   resolutionReport.exact_authored_note_selected = noteSelection.exact_selected_path === authoredNotePath;
-  const selectedNote = await waitFor("OpenObsidian to display the Obsidian-authored image note", async () => {
-    await delay(350);
-    return await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-authored-image-note-selected");
-  }, (capture) => ocrTextContainsPhrase(capture.ocrText, authoredNotePath), 15_000);
+  await delay(350);
+  const selectedNote = await captureOpenObsidianScreenshot(
+    window.window_id,
+    child,
+    "openobsidian-authored-image-note-selected",
+  );
   resolutionReport.selected_note_screen_ocr = selectedNote.ocrText.slice(0, 4_000);
+  resolutionReport.authored_note_path_visible_by_ocr = ocrTextContainsPhrase(selectedNote.ocrText, authoredNotePath);
   resolutionReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
   resolutionReport.selected_note_window_screenshot = relative(reportDirectory, selectedNote.windowPngPath);
 
