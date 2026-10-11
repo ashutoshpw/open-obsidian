@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T17:28:13Z",
+  "updated_at": "2026-10-11T17:39:04Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a051739cd366310715b1cac8353752921dd05ab0",
-  "current_milestone": "R2.8.88",
-  "next_action": "R2.8.88 source and tracker checkpoint are accepted. Continue with the bounded R2.8.89 C06.1 Canvas text-card edit slice, then validate its exact pushed SHA through GitHub Actions. Keep C06 and C06.1 pending for full write behavior and explicit note-creation integration.",
+  "last_reconciled_head": "a1600c8f918f4e540dcb0b66b894986aab375a2f",
+  "current_milestone": "R2.8.89",
+  "next_action": "Await all seven exact-SHA GitHub Actions workflows for the R2.8.89 pure Canvas text-card edit source phase. Keep C06 and C06.1 pending for full write behavior and explicit note-creation integration.",
   "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five workflows but failed Rust CI and the round-trip preview build due to a borrowed CSS byte buffer being moved before analysis completed; Ubuntu also reported formatting changes. Follow-up SHA fe57d3061d0ee379846b1f8e07337a1a2029b552 passed five workflows, passed macOS and Windows round-trip, but Rust CI failed on a selector-order fixture mismatch and one remaining Ubuntu formatting change; the Ubuntu round-trip could not find a visible window with xdotool. SHA b7ccff97711f8c411bd3c39dc6c43726128b7ea3 passed six workflows, including all three round-trip jobs and Rust 1.95, but stable Rust CI failed Clippy on macOS, Ubuntu and Windows due to a let-and-return lint in selector_has_class_word. Exact run/job results are recorded in the attempt evidence. The direct-return Clippy correction is prepared locally. No local executable validation was run. R2.8.82 implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514 passed all seven required workflows, including the Windows round-trip on GitHub rerun attempt 2; exact run/job results are in evidence/r2.8.82-c09-style-identity-css-8c1ae9f.json. No local executable validation was run. The documentation-only tracker checkpoint is next. Documentation-only tracker checkpoint SHA 4f798c2c78f109903d19d6d8d2921f3a3b538901 passed all six required workflows, including Rust CI across Ubuntu, macOS, Windows and Rust 1.95. Exact run/job results are in evidence/r2.8.82-tracker-checkpoint-4f798c2.json. The path-filtered round-trip passed on implementation SHA 8c1ae9f4300f113b54e3cc02073f7af2dda49514. No local executable validation was run. R2.8.83 hotkeys projection was pushed on exact source SHA ece504236c0abb38c6fe765243f505965a4316fb. All seven required GitHub Actions workflows are queued; exact run IDs are recorded in the R2.8.83 attempt state. No local executable validation was run. R2.8.83 attempt 1 on ece504236c0abb38c6fe765243f505965a4316fb passed five workflows. Rust CI failed only Ubuntu formatting (tests passed; Windows, macOS and Rust 1.95 passed). Round-trip passed Linux but had UI timeouts on Windows and macOS. Evidence: evidence/r2.8.83-attempt-1-ece5042.json. GitHub formatter output has been applied; no local executable validation was run. R2.8.83 follow-up source SHA 6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef passed all seven required workflows, including Rust CI across Ubuntu, macOS, Windows and Rust 1.95 and all three pinned Obsidian 1.14.4 round-trip jobs. Exact run/job IDs and report hashes are in evidence/r2.8.83-attempt-2-6d4d891.json. The source slice is accepted; the documentation-only tracker checkpoint follows. No local executable validation was run. R2.8.83 documentation-only tracker SHA 9176467a8b77bc1963352421867cc87f7dfc9798 passed all six required documentation workflows, including Rust CI across Ubuntu, macOS, Windows and Rust 1.95. Exact run/job IDs are in evidence/r2.8.83-tracker-checkpoint-9176467.json; the path-filtered Obsidian round-trip passed on source SHA 6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef. R2.8.84 source attempt 1 on 7ed26f588722fa5f665e7ba12ba53236c790497e passed six of seven required workflows; only Ubuntu formatting failed in Rust CI. Workspace tests passed on Ubuntu, macOS, Windows, and Rust 1.95, and round-trip passed on Linux, macOS, and Windows. Exact run, job, artifact, and report hashes are in evidence/r2.8.84-attempt-1-7ed26f5.json. The formatting-only correction source SHA 16b5f362ba2ca922bcac4a492248e09a7dbfcd8f was pushed to origin/main; exact-SHA workflow runs are inventory 38144412216, quality 38144412181, desktop build 38144412227, plugin renderer 38144412219, loaded plugins 38144412166, Rust CI 38144412174, and vault round-trip 38144412179. All seven workflows passed. No local executable validation was run. R2.8.84 correction SHA 16b5f362ba2ca922bcac4a492248e09a7dbfcd8f passed all seven required workflows, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95, plus the Obsidian 1.14.4 round-trip on all three platforms. Exact run/job IDs, report hashes and artifact digests are in evidence/r2.8.84-attempt-2-16b5f36.json. R2.8.84 is accepted as a partial C09 app-settings slice; C09 and C09.1 remain pending. The documentation-only tracker checkpoint follows. No local executable validation was run. Documentation-only tracker checkpoint SHA da3f8908ba1f8ea06a7a633abe075b300826e6e1 was pushed to origin/main after R2.8.84 source acceptance. Exact-SHA workflow runs are inventory 38145363300, quality 38145363315, desktop build 38145363393, plugin renderer 38145363350, loaded plugins 38145363345, and Rust CI 38145363322. Results are pending; the path-filtered round-trip remains covered by implementation SHA 16b5f362ba2ca922bcac4a492248e09a7dbfcd8f. No local executable validation was run. R2.8.84 documentation tracker checkpoint SHA da3f8908ba1f8ea06a7a633abe075b300826e6e1 passed all six required documentation workflows. Quality attempt 1 had a transient macOS retrieval-boundary timeout; attempt 2 passed all three OS jobs. Rust CI passed Ubuntu, macOS, Windows, and Rust 1.95. Exact run/job IDs are in evidence/r2.8.84-tracker-checkpoint-da3f890.json. The path-filtered Obsidian round-trip remains covered by implementation SHA 16b5f362ba2ca922bcac4a492248e09a7dbfcd8f. No local executable validation was run. R2.8.85 source SHA 26c3363b1bc07eac10c56a7a258b914bc36f67f3 passed all seven required GitHub Actions workflows. Quality and the Windows round-trip each passed on same-SHA retry attempt 2; the first Windows round-trip attempt timed out while previewing a renamed note. Rust CI passed Ubuntu, macOS, Windows, and Rust 1.95. Exact job IDs, report hashes, and artifact digests are recorded in evidence/r2.8.85-attempt-2-26c3363.json. The source is accepted as a partial C09 settings slice; C09 and C09.1 remain pending. No local executable validation was run. R2.8.85 tracker checkpoint SHA 9558a9a09c5bf9f9f9778c1b6c1679259290b66d passed all six documentation workflows; exact results are in evidence/r2.8.85-tracker-checkpoint-9558a9a.json. R2.8.86 implementation SHA a7d718c9d216df26776c2022a29d6d9e1babb66d passed all seven required workflows on its first accepted attempt, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 and the Obsidian 1.14.4 round-trip on Linux, macOS and Windows. Exact run/job IDs and round-trip artifact digests are in evidence/r2.8.86-attempt-3-a7d718c.json. R2.8.86 is a bounded C01 preview-refresh slice; C01/C01.2, C09 and C09.1 remain pending. No local executable validation was run. R2.8.86 tracker checkpoint SHA c09cc905858acef6009582ab02135395ff4a0e0b passed all six required documentation workflows. Quality attempt 1 hit the known Electron local-retrieval-boundary timeout; the same-SHA failed-job retry passed. Exact workflow/job IDs are in evidence/r2.8.86-tracker-checkpoint-c09cc90.json. No local executable validation was run. R2.8.87 attempt 1 source SHA dac76cc1b08d47c84667785cea8cad1fb2e86ff2 passed inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Obsidian round-trip on all three OSes. Rust CI passed Windows, macOS, and Rust 1.95; Ubuntu failed only cargo fmt --all -- --check on two line wraps. Exact results are in evidence/r2.8.87-attempt-1-dac76cc.json. The CI-reported formatting corrections are prepared; no local executable validation or formatter run was performed. R2.8.87 source SHA 8891393ff5955a1797a8d6626c2d4d17d6509552 passed all seven required workflows. Quality attempt 1 had a transient macOS retrieval-boundary timeout; the same-SHA failed-job retry passed. Exact run/job results are in evidence/r2.8.87-attempt-3-8891393.json. No local executable validation was used for acceptance. The documentation-only R2.8.87 tracker checkpoint is next. R2.8.87 tracker checkpoint SHA ce59d7399caf58d498529dd29794c2c2c44c93dd passed all six documentation workflows on attempt 1, including Rust 1.95 and Ubuntu/macOS/Windows Rust CI. Exact workflow/job results are in evidence/r2.8.87-tracker-checkpoint-ce59d73.json. The path-filtered Obsidian round-trip remains covered by accepted implementation SHA 8891393ff5955a1797a8d6626c2d4d17d6509552. R2.8.88 attempt 3 was accepted on source SHA 260d095f42ef5c4d6a237e59b58058975482ab2c after all seven required workflows passed. Rust CI passed Ubuntu, macOS, Windows, and Rust 1.95; Obsidian round-trip passed on Linux, macOS, and Windows. Canvas evidence and artifact digests: evidence/r2.8.88-attempt-3-260d095.json. C06 and C06.1 remain pending for broader write/edit and explicit-action behavior.",
   "blockers": [],
   "phases": {
@@ -28962,25 +28962,54 @@
         }
       ],
       "implementation_sha": "260d095f42ef5c4d6a237e59b58058975482ab2c",
-      "next_action": "R2.8.88 is accepted. Start the next bounded C06/C06.1 slice for Canvas write/edit behavior and explicit-action semantics, retaining GitHub Actions-only validation and small origin/main pushes.",
+      "next_action": "R2.8.88 source and tracker checkpoints are accepted. R2.8.89 is the current in-progress phase for pure Canvas text-card editing; full persistence and explicit note-creation behavior remain pending under C06/C06.1.",
       "accepted_evidence": "evidence/r2.8.88-attempt-3-260d095.json",
-      "tracker_checkpoint_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "tracker_checkpoint_sha": "a1600c8f918f4e540dcb0b66b894986aab375a2f",
       "tracker_checkpoint_outcome": "accepted",
-      "tracker_checkpoint_evidence": "evidence/r2.8.88-tracker-checkpoint-a051739.json",
+      "tracker_checkpoint_evidence": "evidence/r2.8.88-tracker-checkpoint-a1600c8.json",
+      "previous_tracker_checkpoint_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+      "previous_tracker_checkpoint_evidence": "evidence/r2.8.88-tracker-checkpoint-a051739.json",
       "tracker_checkpoint_result": {
-        "tracker_sha": "a051739cd366310715b1cac8353752921dd05ab0",
+        "tracker_sha": "a1600c8f918f4e540dcb0b66b894986aab375a2f",
         "outcome": "accepted",
-        "evidence": "evidence/r2.8.88-tracker-checkpoint-a051739.json",
+        "evidence": "evidence/r2.8.88-tracker-checkpoint-a1600c8.json",
         "workflow_runs": {
-          "inventory": 38159101527,
-          "quality": 38159101521,
-          "desktop_build": 38159101524,
-          "plugin_renderer": 38159101522,
-          "loaded_plugins": 38159101529,
-          "rust_ci": 38159101583
+          "inventory": 38159916861,
+          "quality": 38159916862,
+          "desktop_build": 38159916900,
+          "plugin_renderer": 38159916873,
+          "loaded_plugins": 38159916923,
+          "rust_ci": 38159916881
         },
         "roundtrip_implementation_sha": "260d095f42ef5c4d6a237e59b58058975482ab2c"
       }
+    },
+    "R2.8.89": {
+      "status": "in_progress",
+      "starting_sha": "a1600c8f918f4e540dcb0b66b894986aab375a2f",
+      "scope": "Add a pure CanvasDocument text-node edit operation in crates/doc, with fixture-backed preservation of all non-target JSON fields and no vault write or note-creation path.",
+      "acceptance": [
+        "Editing a uniquely identified text node changes only its text value; unknown root/node/edge fields and sibling nodes survive semantic encode/parse round trips.",
+        "Missing IDs, duplicate IDs, and non-text node IDs return typed errors without mutating the document.",
+        "The document layer edit has no filesystem or vault access and cannot create a note. Keep C06 and C06.1 pending for persisted write behavior and an explicit user-initiated note-creation path.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95 and Obsidian round-trip on all three platforms.",
+        "Use GitHub Actions only for executable validation; run no local tests, builds, formatters, validators, or application launches."
+      ],
+      "known_limits": [
+        "CanvasDocument::edit_text_node changes only the in-memory semantic JSON value; this slice does not persist the edited Canvas or integrate a UI action.",
+        "Note extraction, revision-checked creation, and explicit UI action remain pending under C06.1."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [],
+      "next_action": "Await every required exact-SHA GitHub Actions workflow for the pushed pure Canvas text-card edit source phase before acceptance."
     }
   },
   "ci_preparation": {

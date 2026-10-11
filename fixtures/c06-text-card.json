@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c06-text-card",
+  "valid_edits": [
+    {
+      "id": "edit-selected-text-card-only",
+      "node_id": "text-1",
+      "text": "edited text card",
+      "before": {
+        "nodes": [
+          {
+            "id": "text-1",
+            "type": "text",
+            "x": 10,
+            "y": 20,
+            "width": 320,
+            "height": 140,
+            "text": "draft text card",
+            "color": "1",
+            "unknownNode": {"keep": true, "nested": ["opaque", 7]}
+          },
+          {
+            "id": "file-1",
+            "type": "file",
+            "x": 370,
+            "y": 20,
+            "width": 240,
+            "height": 150,
+            "file": "Notes/Target.md",
+            "subpath": "#^block-id",
+            "label": "Target note",
+            "unknownFileMetadata": {"keep": [true, null]}
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-1",
+            "fromNode": "text-1",
+            "fromSide": "right",
+            "toNode": "file-1",
+            "toSide": "left",
+            "label": "supports",
+            "unknownEdge": {"keep": true}
+          }
+        ],
+        "unknownRoot": {"keep": true, "items": ["opaque", {"future": false}]}
+      },
+      "after": {
+        "nodes": [
+          {
+            "id": "text-1",
+            "type": "text",
+            "x": 10,
+            "y": 20,
+            "width": 320,
+            "height": 140,
+            "text": "edited text card",
+            "color": "1",
+            "unknownNode": {"keep": true, "nested": ["opaque", 7]}
+          },
+          {
+            "id": "file-1",
+            "type": "file",
+            "x": 370,
+            "y": 20,
+            "width": 240,
+            "height": 150,
+            "file": "Notes/Target.md",
+            "subpath": "#^block-id",
+            "label": "Target note",
+            "unknownFileMetadata": {"keep": [true, null]}
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-1",
+            "fromNode": "text-1",
+            "fromSide": "right",
+            "toNode": "file-1",
+            "toSide": "left",
+            "label": "supports",
+            "unknownEdge": {"keep": true}
+          }
+        ],
+        "unknownRoot": {"keep": true, "items": ["opaque", {"future": false}]}
+      }
+    }
+  ],
+  "invalid_edits": [
+    {
+      "id": "missing-node-id",
+      "node_id": "absent",
+      "error": "node_not_found",
+      "before": {
+        "nodes": [{"id": "text-1", "type": "text", "text": "unchanged"}],
+        "edges": []
+      }
+    },
+    {
+      "id": "duplicate-node-id",
+      "node_id": "duplicate",
+      "error": "ambiguous_node_id",
+      "before": {
+        "nodes": [
+          {"id": "duplicate", "type": "text", "text": "first"},
+          {"id": "duplicate", "type": "text", "text": "second"}
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "non-text-node-id",
+      "node_id": "file-1",
+      "error": "not_text_node",
+      "before": {
+        "nodes": [{"id": "file-1", "type": "file", "file": "Notes/Target.md"}],
+        "edges": []
+      }
+    }
+  ]
+}

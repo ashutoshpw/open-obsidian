@@ -4134,3 +4134,21 @@ IDs are recorded in `evidence/r2.8.88-tracker-checkpoint-a051739.json`. The
 path-filtered Obsidian round-trip remains covered by accepted source SHA
 `260d095f42ef5c4d6a237e59b58058975482ab2c`. No local executable validation
 was run.
+
+The R2.8.88 tracker record was committed as exact SHA
+`a1600c8f918f4e540dcb0b66b894986aab375a2f`. Its six required documentation
+workflows passed on attempt 1, including inventory, quality, desktop build,
+plugin renderer, loaded plugins, and Rust CI on Ubuntu, macOS, Windows, and Rust
+1.95. Exact workflow and job IDs are in
+`evidence/r2.8.88-tracker-checkpoint-a1600c8.json`; the path-filtered Obsidian
+round-trip remains covered by source SHA
+`260d095f42ef5c4d6a237e59b58058975482ab2c`. No local executable validation
+was run.
+
+R2.8.89 is a bounded C06.1 document-layer edit slice. It adds a pure
+`CanvasDocument::edit_text_node` API, fixture cases proving only the selected
+node's text changes while unknown fields and sibling nodes remain intact, and
+typed non-mutating failures for missing, duplicate, and non-text node IDs. The
+operation has no vault or filesystem path and cannot create a note. Full Canvas
+persistence, note extraction, revision-checked note creation, and the explicit
+UI action remain pending under C06/C06.1.
