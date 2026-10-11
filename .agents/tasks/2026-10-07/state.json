@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T04:38:32Z",
+  "updated_at": "2026-10-11T04:46:08Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "e78409a4c721e63c866ee6b7fd4411d96c277ded",
   "current_milestone": "R2.8.73",
-  "next_action": "Audit the remaining C01/C01.2 reference-app read-only gaps and define the next bounded matrix flow; keep both parent requirements pending until their broader acceptance criteria are met.",
+  "next_action": "Push the focused requirements.json punctuation correction and rerun Rust migration inventory on its exact tracker SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -296,7 +296,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.73 / C01.2-41 is accepted on exact implementation SHA e78409a4c721e63c866ee6b7fd4411d96c277ded. All seven required GitHub Actions workflows passed; the Obsidian 1.14.4-authored image embed resolved and displayed on Linux, macOS, and Windows with snapshot/reopen evidence in evidence/r2.8.73-c01.2-41-e78409a.json. Parent C01/C01.2 remain pending. No local executable validation was run.",
+  "push_status": "R2.8.73 / C01.2-41 is accepted on exact implementation SHA e78409a4c721e63c866ee6b7fd4411d96c277ded. All seven required GitHub Actions workflows passed; the Obsidian 1.14.4-authored image embed resolved and displayed on Linux, macOS, and Windows with snapshot/reopen evidence in evidence/r2.8.73-c01.2-41-e78409a.json. Parent C01/C01.2 remain pending. No local executable validation was run. Tracker SHA 3b8ef4e inventory run 38112305700 failed because the two appended blocker strings lacked JSON commas. Desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed; OpenObsidian quality passed on same-SHA attempt 2 after the Ubuntu retrieval-boundary timeout on attempt 1. Commas are corrected; exact-SHA inventory rerun is pending.",
   "ci_results": [
     {
       "name": "inventory",
@@ -16367,6 +16367,89 @@
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616193/job/114388189508"
         }
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38112305700,
+      "head_sha": "3b8ef4efc63f93c965692768d46b143b5445d10e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305700",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114390226194,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305700/job/114390226194"
+        }
+      ],
+      "failure": "The migration inventory parser reported a JSONDecodeError at requirements.json line 2359 after the C01/C01.2 blocker updates; the changed blocker lines lacked trailing commas."
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38112305697,
+      "attempt": 1,
+      "head_sha": "3b8ef4efc63f93c965692768d46b143b5445d10e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114390226350,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697/job/114390226350"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114390226461,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697/job/114390226461"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114390226523,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697/job/114390226523"
+        }
+      ],
+      "failure": "Ubuntu Electron vault retrieval-boundary audit timed out before a local retrieval result; this was a transient same-SHA runner/reference-app failure."
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38112305697,
+      "attempt": 2,
+      "head_sha": "3b8ef4efc63f93c965692768d46b143b5445d10e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114391019897,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697/job/114391019897"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114391021019,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697/job/114391021019"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114391038396,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38112305697/job/114391038396"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -25859,7 +25942,40 @@
       "evidence": "evidence/r2.8.73-c01.2-41-e78409a.json",
       "parallel_step_groups": "Native parallel groups in Rust CI, quality, desktop build, and Obsidian round-trip passed in these exact-SHA runs.",
       "next_action": "Audit remaining C01/C01.2 read-only reference-app gaps and define the next bounded matrix flow.",
-      "completed_at": "2026-10-11T04:38:32Z"
+      "completed_at": "2026-10-11T04:38:32Z",
+      "tracker_checkpoint_attempts": [
+        {
+          "sha": "3b8ef4efc63f93c965692768d46b143b5445d10e",
+          "workflow": "Rust migration inventory",
+          "run_id": 38112305700,
+          "job_id": 114390226194,
+          "conclusion": "failure",
+          "finding": "JSONDecodeError in requirements.json at line 2359; both updated parent blocker values missed trailing commas.",
+          "correction": "Restore the commas and rerun inventory after current companion workflows finish."
+        },
+        {
+          "sha": "3b8ef4efc63f93c965692768d46b143b5445d10e",
+          "workflow": "OpenObsidian quality",
+          "run_id": 38112305697,
+          "attempt": 1,
+          "conclusion": "failure",
+          "failed_job_id": 114390226350,
+          "finding": "Ubuntu Electron vault retrieval-boundary audit timed out before a local retrieval result; Windows and macOS passed.",
+          "retry": "Same-SHA attempt 2 passed on all three operating systems."
+        },
+        {
+          "sha": "3b8ef4efc63f93c965692768d46b143b5445d10e",
+          "workflow": "OpenObsidian quality",
+          "run_id": 38112305697,
+          "attempt": 2,
+          "conclusion": "success",
+          "job_ids": {
+            "ubuntu-latest": 114391019897,
+            "windows-latest": 114391021019,
+            "macos-latest": 114391038396
+          }
+        }
+      ]
     }
   },
   "ci_preparation": {
