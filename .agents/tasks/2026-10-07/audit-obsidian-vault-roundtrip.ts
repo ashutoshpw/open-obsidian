@@ -2021,7 +2021,9 @@ async function clickVisibleOpenObsidianControl(
       ? "Read up to 16 KiB"
       : controlName === "Close source preview"
         ? fallbackAnchorPhrase ?? "Source"
-        : null;
+        : controlName === "Refresh note list"
+          ? fallbackAnchorPhrase ?? "Markdown files found"
+          : fallbackAnchorPhrase ?? null;
     let anchor: OcrWordBounds | null = null;
     if (anchorPhrase) {
       for (const candidate of candidates) {
@@ -2036,9 +2038,14 @@ async function clickVisibleOpenObsidianControl(
     const windowSize = await pngDimensions(capture.windowPngPath);
     const scaleX = ocrSize.width / windowSize.width;
     const scaleY = ocrSize.height / windowSize.height;
-    const verticalControlOffset = controlName === "Close source preview" ? 28 : 18;
-    xFraction = (anchor.left + 75 * scaleX) / ocrSize.width;
-    yFraction = (anchor.top + verticalControlOffset * scaleY) / ocrSize.height;
+    if (controlName === "Refresh note list") {
+      xFraction = (anchor.left - 58 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
+    } else {
+      const verticalControlOffset = controlName === "Close source preview" ? 28 : 18;
+      xFraction = (anchor.left + 75 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + verticalControlOffset * scaleY) / ocrSize.height;
+    }
     clickDescription = `OCR layout anchor ${JSON.stringify(anchor.text)} for ${JSON.stringify(controlName)}`;
   } else {
     xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
@@ -2119,6 +2126,7 @@ async function invokeNativeAccessibleControl(
   windowId: string,
   controlName: string,
   fallbackAnchorPhrase?: string,
+  waitUntilEnabled = false,
 ): Promise<string> {
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for native accessibility automation");
@@ -2244,62 +2252,84 @@ sys.exit(1)
         [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
         $processId
       )
-      $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $processCondition)
       $visibleNames = @()
-      foreach ($element in $elements) {
-        try {
-          $current = $element.Current
-          if ($current.Name) { $visibleNames += "$($current.ControlType.ProgrammaticName):$($current.Name)" }
-          if ($current.Name -ne $targetName) { continue }
+      $waitForEnabled = $env:OPENOBSIDIAN_WAIT_FOR_ENABLED_CONTROL -eq "1"
+      $deadline = [DateTime]::UtcNow.AddSeconds(30)
+      do {
+        $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $processCondition)
+        foreach ($element in $elements) {
           try {
-            $element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern).ScrollIntoView()
-          } catch {}
-          $method = $null
-          try {
-            $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-            $method = "InvokePattern.Invoke"
+            $current = $element.Current
+            if ($current.Name) { $visibleNames += "$($current.ControlType.ProgrammaticName):$($current.Name)" }
+            if ($current.Name -ne $targetName) { continue }
+            if ($waitForEnabled -and -not $current.IsEnabled) { continue }
+            try {
+              $element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern).ScrollIntoView()
+            } catch {}
+            $method = $null
+            try {
+              $element.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+              $method = "InvokePattern.Invoke"
+            } catch {
+              try {
+                $toggle = $element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
+                if ($toggle.Current.ToggleState -eq [System.Windows.Automation.ToggleState]::Off) {
+                  $toggle.Toggle()
+                  $method = "TogglePattern.Toggle"
+                }
+              } catch {}
+            }
+            if (-not $method) {
+              try {
+                $expand = $element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
+                if ($expand.Current.ExpandCollapseState -eq [System.Windows.Automation.ExpandCollapseState]::Collapsed) {
+                  $expand.Expand()
+                  $method = "ExpandCollapsePattern.Expand"
+                }
+              } catch {}
+            }
+            if (-not $method) {
+              try {
+                $element.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+                $method = "SelectionItemPattern.Select"
+              } catch {}
+            }
+            if (-not $method) { throw "Control was found but exposes no usable UI Automation activation pattern" }
+            [pscustomobject]@{
+              name = $current.Name
+              control_type = $current.ControlType.ProgrammaticName
+              action = $method
+              is_enabled = [bool]$current.IsEnabled
+              is_offscreen = [bool]$current.IsOffscreen
+            } | ConvertTo-Json -Compress
+            exit 0
           } catch {
-            try {
-              $toggle = $element.GetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern)
-              if ($toggle.Current.ToggleState -eq [System.Windows.Automation.ToggleState]::Off) {
-                $toggle.Toggle()
-                $method = "TogglePattern.Toggle"
-              }
-            } catch {}
+            if ($_.Exception.Message -like "Control was found*") { throw }
           }
-          if (-not $method) {
-            try {
-              $expand = $element.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern)
-              if ($expand.Current.ExpandCollapseState -eq [System.Windows.Automation.ExpandCollapseState]::Collapsed) {
-                $expand.Expand()
-                $method = "ExpandCollapsePattern.Expand"
-              }
-            } catch {}
-          }
-          if (-not $method) { throw "Control was found but exposes no usable UI Automation activation pattern" }
-          [pscustomobject]@{
-            name = $current.Name
-            control_type = $current.ControlType.ProgrammaticName
-            action = $method
-            is_enabled = [bool]$current.IsEnabled
-            is_offscreen = [bool]$current.IsOffscreen
-          } | ConvertTo-Json -Compress
-          exit 0
-        } catch {
-          if ($_.Exception.Message -like "Control was found*") { throw }
         }
-      }
+        if (-not $waitForEnabled) { break }
+        if ([DateTime]::UtcNow -ge $deadline) {
+          throw "Timed out waiting for enabled control: $targetName; observed=$($visibleNames -join ' | ')"
+        }
+        Start-Sleep -Milliseconds 250
+      } while ($true)
       throw "Accessible control not found: $targetName; observed=$($visibleNames -join ' | ')"
     `;
     try {
       return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
         encoding: "utf8",
-        env: {...process.env, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId), OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME: controlName},
+        env: {
+          ...process.env,
+          OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
+          OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME: controlName,
+          OPENOBSIDIAN_WAIT_FOR_ENABLED_CONTROL: waitUntilEnabled ? "1" : "0",
+        },
         stdio: ["ignore", "pipe", "pipe"],
       }).trim();
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+      if (waitUntilEnabled && output.includes("Timed out waiting for enabled control")) throw new Error(output);
       return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Windows UI Automation: ${output || failure.message}`, fallbackAnchorPhrase);
     }
   }
@@ -2368,7 +2398,7 @@ async function runReferenceSourcePreview(
   );
   previewReport.app_data_change_policy_passed_after_preview = true;
 
-  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", `Source ${seedMarkdownPath}`);
+  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", "Source Nested");
   const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
@@ -2401,6 +2431,47 @@ async function runReferenceSourcePreview(
   previewReport.app_data_change_policy_passed_after_close = true;
   previewReport.status = "passed";
   await saveReport();
+}
+
+async function selectFirstNoteFromOpenInspectorMenu(
+  child: ChildProcess,
+  targetPath: string,
+  sortedNotePaths: string[],
+): Promise<string> {
+  if (sortedNotePaths[0] !== targetPath) {
+    throw new Error(`Keyboard inspector fallback requires ${targetPath} to sort first; actual paths=${JSON.stringify(sortedNotePaths)}`);
+  }
+  await focusOpenObsidian(child);
+  if (process.platform === "linux") {
+    xdotool("key", "--clearmodifiers", "Home");
+    xdotool("key", "--clearmodifiers", "Return");
+    return `Keyboard selected the first inspector menu option (${targetPath}) with Home and Return.`;
+  }
+  if (process.platform === "darwin") {
+    const script = `tell application "System Events"
+      key code 115
+      key code 36
+    end tell`;
+    execFileSync("osascript", ["-e", script], {stdio: "ignore"});
+    return `Keyboard selected the first inspector menu option (${targetPath}) with Home and Return.`;
+  }
+  if (process.platform === "win32") {
+    const script = `
+      $ErrorActionPreference = "Stop"
+      $shell = New-Object -ComObject WScript.Shell
+      if (-not $shell.AppActivate(${child.pid ?? -1})) { throw "Could not focus OpenObsidian before keyboard inspector selection" }
+      Start-Sleep -Milliseconds 100
+      $shell.SendKeys("{HOME}")
+      Start-Sleep -Milliseconds 100
+      $shell.SendKeys("{ENTER}")
+      Write-Output "Keyboard selected the first inspector menu option (${targetPath}) with Home and Enter."
+    `;
+    return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  }
+  throw new Error(`Keyboard inspector selection is not configured for ${process.platform}`);
 }
 
 async function runReferenceExternalNoteRefresh(
@@ -2455,7 +2526,14 @@ async function runReferenceExternalNoteRefresh(
   await writeFile(join(reportDirectory, "vault-after-external-note-creation.json"), `${JSON.stringify(vaultAfterCreation, null, 2)}\n`);
   await saveReport();
 
-  refreshReport.refresh_action = await invokeNativeAccessibleControl(child, window.window_id, "Refresh note list");
+  if (process.platform !== "win32") await delay(750);
+  refreshReport.refresh_action = await invokeNativeAccessibleControl(
+    child,
+    window.window_id,
+    "Refresh note list",
+    "Markdown files found",
+    true,
+  );
   const refreshedList = await waitFor("OpenObsidian to finish refreshing its note list after external creation", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-refresh");
@@ -2470,15 +2548,20 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.refreshed_markdown_count_visible = true;
 
   refreshReport.open_note_selector_action = await invokeNativeAccessibleControl(child, window.window_id, "Note to inspect");
-  const visibleMenuOption = await waitFor("OpenObsidian to expose the externally added note in its inspector menu", async () => {
-    await delay(250);
-    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
-    refreshReport.selector_menu_screen_ocr = capture.ocrText.slice(0, 4_000);
-    return capture;
-  }, (capture) => ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
-  refreshReport.selector_menu_screenshot = relative(reportDirectory, visibleMenuOption.pngPath);
+  const visibleMenu = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
+  refreshReport.selector_menu_screen_ocr = visibleMenu.ocrText.slice(0, 4_000);
+  refreshReport.selector_menu_screenshot = relative(reportDirectory, visibleMenu.pngPath);
+  const sortedNotePaths = vaultAfterCreation
+    .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
+    .map((entry) => entry.path)
+    .sort();
+  try {
+    refreshReport.select_external_note_action = await invokeNativeAccessibleControl(child, window.window_id, externalRefreshMarkdownPath);
+  } catch (error) {
+    if (process.platform !== "linux" && process.platform !== "darwin") throw error;
+    refreshReport.select_external_note_action = await selectFirstNoteFromOpenInspectorMenu(child, externalRefreshMarkdownPath, sortedNotePaths);
+  }
   refreshReport.external_note_visible_in_selector = true;
-  refreshReport.select_external_note_action = await invokeNativeAccessibleControl(child, window.window_id, externalRefreshMarkdownPath);
   const selectedNote = await waitFor("OpenObsidian to select the externally added note", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selected");
@@ -2523,7 +2606,7 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.vault_unchanged_after_preview = true;
   refreshReport.app_data_change_policy_passed_after_preview = true;
 
-  refreshReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", `Source ${externalRefreshMarkdownPath}`);
+  refreshReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", "Source After");
   const closedPreview = await waitFor("OpenObsidian to close the externally added note preview", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-preview-closed");

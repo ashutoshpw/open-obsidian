@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T00:58:03Z",
+  "updated_at": "2026-10-11T01:20:06Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "a3aafa3ef954093239a4d128d81de6ec1622fe5f",
+  "last_reconciled_head": "507ef57c6e0773325b15c37a818ddf6483926075",
   "current_milestone": "R2.8.72",
-  "next_action": "Implement C01.2-40 in the pinned Obsidian reference round-trip: create a note externally after OpenObsidian startup, refresh and select it through the UI, verify exact snapshots, then reopen in Obsidian. Push the coherent slice and use GitHub Actions only for executable validation.",
+  "next_action": "Fix the C01.2-40 UI driver based on the all-platform round-trip failure on 507ef57c6e0773325b15c37a818ddf6483926075, then push the correction to origin/main and inspect exact-SHA GitHub Actions results.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -295,7 +295,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.71 implementation SHA ddfee6f6459ef15598337bdebe7b8367fc3b2539 and tracker checkpoint SHA cd9137d0f45f5927aa891c24ac82a63f26489d32 are pushed to origin/main. All seven required workflows passed on the implementation SHA, and Rust migration inventory run 38099452203 passed on the exact tracker SHA. R2.8.72 C01.2-40 is being implemented from starting SHA a3aafa3ef954093239a4d128d81de6ec1622fe5f. All executable validation uses GitHub Actions only.",
+  "push_status": "R2.8.71 implementation SHA ddfee6f6459ef15598337bdebe7b8367fc3b2539 and tracker checkpoint SHA cd9137d0f45f5927aa891c24ac82a63f26489d32 are pushed to origin/main. R2.8.72 implementation SHA 507ef57c6e0773325b15c37a818ddf6483926075 is pushed; six required workflows passed, while Obsidian vault round-trip run 38100421753 failed on Linux, macOS, and Windows and is recorded in journal.md. The UI-driver correction is in progress. All executable validation uses GitHub Actions only.",
   "ci_results": [
     {
       "name": "inventory",
@@ -19922,8 +19922,25 @@
         "Verify the new note appears in Obsidian after reopen with its original bytes and pass all seven required GitHub Actions workflows on the exact implementation SHA across Linux, macOS, and Windows.",
         "Keep parent C01/C01.2 pending for broader reference-app read-only coverage; perform no local executable validation."
       ],
-      "implementation_commits": [],
-      "next_action": "Implement C01.2-40 in the reference round-trip driver, document the pending matrix case, then push the coherent slice to origin/main and inspect exact-SHA GitHub Actions results."
+      "implementation_commits": [
+        "507ef57c6e0773325b15c37a818ddf6483926075"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "507ef57c6e0773325b15c37a818ddf6483926075",
+          "workflow": "Obsidian vault round-trip acceptance",
+          "run_id": 38100421753,
+          "status": "completed",
+          "conclusion": "failure",
+          "jobs": {
+            "windows-latest": {"job_id": 114355035138, "conclusion": "failure", "artifact_id": 11688130317},
+            "macos-latest": {"job_id": 114355035178, "conclusion": "failure", "artifact_id": 11687841382},
+            "ubuntu-24.04": {"job_id": 114355035199, "conclusion": "failure", "artifact_id": 11686484970}
+          },
+          "finding": "Linux OCR missed the visible refresh control; Windows tried the refresh control while disabled and OCR missed the visible menu option; macOS OCR did not match the path-specific preview-close anchor containing Ω."
+        }
+      ],
+      "next_action": "Correct the native/OCR interaction driver for refresh, menu selection, and preview close, then push a small corrective commit to origin/main and inspect exact-SHA CI."
     }
   },
   "ci_preparation": {
