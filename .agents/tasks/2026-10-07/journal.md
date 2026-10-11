@@ -3113,3 +3113,17 @@ digests, and report hashes are in
 Existing GitHub Actions `parallel:` groups passed where applicable. No local
 executable validation was run. C01.2-42 is accepted; parent C01/C01.2 remain
 pending. Next: push the tracker checkpoint and verify it through GitHub Actions.
+
+
+### R2.8.74 tracker checkpoint on `9b7b712`
+
+The tracker checkpoint for accepted C01.2-42 passed exact-SHA migration
+inventory run 38114951017 and the five companion workflows: quality
+38114951191, desktop build 38114951125, plugin renderer 38114951036, loaded
+plugins 38114951060, and Rust CI 38114950978. Every matrix job passed. The
+Obsidian round-trip workflow did not trigger for this documentation-only
+checkpoint; its Linux, macOS, and Windows jobs passed on implementation SHA
+`79526587c3ed3ead47a0cc682baa4a8f92ecb26b`. C01.2-42 is accepted and parent
+C01/C01.2 remain pending. Next: audit remaining read-only requirements and
+select the next bounded reference-app gap for R2.8.75. No local executable
+validation was run.
