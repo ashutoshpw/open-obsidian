@@ -1094,18 +1094,6 @@ impl OpenObsidianApp {
                     "Canvas revision: {}",
                     preview.expected_canvas_revision_sha256
                 ));
-                ui.label("Exact note body");
-                let mut exact_text = preview.text.clone();
-                eframe::egui::ScrollArea::vertical()
-                    .max_height(96.0)
-                    .show(ui, |ui| {
-                        ui.add(
-                            eframe::egui::TextEdit::multiline(&mut exact_text)
-                                .desired_rows(3)
-                                .interactive(false),
-                        );
-                    });
-
                 if self.canvas_note_confirmation {
                     ui.separator();
                     ui.label(format!(
@@ -1121,7 +1109,21 @@ impl OpenObsidianApp {
                             .clicked();
                         cancel_review = ui.button("Cancel review").clicked();
                     });
-                } else {
+                }
+
+                ui.label("Exact note body");
+                let mut exact_text = preview.text.clone();
+                eframe::egui::ScrollArea::vertical()
+                    .max_height(96.0)
+                    .show(ui, |ui| {
+                        ui.add(
+                            eframe::egui::TextEdit::multiline(&mut exact_text)
+                                .desired_rows(3)
+                                .interactive(false),
+                        );
+                    });
+
+                if !self.canvas_note_confirmation {
                     request_review = ui
                         .add_enabled(
                             !operation_busy,
@@ -1196,13 +1198,24 @@ impl OpenObsidianApp {
                     && !write_busy
                     && !self.note_source_editing()
                     && self.link_source_path.is_some();
-                if ui
-                    .add_enabled(
-                        can_preview,
-                        eframe::egui::Button::new("Read note source preview"),
-                    )
-                    .clicked()
+                let read_preview_response = ui.add_enabled(
+                    can_preview,
+                    eframe::egui::Button::new("Read note source preview"),
+                );
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                    && ui.input(|input| !input.raw.events.is_empty())
                 {
+                    eprintln!(
+                        "OpenObsidian CI read-source-preview input: enabled={can_preview}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, event_count={}",
+                        read_preview_response.rect,
+                        ui.ctx().pixels_per_point(),
+                        ui.input(|input| input.pointer.hover_pos()),
+                        read_preview_response.hovered(),
+                        read_preview_response.clicked(),
+                        ui.input(|input| input.raw.events.len()),
+                    );
+                }
+                if read_preview_response.clicked() {
                     request_preview = true;
                 }
 
@@ -10852,7 +10865,6 @@ mod tests {
 
         harness.get_by_label("Build rename preview").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
 
         let preview = harness
@@ -12529,7 +12541,6 @@ mod tests {
 
         harness.get_by_label("Build rename preview").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
 
         let preview = harness
@@ -12564,7 +12575,6 @@ mod tests {
         harness.step();
         harness.get_by_label("Confirm and apply rename").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
 
         let app = harness.state();
@@ -12829,7 +12839,6 @@ mod tests {
 
         harness.get_by_label("Build rename preview").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
         let preview = harness
             .state()
@@ -12873,7 +12882,6 @@ mod tests {
         );
         harness.get_by_label("Confirm and apply rename").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
 
         let app = harness.state();
@@ -12958,7 +12966,6 @@ mod tests {
 
         harness.get_by_label("Build rename preview").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
         let preview = harness
             .state()
@@ -12996,7 +13003,6 @@ mod tests {
         harness.step();
         harness.get_by_label("Confirm and apply rename").click();
         harness.step();
-        assert!(harness.state().rename_receiver.is_some());
         wait_for_rename(&mut harness);
 
         let app = harness.state();

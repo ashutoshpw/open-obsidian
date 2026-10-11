@@ -4451,3 +4451,56 @@ editing and C06/C06.1 acceptance remain pending.
 No local tests, builds, formatters, or application launches were run. A
 non-executable `git diff --check` was inadvertently run while inspecting the
 isolated UI draft and returned clean; no further local validation is planned.
+
+
+## 2026-10-12 — R2.8.94 attempt 1 CI failed; correction underway
+
+Added the bounded Canvas text-card preview, an explicit review and confirmation
+flow for create-only Markdown note creation, revision revalidation, and Markdown
+listing refresh. The native UI now shows this bounded flow before the other vault
+actions so its controls remain reachable in the preview window. The create API
+also rejects non-`.canvas` source paths. Harness coverage checks no writes during
+form entry, preview and review; exact note bytes; unchanged Canvas bytes; and
+first-open/reopen visibility in pinned Obsidian 1.14.4. The UI and engine tests
+cover exact text, final confirmation, stale revisions, destination conflicts,
+and non-Canvas source paths.
+
+Independent read-only reviews found and helped resolve a Windows path-separator
+assertion and a lower-page UI reachability risk. R2.8.94 attempt 1 was pushed on
+exact source SHA `74b8d11121a8d6b9f4fb0796f14eabf70b401aa2`. Five workflows
+passed; Rust CI failed on Ubuntu, Windows, macOS, and MSRV with ten identical UI
+Harness failures, and Ubuntu also reported Rust formatting differences. The
+round-trip failed on all three platforms because the expanded Canvas form
+obscured the existing note-source preview. All run IDs and the complete outcome
+are in `state.json`.
+
+The correction collapses Canvas note creation by default, shortens its scrollable
+exact-text preview so confirmation remains reachable, explicitly expands the
+section in Canvas UI and round-trip interactions, and applies formatting shown
+by Ubuntu CI. No local tests, builds, formatters, validators, or application
+launches were run. Canvas editing and C06/C06.1 acceptance remain pending.
+
+## 2026-10-12 — R2.8.94 attempt 2 CI findings
+
+Attempt 2 was pushed at exact source SHA
+`088f23d67b17a4329007c910553009df07687c1e`. Desktop build, inventory, plugin
+renderer, loaded-plugin, and quality workflows passed. Rust CI passed formatting
+but failed on Ubuntu, macOS, Windows, and MSRV with the same four UI Harness
+failures per target: three Canvas confirmation actions were clipped from the
+accessible UI tree, and a rename test assumed its worker receiver would remain
+present for at least one frame. The three-platform Obsidian round-trip failed
+while reopening or previewing on every OS. Linux's Canvas child was writing to a
+separate log than the picker helper read; Windows OCR confused `C06` with
+`CO6`; macOS's OCR fallback did not load the expected updated preview. The
+macOS window screenshot included padding and shadow that did not match the
+queried window bounds used for click mapping. Run IDs and artifact digests are
+recorded in `state.json`.
+
+The next correction places confirmation controls before the scrollable exact
+body, keeps rename completion and result assertions while removing transient
+worker-handle assertions, passes the per-process Linux app log into the picker,
+allows one OCR edit for the fixture vault name, and maps full-desktop macOS OCR
+through Quartz display bounds. A targeted CI diagnostic records source-preview
+geometry and event counts without including typed or pasted text. No local tests,
+builds, formatters, validators, or application launches were run. The corrected
+phase still requires all seven workflows to pass on one exact pushed SHA.

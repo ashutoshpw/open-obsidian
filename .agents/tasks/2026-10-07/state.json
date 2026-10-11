@@ -30656,11 +30656,42 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
-      "implementation_sha": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "74b8d11121a8d6b9f4fb0796f14eabf70b401aa2",
+          "outcome": "not_accepted",
+          "workflow_runs": {
+            "desktop_build": 38180268105,
+            "inventory": 38180268102,
+            "plugin_renderer": 38180268161,
+            "loaded_plugins": 38180268147,
+            "rust_ci": 38180268144,
+            "vault_roundtrip": 38180268110,
+            "quality": 38180268142
+          },
+          "finding": "All seven GitHub Actions workflows completed. Desktop, inventory, renderer, loaded-plugin, and quality workflows passed. Rust CI failed on Ubuntu, Windows, macOS, and MSRV: each had 96 passed and 10 failed UI Harness tests; Ubuntu also failed cargo fmt --all -- --check. The three-platform Obsidian round-trip failed because the always-expanded Canvas form pushed existing note-source controls below the viewport. No local executable validation was run."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "088f23d67b17a4329007c910553009df07687c1e",
+          "outcome": "not_accepted",
+          "workflow_runs": {
+            "desktop_build": 38180938979,
+            "inventory": 38180938977,
+            "plugin_renderer": 38180939009,
+            "loaded_plugins": 38180938981,
+            "rust_ci": 38180939002,
+            "vault_roundtrip": 38180938997,
+            "quality": 38180938992
+          },
+          "finding": "Five workflows passed: desktop build, inventory, renderer, loaded plugins, and quality. Rust CI passed formatting but failed on Ubuntu, macOS, Windows, and MSRV with 102 passed and four failed tests on each target: three Canvas confirmation controls were clipped and one rename test asserted a transient worker receiver was still present. Round-trip failed on all three operating systems: Linux read the main app log instead of the Canvas child log and exhausted a keyboard fallback despite correct window focus; Windows OCR read C06 as CO6; macOS's OCR fallback did not load the expected updated preview, and its window screenshot included padding/shadow not represented by the queried window bounds. Artifacts: Linux run 38180938997 job 114593163172 artifact 11717932201 sha256 be79ec89b38793e31bab785bf2f22b561658ea2ae525dc371a5d57824d56756f; Windows job 114593163301 artifact 11717637148 sha256 bd80044548e7b302b6ca1d016c22f3fe567fde89f2c2569ab63897d077087544; macOS job 114593163332 artifact 11717961508 sha256 665df3b3dd50d946ea3979bbc8c8efda58d6f25c2cee4cef1be00fce8bcb90b0. No local executable validation was run."
+        }
+      ],
+      "implementation_sha": "088f23d67b17a4329007c910553009df07687c1e",
       "evidence": null,
       "accepted_attempt": null,
-      "push_status": "Implementation and round-trip harness are prepared in isolated worktrees for review. No local tests/builds/formatters/application launches have been run; push the integrated phase and use GitHub Actions for validation."
+      "push_status": "Attempts 1 and 2 are not accepted. Attempt 2 at 088f23d67b17a4329007c910553009df07687c1e passed five workflows; Rust CI still had four failures on each target, and round-trip failed on Linux, Windows, and macOS. The current correction moves confirmation controls ahead of the long body preview, removes race-prone assertions on transient rename worker handles while keeping completion and result assertions, threads the correct per-process Linux log into native picker interactions, allows one-character OCR variation in the fixture name, and maps full-desktop macOS OCR through Quartz display bounds. Source-preview diagnostics record geometry and event counts without printing typed or pasted text. No local executable validation was run."
     }
   },
   "ci_preparation": {

@@ -454,7 +454,7 @@ function clickWindowOpenButton(windowId: string): {window_x: number; window_y: n
   return {window_x: windowX, window_y: windowY, window_width: windowWidth, window_height: windowHeight, click_x: clickX, click_y: clickY};
 }
 
-async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: string): Promise<{window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_activation: string; focused_window_after_activation: string; pointer_before_click: string; egui_hover_event: string | null; keyboard_fallback: boolean}> {
+async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: string): Promise<{window_x: number; window_y: number; window_width: number; window_height: number; click_x: number; click_y: number; focused_window_before_activation: string; focused_window_after_activation: string; pointer_before_click: string; egui_action_event: string; keyboard_fallback: false}> {
   const geometryOutput = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
   const readGeometry = (key: string): number => {
     const match = geometryOutput.match(new RegExp(`^${key}=(\\d+)$`, "m"));
@@ -472,49 +472,25 @@ async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: s
   xdotool("windowfocus", "--sync", windowId);
   await delay(250);
   const focusedWindowAfterActivation = x11InteractionState().focused_window_id;
-  const logOffsetBeforeMotion = (await readFile(applicationLogPath, "utf8")).length;
-  xdotool("mousemove", "--sync", String(clickX), String(clickY));
-  await delay(250);
   const pointerBeforeClick = x11InteractionState().pointer;
-  const localX = Math.round(windowWidth * 0.045);
-  const localY = Math.round(windowHeight * 0.085);
-  const expectedPointer = `pointer=Some([${localX.toFixed(1)} ${localY.toFixed(1)}])`;
-  const eguiHoverEvent = await waitFor(
-    "egui to report the Linux pointer over Open vault",
+  const activationLogBefore = await readFile(applicationLogPath, "utf8");
+  const activationCountBefore = activationLogBefore.split("OpenObsidian CI action: Open vault click received").length - 1;
+  xdotool("mousemove", "--sync", String(clickX), String(clickY));
+  await delay(100);
+  xdotool("click", "1");
+  const eguiActionEvent = await waitFor(
+    "OpenObsidian to receive the Linux Open vault click",
     async () => {
-      const newLog = (await readFile(applicationLogPath, "utf8")).slice(logOffsetBeforeMotion);
-      return newLog.split(/\r?\n/).findLast((line) => line.includes(expectedPointer) && line.includes("hovered=true")) ?? null;
+      const currentLog = await readFile(applicationLogPath, "utf8");
+      const actionLines = currentLog
+        .split(/\r?\n/)
+        .filter((line) => line.includes("OpenObsidian CI action: Open vault click received"));
+      return actionLines.length > activationCountBefore ? actionLines.at(-1) ?? null : null;
     },
     (line) => line !== null,
-    2_000,
-  ).catch(() => null);
-  let keyboardFallback = false;
-  if (eguiHoverEvent) {
-    xdotool("mousedown", "1");
-    await delay(120);
-    xdotool("mouseup", "1");
-  } else {
-    keyboardFallback = true;
-    let openVaultFocused = false;
-    let lastDiagnostic = "No new egui hover event followed the X11 pointer move.";
-    for (let attempt = 0; attempt < 24 && !openVaultFocused; attempt += 1) {
-      const logOffsetBeforeTab = (await readFile(applicationLogPath, "utf8")).length;
-      xdotool("key", "--clearmodifiers", "Tab");
-      await delay(100);
-      const newLog = (await readFile(applicationLogPath, "utf8")).slice(logOffsetBeforeTab);
-      const diagnosticLines = newLog.split(/\r?\n/).filter((line) => line.includes("OpenObsidian CI pointer input:"));
-      const diagnostic = diagnosticLines.at(-1);
-      if (diagnostic) {
-        lastDiagnostic = diagnostic;
-        openVaultFocused = diagnostic.includes("focused=true");
-      }
-    }
-    if (!openVaultFocused) {
-      throw new Error(`Linux keyboard fallback could not focus Open vault after 24 Tab presses; X11 focus=${focusedWindowAfterActivation}; last diagnostic=${lastDiagnostic}`);
-    }
-    xdotool("key", "--clearmodifiers", "Return");
-    await delay(120);
-  }
+    5_000,
+  );
+  if (!eguiActionEvent) throw new Error(`Linux click did not activate Open vault; X11 focus=${focusedWindowAfterActivation}; pointer=${pointerBeforeClick}`);
   return {
     window_x: windowX,
     window_y: windowY,
@@ -525,8 +501,8 @@ async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: s
     focused_window_before_activation: focusedWindowBeforeActivation,
     focused_window_after_activation: focusedWindowAfterActivation,
     pointer_before_click: pointerBeforeClick,
-    egui_hover_event: eguiHoverEvent,
-    keyboard_fallback: keyboardFallback,
+    egui_action_event: eguiActionEvent,
+    keyboard_fallback: false,
   };
 }
 
@@ -1817,16 +1793,17 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
 async function clickOpenVaultButton(
   child: ChildProcess,
   windowId: string,
+  applicationLogPath: string,
   screenshotName = "openobsidian-vault-picker-cancel-click.png",
   reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
 ): Promise<string> {
   await focusOpenObsidian(child);
   if (process.platform === "linux") {
-    const clicked = await clickOpenVaultButtonLinux(windowId, join(reportDirectory, "openobsidian.log"));
+    const clicked = await clickOpenVaultButtonLinux(windowId, applicationLogPath);
     await delay(500);
     const screenshot = await captureDesktopScreenshot(screenshotName);
     reportTarget.picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
-    return `Activated OpenObsidian (focus ${clicked.focused_window_before_activation} -> ${clicked.focused_window_after_activation}), moved to (${clicked.click_x}, ${clicked.click_y}), and waited for egui hover before clicking; window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; pointer_before_click=${clicked.pointer_before_click}; egui_hover_event=${clicked.egui_hover_event ?? "unobserved"}; keyboard_fallback=${clicked.keyboard_fallback}.`;
+    return `Activated OpenObsidian (focus ${clicked.focused_window_before_activation} -> ${clicked.focused_window_after_activation}), clicked (${clicked.click_x}, ${clicked.click_y}), and confirmed the egui Open vault action; window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; pointer_before_click=${clicked.pointer_before_click}; egui_action_event=${clicked.egui_action_event}; keyboard_fallback=${clicked.keyboard_fallback}.`;
   }
   if (process.platform === "darwin") {
     const script = `on run argv
@@ -1948,6 +1925,7 @@ async function clickOpenVaultButton(
 async function selectOpenObsidianVaultFromNativePicker(
   child: ChildProcess,
   window: {window_id: string},
+  applicationLogPath: string,
   targetRoot = vaultRoot,
   reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
   screenshotPrefix = "openobsidian",
@@ -1962,6 +1940,7 @@ async function selectOpenObsidianVaultFromNativePicker(
   const openButtonInteraction = await clickOpenVaultButton(
     child,
     window.window_id,
+    applicationLogPath,
     screenshot("vault-picker-cancel-click"),
     reportTarget,
   );
@@ -2149,7 +2128,11 @@ async function cancelOpenObsidianNativePicker(
   if (linuxWindowsBefore) openReport.picker_cancel_x11_windows_before = linuxWindowsBefore;
   if (process.platform === "linux") openReport.picker_cancel_x11_input_before = x11InteractionState();
   if (windowsBefore) openReport.picker_cancel_windows_before = windowsBefore;
-  const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
+  const openButtonInteraction = await clickOpenVaultButton(
+    child,
+    window.window_id,
+    join(reportDirectory, "openobsidian.log"),
+  );
   openReport.picker_cancel_open_button_interaction = openButtonInteraction;
   if (process.platform === "win32") {
     const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
@@ -2403,9 +2386,10 @@ async function clickVisibleOpenObsidianControl(
 ): Promise<string> {
   const capture = await captureOpenObsidianScreenshot(windowId, child, "openobsidian-control-target");
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
-  const ocrSources: Array<{kind: "window" | "desktop"; ocrPath: string; imagePath: string; candidates: string[]}> = [
-    {kind: "window", ocrPath: capture.ocrPngPath, imagePath: capture.windowPngPath, candidates: []},
-  ];
+  const windowOcrSource = {kind: "window" as const, ocrPath: capture.ocrPngPath, imagePath: capture.windowPngPath, candidates: [] as string[]};
+  const ocrSources: Array<{kind: "window" | "desktop"; ocrPath: string; imagePath: string; candidates: string[]}> = process.platform === "darwin"
+    ? []
+    : [windowOcrSource];
   if (process.platform === "darwin") {
     const desktopOcrPath = join(reportDirectory, "openobsidian-control-target-desktop-ocr.png");
     execFileSync("magick", [capture.pngPath, "-colorspace", "Gray", "-level", "0%,15%", "-resize", "200%", desktopOcrPath], {stdio: "ignore"});
@@ -2472,6 +2456,7 @@ async function clickVisibleOpenObsidianControl(
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
       let verticalControlOffset = 18;
+      if (process.platform === "darwin" && controlName === "Read note source preview") verticalControlOffset = 28;
       if (controlName === "Close source preview") {
         verticalControlOffset = anchorPhrase === "Note source preview" ? 70 : 28;
         if (process.platform === "darwin" && anchorPhrase === "Note source preview") verticalControlOffset = 86;
@@ -2501,26 +2486,32 @@ async function clickVisibleOpenObsidianControl(
     xdotool("mouseup", "1");
     interaction = `xdotool clicked ${clickDescription} at window coordinates (${x}, ${y}) in ${windowId}`;
   } else if (process.platform === "darwin") {
-    const window = ocrSource.kind === "window" ? macOSOpenObsidianWindowBounds(child) : null;
-    const screen = ocrSource.kind === "desktop" ? await pngDimensions(capture.pngPath) : null;
-    const imageSize = await pngDimensions(ocrSource.imagePath);
-    const x = Math.round(window ? window.x + xFraction * window.width : xFraction * (screen?.width ?? 0));
-    const refreshButtonOffset = controlName === "Refresh note list"
-      ? 17 * (window ? window.height / imageSize.height : 1)
-      : 0;
-    const y = Math.round(window ? window.y + yFraction * window.height : yFraction * (screen?.height ?? 0))
-      - Math.round(refreshButtonOffset);
+    const refreshButtonOffsetPoints = controlName === "Refresh note list" ? 17 : 0;
     const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
     await writeFile(swiftPath, `import AppKit
 import CoreGraphics
 import Foundation
 
-guard CommandLine.arguments.count == 3,
-      let x = Double(CommandLine.arguments[1]),
-      let y = Double(CommandLine.arguments[2]) else {
-    fatalError("Expected screen x and y coordinates")
+guard CommandLine.arguments.count == 4,
+      let xFraction = Double(CommandLine.arguments[1]),
+      let yFraction = Double(CommandLine.arguments[2]),
+      let yOffsetPoints = Double(CommandLine.arguments[3]) else {
+    fatalError("Expected desktop OCR fractions and a Quartz-point y offset")
 }
-let point = CGPoint(x: x, y: y)
+guard NSScreen.screens.count == 1 else {
+    fatalError("Desktop OCR click mapping requires the single-display macOS CI screen")
+}
+let displayBounds = CGDisplayBounds(CGMainDisplayID())
+guard displayBounds.width > 0, displayBounds.height > 0 else {
+    fatalError("Could not read the main macOS display bounds in Quartz coordinates")
+}
+guard (0.0...1.0).contains(xFraction), (0.0...1.0).contains(yFraction) else {
+    fatalError("Desktop OCR click fractions fall outside the single-display screenshot")
+}
+let point = CGPoint(
+    x: displayBounds.origin.x + CGFloat(xFraction) * displayBounds.width,
+    y: displayBounds.origin.y + CGFloat(yFraction) * displayBounds.height - CGFloat(yOffsetPoints)
+)
 for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
     guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
         fatalError("Could not create a mouse event")
@@ -2528,9 +2519,10 @@ for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
     event.post(tap: .cghidEventTap)
     if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
 }
+print("\(point.x),\(point.y)")
 `);
-    execFileSync("swift", [swiftPath, String(x), String(y)], {stdio: "ignore"});
-    interaction = `CoreGraphics clicked ${clickDescription} at screen coordinates (${x}, ${y})`;
+    const quartzPoint = execFileSync("swift", [swiftPath, String(xFraction), String(yFraction), String(refreshButtonOffsetPoints)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    interaction = `CoreGraphics clicked ${clickDescription} at desktop fractions (${xFraction}, ${yFraction}), mapped to Quartz screen coordinates (${quartzPoint})`;
   } else if (process.platform === "win32") {
     const geometry = capture.windowGeometry?.match(/x=(-?\d+) y=(-?\d+) width=(\d+) height=(\d+)/);
     if (!geometry) throw new Error(`Could not read OpenObsidian window geometry for OCR click: ${capture.windowGeometry ?? "unavailable"}`);
@@ -4357,7 +4349,11 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     }
     const open = report.openobsidian_open as Record<string, unknown>;
     const expectedInitialMarkdownCount = countMarkdownFiles(noOpBaseline);
-    open.folder_picker = await selectOpenObsidianVaultFromNativePicker(child, window);
+    open.folder_picker = await selectOpenObsidianVaultFromNativePicker(
+      child,
+      window,
+      join(reportDirectory, "openobsidian.log"),
+    );
     let renderAttempt = 0;
     await waitFor("OpenObsidian to render the selected vault and note count", async () => {
       await delay(1_000);
@@ -5110,6 +5106,7 @@ async function runOpenObsidianCanvasNoteCreation(
     noteReport.native_picker = await selectOpenObsidianVaultFromNativePicker(
       child,
       window,
+      join(reportDirectory, "openobsidian-canvas-note-create.log"),
       canvasVaultRoot,
       noteReport,
       "openobsidian-canvas-note-create",
@@ -5118,7 +5115,7 @@ async function runOpenObsidianCanvasNoteCreation(
     const opened = await waitFor("OpenObsidian to render the Canvas fixture vault", async () => {
       await delay(750);
       return await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-selected", noteReport);
-    }, (capture) => capture.ocrText.includes(canvasVaultName)
+    }, (capture) => ocrTextContainsFuzzyPhrase(capture.ocrText, canvasVaultName, 1)
       && new RegExp(`${initialMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText), 30_000);
     screenshots.vault_selected = relative(reportDirectory, opened.windowPngPath);
     noteReport.selected_vault_visible = true;
