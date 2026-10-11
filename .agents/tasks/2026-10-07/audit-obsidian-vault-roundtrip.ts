@@ -2020,8 +2020,9 @@ async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: st
     const windowSize = await pngDimensions(capture.windowPngPath);
     const scaleX = ocrSize.width / windowSize.width;
     const scaleY = ocrSize.height / windowSize.height;
+    const verticalControlOffset = controlName === "Close source preview" ? 28 : 18;
     xFraction = (anchor.left + 75 * scaleX) / ocrSize.width;
-    yFraction = (anchor.top + 18 * scaleY) / ocrSize.height;
+    yFraction = (anchor.top + verticalControlOffset * scaleY) / ocrSize.height;
     clickDescription = `OCR layout anchor ${JSON.stringify(anchor.text)} for ${JSON.stringify(controlName)}`;
   } else {
     xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
