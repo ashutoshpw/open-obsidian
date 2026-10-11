@@ -4334,3 +4334,19 @@ makes the root-refresh test reflect Windows' retained-root behavior while
 preserving the unavailable-root path on other platforms. The remaining
 GitHub-reported formatter layouts are applied. No local tests, builds,
 formatters, validators, or application launches were run.
+
+R2.8.91 attempt 4 was accepted on exact source SHA
+`336e745aac2238c037104ab6cfdb686b59b41d3e`. All seven required GitHub
+Actions workflows passed, including the Rust matrix on Ubuntu, macOS, Windows,
+and Rust 1.95 and the Obsidian 1.14.4 round-trip on Linux, macOS, and Windows.
+Rust CI attempt 1 stalled in the Windows workspace-test step and was cancelled;
+the same-SHA attempt 2 passed all four Rust jobs. Workflow/job IDs and artifact
+archive digests are in
+[`evidence/r2.8.91-attempt-4-336e745.json`](evidence/r2.8.91-attempt-4-336e745.json).
+No local executable validation was run.
+
+R2.8.92 is planned as a pure `CanvasDocument::extract_text_node` operation in
+`crates/doc`, extending the existing C06 text-card fixture with exact valid and
+invalid extraction cases. It will preserve empty, Unicode, multiline, and
+trailing-newline text and leave the document unchanged. Engine orchestration,
+native UI, explicit note creation, and C06/C06.1 acceptance remain pending.

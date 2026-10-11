@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T20:45:37+00:00",
+  "updated_at": "2026-10-11T21:23:34+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
-  "current_milestone": "R2.8.91",
-  "next_action": "Commit and push the R2.8.91 correction for Unix directory syncing, Clippy argument count, Windows retained-root behavior, and formatting; obtain all seven required workflows on that exact SHA. Keep Canvas text extraction as the following document-layer slice; keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
-  "push_status": "R2.8.90 was accepted on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d after all seven required workflows passed. The tracker checkpoint at 25d5962ab1bfbdae562a1a67ca21e5ada2eed948 passed all six workflows triggered by the documentation push; its path-filtered Obsidian round-trip remains accepted on 612fc550c7061d751672790f2b2b21869e990a9d. See evidence/r2.8.90-attempt-3-612fc55.json and evidence/r2.8.91-starting-checkpoint-25d5962.json. R2.8.91 remains in progress: attempt 3 passed six of seven workflows, with Rust CI exposing Unix directory-sync, Clippy, formatting, and Windows test issues. Evidence and exact job IDs are in evidence/r2.8.91-attempt-3-3460b71.json. The correction is being committed and pushed for another exact-SHA run. C06 and C06.1 remain pending for native Canvas UI and explicit note creation.",
+  "last_reconciled_head": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+  "current_milestone": "R2.8.92",
+  "next_action": "Implement the pure CanvasDocument::extract_text_node(&self, node_id: &str) -> Result<&str, CanvasError> document operation in crates/doc, extending the C06 text-card fixture and its inventory hash. Preserve exact text, return typed errors for missing/ambiguous/non-text/missing-or-non-string text, and prove the document is unchanged. Keep engine orchestration, native UI, explicit note creation, and C06/C06.1 acceptance for later milestones; continue using GitHub Actions only for executable validation.",
+  "push_status": "R2.8.91 was accepted on exact implementation SHA 336e745aac2238c037104ab6cfdb686b59b41d3e after all seven required workflows passed. Rust CI attempt 1 was cancelled after a Windows workspace-test stall; same-SHA attempt 2 passed all four jobs. See evidence/r2.8.91-attempt-4-336e745.json. Next: implement R2.8.92 as pure Canvas text extraction, with no engine or UI changes. C06/C06.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "612fc550c7061d751672790f2b2b21869e990a9d"
+      "implementation_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e"
     },
     "R3": {
       "status": "pending",
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.91 accepted on exact source SHA 336e745aac2238c037104ab6cfdb686b59b41d3e after all seven required GitHub Actions workflows passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; the Obsidian 1.14.4 round-trip passed on all three platforms. Rust CI attempt 1 was cancelled after the Windows workspace-test step stalled, and attempt 2 passed all four jobs on the same SHA. Workflow/job IDs and archive digests are recorded in evidence/r2.8.91-attempt-4-336e745.json. No local executable validation was run.",
     "R2.8.83 documentation-only tracker checkpoint SHA 9176467a8b77bc1963352421867cc87f7dfc9798 passed all six required documentation workflows, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95. The path-filtered round-trip passed on implementation SHA 6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef. Exact run/job IDs are in evidence/r2.8.83-tracker-checkpoint-9176467.json. No local executable validation was run.",
     "R2.8.83 accepted as a partial C09 settings/hotkeys data-only slice on exact source SHA 6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef. All seven required workflows passed, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 and the pinned Obsidian 1.14.4 vault round-trip on Linux, macOS and Windows. The three artifact reports record the same source SHA and passed status; their IDs and SHA-256 hashes are in evidence/r2.8.83-attempt-2-6d4d891.json. The first attempt's formatter and UI timing failures remain in evidence/r2.8.83-attempt-1-ece5042.json. C09 and C09.1 remain pending. No local executable validation was run.",
     "R2.8.76 / C01.2-44 passed on exact implementation SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786 after the first attempt exposed Windows/macOS navigation failures before mutation. All seven required workflows passed on the correction SHA; Linux, macOS, and Windows round trips preserved the 142-byte source hash across the external rename, cleared stale preview, selected the renamed path, preserved snapshots, and reopened in Obsidian Restricted Mode. Exact run IDs, job IDs, artifact/report/screenshot hashes, and both attempts are recorded in evidence/r2.8.76-c01.2-44-attempt-1-f231a11.json and evidence/r2.8.76-c01.2-44-attempt-2-6d3ac64.json. C01.2-44 only is accepted; parent C01/C01.2 remain pending. No local executable validation was run.",
@@ -18832,6 +18833,203 @@
         {"name": "Obsidian 1.14.4 vault round-trip on macos-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38166449142/job/114549893257"},
         {"name": "Obsidian 1.14.4 vault round-trip on windows-latest", "status": "completed", "conclusion": "success", "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38166449142/job/114549893502"}
       ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38173615472,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615472",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615472/job/114571232285"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38173615328,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615328",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615328/job/114571232333"
+        },
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615328/job/114571232348"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615328/job/114571232351"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38173615438,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615438",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615438/job/114571232544"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615438/job/114571232716"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615438/job/114571232794"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38173615379,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615379",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615379/job/114571232461"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615379/job/114571232680"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615379/job/114571232714"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38173615382,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615382",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "ubuntu-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615382/job/114571232264"
+        },
+        {
+          "name": "macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615382/job/114571232365"
+        },
+        {
+          "name": "windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615382/job/114571232369"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38173615331,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615331/attempts/2",
+      "attempt": 2,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615331/job/114575713226"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615331/job/114575713421"
+        },
+        {
+          "name": "rust (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615331/job/114575713444"
+        },
+        {
+          "name": "minimum supported Rust (1.95)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615331/job/114575713468"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38173615392,
+      "head_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615392",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615392/job/114571232227"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615392/job/114571232321"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38173615392/job/114571232436"
+        }
+      ]
     }
   ],
   "milestones": {
@@ -30152,7 +30350,7 @@
       "push_status": "Accepted after all seven required GitHub Actions workflows passed on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d. The path-filtered Obsidian round-trip was manually dispatched and passed on the same SHA. C06/C06.1 remain pending for Canvas UI and explicit note creation."
     },
     "R2.8.91": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
       "scope": "Add a root-confined, journaled, create-only vault write for a new note. An existing or racing file must never be overwritten; parent directories are not created implicitly. This is a backend capability only and does not create notes automatically from Canvas edits.",
       "acceptance": [
@@ -30251,6 +30449,23 @@
           },
           "finding": "Six of seven required workflows passed, including the Linux/macOS/Windows Obsidian round-trip. Rust CI found a Unix directory-sync error, a Clippy argument-count error, three rustfmt differences, and a Windows UI test that attempted to rename its still-open vault root.",
           "correction": "Reopen the held parent capability before Unix directory sync; bundle cleanup parameters in a context struct; make the UI test account for Windows' retained-root rename behavior; and apply the remaining rustfmt changes."
+        },
+        {
+          "attempt": 4,
+          "source_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+          "outcome": "accepted",
+          "evidence": "evidence/r2.8.91-attempt-4-336e745.json",
+          "workflow_runs": {
+            "inventory": 38173615472,
+            "quality": 38173615328,
+            "desktop_build": 38173615438,
+            "plugin_renderer": 38173615379,
+            "loaded_plugins": 38173615382,
+            "rust_ci": 38173615331,
+            "vault_roundtrip": 38173615392
+          },
+          "finding": "All seven required workflows passed on exact SHA 336e745. Rust CI attempt 1 was cancelled after the Windows workspace-test step stalled; attempt 2 passed all four jobs on the same SHA. The three-platform Obsidian round-trip passed.",
+          "correction": "Reopened the held directory capability before Unix directory sync, grouped create-temporary cleanup arguments, adapted the UI test for Windows retained-root behavior, and applied Rustfmt corrections."
         }
       ],
       "lockfile_resolution": {
@@ -30265,8 +30480,10 @@
         "cargo_lock_sha256": "4a53a718d5cb55db0fdf5bc57b1d39171f90c4262f9239000def3e66aaa7e884",
         "evidence": "evidence/r2.8.91-cargo-lock-resolution-15b8eef.json"
       },
-      "implementation_sha": null,
-      "push_status": "The create-only API, capability-relative publication, identity-checked staging, fail-closed recovery for ambiguous partial/foreign stages, and failure-injection coverage are committed at 15b8eef; the GitHub-resolved Cargo.lock is committed at f975e48. Attempt 1 passed four of seven workflows, attempt 2 passed five, and attempt 3 passed six including the three-platform Obsidian round-trip. All attempt failures and exact run/job IDs are in their evidence files. The current correction addresses directory sync, Clippy, Windows root handling, and formatting; push it and rerun all seven workflows on the exact correction SHA before acceptance. No local executable validation was run.",
+      "implementation_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "evidence": "evidence/r2.8.91-attempt-4-336e745.json",
+      "accepted_attempt": 4,
+      "push_status": "Accepted after all seven required GitHub Actions workflows passed on exact SHA 336e745aac2238c037104ab6cfdb686b59b41d3e. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; the Obsidian vault round-trip passed on Linux, macOS, and Windows. The first Rust CI attempt was cancelled after the Windows workspace-test step stalled, then the same-SHA retry passed all four Rust jobs. C06/C06.1 remain pending for the native Canvas flow and explicit note creation.",
       "tracker_checkpoint_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
       "tracker_checkpoint_outcome": "passed",
       "tracker_checkpoint_evidence": "evidence/r2.8.91-starting-checkpoint-25d5962.json",
@@ -30284,6 +30501,33 @@
         },
         "roundtrip_implementation_sha": "612fc550c7061d751672790f2b2b21869e990a9d"
       }
+    },
+    "R2.8.92": {
+      "status": "pending",
+      "starting_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
+      "scope": "Add pure Canvas text-node extraction to the document crate. It returns the exact stored text for one uniquely identified text node and does not mutate the Canvas document. This slice does not add engine orchestration, vault writes, a native UI action, or explicit note creation.",
+      "acceptance": [
+        "CanvasDocument::extract_text_node returns the exact text of exactly one matching text node, preserving empty, multiline, Unicode, and trailing-newline content without trimming or normalization.",
+        "Missing IDs, duplicate IDs, non-text nodes, and missing or non-string text return the existing or a new typed CanvasError; extraction never mutates the document.",
+        "Fixture-driven tests extend fixtures/c06-text-card.json with valid and invalid extraction cases, including exact Unicode multiline text; update the existing document-crate inventory entry and fixture SHA-256.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95.",
+        "All executable validation runs only in GitHub Actions; no local tests, builds, formatters, validators, or application launches."
+      ],
+      "known_limits": [
+        "This milestone adds a pure document operation only. Engine integration, explicit native Create note UI, and C06/C06.1 acceptance remain pending."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [],
+      "implementation_sha": null,
+      "push_status": "Planned after R2.8.91 acceptance. Keep this source slice limited to crates/doc and its existing Canvas fixture/inventory entry; use only GitHub Actions for executable validation."
     }
   },
   "ci_preparation": {
