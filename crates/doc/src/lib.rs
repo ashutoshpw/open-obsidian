@@ -1,9 +1,11 @@
 //! Lossless document values shared by the vault engine and native UI.
 
+mod configuration;
 mod markdown_preview;
 mod merge;
 mod yaml;
 
+pub use configuration::{AppearanceMode, AppearanceSettings, parse_appearance_settings};
 pub use markdown_preview::{
     MarkdownPreviewAnalysis, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
     analyze_markdown_preview,

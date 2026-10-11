@@ -3378,3 +3378,23 @@ in `evidence/r2.8.78-c09-discovery-c9ce4a0.json`. R2.8.78 is complete as a
 partial C09 configuration discovery slice. Parent C09 and C09.1 remain pending
 for CSS/theme analysis, settings mapping, app-metadata policy and plugin-write
 policy. No local tests, builds, formatters or validators were run.
+
+## 2026-10-11T09:33:03Z — R2.8.78 tracker checkpoint and R2.8.79 preparation
+
+The six documentation-triggered workflows passed on exact tracker SHA
+`b61541bd8f6842d600ad264e72e29b03759857ab`: inventory 38128241848, quality
+38128241880, desktop build 38128241889, plugin renderer 38128241892,
+loaded-plugin workflows 38128241856, and Rust CI 38128241846. Rust CI passed
+Ubuntu, macOS, Windows, and the locked Rust 1.95 MSRV job. The path-filtered
+Obsidian round-trip did not trigger for the documentation-only checkpoint;
+Linux, macOS, and Windows passed on source SHA
+`c9ce4a00fa418d8302ea6d0b5db5075120c2c411`. Run/job details are in
+`evidence/r2.8.78-tracker-checkpoint-b61541b.json`.
+
+Parallel read-only reviews recommended R2.8.79 as a typed projection of the
+supported `appearance.json` fields in `crates/doc`, integrated with the
+existing read-only `crates/vault` discovery. The implementation keeps raw
+configuration bytes and unknown keys authoritative, and does not apply CSS or
+modify the vault. C09 remains pending for broader appearance/theme and
+app-metadata work; C09.1 remains pending for its plugin-write policy. No local
+tests, builds, formatters, validators, or application launch were run.

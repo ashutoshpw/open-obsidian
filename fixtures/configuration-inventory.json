@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "id": "fixture:c09-configuration-inventory",
-  "covers": ["C09.2"],
-  "purpose": "Discover existing root Obsidian configuration folders and preserve valid JSON object bytes without following symlinks or creating files.",
+  "covers": ["C09"],
+  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project supported appearance settings without following symlinks or creating files.",
   "directories": [
     ".obsidian",
     ".obsidian-broken",
@@ -38,7 +38,7 @@
     },
     {
       "relative_path": ".obsidian-mobile/appearance.json",
-      "source": "{\"theme\":\"dark\",\"futureAppearanceKey\":7}\n"
+      "source": "{\"mode\":\" dark \",\"themeMode\":\"light\",\"colorScheme\":\"system\",\"theme\":\"Northstar\",\"cssTheme\":\" Custom \",\"enabledCssSnippets\":[\" Minimal \",\"Readable\",\"\",\"Minimal\",9],\"accentColor\":\" #3366ff \",\"baseFontSize\":15,\"futureAppearanceKey\":7}\n"
     },
     {
       "relative_path": ".obsidianx/decoy.json",
@@ -51,6 +51,77 @@
     {
       "relative_path": ".hidden/settings.json",
       "source": "{\"ignored\":true}\n"
+    }
+  ],
+  "appearance_cases": [
+    {
+      "source": {
+        "mode": " DARK ",
+        "themeMode": "light",
+        "colorScheme": "system",
+        "theme": "Northstar",
+        "cssTheme": " Custom ",
+        "enabledCssSnippets": [" Minimal ", "Readable", "", "Minimal", 9],
+        "accentColor": " #3366ff ",
+        "baseFontSize": 15,
+        "futureAppearanceKey": 7
+      },
+      "expected": {
+        "mode": "dark",
+        "cssTheme": "Custom",
+        "enabledCssSnippets": ["Minimal", "Readable"],
+        "accentColor": "#3366ff",
+        "baseFontSize": 15
+      }
+    },
+    {
+      "source": {
+        "mode": null,
+        "themeMode": null,
+        "colorScheme": " System ",
+        "theme": "light",
+        "cssTheme": " ",
+        "enabledCssSnippets": [" ", false],
+        "accentColor": 3,
+        "baseFontSize": -1
+      },
+      "expected": {
+        "mode": "system",
+        "cssTheme": null,
+        "enabledCssSnippets": [],
+        "accentColor": null,
+        "baseFontSize": null
+      }
+    },
+    {
+      "source": {
+        "theme": " Solarized ",
+        "enabledCssSnippets": [" first ", "second", "first", "\t", 4],
+        "baseFontSize": 1.25
+      },
+      "expected": {
+        "mode": "unknown",
+        "cssTheme": "Solarized",
+        "enabledCssSnippets": ["first", "second"],
+        "accentColor": null,
+        "baseFontSize": 1.25
+      }
+    },
+    {
+      "source": {
+        "mode": "unexpected",
+        "themeMode": "dark",
+        "theme": "Moonlight",
+        "enabledCssSnippets": "not-an-array",
+        "baseFontSize": 0
+      },
+      "expected": {
+        "mode": "unknown",
+        "cssTheme": "Moonlight",
+        "enabledCssSnippets": [],
+        "accentColor": null,
+        "baseFontSize": null
+      }
     }
   ],
   "expected": {

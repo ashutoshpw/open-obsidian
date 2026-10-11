@@ -1,6 +1,7 @@
 //! Read-only discovery of Obsidian-compatible vault configuration files.
 
 use super::{VaultError, VaultRoot, path_to_slashes};
+use openobsidian_doc::{AppearanceSettings, parse_appearance_settings};
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::ffi::OsStr;
@@ -24,6 +25,8 @@ pub struct VaultConfiguration {
     pub folders: Vec<String>,
     /// Valid top-level JSON objects keyed by vault-relative paths using `/`.
     pub json: BTreeMap<String, VaultConfigurationFile>,
+    /// Supported fields from valid `appearance.json` objects, keyed by vault-relative path.
+    pub appearance: BTreeMap<String, AppearanceSettings>,
 }
 
 impl VaultRoot {
@@ -49,7 +52,12 @@ impl VaultRoot {
                 continue;
             };
             result.folders.push(name);
-            discover_directory(self, &directory, &mut result.json)?;
+            discover_directory(
+                self,
+                &directory,
+                &mut result.json,
+                &mut result.appearance,
+            )?;
         }
         Ok(result)
     }
@@ -63,6 +71,7 @@ fn discover_directory(
     vault: &VaultRoot,
     directory: &Path,
     json: &mut BTreeMap<String, VaultConfigurationFile>,
+    appearance: &mut BTreeMap<String, AppearanceSettings>,
 ) -> Result<(), VaultError> {
     let Some(directory) = confined_directory(vault, directory)? else {
         return Ok(());
@@ -75,7 +84,7 @@ fn discover_directory(
         let file_type = entry.file_type()?;
         if file_type.is_dir() {
             if let Some(child_directory) = confined_directory(vault, &path)? {
-                discover_directory(vault, &child_directory, json)?;
+                discover_directory(vault, &child_directory, json, appearance)?;
             }
             continue;
         }
@@ -91,10 +100,11 @@ fn discover_directory(
         let Ok(Value::Object(object)) = serde_json::from_slice::<Value>(&raw_bytes) else {
             continue;
         };
-        json.insert(
-            path_to_slashes(relative_path)?,
-            VaultConfigurationFile { raw_bytes, object },
-        );
+        let relative_path = path_to_slashes(relative_path)?;
+        if relative_path.ends_with("/appearance.json") {
+            appearance.insert(relative_path.clone(), parse_appearance_settings(&object));
+        }
+        json.insert(relative_path, VaultConfigurationFile { raw_bytes, object });
     }
     Ok(())
 }

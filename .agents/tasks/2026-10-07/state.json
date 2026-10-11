@@ -2,13 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T09:23:34Z",
+  "updated_at": "2026-10-11T09:33:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "c9ce4a00fa418d8302ea6d0b5db5075120c2c411",
-  "current_milestone": "R2.8.78",
-  "next_action": "R2.8.78 passed on exact source SHA c9ce4a00fa418d8302ea6d0b5db5075120c2c411. Commit and push the tracker checkpoint, validate its documentation-triggered workflows, then select the next bounded migration slice. Keep broader C09 and C09.1 pending.",
+  "last_reconciled_head": "b61541bd8f6842d600ad264e72e29b03759857ab",
+  "current_milestone": "R2.8.79",
+  "next_action": "The R2.8.78 tracker checkpoint passed all six documentation-triggered workflows on exact SHA b61541bd8f6842d600ad264e72e29b03759857ab. Push the bounded R2.8.79 typed appearance-settings projection on main and validate all seven required workflows on its exact source SHA. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.78 implementation SHA c9ce4a00fa418d8302ea6d0b5db5075120c2c411 and tracker SHA b61541bd8f6842d600ad264e72e29b03759857ab passed their required GitHub Actions. R2.8.79 is prepared locally and requires exact-SHA CI; no local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -26988,7 +26989,44 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Commit and push the tracker checkpoint for accepted source SHA c9ce4a00fa418d8302ea6d0b5db5075120c2c411; verify documentation-triggered GitHub Actions, then select the next bounded migration slice while C09 and C09.1 remain pending."
+      "next_action": "The tracker checkpoint passed on exact SHA b61541bd8f6842d600ad264e72e29b03759857ab. Continue with R2.8.79 as a separate typed appearance-settings mapping slice; keep C09 and C09.1 pending.",
+      "tracker_checkpoint_validation": {
+        "tracker_sha": "b61541bd8f6842d600ad264e72e29b03759857ab",
+        "conclusion": "passed",
+        "workflow_runs": {
+          "inventory": 38128241848,
+          "quality": 38128241880,
+          "desktop_build": 38128241889,
+          "plugin_renderer": 38128241892,
+          "loaded_plugin_workflows": 38128241856,
+          "rust_ci": 38128241846
+        },
+        "evidence": "evidence/r2.8.78-tracker-checkpoint-b61541b.json",
+        "finding": "All six documentation-triggered workflows passed on the exact tracker SHA. The path-filtered Obsidian round-trip did not trigger; Linux, macOS and Windows passed on implementation SHA c9ce4a00fa418d8302ea6d0b5db5075120c2c411."
+      }
+    },
+    "R2.8.79": {
+      "status": "in_progress",
+      "starting_sha": "b61541bd8f6842d600ad264e72e29b03759857ab",
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "scope": "Add a typed, read-only projection of explicitly supported appearance.json settings in crates/doc and expose it from vault configuration discovery. Retain exact source bytes and unknown JSON keys; do not apply CSS or modify vault files.",
+      "acceptance": [
+        "Fixture cases cover nullish mode-alias precedence, supported and unknown modes, CSS theme fallback, trimmed optional strings, snippet deduplication, invalid types, and positive finite base font size.",
+        "Vault discovery exposes typed appearance settings while retaining the original JSON object and exact bytes; the full vault snapshot remains unchanged.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Ubuntu, macOS, Windows, Rust 1.95 MSRV, and the path-triggered Obsidian round-trip workflow. No local executable validation is allowed.",
+        "Record this as a partial C09 mapping slice; keep C09 and C09.1 pending. CSS/theme analysis and egui application remain separate work."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "next_action": "Push the R2.8.79 source commit to origin/main, then capture every required GitHub Actions job on the exact source SHA."
     }
   },
   "ci_preparation": {

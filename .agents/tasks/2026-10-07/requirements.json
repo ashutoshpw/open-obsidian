@@ -3401,11 +3401,11 @@
       ],
       "legacy_checkpoint": "P2.1",
       "migration_phase": "R2",
-      "rust_owner": "crates/platform",
+      "rust_owner": "crates/vault",
       "mapping_status": "reviewed",
       "runtime_override": "Retained product behavior; historical passes are not Rust acceptance evidence.",
       "migration_disposition": "retained",
-      "migration_acceptance": "Implement confined, deterministic read-only configuration discovery in crates/vault with exact JSON byte and unknown-key preservation, vault-relative paths, symlink and invalid JSON exclusions, and GitHub CI evidence. This is a partial C09 slice; full C09 acceptance also requires CSS/theme analysis, explicit supported-settings mapping, and the app-metadata policy."
+      "migration_acceptance": "Implement confined, deterministic read-only configuration discovery in crates/vault and typed supported appearance-settings projection in crates/doc, preserving exact JSON bytes and unknown keys with vault-relative paths and symlink/invalid JSON exclusions. This is a partial C09 slice; full C09 acceptance also requires CSS/theme analysis, broader supported-settings mapping, and the app-metadata policy."
     },
     {
       "id": "C09.1",

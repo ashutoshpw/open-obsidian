@@ -2,7 +2,8 @@
 
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
-    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+    AppearanceMode, AppearanceSettings, LinkKind, LinkReference, LinkRenameAction,
+    LinkResolution, LinkResolutionStatus,
     LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
     MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, ThreeWayMergeResult,
     TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
@@ -2621,6 +2622,15 @@ mod tests {
             discovered.json[".obsidian/app.json"].object["unknownFutureKey"]["keep"],
             serde_json::json!([1, 2])
         );
+        let appearance = &discovered.appearance[".obsidian-mobile/appearance.json"];
+        assert_eq!(appearance.mode, AppearanceMode::Dark);
+        assert_eq!(appearance.css_theme.as_deref(), Some("Custom"));
+        assert_eq!(
+            appearance.enabled_css_snippets,
+            vec!["Minimal".to_owned(), "Readable".to_owned()]
+        );
+        assert_eq!(appearance.accent_color.as_deref(), Some("#3366ff"));
+        assert_eq!(appearance.base_font_size, Some(15.0));
         assert_eq!(before, after);
     }
 
