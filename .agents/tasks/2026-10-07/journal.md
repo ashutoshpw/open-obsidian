@@ -3455,9 +3455,33 @@ analysis, broader supported settings, and app-metadata policy; C09.1 remains
 pending for its mediated plugin-write policy. No local tests, builds,
 formatters, validators, or application launch were run.
 
-Parallel read-only reviews recommend R2.8.80 as a direct theme/snippet CSS
-asset inventory in `crates/vault`: retain vault-relative paths, exact bytes,
-kind, and SHA-256; include only direct regular `.css` files in real
-`themes/`/`snippets/` folders; exclude symlinks, nested assets, and non-CSS
-files. Keep parsing and CSS application in later slices. Reconcile the fixture
-digest in `inventory.json`, and keep C09 and C09.1 pending.
+Parallel reviews recommended a read-only theme/snippet CSS asset inventory in
+`crates/vault`, retaining vault-relative paths, exact bytes, kind, and SHA-256.
+The fixture and implementation cover direct CSS children in `themes/` and
+`snippets/`, plus Obsidian's standard `themes/<name>/theme.css` entrypoint. The
+named theme directory is scanned only at that one level; sibling CSS and deeper
+nested assets remain excluded. The official theme tutorial installs themes in
+named folders and edits `theme.css`:
+https://github.com/obsidianmd/obsidian-developer-docs/blob/main/en/Themes/App%20themes/Build%20a%20theme.md.
+Symlinks and non-CSS files remain excluded. Parsing and CSS application stay in
+later slices. The fixture digest is reconciled in `inventory.json`; C09 and
+C09.1 remain pending.
+
+## 2026-10-11T10:28:00Z — R2.8.79 tracker checkpoint and R2.8.80 started
+
+Tracker checkpoint SHA `36af32ed88f88844244dbb373a4f60b41f471556` passed all
+six documentation-triggered workflows: inventory 38130953227, quality
+38130953215, desktop build 38130953236, plugin renderer 38130953210,
+loaded-plugin workflows 38130953251, and Rust CI 38130953269. Rust CI passed
+on Ubuntu, macOS, Windows and Rust 1.95. The path-filtered round-trip workflow
+did not trigger for this documentation-only checkpoint; Linux, macOS and
+Windows passed on implementation SHA `e3de21b265ad0de3f0ae213c7d314fe66f45636b`.
+Job IDs are recorded in
+`evidence/r2.8.79-tracker-checkpoint-36af32e.json`.
+
+R2.8.80 starts from tracker SHA `36af32ed88f88844244dbb373a4f60b41f471556`.
+It adds a read-only raw CSS inventory in `crates/vault`, covering direct theme
+and snippet CSS plus the standard one-level `themes/<name>/theme.css` entrypoint.
+Fixture inventory and state are updated; C09 and C09.1 remain pending. Exact-SHA
+GitHub Actions validation is pending. No local tests, builds, formatters,
+validators, or application launch were run.

@@ -7,6 +7,12 @@
     ".obsidian",
     ".obsidian-broken",
     ".obsidian-mobile",
+    ".obsidian-mobile/snippets",
+    ".obsidian/themes",
+    ".obsidian/themes/nested",
+    ".obsidian/themes/Solarized",
+    ".obsidian/themes/Solarized/nested",
+    ".obsidian/snippets",
     ".obsidianx",
     ".hidden",
     "Notes/.obsidian"
@@ -31,6 +37,50 @@
     {
       "relative_path": ".obsidian/data.bin",
       "bytes": [0, 255, 7, 10]
+    },
+    {
+      "relative_path": ".obsidian/themes/Minimal.css",
+      "source": "/* Minimal theme */\nbody { color: #222; }\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/.CSS",
+      "source": "/* CSS suffix dotfile */\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/HighContrast.CSS",
+      "source": "body { color: #fff; background: #000; }\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/notes.txt",
+      "source": "not a stylesheet\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/nested/ignored.css",
+      "source": "body { color: red; }\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/Solarized/manifest.json",
+      "source": "{\"name\":\"Solarized\",\"version\":\"1.0.0\"}\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/Solarized/theme.css",
+      "source": "/* Solarized theme */\nbody { color: #839496; }\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/Solarized/custom.css",
+      "source": "/* not the theme entrypoint */\n"
+    },
+    {
+      "relative_path": ".obsidian/themes/Solarized/nested/ignored.css",
+      "source": "body { color: red; }\n"
+    },
+    {
+      "relative_path": ".obsidian/snippets/outline.css",
+      "source": ".workspace-leaf { outline: 1px solid; }\n"
+    },
+    {
+      "relative_path": ".obsidian-mobile/snippets/Readable.css",
+      "source": "\uFEFFbody {\r\n  color: #fff;\r\n}"
     },
     {
       "relative_path": ".obsidian-broken/invalid.json",
@@ -146,7 +196,40 @@
     "json_paths": [
       ".obsidian-mobile/appearance.json",
       ".obsidian/app.json",
-      ".obsidian/plugins/sample/data.json"
+      ".obsidian/plugins/sample/data.json",
+      ".obsidian/themes/Solarized/manifest.json"
+    ],
+    "style_assets": [
+      {
+        "relative_path": ".obsidian-mobile/snippets/Readable.css",
+        "kind": "snippet",
+        "sha256": "8861e8feeae987250ff696ef1f027a7f2b6bb1ae5ea471a296feb4a5ee3a2760"
+      },
+      {
+        "relative_path": ".obsidian/snippets/outline.css",
+        "kind": "snippet",
+        "sha256": "672d728a3a4eecfee9ef3ac2dea434deb33813776865a34b34b4d3d1e67d899b"
+      },
+      {
+        "relative_path": ".obsidian/themes/.CSS",
+        "kind": "theme",
+        "sha256": "de1704714a75c5657d8b5d421826a5fec0dbac54829646ad86c361256dbb5b4e"
+      },
+      {
+        "relative_path": ".obsidian/themes/HighContrast.CSS",
+        "kind": "theme",
+        "sha256": "ab1d7614a9cb5afe9b956a37d93c8385560d5674ed6e90ed6d0c797df2a4810b"
+      },
+      {
+        "relative_path": ".obsidian/themes/Minimal.css",
+        "kind": "theme",
+        "sha256": "988fb2c0ed788534afdcef130497128f8b3f1eba2053145f8bee77232fb88c8a"
+      },
+      {
+        "relative_path": ".obsidian/themes/Solarized/theme.css",
+        "kind": "theme",
+        "sha256": "1e3e61b152e4046a3e1314a5d16d783ae8e782ab2b2665e0e3173c6a32f3d6be"
+      }
     ]
   }
 }

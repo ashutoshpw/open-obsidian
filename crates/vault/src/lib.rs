@@ -291,7 +291,9 @@ mod history;
 mod rename_transaction;
 mod watcher;
 mod write_recovery;
-pub use configuration::{VaultConfiguration, VaultConfigurationFile};
+pub use configuration::{
+    VaultConfiguration, VaultConfigurationFile, VaultStyleAsset, VaultStyleAssetKind,
+};
 pub use history::{
     VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultHistoryCleanup,
     VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy, VaultHistoryRecord,
@@ -2095,8 +2097,8 @@ mod tests {
     use super::{
         AppearanceMode, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
         MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason, VaultError,
-        VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultWriteRequest,
-        sha256_hex,
+        VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultStyleAssetKind,
+        VaultWriteRequest, sha256_hex,
     };
     use openobsidian_doc::MergeStatus;
     use serde_json::Value;
@@ -2631,6 +2633,28 @@ mod tests {
         );
         assert_eq!(appearance.accent_color.as_deref(), Some("#3366ff"));
         assert_eq!(appearance.base_font_size, Some(15.0));
+        let expected_style_assets = expected["style_assets"].as_array().unwrap();
+        assert_eq!(discovered.styles.len(), expected_style_assets.len());
+        for (style, expected_style) in discovered.styles.iter().zip(expected_style_assets) {
+            let relative_path = expected_style["relative_path"].as_str().unwrap();
+            assert_eq!(style.relative_path, relative_path);
+            assert_eq!(
+                style.kind,
+                match expected_style["kind"].as_str().unwrap() {
+                    "theme" => VaultStyleAssetKind::Theme,
+                    "snippet" => VaultStyleAssetKind::Snippet,
+                    unknown => panic!("unknown fixture style kind {unknown}"),
+                }
+            );
+            let fixture_file = files
+                .iter()
+                .find(|file| file["relative_path"] == relative_path)
+                .expect("expected style path must exist in the fixture");
+            let source_bytes = fixture_file["source"].as_str().unwrap().as_bytes();
+            assert_eq!(style.raw_bytes.as_slice(), source_bytes);
+            assert_eq!(style.sha256, expected_style["sha256"].as_str().unwrap());
+            assert_eq!(style.sha256, sha256_hex(source_bytes));
+        }
         assert_eq!(before, after);
     }
 
@@ -2644,6 +2668,7 @@ mod tests {
 
         assert!(discovered.folders.is_empty());
         assert!(discovered.json.is_empty());
+        assert!(discovered.styles.is_empty());
         assert_eq!(before, vault.snapshot().unwrap());
         assert!(!temp.0.join(".obsidian").exists());
     }
@@ -2654,6 +2679,10 @@ mod tests {
         let vault_path = temp.0.join("vault");
         let outside_path = temp.0.join("outside");
         fs::create_dir_all(vault_path.join(".obsidian/plugins")).unwrap();
+        fs::create_dir_all(vault_path.join(".obsidian/themes")).unwrap();
+        fs::create_dir_all(vault_path.join(".obsidian/themes/linked-file-theme")).unwrap();
+        fs::create_dir_all(vault_path.join(".obsidian/snippets")).unwrap();
+        fs::create_dir_all(vault_path.join(".obsidian-mobile")).unwrap();
         fs::create_dir_all(outside_path.join("plugin")).unwrap();
         fs::write(
             vault_path.join(".obsidian/app.json"),
@@ -2663,6 +2692,10 @@ mod tests {
         let outside_bytes = b"{\"outside\":true}\n";
         fs::write(outside_path.join("linked.json"), outside_bytes).unwrap();
         fs::write(outside_path.join("plugin/data.json"), outside_bytes).unwrap();
+        let outside_theme_bytes = b"body { color: red; }\n";
+        let outside_snippet_bytes = b"body { color: blue; }\n";
+        fs::write(outside_path.join("theme.css"), outside_theme_bytes).unwrap();
+        fs::write(outside_path.join("snippet.css"), outside_snippet_bytes).unwrap();
 
         let file_link = vault_path.join(".obsidian/plugins/linked.json");
         #[cfg(unix)]
@@ -2676,12 +2709,33 @@ mod tests {
         let root_directory_link = vault_path.join(".obsidian-external");
         let root_directory_link_created =
             create_directory_symlink(&outside_path, &root_directory_link).is_ok();
+        let linked_theme_directory = vault_path.join(".obsidian/themes/linked-theme");
+        let linked_theme_directory_created =
+            create_directory_symlink(&outside_path, &linked_theme_directory).is_ok();
+        let themes_directory_link = vault_path.join(".obsidian-mobile/themes");
+        let themes_directory_link_created =
+            create_directory_symlink(&outside_path, &themes_directory_link).is_ok();
+        let theme_file_link = vault_path.join(".obsidian/themes/linked-file-theme/theme.css");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(outside_path.join("theme.css"), &theme_file_link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(outside_path.join("theme.css"), &theme_file_link)
+            .unwrap();
+        let style_file_link = vault_path.join(".obsidian/snippets/linked.css");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(outside_path.join("snippet.css"), &style_file_link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(outside_path.join("snippet.css"), &style_file_link)
+            .unwrap();
 
         let vault = VaultRoot::open(&vault_path).unwrap();
         let before = vault.snapshot().unwrap();
         let discovered = vault.discover_configuration().unwrap();
 
-        assert_eq!(discovered.folders, vec![".obsidian".to_owned()]);
+        assert_eq!(
+            discovered.folders,
+            vec![".obsidian".to_owned(), ".obsidian-mobile".to_owned()]
+        );
         assert!(discovered.json.contains_key(".obsidian/app.json"));
         assert!(
             !discovered
@@ -2693,6 +2747,7 @@ mod tests {
                 .json
                 .contains_key(".obsidian/plugins/linked-plugin/data.json")
         );
+        assert!(discovered.styles.is_empty());
         assert_eq!(
             fs::read(outside_path.join("linked.json")).unwrap(),
             outside_bytes
@@ -2700,6 +2755,14 @@ mod tests {
         assert_eq!(
             fs::read(outside_path.join("plugin/data.json")).unwrap(),
             outside_bytes
+        );
+        assert_eq!(
+            fs::read(outside_path.join("theme.css")).unwrap(),
+            outside_theme_bytes
+        );
+        assert_eq!(
+            fs::read(outside_path.join("snippet.css")).unwrap(),
+            outside_snippet_bytes
         );
         assert_eq!(before, vault.snapshot().unwrap());
         if nested_directory_link_created {
@@ -2718,6 +2781,34 @@ mod tests {
                     .is_symlink()
             );
         }
+        if themes_directory_link_created {
+            assert!(
+                fs::symlink_metadata(themes_directory_link)
+                    .unwrap()
+                    .file_type()
+                    .is_symlink()
+            );
+        }
+        if linked_theme_directory_created {
+            assert!(
+                fs::symlink_metadata(linked_theme_directory)
+                    .unwrap()
+                    .file_type()
+                    .is_symlink()
+            );
+        }
+        assert!(
+            fs::symlink_metadata(style_file_link)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert!(
+            fs::symlink_metadata(theme_file_link)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
     }
 
     #[cfg(unix)]

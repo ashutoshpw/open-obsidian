@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T10:08:49Z",
+  "updated_at": "2026-10-11T10:28:00Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b61541bd8f6842d600ad264e72e29b03759857ab",
-  "current_milestone": "R2.8.79",
-  "next_action": "R2.8.79 passed all seven required workflows on exact source SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b. Record the tracker checkpoint in a documentation-only commit, then start R2.8.80 as a separate read-only theme/snippet CSS asset inventory slice. Keep parent C09 and C09.1 pending.",
-  "push_status": "R2.8.79 source SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b is pushed and all seven required GitHub Actions workflows passed, including Rust 1.95 and Linux/macOS/Windows Obsidian round-trip. No local executable validation was run.",
+  "last_reconciled_head": "36af32ed88f88844244dbb373a4f60b41f471556",
+  "current_milestone": "R2.8.80",
+  "next_action": "R2.8.79's tracker checkpoint passed all six documentation-triggered workflows on exact SHA 36af32ed88f88844244dbb373a4f60b41f471556. R2.8.80 is in progress as a read-only theme/snippet CSS asset inventory, including named theme folders' theme.css entrypoint. Push the implementation phase and wait for all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.79 implementation SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b and tracker checkpoint SHA 36af32ed88f88844244dbb373a4f60b41f471556 are pushed. All required implementation workflows and all six tracker-checkpoint workflows passed. R2.8.80 implementation validation is pending on GitHub Actions; no local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -27106,7 +27106,43 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Record the successful R2.8.79 tracker checkpoint, then start R2.8.80 as a read-only theme/snippet CSS asset inventory slice; keep C09 and C09.1 pending."
+      "next_action": "R2.8.79's tracker checkpoint passed on exact SHA 36af32ed88f88844244dbb373a4f60b41f471556; R2.8.80 is in progress. Keep C09 and C09.1 pending.",
+      "tracker_checkpoint_validation": {
+        "tracker_sha": "36af32ed88f88844244dbb373a4f60b41f471556",
+        "conclusion": "passed",
+        "workflow_runs": {
+          "inventory": 38130953227,
+          "quality": 38130953215,
+          "desktop_build": 38130953236,
+          "plugin_renderer": 38130953210,
+          "loaded_plugin_workflows": 38130953251,
+          "rust_ci": 38130953269
+        },
+        "evidence": "evidence/r2.8.79-tracker-checkpoint-36af32e.json",
+        "finding": "All six documentation-triggered workflows passed on the exact tracker SHA. The path-filtered Obsidian round-trip workflow did not trigger; Linux, macOS and Windows passed on implementation SHA e3de21b265ad0de3f0ae213c7d314fe66f45636b."
+      }
+    },
+    "R2.8.80": {
+      "status": "in_progress",
+      "starting_sha": "36af32ed88f88844244dbb373a4f60b41f471556",
+      "scope": "Add read-only theme/snippet CSS asset inventory to crates/vault. Scan direct CSS files in configuration themes/snippets folders and the theme.css entrypoint directly inside each immediate named theme folder. Preserve raw bytes, SHA-256 and sorted vault-relative paths. Do not parse, apply or render CSS.",
+      "acceptance": [
+        "Discovery covers real .obsidian and .obsidian-* roots, treats missing style directories and missing theme.css entrypoints as empty, and skips symlinked roots, style folders and CSS files.",
+        "Fixture coverage includes direct theme and snippet CSS, case-insensitive .css suffixes, the .CSS dotfile suffix, standard themes/<name>/theme.css, alternate configuration roots, BOM/CRLF bytes without a final newline, non-CSS files, unrelated nested CSS and theme folders without a theme.css entrypoint.",
+        "The sorted inventory exposes exact raw bytes and SHA-256; fixture-backed discovery preserves the entire vault snapshot.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95 plus the path-triggered Obsidian round-trip workflow. No local executable validation is allowed.",
+        "Accept this as a partial C09 asset-inventory slice. Keep C09 and C09.1 pending; CSS safety analysis, UI application, broader settings and app-metadata policy remain separate work."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "next_action": "Push the R2.8.80 implementation phase, then record attempt-specific exact-SHA GitHub Actions results and round-trip artifacts."
     }
   },
   "ci_preparation": {
