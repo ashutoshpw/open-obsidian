@@ -3366,3 +3366,15 @@ and round-trip artifact digests are recorded in
 `evidence/r2.8.78-c09-attempt-1-b0b8557.json`. The inventory and formatter
 corrections are prepared for a new exact-SHA GitHub Actions attempt. No local
 tests, builds, formatters or validators were run.
+
+Attempt 2 was pushed as exact source SHA
+`c9ce4a00fa418d8302ea6d0b5db5075120c2c411`. All seven required workflows
+passed: migration inventory 38127466969, quality 38127467013, desktop build
+38127467115, plugin renderer 38127467099, loaded-plugin workflows 38127466980,
+Rust CI 38127467047, and Obsidian vault round-trip 38127466987. Rust CI passed
+on Ubuntu, macOS and Windows plus Rust 1.95.0; Obsidian 1.14.4 round-trip passed
+on Linux, macOS and Windows. Artifact digests and exact job IDs are recorded
+in `evidence/r2.8.78-c09-discovery-c9ce4a0.json`. R2.8.78 is complete as a
+partial C09 configuration discovery slice. Parent C09 and C09.1 remain pending
+for CSS/theme analysis, settings mapping, app-metadata policy and plugin-write
+policy. No local tests, builds, formatters or validators were run.

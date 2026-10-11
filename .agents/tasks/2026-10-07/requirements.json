@@ -3384,7 +3384,10 @@
         "Linux"
       ],
       "status": "pending",
-      "evidence_paths": [],
+      "evidence_paths": [
+        "evidence/r2.8.78-c09-attempt-1-b0b8557.json",
+        "evidence/r2.8.78-c09-discovery-c9ce4a0.json"
+      ],
       "tested_source_tree": null,
       "blocker": null,
       "gate_class": "implementation",
@@ -10536,7 +10539,7 @@
       "runtime_override": "Documentation upkeep is a continuing migration requirement; this row captures the final audited completion gate."
     }
   ],
-  "reviewed_at": "2026-10-11T09:10:56+00:00",
+  "reviewed_at": "2026-10-11T09:23:34+00:00",
   "mapping_review": {
     "status": "complete",
     "reviewed_requirement_count": 212,

@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.78 / C09 read-only configuration discovery slice",
+  "attempt": 2,
+  "tested_source_sha": "c9ce4a00fa418d8302ea6d0b5db5075120c2c411",
+  "recorded_at": "2026-10-11T09:22:03Z",
+  "conclusion": "accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38127466969,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127466969",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": {"job_id": 114434708170, "conclusion": "success"}
+      }
+    },
+    "quality": {
+      "run_id": 38127467013,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127467013",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114434708619, "conclusion": "success"},
+        "macos": {"job_id": 114434708680, "conclusion": "success"},
+        "windows": {"job_id": 114434708745, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38127467115,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127467115",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114434708988, "conclusion": "success"},
+        "macos": {"job_id": 114434709070, "conclusion": "success"},
+        "windows": {"job_id": 114434709084, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38127467099,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127467099",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114434708791, "conclusion": "success"},
+        "ubuntu": {"job_id": 114434708879, "conclusion": "success"},
+        "windows": {"job_id": 114434708907, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38127466980,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127466980",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114434708281, "conclusion": "success"},
+        "ubuntu": {"job_id": 114434708355, "conclusion": "success"},
+        "macos": {"job_id": 114434708379, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38127467047,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127467047",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114434708401, "conclusion": "success"},
+        "windows": {"job_id": 114434708490, "conclusion": "success"},
+        "ubuntu": {"job_id": 114434708504, "conclusion": "success"},
+        "minimum_supported_rust_1_95": {
+          "job_id": 114434708488,
+          "conclusion": "success",
+          "toolchain": "Rust 1.95.0",
+          "command": "cargo test --workspace --locked"
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38127466987,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38127466987",
+      "conclusion": "success",
+      "obsidian_version": "1.14.4",
+      "jobs": {
+        "macos": {"job_id": 114434708291, "conclusion": "success"},
+        "linux": {"job_id": 114434708395, "conclusion": "success"},
+        "windows": {"job_id": 114434708416, "conclusion": "success"}
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11697819024,
+          "size_bytes": 8349383,
+          "sha256_digest": "dbbbed0da2d4f151ea6a40bd81e9921e88566d56bd616a38790f5ca0537f2ffc"
+        },
+        "macos": {
+          "artifact_id": 11697154009,
+          "size_bytes": 9389943,
+          "sha256_digest": "4cceaa1567fd186804bef8789c986a62d908a117650ffcdb9c6ac5820f37a328"
+        },
+        "windows": {
+          "artifact_id": 11696939530,
+          "size_bytes": 7812693,
+          "sha256_digest": "5a9dd58d47c0f1c9543155f6bc2c659b1bf994c1b58b23ebeb827aedae74eb2f"
+        }
+      }
+    }
+  },
+  "acceptance_status": "R2.8.78 is accepted as a partial C09 implementation slice on this exact source SHA. Parent C09 remains pending until CSS/theme analysis, supported-settings mapping, and app-metadata policy are complete; C09.1 remains pending. All seven required workflows passed. No local tests, builds, formatters, or validators were run."
+}
