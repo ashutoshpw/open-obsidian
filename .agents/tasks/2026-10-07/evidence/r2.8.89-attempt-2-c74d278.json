@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.89",
+  "source_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+  "attempt": 2,
+  "outcome": "accepted",
+  "workflow_run_attempt": "1",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38161402914,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402914",
+      "jobs": [
+        {"id": 114534904250, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38161402884,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402884",
+      "jobs": [
+        {"id": 114534904610, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114534904827, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114534904888, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38161402926,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402926",
+      "jobs": [
+        {"id": 114534904693, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114534904850, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114534904922, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38161402897,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402897",
+      "jobs": [
+        {"id": 114534904734, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114534904988, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114534905189, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38161402896,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402896",
+      "jobs": [
+        {"id": 114534904635, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114534904802, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114534904851, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38161402924,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402924",
+      "jobs": [
+        {"id": 114534904403, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114534904634, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114534904673, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114534904747, "name": "rust (ubuntu-latest)", "conclusion": "success"}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38161402876,
+      "head_sha": "c74d27860f7c60459373887bf85caec2c3af2182",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38161402876",
+      "jobs": [
+        {
+          "id": 114534904225,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "success",
+          "artifact_id": 11710313545,
+          "artifact_name": "obsidian-vault-roundtrip-Linux-c74d27860f7c60459373887bf85caec2c3af2182",
+          "artifact_zip_sha256": "949f1a90bb17e73a9f98a9f4abdfe49d7cfacb744ef2601c5b65705fe57fb759",
+          "report_sha256": "d76aa73c727f1271c60346e175874e33b78d13b113a934ab1cf89c5d5af7305d"
+        },
+        {
+          "id": 114534904468,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "success",
+          "artifact_id": 11710786674,
+          "artifact_name": "obsidian-vault-roundtrip-Windows-c74d27860f7c60459373887bf85caec2c3af2182",
+          "artifact_zip_sha256": "e76f5f44b8d17deb2e5445fdca7a85a5ecdf02c7e56a70af01a28921c5d120c6",
+          "report_sha256": "112253a444db103811d2dda9af45f4c82bec5dd0f24e9a81bf30570241edcb22"
+        },
+        {
+          "id": 114534904516,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "success",
+          "artifact_id": 11710671858,
+          "artifact_name": "obsidian-vault-roundtrip-macOS-c74d27860f7c60459373887bf85caec2c3af2182",
+          "artifact_zip_sha256": "91d2fc58745c5f200e4b06bb4ecd89a44d73ac499e1583f14aa90eb7b50010b4",
+          "report_sha256": "f632fefcf5213aac4f56a0017f499f5e66f26994c108bb774303031197255737"
+        }
+      ]
+    }
+  },
+  "canvas_reference_reopen": {
+    "application": "Obsidian Desktop 1.14.4",
+    "fixture": "Dedicated reference-compatible known-field Canvas fixture in a fresh isolated profile",
+    "canvas_path": "C06 Reference.canvas",
+    "target_path": "Notes/Target.md",
+    "target_subpath": "#^block-id",
+    "canvas_bytes": 741,
+    "canvas_sha256": "2258580368625a06b2b3d2f5b0576b032678b0a7bc73d1292716642c9c7f4cc5",
+    "source_unchanged_after_first_shutdown_and_reopen_shutdown": true,
+    "target_paragraph_visible_and_subpath_error_absent_on_first_open_and_reopen": true,
+    "per_platform_workspace_changes": {"Linux": [], "macOS": [], "Windows": []},
+    "main_vault_non_workspace_paths_unchanged_on_all_platforms": true
+  },
+  "artifacts": [
+    {
+      "id": 11710313545,
+      "runner_os": "Linux",
+      "zip_sha256": "949f1a90bb17e73a9f98a9f4abdfe49d7cfacb744ef2601c5b65705fe57fb759",
+      "report_sha256": "d76aa73c727f1271c60346e175874e33b78d13b113a934ab1cf89c5d5af7305d"
+    },
+    {
+      "id": 11710671858,
+      "runner_os": "macOS",
+      "zip_sha256": "91d2fc58745c5f200e4b06bb4ecd89a44d73ac499e1583f14aa90eb7b50010b4",
+      "report_sha256": "f632fefcf5213aac4f56a0017f499f5e66f26994c108bb774303031197255737"
+    },
+    {
+      "id": 11710786674,
+      "runner_os": "Windows",
+      "zip_sha256": "e76f5f44b8d17deb2e5445fdca7a85a5ecdf02c7e56a70af01a28921c5d120c6",
+      "report_sha256": "112253a444db103811d2dda9af45f4c82bec5dd0f24e9a81bf30570241edcb22"
+    },
+    {
+      "id": 11710346846,
+      "runner_os": "Linux",
+      "name": "rust-plugin-runtime-Linux-c74d27860f7c60459373887bf85caec2c3af2182",
+      "bytes": 2695,
+      "zip_sha256": "27bae0d353b80e4f9fe684bcdceaf48e1d7576411ebdb5dc0ecbe97e17a2c6ce"
+    },
+    {
+      "id": 11710666538,
+      "runner_os": "macOS",
+      "name": "rust-plugin-runtime-macOS-c74d27860f7c60459373887bf85caec2c3af2182",
+      "bytes": 2698,
+      "zip_sha256": "00241e63dd4a333f536500358c1d5e872972b5cea0bdac0a6c16720cb4b83c8c"
+    },
+    {
+      "id": 11710316962,
+      "runner_os": "Windows",
+      "name": "rust-plugin-runtime-Windows-c74d27860f7c60459373887bf85caec2c3af2182",
+      "bytes": 2715,
+      "zip_sha256": "aaeef678eba09444a22d34af335a386577dc3b4a68fa750d416a3d78267e73ab"
+    },
+    {
+      "id": 11710961328,
+      "runner_os": "Linux",
+      "name": "openobsidian-native-preview-Linux-c74d27860f7c60459373887bf85caec2c3af2182",
+      "bytes": 10794419,
+      "zip_sha256": "6e8d5838c9b8a254c3559f7c3afef2f14e7993da60b0fc3eeab4cf5dcbaae1dc"
+    }
+  ],
+  "all_seven_required_workflows_passed": true,
+  "roundtrip_platforms": ["Linux", "macOS", "Windows"],
+  "finding": "All seven required workflows passed on attempt 1 of exact-SHA correction commit c74d27860f7c60459373887bf85caec2c3af2182. Rust CI passed formatting, workspace tests, Clippy, crate layering, native builds, and Wry compatibility probes on Ubuntu, macOS, and Windows; Rust 1.95 locked workspace tests passed. The Obsidian 1.14.4 round-trip passed on Linux, macOS, and Windows. Each report shows the Canvas target visible, the 741-byte Canvas hash unchanged through both shutdowns, and no reopen workspace changes.",
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions. Completed GitHub Actions artifacts were downloaded and inspected as evidence only.",
+  "last_updated_at": "2026-10-11T18:02:29Z"
+}

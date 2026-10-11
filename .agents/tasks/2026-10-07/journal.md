@@ -4162,5 +4162,12 @@ All three Obsidian round-trip reports confirm `C06 Reference.canvas` reopened
 with its referenced block visible and its 741-byte source SHA unchanged after
 both shutdowns. Exact run/job IDs, artifact IDs and digests, and report hashes
 are in `evidence/r2.8.89-attempt-1-992e92f.json`. The exact three line-layout
-changes from GitHub's formatter log are applied; the correction awaits its
-source commit and fresh exact-SHA CI. No local executable validation was run.
+changes from GitHub's formatter log were applied in correction source SHA
+`c74d27860f7c60459373887bf85caec2c3af2182`. All seven required workflows
+passed on that exact SHA on attempt 1, including Rust CI across Ubuntu, macOS,
+Windows, and Rust 1.95, and Obsidian round-trip across Linux, macOS, and
+Windows. Exact run/job IDs, round-trip report hashes, and artifact digests are
+in `evidence/r2.8.89-attempt-2-c74d278.json`. R2.8.89 is accepted as a pure
+document-layer edit; persisted Canvas edits, explicit note creation, and UI
+integration remain pending under C06/C06.1. No local executable validation was
+run.
