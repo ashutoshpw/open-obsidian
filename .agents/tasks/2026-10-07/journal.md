@@ -3201,5 +3201,20 @@ artifact digests, report hashes, and screenshot hashes are recorded in
 evidence/r2.8.75-c01.2-43-attempt-2-938f4cd.json.
 
 C01.2-43 is accepted; broader C01/C01.2 remain pending. No local executable
-validation was run. Next: push the evidence tracker checkpoint and verify its
-documentation-triggered GitHub Actions.
+validation was run.
+
+### R2.8.75 tracker checkpoint on 3d69885
+
+The evidence tracker checkpoint passed all six documentation-triggered
+GitHub Actions workflows on exact SHA 3d6988523e90819b15f4893736a0cfbfb782e896:
+migration inventory run 38119086998, quality 38119087016, desktop build
+38119086937, plugin renderer 38119087023, loaded-plugin workflows 38119086981,
+and Rust CI 38119086983. All platform matrix jobs passed. The path-filtered
+Obsidian round-trip workflow did not trigger for this documentation-only
+commit; the Linux, macOS, and Windows round-trip jobs passed on implementation
+SHA 938f4cda4885efc09d75e6d1eeb182398cacf229. The applicable native parallel
+step groups passed on both the implementation and tracker checkpoints.
+
+Next: audit the remaining C01/C01.2 read-only requirements and choose the next
+bounded gap. Parent C01/C01.2 remain pending; executable validation stays in
+GitHub Actions.

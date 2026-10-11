@@ -26650,8 +26650,20 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Push the accepted evidence tracker checkpoint and verify documentation-triggered GitHub Actions. Then continue with the next bounded C01/C01.2 read-only requirement; parent C01/C01.2 remain pending.",
-      "evidence": "evidence/r2.8.75-c01-readonly-audit.md"
+      "next_action": "Audit the remaining C01/C01.2 read-only requirements and select the next bounded gap. Keep parent C01/C01.2 pending until their broader acceptance criteria pass; use GitHub Actions for executable validation.",
+      "evidence": "evidence/r2.8.75-c01-readonly-audit.md",
+      "tracker_checkpoint_validation": {
+        "sha": "3d6988523e90819b15f4893736a0cfbfb782e896",
+        "run_ids": {
+          "inventory": 38119086998,
+          "quality": 38119087016,
+          "desktop_build": 38119086937,
+          "plugin_renderer": 38119087023,
+          "loaded_plugin_workflows": 38119086981,
+          "rust_ci": 38119086983
+        },
+        "conclusion": "All six documentation-triggered workflows passed on this exact tracker SHA, including every platform matrix. The Obsidian round-trip workflow was not triggered for documentation-only changes; all three reference-app jobs passed on implementation SHA 938f4cda4885efc09d75e6d1eeb182398cacf229."
+      }
     }
   },
   "ci_preparation": {
