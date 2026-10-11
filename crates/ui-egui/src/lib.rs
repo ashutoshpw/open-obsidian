@@ -708,13 +708,30 @@ impl OpenObsidianApp {
                 }
             });
             let can_resolve = !note_navigation_busy && self.link_source_path.is_some();
-            if ui
-                .add_enabled(
-                    can_resolve,
-                    eframe::egui::Button::new("Resolve link status"),
-                )
-                .clicked()
+            let resolve_response = ui.add_enabled(
+                can_resolve,
+                eframe::egui::Button::new("Resolve link status"),
+            );
+            let resolve_clicked = resolve_response.clicked();
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                && ui.input(|input| !input.raw.events.is_empty())
             {
+                let selected = self
+                    .link_source_path
+                    .as_ref()
+                    .map_or_else(|| "<none>".to_owned(), |path| path.display().to_string());
+                eprintln!(
+                    "OpenObsidian CI resolve-link-status input: enabled={}, selected={selected}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                    can_resolve,
+                    resolve_response.rect,
+                    ui.ctx().pixels_per_point(),
+                    ui.input(|input| input.pointer.hover_pos()),
+                    resolve_response.hovered(),
+                    resolve_clicked,
+                    ui.input(|input| input.raw.events.clone()),
+                );
+            }
+            if resolve_clicked {
                 self.start_link_resolution();
             }
         });

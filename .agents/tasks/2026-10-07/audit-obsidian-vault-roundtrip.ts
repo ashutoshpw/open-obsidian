@@ -2687,37 +2687,109 @@ async function clickLinuxNoteNavigationButtonFromCiGeometry(
 ): Promise<string> {
   const controlName = direction === "previous" ? "Previous note" : "Next note";
   const diagnosticPrefix = `OpenObsidian CI ${direction}-note input:`;
+  const bounds = await readOpenObsidianCiButtonBounds(controlName, diagnosticPrefix);
+  const x = Math.round(((bounds.left + bounds.right) / 2) * bounds.pixelsPerPoint);
+  const y = Math.round(((bounds.top + bounds.bottom) / 2) * bounds.pixelsPerPoint);
+  xdotool("windowfocus", "--sync", windowId);
+  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+  xdotool("mousedown", "1");
+  await delay(80);
+  xdotool("mouseup", "1");
+  return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${bounds.diagnostic}`;
+}
+
+async function clickLinuxResolveButtonFromCiGeometry(windowId: string, authoredNotePath: string): Promise<string> {
+  xdotool("windowfocus", "--sync", windowId);
+  xdotool("mousemove", "--sync", "--window", windowId, "1", "1");
+  const bounds = await readOpenObsidianCiButtonBounds(
+    "Resolve link status",
+    "OpenObsidian CI resolve-link-status input:",
+    authoredNotePath,
+  );
+  const x = Math.round(((bounds.left + bounds.right) / 2) * bounds.pixelsPerPoint);
+  const y = Math.round(((bounds.top + bounds.bottom) / 2) * bounds.pixelsPerPoint);
+  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+  xdotool("mousedown", "1");
+  await delay(80);
+  xdotool("mouseup", "1");
+  return `xdotool clicked Resolve link status from CI response geometry at window coordinates (${x}, ${y}); ${bounds.diagnostic}`;
+}
+
+async function readOpenObsidianCiButtonBounds(
+  controlName: string,
+  diagnosticPrefix: string,
+  expectedSelectedPath?: string,
+): Promise<{diagnostic: string; left: number; top: number; right: number; bottom: number; pixelsPerPoint: number}> {
   const diagnosticLines = await waitFor(
     `OpenObsidian to report the enabled ${controlName} button bounds`,
     async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
-    (lines) => lines.some((line) => line.startsWith(diagnosticPrefix) && line.includes("enabled=true") && line.includes("pixels_per_point=")),
+    (lines) => lines.some((line) => line.startsWith(diagnosticPrefix)
+      && line.includes("enabled=true")
+      && line.includes("pixels_per_point=")
+      && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}`))),
     5_000,
   );
   const diagnostic = [...diagnosticLines].reverse().find((line) => (
     line.startsWith(diagnosticPrefix)
     && line.includes("enabled=true")
     && line.includes("pixels_per_point=")
+    && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}`))
   ));
   const geometry = diagnostic?.match(/response_rect=\[\[(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\]\s+-\s+\[(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\]\], pixels_per_point=(\d+(?:\.\d+)?)/);
   if (!diagnostic || !geometry) {
     throw new Error(`OpenObsidian did not report usable ${controlName} button bounds: ${diagnostic ?? "missing diagnostic"}`);
   }
-  const left = Number(geometry[1]);
-  const top = Number(geometry[2]);
-  const right = Number(geometry[3]);
-  const bottom = Number(geometry[4]);
-  const pixelsPerPoint = Number(geometry[5]);
-  if (!(pixelsPerPoint > 0) || !(right > left) || !(bottom > top)) {
+  const bounds = {
+    diagnostic,
+    left: Number(geometry[1]),
+    top: Number(geometry[2]),
+    right: Number(geometry[3]),
+    bottom: Number(geometry[4]),
+    pixelsPerPoint: Number(geometry[5]),
+  };
+  if (!(bounds.pixelsPerPoint > 0) || !(bounds.right > bounds.left) || !(bounds.bottom > bounds.top)) {
     throw new Error(`OpenObsidian reported invalid ${controlName} button geometry: ${diagnostic}`);
   }
-  const x = Math.round(((left + right) / 2) * pixelsPerPoint);
-  const y = Math.round(((top + bottom) / 2) * pixelsPerPoint);
-  xdotool("windowfocus", "--sync", windowId);
-  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
-  xdotool("mousedown", "1");
-  await delay(80);
-  xdotool("mouseup", "1");
-  return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${diagnostic}`;
+  return bounds;
+}
+
+async function clickMacOsResolveButtonFromCiGeometry(child: ChildProcess, authoredNotePath: string): Promise<string> {
+  await focusOpenObsidian(child);
+  const window = macOSOpenObsidianWindowBounds(child);
+  // Move the pointer once so egui emits fresh bounds for the newly selected note.
+  const macOSRunnerTitlebarHeightPoints = 32;
+  await postMacOsPointerEvent(window.x + 5, window.y + macOSRunnerTitlebarHeightPoints + 5, false);
+  const diagnosticPrefix = "OpenObsidian CI resolve-link-status input:";
+  const bounds = await readOpenObsidianCiButtonBounds("Resolve link status", diagnosticPrefix, authoredNotePath);
+  const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
+  // egui coordinates start below the macOS title bar; AppKit/CGEvent coordinates are screen points.
+  const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
+  await postMacOsPointerEvent(x, y, true);
+  return `CoreGraphics clicked Resolve link status at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
+}
+
+async function postMacOsPointerEvent(x: number, y: number, click: boolean): Promise<void> {
+  const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
+  const eventTypes = click ? "[CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp]" : "[CGEventType.mouseMoved]";
+  await writeFile(swiftPath, `import AppKit
+import CoreGraphics
+import Foundation
+
+guard CommandLine.arguments.count == 3,
+      let x = Double(CommandLine.arguments[1]),
+      let y = Double(CommandLine.arguments[2]) else {
+    fatalError("Expected screen x and y coordinates")
+}
+let point = CGPoint(x: x, y: y)
+for type in ${eventTypes} {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
+        fatalError("Could not create mouse event")
+    }
+    event.post(tap: .cghidEventTap)
+    if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
+}
+`);
+  execFileSync("swift", [swiftPath, String(x), String(y)], {stdio: "ignore"});
 }
 
 async function selectReferenceNoteForEmbedResolution(
@@ -2746,11 +2818,13 @@ async function selectReferenceNoteForEmbedResolution(
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
     }
+    const dismissAction = await invokeNativeAccessibleControl(child, windowId, "Note to inspect", targetPath);
     return {
       strategy: "windows_ui_automation_exact_path_from_expanded_selector",
       expanded_selector_screenshot: relative(reportDirectory, openMenuScreenshot.pngPath),
       target_path_visible_by_ocr: ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath),
       selection_action: selectionAction,
+      selector_dismiss_action: dismissAction,
       exact_selected_path: targetPath,
     };
   }
@@ -3095,12 +3169,11 @@ async function runReferenceImageEmbedResolution(
   resolutionReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
   resolutionReport.selected_note_window_screenshot = relative(reportDirectory, selectedNote.windowPngPath);
 
-  resolutionReport.resolve_link_status_action = await invokeNativeAccessibleControl(
-    child,
-    window.window_id,
-    "Resolve link status",
-    authoredNotePath,
-  );
+  resolutionReport.resolve_link_status_action = process.platform === "linux"
+    ? await clickLinuxResolveButtonFromCiGeometry(window.window_id, authoredNotePath)
+    : process.platform === "darwin"
+      ? await clickMacOsResolveButtonFromCiGeometry(child, authoredNotePath)
+      : await invokeNativeAccessibleControl(child, window.window_id, "Resolve link status", authoredNotePath);
   const expectedSummary = `OpenObsidian CI link resolution: source=${authoredNotePath}, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false`;
   const expectedReference = `OpenObsidian CI link reference: source=${authoredNotePath}, kind=Embed, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}`;
   const expectedEmbedPrefix = `OpenObsidian CI note embed: source=${authoredNotePath}, index=0, raw=${JSON.stringify(noteEmbed)}, status=Resolved, target=${attachmentPath}, disposition=image, revision_sha256=${attachmentEntry.sha256}, `;
