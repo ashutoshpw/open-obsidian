@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.80 tracker checkpoint",
+  "tested_tracker_sha": "9a00847a683450aa667d74805f07c9ed98d1cb66",
+  "implementation_sha": "b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee",
+  "recorded_at": "2026-10-11T10:53:45Z",
+  "conclusion": "passed",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38132934956,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132934956",
+      "conclusion": "success",
+      "jobs": {
+        "inventory": {"job_id": 114450837116, "conclusion": "success"}
+      }
+    },
+    "quality": {
+      "run_id": 38132934911,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132934911",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114450836958, "conclusion": "success"},
+        "macos": {"job_id": 114450837053, "conclusion": "success"},
+        "ubuntu": {"job_id": 114450837066, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38132934909,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132934909",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114450837052, "conclusion": "success"},
+        "windows": {"job_id": 114450837222, "conclusion": "success"},
+        "ubuntu": {"job_id": 114450837255, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38132934942,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132934942",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114450837125, "conclusion": "success"},
+        "windows": {"job_id": 114450837161, "conclusion": "success"},
+        "ubuntu": {"job_id": 114450837217, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38132934924,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132934924",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114450836970, "conclusion": "success"},
+        "macos": {"job_id": 114450837091, "conclusion": "success"},
+        "ubuntu": {"job_id": 114450837190, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38132934912,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38132934912",
+      "conclusion": "success",
+      "jobs": {
+        "minimum_supported_rust_1_95": {"job_id": 114450836881, "conclusion": "success"},
+        "windows": {"job_id": 114450836923, "conclusion": "success"},
+        "ubuntu": {"job_id": 114450837007, "conclusion": "success"},
+        "macos": {"job_id": 114450837045, "conclusion": "success"}
+      }
+    }
+  },
+  "path_filtered_workflow": {
+    "workflow": "Obsidian vault round-trip acceptance",
+    "triggered": false,
+    "reason": "The tracker checkpoint changed only migration state and evidence files, outside the workflow source trigger paths.",
+    "implementation_run_id": 38132088454,
+    "implementation_job_conclusions": {
+      "macos": "success",
+      "linux": "success",
+      "windows": "success"
+    },
+    "implementation_evidence": "evidence/r2.8.80-c09-style-inventory-b6f0bbb.json"
+  },
+  "notes": [
+    "All six documentation-triggered workflows passed on exact tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66.",
+    "R2.8.80 remains a partial C09 stylesheet-inventory slice; C09 and C09.1 remain pending.",
+    "All executable validation was performed by GitHub Actions. No local tests, builds, formatting, linting, validators, or application launch were run."
+  ]
+}

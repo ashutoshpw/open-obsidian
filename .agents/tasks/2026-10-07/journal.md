@@ -3512,3 +3512,24 @@ app-metadata separation boundary in `crates/platform` with an injected user-data
 root and CI-only tests. Keep portable selection unavailable, and keep C09 and
 C09.1 pending. No local tests, builds, formatters, validators, or application
 launch were run.
+
+## 2026-10-11T10:53:45Z — R2.8.80 tracker checkpoint accepted; R2.8.81 prepared
+
+Tracker SHA `9a00847a683450aa667d74805f07c9ed98d1cb66` passed all six
+documentation-triggered workflows: inventory 38132934956, quality 38132934911,
+desktop build 38132934909, plugin renderer 38132934942, loaded-plugin workflows
+38132934924, and Rust CI 38132934912. Rust CI passed on Rust 1.95, Ubuntu,
+macOS, and Windows. The path-filtered Obsidian round-trip did not trigger for
+the tracker-only commit; Linux, macOS, and Windows passed on implementation
+SHA `b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee`. Exact job IDs are in
+`evidence/r2.8.80-tracker-checkpoint-9a00847.json`.
+
+R2.8.81 prepares a private injected-root seam for per-vault app-data creation
+while production continues to select the platform user-data path. CI tests
+cover an outside-vault path with ownership markers and unchanged vault paths
+and bytes, plus rejection before creating any in-vault data directory. A
+read-only parallel review found no blocker; it specifically checked that the
+production root supplier runs after existing vault resolution and
+canonicalization. Exact-SHA validation is pending. C09 and C09.1 remain
+pending. No local tests, builds, formatters, validators, or application launch
+were run.
