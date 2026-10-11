@@ -4045,3 +4045,21 @@ known/unknown field and malformed-input coverage, fixture inventory row, and
 three-platform Obsidian reopen audit. Full C06 and C06.1 remain pending: this
 slice does not implement Canvas editing, explicit note creation, vault writes,
 or UI integration. No local executable validation is used for acceptance.
+
+R2.8.88 source attempt 1 (`1118d999531eea586073e6184e153d751437711d`) passed
+inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows.
+Rust CI passed Rust 1.95, macOS, and Windows; Ubuntu workspace tests passed but
+its formatting gate failed on five `crates/doc/src/canvas.rs` layouts. The
+Obsidian round-trip failed on all three OSes: Ubuntu's screenshot showed three
+Markdown files while OCR read two, and macOS/Windows changed the renamed note
+from 142 to 132 bytes after the new Canvas selection. The Windows artifact
+confirms the Canvas marker/path and unchanged Canvas bytes before that later
+failure. Exact run/job IDs and artifact digests are recorded in
+`evidence/r2.8.88-attempt-1-1118d99.json`.
+
+Attempt 2 keeps the Rust formatting corrections from GitHub's log, delays the
+Canvas target note until after OpenObsidian's count-sensitive audit, moves the
+Canvas check before selecting the edited note, and uses the standard
+`#^block-id` Canvas subpath with an unresolved-link assertion. The edited-note
+byte check remains enabled. All acceptance validation remains on GitHub Actions;
+no local tests, builds, formatters, validators, or app launches were run.

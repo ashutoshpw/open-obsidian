@@ -44,6 +44,9 @@ const noteContents = `${noteMarker}\n\n${noteEmbed}\n`;
 const canvasPath = "C06 Reference.canvas";
 const canvasMarker = "Canvas text card";
 const canvasFixtureCaseId = "all-node-and-edge-fields-with-unknown-values";
+const canvasTargetPath = "Notes/Target.md";
+const canvasTargetMarkdown = "# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n";
+const canvasTargetMarkdownBytes = Buffer.from(canvasTargetMarkdown, "utf8");
 const obsidianAsset = requiredEnv("OBSIDIAN_RELEASE_ASSET");
 const obsidianSourcePlatform = requiredEnv("OBSIDIAN_SOURCE_PLATFORM");
 const seedMarkdownPath = "Nested Ω/space note.md";
@@ -1433,7 +1436,6 @@ async function createFixture(): Promise<void> {
   const files: Record<string, Buffer> = {
     [seedMarkdownPath]: Buffer.from(seedMarkdown, "utf8"),
     [canvasPath]: canvasBytes,
-    "Notes/Target.md": Buffer.from("# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n", "utf8"),
     "Assets/roundtrip image.png": await readFile(resolve("assets/openobsidian-icon.png")),
     "Assets/group-background.png": await readFile(resolve("assets/openobsidian-icon.png")),
     ".opaque/unknown.bin": Buffer.from([0x00, 0x7f, 0xff, 0x4f, 0x4f, 0x42, 0x01, 0x02, 0x00, 0x10]),
@@ -4516,6 +4518,55 @@ async function reopenInObsidian(
     throw new Error("Obsidian reopen changed the externally edited note bytes at " + externalNotePath);
   }
 
+  const canvasPathJson = JSON.stringify(canvasPath);
+  const canvasSelectionAction = await connection.evaluateJson<boolean>(`(() => {
+    const target = [...document.querySelectorAll('[data-path]')]
+      .find((element) => element.getAttribute('data-path') === ${canvasPathJson});
+    target?.click();
+    return Boolean(target);
+  })()`);
+  if (!canvasSelectionAction) {
+    throw new Error(`Obsidian did not expose the Canvas fixture at ${canvasPath} for selection after reopen`);
+  }
+  const canvasVisible = await waitFor(
+    "Obsidian to render the C06 Canvas fixture text marker after reopening the vault",
+    readVisible,
+    (value) => value.paths.includes(canvasPath)
+      && value.body.includes(canvasMarker)
+      && !value.body.includes("Do you trust the author of this vault?"),
+    30_000,
+  );
+  if (canvasVisible.body.includes("Unable to find")) {
+    throw new Error(`Obsidian could not resolve the C06 Canvas file subpath: ${canvasVisible.body.slice(0, 2_000)}`);
+  }
+  const canvasBytesAfterReopen = await readFile(join(vaultRoot, canvasPath));
+  const canvasSha256AfterReopen = createHash("sha256").update(canvasBytesAfterReopen).digest("hex");
+  const canvasSourceUnchanged = canvasBytesAfterReopen.length === canvasBeforeReopen.bytes
+    && canvasSha256AfterReopen === canvasBeforeReopen.sha256;
+  if (!canvasSourceUnchanged) {
+    throw new Error(`Obsidian reopen changed Canvas fixture bytes at ${canvasPath}`);
+  }
+  await captureObsidianScreenshot(connection, "obsidian-reopened-c06-canvas.png");
+  reopen.canvas_reference_reopen = {
+    status: "passed",
+    milestone: "R2.8.88-C06-pinned-reference-reopen",
+    path: canvasPath,
+    marker: canvasMarker,
+    marker_visible_in_body: canvasVisible.body.includes(canvasMarker),
+    path_visible_in_file_explorer: canvasVisible.paths.includes(canvasPath),
+    bytes_before_reopen: canvasBeforeReopen.bytes,
+    sha256_before_reopen: canvasBeforeReopen.sha256,
+    bytes_after_reopen: canvasBytesAfterReopen.length,
+    sha256_after_reopen: canvasSha256AfterReopen,
+    source_unchanged: canvasSourceUnchanged,
+    screenshot: "obsidian-reopened-c06-canvas.png",
+  };
+  reopen.editor_text = canvasVisible.editor.slice(0, 2_000);
+  reopen.visible_vault_text = canvasVisible.body.slice(0, 4_000);
+  reopen.final_file_tree_paths = canvasVisible.paths;
+  await captureObsidianScreenshot(connection, "obsidian-reopened-vault.png");
+  reopen.screenshot = "obsidian-reopened-vault.png";
+
   const externalNoteSelectionAction = await connection.evaluateJson<boolean>(
     "(() => { const target = [...document.querySelectorAll('[data-path]')].find((element) => element.getAttribute('data-path') === "
       + JSON.stringify(externalNotePath)
@@ -4584,52 +4635,7 @@ async function reopenInObsidian(
   await captureObsidianScreenshot(connection, "obsidian-reopened-external-note.png");
   reopen.external_note_screenshot = "obsidian-reopened-external-note.png";
 
-  const canvasPathJson = JSON.stringify(canvasPath);
-  const canvasSelectionAction = await connection.evaluateJson<boolean>(`(() => {
-    const target = [...document.querySelectorAll('[data-path]')]
-      .find((element) => element.getAttribute('data-path') === ${canvasPathJson});
-    target?.click();
-    return Boolean(target);
-  })()`);
-  if (!canvasSelectionAction) {
-    throw new Error(`Obsidian did not expose the Canvas fixture at ${canvasPath} for selection after reopen`);
-  }
-  const canvasVisible = await waitFor(
-    "Obsidian to render the C06 Canvas fixture text marker after reopening the vault",
-    readVisible,
-    (value) => value.paths.includes(canvasPath)
-      && value.body.includes(canvasMarker)
-      && !value.body.includes("Do you trust the author of this vault?"),
-    30_000,
-  );
-  const canvasBytesAfterReopen = await readFile(join(vaultRoot, canvasPath));
-  const canvasSha256AfterReopen = createHash("sha256").update(canvasBytesAfterReopen).digest("hex");
-  const canvasSourceUnchanged = canvasBytesAfterReopen.length === canvasBeforeReopen.bytes
-    && canvasSha256AfterReopen === canvasBeforeReopen.sha256;
-  if (!canvasSourceUnchanged) {
-    throw new Error(`Obsidian reopen changed Canvas fixture bytes at ${canvasPath}`);
-  }
-  await captureObsidianScreenshot(connection, "obsidian-reopened-c06-canvas.png");
-  reopen.canvas_reference_reopen = {
-    status: "passed",
-    milestone: "R2.8.88-C06-pinned-reference-reopen",
-    path: canvasPath,
-    marker: canvasMarker,
-    marker_visible_in_body: canvasVisible.body.includes(canvasMarker),
-    path_visible_in_file_explorer: canvasVisible.paths.includes(canvasPath),
-    bytes_before_reopen: canvasBeforeReopen.bytes,
-    sha256_before_reopen: canvasBeforeReopen.sha256,
-    bytes_after_reopen: canvasBytesAfterReopen.length,
-    sha256_after_reopen: canvasSha256AfterReopen,
-    source_unchanged: canvasSourceUnchanged,
-    screenshot: "obsidian-reopened-c06-canvas.png",
-  };
-  reopen.editor_text = canvasVisible.editor.slice(0, 2_000);
-  reopen.visible_vault_text = canvasVisible.body.slice(0, 4_000);
-  reopen.final_file_tree_paths = canvasVisible.paths;
-  await captureObsidianScreenshot(connection, "obsidian-reopened-vault.png");
-  reopen.screenshot = "obsidian-reopened-vault.png";
-  reopen.status = "passed";
+  reopen.status = "reference_checks_passed";
   return connection;
 }
 
@@ -4659,7 +4665,22 @@ async function run(): Promise<void> {
     await writeFile(join(reportDirectory, "vault-before-openobsidian.json"), `${JSON.stringify(beforeRust, null, 2)}\n`);
     await saveReport();
 
-    const expectedBeforeObsidianReopen = await runOpenObsidian(beforeRust);
+    await runOpenObsidian(beforeRust);
+    await writeFile(join(vaultRoot, canvasTargetPath), canvasTargetMarkdownBytes);
+    const canvasTargetSha256 = createHash("sha256").update(canvasTargetMarkdownBytes).digest("hex");
+    const fixtureReport = report.fixture as Record<string, unknown>;
+    const fixtureContentHashes = fixtureReport.content_hashes as Record<string, {bytes: number; sha256: string}>;
+    fixtureContentHashes[canvasTargetPath] = {
+      bytes: canvasTargetMarkdownBytes.length,
+      sha256: canvasTargetSha256,
+    };
+    fixtureReport.canvas_target_note_seed = {
+      path: canvasTargetPath,
+      bytes: canvasTargetMarkdownBytes.length,
+      sha256: canvasTargetSha256,
+      created_after_openobsidian_roundtrip: true,
+    };
+    const expectedBeforeObsidianReopen = await snapshotTree(vaultRoot);
     (report.vault_snapshots as Record<string, unknown>).expected_before_obsidian_reopen = expectedBeforeObsidianReopen;
     await writeFile(join(reportDirectory, "vault-after-openobsidian.json"), `${JSON.stringify(report.vault_snapshots && (report.vault_snapshots as Record<string, unknown>).after_openobsidian, null, 2)}\n`);
     await writeFile(join(reportDirectory, "vault-before-obsidian-reopen.json"), `${JSON.stringify(expectedBeforeObsidianReopen, null, 2)}\n`);
@@ -4700,6 +4721,7 @@ async function run(): Promise<void> {
     (report.vault_snapshots as Record<string, unknown>).reference_workspace_state_changes = allowedChanges;
     (report.vault_snapshots as Record<string, unknown>).non_workspace_paths_unchanged_after_reopen = true;
     (report.obsidian_reopen as Record<string, unknown>).workspace_state_changes = allowedChanges;
+    (report.obsidian_reopen as Record<string, unknown>).status = "passed";
     await writeFile(join(reportDirectory, "vault-after-obsidian-reopen.json"), `${JSON.stringify(afterReopen, null, 2)}\n`);
     await writeFile(join(reportDirectory, "vault-reopen-workspace-changes.json"), `${JSON.stringify(allowedChanges, null, 2)}\n`);
 

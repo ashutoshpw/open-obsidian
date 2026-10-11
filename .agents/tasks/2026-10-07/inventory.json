@@ -1282,7 +1282,7 @@
     },
     {
       "path": "fixtures/c06-canvas.json",
-      "sha256": "b0910de2f80e74f046eeef5f975b9a92bb10c985deb088a21407480250403ae8",
+      "sha256": "5e87a3385b19fb37b52e403365f8cb411ce68e22a052074a4e81953108445705",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",

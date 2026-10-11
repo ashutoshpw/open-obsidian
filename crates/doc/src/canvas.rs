@@ -73,10 +73,7 @@ impl std::error::Error for CanvasError {
 /// this allows newer node types and unknown fields to round-trip unchanged.
 pub fn parse_canvas(bytes: &[u8]) -> Result<CanvasDocument, CanvasError> {
     let value: Value = serde_json::from_slice(bytes).map_err(CanvasError::MalformedJson)?;
-    if !value.is_object()
-        || !value["nodes"].is_array()
-        || !value["edges"].is_array()
-    {
+    if !value.is_object() || !value["nodes"].is_array() || !value["edges"].is_array() {
         return Err(CanvasError::InvalidDocumentShape);
     }
 
@@ -107,7 +104,11 @@ mod tests {
         let cases = fixture["valid_cases"]
             .as_array()
             .expect("C06 fixture must contain valid cases");
-        assert_eq!(cases.len(), 2, "fixture covers populated and empty documents");
+        assert_eq!(
+            cases.len(),
+            2,
+            "fixture covers populated and empty documents"
+        );
 
         for case in cases {
             let case_id = case["id"]
@@ -123,11 +124,18 @@ mod tests {
 
             let encoded = encode_canvas(&document)
                 .unwrap_or_else(|error| panic!("{case_id}: fixture document must encode: {error}"));
-            assert!(encoded.ends_with(b"\n"), "{case_id}: encoded JSON ends in LF");
+            assert!(
+                encoded.ends_with(b"\n"),
+                "{case_id}: encoded JSON ends in LF"
+            );
 
             let round_tripped = parse_canvas(&encoded)
                 .unwrap_or_else(|error| panic!("{case_id}: encoded document must parse: {error}"));
-            assert_eq!(round_tripped.as_json(), expected, "{case_id}: semantic round trip");
+            assert_eq!(
+                round_tripped.as_json(),
+                expected,
+                "{case_id}: semantic round trip"
+            );
             assert_eq!(round_tripped.nodes(), expected["nodes"].as_array().unwrap());
             assert_eq!(round_tripped.edges(), expected["edges"].as_array().unwrap());
         }
@@ -137,7 +145,11 @@ mod tests {
             .as_array()
             .expect("populated fixture nodes must be an array")
             .iter()
-            .map(|node| node["type"].as_str().expect("fixture node must have a type"))
+            .map(|node| {
+                node["type"]
+                    .as_str()
+                    .expect("fixture node must have a type")
+            })
             .collect::<Vec<_>>();
         assert_eq!(node_types, vec!["text", "file", "link", "group"]);
         assert!(populated.get("unknownRoot").is_some());

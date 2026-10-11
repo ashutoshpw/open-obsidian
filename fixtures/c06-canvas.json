@@ -26,7 +26,7 @@
             "width": 240,
             "height": 150,
             "file": "Notes/Target.md",
-            "subpath": "#Heading^block-id",
+            "subpath": "#^block-id",
             "label": "Target note",
             "color": "2",
             "unknownFileMetadata": {"keep": [true, null]}

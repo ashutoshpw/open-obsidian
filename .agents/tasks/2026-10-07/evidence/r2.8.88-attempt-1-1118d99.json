@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.88",
+  "source_sha": "1118d999531eea586073e6184e153d751437711d",
+  "attempt": 1,
+  "outcome": "not_accepted",
+  "accepted_scope": "No acceptance: the semantic Canvas codec and fixture were implemented, but exact-SHA Rust formatting and three-platform Obsidian round-trip gates did not all pass.",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38155514585,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514585",
+      "jobs": [{"id": 114517566135, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38155514760,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514760",
+      "jobs": [
+        {"id": 114517566993, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114517567171, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114517567181, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38155514587,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514587",
+      "jobs": [
+        {"id": 114517566768, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114517566790, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114517566812, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38155514572,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514572",
+      "jobs": [
+        {"id": 114517566262, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114517566449, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114517566468, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38155514566,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514566",
+      "jobs": [
+        {"id": 114517566256, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114517566489, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114517566543, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38155514671,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514671",
+      "jobs": [
+        {"id": 114517566911, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114517566947, "name": "rust (ubuntu-latest)", "conclusion": "failure", "finding": "Workspace tests passed; Check formatting failed on crates/doc/src/canvas.rs. Subsequent Clippy, layer, and native build steps were skipped after the format gate failed."},
+        {"id": 114517567055, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114517567097, "name": "rust (windows-latest)", "conclusion": "success"}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38155514639,
+      "head_sha": "1118d999531eea586073e6184e153d751437711d",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38155514639",
+      "jobs": [
+        {"id": 114517566957, "name": "Obsidian vault round-trip on ubuntu-24.04", "conclusion": "failure", "finding": "Timed out waiting for OpenObsidian's selected-vault Markdown count. The artifact screenshot shows 3 Markdown files; OCR reported 2, so this was an OCR misread."},
+        {"id": 114517566749, "name": "Obsidian vault round-trip on macos-latest", "conclusion": "failure", "artifact_id": 11708700220, "artifact_zip_sha256": "16013170c0f6ef0cadec291239cb176d4a4f17f008e831fd6f0651d066848bc8", "finding": "The final snapshot found Obsidian had changed After refresh renamed.md from 142 to 132 bytes after the Canvas reopen check."},
+        {"id": 114517567008, "name": "Obsidian vault round-trip on windows-latest", "conclusion": "failure", "artifact_id": 11708368241, "artifact_zip_sha256": "67f4d610b6bc87528d763abeadd00e2e3a06b67ff4f71e0a2ffc3d92455c6e35", "finding": "The embedded report confirms Canvas marker/path visibility and unchanged Canvas bytes, then the final snapshot found Obsidian had changed After refresh renamed.md from 142 to 132 bytes."}
+      ],
+      "artifact_notes": [
+        "Ubuntu artifact 11707664360, ZIP SHA-256 f6688a424f60362a319f0bea01be01d095b09a9b13ed94d81f4195e9a4e7af86, contains the saved screenshot showing 3 files despite the OCR result of 2.",
+        "The 10-byte note reduction is consistent with removing the UTF-8 BOM and normalizing CRLF line endings; this is an inference from the fixture bytes and reported sizes."
+      ]
+    }
+  },
+  "correction_plan": [
+    "Apply the Ubuntu rustfmt layout changes from the GitHub Actions log.",
+    "Create Notes/Target.md after the OpenObsidian round-trip and before the pinned Canvas reopen snapshot, reducing the earlier OCR count ambiguity while retaining the Canvas link target.",
+    "Open and verify Canvas before selecting the externally edited Markdown note; leave that note selected through shutdown so its existing byte-integrity check remains meaningful.",
+    "Use the JSON Canvas block subpath form #^block-id and fail if Obsidian reports an unresolved Canvas subpath."
+  ],
+  "local_executable_validation": "none"
+}
