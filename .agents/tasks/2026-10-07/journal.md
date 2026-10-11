@@ -3127,3 +3127,24 @@ checkpoint; its Linux, macOS, and Windows jobs passed on implementation SHA
 C01/C01.2 remain pending. Next: audit remaining read-only requirements and
 select the next bounded reference-app gap for R2.8.75. No local executable
 validation was run.
+
+
+### R2.8.75 in progress — C01.2-43 real-app external note edit
+
+Revalidated clean main at f70745df9299785e2d31e8822825f49f209abd34. C01.2-42
+is the latest accepted reference-app case. The prior C01.2-05 edit/refresh test
+is synthetic egui coverage; C01.2-40 uses the pinned Obsidian-authored vault
+for external note creation and preview, but does not edit that selected note
+while its preview remains open. The read-only audit selects C01.2-43 to cover
+that gap through the running desktop on Ubuntu, macOS, and Windows, including
+exact BOM/CRLF hashes and visible updated content after Obsidian reopen.
+
+The reference harness now overwrites exactly After refresh.md while OpenObsidian
+shows its original source preview, refreshes through the native UI, requires
+stale preview clearing and updated-source visibility, and returns the
+post-edit snapshot as the baseline for image resolution. The later deliberate
+attachment removal establishes its own baseline for the remaining no-op flows.
+Reopen assertions compare exact edited bytes and render the new marker in Obsidian.
+The matrix row and audit are recorded in
+evidence/r2.8.75-c01-readonly-audit.md. Parent C01/C01.2 remain pending. All
+executable validation remains limited to GitHub Actions.

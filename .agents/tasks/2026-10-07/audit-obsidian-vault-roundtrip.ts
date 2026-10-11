@@ -49,13 +49,16 @@ const externalRefreshMarkdownPath = "After refresh.md";
 const externalRefreshMarkdown = "\uFEFF---\r\ntitle: External refresh note\r\nunknown_nested:\r\n  keep: [true, 13, 'external']\r\n---\r\n\r\nExternal note source stays exact.\r\n";
 const externalRefreshMarkdownBytes = Buffer.from(externalRefreshMarkdown, "utf8");
 const externalRefreshMarker = "External note source stays exact.";
+const externalEditedMarkdown = "\uFEFF---\r\ntitle: External in-place edit\r\nunknown_nested:\r\n  keep: [true, 29, 'updated']\r\n---\r\n\r\nExternal note source updated by in-place edit.\r\n";
+const externalEditedMarkdownBytes = Buffer.from(externalEditedMarkdown, "utf8");
+const externalEditedMarker = "External note source updated by in-place edit.";
 const workspaceStateAllowlist = [".obsidian/workspace.json", ".obsidian/workspace-mobile.json"];
 const startedAt = new Date().toISOString();
 const macOSWindowIds = new Map<number, string>();
 
 const report: Record<string, unknown> = {
   schema_version: 1,
-  milestone: "R2.8.74-C01.2-reference-app-image-attachment-removal",
+  milestone: "R2.8.75-C01.2-reference-app-external-note-edit-refresh",
   status: "pending",
   started_at: startedAt,
   source_sha: sourceSha,
@@ -89,9 +92,9 @@ const report: Record<string, unknown> = {
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves read-only startup, source preview and close, external note creation followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
-    "The deliberate external note creation and later attachment removal each establish a new baseline; all following OpenObsidian and Obsidian actions must preserve that baseline exactly.",
-    "This run does not certify editing, all product C01 flows, or general plugin/theme compatibility.",
+    "The run proves read-only startup, source preview and close, external note creation and in-place edit followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The deliberate external note creation, in-place note edit, and later attachment removal each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
+    "This run does not certify native in-app note editing or saving, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
 
@@ -3155,25 +3158,212 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.vault_unchanged_after_preview = true;
   refreshReport.app_data_change_policy_passed_after_preview = true;
 
+  const originalSourceMarkerVisible = ocrTextContainsPhrase(visiblePreview.ocrText, externalRefreshMarker);
+  const editReport: Record<string, unknown> = {
+    status: "in_progress",
+    note_path: externalRefreshMarkdownPath,
+    previous_note_bytes: externalRefreshMarkdownBytes.length,
+    previous_note_sha256: createHash("sha256").update(externalRefreshMarkdownBytes).digest("hex"),
+    expected_note_bytes: externalEditedMarkdownBytes.length,
+    expected_note_sha256: createHash("sha256").update(externalEditedMarkdownBytes).digest("hex"),
+    expected_source_marker: externalEditedMarker,
+    original_source_marker_visible_before_edit: originalSourceMarkerVisible,
+    source_preview_open_before_edit: true,
+  };
+  refreshReport.external_in_place_edit = editReport;
+  if (!originalSourceMarkerVisible) {
+    throw new Error("OpenObsidian did not visibly preview the original note source before the deliberate external edit");
+  }
+
+  const settledRefreshBeforeEdit = await waitForOpenObsidianRefreshIdle(
+    0,
+    expectedMarkdownCount,
+    false,
+  );
+  editReport.previous_refresh_settled_before_edit = {
+    settled_for_ms: settledRefreshBeforeEdit.settled_for_ms,
+    latest_receiver_busy: settledRefreshBeforeEdit.receiverStates.at(-1)?.busy ?? false,
+    latest_consumed_result: settledRefreshBeforeEdit.consumedResults.at(-1) ?? null,
+  };
+  const refreshRequestCountBeforeEdit = settledRefreshBeforeEdit.requests.length;
+  const vaultBeforeEdit = await snapshotTree(vaultRoot);
+  ensureExactSnapshot(vaultAfterCreation, vaultBeforeEdit, "OpenObsidian vault before deliberate external note edit");
+  const noteBeforeEdit = vaultBeforeEdit.find((entry) => entry.path === externalRefreshMarkdownPath && entry.kind === "file");
+  const originalNoteSha256 = createHash("sha256").update(externalRefreshMarkdownBytes).digest("hex");
+  if (
+    !noteBeforeEdit
+    || noteBeforeEdit.bytes !== externalRefreshMarkdownBytes.length
+    || noteBeforeEdit.sha256 !== originalNoteSha256
+  ) {
+    throw new Error("The external note does not match the original source bytes before the in-place edit");
+  }
+  const appDataBeforeEdit = await snapshotTree(appDataRoot);
+  await writeFile(join(vaultRoot, externalRefreshMarkdownPath), externalEditedMarkdownBytes);
+
+  const vaultAfterEdit = await snapshotTree(vaultRoot);
+  const changesFromExternalEdit = changedPaths(vaultBeforeEdit, vaultAfterEdit);
+  const editedNoteSha256 = createHash("sha256").update(externalEditedMarkdownBytes).digest("hex");
+  const editedNote = vaultAfterEdit.find((entry) => entry.path === externalRefreshMarkdownPath && entry.kind === "file");
+  if (
+    changesFromExternalEdit.length !== 1
+    || changesFromExternalEdit[0]?.path !== externalRefreshMarkdownPath
+    || changesFromExternalEdit[0]?.before?.sha256 !== originalNoteSha256
+    || changesFromExternalEdit[0]?.after?.kind !== "file"
+    || changesFromExternalEdit[0]?.after?.bytes !== externalEditedMarkdownBytes.length
+    || changesFromExternalEdit[0]?.after?.sha256 !== editedNoteSha256
+    || !editedNote
+    || editedNote.bytes !== externalEditedMarkdownBytes.length
+    || editedNote.sha256 !== editedNoteSha256
+  ) {
+    throw new Error("The deliberate external note edit did not change exactly the expected note bytes: " + JSON.stringify(changesFromExternalEdit).slice(0, 6_000));
+  }
+  const markdownCountAfterEdit = countMarkdownFiles(vaultAfterEdit);
+  if (markdownCountAfterEdit !== expectedMarkdownCount) {
+    throw new Error("The external in-place edit changed the Markdown file count from " + expectedMarkdownCount + " to " + markdownCountAfterEdit);
+  }
+  const appDataAfterEdit = await snapshotTree(appDataRoot);
+  ensureExactSnapshot(appDataBeforeEdit, appDataAfterEdit, "OpenObsidian app data during deliberate external note edit");
+  editReport.vault_snapshot_before_edit = vaultBeforeEdit;
+  editReport.vault_snapshot_after_edit = vaultAfterEdit;
+  editReport.vault_changes_from_external_edit = changesFromExternalEdit;
+  editReport.markdown_count_before_edit = expectedMarkdownCount;
+  editReport.markdown_count_after_edit = markdownCountAfterEdit;
+  editReport.app_data_snapshot_before_edit = appDataBeforeEdit;
+  editReport.app_data_snapshot_after_edit = appDataAfterEdit;
+  editReport.app_data_unchanged_during_external_edit = true;
+  vaultSnapshots.before_external_note_edit = vaultBeforeEdit;
+  vaultSnapshots.after_external_note_edit = vaultAfterEdit;
+  await writeFile(join(reportDirectory, "vault-after-external-note-edit.json"), JSON.stringify(vaultAfterEdit, null, 2) + "\n");
+  await saveReport();
+
+  if (process.platform !== "win32") await delay(2_000);
+  const settledWatcherRefreshAfterEdit = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeEdit,
+    markdownCountAfterEdit,
+    false,
+  );
+  editReport.watcher_refresh_settled_before_manual = {
+    settled_for_ms: settledWatcherRefreshAfterEdit.settled_for_ms,
+    latest_receiver_busy: settledWatcherRefreshAfterEdit.receiverStates.at(-1)?.busy ?? false,
+    latest_consumed_result: settledWatcherRefreshAfterEdit.consumedResults.at(-1) ?? null,
+  };
+  const refreshRequestCountBeforeManualEdit = settledWatcherRefreshAfterEdit.requests.length;
+  editReport.refresh_action = await clickManualRefreshUntilRequested(
+    child,
+    window.window_id,
+    refreshRequestCountBeforeManualEdit,
+  );
+  const settledManualRefreshAfterEdit = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeManualEdit,
+    markdownCountAfterEdit,
+    true,
+  );
+  editReport.manual_refresh_diagnostics = {
+    action_request: settledManualRefreshAfterEdit.requests.at(-1) ?? null,
+    result: settledManualRefreshAfterEdit.consumedResults.at(-1) ?? null,
+    receiver_busy_after_result: settledManualRefreshAfterEdit.receiverStates.at(-1)?.busy ?? false,
+    settled_for_ms: settledManualRefreshAfterEdit.settled_for_ms,
+  };
+  const editedRefresh = await waitFor(
+    "OpenObsidian to clear the stale source preview after the external note edit",
+    async () => {
+      await delay(350);
+      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-edit-refresh");
+      editReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
+      return capture;
+    },
+    (capture) => (
+      ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
+      && new RegExp(markdownCountAfterEdit + "\\s+Markdown files found", "i").test(capture.ocrText)
+      && !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker)
+      && !ocrTextContainsPhrase(capture.ocrText, externalEditedMarker)
+    ),
+    30_000,
+  );
+  editReport.refresh_screenshot = relative(reportDirectory, editedRefresh.pngPath);
+  editReport.refresh_window_screenshot = relative(reportDirectory, editedRefresh.windowPngPath);
+  editReport.stale_source_marker_absent_after_refresh = true;
+  editReport.updated_source_marker_absent_before_repreview = true;
+  const selectedEditedNoteVisible = ocrTextContainsPhrase(editedRefresh.ocrText, externalRefreshMarkdownPath)
+    || ocrTextContainsFuzzyPhrase(editedRefresh.ocrText, externalRefreshMarkdownPath);
+  editReport.selected_note_path_visible_after_refresh = selectedEditedNoteVisible;
+  if (!selectedEditedNoteVisible) {
+    throw new Error("OpenObsidian did not visibly retain the externally edited note selection after refresh");
+  }
+  editReport.refreshed_markdown_count_visible = true;
+  editReport.stale_preview_cleared = true;
+
+  editReport.read_updated_source_action = await invokeNativeAccessibleControl(
+    child,
+    window.window_id,
+    "Read note source preview",
+    externalRefreshMarkdownPath,
+  );
+  const updatedPreview = await waitFor(
+    "OpenObsidian to preview the externally edited note source",
+    async () => {
+      await delay(350);
+      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-edited-source-preview");
+      editReport.updated_preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+      return capture;
+    },
+    (capture) => ocrTextContainsPhrase(capture.ocrText, externalEditedMarker)
+      && !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker),
+    30_000,
+  );
+  editReport.updated_preview_screenshot = relative(reportDirectory, updatedPreview.pngPath);
+  editReport.updated_preview_window_screenshot = relative(reportDirectory, updatedPreview.windowPngPath);
+  editReport.updated_source_marker_visible = true;
+  editReport.original_source_marker_absent_from_updated_preview = true;
+
+  const vaultAfterUpdatedPreview = await snapshotTree(vaultRoot);
+  const appDataAfterUpdatedPreview = await snapshotTree(appDataRoot);
+  const vaultChangesAfterUpdatedPreview = changedPaths(vaultAfterEdit, vaultAfterUpdatedPreview);
+  const appDataChangesAfterUpdatedPreview = changedPaths(appDataBeforeEdit, appDataAfterUpdatedPreview);
+  const eframeFilesAfterUpdatedPreview = await readSnapshotTextFiles(
+    appDataRoot,
+    appDataAfterUpdatedPreview,
+    (path) => path.toLowerCase().endsWith(".ron"),
+  );
+  editReport.vault_snapshot_after_updated_preview = vaultAfterUpdatedPreview;
+  editReport.vault_changes_after_updated_preview = vaultChangesAfterUpdatedPreview;
+  editReport.app_data_snapshot_after_updated_preview = appDataAfterUpdatedPreview;
+  editReport.app_data_changes_after_updated_preview = appDataChangesAfterUpdatedPreview;
+  editReport.eframe_persistence_files_after_updated_preview = eframeFilesAfterUpdatedPreview;
+  await saveReport();
+  ensureExactSnapshot(vaultAfterEdit, vaultAfterUpdatedPreview, "OpenObsidian updated external note source preview");
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterUpdatedPreview,
+    eframeFilesAfterUpdatedPreview,
+    "OpenObsidian updated external note source preview app data",
+    forbiddenPersistencePaths,
+  );
+  editReport.vault_unchanged_after_updated_preview = true;
+  editReport.app_data_change_policy_passed_after_updated_preview = true;
+  await saveReport();
+
   refreshReport.close_preview_action = await invokeNativeAccessibleControl(
     child,
     window.window_id,
     "Close source preview",
     "Note source preview",
   );
-  const closedPreview = await waitFor("OpenObsidian to close the externally added note preview", async () => {
+  editReport.close_preview_action = refreshReport.close_preview_action;
+  const closedPreview = await waitFor("OpenObsidian to close the externally edited note preview", async () => {
     await delay(350);
-    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-preview-closed");
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-edited-preview-closed");
     refreshReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker), 30_000);
+  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker)
+    && !ocrTextContainsPhrase(capture.ocrText, externalEditedMarker), 30_000);
   refreshReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
   refreshReport.preview_closed = true;
+  editReport.preview_closed = true;
 
   const vaultAfterClose = await snapshotTree(vaultRoot);
   const appDataAfterClose = await snapshotTree(appDataRoot);
-  const vaultChangesAfterClose = changedPaths(vaultAfterCreation, vaultAfterClose);
-  const appDataChangesAfterClose = changedPaths(appDataAfterCreation, appDataAfterClose);
+  const vaultChangesAfterClose = changedPaths(vaultAfterEdit, vaultAfterClose);
+  const appDataChangesAfterClose = changedPaths(appDataBeforeEdit, appDataAfterClose);
   const eframeFilesAfterClose = await readSnapshotTextFiles(appDataRoot, appDataAfterClose, (path) => path.toLowerCase().endsWith(".ron"));
   refreshReport.vault_snapshot_after_close = vaultAfterClose;
   refreshReport.vault_changes_after_close = vaultChangesAfterClose;
@@ -3181,7 +3371,7 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.app_data_changes_after_close = appDataChangesAfterClose;
   refreshReport.eframe_persistence_files_after_close = eframeFilesAfterClose;
   await saveReport();
-  ensureExactSnapshot(vaultAfterCreation, vaultAfterClose, "OpenObsidian external note preview close");
+  ensureExactSnapshot(vaultAfterEdit, vaultAfterClose, "OpenObsidian external note preview close");
   ensureAppDataChangesAreMacEframeUiStateOnly(
     appDataChangesAfterClose,
     eframeFilesAfterClose,
@@ -3190,9 +3380,17 @@ async function runReferenceExternalNoteRefresh(
   );
   refreshReport.vault_unchanged_after_close = true;
   refreshReport.app_data_change_policy_passed_after_close = true;
+  editReport.vault_snapshot_after_close = vaultAfterClose;
+  editReport.vault_changes_after_close = vaultChangesAfterClose;
+  editReport.app_data_snapshot_after_close = appDataAfterClose;
+  editReport.app_data_changes_after_close = appDataChangesAfterClose;
+  editReport.eframe_persistence_files_after_close = eframeFilesAfterClose;
+  editReport.vault_unchanged_after_close = true;
+  editReport.app_data_change_policy_passed_after_close = true;
+  editReport.status = "passed";
   refreshReport.status = "passed";
   await saveReport();
-  return vaultAfterCreation;
+  return vaultAfterEdit;
 }
 
 async function runReferenceImageEmbedResolution(
@@ -3697,15 +3895,16 @@ async function runOpenObsidian(noOpBaseline: SnapshotEntry[]): Promise<SnapshotE
     await saveReport();
 
     await runReferenceSourcePreview(child, window, appDataRoot, noOpBaseline);
-    const vaultBaselineAfterExternalCreation = await runReferenceExternalNoteRefresh(child, window, appDataRoot, noOpBaseline);
-    const expectedMarkdownCountAfterExternalCreation = countMarkdownFiles(vaultBaselineAfterExternalCreation);
+    const vaultBaselineAfterExternalNoteEdit = await runReferenceExternalNoteRefresh(child, window, appDataRoot, noOpBaseline);
+    const expectedMarkdownCountAfterExternalCreation = countMarkdownFiles(vaultBaselineAfterExternalNoteEdit);
     open.expected_markdown_count_after_external_refresh = expectedMarkdownCountAfterExternalCreation;
-    await runReferenceImageEmbedResolution(child, window, appDataRoot, vaultBaselineAfterExternalCreation);
+    open.expected_markdown_count_after_external_note_edit = expectedMarkdownCountAfterExternalCreation;
+    await runReferenceImageEmbedResolution(child, window, appDataRoot, vaultBaselineAfterExternalNoteEdit);
     const vaultBaselineAfterAttachmentRemoval = await runReferenceImageAttachmentRemoval(
       child,
       window,
       appDataRoot,
-      vaultBaselineAfterExternalCreation,
+      vaultBaselineAfterExternalNoteEdit,
     );
     const appDataBaselineAfterPickerCancellation = await runOpenObsidianPickerCancellation(
       child,
@@ -3900,9 +4099,25 @@ async function reopenInObsidian(child: ChildProcess, notePath: string, expectedA
   );
   const externalNoteAfterReopen = await readFile(join(vaultRoot, externalRefreshMarkdownPath));
   const externalNoteSha256 = createHash("sha256").update(externalNoteAfterReopen).digest("hex");
-  if (!externalNoteAfterReopen.equals(externalRefreshMarkdownBytes)) {
-    throw new Error(`Obsidian reopen changed the externally created note bytes at ${externalRefreshMarkdownPath}`);
+  if (!externalNoteAfterReopen.equals(externalEditedMarkdownBytes)) {
+    throw new Error(`Obsidian reopen changed the externally edited note bytes at ${externalRefreshMarkdownPath}`);
   }
+
+  const externalNoteSelectionAction = await connection.evaluateJson<boolean>(
+    "(() => { const target = [...document.querySelectorAll('[data-path]')].find((element) => element.getAttribute('data-path') === "
+      + JSON.stringify(externalRefreshMarkdownPath)
+      + "); target?.click(); return Boolean(target); })()",
+  );
+  if (!externalNoteSelectionAction) {
+    throw new Error("Obsidian did not expose the externally edited note for selection after reopen");
+  }
+  const externalEditedNoteVisible = await waitFor(
+    "Obsidian to render the externally edited note after reopening the vault",
+    readVisible,
+    (value) => value.paths.includes(externalRefreshMarkdownPath)
+      && value.editor.includes(externalEditedMarker),
+    20_000,
+  );
 
   const noteSource = await readFile(join(vaultRoot, notePath), "utf8");
   const attachmentLinkPersistedInSource = noteSource.includes(noteEmbed);
@@ -3945,9 +4160,13 @@ async function reopenInObsidian(child: ChildProcess, notePath: string, expectedA
   reopen.attachment_remains_absent_after_reopen = !expectedAttachmentPresent && !exactAttachmentListed;
   reopen.external_note_path = externalRefreshMarkdownPath;
   reopen.external_note_path_visible_in_file_explorer = visible.paths.includes(externalRefreshMarkdownPath);
+  reopen.external_note_source_marker_visible_after_reopen = externalEditedNoteVisible.editor.includes(externalEditedMarker);
+  reopen.external_note_source_bytes_match_external_edit = externalNoteAfterReopen.equals(externalEditedMarkdownBytes);
   reopen.external_note_bytes = externalNoteAfterReopen.length;
   reopen.external_note_sha256 = externalNoteSha256;
   reopen.external_note_source_unchanged = true;
+  await captureObsidianScreenshot(connection, "obsidian-reopened-external-note.png");
+  reopen.external_note_screenshot = "obsidian-reopened-external-note.png";
   reopen.editor_text = visible.editor.slice(0, 2_000);
   reopen.visible_vault_text = visible.body.slice(0, 4_000);
   reopen.final_file_tree_paths = pathsAfterExpand;
