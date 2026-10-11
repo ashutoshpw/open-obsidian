@@ -14,13 +14,20 @@ use openobsidian_doc::{
     resolve_link_with_sources, resolve_link_with_subpath_statuses, slice_markdown_subpath,
     three_way_merge_bytes,
 };
+use cap_fs_ext::{DirExt, FollowSymlinks, OpenOptionsFollowExt};
+use cap_std::fs::{
+    Dir as CapabilityDir, File as CapabilityFile, OpenOptions as CapabilityOpenOptions,
+};
+use same_file::Handle as SameFileHandle;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Cursor, Read as IoRead, Write as IoWrite};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Component, Path, PathBuf};
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
@@ -69,6 +76,13 @@ pub enum VaultError {
         relative_path: PathBuf,
         expected_revision: Option<String>,
         current_revision: Option<String>,
+        preserved_path: PathBuf,
+    },
+    #[error(
+        "create destination already exists at {relative_path}; incoming bytes were preserved at {preserved_path}"
+    )]
+    CreateDestinationExists {
+        relative_path: PathBuf,
         preserved_path: PathBuf,
     },
     #[error("write for {relative_path} needs recovery: {reason}")]
@@ -261,6 +275,18 @@ pub struct VaultWriteResult {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultCreateRequest {
+    pub relative_path: PathBuf,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VaultCreateResult {
+    pub read: VaultRead,
+    pub operation_id: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultMergeWriteResult {
     pub merge: ThreeWayMergeResult,
     pub written: Option<VaultWriteResult>,
@@ -285,6 +311,18 @@ pub struct VaultStore {
     fail_replace_path: Option<PathBuf>,
     #[cfg(test)]
     external_change_on_failure: Option<(PathBuf, Vec<u8>)>,
+    #[cfg(test)]
+    create_race_bytes: Option<Vec<u8>>,
+    #[cfg(test)]
+    replace_create_temporary_before_link: Option<Vec<u8>>,
+    #[cfg(test)]
+    fail_create_link: bool,
+    #[cfg(test)]
+    fail_create_write_after_bytes: Option<usize>,
+    #[cfg(test)]
+    fail_create_committed_journal: bool,
+    #[cfg(test)]
+    fail_create_temporary_cleanup: bool,
 }
 
 mod configuration;
@@ -309,6 +347,7 @@ pub use write_recovery::{VaultWriteRecoveryIssue, VaultWriteRecoveryReport};
 #[derive(Clone, Debug)]
 pub struct VaultRoot {
     canonical_root: PathBuf,
+    capability_root: Arc<CapabilityDir>,
 }
 
 impl VaultRoot {
@@ -318,7 +357,12 @@ impl VaultRoot {
         if !canonical_root.is_dir() {
             return Err(VaultError::NotAFile(canonical_root));
         }
-        Ok(Self { canonical_root })
+        let capability_root =
+            CapabilityDir::open_ambient_dir(&canonical_root, cap_std::ambient_authority())?;
+        Ok(Self {
+            canonical_root,
+            capability_root: Arc::new(capability_root),
+        })
     }
 
     pub fn scan_markdown(&self) -> Result<Vec<VaultEntry>, VaultError> {
@@ -1125,9 +1169,45 @@ impl VaultRoot {
         }
         Ok(canonical)
     }
+
+    pub(crate) fn open_parent_nofollow(
+        &self,
+        relative_path: &Path,
+    ) -> Result<(CapabilityDir, OsString), VaultError> {
+        validate_relative_path(relative_path)?;
+        let components = relative_path.components().collect::<Vec<_>>();
+        let (leaf, parents) = components.split_last().ok_or(VaultError::InvalidPath)?;
+        let mut parent = self.capability_root.try_clone()?;
+        for component in parents {
+            parent = parent.open_dir_nofollow(component.as_os_str())?;
+        }
+        Ok((parent, leaf.as_os_str().to_os_string()))
+    }
 }
 
 static NEXT_OPERATION_ID: AtomicU64 = AtomicU64::new(0);
+
+pub(crate) fn create_temporary_name(operation_id: &str) -> OsString {
+    // Keep the staging component bounded even when the requested note name is
+    // close to the filesystem's per-component limit.
+    let mut name = OsString::from(".openobsidian-create-");
+    name.push(operation_id);
+    name.push(".tmp");
+    name
+}
+
+#[cfg(unix)]
+fn sync_create_directory(directory: &CapabilityDir) -> io::Result<()> {
+    directory.try_clone()?.into_std_file().sync_all()
+}
+
+// Windows does not provide a portable directory-entry flush through the
+// standard file API. Creation stays atomic and journal-recoverable for process
+// interruption, without claiming power-loss durability for the directory.
+#[cfg(not(unix))]
+fn sync_create_directory(_directory: &CapabilityDir) -> io::Result<()> {
+    Ok(())
+}
 
 impl VaultStore {
     /// Open an existing vault and an existing app-owned data directory.
@@ -1158,6 +1238,18 @@ impl VaultStore {
             fail_replace_path: None,
             #[cfg(test)]
             external_change_on_failure: None,
+            #[cfg(test)]
+            create_race_bytes: None,
+            #[cfg(test)]
+            replace_create_temporary_before_link: None,
+            #[cfg(test)]
+            fail_create_link: false,
+            #[cfg(test)]
+            fail_create_write_after_bytes: None,
+            #[cfg(test)]
+            fail_create_committed_journal: false,
+            #[cfg(test)]
+            fail_create_temporary_cleanup: false,
         })
     }
 
@@ -1502,6 +1594,544 @@ impl VaultStore {
         })
     }
 
+    /// Creates a new vault file without replacing an existing or racing entry.
+    /// Incoming bytes are preserved in app-owned recovery history before the
+    /// prepared journal record. Publication uses a hard link from a complete,
+    /// same-directory temporary file so readers never observe a partial target.
+    pub fn create_new(
+        &self,
+        request: VaultCreateRequest,
+    ) -> Result<VaultCreateResult, VaultError> {
+        let relative_path = normalize_relative_path(&request.relative_path)?;
+        let relative_path_text = path_to_slashes(&relative_path)?;
+        // Keep the checked parent directory open through publication. Every
+        // parent component is opened without following symlinks, and all
+        // namespace operations below use this directory capability.
+        let (parent, target_name) = self.root.open_parent_nofollow(&relative_path)?;
+        let operation_id = next_operation_id();
+        let next_revision = sha256_hex(&request.bytes);
+
+        let before = self.read_create_target_at(&parent, &target_name, &relative_path)?;
+        if let Some(current) = before {
+            return self.create_destination_conflict(
+                &operation_id,
+                relative_path,
+                &relative_path_text,
+                &request.bytes,
+                &next_revision,
+                Some(&current.revision_sha256),
+            );
+        }
+
+        if let Err(error) = self.preserve_bytes(
+            "recovery",
+            &format!("{operation_id}-incoming"),
+            ".bin",
+            &relative_path_text,
+            &request.bytes,
+            &next_revision,
+            None,
+            None,
+        ) {
+            let _ = self.append_create_journal(
+                &operation_id,
+                "failed",
+                &relative_path_text,
+                None,
+                &next_revision,
+                Some(&error.to_string()),
+            );
+            return Err(error);
+        }
+
+        self.append_create_journal(
+            &operation_id,
+            "prepared",
+            &relative_path_text,
+            None,
+            &next_revision,
+            None,
+        )?;
+
+        match self.read_create_target_at(&parent, &target_name, &relative_path) {
+            Ok(Some(current)) => {
+                return self.create_destination_conflict(
+                    &operation_id,
+                    relative_path,
+                    &relative_path_text,
+                    &request.bytes,
+                    &next_revision,
+                    Some(&current.revision_sha256),
+                );
+            }
+            Ok(None) => {}
+            Err(error) => {
+                let reason = error.to_string();
+                let _ = self.append_create_journal(
+                    &operation_id,
+                    "recovery_required",
+                    &relative_path_text,
+                    None,
+                    &next_revision,
+                    Some(&reason),
+                );
+                return Err(error);
+            }
+        }
+
+        let (temporary_name, temporary_identity) = match self.atomic_create_only(
+            &parent,
+            &target_name,
+            &relative_path,
+            &operation_id,
+            &request.bytes,
+            &next_revision,
+        ) {
+            Ok(staging) => staging,
+            Err(error) => {
+                if let VaultError::RecoveryRequired { reason, .. } = &error {
+                    let reason = reason.clone();
+                    let _ = self.append_create_journal(
+                        &operation_id,
+                        "recovery_required",
+                        &relative_path_text,
+                        None,
+                        &next_revision,
+                        Some(&reason),
+                    );
+                    return Err(error);
+                }
+                match self.read_create_target_at(&parent, &target_name, &relative_path) {
+                    Ok(Some(current)) => {
+                        return self.create_destination_conflict(
+                            &operation_id,
+                            relative_path,
+                            &relative_path_text,
+                            &request.bytes,
+                            &next_revision,
+                            Some(&current.revision_sha256),
+                        );
+                    }
+                    Ok(None) => {
+                        let _ = self.append_create_journal(
+                            &operation_id,
+                            "failed",
+                            &relative_path_text,
+                            None,
+                            &next_revision,
+                            Some(&error.to_string()),
+                        );
+                        return Err(error);
+                    }
+                    Err(path_error) => {
+                        let reason = format!(
+                            "create failed: {error}; target check failed: {path_error}"
+                        );
+                        let _ = self.append_create_journal(
+                            &operation_id,
+                            "recovery_required",
+                            &relative_path_text,
+                            None,
+                            &next_revision,
+                            Some(&reason),
+                        );
+                        return Err(VaultError::RecoveryRequired {
+                            relative_path,
+                            reason,
+                        });
+                    }
+                }
+            }
+        };
+
+        let published = self.read_create_target_at(&parent, &target_name, &relative_path)?;
+        let stage_matches = self.create_entry_matches_handle_at(
+            &parent,
+            &temporary_name,
+            &relative_path,
+            &temporary_identity,
+        )?;
+        let target_matches = self.create_entry_matches_handle_at(
+            &parent,
+            &target_name,
+            &relative_path,
+            &temporary_identity,
+        )?;
+        if published
+            .as_ref()
+            .is_none_or(|read| read.revision_sha256 != next_revision)
+            || !stage_matches
+            || !target_matches
+        {
+            let reason =
+                "published create target does not match the operation's staged file".to_owned();
+            let _ = self.append_create_journal(
+                &operation_id,
+                "recovery_required",
+                &relative_path_text,
+                None,
+                &next_revision,
+                Some(&reason),
+            );
+            return Err(VaultError::RecoveryRequired {
+                relative_path,
+                reason,
+            });
+        }
+
+        if let Err(error) = sync_create_directory(&parent) {
+            let reason = format!("published create directory could not be synced: {error}");
+            let _ = self.append_create_journal(
+                &operation_id,
+                "recovery_required",
+                &relative_path_text,
+                None,
+                &next_revision,
+                Some(&reason),
+            );
+            return Err(VaultError::RecoveryRequired {
+                relative_path,
+                reason,
+            });
+        }
+
+        let published_after_sync =
+            self.read_create_target_at(&parent, &target_name, &relative_path)?;
+        let stage_matches_after_sync = self.create_entry_matches_handle_at(
+            &parent,
+            &temporary_name,
+            &relative_path,
+            &temporary_identity,
+        )?;
+        let target_matches_after_sync = self.create_entry_matches_handle_at(
+            &parent,
+            &target_name,
+            &relative_path,
+            &temporary_identity,
+        )?;
+        if published_after_sync
+            .as_ref()
+            .is_none_or(|read| read.revision_sha256 != next_revision)
+            || !stage_matches_after_sync
+            || !target_matches_after_sync
+        {
+            let reason = "create publication changed before its commit record".to_owned();
+            let _ = self.append_create_journal(
+                &operation_id,
+                "recovery_required",
+                &relative_path_text,
+                None,
+                &next_revision,
+                Some(&reason),
+            );
+            return Err(VaultError::RecoveryRequired {
+                relative_path,
+                reason,
+            });
+        }
+
+        if let Err(journal_error) = self.append_create_journal(
+            &operation_id,
+            "committed",
+            &relative_path_text,
+            None,
+            &next_revision,
+            None,
+        ) {
+            let reason = format!(
+                "file was published but its commit journal failed: {journal_error}"
+            );
+            let _ = self.append_create_journal(
+                &operation_id,
+                "recovery_required",
+                &relative_path_text,
+                None,
+                &next_revision,
+                Some(&reason),
+            );
+            return Err(VaultError::RecoveryRequired {
+                relative_path,
+                reason,
+            });
+        }
+
+        // The committed record is durable before removing the second hard link.
+        // Recovery can identify and clean a leftover link if the process stops here.
+        let _ = self.remove_valid_create_temporary_at(
+            &parent,
+            &temporary_name,
+            &target_name,
+            &relative_path,
+            &next_revision,
+            true,
+            Some(&temporary_identity),
+        );
+        let _ = sync_create_directory(&parent);
+
+        Ok(VaultCreateResult {
+            read: VaultRead {
+                document: RawDocument::from_bytes(request.bytes),
+                revision_sha256: next_revision,
+            },
+            operation_id,
+        })
+    }
+
+    pub(crate) fn read_create_target_at(
+        &self,
+        parent: &CapabilityDir,
+        target_name: &OsStr,
+        relative_path: &Path,
+    ) -> Result<Option<VaultRead>, VaultError> {
+        let Some(mut file) = self.open_create_file_at(parent, target_name, relative_path)? else {
+            return Ok(None);
+        };
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes)?;
+        let revision_sha256 = sha256_hex(&bytes);
+        Ok(Some(VaultRead {
+            document: RawDocument::from_bytes(bytes),
+            revision_sha256,
+        }))
+    }
+
+    fn open_create_file_at(
+        &self,
+        parent: &CapabilityDir,
+        name: &OsStr,
+        relative_path: &Path,
+    ) -> Result<Option<CapabilityFile>, VaultError> {
+        let metadata = match parent.symlink_metadata(name) {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+            Err(error) => return Err(error.into()),
+        };
+        if metadata.file_type().is_symlink() {
+            return Err(VaultError::Symlink(relative_path.to_path_buf()));
+        }
+        if !metadata.is_file() {
+            return Err(VaultError::NotAFile(relative_path.to_path_buf()));
+        }
+        let mut options = CapabilityOpenOptions::new();
+        options.read(true).follow(FollowSymlinks::No);
+        parent
+            .open_with(name, &options)
+            .map(Some)
+            .map_err(VaultError::from)
+    }
+
+    pub(crate) fn create_entries_same_file_at(
+        &self,
+        parent: &CapabilityDir,
+        first_name: &OsStr,
+        second_name: &OsStr,
+        relative_path: &Path,
+    ) -> Result<bool, VaultError> {
+        let Some(first) = self.open_create_file_at(parent, first_name, relative_path)? else {
+            return Ok(false);
+        };
+        let Some(second) = self.open_create_file_at(parent, second_name, relative_path)? else {
+            return Ok(false);
+        };
+        let first = SameFileHandle::from_file(first.into_std())?;
+        let second = SameFileHandle::from_file(second.into_std())?;
+        Ok(first == second)
+    }
+
+    pub(crate) fn prepare_create_temporary_at(
+        &self,
+        parent: &CapabilityDir,
+        operation_id: &str,
+        bytes: &[u8],
+        expected_revision: &str,
+    ) -> Result<(OsString, SameFileHandle), String> {
+        let temporary_name = create_temporary_name(operation_id);
+        if sha256_hex(bytes) != expected_revision {
+            return Err("incoming create bytes do not match the journaled revision".to_owned());
+        }
+        match parent.symlink_metadata(&temporary_name) {
+            Ok(_) => {
+                return Err(
+                    "existing create staging entry has no retained operation identity and is preserved for explicit recovery".to_owned(),
+                );
+            }
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => {
+                return Err(format!("create staging entry cannot be checked: {error}"));
+            }
+        }
+
+        let mut options = CapabilityOpenOptions::new();
+        options.write(true).create_new(true);
+        let mut file = parent
+            .open_with(&temporary_name, &options)
+            .map_err(|error| format!("create staging file cannot be created: {error}"))?;
+        file.write_all(bytes)
+            .and_then(|()| file.sync_all())
+            .map_err(|error| format!("create staging file cannot be written: {error}"))?;
+        let identity = SameFileHandle::from_file(
+            file.try_clone()
+                .map_err(|error| format!("create staging identity cannot be retained: {error}"))?
+                .into_std(),
+        )
+        .map_err(|error| format!("create staging identity cannot be retained: {error}"))?;
+        Ok((temporary_name, identity))
+    }
+
+    pub(crate) fn create_entry_matches_handle_at(
+        &self,
+        parent: &CapabilityDir,
+        name: &OsStr,
+        relative_path: &Path,
+        expected: &SameFileHandle,
+    ) -> Result<bool, VaultError> {
+        let Some(file) = self.open_create_file_at(parent, name, relative_path)? else {
+            return Ok(false);
+        };
+        let actual = SameFileHandle::from_file(file.into_std())?;
+        Ok(&actual == expected)
+    }
+
+    pub(crate) fn open_create_entry_identity_at(
+        &self,
+        parent: &CapabilityDir,
+        name: &OsStr,
+        relative_path: &Path,
+    ) -> Result<Option<SameFileHandle>, VaultError> {
+        self.open_create_file_at(parent, name, relative_path)?
+            .map(|file| SameFileHandle::from_file(file.into_std()).map_err(VaultError::from))
+            .transpose()
+    }
+
+    pub(crate) fn remove_valid_create_temporary_at(
+        &self,
+        parent: &CapabilityDir,
+        temporary_name: &OsStr,
+        target_name: &OsStr,
+        relative_path: &Path,
+        expected_revision: &str,
+        require_target_link: bool,
+        expected_file: Option<&SameFileHandle>,
+    ) -> Result<(), String> {
+        match self.read_create_target_at(parent, temporary_name, relative_path) {
+            Ok(None) => Ok(()),
+            Ok(Some(staged)) => {
+                if let Some(expected_file) = expected_file {
+                    if !self
+                        .create_entry_matches_handle_at(
+                            parent,
+                            temporary_name,
+                            relative_path,
+                            expected_file,
+                        )
+                        .map_err(|error| format!("create staging identity cannot be checked: {error}"))?
+                    {
+                        return Err("create staging entry is not owned by this operation".to_owned());
+                    }
+                    if !require_target_link && staged.revision_sha256 != expected_revision {
+                        return Err("create staging file no longer matches the operation's revision".to_owned());
+                    }
+                }
+                if require_target_link {
+                    let target = self
+                        .read_create_target_at(parent, target_name, relative_path)
+                        .map_err(|error| format!("published create target cannot be checked: {error}"))?;
+                    if !matches!(target.as_ref(), Some(target) if target.revision_sha256 == staged.revision_sha256)
+                    {
+                        return Err("published create target and staging bytes differ".to_owned());
+                    }
+                    if !self
+                        .create_entries_same_file_at(
+                            parent,
+                            temporary_name,
+                            target_name,
+                            relative_path,
+                        )
+                        .map_err(|error| format!("create staging identity cannot be checked: {error}"))?
+                    {
+                        return Err("create staging entry is not the published target's file".to_owned());
+                    }
+                } else if expected_file.is_none() {
+                    return Err("create staging entry ownership cannot be verified after interruption".to_owned());
+                }
+                #[cfg(test)]
+                if self.fail_create_temporary_cleanup {
+                    return Err("injected create staging cleanup failure".to_owned());
+                }
+                parent
+                    .remove_file(temporary_name)
+                    .map_err(|error| format!("create staging file cannot be removed: {error}"))
+            }
+            Err(error) => Err(format!("create staging file cannot be checked: {error}")),
+        }
+    }
+
+    fn remove_failed_create_temporary_at(
+        &self,
+        parent: &CapabilityDir,
+        temporary_name: &OsStr,
+        relative_path: &Path,
+        bytes: &[u8],
+        expected_file: &SameFileHandle,
+    ) -> Result<(), String> {
+        match self.read_create_target_at(parent, temporary_name, relative_path) {
+            Ok(None) => Ok(()),
+            Ok(Some(read)) => {
+                if !bytes.starts_with(read.document.as_bytes())
+                    || !self
+                        .create_entry_matches_handle_at(
+                            parent,
+                            temporary_name,
+                            relative_path,
+                            expected_file,
+                        )
+                    .map_err(|error| {
+                        format!("failed create staging identity cannot be checked: {error}")
+                    })?
+                {
+                    return Err("failed create staging entry is not owned by this operation".into());
+                }
+                parent.remove_file(temporary_name).map_err(|error| {
+                    format!("failed create staging file cannot be removed: {error}")
+                })
+            }
+            Err(error) => Err(format!("failed create staging file cannot be checked: {error}")),
+        }
+    }
+
+    fn create_destination_conflict(
+        &self,
+        operation_id: &str,
+        relative_path: PathBuf,
+        relative_path_text: &str,
+        incoming_bytes: &[u8],
+        incoming_revision: &str,
+        current_revision: Option<&str>,
+    ) -> Result<VaultCreateResult, VaultError> {
+        let preserved_path = self.preserve_bytes(
+            "conflicts",
+            &format!("{operation_id}-incoming"),
+            ".incoming",
+            relative_path_text,
+            incoming_bytes,
+            incoming_revision,
+            None,
+            current_revision,
+        )?;
+        self.append_create_journal(
+            operation_id,
+            "conflict",
+            relative_path_text,
+            None,
+            incoming_revision,
+            Some("create destination already exists"),
+        )?;
+        Err(VaultError::CreateDestinationExists {
+            relative_path,
+            preserved_path,
+        })
+    }
+
     /// Apply revision-bound writes in order and journal their batch outcome.
     ///
     /// The vault filesystem does not provide a multi-file atomic replacement:
@@ -1649,6 +2279,130 @@ impl VaultStore {
         })
     }
 
+    fn atomic_create_only(
+        &self,
+        parent: &CapabilityDir,
+        target_name: &OsStr,
+        relative_path: &Path,
+        operation_id: &str,
+        bytes: &[u8],
+        expected_revision: &str,
+    ) -> Result<(OsString, SameFileHandle), VaultError> {
+        let temporary_name = create_temporary_name(operation_id);
+        let mut owns_temporary = false;
+        let mut owned_identity = None;
+        let publish_result = (|| -> io::Result<()> {
+            let mut options = CapabilityOpenOptions::new();
+            options.write(true).create_new(true);
+            let mut temporary = parent.open_with(&temporary_name, &options)?;
+            owns_temporary = true;
+            owned_identity = Some(SameFileHandle::from_file(temporary.try_clone()?.into_std())?);
+            #[cfg(test)]
+            if let Some(prefix_length) = self.fail_create_write_after_bytes {
+                temporary.write_all(&bytes[..prefix_length.min(bytes.len())])?;
+                return Err(io::Error::other("injected create staging write failure"));
+            }
+            let write_result = temporary
+                .write_all(bytes)
+                .and_then(|()| temporary.sync_all());
+            drop(temporary);
+            write_result?;
+
+            #[cfg(test)]
+            if let Some(replacement_bytes) = self.replace_create_temporary_before_link.as_deref() {
+                parent.remove_file(&temporary_name)?;
+                let mut options = CapabilityOpenOptions::new();
+                options.write(true).create_new(true);
+                let mut replacement = parent.open_with(&temporary_name, &options)?;
+                replacement.write_all(replacement_bytes)?;
+                replacement.sync_all()?;
+                drop(replacement);
+            }
+
+            let staged = self
+                .read_create_target_at(parent, &temporary_name, relative_path)
+                .map_err(|error| io::Error::other(error.to_string()))?
+                .ok_or_else(|| io::Error::other("create staging file disappeared"))?;
+            if staged.revision_sha256 != expected_revision {
+                return Err(io::Error::other(
+                    "create staging file changed before publication",
+                ));
+            }
+            if !self
+                .create_entry_matches_handle_at(
+                    parent,
+                    &temporary_name,
+                    relative_path,
+                    owned_identity
+                        .as_ref()
+                        .ok_or_else(|| io::Error::other("create staging identity is unavailable"))?,
+                )
+                .map_err(|error| io::Error::other(error.to_string()))?
+            {
+                return Err(io::Error::other(
+                    "create staging entry changed before publication",
+                ));
+            }
+
+            #[cfg(test)]
+            if let Some(race_bytes) = self.create_race_bytes.as_deref() {
+                let mut options = CapabilityOpenOptions::new();
+                options.write(true).create_new(true);
+                let mut raced_target = parent.open_with(target_name, &options)?;
+                let race_result = raced_target
+                    .write_all(race_bytes)
+                    .and_then(|()| raced_target.sync_all());
+                drop(raced_target);
+                if let Err(error) = race_result {
+                    let _ = parent.remove_file(target_name);
+                    return Err(error);
+                }
+            }
+
+            #[cfg(test)]
+            if self.fail_create_link {
+                return Err(io::Error::other(
+                    "injected create-only hard-link publication failure",
+                ));
+            }
+
+            parent.hard_link(&temporary_name, parent, target_name)
+        })();
+        match publish_result {
+            Ok(()) => owned_identity
+                .map(|identity| (temporary_name, identity))
+                .ok_or_else(|| VaultError::RecoveryRequired {
+                    relative_path: relative_path.to_path_buf(),
+                    reason: "create publication completed without a retained staging identity"
+                        .to_owned(),
+                }),
+            Err(source) if !owns_temporary => Err(VaultError::WriteFailed {
+                relative_path: relative_path.to_path_buf(),
+                source,
+            }),
+            Err(source) => match owned_identity.as_ref().ok_or_else(|| {
+                "failed create staging identity could not be retained".to_owned()
+            }).and_then(|identity| self.remove_failed_create_temporary_at(
+                parent,
+                &temporary_name,
+                relative_path,
+                bytes,
+                identity,
+            )) {
+                Ok(()) => Err(VaultError::WriteFailed {
+                    relative_path: relative_path.to_path_buf(),
+                    source,
+                }),
+                Err(cleanup_error) => Err(VaultError::RecoveryRequired {
+                    relative_path: relative_path.to_path_buf(),
+                    reason: format!(
+                        "create publication failed: {source}; staging cleanup also failed: {cleanup_error}"
+                    ),
+                }),
+            },
+        }
+    }
+
     fn rollback_single_write(
         &self,
         target_path: &Path,
@@ -1699,6 +2453,35 @@ impl VaultStore {
         let error_json = error.map_or_else(|| "null".to_owned(), json_string);
         let line = format!(
             "{{\"id\":{},\"operation\":\"write\",\"state\":{},\"relative_path\":{},\"expected_revision\":{},\"next_revision\":{},\"recorded_at\":{},\"error\":{}}}\n",
+            json_string(operation_id),
+            json_string(state),
+            json_string(relative_path),
+            json_option_string(expected_revision),
+            json_string(next_revision),
+            json_string(&timestamp()),
+            error_json,
+        );
+        self.append_journal_line(&line)
+    }
+
+    fn append_create_journal(
+        &self,
+        operation_id: &str,
+        state: &str,
+        relative_path: &str,
+        expected_revision: Option<&str>,
+        next_revision: &str,
+        error: Option<&str>,
+    ) -> Result<(), VaultError> {
+        #[cfg(test)]
+        if state == "committed" && self.fail_create_committed_journal {
+            return Err(VaultError::Journal(io::Error::other(
+                "injected create commit journal failure",
+            )));
+        }
+        let error_json = error.map_or_else(|| "null".to_owned(), json_string);
+        let line = format!(
+            "{{\"id\":{},\"operation\":\"create\",\"state\":{},\"relative_path\":{},\"expected_revision\":{},\"next_revision\":{},\"recorded_at\":{},\"error\":{}}}\n",
             json_string(operation_id),
             json_string(state),
             json_string(relative_path),
@@ -2097,9 +2880,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 mod tests {
     use super::{
         AppearanceMode, HotkeyBinding, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
-        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason, VaultError,
-        VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot, VaultStore, VaultStyleAssetKind,
-        VaultWriteRequest, sha256_hex,
+        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason,
+        VaultCreateRequest, VaultError, VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot,
+        VaultStore, VaultStyleAssetKind, VaultWriteRequest, sha256_hex,
     };
     use openobsidian_doc::MergeStatus;
     use serde_json::Value;
@@ -2196,6 +2979,15 @@ mod tests {
             "missing {suffix} artifact for {relative_path} in {}",
             directory.display()
         );
+    }
+
+    fn journal_entries(app_data_root: &Path) -> Vec<Value> {
+        fs::read_to_string(app_data_root.join("journal.jsonl"))
+            .unwrap()
+            .lines()
+            .map(serde_json::from_str)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
     }
 
     fn rgba_png(rgba: [u8; 4]) -> Vec<u8> {
@@ -3282,6 +4074,795 @@ mod tests {
         assert!(journal.contains("\"state\":\"prepared\""));
         assert!(journal.contains("\"state\":\"committed\""));
         assert!(journal.contains(&result.operation_id));
+    }
+
+    #[test]
+    fn create_only_publishes_new_bytes_and_journals_the_operation() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Cards/Created.md");
+        fs::create_dir(vault_temp.0.join("Cards")).unwrap();
+        let incoming = b"# Created from a Canvas card\r\n";
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+
+        let result = store
+            .create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap();
+
+        assert_eq!(
+            fs::read(vault_temp.0.join(&relative_path)).unwrap(),
+            incoming
+        );
+        assert_eq!(result.read.document.as_bytes(), incoming);
+        assert_eq!(result.read.revision_sha256, sha256_hex(incoming));
+        assert_eq!(
+            fs::read(
+                app_data_temp
+                    .0
+                    .join("recovery")
+                    .join(format!("{}-incoming.bin", result.operation_id))
+            )
+            .unwrap(),
+            incoming
+        );
+
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(journal.len(), 2);
+        assert_eq!(journal[0]["operation"], "create");
+        assert_eq!(journal[0]["state"], "prepared");
+        assert_eq!(journal[1]["operation"], "create");
+        assert_eq!(journal[1]["state"], "committed");
+        assert!(
+            journal
+                .iter()
+                .all(|entry| entry["id"].as_str() == Some(result.operation_id.as_str()))
+        );
+        assert_eq!(journal[0]["relative_path"], "Cards/Created.md");
+        assert_eq!(journal[0]["expected_revision"], Value::Null);
+        assert_eq!(journal[0]["next_revision"], sha256_hex(incoming));
+    }
+
+    #[test]
+    fn create_only_preserves_an_existing_target_and_records_a_conflict() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Existing.md");
+        let target = vault_temp.0.join(&relative_path);
+        let current = b"keep this existing note\n";
+        let incoming = b"do not replace the note\n";
+        fs::write(&target, current).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+
+        let preserved_path = match store
+            .create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap_err()
+        {
+            VaultError::CreateDestinationExists {
+                relative_path: error_path,
+                preserved_path,
+            } => {
+                assert_eq!(error_path, relative_path);
+                preserved_path
+            }
+            error => panic!("existing create target returned the wrong error: {error}"),
+        };
+
+        assert_eq!(fs::read(&target).unwrap(), current);
+        assert_eq!(fs::read(preserved_path).unwrap(), incoming);
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(journal.len(), 1);
+        assert_eq!(journal[0]["operation"], "create");
+        assert_eq!(journal[0]["state"], "conflict");
+        assert_eq!(journal[0]["relative_path"], "Existing.md");
+    }
+
+    #[test]
+    fn create_only_preserves_a_target_that_races_in_before_publication() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Racing.md");
+        let target = vault_temp.0.join(&relative_path);
+        let racing_bytes = b"created by another writer\n";
+        let incoming = b"our requested note\n";
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.create_race_bytes = Some(racing_bytes.to_vec());
+
+        let preserved_path = match store
+            .create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap_err()
+        {
+            VaultError::CreateDestinationExists {
+                relative_path: error_path,
+                preserved_path,
+            } => {
+                assert_eq!(error_path, relative_path);
+                preserved_path
+            }
+            error => panic!("racing create target returned the wrong error: {error}"),
+        };
+
+        assert_eq!(fs::read(&target).unwrap(), racing_bytes);
+        assert_eq!(fs::read(preserved_path).unwrap(), incoming);
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "conflict"]
+        );
+        assert!(journal.iter().all(|entry| entry["operation"] == "create"));
+    }
+
+    #[test]
+    fn failed_create_publication_preserves_incoming_bytes_for_recovery() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Unsupported.md");
+        let target = vault_temp.0.join(&relative_path);
+        let incoming = b"incoming bytes survive failed publication\n";
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_create_link = true;
+
+        let error = store
+            .create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap_err();
+        assert!(matches!(
+            error,
+            VaultError::WriteFailed {
+                relative_path: error_path,
+                ..
+            } if error_path == relative_path
+        ));
+
+        assert!(!target.exists());
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "failed"]
+        );
+        let operation_id = journal[0]["id"].as_str().unwrap();
+        assert_eq!(journal[0]["operation"], "create");
+        assert_eq!(
+            fs::read(
+                app_data_temp
+                    .0
+                    .join("recovery")
+                    .join(format!("{operation_id}-incoming.bin"))
+            )
+            .unwrap(),
+            incoming
+        );
+    }
+
+    #[test]
+    fn recovery_publishes_a_prepared_create_that_was_not_yet_published() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Recovered/Created.md");
+        let target = vault_temp.0.join(&relative_path);
+        let relative_path_text = "Recovered/Created.md";
+        let operation_id = "prepared-create-recovery";
+        let incoming = b"prepared incoming bytes\n";
+        let revision = sha256_hex(incoming);
+        fs::create_dir(vault_temp.0.join("Recovered")).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-incoming"),
+                ".bin",
+                relative_path_text,
+                incoming,
+                &revision,
+                None,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                relative_path_text,
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        let pending_history = store
+            .history_records()
+            .unwrap()
+            .into_iter()
+            .filter(|record| record.id.starts_with(operation_id))
+            .collect::<Vec<_>>();
+        assert!(!pending_history.is_empty());
+        assert!(pending_history.iter().all(|record| record.protected));
+        assert!(!target.exists());
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert_eq!(report.recovered_operations, vec![operation_id]);
+        assert!(report.needs_attention.is_empty());
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        let recovered_history = store
+            .history_records()
+            .unwrap()
+            .into_iter()
+            .filter(|record| record.id.starts_with(operation_id))
+            .collect::<Vec<_>>();
+        assert!(!recovered_history.is_empty());
+        assert!(recovered_history.iter().all(|record| !record.protected));
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "committed"]
+        );
+        assert!(
+            journal
+                .iter()
+                .all(|entry| entry["id"].as_str() == Some(operation_id))
+        );
+    }
+
+    #[test]
+    fn recovery_finishes_a_create_published_before_its_commit_record() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Published.md");
+        let target = vault_temp.0.join(&relative_path);
+        let incoming = b"published before commit journaling\n";
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_create_committed_journal = true;
+
+        assert!(matches!(
+            store.create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            }),
+            Err(VaultError::RecoveryRequired { relative_path: error_path, .. })
+                if error_path == relative_path
+        ));
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        let journal_before_recovery = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal_before_recovery
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            vec!["prepared", "recovery_required"]
+        );
+        let operation_id = journal_before_recovery[0]["id"].as_str().unwrap().to_owned();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert_eq!(report.recovered_operations, vec![operation_id]);
+        assert!(report.needs_attention.is_empty());
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "recovery_required", "committed"]
+        );
+    }
+
+    #[test]
+    fn create_only_rejects_a_missing_parent_without_creating_directories() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let missing_parent = vault_temp.0.join("Missing");
+        let target = missing_parent.join("Created.md");
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+
+        assert!(
+            store
+                .create_new(VaultCreateRequest {
+                    relative_path: PathBuf::from("Missing/Created.md"),
+                    bytes: b"do not create the parent\n".to_vec(),
+                })
+                .is_err()
+        );
+
+        assert!(!missing_parent.exists());
+        assert!(!target.exists());
+        assert!(!app_data_temp.0.join("recovery").exists());
+        assert!(!app_data_temp.0.join("journal.jsonl").exists());
+    }
+
+    #[test]
+    fn create_only_rejects_a_symlinked_parent_without_writing_outside_the_vault() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let external_temp = TempDir::new();
+        let outside_target = external_temp.0.join("Created.md");
+        let linked_parent = vault_temp.0.join("Linked");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&external_temp.0, &linked_parent).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_dir(&external_temp.0, &linked_parent).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+
+        assert!(
+            store
+                .create_new(VaultCreateRequest {
+                    relative_path: PathBuf::from("Linked/Created.md"),
+                    bytes: b"must stay within the selected vault\n".to_vec(),
+                })
+                .is_err()
+        );
+
+        assert!(!outside_target.exists());
+        assert!(!app_data_temp.0.join("recovery").exists());
+        assert!(!app_data_temp.0.join("journal.jsonl").exists());
+    }
+
+    #[test]
+    fn recovery_converts_an_interrupted_create_interloper_into_a_resolvable_conflict() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Interloper.md");
+        let target = vault_temp.0.join(&relative_path);
+        let relative_path_text = "Interloper.md";
+        let operation_id = "interrupted-create-interloper";
+        let incoming = b"preserve requested note\n";
+        let current = b"preserve the interloper\n";
+        let revision = sha256_hex(incoming);
+        fs::write(&target, current).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-incoming"),
+                ".bin",
+                relative_path_text,
+                incoming,
+                &revision,
+                None,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                relative_path_text,
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert_eq!(report.needs_attention.len(), 1);
+        assert_eq!(report.needs_attention[0].operation_id, operation_id);
+        assert_eq!(fs::read(&target).unwrap(), current);
+        let conflict = store
+            .read_conflict(&format!("{operation_id}-incoming"), &relative_path)
+            .unwrap();
+        assert_eq!(conflict.bytes.as_slice(), incoming);
+        let current_revision = sha256_hex(current);
+        assert_eq!(
+            conflict.record.current_revision_sha256.as_deref(),
+            Some(current_revision.as_str())
+        );
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "conflict"]
+        );
+    }
+
+    #[test]
+    fn recovery_cleans_a_staging_link_left_after_create_commit() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Cleanup.md");
+        let target = vault_temp.0.join(&relative_path);
+        let incoming = b"published with a leftover staging link\n";
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_create_temporary_cleanup = true;
+
+        store
+            .create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            })
+            .unwrap();
+        let journal_before_recovery = journal_entries(&app_data_temp.0);
+        let operation_id = journal_before_recovery[0]["id"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let temporary_path = vault_temp
+            .0
+            .join(create_temporary_name(&operation_id));
+        assert!(temporary_path.exists());
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert!(report.needs_attention.is_empty());
+        assert!(!temporary_path.exists());
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        let journal_after_recovery = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal_after_recovery
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
+            vec!["prepared", "committed"]
+        );
+        assert_eq!(journal_after_recovery[0]["id"], operation_id);
+    }
+
+    #[test]
+    fn interrupted_create_with_an_identical_interloper_is_still_a_conflict() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("IdenticalInterloper.md");
+        let target = vault_temp.0.join(&relative_path);
+        let relative_path_text = "IdenticalInterloper.md";
+        let operation_id = "identical-create-interloper";
+        let incoming = b"same bytes from another writer\n";
+        let revision = sha256_hex(incoming);
+        fs::write(&target, incoming).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-incoming"),
+                ".bin",
+                relative_path_text,
+                incoming,
+                &revision,
+                None,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                relative_path_text,
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert_eq!(report.needs_attention.len(), 1);
+        assert_eq!(report.needs_attention[0].operation_id, operation_id);
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        let conflict = store
+            .read_conflict(&format!("{operation_id}-incoming"), &relative_path)
+            .unwrap();
+        assert_eq!(conflict.bytes.as_slice(), incoming);
+        assert_eq!(
+            conflict.record.current_revision_sha256.as_deref(),
+            Some(revision.as_str())
+        );
+        let journal = journal_entries(&app_data_temp.0);
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "conflict"]
+        );
+    }
+
+    #[test]
+    fn recovery_preserves_an_ambiguous_partial_create_staging_file() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("Partial.md");
+        let target = vault_temp.0.join(&relative_path);
+        let operation_id = "partial-create-stage";
+        let incoming = b"complete bytes survive a partial stage\n";
+        let revision = sha256_hex(incoming);
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-incoming"),
+                ".bin",
+                "Partial.md",
+                incoming,
+                &revision,
+                None,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(operation_id, "prepared", "Partial.md", None, &revision, None)
+            .unwrap();
+        let temporary_path = vault_temp
+            .0
+            .join(create_temporary_name(operation_id));
+        fs::write(&temporary_path, &incoming[..8]).unwrap();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert_eq!(report.needs_attention.len(), 1);
+        assert_eq!(report.needs_attention[0].operation_id, operation_id);
+        assert!(!target.exists());
+        assert_eq!(fs::read(&temporary_path).unwrap(), &incoming[..8]);
+        assert_eq!(
+            fs::read(
+                app_data_temp
+                    .0
+                    .join("recovery")
+                    .join(format!("{operation_id}-incoming.bin"))
+            )
+            .unwrap(),
+            incoming
+        );
+    }
+
+    #[test]
+    fn terminal_recovery_preserves_a_foreign_exact_revision_stage_file() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("ForeignStage.md");
+        let incoming = b"same bytes, separate file identity\n";
+        let revision = sha256_hex(incoming);
+        let operation_id = "foreign-exact-stage";
+        let target = vault_temp.0.join(&relative_path);
+        let temporary_path = vault_temp.0.join(create_temporary_name(operation_id));
+        fs::write(&target, incoming).unwrap();
+        fs::write(&temporary_path, incoming).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                "ForeignStage.md",
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "committed",
+                "ForeignStage.md",
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert_eq!(report.needs_attention.len(), 1);
+        assert_eq!(report.needs_attention[0].operation_id, operation_id);
+        assert_eq!(fs::read(&target).unwrap(), incoming);
+        assert_eq!(fs::read(&temporary_path).unwrap(), incoming);
+    }
+
+    #[test]
+    fn interrupted_create_does_not_adopt_a_foreign_exact_revision_stage_file() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("PreparedForeignStage.md");
+        let incoming = b"exact bytes do not prove stage ownership\n";
+        let revision = sha256_hex(incoming);
+        let operation_id = "prepared-foreign-exact-stage";
+        let target = vault_temp.0.join(&relative_path);
+        let temporary_path = vault_temp.0.join(create_temporary_name(operation_id));
+        fs::write(&temporary_path, incoming).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-incoming"),
+                ".bin",
+                "PreparedForeignStage.md",
+                incoming,
+                &revision,
+                None,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                "PreparedForeignStage.md",
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert_eq!(report.needs_attention.len(), 1);
+        assert_eq!(report.needs_attention[0].operation_id, operation_id);
+        assert!(!target.exists());
+        assert_eq!(fs::read(&temporary_path).unwrap(), incoming);
+        assert_eq!(
+            fs::read(
+                app_data_temp
+                    .0
+                    .join("recovery")
+                    .join(format!("{operation_id}-incoming.bin"))
+            )
+            .unwrap(),
+            incoming
+        );
+    }
+
+    #[test]
+    fn interrupted_conflict_does_not_terminalize_while_staging_remains() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("ConflictStage.md");
+        let target = vault_temp.0.join(&relative_path);
+        let incoming = b"incoming intended note bytes\n";
+        let interloper = b"existing note bytes\n";
+        let revision = sha256_hex(incoming);
+        let operation_id = "conflict-partial-stage";
+        let temporary_path = vault_temp.0.join(create_temporary_name(operation_id));
+        fs::write(&target, interloper).unwrap();
+        fs::write(&temporary_path, &incoming[..7]).unwrap();
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store
+            .preserve_bytes(
+                "recovery",
+                &format!("{operation_id}-incoming"),
+                ".bin",
+                "ConflictStage.md",
+                incoming,
+                &revision,
+                None,
+                None,
+            )
+            .unwrap();
+        store
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                "ConflictStage.md",
+                None,
+                &revision,
+                None,
+            )
+            .unwrap();
+        drop(store);
+
+        let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        let report = store.recover_pending_writes().unwrap();
+
+        assert!(report.recovered_operations.is_empty());
+        assert_eq!(report.needs_attention.len(), 1);
+        assert_eq!(report.needs_attention[0].operation_id, operation_id);
+        assert_eq!(fs::read(&target).unwrap(), interloper);
+        assert_eq!(fs::read(&temporary_path).unwrap(), &incoming[..7]);
+        let journal = journal_entries(&app_data_temp.0);
+        let journal_states = journal
+            .iter()
+            .map(|entry| entry["state"].as_str().unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(journal_states.first(), Some(&"prepared"));
+        assert_eq!(journal_states.last(), Some(&"recovery_required"));
+        assert!(!journal_states.iter().any(|state| {
+            matches!(*state, "committed" | "conflict")
+        }));
+        assert!(store
+            .read_conflict(&format!("{operation_id}-incoming"), &relative_path)
+            .is_ok());
+    }
+
+    #[test]
+    fn failed_partial_create_write_cleans_its_staging_file_and_keeps_incoming_bytes() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("WriteFailure.md");
+        let target = vault_temp.0.join(&relative_path);
+        let incoming = b"the complete incoming note\n";
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.fail_create_write_after_bytes = Some(7);
+
+        assert!(matches!(
+            store.create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            }),
+            Err(VaultError::WriteFailed { .. })
+        ));
+
+        let journal = journal_entries(&app_data_temp.0);
+        let operation_id = journal[0]["id"].as_str().unwrap();
+        let temporary_path = vault_temp
+            .0
+            .join(create_temporary_name(operation_id));
+        assert!(!target.exists());
+        assert!(!temporary_path.exists());
+        assert_eq!(
+            fs::read(
+                app_data_temp
+                    .0
+                    .join("recovery")
+                    .join(format!("{operation_id}-incoming.bin"))
+            )
+            .unwrap(),
+            incoming
+        );
+        assert_eq!(
+            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            vec!["prepared", "failed"]
+        );
+    }
+
+    #[test]
+    fn replaced_create_staging_entry_is_not_published() {
+        let vault_temp = TempDir::new();
+        let app_data_temp = TempDir::new();
+        let relative_path = PathBuf::from("ReplacedStage.md");
+        let target = vault_temp.0.join(&relative_path);
+        let incoming = b"the requested note bytes\n";
+        let replacement = b"foreign staging contents\n";
+        let mut store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
+        store.replace_create_temporary_before_link = Some(replacement.to_vec());
+
+        assert!(matches!(
+            store.create_new(VaultCreateRequest {
+                relative_path: relative_path.clone(),
+                bytes: incoming.to_vec(),
+            }),
+            Err(VaultError::RecoveryRequired { .. })
+        ));
+
+        let journal = journal_entries(&app_data_temp.0);
+        let operation_id = journal[0]["id"].as_str().unwrap();
+        let temporary_path = vault_temp
+            .0
+            .join(create_temporary_name(operation_id));
+        assert!(!target.exists());
+        assert_eq!(fs::read(&temporary_path).unwrap(), replacement);
+        assert_eq!(
+            fs::read(
+                app_data_temp
+                    .0
+                    .join("recovery")
+                    .join(format!("{operation_id}-incoming.bin"))
+            )
+            .unwrap(),
+            incoming
+        );
+        assert_eq!(journal.last().unwrap()["state"], "recovery_required");
     }
 
     #[test]

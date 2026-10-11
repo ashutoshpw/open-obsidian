@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T19:16:44+00:00",
+  "updated_at": "2026-10-11T20:10:51+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "612fc550c7061d751672790f2b2b21869e990a9d",
+  "last_reconciled_head": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
   "current_milestone": "R2.8.91",
-  "next_action": "Begin R2.8.91: design a journaled, root-confined, create-only vault write that never overwrites a racing file; pair it with pure Canvas text extraction and fixture-backed non-mutating failures. Keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
-  "push_status": "R2.8.90 was accepted on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d after all seven required workflows passed. Exact runs, jobs, artifacts, and report hashes are in evidence/r2.8.90-attempt-3-612fc55.json. The Obsidian round-trip was manually dispatched because the xtask-only change is outside its push path filters; GitHub confirms the dispatch tested the same SHA. C06 and C06.1 remain pending for native Canvas UI and explicit note creation.",
+  "next_action": "Complete R2.8.91: resolve the capability filesystem dependency lockfile in GitHub CI, finish journal/recovery and failure-injection coverage, then pass all seven workflows on the exact pushed source SHA. Keep Canvas text extraction as the following document-layer slice; keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
+  "push_status": "R2.8.90 was accepted on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d after all seven required workflows passed. The tracker checkpoint at 25d5962ab1bfbdae562a1a67ca21e5ada2eed948 passed all six workflows triggered by the documentation push; its path-filtered Obsidian round-trip remains accepted on 612fc550c7061d751672790f2b2b21869e990a9d. See evidence/r2.8.90-attempt-3-612fc55.json and evidence/r2.8.91-starting-checkpoint-25d5962.json. R2.8.91 implementation is in progress and has not passed exact-SHA CI. C06 and C06.1 remain pending for native Canvas UI and explicit note creation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -37,7 +37,7 @@
       "implementation_sha": "5ea3ea6c9e0d02a562daa696eac19b826dad0efa"
     },
     "R2": {
-      "status": "complete",
+      "status": "in_progress",
       "required_ci": [
         "rust-ci",
         "obsidian-vault-roundtrip",
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee"
+      "implementation_sha": "612fc550c7061d751672790f2b2b21869e990a9d"
     },
     "R3": {
       "status": "pending",
@@ -30152,18 +30152,44 @@
       "push_status": "Accepted after all seven required GitHub Actions workflows passed on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d. The path-filtered Obsidian round-trip was manually dispatched and passed on the same SHA. C06/C06.1 remain pending for Canvas UI and explicit note creation."
     },
     "R2.8.91": {
-      "status": "planned",
-      "starting_sha": "612fc550c7061d751672790f2b2b21869e990a9d",
+      "status": "in_progress",
+      "starting_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
       "scope": "Add a root-confined, journaled, create-only vault write for a new note. An existing or racing file must never be overwritten; parent directories are not created implicitly. This is a backend capability only and does not create notes automatically from Canvas edits.",
       "acceptance": [
-        "Creation requires an absent relative path beneath the selected vault and uses an atomic no-clobber filesystem operation; reject traversal, symlinks, directories, and missing parent directories without mutation.",
-        "Journal recovery handles interrupted note creation without replacing an interloper or leaving an accepted partial note; failure-injection tests preserve existing bytes.",
+        "Creation requires an absent relative path beneath the selected vault and uses a capability-relative atomic no-clobber filesystem operation; open each parent component without following symlinks and reject traversal, symlinks, directories, and missing parent directories without mutation.",
+        "Journal recovery completes interrupted note creation only when publication provenance is verifiable, without replacing an interloper or accepting a partial note. Ambiguous partial or foreign staging entries are preserved and reported for explicit recovery; a staging entry alone is never adopted based only on matching content.",
         "Existing target paths and a file appearing between preflight and commit return a typed conflict while preserving the exact pre-existing bytes.",
+        "If the filesystem cannot publish with an atomic no-clobber link, creation fails closed, leaves the target absent, and retains the incoming bytes.",
         "All seven required GitHub Actions workflows pass on the exact pushed source SHA, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95.",
         "All executable validation runs only in GitHub Actions; no local tests, builds, formatters, validators, or application launches."
       ],
       "known_limits": [
-        "This slice adds only the vault create-only primitive. Canvas extraction, engine orchestration, explicit native Create note action, and C06/C06.1 acceptance remain pending."
+        "This slice adds only the vault create-only primitive. Canvas extraction, engine orchestration, explicit native Create note action, and C06/C06.1 acceptance remain pending.",
+        "A retained directory capability prevents a replaced parent path or symlink from redirecting publication. It cannot guarantee lexical containment if an external process with filesystem permissions renames the opened directory itself outside the vault while creation is in progress; canonical root resolution and root-handle acquisition also remain separate operations.",
+        "A process with write access to the vault can race a staging leaf between identity verification and path-based hard-link or unlink calls. The code verifies the retained file identity and published target immediately before commit, but portable path APIs cannot bind these namespace operations to the retained file handle. A detected staging-name swap can leave an unexpected target or staging entry and require explicit recovery.",
+        "Any pre-existing staging entry without a retained identity from the current process is preserved unless recovery proves it is the committed target's hard link. Partial or exact-revision bytes alone do not establish ownership, so ambiguous entries remain for explicit recovery.",
+        "same-file identity checks can be ambiguous on some Windows filesystems, including ReFS configurations with non-unique 64-bit file IDs. Publication checks combine identity with revision hashes, but the identity check is not a universal filesystem proof.",
+        "Directory-entry durability is best-effort across platforms: Unix syncs the vault parent directory, while the standard Windows API path does not provide a portable directory flush. App-data history writes sync file contents but do not fsync all containing directories. The implementation promises process-interruption recovery, not universal power-loss durability."
+      ],
+      "dependencies_added": [
+        {
+          "crate": "cap-std",
+          "version": "=4.0.3",
+          "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+          "purpose": "Retain an opened vault root and perform create-only file operations relative to directory handles."
+        },
+        {
+          "crate": "cap-fs-ext",
+          "version": "=4.0.3",
+          "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+          "purpose": "Open each vault parent component without following symlinks and disable final-component symlink following for reads."
+        },
+        {
+          "crate": "same-file",
+          "version": "=1.0.6",
+          "license": "MIT OR Apache-2.0",
+          "purpose": "Compare already-open staging and target handles to verify practical file identity before committing create-only publication and cleaning staging links."
+        }
       ],
       "required_workflows": [
         "Rust migration inventory",
@@ -30176,7 +30202,24 @@
       ],
       "attempts": [],
       "implementation_sha": null,
-      "push_status": "Not started. Review existing vault journal/recovery semantics and define the atomic no-clobber recovery protocol before implementation."
+      "push_status": "Implementation in progress after tracker checkpoint 25d5962. The create-only API, capability-relative publication, identity-checked staging, fail-closed recovery for ambiguous partial/foreign stages, and failure-injection coverage are implemented locally. Cargo.lock must be resolved by the manual GitHub Actions resolver because Cargo is unavailable in this workspace. No local executable validation was run; exact-SHA CI is still required before acceptance.",
+      "tracker_checkpoint_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
+      "tracker_checkpoint_outcome": "passed",
+      "tracker_checkpoint_evidence": "evidence/r2.8.91-starting-checkpoint-25d5962.json",
+      "tracker_checkpoint_result": {
+        "tracker_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
+        "outcome": "passed",
+        "evidence": "evidence/r2.8.91-starting-checkpoint-25d5962.json",
+        "workflow_runs": {
+          "inventory": 38167373033,
+          "quality": 38167373024,
+          "desktop_build": 38167373005,
+          "plugin_renderer": 38167373006,
+          "loaded_plugins": 38167373042,
+          "rust_ci": 38167373037
+        },
+        "roundtrip_implementation_sha": "612fc550c7061d751672790f2b2b21869e990a9d"
+      }
     }
   },
   "ci_preparation": {

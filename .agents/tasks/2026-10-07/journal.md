@@ -4273,3 +4273,28 @@ and job IDs, artifact digests, and report hashes are in
 This accepts the persisted Canvas edit slice only; native Canvas UI and
 explicit note creation remain pending. No local executable validation was
 run.
+
+## 2026-10-11 — R2.8.91 create-only vault write checkpoint
+
+Implemented the vault create-only backend slice with a retained vault-root
+capability, no-follow parent traversal, atomic no-clobber hard-link publication,
+incoming recovery history, journal recovery, and file-identity-gated staging
+cleanup. Added failure-injection coverage for racing targets, interrupted
+publication, ambiguous or foreign staging files, and partial staging writes.
+Recovery preserves stages whose ownership cannot be proven; committed cleanup
+may remove a stage only after proving it is the published target's hard link.
+
+Independent read-only reviews checked recovery ordering, stage ownership, path
+races, Windows behavior, documented limits, and Rust formatting. They found no
+obvious API or type issue; they identified two continuation-indentation issues,
+a tracker wording mismatch, and invalid JSON punctuation, all corrected by
+inspection. The tracker now records that a detected staging-name race can
+require explicit recovery and that directory-entry durability is not guaranteed
+across power loss. No local tests, builds, formatters, validators, or application
+launches were run.
+
+The Rust dependency lockfile still needs resolution in GitHub Actions because
+Cargo is unavailable in the workspace. Next: commit and push this coherent
+source checkpoint to `origin/main`, run the manual lockfile resolver on that
+SHA, commit its artifact as `Cargo.lock`, then obtain all seven required
+R2.8.91 workflows on the exact implementation SHA before acceptance.

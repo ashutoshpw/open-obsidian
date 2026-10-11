@@ -9,6 +9,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+cap-std = { workspace = true }
+cap-fs-ext = { workspace = true }
+same-file = { workspace = true }
 openobsidian-doc = { workspace = true }
 image = { workspace = true }
 notify = { workspace = true }

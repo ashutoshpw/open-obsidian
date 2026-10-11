@@ -1,0 +1,30 @@
+name: OpenObsidian Cargo.lock resolver
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resolve-lock:
+    name: Resolve committed workspace dependencies in CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up the declared Rust toolchain
+        uses: dtolnay/rust-toolchain@1.95.0
+
+      - name: Resolve workspace metadata and update Cargo.lock
+        run: cargo metadata --format-version 1 > /dev/null
+
+      - name: Upload resolved lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: cargo-lock-${{ github.sha }}
+          path: Cargo.lock
+          if-no-files-found: error
+          retention-days: 7

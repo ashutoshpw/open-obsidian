@@ -209,7 +209,10 @@ impl VaultStore {
             let value: Value = serde_json::from_str(line).map_err(|error| {
                 VaultError::Journal(std::io::Error::new(std::io::ErrorKind::InvalidData, error))
             })?;
-            if value.get("operation").and_then(Value::as_str) != Some("write") {
+            if !matches!(
+                value.get("operation").and_then(Value::as_str),
+                Some("write" | "create")
+            ) {
                 continue;
             }
             let operation_id = value
@@ -225,7 +228,7 @@ impl VaultStore {
                 .ok_or_else(|| {
                     VaultError::Journal(std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
-                        "write journal entry has an invalid operation id",
+                        "write or create journal entry has an invalid operation id",
                     ))
                 })?;
             let state = value.get("state").and_then(Value::as_str).unwrap_or("");
