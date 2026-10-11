@@ -4089,3 +4089,34 @@ expect the renderer to display Markdown's hidden block-ID syntax. Both C01.2's
 whole-vault check and the Canvas source checks remain strict. No local tests,
 builds, formatters, validators, or app launches were run. C06 and C06.1 remain
 pending.
+
+R2.8.88 attempt 3 was committed and pushed as exact source SHA
+`260d095f42ef5c4d6a237e59b58058975482ab2c`. Inventory run
+[38158188281](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188281)
+passed. Exact-SHA quality [38158188304](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188304),
+desktop build [38158188305](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188305),
+plugin renderer [38158188261](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188261),
+loaded plugins [38158188265](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188265),
+Rust CI [38158188271](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188271),
+and Obsidian round-trip [38158188254](https://github.com/ashutoshpw/open-obsidian/actions/runs/38158188254)
+were queued or running at first inspection. All seven workflow IDs and initial
+statuses are in `evidence/r2.8.88-attempt-3-260d095.json`; acceptance remains
+pending until every required job and platform settles. No local executable
+validation was run.
+
+R2.8.88 attempt 3 passed all seven required workflows on exact source SHA
+`260d095f42ef5c4d6a237e59b58058975482ab2c`, with no retries. Rust CI passed
+Ubuntu, macOS, Windows, and Rust 1.95; the pinned Obsidian 1.14.4 round-trip
+passed on Linux, macOS, and Windows. All three archived reports show the
+referenced Canvas marker/path/paragraph visible, no unresolved subpath error,
+and the same 741-byte Canvas SHA-256
+`2258580368625a06b2b3d2f5b0576b032678b0a7bc73d1292716642c9c7f4cc5` before
+open, after the first shutdown, and after reopen and the second shutdown. The
+dedicated vault changed only `.obsidian/workspace.json` on first open and had no
+further changes on reopen; the main C01.2 non-workspace vault paths remained
+unchanged. Artifact IDs, archive digests, report hashes, per-job IDs, and exact
+workflow links are recorded in `evidence/r2.8.88-attempt-3-260d095.json`.
+R2.8.88 is accepted as a bounded Canvas codec and pinned reference-reopen slice;
+full Canvas editing/writing, note creation, and explicit-action behavior remain
+pending under C06/C06.1. No local executable validation was run; the downloaded
+CI artifacts were inspected as evidence only.
