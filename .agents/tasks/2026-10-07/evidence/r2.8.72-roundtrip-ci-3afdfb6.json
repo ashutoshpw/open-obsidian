@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T01:49:03Z",
+  "milestone": "R2.8.72",
+  "source_sha": "3afdfb605f826474ca4e11c5b9467ea3011a6cdb",
+  "source_commit": "[rust R2.8.72] Diagnose reference refresh worker",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 38102475317,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475317",
+    "status": "completed",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "os": "Linux",
+        "job_id": 114361083919,
+        "conclusion": "failure",
+        "artifact": {
+          "id": 11689085088,
+          "name": "obsidian-vault-roundtrip-Linux-3afdfb605f826474ca4e11c5b9467ea3011a6cdb",
+          "size_in_bytes": 3069948,
+          "digest": "sha256:0193244bb715cf2f752daadc71edc5bb6753f78ac26cdc9d6166ce1aad7e9e7d"
+        },
+        "finding": "The external note was created with the expected 129 bytes and SHA-256 7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6. The refresh worker scanned 2 to 3 entries and delivered success, but a subsequent queued watcher refresh delivered without being consumed; the screenshot showed the refresh-in-progress status. The OCR click occurred while the control was disabled, and no manual_button request was logged. App data remained unchanged during external creation."
+      },
+      {
+        "os": "Windows",
+        "job_id": 114361083969,
+        "conclusion": "success",
+        "artifact": {
+          "id": 11688187814,
+          "name": "obsidian-vault-roundtrip-Windows-3afdfb605f826474ca4e11c5b9467ea3011a6cdb",
+          "size_in_bytes": 5787399,
+          "digest": "sha256:9e37b1c66bf844b5fbfc54a016341602c9868d2348137bec87ffb27c08f25378"
+        },
+        "finding": "Passed the full round-trip. UI Automation selected the exact After refresh.md RadioButton with SelectionItemPattern.Select; its BOM/CRLF bytes remained unchanged through preview, close, and Obsidian reopen. Vault snapshots were preserved after deliberate external creation, and app data remained unchanged."
+      },
+      {
+        "os": "macOS",
+        "job_id": 114361084043,
+        "conclusion": "failure",
+        "artifact": {
+          "id": 11688377713,
+          "name": "obsidian-vault-roundtrip-macOS-3afdfb605f826474ca4e11c5b9467ea3011a6cdb",
+          "size_in_bytes": 3477020,
+          "digest": "sha256:4c3a8803a17ae099330f53430a9125247a440672997887b33c699d45b8082b08"
+        },
+        "finding": "The external note was created exactly and app data remained unchanged. The three-file count and completed refresh message were visible. Selection then failed because Accessibility did not expose Note to inspect and the window-only screenshot used by OCR was blank; the step stopped before selecting the external note."
+      }
+    ]
+  },
+  "external_creation": {
+    "note_path": "After refresh.md",
+    "bytes": 129,
+    "sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+    "expected_markdown_count": 3,
+    "result": "Each platform recorded only the intentional external note creation and unchanged app data at the creation checkpoint."
+  },
+  "companion_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38102475333,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475333",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114361083795, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38102475320,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475320",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114361083972, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114361084068, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114361084088, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38102475315,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475315",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114361083962, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114361084007, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114361084127, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38102475304,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475304",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114361083941, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114361083960, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114361084021, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38102475352,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475352",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114361083949, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114361084032, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114361084124, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38102475348,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38102475348",
+      "conclusion": "failure",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 114361083860, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114361083964, "conclusion": "failure"},
+        {"name": "rust (macos-latest)", "job_id": 114361083971, "conclusion": "success"}
+      ],
+      "ubuntu_failure": "cargo fmt --all -- --check found two formatting diffs in crates/ui-egui/src/lib.rs around the new refresh diagnostic lines. The Ubuntu workspace tests passed: 100 ui-egui tests and 50 vault tests."
+    }
+  ],
+  "next_action": "Fix refresh repaint scheduling, wait for watcher work to settle before the explicit manual scan, and use full-desktop OCR plus deterministic first-item keyboard selection on Linux/macOS; push a focused correction and inspect exact-SHA GitHub Actions."
+}

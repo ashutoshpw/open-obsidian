@@ -464,6 +464,7 @@ impl OpenObsidianApp {
                 eprintln!("OpenObsidian CI vault refresh request: source=manual_button");
             }
             self.start_vault_refresh();
+            ui.ctx().request_repaint();
         }
         if self.session.is_some() {
             self.show_links(ui);
@@ -1887,9 +1888,7 @@ impl OpenObsidianApp {
         let ci_diagnostics = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some();
         let entries_before = session.entries().len();
         if ci_diagnostics {
-            eprintln!(
-                "OpenObsidian CI vault refresh scheduled: entries_before={entries_before}"
-            );
+            eprintln!("OpenObsidian CI vault refresh scheduled: entries_before={entries_before}");
         }
         let note_preview_guard = self
             .last_note_preview_write
@@ -1920,16 +1919,17 @@ impl OpenObsidianApp {
             }
             let result = match refresh_result {
                 Ok(()) => {
-                    let preserve_note_preview = note_preview_guard.as_ref().is_some_and(
-                        |(path, expected_revision)| {
-                            session
-                                .read_preview(path)
-                                .ok()
-                                .and_then(|preview| preview.revision_sha256)
-                                .as_deref()
-                                == Some(expected_revision.as_str())
-                        },
-                    );
+                    let preserve_note_preview =
+                        note_preview_guard
+                            .as_ref()
+                            .is_some_and(|(path, expected_revision)| {
+                                session
+                                    .read_preview(path)
+                                    .ok()
+                                    .and_then(|preview| preview.revision_sha256)
+                                    .as_deref()
+                                    == Some(expected_revision.as_str())
+                            });
                     if ci_diagnostics {
                         eprintln!(
                             "OpenObsidian CI vault refresh preview guard finished: preserved={preserve_note_preview}"
@@ -2014,6 +2014,7 @@ impl OpenObsidianApp {
                 eprintln!("OpenObsidian CI vault refresh request: source=watcher_reconciliation");
             }
             self.start_vault_refresh();
+            ui.ctx().request_repaint();
         } else if self.vault_rescan_pending {
             ui.ctx().request_repaint_after(Duration::from_millis(100));
         }

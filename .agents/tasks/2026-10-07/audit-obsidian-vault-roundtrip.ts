@@ -219,6 +219,62 @@ async function waitFor<T>(label: string, read: () => Promise<T>, predicate: (val
   throw new Error(`Timed out waiting for ${label}; last value=${(serializedLast ?? String(last)).slice(0, 2_000)}`);
 }
 
+type OpenObsidianRefreshDiagnostics = {
+  requests: Array<{source: string; line: number}>;
+  consumedResults: Array<{succeeded: boolean; entries: number | null; line: number}>;
+  receiverStates: Array<{busy: boolean; line: number}>;
+};
+
+async function readOpenObsidianRefreshDiagnostics(): Promise<OpenObsidianRefreshDiagnostics> {
+  const log = await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "");
+  const diagnostics: OpenObsidianRefreshDiagnostics = {requests: [], consumedResults: [], receiverStates: []};
+  for (const [line, value] of log.split(/\r?\n/).entries()) {
+    const request = value.match(/OpenObsidian CI vault refresh request: source=([a-z_]+)/);
+    if (request) diagnostics.requests.push({source: request[1] ?? "unknown", line});
+    const consumed = value.match(/OpenObsidian CI vault refresh result consumed: succeeded=(true|false)(?:, entries=(\d+))?/);
+    if (consumed) diagnostics.consumedResults.push({
+      succeeded: consumed[1] === "true",
+      entries: consumed[2] === undefined ? null : Number(consumed[2]),
+      line,
+    });
+    const receiverState = value.match(/OpenObsidian CI UI state: .*vault_refresh_receiver=(true|false)/);
+    if (receiverState) diagnostics.receiverStates.push({busy: receiverState[1] === "true", line});
+  }
+  return diagnostics;
+}
+
+async function waitForOpenObsidianRefreshIdle(
+  previousRequestCount: number,
+  expectedEntries: number,
+  requireManualRequest: boolean,
+): Promise<OpenObsidianRefreshDiagnostics & {settled_for_ms: number}> {
+  let settledSince: number | null = null;
+  return await waitFor(
+    requireManualRequest
+      ? "OpenObsidian to finish the explicit manual note-list refresh"
+      : "OpenObsidian watcher refreshes to settle before the manual refresh",
+    async () => {
+      const diagnostics = await readOpenObsidianRefreshDiagnostics();
+      const latestRequest = diagnostics.requests.at(-1);
+      const latestResult = diagnostics.consumedResults.at(-1);
+      const receiverBusy = diagnostics.receiverStates.at(-1)?.busy ?? false;
+      const latestRequestConsumed = !latestRequest || Boolean(latestResult && latestResult.line > latestRequest.line);
+      const newManualRequest = diagnostics.requests.some((request, index) => (
+        index >= previousRequestCount && request.source === "manual_button"
+      ));
+      const latestResultHasExpectedEntries = latestResult?.succeeded === true && latestResult.entries === expectedEntries;
+      const ready = !receiverBusy
+        && latestRequestConsumed
+        && (!requireManualRequest || (newManualRequest && latestResultHasExpectedEntries));
+      if (ready) settledSince ??= Date.now();
+      else settledSince = null;
+      return {...diagnostics, settled_for_ms: settledSince === null ? 0 : Date.now() - settledSince};
+    },
+    (diagnostics) => diagnostics.settled_for_ms >= 750,
+    30_000,
+  );
+}
+
 async function waitForDevToolsVersion(port: number): Promise<{Browser?: string; "Protocol-Version"?: string}> {
   const value = await waitFor<{Browser?: string; "Protocol-Version"?: string} | null>(`Obsidian DevTools port ${port}`, async () => {
     try {
@@ -2059,12 +2115,26 @@ async function clickVisibleOpenObsidianControl(
 ): Promise<string> {
   const capture = await captureOpenObsidianScreenshot(windowId, child, "openobsidian-control-target");
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
-  const candidates = ["11", "6"].map((mode) => execFileSync(tesseract, [capture.ocrPngPath, "stdout", "--psm", mode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}));
-  const ocrSize = await pngDimensions(capture.ocrPngPath);
+  const ocrSources: Array<{kind: "window" | "desktop"; ocrPath: string; imagePath: string; candidates: string[]}> = [
+    {kind: "window", ocrPath: capture.ocrPngPath, imagePath: capture.windowPngPath, candidates: []},
+  ];
+  if (process.platform === "darwin") {
+    const desktopOcrPath = join(reportDirectory, "openobsidian-control-target-desktop-ocr.png");
+    execFileSync("magick", [capture.pngPath, "-colorspace", "Gray", "-level", "0%,15%", "-resize", "200%", desktopOcrPath], {stdio: "ignore"});
+    ocrSources.push({kind: "desktop", ocrPath: desktopOcrPath, imagePath: capture.pngPath, candidates: []});
+  }
   let bounds: OcrWordBounds | null = null;
-  for (const candidate of candidates) {
-    bounds = findOcrPhraseBounds(candidate, controlName);
-    if (bounds) break;
+  let ocrSource = ocrSources[0]!;
+  let ocrSize = await pngDimensions(ocrSource.ocrPath);
+  for (const source of ocrSources) {
+    source.candidates = ["11", "6"].map((mode) => execFileSync(tesseract, [source.ocrPath, "stdout", "--psm", mode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}));
+    const targetBounds = source.candidates.map((candidate) => findOcrPhraseBounds(candidate, controlName)).find(Boolean) ?? null;
+    if (targetBounds) {
+      bounds = targetBounds;
+      ocrSource = source;
+      ocrSize = await pngDimensions(source.ocrPath);
+      break;
+    }
   }
   let clickDescription = `OCR label ${JSON.stringify(bounds?.text ?? controlName)}`;
   let xFraction: number;
@@ -2074,25 +2144,35 @@ async function clickVisibleOpenObsidianControl(
       ? "Read up to 16 KiB"
       : controlName === "Close source preview"
         ? fallbackAnchorPhrase ?? "Source"
-        : controlName === "Refresh note list"
-          ? fallbackAnchorPhrase ?? "Markdown files found"
-          : fallbackAnchorPhrase ?? null;
+      : controlName === "Refresh note list"
+        ? fallbackAnchorPhrase ?? "Markdown files found"
+        : controlName === "Note to inspect"
+          ? fallbackAnchorPhrase ?? "Previous note"
+        : fallbackAnchorPhrase ?? null;
     let anchor: OcrWordBounds | null = null;
     if (anchorPhrase) {
-      for (const candidate of candidates) {
-        anchor = findOcrPhraseBounds(candidate, anchorPhrase);
-        if (anchor) break;
+      for (const source of ocrSources) {
+        anchor = source.candidates.map((candidate) => findOcrPhraseBounds(candidate, anchorPhrase)).find(Boolean) ?? null;
+        if (anchor) {
+          ocrSource = source;
+          ocrSize = await pngDimensions(source.ocrPath);
+          break;
+        }
       }
     }
     if (!anchorPhrase || !anchor) {
+      const candidates = ocrSources.flatMap((source) => source.candidates);
       const detectedWords = candidates.map((candidate) => candidate.split(/\r?\n/).slice(1).map((line) => line.split("\t")[11]?.trim()).filter(Boolean).join(" ")).join(" | ");
       throw new Error(`Accessibility failed (${accessibilityFailure}); OCR could not locate ${JSON.stringify(controlName)} or anchor ${JSON.stringify(anchorPhrase)}; detected words=${JSON.stringify(detectedWords.slice(0, 2_000))}; OCR=${JSON.stringify(capture.ocrText.slice(0, 2_000))}`);
     }
-    const windowSize = await pngDimensions(capture.windowPngPath);
-    const scaleX = ocrSize.width / windowSize.width;
-    const scaleY = ocrSize.height / windowSize.height;
+    const imageSize = await pngDimensions(ocrSource.imagePath);
+    const scaleX = ocrSize.width / imageSize.width;
+    const scaleY = ocrSize.height / imageSize.height;
     if (controlName === "Refresh note list") {
       xFraction = (anchor.left - 58 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
+    } else if (controlName === "Note to inspect") {
+      xFraction = (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
       const verticalControlOffset = controlName === "Close source preview" ? 28 : 18;
@@ -2119,9 +2199,10 @@ async function clickVisibleOpenObsidianControl(
     xdotool("click", "1");
     interaction = `xdotool clicked ${clickDescription} at window coordinates (${x}, ${y}) in ${windowId}`;
   } else if (process.platform === "darwin") {
-    const window = macOSOpenObsidianWindowBounds(child);
-    const x = Math.round(window.x + xFraction * window.width);
-    const y = Math.round(window.y + yFraction * window.height);
+    const window = ocrSource.kind === "window" ? macOSOpenObsidianWindowBounds(child) : null;
+    const screen = ocrSource.kind === "desktop" ? await pngDimensions(capture.pngPath) : null;
+    const x = Math.round(window ? window.x + xFraction * window.width : xFraction * (screen?.width ?? 0));
+    const y = Math.round(window ? window.y + yFraction * window.height : yFraction * (screen?.height ?? 0));
     const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
     await writeFile(swiftPath, `import AppKit
 import CoreGraphics
@@ -2183,6 +2264,16 @@ async function invokeNativeAccessibleControl(
 ): Promise<string> {
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for native accessibility automation");
+
+  if (controlName === "Refresh note list" && waitUntilEnabled && process.platform !== "win32") {
+    return await clickVisibleOpenObsidianControl(
+      child,
+      windowId,
+      controlName,
+      `${process.platform} accessibility does not expose the egui refresh control`,
+      fallbackAnchorPhrase,
+    );
+  }
 
   if (process.platform === "linux") {
     const script = `
@@ -2548,6 +2639,7 @@ async function runReferenceExternalNoteRefresh(
   };
   open.external_note_refresh = refreshReport;
 
+  const refreshRequestCountBeforeCreation = (await readOpenObsidianRefreshDiagnostics()).requests.length;
   const vaultBeforeCreation = await snapshotTree(vaultRoot);
   ensureExactSnapshot(vaultBaseline, vaultBeforeCreation, "OpenObsidian vault before deliberate external note creation");
   const appDataBeforeCreation = await snapshotTree(appDataRoot);
@@ -2585,6 +2677,17 @@ async function runReferenceExternalNoteRefresh(
   await saveReport();
 
   if (process.platform !== "win32") await delay(750);
+  const settledWatcherRefresh = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeCreation,
+    expectedMarkdownCount,
+    false,
+  );
+  refreshReport.watcher_refresh_settled_before_manual = {
+    settled_for_ms: settledWatcherRefresh.settled_for_ms,
+    latest_receiver_busy: settledWatcherRefresh.receiverStates.at(-1)?.busy ?? false,
+    latest_consumed_result: settledWatcherRefresh.consumedResults.at(-1) ?? null,
+  };
+  const refreshRequestCountBeforeManual = settledWatcherRefresh.requests.length;
   refreshReport.refresh_action = await invokeNativeAccessibleControl(
     child,
     window.window_id,
@@ -2592,6 +2695,17 @@ async function runReferenceExternalNoteRefresh(
     "Markdown files found",
     true,
   );
+  const settledManualRefresh = await waitForOpenObsidianRefreshIdle(
+    refreshRequestCountBeforeManual,
+    expectedMarkdownCount,
+    true,
+  );
+  refreshReport.manual_refresh_diagnostics = {
+    action_request: settledManualRefresh.requests.at(-1) ?? null,
+    result: settledManualRefresh.consumedResults.at(-1) ?? null,
+    receiver_busy_after_result: settledManualRefresh.receiverStates.at(-1)?.busy ?? false,
+    settled_for_ms: settledManualRefresh.settled_for_ms,
+  };
   const refreshedList = await waitFor("OpenObsidian to finish refreshing its note list after external creation", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-refresh");
@@ -2605,7 +2719,12 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.refreshed_list_window_screenshot = relative(reportDirectory, refreshedList.windowPngPath);
   refreshReport.refreshed_markdown_count_visible = true;
 
-  refreshReport.open_note_selector_action = await invokeNativeAccessibleControl(child, window.window_id, "Note to inspect");
+  refreshReport.open_note_selector_action = await invokeNativeAccessibleControl(
+    child,
+    window.window_id,
+    "Note to inspect",
+    "Previous note",
+  );
   const visibleMenu = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
   refreshReport.selector_menu_screen_ocr = visibleMenu.ocrText.slice(0, 4_000);
   refreshReport.selector_menu_screenshot = relative(reportDirectory, visibleMenu.pngPath);
@@ -2613,22 +2732,25 @@ async function runReferenceExternalNoteRefresh(
     .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
     .map((entry) => entry.path)
     .sort();
-  try {
-    refreshReport.select_external_note_action = await invokeNativeAccessibleControl(child, window.window_id, externalRefreshMarkdownPath);
-  } catch (error) {
-    if (process.platform !== "linux" && process.platform !== "darwin") throw error;
+  if (process.platform === "linux" || process.platform === "darwin") {
     refreshReport.select_external_note_action = await selectFirstNoteFromOpenInspectorMenu(child, externalRefreshMarkdownPath, sortedNotePaths);
+  } else {
+    refreshReport.select_external_note_action = await invokeNativeAccessibleControl(child, window.window_id, externalRefreshMarkdownPath);
   }
   refreshReport.external_note_visible_in_selector = true;
   const selectedByWindowsUiAutomation = process.platform === "win32"
     && windowsSelectionConfirmsPath(refreshReport.select_external_note_action, externalRefreshMarkdownPath);
+  const selectedByDeterministicKeyboard = (process.platform === "linux" || process.platform === "darwin")
+    && String(refreshReport.select_external_note_action).startsWith("Keyboard selected the first inspector menu option (");
   refreshReport.external_note_selected_by_exact_windows_uia = selectedByWindowsUiAutomation;
+  refreshReport.external_note_selected_by_deterministic_keyboard = selectedByDeterministicKeyboard;
   const selectedNote = await waitFor("OpenObsidian to select the externally added note", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selected");
     refreshReport.selected_note_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
   }, (capture) => selectedByWindowsUiAutomation
+    || selectedByDeterministicKeyboard
     || ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath)
     || ocrTextContainsFuzzyPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
   refreshReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
