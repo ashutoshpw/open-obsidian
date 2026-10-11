@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T02:35:45Z",
+  "milestone": "R2.8.72",
+  "source_sha": "be082a4864b38d28cf2ab15489d7ed84c47b5271",
+  "source_commit": "[rust R2.8.72] Select refreshed note from visible menu",
+  "required_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38105281874,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281874",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114369384918, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38105281861,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281861",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114369385074, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114369385248, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114369385313, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38105281883,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281883",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114369385207, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114369385338, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114369385433, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38105281867,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281867",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114369385186, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114369385269, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114369385290, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38105281902,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281902",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114369385133, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114369385237, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114369385241, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38105281890,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281890",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 114369385137, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114369385152, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114369385167, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38105281900,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38105281900",
+      "conclusion": "failure",
+      "reference_app_version": "Obsidian 1.14.4",
+      "jobs": [
+        {
+          "name": "Linux",
+          "job_id": 114369385352,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11689711404,
+            "name": "obsidian-vault-roundtrip-Linux-be082a4864b38d28cf2ab15489d7ed84c47b5271",
+            "size_in_bytes": 3612945,
+            "digest": "sha256:91335172c7bf7d017f9fbf1257b752b5b8a4b42b6285d9da88af54323ce8ae98"
+          },
+          "finding": "The flow completed external creation and manual refresh. The OCR click on the visible first menu row closed the selector but left Nested Ω/space note.md selected, so the external note was not confirmed."
+        },
+        {
+          "name": "macOS",
+          "job_id": 114369385238,
+          "conclusion": "success",
+          "artifact": {
+            "id": 11689496551,
+            "name": "obsidian-vault-roundtrip-macOS-be082a4864b38d28cf2ab15489d7ed84c47b5271",
+            "size_in_bytes": 6215019,
+            "digest": "sha256:aa9c569847087ae24e5e9334939e47b39a2ac01c8737a8fd7c38e4a7b5c8d4ac"
+          },
+          "finding": "The visible menu option click selected After refresh.md, and the full round-trip acceptance passed."
+        },
+        {
+          "name": "Windows",
+          "job_id": 114369385379,
+          "conclusion": "success",
+          "artifact": {
+            "id": 11689706308,
+            "name": "obsidian-vault-roundtrip-Windows-be082a4864b38d28cf2ab15489d7ed84c47b5271",
+            "size_in_bytes": 5804710,
+            "digest": "sha256:3f02d942ba70aa796465c627f71ded6b8bf3cc2647226f3a517b2533916116ab"
+          },
+          "finding": "UI Automation selected the external note and the full round-trip acceptance passed."
+        }
+      ]
+    }
+  ],
+  "next_action": "Use the Previous note button, whose target is verified by sorted note order, and confirm the selected title before reading source."
+}

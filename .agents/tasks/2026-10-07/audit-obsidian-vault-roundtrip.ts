@@ -2219,9 +2219,9 @@ async function clickVisibleOpenObsidianControl(
         ? (anchor.left - 55 * scaleX) / ocrSize.width
         : (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
-    } else if (anchorPhrase === "Resolve wiki links") {
-      xFraction = (anchor.left + 165 * scaleX) / ocrSize.width;
-      yFraction = (anchor.top + 45 * scaleY) / ocrSize.height;
+    } else if (controlName === "Previous note" && anchorPhrase === "Nested") {
+      xFraction = (anchor.left - 155 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
       const verticalControlOffset = controlName === "Close source preview"
         ? anchorPhrase === "Note source preview" ? 70 : 28
@@ -2644,17 +2644,20 @@ async function runReferenceSourcePreview(
   await saveReport();
 }
 
-async function selectFirstNoteFromOpenInspectorMenu(
+async function selectFirstNoteWithPreviousButton(
   child: ChildProcess,
   windowId: string,
   targetPath: string,
   sortedNotePaths: string[],
 ): Promise<string> {
   if (sortedNotePaths[0] !== targetPath) {
-    throw new Error(`Inspector selector fallback requires ${targetPath} to sort first; actual paths=${JSON.stringify(sortedNotePaths)}`);
+    throw new Error(`Previous-note selector fallback requires ${targetPath} to sort first; actual paths=${JSON.stringify(sortedNotePaths)}`);
   }
   if (process.platform === "linux" || process.platform === "darwin") {
-    return await invokeNativeAccessibleControl(child, windowId, targetPath, "Resolve wiki links");
+    if (sortedNotePaths[1] !== seedMarkdownPath) {
+      throw new Error(`Previous-note selector fallback requires ${seedMarkdownPath} to be immediately after ${targetPath}; actual paths=${JSON.stringify(sortedNotePaths)}`);
+    }
+    return await invokeNativeAccessibleControl(child, windowId, "Previous note", "Nested");
   }
   if (process.platform === "win32") {
     const script = `
@@ -2769,21 +2772,19 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.refreshed_list_window_screenshot = relative(reportDirectory, refreshedList.windowPngPath);
   refreshReport.refreshed_markdown_count_visible = true;
 
-  refreshReport.open_note_selector_action = await invokeNativeAccessibleControl(
-    child,
+  const selectorBefore = await captureOpenObsidianScreenshot(
     window.window_id,
-    "Note to inspect",
-    "Nested",
+    child,
+    "openobsidian-external-note-selector-before",
   );
-  const visibleMenu = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selector");
-  refreshReport.selector_menu_screen_ocr = visibleMenu.ocrText.slice(0, 4_000);
-  refreshReport.selector_menu_screenshot = relative(reportDirectory, visibleMenu.pngPath);
+  refreshReport.selector_before_screen_ocr = selectorBefore.ocrText.slice(0, 4_000);
+  refreshReport.selector_before_screenshot = relative(reportDirectory, selectorBefore.pngPath);
   const sortedNotePaths = vaultAfterCreation
     .filter((entry) => entry.kind === "file" && entry.path.toLowerCase().endsWith(".md"))
     .map((entry) => entry.path)
     .sort();
   if (process.platform === "linux" || process.platform === "darwin") {
-    refreshReport.select_external_note_action = await selectFirstNoteFromOpenInspectorMenu(
+    refreshReport.select_external_note_action = await selectFirstNoteWithPreviousButton(
       child,
       window.window_id,
       externalRefreshMarkdownPath,
@@ -2795,10 +2796,9 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.external_note_visible_in_selector = true;
   const selectedByWindowsUiAutomation = process.platform === "win32"
     && windowsSelectionConfirmsPath(refreshReport.select_external_note_action, externalRefreshMarkdownPath);
-  const selectedByDeterministicKeyboard = (process.platform === "linux" || process.platform === "darwin")
-    && String(refreshReport.select_external_note_action).startsWith("Keyboard selected the first inspector menu option (");
   refreshReport.external_note_selected_by_exact_windows_uia = selectedByWindowsUiAutomation;
-  refreshReport.external_note_selected_by_deterministic_keyboard = selectedByDeterministicKeyboard;
+  refreshReport.external_note_selected_by_previous_button = (process.platform === "linux" || process.platform === "darwin")
+    && String(refreshReport.select_external_note_action).includes('for "Previous note"');
   const selectedNote = await waitFor("OpenObsidian to select the externally added note", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selected");
