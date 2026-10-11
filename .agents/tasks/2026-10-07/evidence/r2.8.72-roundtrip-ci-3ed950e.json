@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T02:02:00Z",
+  "milestone": "R2.8.72",
+  "source_sha": "3ed950ee7e5f0ff1623aea0ec050a9a595fa1bd3",
+  "source_commit": "[rust R2.8.72] Stabilize cross-platform note refresh",
+  "required_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38103381601,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381601",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114363746282, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38103381540,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381540",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114363746246, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114363746341, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114363746369, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38103381583,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381583",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114363746280, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114363746394, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114363746426, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38103381520,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381520",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114363746129, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114363746274, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114363746297, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38103381553,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381553",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114363746271, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114363746478, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114363746512, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38103381567,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381567",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (windows-latest)", "job_id": 114363746355, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114363746440, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114363746459, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38103381537,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38103381537",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "os": "Linux",
+          "job_id": 114363746071,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11688667237,
+            "name": "obsidian-vault-roundtrip-Linux-3ed950ee7e5f0ff1623aea0ec050a9a595fa1bd3",
+            "size_in_bytes": 2532476,
+            "digest": "sha256:5d3990b1fc345bc8606deb90bc34f0b3a44f68a7fd5128b80a42228e33213a8e"
+          },
+          "finding": "Linux passed read-only startup and source preview with the expected bytes and unchanged snapshots, but AT-SPI exposed no close control and OCR could not match the Source Nested anchor. The run stopped before external note creation."
+        },
+        {
+          "os": "Windows",
+          "job_id": 114363746214,
+          "conclusion": "success",
+          "artifact": {
+            "id": 11688318957,
+            "name": "obsidian-vault-roundtrip-Windows-3ed950ee7e5f0ff1623aea0ec050a9a595fa1bd3",
+            "size_in_bytes": 5920508,
+            "digest": "sha256:cb2db8f57cd95de5a2f7a6d795b3b2613c1d78ac1565012d00bb57d475e50fce"
+          },
+          "finding": "Windows passed the full round-trip. UI Automation invoked refresh, selected the exact After refresh.md RadioButton with SelectionItemPattern.Select, showed and closed source preview, and verified Obsidian reopen with unchanged note bytes and vault/app-data snapshots."
+        },
+        {
+          "os": "macOS",
+          "job_id": 114363746185,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11688194054,
+            "name": "obsidian-vault-roundtrip-macOS-3ed950ee7e5f0ff1623aea0ec050a9a595fa1bd3",
+            "size_in_bytes": 3397845,
+            "digest": "sha256:5023c04b48f7e4819d47873cdb29148dd78aff3d54a6a9b9fcff5d047feaa200"
+          },
+          "finding": "macOS showed the externally created 129-byte note with SHA-256 7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6. Two watcher refresh results were consumed and the receiver settled, but the OCR click at (378,164) did not log a manual_button request; the explicit refresh wait timed out."
+        }
+      ]
+    }
+  ],
+  "external_creation": {
+    "note_path": "After refresh.md",
+    "bytes": 129,
+    "sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+    "creation_app_data_unchanged": "Linux, Windows, and macOS"
+  },
+  "next_action": "Use the stable Note source preview title and calibrated offset for the Linux close button, and compare macOS refresh click coordinates with the CI-only egui response rectangle and pointer event; push a focused correction and inspect exact-SHA GitHub Actions."
+}

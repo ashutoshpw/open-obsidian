@@ -2175,7 +2175,9 @@ async function clickVisibleOpenObsidianControl(
       xFraction = (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
-      const verticalControlOffset = controlName === "Close source preview" ? 28 : 18;
+      const verticalControlOffset = controlName === "Close source preview"
+        ? anchorPhrase === "Note source preview" ? 70 : 28
+        : 18;
       xFraction = (anchor.left + 75 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + verticalControlOffset * scaleY) / ocrSize.height;
     }
@@ -2547,7 +2549,12 @@ async function runReferenceSourcePreview(
   );
   previewReport.app_data_change_policy_passed_after_preview = true;
 
-  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", "Source Nested");
+  previewReport.close_preview_action = await invokeNativeAccessibleControl(
+    child,
+    window.window_id,
+    "Close source preview",
+    process.platform === "linux" ? "Note source preview" : "Source Nested",
+  );
   const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
@@ -2791,7 +2798,12 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.vault_unchanged_after_preview = true;
   refreshReport.app_data_change_policy_passed_after_preview = true;
 
-  refreshReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview", "Source After");
+  refreshReport.close_preview_action = await invokeNativeAccessibleControl(
+    child,
+    window.window_id,
+    "Close source preview",
+    process.platform === "linux" ? "Note source preview" : "Source After",
+  );
   const closedPreview = await waitFor("OpenObsidian to close the externally added note preview", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-preview-closed");

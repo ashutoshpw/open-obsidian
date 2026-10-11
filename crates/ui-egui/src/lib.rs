@@ -414,12 +414,24 @@ impl OpenObsidianApp {
                     .unwrap_or("Selected vault");
                 ui.horizontal_wrapped(|ui| {
                     ui.label(format!("Vault: {vault_name}"));
-                    ui.add_enabled_ui(!vault_operation_busy, |ui| {
-                        refresh_note_list_requested = ui
-                            .small_button("Refresh note list")
+                    let refresh_response = ui.add_enabled_ui(!vault_operation_busy, |ui| {
+                        ui.small_button("Refresh note list")
                             .on_hover_text("Rescan Markdown paths without changing vault files.")
-                            .clicked();
                     });
+                    refresh_note_list_requested = refresh_response.inner.clicked();
+                    if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+                        && ui.input(|input| !input.raw.events.is_empty())
+                    {
+                        eprintln!(
+                            "OpenObsidian CI refresh button input: enabled={}, response_rect={:?}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                            !vault_operation_busy,
+                            refresh_response.inner.rect,
+                            ui.input(|input| input.pointer.hover_pos()),
+                            refresh_response.inner.hovered(),
+                            refresh_response.inner.clicked(),
+                            ui.input(|input| input.raw.events.clone()),
+                        );
+                    }
                     ui.label(format!("{} Markdown files found.", session.entries().len()));
                 });
                 if let Some(summary) = rename_recovery_summary(session.rename_recovery_report()) {
