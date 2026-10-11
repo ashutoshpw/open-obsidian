@@ -8,8 +8,7 @@ mod themes;
 mod yaml;
 
 pub use configuration::{
-    AppSettings, AppearanceMode, AppearanceSettings, parse_app_settings,
-    parse_appearance_settings,
+    AppSettings, AppearanceMode, AppearanceSettings, parse_app_settings, parse_appearance_settings,
 };
 pub use hotkeys::{HotkeyBinding, HotkeysSettings, parse_hotkeys_settings};
 pub use markdown_preview::{

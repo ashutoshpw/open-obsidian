@@ -3804,3 +3804,16 @@ Obsidian `app.json` schema. Scope and review rationale are in
 `evidence/r2.8.84-app-json-source-research.md`. C09 and C09.1 remain pending.
 No local tests, builds, formatters, validators, or application launches were
 run.
+
+## 2026-10-11T13:42:20Z — R2.8.84 attempt 1: CI formatter correction
+
+Source SHA `7ed26f588722fa5f665e7ba12ba53236c790497e` passed six of seven
+required workflows. Rust CI failed only the Ubuntu `cargo fmt --all -- --check`
+step; the workspace tests passed on Ubuntu, macOS, Windows and Rust 1.95, and
+the macOS/Windows stable jobs passed. The pinned Obsidian 1.14.4 round-trip
+passed on Linux, macOS and Windows. Each downloaded report records this exact
+SHA and `status: passed`; report and artifact hashes are recorded in
+`evidence/r2.8.84-attempt-1-7ed26f5.json`. The two import-list wraps reported
+by GitHub are corrected locally. R2.8.84 remains pending until a fresh exact
+source SHA passes all seven workflows. C09 and C09.1 remain pending. No local
+tests, builds, formatters, validators, or application launches were run.

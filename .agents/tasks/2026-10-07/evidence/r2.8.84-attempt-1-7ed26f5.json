@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.84",
+  "attempt": 1,
+  "source_sha": "7ed26f588722fa5f665e7ba12ba53236c790497e",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38143483317,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483317",
+      "jobs": [
+        {"id": 114481922531, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38143483340,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483340",
+      "jobs": [
+        {"id": 114481922565, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114481922744, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114481922897, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38143483330,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483330",
+      "jobs": [
+        {"id": 114481922944, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114481923018, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114481923086, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38143483328,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483328",
+      "jobs": [
+        {"id": 114481922870, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114481922918, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114481922957, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38143483348,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483348",
+      "jobs": [
+        {"id": 114481922878, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114481922987, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114481923062, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38143483350,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483350",
+      "jobs": [
+        {"id": 114481922718, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114481922786, "name": "rust (ubuntu-latest)", "conclusion": "failure"},
+        {"id": 114481922856, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114481922891, "name": "rust (windows-latest)", "conclusion": "success"}
+      ],
+      "failure": {
+        "job_id": 114481922786,
+        "step": "Check formatting",
+        "command": "cargo fmt --all -- --check",
+        "diff": [
+          "crates/doc/src/lib.rs: join parse_app_settings and parse_appearance_settings on the same import line",
+          "crates/vault/src/configuration.rs: wrap the imports as reported by GitHub rustfmt"
+        ],
+        "workspace_tests": "passed"
+      }
+    },
+    "vault_roundtrip": {
+      "id": 38143483312,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483312",
+      "jobs": [
+        {"id": 114481922481, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {"id": 114481922613, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"},
+        {"id": 114481922642, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"}
+      ],
+      "reports": [
+        {
+          "runner_os": "Linux",
+          "status": "passed",
+          "source_sha": "7ed26f588722fa5f665e7ba12ba53236c790497e",
+          "reference_version": "1.14.4",
+          "report_sha256": "564294912c1b2cd77eee7c62116769aef6307e548e43b478c324c2c5bff1fe23",
+          "artifact_id": 11703628407,
+          "artifact": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483312/artifacts/11703628407",
+          "artifact_sha256": "1e96ec5ca2f0ab9442a74845698a697ac921fc9792af4fc3380f1225f14725b8"
+        },
+        {
+          "runner_os": "macOS",
+          "status": "passed",
+          "source_sha": "7ed26f588722fa5f665e7ba12ba53236c790497e",
+          "reference_version": "1.14.4",
+          "report_sha256": "bd6569c373775d3b18ae22d9d2ccefa4be2087f88d1c103a85383a0ce051ee44",
+          "artifact_id": 11704032205,
+          "artifact": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483312/artifacts/11704032205",
+          "artifact_sha256": "21e03ffdf945387f3460e2948ed2173183ca5fccebb239e2f707b5b1abbac22d"
+        },
+        {
+          "runner_os": "Windows",
+          "status": "passed",
+          "source_sha": "7ed26f588722fa5f665e7ba12ba53236c790497e",
+          "reference_version": "1.14.4",
+          "report_sha256": "70d7d1246ae208a93a1c73e639750caaad32252fbb014e8b3c9cb86bb2dcec76",
+          "artifact_id": 11703548965,
+          "artifact": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38143483312/artifacts/11703548965",
+          "artifact_sha256": "d0a2b93af77ea2a56dd2c3bb0dc2029df305054be672e2922e8063b506501229"
+        }
+      ],
+      "limitations": [
+        "Each platform report records passed status, this exact source SHA, and that non-workspace vault paths remained unchanged after reopen.",
+        "These reports cover the pinned round-trip scenarios only; they do not certify all C01 flows or general plugin/theme compatibility."
+      ]
+    }
+  },
+  "local_executable_validation": "none",
+  "findings": "Six of seven required workflows passed. Rust CI failed only Ubuntu formatting; the Ubuntu workspace tests, Rust 1.95 job, macOS and Windows Rust jobs passed. The pinned Obsidian round-trip passed on all three platforms with reports recording this exact SHA. GitHub's two import-list formatting changes were applied as the follow-up correction. R2.8.84 and C09/C09.1 remain pending."
+}

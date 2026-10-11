@@ -2,9 +2,8 @@
 
 use super::{VaultError, VaultRoot, path_to_slashes, sha256_hex};
 use openobsidian_doc::{
-    AppSettings, AppearanceSettings, HotkeysSettings, ThemeStyleAnalysis,
-    analyze_theme_stylesheet, parse_app_settings, parse_appearance_settings,
-    parse_hotkeys_settings,
+    AppSettings, AppearanceSettings, HotkeysSettings, ThemeStyleAnalysis, analyze_theme_stylesheet,
+    parse_app_settings, parse_appearance_settings, parse_hotkeys_settings,
 };
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
