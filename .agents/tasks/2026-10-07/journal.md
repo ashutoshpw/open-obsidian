@@ -3769,3 +3769,18 @@ the renamed note. Their logs and artifact IDs are recorded in
 `evidence/r2.8.83-attempt-1-ece5042.json`. The corrected source SHA will rerun all seven workflows, which
 will show whether those UI timeouts reproduce. No local tests, builds,
 formatters, validators, or application launches were run.
+
+## 2026-10-11T13:15:04Z — R2.8.83 passed on the corrected exact source SHA
+
+Source SHA `6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef` passed all seven required
+GitHub Actions workflows. Inventory, quality, desktop build, plugin renderer,
+loaded plugins and Rust CI passed. Rust CI passed on Ubuntu, macOS, Windows and
+Rust 1.95. The pinned Obsidian 1.14.4 round-trip passed on Ubuntu, Windows and
+macOS, resolving the two attempt-1 UI timeouts. Each downloaded round-trip
+report records this exact SHA and `status: passed`; report hashes and workflow,
+job and artifact IDs are recorded in
+`evidence/r2.8.83-attempt-2-6d4d891.json`. R2.8.83 is accepted as a partial
+C09 settings/hotkeys data-only slice; C09 and C09.1 remain pending. The next
+action is a documentation-only tracker checkpoint, followed by the next
+bounded settings slice selected from parallel read-only research. No local
+tests, builds, formatters, validators, or application launches were run.

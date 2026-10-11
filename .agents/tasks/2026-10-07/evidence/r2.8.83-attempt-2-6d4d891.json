@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.83",
+  "attempt": 2,
+  "implementation_sha": "6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef",
+  "outcome": "accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38141670050,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670050",
+      "jobs": [
+        {"id": 114476617311, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38141670059,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670059",
+      "jobs": [
+        {"id": 114476617558, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114476617688, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114476617712, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38141670027,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670027",
+      "jobs": [
+        {"id": 114476617300, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114476617477, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114476617550, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38141670069,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670069",
+      "jobs": [
+        {"id": 114476617154, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114476617309, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114476617379, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38141670046,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670046",
+      "jobs": [
+        {"id": 114476617391, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114476617535, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114476617640, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38141670025,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670025",
+      "jobs": [
+        {"id": 114476617260, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114476617293, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114476617323, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114476617333, "name": "rust (ubuntu-latest)", "conclusion": "success"}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38141670033,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38141670033",
+      "jobs": [
+        {
+          "id": 114476617342,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "success",
+          "artifact_id": 11703142760,
+          "report_sha256": "50f7644677211177dd8482d064600f71525a2bd2ade996206fa62e757e15a933"
+        },
+        {
+          "id": 114476617520,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "success",
+          "artifact_id": 11703595231,
+          "report_sha256": "0563592e8f67fba3b1c97504001f2c08ec80c277464804590ed65d44cb3f323a"
+        },
+        {
+          "id": 114476617566,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "success",
+          "artifact_id": 11703590220,
+          "report_sha256": "10aeaf0c19ce0b40b1b5c7b10d37c353be9fd9d25f8f42a61a907b44c6a9de9b"
+        }
+      ],
+      "summary": "All three round-trip reports state status=passed and record this exact source SHA. The pinned Obsidian authoring/open/reopen flow passed; snapshots and artifact reports are retained in the linked GitHub run."
+    }
+  },
+  "local_executable_validation": "none",
+  "accepted_scope": "Partial C09 settings/hotkeys data-only slice. C09 and C09.1 remain pending."
+}
