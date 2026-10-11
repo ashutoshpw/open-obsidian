@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T20:30:24+00:00",
+  "updated_at": "2026-10-11T20:45:37+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
   "current_milestone": "R2.8.91",
-  "next_action": "Push the R2.8.91 CI corrections (inventory exclusion, GitHub-reported Rust formatting, and test helper import), then obtain all seven required workflows on that exact SHA. Keep Canvas text extraction as the following document-layer slice; keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
-  "push_status": "R2.8.90 was accepted on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d after all seven required workflows passed. The tracker checkpoint at 25d5962ab1bfbdae562a1a67ca21e5ada2eed948 passed all six workflows triggered by the documentation push; its path-filtered Obsidian round-trip remains accepted on 612fc550c7061d751672790f2b2b21869e990a9d. See evidence/r2.8.90-attempt-3-612fc55.json and evidence/r2.8.91-starting-checkpoint-25d5962.json. R2.8.91 implementation is in progress and has not passed exact-SHA CI. C06 and C06.1 remain pending for native Canvas UI and explicit note creation.",
+  "next_action": "Commit and push the R2.8.91 correction for Unix directory syncing, Clippy argument count, Windows retained-root behavior, and formatting; obtain all seven required workflows on that exact SHA. Keep Canvas text extraction as the following document-layer slice; keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
+  "push_status": "R2.8.90 was accepted on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d after all seven required workflows passed. The tracker checkpoint at 25d5962ab1bfbdae562a1a67ca21e5ada2eed948 passed all six workflows triggered by the documentation push; its path-filtered Obsidian round-trip remains accepted on 612fc550c7061d751672790f2b2b21869e990a9d. See evidence/r2.8.90-attempt-3-612fc55.json and evidence/r2.8.91-starting-checkpoint-25d5962.json. R2.8.91 remains in progress: attempt 3 passed six of seven workflows, with Rust CI exposing Unix directory-sync, Clippy, formatting, and Windows test issues. Evidence and exact job IDs are in evidence/r2.8.91-attempt-3-3460b71.json. The correction is being committed and pushed for another exact-SHA run. C06 and C06.1 remain pending for native Canvas UI and explicit note creation.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -30234,6 +30234,23 @@
           },
           "finding": "Five of seven required workflows passed, including the three-platform Obsidian round-trip. Inventory found the resolver workflow, while Rust CI reported formatting differences and an unimported test helper.",
           "correction": "Add the inventory exclusion, apply GitHub's formatter output, and import create_temporary_name in the test module."
+        },
+        {
+          "attempt": 3,
+          "source_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.91-attempt-3-3460b71.json",
+          "workflow_runs": {
+            "inventory": 38172617946,
+            "quality": 38172618046,
+            "desktop_build": 38172618076,
+            "plugin_renderer": 38172618029,
+            "loaded_plugins": 38172618052,
+            "rust_ci": 38172618059,
+            "vault_roundtrip": 38172618022
+          },
+          "finding": "Six of seven required workflows passed, including the Linux/macOS/Windows Obsidian round-trip. Rust CI found a Unix directory-sync error, a Clippy argument-count error, three rustfmt differences, and a Windows UI test that attempted to rename its still-open vault root.",
+          "correction": "Reopen the held parent capability before Unix directory sync; bundle cleanup parameters in a context struct; make the UI test account for Windows' retained-root rename behavior; and apply the remaining rustfmt changes."
         }
       ],
       "lockfile_resolution": {
@@ -30249,7 +30266,7 @@
         "evidence": "evidence/r2.8.91-cargo-lock-resolution-15b8eef.json"
       },
       "implementation_sha": null,
-      "push_status": "The create-only API, capability-relative publication, identity-checked staging, fail-closed recovery for ambiguous partial/foreign stages, and failure-injection coverage are committed at 15b8eef; the GitHub-resolved Cargo.lock is committed at f975e48. Attempt 1 passed four of seven workflows; attempt 2 passed five, including three-platform round-trip. Their failures and exact job IDs are recorded in the attempt evidence. The working tree contains the formatter/import and inventory corrections; push them and rerun all seven workflows on the exact correction SHA before acceptance. No local executable validation was run.",
+      "push_status": "The create-only API, capability-relative publication, identity-checked staging, fail-closed recovery for ambiguous partial/foreign stages, and failure-injection coverage are committed at 15b8eef; the GitHub-resolved Cargo.lock is committed at f975e48. Attempt 1 passed four of seven workflows, attempt 2 passed five, and attempt 3 passed six including the three-platform Obsidian round-trip. All attempt failures and exact run/job IDs are in their evidence files. The current correction addresses directory sync, Clippy, Windows root handling, and formatting; push it and rerun all seven workflows on the exact correction SHA before acceptance. No local executable validation was run.",
       "tracker_checkpoint_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
       "tracker_checkpoint_outcome": "passed",
       "tracker_checkpoint_evidence": "evidence/r2.8.91-starting-checkpoint-25d5962.json",

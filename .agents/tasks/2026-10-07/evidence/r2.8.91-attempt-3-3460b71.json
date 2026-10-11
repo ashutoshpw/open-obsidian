@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.91",
+  "attempt": 3,
+  "source_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38172617946,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172617946",
+      "jobs": [
+        {
+          "id": 114568218990,
+          "name": "inventory",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "quality": {
+      "id": 38172618046,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172618046",
+      "jobs": [
+        {
+          "id": 114568219366,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219556,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219566,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "desktop_build": {
+      "id": 38172618076,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172618076",
+      "jobs": [
+        {
+          "id": 114568219552,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219793,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219799,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38172618029,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172618029",
+      "jobs": [
+        {
+          "id": 114568219281,
+          "name": "macos-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219506,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219515,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38172618052,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172618052",
+      "jobs": [
+        {
+          "id": 114568219280,
+          "name": "ubuntu-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219348,
+          "name": "windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219414,
+          "name": "macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "rust_ci": {
+      "id": 38172618059,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172618059",
+      "jobs": [
+        {
+          "id": 114568219480,
+          "name": "minimum supported Rust (1.95)",
+          "conclusion": "failure",
+          "failure": "Six openobsidian-vault tests failed after create publication returned Bad file descriptor (os error 9) while syncing the published parent directory."
+        },
+        {
+          "id": 114568219632,
+          "name": "rust (ubuntu-latest)",
+          "conclusion": "failure",
+          "failure": "Rustfmt reported three layout differences in crates/vault/src/lib.rs; six openobsidian-vault tests also failed with Bad file descriptor while syncing the published directory."
+        },
+        {
+          "id": 114568219646,
+          "name": "rust (macos-latest)",
+          "conclusion": "failure",
+          "failure": "Clippy rejected remove_valid_create_temporary_at for too many arguments (8/7). Workspace tests passed."
+        },
+        {
+          "id": 114568219689,
+          "name": "rust (windows-latest)",
+          "conclusion": "failure",
+          "failure": "The UI test could not rename the open vault root because Windows reported that the file was in use; other 102 UI tests passed."
+        }
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38172618022,
+      "head_sha": "3460b71a20b42b4d9cc3a0a2b15796e31f200e19",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38172618022",
+      "jobs": [
+        {
+          "id": 114568219483,
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219700,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "success"
+        },
+        {
+          "id": 114568219710,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "success"
+        }
+      ]
+    }
+  },
+  "roundtrip_artifacts": [
+    {
+      "id": 11714567816,
+      "runner_os": "Linux",
+      "sha256": "8ce5beb04c3a473f5e3327c2012cceb878a8f08727ce78edf63d51b4caee8264"
+    },
+    {
+      "id": 11715190707,
+      "runner_os": "macOS",
+      "sha256": "7bbb163637c670b1dccefd2304541ce19abeee03c5f8af917b11575e33963d80"
+    },
+    {
+      "id": 11715295436,
+      "runner_os": "Windows",
+      "sha256": "f6349750e0773d6caac381003ae0d93a5d6dae9ba25d66c91f177647df044c4b"
+    }
+  ],
+  "finding": "Six of seven required workflows passed, including the Obsidian round-trip on Linux, macOS, and Windows. Rust CI exposed a Unix directory-sync failure, a Clippy argument-count violation, three formatter differences, and the Windows test's attempt to rename its retained open vault root.",
+  "correction": "Open the held parent capability with directory.open(\".\") before syncing on Unix; pass create cleanup arguments through a context struct; make the UI test reflect Windows' retained-root rename behavior; and apply the exact Rustfmt layout/import ordering.",
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions CI."
+}

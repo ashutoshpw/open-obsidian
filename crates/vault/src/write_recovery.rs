@@ -1,6 +1,6 @@
 use super::{
-    VaultError, VaultStore, normalize_relative_path, path_to_slashes, sha256_hex,
-    sync_create_directory,
+    CreateTemporaryCleanup, VaultError, VaultStore, normalize_relative_path, path_to_slashes,
+    sha256_hex, sync_create_directory,
 };
 use cap_std::fs::Dir as CapabilityDir;
 use serde_json::Value;
@@ -364,15 +364,15 @@ impl VaultStore {
                 &incoming,
                 &current_revision,
             )?;
-            self.remove_valid_create_temporary_at(
-                &parent,
-                &temporary_name,
-                &target_name,
-                &record.relative_path,
-                &record.next_revision,
-                false,
-                temporary_identity.as_ref(),
-            )?;
+            self.remove_valid_create_temporary_at(CreateTemporaryCleanup {
+                parent: &parent,
+                temporary_name: &temporary_name,
+                target_name: &target_name,
+                relative_path: &record.relative_path,
+                expected_revision: &record.next_revision,
+                require_target_link: false,
+                expected_file: temporary_identity.as_ref(),
+            })?;
             sync_create_directory(&parent).map_err(|error| {
                 format!("create conflict staging cleanup could not be synced: {error}")
             })?;
@@ -437,15 +437,15 @@ impl VaultStore {
             None,
         )
         .map_err(|error| error.to_string())?;
-        self.remove_valid_create_temporary_at(
-            &parent,
-            &temporary_name,
-            &target_name,
-            &record.relative_path,
-            &record.next_revision,
-            true,
-            Some(temporary_identity),
-        )?;
+        self.remove_valid_create_temporary_at(CreateTemporaryCleanup {
+            parent: &parent,
+            temporary_name: &temporary_name,
+            target_name: &target_name,
+            relative_path: &record.relative_path,
+            expected_revision: &record.next_revision,
+            require_target_link: true,
+            expected_file: Some(temporary_identity),
+        })?;
         sync_create_directory(&parent).map_err(|error| {
             format!("recovered create staging cleanup could not be synced: {error}")
         })?;
@@ -559,15 +559,15 @@ impl VaultStore {
             Err(error) => return Err(error.to_string()),
         };
         let temporary_name = super::create_temporary_name(&record.operation_id);
-        self.remove_valid_create_temporary_at(
-            &parent,
-            &temporary_name,
-            &target_name,
-            &record.relative_path,
-            &record.next_revision,
-            committed,
-            None,
-        )?;
+        self.remove_valid_create_temporary_at(CreateTemporaryCleanup {
+            parent: &parent,
+            temporary_name: &temporary_name,
+            target_name: &target_name,
+            relative_path: &record.relative_path,
+            expected_revision: &record.next_revision,
+            require_target_link: committed,
+            expected_file: None,
+        })?;
         sync_create_directory(&parent)
             .map_err(|error| format!("create staging directory could not be synced: {error}"))
     }

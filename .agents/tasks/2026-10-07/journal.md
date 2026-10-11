@@ -4317,9 +4317,20 @@ resolver workflow, and Rust CI reported formatter differences plus a missing
 test-module import for `create_temporary_name`. Exact run and job IDs are in
 `evidence/r2.8.91-attempt-2-f975e48.json`. This attempt was not accepted.
 
-The next correction applies the exact formatter changes shown in GitHub CI,
-imports the temporary-name helper in the test module, and excludes the
-migration-only lockfile resolver from the legacy source inventory. A static
-review compared the source against the saved GitHub formatter diff and
-confirmed the reported formatting hunks and test import are addressed. No
-local executable validation was run.
+Attempt 3 ran all seven required workflows on exact SHA
+`3460b71a20b42b4d9cc3a0a2b15796e31f200e19`. Six passed, including the
+Obsidian 1.14.4 round-trip on Linux, macOS, and Windows. Rust CI found that
+Unix directory sync used a cloned capability handle that returned `EBADF`,
+Clippy rejected the cleanup function's eight arguments, Ubuntu reported three
+rustfmt differences, and the Windows UI test could not rename its retained
+open vault root. Exact workflow and job IDs, artifact digests, and findings
+are recorded in
+[`evidence/r2.8.91-attempt-3-3460b71.json`](evidence/r2.8.91-attempt-3-3460b71.json).
+This attempt was not accepted.
+
+The next correction reopens `.` relative to the held directory capability
+before Unix `sync_all`, groups cleanup parameters into a context struct, and
+makes the root-refresh test reflect Windows' retained-root behavior while
+preserving the unavailable-root path on other platforms. The remaining
+GitHub-reported formatter layouts are applied. No local tests, builds,
+formatters, validators, or application launches were run.

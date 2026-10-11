@@ -7590,11 +7590,24 @@ mod tests {
         assert_eq!(initial_preview.relative_path, note_path);
         assert_eq!(initial_preview.text.as_bytes(), initial_source);
 
-        std::fs::rename(&vault_path, &relocated_vault_path)
-            .expect("simulate the selected vault root becoming unavailable");
-        let relocated_vault = existing_vault_tree_snapshot(&relocated_vault_path);
-        assert_eq!(relocated_vault, before_vault);
-        assert!(!vault_path.exists());
+        #[cfg(windows)]
+        {
+            assert!(std::fs::rename(&vault_path, &relocated_vault_path).is_err());
+            assert!(vault_path.exists());
+            assert!(!relocated_vault_path.exists());
+        }
+        #[cfg(not(windows))]
+        {
+            std::fs::rename(&vault_path, &relocated_vault_path)
+                .expect("simulate the selected vault root becoming unavailable");
+            assert!(!vault_path.exists());
+        }
+        #[cfg(windows)]
+        let current_vault_path = &vault_path;
+        #[cfg(not(windows))]
+        let current_vault_path = &relocated_vault_path;
+        let vault_while_root_changed = existing_vault_tree_snapshot(current_vault_path);
+        assert_eq!(vault_while_root_changed, before_vault);
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             before_app_data
@@ -7605,18 +7618,28 @@ mod tests {
         assert!(harness.state().vault_refresh_receiver.is_some());
         wait_for_vault_refresh(&mut harness);
         assert!(harness.state().vault_refresh_receiver.is_none());
+        #[cfg(not(windows))]
         assert_eq!(
             harness.state().vault_refresh_error.as_deref(),
             Some(
                 "The note list could not be refreshed safely. The existing listing remains available."
             )
         );
+        #[cfg(windows)]
+        {
+            assert!(harness.state().vault_refresh_error.is_none());
+            assert_eq!(
+                harness.state().vault_refresh_status.as_deref(),
+                Some("Note list refreshed: 1 Markdown files found.")
+            );
+        }
+        #[cfg(not(windows))]
         assert!(harness.state().vault_refresh_status.is_none());
         let retained_session = harness
             .state()
             .session
             .as_ref()
-            .expect("a failed refresh should retain the existing session");
+            .expect("the refresh should retain the existing session");
         assert_eq!(retained_session.root_path(), canonical_vault);
         assert_eq!(retained_session.entries().len(), 1);
         assert_eq!(retained_session.entries()[0].relative_path, note_path);
@@ -7625,8 +7648,8 @@ mod tests {
             Some(note_path.as_path())
         );
         assert_eq!(
-            existing_vault_tree_snapshot(&relocated_vault_path),
-            relocated_vault
+            existing_vault_tree_snapshot(current_vault_path),
+            vault_while_root_changed
         );
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
@@ -7638,27 +7661,42 @@ mod tests {
         assert!(harness.state().note_preview_receiver.is_some());
         wait_for_note_preview(&mut harness);
         assert!(harness.state().note_preview_receiver.is_none());
-        assert!(harness.state().note_source_preview.is_none());
-        assert!(harness.state().note_preview_error.is_some());
+        #[cfg(not(windows))]
+        {
+            assert!(harness.state().note_source_preview.is_none());
+            assert!(harness.state().note_preview_error.is_some());
+        }
+        #[cfg(windows)]
+        {
+            assert!(harness.state().note_preview_error.is_none());
+            let preview = harness
+                .state()
+                .note_source_preview
+                .as_ref()
+                .expect("the still-open vault root should remain readable");
+            assert_eq!(preview.relative_path, note_path);
+            assert_eq!(preview.text.as_bytes(), initial_source);
+        }
         assert_eq!(
-            existing_vault_tree_snapshot(&relocated_vault_path),
-            relocated_vault
+            existing_vault_tree_snapshot(current_vault_path),
+            vault_while_root_changed
         );
         assert_eq!(
             existing_vault_tree_snapshot(&app_data_path),
             before_app_data
         );
 
-        std::fs::write(relocated_vault_path.join(&note_path), recovered_source)
-            .expect("simulate an external note update while the vault root is relocated");
+        std::fs::write(current_vault_path.join(&note_path), recovered_source)
+            .expect("simulate an external note update while the vault is open");
         let mut expected_recovered_vault = before_vault.clone();
         expected_recovered_vault
             .iter_mut()
             .find(|(path, _, _)| path == &note_path)
             .expect("vault snapshot must contain the note")
             .2 = recovered_source.to_vec();
-        let recovered_vault = existing_vault_tree_snapshot(&relocated_vault_path);
+        let recovered_vault = existing_vault_tree_snapshot(current_vault_path);
         assert_eq!(recovered_vault, expected_recovered_vault);
+        #[cfg(not(windows))]
         std::fs::rename(&relocated_vault_path, &vault_path)
             .expect("restore the selected vault root at its original path");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), recovered_vault);

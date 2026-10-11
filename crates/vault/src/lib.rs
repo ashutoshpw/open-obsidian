@@ -286,6 +286,16 @@ pub struct VaultCreateResult {
     pub operation_id: String,
 }
 
+pub(crate) struct CreateTemporaryCleanup<'a> {
+    pub(crate) parent: &'a CapabilityDir,
+    pub(crate) temporary_name: &'a OsStr,
+    pub(crate) target_name: &'a OsStr,
+    pub(crate) relative_path: &'a Path,
+    pub(crate) expected_revision: &'a str,
+    pub(crate) require_target_link: bool,
+    pub(crate) expected_file: Option<&'a SameFileHandle>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct VaultMergeWriteResult {
     pub merge: ThreeWayMergeResult,
@@ -1198,7 +1208,7 @@ pub(crate) fn create_temporary_name(operation_id: &str) -> OsString {
 
 #[cfg(unix)]
 fn sync_create_directory(directory: &CapabilityDir) -> io::Result<()> {
-    directory.try_clone()?.into_std_file().sync_all()
+    directory.open(".")?.sync_all()
 }
 
 // Windows does not provide a portable directory-entry flush through the
@@ -1852,15 +1862,15 @@ impl VaultStore {
 
         // The committed record is durable before removing the second hard link.
         // Recovery can identify and clean a leftover link if the process stops here.
-        let _ = self.remove_valid_create_temporary_at(
-            &parent,
-            &temporary_name,
-            &target_name,
-            &relative_path,
-            &next_revision,
-            true,
-            Some(&temporary_identity),
-        );
+        let _ = self.remove_valid_create_temporary_at(CreateTemporaryCleanup {
+            parent: &parent,
+            temporary_name: &temporary_name,
+            target_name: &target_name,
+            relative_path: &relative_path,
+            expected_revision: &next_revision,
+            require_target_link: true,
+            expected_file: Some(&temporary_identity),
+        });
         let _ = sync_create_directory(&parent);
 
         Ok(VaultCreateResult {
@@ -2000,14 +2010,17 @@ impl VaultStore {
 
     pub(crate) fn remove_valid_create_temporary_at(
         &self,
-        parent: &CapabilityDir,
-        temporary_name: &OsStr,
-        target_name: &OsStr,
-        relative_path: &Path,
-        expected_revision: &str,
-        require_target_link: bool,
-        expected_file: Option<&SameFileHandle>,
+        cleanup: CreateTemporaryCleanup<'_>,
     ) -> Result<(), String> {
+        let CreateTemporaryCleanup {
+            parent,
+            temporary_name,
+            target_name,
+            relative_path,
+            expected_revision,
+            require_target_link,
+            expected_file,
+        } = cleanup;
         match self.read_create_target_at(parent, temporary_name, relative_path) {
             Ok(None) => Ok(()),
             Ok(Some(staged)) => {
@@ -2073,9 +2086,7 @@ impl VaultStore {
                     .remove_file(temporary_name)
                     .map_err(|error| format!("create staging file cannot be removed: {error}"))
             }
-            Err(error) => Err(format!(
-                "create staging file cannot be checked: {error}"
-            )),
+            Err(error) => Err(format!("create staging file cannot be checked: {error}")),
         }
     }
 
@@ -2408,8 +2419,7 @@ impl VaultStore {
                         bytes,
                         identity,
                     )
-                })
-            {
+                }) {
                 Ok(()) => Err(VaultError::WriteFailed {
                     relative_path: relative_path.to_path_buf(),
                     source,
@@ -2900,11 +2910,10 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        AppearanceMode, create_temporary_name, HotkeyBinding, LinkKind, LinkReference,
-        MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
-        TransclusionBlockReason,
+        AppearanceMode, HotkeyBinding, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason,
         VaultCreateRequest, VaultError, VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot,
-        VaultStore, VaultStyleAssetKind, VaultWriteRequest, sha256_hex,
+        VaultStore, VaultStyleAssetKind, VaultWriteRequest, create_temporary_name, sha256_hex,
     };
     use openobsidian_doc::MergeStatus;
     use serde_json::Value;
