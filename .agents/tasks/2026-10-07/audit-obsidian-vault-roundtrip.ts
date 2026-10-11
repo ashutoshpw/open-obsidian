@@ -1035,6 +1035,75 @@ function windowsSelectionConfirmsPath(action: unknown, expectedPath: string): bo
   }
 }
 
+function windowsSelectorDismissConfirmsPath(action: unknown, expectedPath: string): boolean {
+  if (typeof action !== "string") return false;
+  try {
+    const dismissal = JSON.parse(action) as {
+      action?: unknown;
+      control_type?: unknown;
+      name?: unknown;
+      selected_value?: unknown;
+    };
+    const selectedValue = typeof dismissal.selected_value === "string"
+      ? dismissal.selected_value.replaceAll("\\", "/")
+      : "";
+    return dismissal.name === "Note to inspect"
+      && dismissal.control_type === "ControlType.Button"
+      && dismissal.action === "InvokePattern.Invoke"
+      && (selectedValue === expectedPath || selectedValue.endsWith(`/${expectedPath}`));
+  } catch {
+    return false;
+  }
+}
+
+async function dismissWindowsNoteSelectorMenu(child: ChildProcess, expectedPath: string): Promise<string> {
+  const processId = child.pid;
+  if (!processId) throw new Error("OpenObsidian did not expose its process id for Windows note selector dismissal");
+  const script = `
+    $ErrorActionPreference = "Stop"
+    Add-Type -AssemblyName UIAutomationClient
+    Add-Type -AssemblyName UIAutomationTypes
+    $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+    $root = [System.Windows.Automation.AutomationElement]::RootElement
+    $condition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
+      $processId
+    )
+    $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $condition)
+    $selector = $null
+    foreach ($element in $elements) {
+      try {
+        $current = $element.Current
+        if ($current.ControlType.ProgrammaticName -eq "ControlType.Button" -and $current.Name -eq "Note to inspect") {
+          $selector = $element
+          break
+        }
+      } catch {}
+    }
+    if ($null -eq $selector) { throw "UI Automation did not expose the Note to inspect button" }
+    $selector.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Start-Sleep -Milliseconds 150
+    $selectedValue = $selector.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value
+    [pscustomobject]@{
+      name = $selector.Current.Name
+      control_type = $selector.Current.ControlType.ProgrammaticName
+      action = "InvokePattern.Invoke"
+      selected_value = $selectedValue
+    } | ConvertTo-Json -Compress
+  `;
+  try {
+    return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      env: {...process.env, OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId)},
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+    const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+    throw new Error(`Could not dismiss the expanded Windows note selector through its UI Automation button: ${output || failure.message}`);
+  }
+}
+
 function nativeFolderPickerVisibleInOcr(text: string): boolean {
   const compact = text.toLowerCase().replace(/[^a-z]/g, "");
   if (compact.includes("openanexistingvault") || compact.includes("openexistingvault")) return true;
@@ -2818,7 +2887,10 @@ async function selectReferenceNoteForEmbedResolution(
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
     }
-    const dismissAction = await invokeNativeAccessibleControl(child, windowId, "Note to inspect", targetPath);
+    const dismissAction = await dismissWindowsNoteSelectorMenu(child, targetPath);
+    if (!windowsSelectorDismissConfirmsPath(dismissAction, targetPath)) {
+      throw new Error(`Windows UI Automation did not dismiss the selector while retaining ${targetPath}: ${dismissAction}`);
+    }
     return {
       strategy: "windows_ui_automation_exact_path_from_expanded_selector",
       expanded_selector_screenshot: relative(reportDirectory, openMenuScreenshot.pngPath),
