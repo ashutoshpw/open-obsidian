@@ -2219,6 +2219,9 @@ async function clickVisibleOpenObsidianControl(
         ? (anchor.left - 55 * scaleX) / ocrSize.width
         : (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
+    } else if (anchorPhrase === "Resolve wiki links") {
+      xFraction = (anchor.left + 165 * scaleX) / ocrSize.width;
+      yFraction = (anchor.top + 45 * scaleY) / ocrSize.height;
     } else {
       const verticalControlOffset = controlName === "Close source preview"
         ? anchorPhrase === "Note source preview" ? 70 : 28
@@ -2643,25 +2646,15 @@ async function runReferenceSourcePreview(
 
 async function selectFirstNoteFromOpenInspectorMenu(
   child: ChildProcess,
+  windowId: string,
   targetPath: string,
   sortedNotePaths: string[],
 ): Promise<string> {
   if (sortedNotePaths[0] !== targetPath) {
-    throw new Error(`Keyboard inspector fallback requires ${targetPath} to sort first; actual paths=${JSON.stringify(sortedNotePaths)}`);
+    throw new Error(`Inspector selector fallback requires ${targetPath} to sort first; actual paths=${JSON.stringify(sortedNotePaths)}`);
   }
-  await focusOpenObsidian(child);
-  if (process.platform === "linux") {
-    xdotool("key", "--clearmodifiers", "Home");
-    xdotool("key", "--clearmodifiers", "Return");
-    return `Keyboard selected the first inspector menu option (${targetPath}) with Home and Return.`;
-  }
-  if (process.platform === "darwin") {
-    const script = `tell application "System Events"
-      key code 115
-      key code 36
-    end tell`;
-    execFileSync("osascript", ["-e", script], {stdio: "ignore"});
-    return `Keyboard selected the first inspector menu option (${targetPath}) with Home and Return.`;
+  if (process.platform === "linux" || process.platform === "darwin") {
+    return await invokeNativeAccessibleControl(child, windowId, targetPath, "Resolve wiki links");
   }
   if (process.platform === "win32") {
     const script = `
@@ -2790,7 +2783,12 @@ async function runReferenceExternalNoteRefresh(
     .map((entry) => entry.path)
     .sort();
   if (process.platform === "linux" || process.platform === "darwin") {
-    refreshReport.select_external_note_action = await selectFirstNoteFromOpenInspectorMenu(child, externalRefreshMarkdownPath, sortedNotePaths);
+    refreshReport.select_external_note_action = await selectFirstNoteFromOpenInspectorMenu(
+      child,
+      window.window_id,
+      externalRefreshMarkdownPath,
+      sortedNotePaths,
+    );
   } else {
     refreshReport.select_external_note_action = await invokeNativeAccessibleControl(child, window.window_id, externalRefreshMarkdownPath);
   }
@@ -2807,7 +2805,6 @@ async function runReferenceExternalNoteRefresh(
     refreshReport.selected_note_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
   }, (capture) => selectedByWindowsUiAutomation
-    || selectedByDeterministicKeyboard
     || ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath)
     || ocrTextContainsFuzzyPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
   refreshReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);

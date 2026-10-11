@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T02:19:08Z",
+  "updated_at": "2026-10-11T02:27:58Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "5788a79c46e2aeb56abf34590754ccc6cb789e53",
+  "last_reconciled_head": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
   "current_milestone": "R2.8.72",
-  "next_action": "Push the OCR status and note-selector anchor correction; inspect exact-SHA GitHub Actions on Linux, macOS, and Windows.",
+  "next_action": "Push the calibrated selector-item click and require visible selected-note confirmation before source preview; inspect exact-SHA GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -295,7 +295,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.72 implementation SHA 5788a79c46e2aeb56abf34590754ccc6cb789e53 is pushed to origin/main. Inventory, plugin renderer, loaded-plugin, quality, desktop build, and Rust CI passed across all required OSes. The Obsidian 1.14.4 round-trip logged successful manual refresh requests and results on all three OSes, then failed on OCR status-text or note-selector recognition. Run/job IDs, artifacts and digests are in evidence/r2.8.72-roundtrip-ci-5788a79.json. A focused OCR-anchor and fuzzy-status correction is in progress. GitHub Actions remains the only executable validation environment.",
+  "push_status": "R2.8.72 implementation SHA f85d619b5d8c64dd2afe2b95509e5fadf6f41c25 is pushed to origin/main. Inventory, plugin renderer, loaded-plugin, quality, desktop build, and Rust CI passed across all required OSes. The Obsidian round-trip passed on Windows and failed on Linux/macOS after the selector click left the menu open; the harness incorrectly treated the keyboard action label as proof of selection. Exact runs, jobs, artifact digests, and failure findings are in evidence/r2.8.72-roundtrip-ci-f85d619.json. A focused selector-click and visible-selection check is in progress. GitHub Actions remains the only executable validation environment.",
   "ci_results": [
     {
       "name": "inventory",
@@ -15755,6 +15755,209 @@
           "status": "completed",
           "conclusion": "failure",
           "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104461234/job/114366889744"
+        }
+      ]
+    },
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38104790738,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790738",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114367880353,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790738/job/114367880353"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38104790729,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790729",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114367880563,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790729/job/114367880563"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114367880729,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790729/job/114367880729"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114367880736,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790729/job/114367880736"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38104790736,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790736",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114367880569,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790736/job/114367880569"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114367880682,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790736/job/114367880682"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114367880711,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790736/job/114367880711"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38104790727,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790727",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114367880467,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790727/job/114367880467"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114367880551,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790727/job/114367880551"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114367880562,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790727/job/114367880562"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38104790846,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790846",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114367880704,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790846/job/114367880704"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114367880768,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790846/job/114367880768"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114367880805,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790846/job/114367880805"
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38104790728,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790728",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114367880404,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790728/job/114367880404"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114367880442,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790728/job/114367880442"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114367880478,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790728/job/114367880478"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38104790732,
+      "head_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790732",
+      "status": "completed",
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04",
+          "job_id": 114367880466,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790732/job/114367880466"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "job_id": 114367880565,
+          "status": "completed",
+          "conclusion": "failure",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790732/job/114367880565"
+        },
+        {
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "job_id": 114367880600,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790732/job/114367880600"
         }
       ]
     }

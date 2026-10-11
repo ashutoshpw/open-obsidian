@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T02:27:58Z",
+  "milestone": "R2.8.72",
+  "source_sha": "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+  "source_commit": "[rust R2.8.72] Use stable OCR anchors for refresh controls",
+  "required_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38104790738,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790738",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114367880353, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38104790736,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790736",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114367880569, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114367880682, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114367880711, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38104790727,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790727",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114367880467, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114367880551, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114367880562, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38104790846,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790846",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114367880704, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114367880768, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114367880805, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38104790729,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790729",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114367880563, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114367880729, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114367880736, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38104790728,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790728",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (macos-latest)", "job_id": 114367880404, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 114367880442, "conclusion": "success"},
+        {"name": "rust (ubuntu-latest)", "job_id": 114367880478, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38104790732,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38104790732",
+      "conclusion": "failure",
+      "reference_app_version": "Obsidian 1.14.4",
+      "jobs": [
+        {
+          "name": "Linux",
+          "job_id": 114367880466,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11688794641,
+            "name": "obsidian-vault-roundtrip-Linux-f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+            "size_in_bytes": 3892385,
+            "digest": "sha256:e15cf82340a3981685acd0778723a468311168c97e7159876bd147ad4f966f71"
+          },
+          "finding": "Manual refresh succeeded and the note selector was opened. The Home/Enter keyboard sequence did not close the selector or change its selected note; the harness incorrectly accepted the action description as proof of selection. The source-preview click then failed to show the external note marker."
+        },
+        {
+          "name": "macOS",
+          "job_id": 114367880565,
+          "conclusion": "failure",
+          "artifact": {
+            "id": 11689740249,
+            "name": "obsidian-vault-roundtrip-macOS-f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+            "size_in_bytes": 4688392,
+            "digest": "sha256:1cda0569bd03ef0c1913367dc57ea2a67c1e30276e245f82f64560b5e221b85c"
+          },
+          "finding": "Manual refresh succeeded and the note selector was opened. The Home/Enter key events left the selector open on the original note; the harness incorrectly accepted the action description as proof of selection. The source-preview click then failed to show the external note marker."
+        },
+        {
+          "name": "Windows",
+          "job_id": 114367880600,
+          "conclusion": "success",
+          "artifact": {
+            "id": 11688879570,
+            "name": "obsidian-vault-roundtrip-Windows-f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
+            "size_in_bytes": 5934020,
+            "digest": "sha256:4502a2b59803cb726285717497c2dfd6aec9a83447c4fe2b2b14d337ad48f91f"
+          },
+          "finding": "UI Automation selected the external note and the complete round-trip acceptance passed."
+        }
+      ]
+    }
+  ],
+  "next_action": "Click the exact first note menu option at a calibrated position derived from a stable visible anchor, and require OCR confirmation of the selected note before previewing it."
+}
