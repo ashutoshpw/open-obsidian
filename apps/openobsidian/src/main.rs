@@ -79,7 +79,7 @@ fn main() -> ExitCode {
         probe,
         open_vault,
         initial_session,
-        |path| open_external_file(path),
+        open_external_file,
     ) {
         eprintln!("OpenObsidian could not start: {error}");
         return ExitCode::FAILURE;

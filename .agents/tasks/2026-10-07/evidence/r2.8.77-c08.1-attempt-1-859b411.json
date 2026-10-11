@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.77 / C08.1 external file opening",
+  "attempt": 1,
+  "tested_source_sha": "859b4117fe06295a521dc263bf06cab3cf738a54",
+  "recorded_at": "2026-10-11T08:08:54Z",
+  "conclusion": "not_accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38123196199,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196199",
+      "conclusion": "failure",
+      "jobs": {
+        "inventory": {
+          "job_id": 114422010981,
+          "conclusion": "failure",
+          "finding": "validate_inventory.py could not parse state.json: JSONDecodeError Extra data at line 26791, column 4, caused by one extra closing brace."
+        }
+      }
+    },
+    "quality": {
+      "run_id": 38123196260,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196260",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114422011264, "conclusion": "success"},
+        "macos": {"job_id": 114422011417, "conclusion": "success"},
+        "windows": {"job_id": 114422011437, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38123196187,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196187",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114422010898, "conclusion": "success"},
+        "windows": {"job_id": 114422011010, "conclusion": "success"},
+        "macos": {"job_id": 114422011167, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38123196200,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196200",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114422010950, "conclusion": "success"},
+        "ubuntu": {"job_id": 114422011087, "conclusion": "success"},
+        "windows": {"job_id": 114422011138, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38123196205,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196205",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114422011218, "conclusion": "success"},
+        "ubuntu": {"job_id": 114422011394, "conclusion": "success"},
+        "windows": {"job_id": 114422011432, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38123196169,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196169",
+      "conclusion": "failure",
+      "jobs": {
+        "ubuntu": {
+          "job_id": 114422010943,
+          "conclusion": "failure",
+          "workspace_tests": "success",
+          "format": "failure",
+          "format_finding": "cargo fmt --all -- --check reported layout changes in crates/engine/src/lib.rs, crates/ui-egui/src/lib.rs and crates/vault/src/lib.rs."
+        },
+        "macos": {
+          "job_id": 114422010953,
+          "conclusion": "failure",
+          "workspace_tests": "success",
+          "clippy": "failure",
+          "clippy_finding": "Clippy rejected the redundant closure passed to the desktop UI opener injection."
+        },
+        "windows": {
+          "job_id": 114422010957,
+          "conclusion": "failure",
+          "workspace_tests": "success",
+          "clippy": "failure",
+          "clippy_finding": "Clippy rejected the redundant closure passed to the desktop UI opener injection."
+        },
+        "minimum_supported_rust_1_95": {
+          "job_id": 114422010812,
+          "conclusion": "success",
+          "toolchain": "Rust 1.95.0",
+          "command": "cargo test --workspace --locked"
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38123196213,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38123196213",
+      "conclusion": "success",
+      "obsidian_version": "1.14.4",
+      "jobs": {
+        "linux": {"job_id": 114422011080, "conclusion": "success"},
+        "windows": {"job_id": 114422011182, "conclusion": "success"},
+        "macos": {"job_id": 114422011287, "conclusion": "success"}
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11696162362,
+          "sha256_digest": "4d88cdb65d9926b7e3f3e27054620d1b173615f35249a17c9d522d3fe2e52ee9"
+        },
+        "windows": {
+          "artifact_id": 11696057403,
+          "sha256_digest": "d671ad81e3789109fed28dbc84fce6059161790b126a9c1634346a47b96b1281"
+        },
+        "macos": {
+          "artifact_id": 11695549185,
+          "sha256_digest": "12a9d256c669f140f08e74c9744d5456cb1a7b491b641b3d74900fe41cc189f5"
+        }
+      },
+      "limitation": "The run passed, but its report and screenshot contents were not used to accept C08.1 because the exact-SHA inventory and stable Rust gates failed. The round-trip will run again on the corrected source SHA."
+    }
+  },
+  "corrections_prepared_from_ci": [
+    "Remove the extra state.json closing brace reported by the inventory parser.",
+    "Apply the exact formatting changes reported by cargo fmt in GitHub Actions.",
+    "Pass open_external_file directly instead of wrapping it in a redundant closure."
+  ],
+  "acceptance_status": "C08.1 remains pending until every required workflow passes on a corrected exact implementation SHA."
+}

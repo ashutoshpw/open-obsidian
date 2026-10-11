@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T07:57:13Z",
+  "updated_at": "2026-10-11T08:08:54Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "f00e67b3a293f22c5794295a437ac3ff9e4b321c",
+  "last_reconciled_head": "859b4117fe06295a521dc263bf06cab3cf738a54",
   "current_milestone": "R2.8.77",
-  "next_action": "Finish R2.8.77 C08.1 external-open implementation, commit the bounded source slice, and push to origin/main for all seven required workflows plus the Rust 1.95 MSRV job. Wait for exact-SHA CI before any further push; keep C08.1 pending until the required results pass. All executable validation stays in GitHub Actions.",
+  "next_action": "Commit the CI-directed state.json, formatting and Clippy corrections, then push a fresh SHA to origin/main for all required workflows. Inspect every exact-SHA job and keep C08.1 pending until all required results pass.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -299,7 +299,7 @@
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.74 / C01.2-42 passed on exact implementation SHA 79526587c3ed3ead47a0cc682baa4a8f92ecb26b. All seven required GitHub Actions workflows passed, with the quality workflow passing on same-SHA attempt 2 after a transient Ubuntu Electron retrieval-boundary timeout. Obsidian 1.14.4-authored image removal, fresh Unresolved/targetless/not_rendered diagnostics, unchanged note source, snapshots, and reopen passed on Linux, macOS, and Windows. Evidence: evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json. Parent C01/C01.2 remain pending; no local executable validation was used."
   ],
-  "push_status": "R2.8.76 tracker checkpoint passed all six path-eligible workflows on exact SHA f00e67b3a293f22c5794295a437ac3ff9e4b321c; Obsidian round-trip was path-filtered out and passed on implementation SHA 6d3ac642fd3b10052d4f41e9b6274654bc54e786. R2.8.77 C08.1 implementation is in progress locally from f00e67b; next source push triggers all seven required workflows and the Rust 1.95 MSRV job. All executable validation remains in GitHub Actions.",
+  "push_status": "R2.8.77 attempt 1 on exact SHA 859b4117fe06295a521dc263bf06cab3cf738a54 is not accepted. Inventory failed on an extra state.json brace; Linux formatting and macOS/Windows Clippy failed. Quality, desktop build, renderer and loaded-plugin workflows passed, as did all three round-trip jobs and Rust 1.95 tests. The CI-directed syntax, formatting and closure fixes are ready locally; push a new exact SHA for all required results.",
   "ci_results": [
     {
       "name": "inventory",
@@ -26762,8 +26762,68 @@
     "R2.8.77": {
       "status": "in_progress",
       "starting_sha": "f00e67b3a293f22c5794295a437ac3ff9e4b321c",
-      "implementation_commits": [],
-      "ci_attempts": [],
+      "implementation_commits": [
+        "859b4117fe06295a521dc263bf06cab3cf738a54"
+      ],
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "implementation_sha": "859b4117fe06295a521dc263bf06cab3cf738a54",
+          "conclusion": "not_accepted",
+          "workflow_runs": {
+            "inventory": 38123196199,
+            "quality": 38123196260,
+            "desktop_build": 38123196187,
+            "plugin_renderer": 38123196200,
+            "loaded_plugin_workflows": 38123196205,
+            "rust_ci": 38123196169,
+            "obsidian_vault_roundtrip": 38123196213
+          },
+          "findings": "Inventory failed because state.json had an extra closing brace, reported as JSONDecodeError: Extra data at line 26791 column 4. Stable workspace tests passed on all three OSes. Ubuntu formatting failed on crates/engine/src/lib.rs, crates/ui-egui/src/lib.rs and crates/vault/src/lib.rs; macOS and Windows Clippy failed on a redundant opener closure in apps/openobsidian/src/main.rs. The Rust 1.95.0 job passed. All three Obsidian round-trip jobs passed. The working tree now contains the JSON-brace, formatter-reported layout and direct-function-pointer corrections; attempt 1 remains not accepted and must be superseded by fresh exact-SHA CI.",
+          "failed_job": {
+            "workflow": "Rust migration inventory",
+            "job_id": 114422010981,
+            "step": "Check migration traceability and baseline inventory"
+          },
+          "job_conclusions": {
+            "inventory": {
+              "114422010981": "failure"
+            },
+            "quality": {
+              "114422011264": "success",
+              "114422011417": "success",
+              "114422011437": "success"
+            },
+            "desktop_build": {
+              "114422010898": "success",
+              "114422011010": "success",
+              "114422011167": "success"
+            },
+            "plugin_renderer": {
+              "114422010950": "success",
+              "114422011087": "success",
+              "114422011138": "success"
+            },
+            "loaded_plugin_workflows": {
+              "114422011218": "success",
+              "114422011394": "success",
+              "114422011432": "success"
+            },
+            "rust_ci": {
+              "114422010943": "failure",
+              "114422010953": "failure",
+              "114422010957": "failure",
+              "114422010812": "success"
+            },
+            "obsidian_vault_roundtrip": {
+              "114422011080": "success",
+              "114422011182": "success",
+              "114422011287": "success"
+            }
+          },
+          "evidence": "evidence/r2.8.77-c08.1-attempt-1-859b411.json"
+        }
+      ],
       "scope": "Port the C08.1 unknown-binary external-open flow: resolve only an existing regular vault file through the confined vault boundary, revalidate immediately before handing its canonical absolute path to an injected OS default-app opener, preserve exact bytes and vault/app-data snapshots, and deny missing, directory, traversal and symlink targets.",
       "acceptance": [
         "The headless UI offers Open externally only for a resolved non-Markdown regular file and invokes the injected opener with its canonical absolute path after revalidation.",
@@ -26785,8 +26845,7 @@
         "Obsidian vault round-trip acceptance",
         "OpenObsidian Rust CI minimum supported Rust 1.95 job"
       ],
-      "next_action": "Review the final source diff, commit the coherent C08.1 implementation, push to origin/main, and inspect every required exact-SHA workflow and platform job before any subsequent push."
-    }
+      "next_action": "Commit the corrections reported by attempt 1 and push to origin/main for fresh exact-SHA CI. Then inspect all seven required workflows and the Rust 1.95 job before accepting C08.1."
     }
   },
   "ci_preparation": {

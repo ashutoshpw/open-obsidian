@@ -2261,13 +2261,14 @@ mod tests {
 
         assert_eq!(resolved, fs::canonicalize(&binary_path).unwrap());
         assert_eq!(fs::read(&resolved).unwrap(), binary_bytes);
-        assert_eq!(sha256_hex(&fs::read(&resolved).unwrap()), sha256_hex(&binary_bytes));
+        assert_eq!(
+            sha256_hex(&fs::read(&resolved).unwrap()),
+            sha256_hex(&binary_bytes)
+        );
         assert_eq!(vault.snapshot().unwrap(), before);
         assert!(vault.resolve_regular_file_path("Missing.dat").is_err());
         assert!(vault.resolve_regular_file_path("Folder").is_err());
-        assert!(vault
-            .resolve_regular_file_path("../outside.dat")
-            .is_err());
+        assert!(vault.resolve_regular_file_path("../outside.dat").is_err());
 
         let symlink_path = attachments.join("external.dat");
         #[cfg(unix)]

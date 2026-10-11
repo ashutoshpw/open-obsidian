@@ -888,14 +888,11 @@ impl OpenObsidianApp {
                                     ui.small(format!("Heading or block: {subpath}"));
                                 }
                                 if self.external_file_opener.is_some()
-                                    && resolved.resolution.status
-                                        == LinkResolutionStatus::Resolved
+                                    && resolved.resolution.status == LinkResolutionStatus::Resolved
                                     && let Some(target) = &resolved.resolution.target
-                                    && !Path::new(target)
-                                        .extension()
-                                        .is_some_and(|extension| {
-                                            extension.eq_ignore_ascii_case("md")
-                                        })
+                                    && !Path::new(target).extension().is_some_and(|extension| {
+                                        extension.eq_ignore_ascii_case("md")
+                                    })
                                     && ui.button("Open externally").clicked()
                                 {
                                     external_open_target = Some(std::path::PathBuf::from(target));
@@ -955,12 +952,13 @@ impl OpenObsidianApp {
                 .session
                 .as_ref()
                 .ok_or_else(|| "Open a vault before opening an attachment.".to_owned())?;
-            let canonical_path = session
-                .resolve_regular_file_path(relative_path)
-                .map_err(|_| {
-                    "The selected attachment is no longer a safe regular file in this vault."
-                        .to_owned()
-                })?;
+            let canonical_path =
+                session
+                    .resolve_regular_file_path(relative_path)
+                    .map_err(|_| {
+                        "The selected attachment is no longer a safe regular file in this vault."
+                            .to_owned()
+                    })?;
             let opener = self
                 .external_file_opener
                 .as_ref()
@@ -972,7 +970,8 @@ impl OpenObsidianApp {
         match result {
             Ok(()) => {
                 self.external_open_error = None;
-                self.external_open_status = Some("Opened the file with its default app.".to_owned());
+                self.external_open_status =
+                    Some("Opened the file with its default app.".to_owned());
             }
             Err(error) => {
                 self.external_open_status = None;
@@ -11252,10 +11251,16 @@ mod tests {
             harness.state().external_open_error.as_deref(),
             Some("The selected attachment is no longer a safe regular file in this vault.")
         );
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), after_external_removal);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
 
         drop(harness);
-        assert_eq!(existing_vault_tree_snapshot(&vault_path), after_external_removal);
+        assert_eq!(
+            existing_vault_tree_snapshot(&vault_path),
+            after_external_removal
+        );
     }
 
     #[test]

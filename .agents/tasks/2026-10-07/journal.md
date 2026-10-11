@@ -3283,3 +3283,29 @@ symlink and stale targets. Rust CI also gains a locked workspace test job at
 the declared Rust 1.95 MSRV. C08.1 remains pending until the seven required
 workflows and this MSRV job pass on the exact source SHA. No local executable
 validation was run.
+
+### R2.8.77 / C08.1 attempt 1 on 859b411
+
+All seven workflows triggered on exact source SHA
+`859b4117fe06295a521dc263bf06cab3cf738a54`. The inventory run
+38123196199 failed at `validate_inventory.py` because `state.json` had one
+extra closing brace at line 26791 (`JSONDecodeError: Extra data`). The error
+was removed in the working tree based on the CI diagnostic. Quality
+38123196260, desktop build 38123196187, plugin renderer 38123196200 and
+loaded-plugin workflows 38123196205 passed. Rust CI 38123196169 and Obsidian
+round-trip 38123196213 were still running at 2026-10-11T08:02:21Z. The
+correction push is deferred until those runs are terminal to avoid cancelling
+required evidence. C08.1 remains pending; no local executable validation was
+run.
+
+### R2.8.77 / C08.1 attempt 1 completed
+
+The remaining exact-SHA workflows finished on `859b411`. All three Obsidian
+1.14.4 round-trip jobs passed (Linux 114422011080, Windows 114422011182,
+macOS 114422011287); artifact IDs and SHA-256 digests are recorded in
+`evidence/r2.8.77-c08.1-attempt-1-859b411.json`. The Rust 1.95.0 workspace test
+job passed as well (114422010812). Stable workspace tests passed on all three
+OSes, but Ubuntu formatting failed on the six CI-reported hunks and macOS and
+Windows Clippy rejected the redundant closure. Inventory also failed on the
+extra state brace. This attempt is not accepted; the CI-directed corrections
+are ready for a new exact-SHA push. No local executable validation was run.

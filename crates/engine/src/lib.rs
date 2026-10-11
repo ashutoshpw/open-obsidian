@@ -69,9 +69,7 @@ impl VaultSession {
         &self,
         relative_path: impl AsRef<Path>,
     ) -> Result<std::path::PathBuf, VaultError> {
-        self.store
-            .root()
-            .resolve_regular_file_path(relative_path)
+        self.store.root().resolve_regular_file_path(relative_path)
     }
 
     /// Reads a note through the vault's root-confinement and revision-hashing boundary.
