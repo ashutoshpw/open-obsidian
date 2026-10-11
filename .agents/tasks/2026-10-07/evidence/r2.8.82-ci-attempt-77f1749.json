@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.82",
+  "source_sha": "77f174934bfcbc509d9f0436bdbd25c5e66f9728",
+  "outcome": "failed",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38137641406,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641406",
+      "jobs": [{"id": 114464695092, "name": "inventory", "conclusion": "success"}]
+    },
+    "quality": {
+      "id": 38137641402,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641402",
+      "jobs": [
+        {"id": 114464695424, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114464695647, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114464695712, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38137641388,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641388",
+      "jobs": [
+        {"id": 114464695392, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114464695549, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114464695552, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38137641433,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641433",
+      "jobs": [
+        {"id": 114464695376, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114464695597, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114464695748, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38137641409,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641409",
+      "jobs": [
+        {"id": 114464695426, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114464695731, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114464695762, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38137641413,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641413",
+      "jobs": [
+        {"id": 114464695093, "name": "minimum supported Rust (1.95)", "conclusion": "failure", "cause": "E0505: raw_bytes is moved while the lossy decoded CSS view remains borrowed."},
+        {"id": 114464695238, "name": "rust (windows-latest)", "conclusion": "failure", "cause": "E0505: raw_bytes is moved while the lossy decoded CSS view remains borrowed."},
+        {"id": 114464695239, "name": "rust (macos-latest)", "conclusion": "failure", "cause": "E0505: raw_bytes is moved while the lossy decoded CSS view remains borrowed."},
+        {"id": 114464695254, "name": "rust (ubuntu-latest)", "conclusion": "failure", "cause": "Rust formatting changes in crates/doc/src/themes.rs and crates/vault/src/lib.rs, plus E0505 during compilation."}
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38137641399,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38137641399",
+      "jobs": [
+        {"id": 114464695268, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure", "cause": "Native preview build stopped on E0505."},
+        {"id": 114464695386, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure", "cause": "Native preview build stopped on E0505."},
+        {"id": 114464695455, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure", "cause": "Native preview build stopped on E0505."}
+      ]
+    }
+  },
+  "correction": "Compute ThemeStyleAnalysis within a scoped borrow before moving raw_bytes into VaultStyleAsset, and apply the Rust CI formatter diff to the new analyzer and vault fixture assertions.",
+  "local_executable_validation": "none"
+}

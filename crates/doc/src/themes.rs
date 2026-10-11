@@ -115,35 +115,39 @@ pub fn analyze_theme_stylesheet(source: &str) -> ThemeStyleAnalysis {
                 .iter()
                 .any(|class| selectors_have_class_word(&selectors, class)),
         ),
-        ("titlebar", selectors_have_class_word(&selectors, ".titlebar")),
+        (
+            "titlebar",
+            selectors_have_class_word(&selectors, ".titlebar"),
+        ),
         (
             "status-bar",
             selectors_have_class_word(&selectors, ".status-bar"),
         ),
     ]);
-    let plugin_view_contracts = matching_contracts(
-        &[
-            ("data-view", selectors.iter().any(|value| has_attribute_equals(value, "data-type"))),
-            (
-                "workspace-leaf-content",
-                selectors_have_class_word(&selectors, ".workspace-leaf-content"),
-            ),
-            (
-                "view-content",
-                selectors_have_class_word(&selectors, ".view-content"),
-            ),
-        ],
-    );
-    let popout_contracts = matching_contracts(
-        &[(
-            "popout-surface",
-            selectors.iter().any(|selector| {
-                selector_has_class_word(selector, ".mod-popout")
-                    || selector_has_class_word(selector, ".is-popout")
-                    || selector_has_body_popout(selector)
-            }),
-        )],
-    );
+    let plugin_view_contracts = matching_contracts(&[
+        (
+            "data-view",
+            selectors
+                .iter()
+                .any(|value| has_attribute_equals(value, "data-type")),
+        ),
+        (
+            "workspace-leaf-content",
+            selectors_have_class_word(&selectors, ".workspace-leaf-content"),
+        ),
+        (
+            "view-content",
+            selectors_have_class_word(&selectors, ".view-content"),
+        ),
+    ]);
+    let popout_contracts = matching_contracts(&[(
+        "popout-surface",
+        selectors.iter().any(|selector| {
+            selector_has_class_word(selector, ".mod-popout")
+                || selector_has_class_word(selector, ".is-popout")
+                || selector_has_body_popout(selector)
+        }),
+    )]);
 
     let mut accessibility_contracts = Vec::new();
     if contains_focus_selector(&lower) {
@@ -224,7 +228,11 @@ fn strip_css_comments(source: &str) -> String {
     let mut index = 0;
     while index < characters.len() {
         let (byte_index, character) = characters[index];
-        if character == '/' && characters.get(index + 1).is_some_and(|(_, next)| *next == '*') {
+        if character == '/'
+            && characters
+                .get(index + 1)
+                .is_some_and(|(_, next)| *next == '*')
+        {
             index += 2;
             while index + 1 < characters.len()
                 && !(characters[index].1 == '*' && characters[index + 1].1 == '/')
@@ -253,15 +261,15 @@ fn css_selectors(source: &str) -> Vec<String> {
     for (brace_index, _) in source.match_indices('{') {
         let segment = &source[segment_start..brace_index];
         segment_start = brace_index + 1;
-        let candidate = segment
-            .rsplit(['}', ';'])
-            .next()
-            .unwrap_or_default()
-            .trim();
+        let candidate = segment.rsplit(['}', ';']).next().unwrap_or_default().trim();
         if candidate.is_empty() || candidate.starts_with('@') {
             continue;
         }
-        for selector in candidate.split(',').map(str::trim).filter(|value| !value.is_empty()) {
+        for selector in candidate
+            .split(',')
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
             if !selectors.iter().any(|existing| existing == selector) {
                 selectors.push(selector.to_owned());
             }
@@ -282,7 +290,10 @@ fn css_variables(source: &str) -> BTreeMap<String, String> {
         let start = offset;
         offset += 2;
         let name_start = offset;
-        while bytes.get(offset).is_some_and(|byte| is_css_variable_byte(*byte)) {
+        while bytes
+            .get(offset)
+            .is_some_and(|byte| is_css_variable_byte(*byte))
+        {
             offset += 1;
         }
         if offset == name_start {
@@ -426,8 +437,7 @@ fn has_quoted_property(source: &str, name: &str, value: &str) -> bool {
         }
         offset += 1;
         source.get(offset..).is_some_and(|tail| {
-            tail.starts_with(value)
-                && tail.as_bytes().get(value.len()) == Some(&quote)
+            tail.starts_with(value) && tail.as_bytes().get(value.len()) == Some(&quote)
         })
     })
 }
@@ -436,16 +446,19 @@ fn has_theme_mode_hint(source: &str, mode: &str) -> bool {
     ["theme", "mode"].iter().any(|name| {
         source.match_indices(name).any(|(start, _)| {
             let before_ok = start == 0
-                || source.as_bytes().get(start - 1).is_some_and(|byte| {
-                    !is_ascii_word(*byte) && *byte != b'-'
-                });
+                || source
+                    .as_bytes()
+                    .get(start - 1)
+                    .is_some_and(|byte| !is_ascii_word(*byte) && *byte != b'-');
             if !before_ok {
                 return false;
             }
             let delimiter_index = start + name.len();
-            if !source.as_bytes().get(delimiter_index).is_some_and(|byte| {
-                matches!(*byte, b'-' | b'_' | b' ')
-            }) {
+            if !source
+                .as_bytes()
+                .get(delimiter_index)
+                .is_some_and(|byte| matches!(*byte, b'-' | b'_' | b' '))
+            {
                 return false;
             }
             let mode_start = delimiter_index + 1;
@@ -463,7 +476,10 @@ fn has_theme_mode_hint(source: &str, mode: &str) -> bool {
 fn contains_focus_selector(source: &str) -> bool {
     source.match_indices(":focus").any(|(start, _)| {
         let mut end = start + ":focus".len();
-        if source.get(end..).is_some_and(|tail| tail.starts_with("-visible")) {
+        if source
+            .get(end..)
+            .is_some_and(|tail| tail.starts_with("-visible"))
+        {
             end += "-visible".len();
         }
         source
@@ -477,9 +493,11 @@ fn has_aria_attribute(source: &str) -> bool {
     source.match_indices("[aria-").any(|(start, _)| {
         let mut offset = start + "[aria-".len();
         let name_start = offset;
-        while source.as_bytes().get(offset).is_some_and(|byte| {
-            is_ascii_word(*byte) || *byte == b'-'
-        }) {
+        while source
+            .as_bytes()
+            .get(offset)
+            .is_some_and(|byte| is_ascii_word(*byte) || *byte == b'-')
+        {
             offset += 1;
         }
         offset > name_start && source.as_bytes().get(offset) == Some(&b']')

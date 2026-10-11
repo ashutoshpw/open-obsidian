@@ -2636,7 +2636,10 @@ mod tests {
         let selected_theme = discovered.matching_styles(
             ".obsidian-mobile",
             VaultStyleAssetKind::Theme,
-            appearance.css_theme.as_deref().expect("fixture theme is selected"),
+            appearance
+                .css_theme
+                .as_deref()
+                .expect("fixture theme is selected"),
         );
         assert_eq!(selected_theme.len(), 1);
         assert_eq!(
@@ -2654,7 +2657,7 @@ mod tests {
                 VaultStyleAssetKind::Snippet,
                 selected_snippet
             )[0]
-                .relative_path,
+            .relative_path,
             ".obsidian-mobile/snippets/Readable.css"
         );
         let expected_style_assets = expected["style_assets"].as_array().unwrap();
@@ -2683,11 +2686,8 @@ mod tests {
             assert_eq!(style.sha256, expected_style["sha256"].as_str().unwrap());
             assert_eq!(style.sha256, sha256_hex(source_bytes));
         }
-        let desktop_minimal = discovered.matching_styles(
-            ".obsidian",
-            VaultStyleAssetKind::Theme,
-            "  minimal  ",
-        );
+        let desktop_minimal =
+            discovered.matching_styles(".obsidian", VaultStyleAssetKind::Theme, "  minimal  ");
         assert_eq!(desktop_minimal.len(), 2);
         assert_eq!(
             desktop_minimal[0].relative_path,
@@ -2697,31 +2697,31 @@ mod tests {
             desktop_minimal[1].relative_path,
             ".obsidian/themes/Minimal/theme.css"
         );
-        let solarized = discovered.matching_styles(
-            ".obsidian",
-            VaultStyleAssetKind::Theme,
-            "Solarized",
-        );
+        let solarized =
+            discovered.matching_styles(".obsidian", VaultStyleAssetKind::Theme, "Solarized");
         assert_eq!(solarized.len(), 1);
         assert_eq!(
             solarized[0].relative_path,
             ".obsidian/themes/Solarized/theme.css"
         );
-        let mobile_minimal = discovered.matching_styles(
-            ".obsidian-mobile",
-            VaultStyleAssetKind::Theme,
-            "MINIMAL",
-        );
+        let mobile_minimal =
+            discovered.matching_styles(".obsidian-mobile", VaultStyleAssetKind::Theme, "MINIMAL");
         assert_eq!(mobile_minimal.len(), 1);
         assert_eq!(
             mobile_minimal[0].relative_path,
             ".obsidian-mobile/themes/Minimal.css"
         );
+        assert!(
+            discovered
+                .matching_styles(".obsidian-mobile", VaultStyleAssetKind::Snippet, "outline")
+                .is_empty()
+        );
         assert!(discovered
-            .matching_styles(".obsidian-mobile", VaultStyleAssetKind::Snippet, "outline")
-            .is_empty());
-        assert!(discovered
-            .matching_styles("not-a-configuration-folder", VaultStyleAssetKind::Theme, "Minimal")
+            .matching_styles(
+                "not-a-configuration-folder",
+                VaultStyleAssetKind::Theme,
+                "Minimal"
+            )
             .is_empty());
         let readable = discovered
             .styles

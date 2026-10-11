@@ -3646,3 +3646,18 @@ the folder-entrypoint display-name correction. The configuration fixture
 digest in the inventory is refreshed. Changes remain source-reviewed only;
 the exact-SHA GitHub CI gate is pending. No local tests, builds, formatters,
 validators, or application launches were run.
+
+## 2026-10-11T12:04:48Z — R2.8.82 first CI attempt found compile and formatting errors
+
+Source SHA `77f174934bfcbc509d9f0436bdbd25c5e66f9728` passed inventory,
+quality, desktop build, plugin renderer and loaded-plugin workflows. Rust CI
+failed on Ubuntu, macOS, Windows and Rust 1.95 with E0505 because the lossy
+UTF-8 view borrowed `raw_bytes` through the struct initializer after the bytes
+were moved. Ubuntu also reported rustfmt changes in the new analyzer and vault
+fixture checks. All three Obsidian round-trip jobs stopped at the same native
+preview build error. Exact run/job results are in
+`evidence/r2.8.82-ci-attempt-77f1749.json`. The correction now computes owned
+analysis inside a scoped borrow and applies the formatter's reported layouts.
+The follow-up source SHA and its seven-workflow CI results are pending. C09
+and C09.1 remain pending. No local tests, builds, formatters, validators, or
+application launches were run.

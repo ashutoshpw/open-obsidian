@@ -270,13 +270,16 @@ fn push_style_asset(
         .map_err(|_| VaultError::OutsideRoot(path.to_path_buf()))?;
     let resolved_path = vault.resolve_regular_file_path(relative_path)?;
     let raw_bytes = fs::read(resolved_path)?;
-    let decoded_source = String::from_utf8_lossy(&raw_bytes);
+    let analysis = {
+        let decoded_source = String::from_utf8_lossy(&raw_bytes);
+        analyze_theme_stylesheet(decoded_source.as_ref())
+    };
     styles.push(VaultStyleAsset {
         relative_path: path_to_slashes(relative_path)?,
         kind,
         sha256: sha256_hex(&raw_bytes),
         raw_bytes,
-        analysis: analyze_theme_stylesheet(decoded_source.as_ref()),
+        analysis,
     });
     Ok(())
 }

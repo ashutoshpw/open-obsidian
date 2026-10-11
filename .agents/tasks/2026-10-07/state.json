@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T11:59:51Z",
+  "updated_at": "2026-10-11T12:04:48Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "51b523a38cbacba3f0b03d718daacd9e086156c6",
+  "last_reconciled_head": "77f174934bfcbc509d9f0436bdbd25c5e66f9728",
   "current_milestone": "R2.8.82",
-  "next_action": "Commit and push the prepared R2.8.82 theme identity and read-only CSS analysis slice, then validate its exact source SHA through all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 implementation is prepared locally and its source validation is pending. No local executable validation was run.",
+  "next_action": "Commit and push the R2.8.82 ownership and formatting correction with the failed first-attempt evidence, then validate the exact follow-up source SHA through all seven required GitHub Actions workflows. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.81 source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e passed all seven required workflows. Tracker checkpoint SHA 51b523a38cbacba3f0b03d718daacd9e086156c6 passed all six documentation workflows; the initial macOS quality job failed to observe the local retrieval boundary and passed on GitHub's failed-job rerun. Exact results are in evidence/r2.8.81-tracker-checkpoint-51b523a.json. R2.8.82 first source SHA 77f174934bfcbc509d9f0436bdbd25c5e66f9728 passed five required workflows but failed Rust CI and Obsidian round-trip because a borrowed CSS byte buffer was moved before analysis completed; Ubuntu also reported Rust formatting changes. Exact run and job IDs are in evidence/r2.8.82-ci-attempt-77f1749.json. The scoped-borrow and CI-reported formatting correction is prepared locally for exact-SHA CI. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -28029,7 +28029,23 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Push the R2.8.82 source commit to origin/main and inspect the seven exact-SHA workflow outcomes before accepting this partial C09 slice."
+      "attempts": [
+        {
+          "source_sha": "77f174934bfcbc509d9f0436bdbd25c5e66f9728",
+          "status": "failed",
+          "workflow_runs": {
+            "inventory": 38137641406,
+            "quality": 38137641402,
+            "desktop_build": 38137641388,
+            "plugin_renderer": 38137641433,
+            "loaded_plugins": 38137641409,
+            "rust_ci": 38137641413,
+            "vault_roundtrip": 38137641399
+          },
+          "evidence": "evidence/r2.8.82-ci-attempt-77f1749.json"
+        }
+      ],
+      "next_action": "Push the R2.8.82 ownership and formatting correction to origin/main and inspect all seven exact-SHA workflow outcomes before accepting this partial C09 slice."
     }
   },
   "ci_preparation": {
