@@ -26592,10 +26592,11 @@
       }
     },
     "R2.8.75": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "f70745df9299785e2d31e8822825f49f209abd34",
       "implementation_commits": [
-        "64f77e7200829dde897ec43bde0b0fef49d0b3ac"
+        "64f77e7200829dde897ec43bde0b0fef49d0b3ac",
+        "938f4cda4885efc09d75e6d1eeb182398cacf229"
       ],
       "ci_attempts": [
         {
@@ -26613,6 +26614,22 @@
           },
           "findings": "All six companion workflows passed. The Linux round-trip failed because OCR did not recognize the selected note path after refresh; macOS and Windows report data showed the edited bytes, but their reopen screenshots retain the Obsidian trust modal over the note.",
           "evidence": "evidence/r2.8.75-c01.2-43-attempt-1-64f77e7.json"
+        },
+        {
+          "attempt": 2,
+          "implementation_sha": "938f4cda4885efc09d75e6d1eeb182398cacf229",
+          "conclusion": "accepted",
+          "workflow_runs": {
+            "inventory": 38118385239,
+            "quality": 38118385249,
+            "desktop_build": 38118385262,
+            "plugin_renderer": 38118385264,
+            "loaded_plugin_workflows": 38118385234,
+            "rust_ci": 38118385230,
+            "obsidian_vault_roundtrip": 38118385229
+          },
+          "findings": "All seven required workflows passed. Quality passed on a same-SHA rerun after the first Ubuntu Electron retrieval-boundary audit failed transiently. All three reference-app artifacts confirm exact note bytes, retained selection, cleared stale preview, updated preview, unchanged vault/app-data policy, and a visible Obsidian reopen after choosing Restricted Mode. Existing native parallel step groups passed in applicable workflows.",
+          "evidence": "evidence/r2.8.75-c01.2-43-attempt-2-938f4cd.json"
         }
       ],
       "scope": "Exercise an external in-place edit of the selected BOM/CRLF note while OpenObsidian visibly previews it, refresh and preview the updated source, preserve the post-edit snapshot, then verify exact bytes and rendered content after Obsidian 1.14.4 reopens the vault.",
@@ -26633,7 +26650,7 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Push the selected-path diagnostic and Restricted Mode reopen correction, then inspect all seven exact-SHA workflow results and three platform artifacts. Keep C01.2-43 and parent C01/C01.2 pending until corrected evidence passes.",
+      "next_action": "Push the accepted evidence tracker checkpoint and verify documentation-triggered GitHub Actions. Then continue with the next bounded C01/C01.2 read-only requirement; parent C01/C01.2 remain pending.",
       "evidence": "evidence/r2.8.75-c01-readonly-audit.md"
     }
   },

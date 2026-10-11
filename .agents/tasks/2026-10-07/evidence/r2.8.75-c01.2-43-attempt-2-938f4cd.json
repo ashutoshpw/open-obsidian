@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.75-C01.2-43-reference-app-external-note-edit-refresh",
+  "attempt": 2,
+  "implementation_sha": "938f4cda4885efc09d75e6d1eeb182398cacf229",
+  "status": "accepted",
+  "local_executable_validation": false,
+  "workflow_runs": {
+    "inventory": {"run_id": 38118385239, "job_id": 114407840800, "conclusion": "success"},
+    "quality": {
+      "run_id": 38118385249,
+      "attempt_1": {
+        "ubuntu-latest": {
+          "job_id": 114407841072,
+          "conclusion": "failure",
+          "finding": "Transient Electron retrieval-boundary audit failure: the expected local retrieval result was not reached."
+        }
+      },
+      "attempt_2": {
+        "ubuntu-latest": {"job_id": 114408197514, "conclusion": "success"},
+        "windows-latest": {"job_id": 114408198249, "conclusion": "success"},
+        "macos-latest": {"job_id": 114408198723, "conclusion": "success"}
+      },
+      "conclusion": "success"
+    },
+    "desktop_build": {
+      "run_id": 38118385262,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114407841013, "conclusion": "success"},
+        "macos-latest": {"job_id": 114407841123, "conclusion": "success"},
+        "windows-latest": {"job_id": 114407841210, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38118385264,
+      "jobs": {
+        "macos-latest": {"job_id": 114407841120, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114407841263, "conclusion": "success"},
+        "windows-latest": {"job_id": 114407841302, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38118385234,
+      "jobs": {
+        "macos-latest": {"job_id": 114407841097, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114407841223, "conclusion": "success"},
+        "windows-latest": {"job_id": 114407841248, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38118385230,
+      "jobs": {
+        "windows-latest": {"job_id": 114407840861, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114407840974, "conclusion": "success"},
+        "macos-latest": {"job_id": 114407841010, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38118385229,
+      "jobs": {
+        "macos-latest": {"job_id": 114407841055, "conclusion": "success"},
+        "windows-latest": {"job_id": 114407841186, "conclusion": "success"},
+        "ubuntu-24.04": {"job_id": 114407841196, "conclusion": "success"}
+      },
+      "artifacts": {
+        "Linux": {
+          "artifact_id": 11694353662,
+          "artifact_digest": "sha256:78c42f364411923597adb2b21a4bbe8feb5345486ddd77cca33833586a5c0950",
+          "report": "obsidian-vault-roundtrip-report.json",
+          "report_sha256": "b0735c26f11d13cddc9f69b17b8bb124778a79d3da3cc1e564202793cc056d52",
+          "reopened_screenshot": "obsidian-reopened-external-note.png",
+          "reopened_screenshot_sha256": "888b1a71393427aab222f6cff338a78a366ab19360f692b714185b43e215e773"
+        },
+        "macOS": {
+          "artifact_id": 11693832973,
+          "artifact_digest": "sha256:9913dbc8f967fa72dda3fcf5a894bba3400f1eec4606783c8e642b5caf2e3235",
+          "report": "obsidian-vault-roundtrip-report.json",
+          "report_sha256": "cdd7c6cf66ed9ae16374c8e142aa6e014dac6c4a9e3c956ead03622d6ae9a761",
+          "reopened_screenshot": "obsidian-reopened-external-note.png",
+          "reopened_screenshot_sha256": "5b1e4b16441d812f5ee7a37cdf17fe605fbbe503e58c74950020bbe6415b760b"
+        },
+        "Windows": {
+          "artifact_id": 11694068905,
+          "artifact_digest": "sha256:3b8f37faa3e74e08c853a113caefbbc92eba62b45b9e4a92a63597b7bb905b79",
+          "report": "obsidian-vault-roundtrip-report.json",
+          "report_sha256": "acdb99ec10228ad933f25bc64d9c60c4ea60bd3ba314bed75878bab37657dde6",
+          "reopened_screenshot": "obsidian-reopened-external-note.png",
+          "reopened_screenshot_sha256": "934974cb6383f017727fbb988e6c811f0d5a0dc53b551d0b47859bdec527e459"
+        }
+      }
+    }
+  },
+  "parallel_step_groups": {
+    "applicable_workflows": ["quality", "desktop_build", "rust_ci", "obsidian_vault_roundtrip"],
+    "conclusion": "All native parallel step groups completed successfully on the exact implementation SHA."
+  },
+  "shared_roundtrip_assertions": {
+    "external_note_path": "After refresh.md",
+    "previous_note_bytes": 129,
+    "previous_note_sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+    "edited_note_bytes": 142,
+    "edited_note_sha256": "225d6216fad51e43994e3ddc2a29411ff003a6ed0336d7c8f4fd13f4e7b39309",
+    "markdown_count_before_and_after_edit": 3,
+    "edited_note_source_format": "UTF-8 BOM with CRLF line endings",
+    "updated_marker": "External note source updated by in-place edit.",
+    "selection_diagnostic": "OpenObsidian CI vault refresh selection applied: selected=After refresh.md"
+  },
+  "platform_results": {
+    "Linux": {
+      "report_status": "passed",
+      "selected_note_path_retained_after_refresh": true,
+      "selected_note_path_ocr_confirmation_after_refresh": false,
+      "exact_selection_diagnostic_recorded": true,
+      "stale_preview_cleared": true,
+      "original_marker_absent_from_updated_preview": true,
+      "updated_marker_visible_in_preview": true,
+      "vault_unchanged_after_updated_preview_and_close": true,
+      "app_data_unchanged_during_external_edit": true,
+      "app_data_policy_passed_after_updated_preview_and_close": true,
+      "restricted_mode_selected": true,
+      "trust_prompt_hidden": true,
+      "reopened_note_bytes_match": true,
+      "updated_marker_visible_after_reopen": true
+    },
+    "macOS": {
+      "report_status": "passed",
+      "selected_note_path_retained_after_refresh": true,
+      "selected_note_path_ocr_confirmation_after_refresh": true,
+      "exact_selection_diagnostic_recorded": true,
+      "stale_preview_cleared": true,
+      "original_marker_absent_from_updated_preview": true,
+      "updated_marker_visible_in_preview": true,
+      "vault_unchanged_after_updated_preview_and_close": true,
+      "app_data_unchanged_during_external_edit": true,
+      "app_data_policy_passed_after_updated_preview_and_close": true,
+      "restricted_mode_selected": true,
+      "trust_prompt_hidden": true,
+      "reopened_note_bytes_match": true,
+      "updated_marker_visible_after_reopen": true
+    },
+    "Windows": {
+      "report_status": "passed",
+      "selected_note_path_retained_after_refresh": true,
+      "selected_note_path_ocr_confirmation_after_refresh": true,
+      "exact_selection_diagnostic_recorded": true,
+      "stale_preview_cleared": true,
+      "original_marker_absent_from_updated_preview": true,
+      "updated_marker_visible_in_preview": true,
+      "vault_unchanged_after_updated_preview_and_close": true,
+      "app_data_unchanged_during_external_edit": true,
+      "app_data_policy_passed_after_updated_preview_and_close": true,
+      "restricted_mode_selected": true,
+      "trust_prompt_hidden": true,
+      "reopened_note_bytes_match": true,
+      "updated_marker_visible_after_reopen": true
+    }
+  },
+  "visual_review": "All three reopened-note screenshots show After refresh.md with the updated marker, the updated frontmatter, and no Obsidian trust dialog obscuring the note.",
+  "acceptance": "C01.2-43 accepted on exact implementation SHA 938f4cda4885efc09d75e6d1eeb182398cacf229. Parent C01 and C01.2 remain pending until their broader acceptance criteria pass."
+}

@@ -3178,3 +3178,28 @@ application launch, or runtime audit was run. During preparation only, I ran
 `git diff --check` and `python3 -m json.tool` on changed tracker files; these
 did not validate application behavior and are not acceptance evidence. All
 application validation remains in GitHub Actions.
+
+### R2.8.75 / C01.2-43 accepted on 938f4cd
+
+The correction passed all seven required GitHub Actions workflows on exact
+implementation SHA 938f4cda4885efc09d75e6d1eeb182398cacf229. The initial Ubuntu
+quality attempt hit a transient Electron retrieval-boundary audit failure; the
+same-SHA rerun passed on Ubuntu, macOS, and Windows. Inventory, desktop build,
+plugin renderer, loaded-plugin workflows, Rust CI, and the Obsidian round-trip
+passed. Existing native parallel step groups passed in applicable workflows.
+
+All three Obsidian 1.14.4 round-trip reports passed. Each platform changed only
+After refresh.md from 129 bytes to 142 bytes with the expected SHA-256
+225d6216fad51e43994e3ddc2a29411ff003a6ed0336d7c8f4fd13f4e7b39309; the Markdown
+count remained three and app data stayed unchanged. Manual refresh retained the
+selected path, cleared the old preview, and showed the updated marker. Linux
+OCR did not independently recognize the selected path, while the exact CI-only
+selection diagnostic confirmed it. Each Obsidian reopen selected Restricted
+Mode, hid the trust dialog, matched the edited bytes, and visibly rendered the
+updated marker. I visually inspected all three screenshots. Run/job IDs,
+artifact digests, report hashes, and screenshot hashes are recorded in
+evidence/r2.8.75-c01.2-43-attempt-2-938f4cd.json.
+
+C01.2-43 is accepted; broader C01/C01.2 remain pending. No local executable
+validation was run. Next: push the evidence tracker checkpoint and verify its
+documentation-triggered GitHub Actions.
