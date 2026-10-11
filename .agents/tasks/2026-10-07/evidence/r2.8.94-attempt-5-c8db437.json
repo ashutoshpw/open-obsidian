@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.94",
+  "attempt": 5,
+  "captured_at": "2026-10-11T23:54:51Z",
+  "source_sha": "c8db437492c50af201be4144de5389585f7be63d",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38185312405,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312405",
+      "jobs": [
+        { "id": 114606255372, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    "quality": {
+      "id": 38185312414,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312414",
+      "jobs": [
+        { "id": 114606255816, "name": "ubuntu-latest", "conclusion": "failure" },
+        { "id": 114606255826, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114606255660, "name": "windows-latest", "conclusion": "success" }
+      ],
+      "failure_detail": "The Ubuntu Electron vault audit reached 'Local index complete · 1/1 Markdown files visited · 1 passages indexed · 3 excluded.' but did not reach the local retrieval boundary. The other two parallel checks in that group passed."
+    },
+    "desktop_build": {
+      "id": 38185312388,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312388",
+      "jobs": [
+        { "id": 114606255822, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114606255753, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114606255834, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38185312396,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312396",
+      "jobs": [
+        { "id": 114606255633, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114606255523, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114606255610, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38185312393,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312393",
+      "jobs": [
+        { "id": 114606255491, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114606255499, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114606255343, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "rust_ci": {
+      "id": 38185312403,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312403",
+      "jobs": [
+        { "id": 114606255540, "name": "rust (ubuntu-latest)", "conclusion": "failure", "result": "104 passed, 2 failed" },
+        { "id": 114606255627, "name": "rust (macos-latest)", "conclusion": "failure", "result": "104 passed, 2 failed" },
+        { "id": 114606255735, "name": "rust (windows-latest)", "conclusion": "failure", "result": "104 passed, 2 failed" },
+        { "id": 114606255433, "name": "minimum supported Rust (1.95)", "conclusion": "failure", "result": "104 passed, 2 failed" }
+      ],
+      "failure_detail": "All four targets failed the same two UI Harness tests because the tests queried the rename-empty-state label while the Rename disclosure was closed: egui_opens_and_refreshes_an_existing_empty_vault_without_changing_its_tree and egui_refresh_after_external_removal_of_last_note_clears_stale_state_without_writing."
+    },
+    "vault_roundtrip": {
+      "id": 38185312394,
+      "head_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38185312394",
+      "jobs": [
+        { "id": 114606255817, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure" },
+        { "id": 114606255768, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure" },
+        { "id": 114606255655, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure" }
+      ],
+      "failure_detail": "Windows and macOS visibly displayed the source editor and marker, but source OCR was cropped from a processed image that had lost the low-contrast editor text. Linux passed the source-preview check, then its Canvas Text card ID fallback clicked the instruction banner at y=146 rather than the input row around y=160. No vault data mismatch was reported."
+    }
+  },
+  "build_artifacts": [
+    { "workflow": "desktop_build", "platform": "macos-latest", "artifact_id": 11719153169, "sha256": "bdfbd489d01460a5e99b9a60c200d9eacf3a53d14bbb135f8be45873bfc6464f" },
+    { "workflow": "desktop_build", "platform": "windows-latest", "artifact_id": 11718804241, "sha256": "66199e7e4ad3febcc09dfe543f225ca724eb243d90945d5b9cad00444a5f8072" },
+    { "workflow": "desktop_build", "platform": "ubuntu-latest", "artifact_id": 11718764278, "sha256": "b544de9919605736da511749718206f0c354cd300859aa280a083387397dbb5c" },
+    { "workflow": "plugin_renderer", "platform": "macos-latest", "artifact_id": 11719386502, "sha256": "fab03fcdb7bd6ec30cd42fefb9e8bd40b739f1c4a0632d897b1661b38c17aadc" },
+    { "workflow": "plugin_renderer", "platform": "ubuntu-latest", "artifact_id": 11719227915, "sha256": "3ce97d4e1c2e503a3bbc1c690a5d64c7a47ec493e18cbc222fbb8d2bbd5063e3" },
+    { "workflow": "plugin_renderer", "platform": "windows-latest", "artifact_id": 11718888926, "sha256": "322e6f5016f1d8ce488c03b6aa35064dafc070e821618c94d52a57c7cc2e3b7f" },
+    { "workflow": "loaded_plugins", "platform": "windows-latest", "artifact_id": 11719665783, "sha256": "b722ce0a79ada1c9113b3fe70eef4e8e297d552bb2d4e27f1a1634d5a1169e5e" },
+    { "workflow": "loaded_plugins", "platform": "macos-latest", "artifact_id": 11719242949, "sha256": "776622a423477ce7981c85c2e364cae3fa1547a21b3ca30a917dfad36462fc27" },
+    { "workflow": "loaded_plugins", "platform": "ubuntu-latest", "artifact_id": 11719227934, "sha256": "0aafbde83fab256f3ef7fd914d9e7f597dd31bbbb17032e1611d28f0a93a3d25" }
+  ],
+  "roundtrip_artifacts": [
+    { "job_id": 114606255655, "artifact_id": 11719278122, "archive_sha256": "bf1f820eee95285913b36671a13631fe727bee4f89beb93d7099b15168eb8233" },
+    { "job_id": 114606255768, "artifact_id": 11718889326, "archive_sha256": "93b867ae23eee6f86ce054d37412434fc9bd6c2642495b4b383d2d2623d26041" },
+    { "job_id": 114606255817, "artifact_id": 11718809908, "archive_sha256": "5feee85c97bcfbe9953413fcfc6847bd3f2893e5021ec40fec6232155eb7dacc" }
+  ],
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions CI only."
+}

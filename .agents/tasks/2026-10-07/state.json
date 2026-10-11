@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T01:42:28+02:00",
+  "updated_at": "2026-10-12T01:54:51+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "459ff4c5279e9b7531b210a68b09896a4d416221",
+  "last_reconciled_head": "c8db437492c50af201be4144de5389585f7be63d",
   "current_milestone": "R2.8.94",
-  "next_action": "Review and commit the focused R2.8.94 correction, push it to origin/main, and collect all seven GitHub Actions results for its exact SHA; accept the milestone only after all required workflows pass.",
-  "push_status": "origin/main contains 459ff4c5279e9b7531b210a68b09896a4d416221; attempt 4 is not accepted, and the next focused correction is in progress on the integration worktree. A non-executable git diff --check accidentally ran against the pending correction and returned clean; no local tests, builds, formatters, or application launches ran.",
+  "next_action": "Commit and push the focused R2.8.94 correction for attempt 5, then collect all seven GitHub Actions results for its exact SHA; accept the milestone only after all required workflows pass.",
+  "push_status": "origin/main contains c8db437492c50af201be4144de5389585f7be63d; R2.8.94 attempt 5 is not accepted. The next correction addresses two collapsed-Rename Harness assertions, source-pane OCR using the original screenshot, and Linux Canvas input row coordinates. No local executable validation ran.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.94 attempt 5 ran on exact source SHA c8db437492c50af201be4144de5389585f7be63d. Inventory, desktop build, plugin renderer, and loaded-plugin workflows passed. Quality failed only on Ubuntu before the local retrieval boundary. Rust CI failed the same two empty-vault Harness assertions on Ubuntu/macOS/Windows and Rust 1.95 because the tests did not open the collapsed Rename disclosure. The pinned Obsidian round-trip failed on Windows/macOS because OCR preprocessing erased low-contrast source-editor text; Linux passed source preview but clicked the Canvas text-card ID row 14 px too high. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-5-c8db437.json. No local executable validation ran.",
     "R2.8.93 attempt 2 accepted on exact source SHA 325ce3ab806f3e41564f12a8d61ef7562ffa45e9 after all seven required GitHub Actions workflows passed: Rust CI on Ubuntu/macOS/Windows and Rust 1.95, plus the pinned Obsidian 1.14.4 round-trip on Ubuntu/Windows/macOS. Exact run/job IDs, artifact IDs, and archive digests are in evidence/r2.8.93-attempt-2-325ce3a.json. Attempt 1's Ubuntu rustfmt-only failure remains in evidence/r2.8.93-attempt-1-392014b.json. Native UI and reference-app create-note behavior continue as R2.8.94; C06/C06.1 remain pending. No local tests, builds, formatters, or application launches were run for the accepted attempt.",
     "R2.8.92 accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven required GitHub Actions workflows passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; Obsidian 1.14.4 vault round-trip passed on Linux, macOS, and Windows. Attempt 1 failed only Ubuntu formatting and is retained in evidence/r2.8.92-attempt-1-e5ee89a.json; accepted attempt 2 evidence is evidence/r2.8.92-attempt-2-1a025db.json. C06/C06.1 and native note-creation UI remain pending. No local executable validation was run.",
     "R2.8.92 attempt 1 ran on exact source SHA e5ee89a48f50e43026953e6361bb7312b58b16fa. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Ubuntu Rust CI failed only formatting at crates/doc/src/canvas.rs:404 after workspace tests passed; macOS and Windows Rust jobs passed, while MSRV and the three vault round-trip jobs were still running when captured. Evidence is in evidence/r2.8.92-attempt-1-e5ee89a.json. The exact CI-requested formatting layout is applied in the working tree for the correction push. This attempt is not accepted. No local executable validation was run.",
@@ -30815,12 +30816,28 @@
             "vault_roundtrip": 38184319989
           },
           "finding": "Five workflows passed on all required targets. Rust CI failed on Ubuntu, macOS, Windows, and Rust 1.95 with the same four note-inspection Harness selection tests: each retained README.md instead of the requested nested, Unicode, or invalid-UTF-8 path (102 passed, 4 failed). The Obsidian round-trip failed on Linux, macOS, and Windows because full-window OCR missed visible source text on macOS/Windows and read note as nate on Linux; no vault data mismatch was reported. Exact run/job IDs and artifact hashes are in the attempt evidence file. No local executable validation ran."
+        },
+        {
+          "attempt": 5,
+          "source_sha": "c8db437492c50af201be4144de5389585f7be63d",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.94-attempt-5-c8db437.json",
+          "workflow_runs": {
+            "inventory": 38185312405,
+            "quality": 38185312414,
+            "desktop_build": 38185312388,
+            "plugin_renderer": 38185312396,
+            "loaded_plugins": 38185312393,
+            "rust_ci": 38185312403,
+            "vault_roundtrip": 38185312394
+          },
+          "finding": "Four workflows passed: inventory, desktop build, renderer, and loaded plugin workflows. Quality failed on Ubuntu at the local retrieval boundary. Rust CI failed two empty-vault rename-label Harness assertions on all four targets. Round-trip Windows/macOS source OCR used an aggressively processed image that erased low-contrast editor text; Linux passed source preview and later clicked the Canvas Text card ID field above its input row. No vault mismatch was reported. No local executable validation ran."
         }
       ],
-      "implementation_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
-      "evidence": "evidence/r2.8.94-attempt-4-459ff4c.json",
+      "implementation_sha": "c8db437492c50af201be4144de5389585f7be63d",
+      "evidence": "evidence/r2.8.94-attempt-5-c8db437.json",
       "accepted_attempt": null,
-      "push_status": "Attempts 1-4 are not accepted. Attempt 4 at 459ff4c5279e9b7531b210a68b09896a4d416221 passed five workflows and failed Rust CI plus the Obsidian round-trip; see evidence/r2.8.94-attempt-4-459ff4c.json. A focused layout and source-pane OCR correction is in progress. An accidental non-executable git diff --check on the pending correction returned clean; no local tests, builds, formatters, or application launches were run."
+      "push_status": "Attempts 1-5 are not accepted. Attempt 5 at c8db437492c50af201be4144de5389585f7be63d passed four workflows and failed quality, Rust CI, and the Obsidian round-trip; see evidence/r2.8.94-attempt-5-c8db437.json. A focused correction is prepared for the two Harness assertions, original-screenshot source OCR, and Linux Canvas field coordinates. No local tests, builds, formatters, or application launches were run."
     }
   },
   "ci_preparation": {

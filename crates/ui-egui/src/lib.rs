@@ -6794,6 +6794,7 @@ mod tests {
         harness.get_by_label("Vault: Existing Empty Vault");
         harness.get_by_label("0 Markdown files found.");
         harness.get_by_label("This vault has no Markdown notes to inspect.");
+        open_rename_panel(&mut harness);
         harness.get_by_label("This vault has no Markdown notes to rename.");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_vault);
         assert_eq!(
@@ -8825,6 +8826,7 @@ mod tests {
         assert!(harness.state().rename_status.is_none());
         harness.get_by_label("0 Markdown files found.");
         harness.get_by_label("This vault has no Markdown notes to inspect.");
+        open_rename_panel(&mut harness);
         harness.get_by_label("This vault has no Markdown notes to rename.");
         harness.get_by_label("Note list refreshed: 0 Markdown files found.");
         assert_eq!(

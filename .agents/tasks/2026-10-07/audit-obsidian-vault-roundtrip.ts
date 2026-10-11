@@ -2338,17 +2338,19 @@ async function captureOpenObsidianScreenshot(
   return {pngPath, windowPngPath, ocrPngPath, ocrText, ...(windowsCapture ? {windowGeometry: windowsCapture.geometry} : {})};
 }
 
-async function withSourcePaneOcr<T extends {ocrPngPath: string}>(capture: T): Promise<T & {
+async function withSourcePaneOcr<T extends {ocrPngPath: string; windowPngPath: string}>(capture: T): Promise<T & {
   sourcePaneOcrText: string;
   sourcePaneLabelVisible: boolean;
   sourcePaneOcrCropPath: string | null;
+  sourcePaneOcrCropBounds: Record<string, unknown> | null;
 }> {
-  const sourcePane = await readSourcePaneOcr(capture.ocrPngPath);
+  const sourcePane = await readSourcePaneOcr(capture.windowPngPath, capture.ocrPngPath);
   return {
     ...capture,
     sourcePaneOcrText: sourcePane.text,
     sourcePaneLabelVisible: sourcePane.labelVisible,
     sourcePaneOcrCropPath: sourcePane.cropPath,
+    sourcePaneOcrCropBounds: sourcePane.cropBounds,
   };
 }
 
@@ -2386,23 +2388,100 @@ async function pngDimensions(path: string): Promise<{width: number; height: numb
   return {width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20)};
 }
 
-async function readSourcePaneOcr(ocrImagePath: string): Promise<{text: string; cropPath: string | null; labelVisible: boolean}> {
+async function readSourcePaneOcr(windowImagePath: string, ocrImagePath: string): Promise<{
+  text: string;
+  cropPath: string | null;
+  labelVisible: boolean;
+  cropBounds: Record<string, unknown> | null;
+}> {
   const tsv = runTesseractTsv(ocrImagePath);
   const sourceLabel = findOcrPhraseBounds(tsv, "Original Markdown source");
-  if (!sourceLabel) return {text: "", cropPath: null, labelVisible: false};
+  if (!sourceLabel) return {text: "", cropPath: null, labelVisible: false, cropBounds: null};
 
-  const dimensions = await pngDimensions(ocrImagePath);
-  const left = Math.max(0, sourceLabel.left - 12);
-  const top = Math.min(dimensions.height - 1, sourceLabel.top + sourceLabel.height + 6);
-  const previewLabel = findOcrPhraseBounds(tsv, "Markdown preview", top);
-  const fallbackBottom = Math.min(dimensions.height, top + 420);
-  const bottom = Math.max(top + 1, Math.min(fallbackBottom, previewLabel?.top ?? fallbackBottom));
-  const width = dimensions.width - left;
+  const windowDimensions = await pngDimensions(windowImagePath);
+  const ocrDimensions = await pngDimensions(ocrImagePath);
+  const scaleX = windowDimensions.width / ocrDimensions.width;
+  const scaleY = windowDimensions.height / ocrDimensions.height;
+  const sourceTop = sourceLabel.top + sourceLabel.height + 6;
+  const previewLabel = findOcrPhraseBounds(tsv, "Markdown preview", sourceTop);
+  const cropBounds: Record<string, unknown> = {
+    source_label_bounds_ocr_image: sourceLabel,
+    markdown_preview_label_bounds_ocr_image: previewLabel,
+    window_image_dimensions: windowDimensions,
+    ocr_image_dimensions: ocrDimensions,
+    ocr_to_window_scale: {x: scaleX, y: scaleY},
+    crop_source: "original_window_screenshot",
+  };
+  const sourceLabelValid = sourceLabel.left >= 0
+    && sourceLabel.top >= 0
+    && sourceLabel.width > 0
+    && sourceLabel.height > 0
+    && sourceLabel.left + sourceLabel.width <= ocrDimensions.width
+    && sourceLabel.top + sourceLabel.height <= ocrDimensions.height;
+  const previewLabelValid = Boolean(previewLabel
+    && previewLabel.left >= 0
+    && previewLabel.top >= 0
+    && previewLabel.width > 0
+    && previewLabel.height > 0
+    && previewLabel.left + previewLabel.width <= ocrDimensions.width
+    && previewLabel.top + previewLabel.height <= ocrDimensions.height
+    && previewLabel.top > sourceTop);
+  if (!sourceLabelValid || !previewLabelValid || !Number.isFinite(scaleX) || !Number.isFinite(scaleY) || scaleX <= 0 || scaleY <= 0) {
+    return {
+      text: "",
+      cropPath: null,
+      labelVisible: true,
+      cropBounds: {
+        ...cropBounds,
+        crop_error: !sourceLabelValid
+          ? "source_label_bounds_invalid"
+          : !previewLabelValid
+            ? "markdown_preview_label_missing_or_out_of_order"
+            : "invalid_image_scale",
+      },
+    };
+  }
+  const left = Math.max(0, Math.min(windowDimensions.width - 1, Math.round((sourceLabel.left - 12) * scaleX)));
+  const top = Math.max(0, Math.min(windowDimensions.height - 1, Math.round(sourceTop * scaleY)));
+  const bottom = Math.min(windowDimensions.height, Math.round((previewLabel?.top ?? sourceTop) * scaleY));
+  const width = windowDimensions.width - left;
   const height = bottom - top;
-  const cropPath = join(reportDirectory, `openobsidian-source-pane-ocr-${Date.now()}.png`);
+  if (left < 0 || top < 0 || width <= 0 || height <= 0
+    || left + width > windowDimensions.width || top + height > windowDimensions.height) {
+    return {
+      text: "",
+      cropPath: null,
+      labelVisible: true,
+      cropBounds: {
+        ...cropBounds,
+        crop_error: "window_crop_rectangle_invalid",
+        window_crop_rectangle: {left, top, width, height},
+      },
+    };
+  }
+  const cropPath = join(reportDirectory, "openobsidian-source-pane-ocr-" + Date.now() + ".png");
   const imageMagick = process.platform === "linux" ? "convert" : "magick";
-  execFileSync(imageMagick, [ocrImagePath, "-crop", `${width}x${height}+${left}+${top}`, "+repage", cropPath], {stdio: "ignore"});
-  return {text: runTesseractOcr(cropPath, ["6"]), cropPath, labelVisible: true};
+  const cropGeometry = width + "x" + height + "+" + left + "+" + top;
+  execFileSync(imageMagick, [
+    windowImagePath,
+    "-crop",
+    cropGeometry,
+    "+repage",
+    "-colorspace",
+    "Gray",
+    "-resize",
+    "300%",
+    cropPath,
+  ], {stdio: "ignore"});
+  return {
+    text: runTesseractOcr(cropPath, ["6"]),
+    cropPath,
+    labelVisible: true,
+    cropBounds: {
+      ...cropBounds,
+      window_crop_rectangle: {left, top, width, height},
+    },
+  };
 }
 
 function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: number; width: number; height: number} {
@@ -2863,6 +2942,7 @@ async function runReferenceSourcePreview(
     previewReport.preview_source_pane_crop = capture.sourcePaneOcrCropPath
       ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
       : null;
+    previewReport.preview_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
     return capture;
   }, (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, "Original bytes stay untouched", 1), 30_000);
   previewReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
@@ -3345,6 +3425,7 @@ async function runReferenceExternalNoteRefresh(
     refreshReport.preview_source_pane_crop = capture.sourcePaneOcrCropPath
       ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
       : null;
+    refreshReport.preview_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
     return capture;
   }, (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalRefreshMarker, 1), 30_000);
   refreshReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
@@ -3491,6 +3572,7 @@ async function runReferenceExternalNoteRefresh(
       editReport.refresh_source_pane_crop = capture.sourcePaneOcrCropPath
         ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
         : null;
+      editReport.refresh_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
       return capture;
     },
     (capture) => (
@@ -3538,6 +3620,7 @@ async function runReferenceExternalNoteRefresh(
       editReport.updated_preview_source_pane_crop = capture.sourcePaneOcrCropPath
         ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
         : null;
+      editReport.updated_preview_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
       return capture;
     },
     (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalEditedMarker, 1)
@@ -4109,6 +4192,7 @@ async function runReferenceExternalNoteRename(
       renameReport.preview_source_pane_crop = capture.sourcePaneOcrCropPath
         ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
         : null;
+      renameReport.preview_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
       return capture;
     },
     (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalEditedMarker, 1),
@@ -4248,6 +4332,7 @@ async function runReferenceExternalNoteRename(
       renameReport.refresh_source_pane_crop = capture.sourcePaneOcrCropPath
         ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
         : null;
+      renameReport.refresh_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
       return capture;
     },
     (capture) => (
@@ -4289,6 +4374,7 @@ async function runReferenceExternalNoteRename(
       renameReport.renamed_preview_source_pane_crop = capture.sourcePaneOcrCropPath
         ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
         : null;
+      renameReport.renamed_preview_source_pane_crop_bounds = capture.sourcePaneOcrCropBounds;
       return capture;
     },
     (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalEditedMarker, 1),
@@ -4981,9 +5067,9 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   value: string,
 ): Promise<string> {
   const calibratedFields: Record<string, {x: number; y: number}> = {
-    "Canvas path": {x: 201, y: 146},
-    "Text card ID": {x: 460, y: 146},
-    "New Markdown path": {x: 123, y: 168},
+    "Canvas path": {x: 201, y: 160},
+    "Text card ID": {x: 460, y: 160},
+    "New Markdown path": {x: 123, y: 182},
   };
   const calibratedPoint = calibratedFields[controlName];
   if (!calibratedPoint) throw new Error(`No Linux Canvas input position is configured for ${controlName}`);
@@ -5006,7 +5092,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     throw new Error(`Linux Canvas field coordinates require the captured 800x600 CI layout: window=${windowWidth}x${windowHeight}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
   }
 
-  // These centers were measured from the 800x600 expanded-form screenshot; keep clicks inside each edit field.
+  // These centers are on the input rows in the current 800x600 expanded-form screenshot.
   const screenshotX = Math.round(calibratedPoint.x * screenshotSize.width / 800);
   const screenshotY = Math.round(calibratedPoint.y * screenshotSize.height / 600);
   const clickX = Math.round(screenshotX * windowWidth / screenshotSize.width);

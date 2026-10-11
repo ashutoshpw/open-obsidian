@@ -4562,3 +4562,27 @@ During review of this correction, a second non-executable `git diff --check`
 was accidentally included in a source-inspection command and returned clean.
 It executed no application or test code; all executable validation remains
 reserved for GitHub Actions.
+
+## 2026-10-12 — R2.8.94 attempt 5 CI findings and correction
+
+Attempt 5 ran on exact source SHA
+c8db437492c50af201be4144de5389585f7be63d. Inventory, desktop build, plugin
+renderer, and loaded-plugin workflows passed. Quality failed on Ubuntu when
+the Electron vault audit reached the completed-index message but did not reach
+the local retrieval boundary. Rust CI failed on Ubuntu, macOS, Windows, and
+Rust 1.95 with the same two empty-vault Harness failures: the tests queried the
+rename-empty-state label before opening the collapsed Rename section. Exact
+run/job IDs and artifact digests are in
+[evidence/r2.8.94-attempt-5-c8db437.json](evidence/r2.8.94-attempt-5-c8db437.json).
+
+The Obsidian round-trip failed on Windows and macOS because the prepared OCR
+image erased the low-contrast source-editor text before cropping; the raw
+screenshots show the marker, and no vault mismatch was reported. Linux passed
+the source-preview check, then its Canvas text-card ID keyboard fallback clicked
+the instruction banner at y=146 instead of the input row around y=160. The
+correction crops the original window screenshot using scaled Tesseract bounds
+and records the crop geometry, shifts all Linux Canvas input centers to the
+visible input rows, and opens the Rename section in the two empty-vault tests.
+The correction is prepared for a new focused commit and exact-SHA GitHub
+Actions run. No local tests, builds, formatters, validators, or applications
+were run.
