@@ -1,0 +1,659 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T04:35:55Z",
+  "milestone": "R2.8.73 / C01.2-41",
+  "source_sha": "e78409a4c721e63c866ee6b7fd4411d96c277ded",
+  "source_commit": "[rust R2.8.73] Recheck image resolution after vault refresh",
+  "cargo_lock_sha256": "f143845d873b4b530e4661a43baca149bec9c8deea627285620b5431252c06dc",
+  "toolchain": {
+    "rust": "1.99.0 (b940084d7 2026-09-28)",
+    "bun": "1.4.2"
+  },
+  "required_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38111616204,
+      "jobs": [
+        {
+          "name": "inventory",
+          "job_id": 114388189368,
+          "conclusion": "success"
+        }
+      ],
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616204",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38111616192,
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114388189567,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114388189705,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114388189724,
+          "conclusion": "success"
+        }
+      ],
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616192",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38111616161,
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114388189402,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114388189520,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114388189568,
+          "conclusion": "success"
+        }
+      ],
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616161",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38111616188,
+      "jobs": [
+        {
+          "name": "macos-latest",
+          "job_id": 114388189614,
+          "conclusion": "success"
+        },
+        {
+          "name": "windows-latest",
+          "job_id": 114388189697,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114388189725,
+          "conclusion": "success"
+        }
+      ],
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616188",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38111616221,
+      "jobs": [
+        {
+          "name": "windows-latest",
+          "job_id": 114388189585,
+          "conclusion": "success"
+        },
+        {
+          "name": "ubuntu-latest",
+          "job_id": 114388189686,
+          "conclusion": "success"
+        },
+        {
+          "name": "macos-latest",
+          "job_id": 114388189749,
+          "conclusion": "success"
+        }
+      ],
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616221",
+      "conclusion": "success"
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38111616205,
+      "jobs": [
+        {
+          "name": "rust (macos-latest)",
+          "job_id": 114388189374,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (windows-latest)",
+          "job_id": 114388189554,
+          "conclusion": "success"
+        },
+        {
+          "name": "rust (ubuntu-latest)",
+          "job_id": 114388189633,
+          "conclusion": "success"
+        }
+      ],
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616205",
+      "conclusion": "success"
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38111616193,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38111616193",
+      "conclusion": "success",
+      "reference_application_version": "Obsidian 1.14.4",
+      "jobs": [
+        {
+          "os": "Linux",
+          "job_id": 114388189414,
+          "artifact_id": 11692076957,
+          "artifact_name": "obsidian-vault-roundtrip-Linux-e78409a4c721e63c866ee6b7fd4411d96c277ded",
+          "artifact_size_in_bytes": 7702415,
+          "artifact_digest": "sha256:fe085c3403748e7fa5da2102f3e674228cc20c3c718e565a413830c88a7b3c28",
+          "conclusion": "success",
+          "runner": {
+            "image": "ubuntu24",
+            "version": "20261004.327.1",
+            "architecture": "x64"
+          },
+          "reference_application": {
+            "product": "Obsidian Desktop",
+            "version": "1.14.4",
+            "asset": "Obsidian-1.14.4.AppImage",
+            "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+            "appimage_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+            "source_platform": "Linux x86_64",
+            "runner_architecture": "x64",
+            "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+          },
+          "fixture_note": {
+            "path": "Untitled.md",
+            "bytes": 99,
+            "sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078"
+          },
+          "attachment": {
+            "path": "Assets/roundtrip image.png",
+            "bytes": 1371546,
+            "sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6"
+          },
+          "selection": {
+            "strategy": "previous_button",
+            "exact_path": "Untitled.md",
+            "confirmed": true
+          },
+          "resolution": {
+            "status": "passed",
+            "link_diagnostic": "OpenObsidian CI link resolution: source=Untitled.md, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false",
+            "embed_diagnostic": "OpenObsidian CI note embed: source=Untitled.md, index=0, raw=\"![[Assets/roundtrip image.png]]\", status=Resolved, target=Assets/roundtrip image.png, disposition=image, revision_sha256=abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6, dimensions=1254x1254, decoded_rgba_bytes=6290064, alt=\"Vault image attachment\"",
+            "decoded_image": {
+              "width": 1254,
+              "height": 1254,
+              "rgba_bytes": 6290064,
+              "revision_sha256_matches_attachment": true,
+              "alt_text": "Vault image attachment"
+            },
+            "link_status_visible": true,
+            "resolved_count_visible": true,
+            "image_attachment_visible": true,
+            "result_screenshot": "openobsidian-resolved-image-embed.png",
+            "result_window_screenshot": "openobsidian-resolved-image-embed-window.png"
+          },
+          "picker_cancellation": {
+            "picker_open_verified": true,
+            "picker_closed_verified": true,
+            "vault_unchanged": true,
+            "app_data_unchanged": true,
+            "app_data_policy_passed": true,
+            "app_data_changed_paths": []
+          },
+          "snapshot_policy": {
+            "vault_unchanged_after_resolution": true,
+            "vault_changed_paths": [],
+            "app_data_policy_passed": true,
+            "app_data_changed_paths": []
+          },
+          "obsidian_reopen": {
+            "status": "passed",
+            "note_path": "Untitled.md",
+            "attachment_path": "Assets/roundtrip image.png",
+            "workspace_state_changes": []
+          }
+        },
+        {
+          "os": "macOS",
+          "job_id": 114388189651,
+          "artifact_id": 11692006863,
+          "artifact_name": "obsidian-vault-roundtrip-macOS-e78409a4c721e63c866ee6b7fd4411d96c277ded",
+          "artifact_size_in_bytes": 7767855,
+          "artifact_digest": "sha256:bc7e4c18ff4e6121ee6261b7798a1b5d0647ea0a1f5bebdec6774cf03ebd8018",
+          "conclusion": "success",
+          "runner": {
+            "image": "macos26",
+            "version": "20260907.0351.1",
+            "architecture": "arm64"
+          },
+          "reference_application": {
+            "product": "Obsidian Desktop",
+            "version": "1.14.4",
+            "asset": "Obsidian-1.14.4.dmg",
+            "sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+            "source_platform": "official macOS desktop build",
+            "runner_architecture": "arm64",
+            "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+          },
+          "fixture_note": {
+            "path": "Untitled.md",
+            "bytes": 99,
+            "sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078"
+          },
+          "attachment": {
+            "path": "Assets/roundtrip image.png",
+            "bytes": 1371546,
+            "sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6"
+          },
+          "selection": {
+            "strategy": "previous_button",
+            "exact_path": "Untitled.md",
+            "confirmed": true
+          },
+          "resolution": {
+            "status": "passed",
+            "link_diagnostic": "OpenObsidian CI link resolution: source=Untitled.md, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false",
+            "embed_diagnostic": "OpenObsidian CI note embed: source=Untitled.md, index=0, raw=\"![[Assets/roundtrip image.png]]\", status=Resolved, target=Assets/roundtrip image.png, disposition=image, revision_sha256=abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6, dimensions=1254x1254, decoded_rgba_bytes=6290064, alt=\"Vault image attachment\"",
+            "decoded_image": {
+              "width": 1254,
+              "height": 1254,
+              "rgba_bytes": 6290064,
+              "revision_sha256_matches_attachment": true,
+              "alt_text": "Vault image attachment"
+            },
+            "link_status_visible": true,
+            "resolved_count_visible": true,
+            "image_attachment_visible": true,
+            "result_screenshot": "openobsidian-resolved-image-embed.png",
+            "result_window_screenshot": "openobsidian-resolved-image-embed-window.png"
+          },
+          "picker_cancellation": {
+            "picker_open_verified": true,
+            "picker_closed_verified": true,
+            "vault_unchanged": true,
+            "app_data_unchanged": false,
+            "app_data_policy_passed": true,
+            "app_data_changed_paths": [
+              "app.ron"
+            ]
+          },
+          "snapshot_policy": {
+            "vault_unchanged_after_resolution": true,
+            "vault_changed_paths": [],
+            "app_data_policy_passed": true,
+            "app_data_changed_paths": [
+              "app.ron"
+            ]
+          },
+          "obsidian_reopen": {
+            "status": "passed",
+            "note_path": "Untitled.md",
+            "attachment_path": "Assets/roundtrip image.png",
+            "workspace_state_changes": []
+          }
+        },
+        {
+          "os": "Windows",
+          "job_id": 114388189508,
+          "artifact_id": 11690814982,
+          "artifact_name": "obsidian-vault-roundtrip-Windows-e78409a4c721e63c866ee6b7fd4411d96c277ded",
+          "artifact_size_in_bytes": 8042074,
+          "artifact_digest": "sha256:9f928fa2647b5315698923a83adf05adb86ab178a8e1968fb26cd709928ecea9",
+          "conclusion": "success",
+          "runner": {
+            "image": "win25-vs2026",
+            "version": "20260925.250.1",
+            "architecture": "x64"
+          },
+          "reference_application": {
+            "product": "Obsidian Desktop",
+            "version": "1.14.4",
+            "asset": "Obsidian-1.14.4.exe",
+            "sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+            "source_platform": "Windows x86_64",
+            "runner_architecture": "x64",
+            "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+          },
+          "fixture_note": {
+            "path": "Untitled.md",
+            "bytes": 99,
+            "sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078"
+          },
+          "attachment": {
+            "path": "Assets/roundtrip image.png",
+            "bytes": 1371546,
+            "sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6"
+          },
+          "selection": {
+            "strategy": "windows_ui_automation_exact_path_from_expanded_selector",
+            "exact_path": "Untitled.md",
+            "confirmed": true
+          },
+          "resolution": {
+            "status": "passed",
+            "link_diagnostic": "OpenObsidian CI link resolution: source=Untitled.md, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false",
+            "embed_diagnostic": "OpenObsidian CI note embed: source=Untitled.md, index=0, raw=\"![[Assets/roundtrip image.png]]\", status=Resolved, target=Assets/roundtrip image.png, disposition=image, revision_sha256=abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6, dimensions=1254x1254, decoded_rgba_bytes=6290064, alt=\"Vault image attachment\"",
+            "decoded_image": {
+              "width": 1254,
+              "height": 1254,
+              "rgba_bytes": 6290064,
+              "revision_sha256_matches_attachment": true,
+              "alt_text": "Vault image attachment"
+            },
+            "link_status_visible": true,
+            "resolved_count_visible": true,
+            "image_attachment_visible": true,
+            "result_screenshot": "openobsidian-resolved-image-embed.png",
+            "result_window_screenshot": "openobsidian-resolved-image-embed-window.png"
+          },
+          "picker_cancellation": {
+            "picker_open_verified": true,
+            "picker_closed_verified": true,
+            "vault_unchanged": true,
+            "app_data_unchanged": true,
+            "app_data_policy_passed": true,
+            "app_data_changed_paths": []
+          },
+          "snapshot_policy": {
+            "vault_unchanged_after_resolution": true,
+            "vault_changed_paths": [],
+            "app_data_policy_passed": true,
+            "app_data_changed_paths": []
+          },
+          "obsidian_reopen": {
+            "status": "passed",
+            "note_path": "Untitled.md",
+            "attachment_path": "Assets/roundtrip image.png",
+            "workspace_state_changes": []
+          }
+        }
+      ]
+    }
+  ],
+  "parallel_step_groups": {
+    "status": "The existing native GitHub Actions parallel groups passed in the exact-SHA Rust CI, quality, desktop-build, and Obsidian round-trip runs.",
+    "workflow_paths": [
+      ".github/workflows/rust.yml",
+      ".github/workflows/quality.yml",
+      ".github/workflows/desktop-build.yml",
+      ".github/workflows/obsidian-vault-roundtrip.yml",
+      ".github/workflows/compatibility-pins.yml",
+      ".github/workflows/obsidian-reference-feasibility.yml"
+    ],
+    "official_changelog": "https://github.blog/changelog/2026-06-25-actions-steps-can-now-be-run-in-parallel/",
+    "syntax_reference": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsparallel"
+  },
+  "acceptance": {
+    "exact_authored_note_selected_on_all_os": "Untitled.md",
+    "one_wiki_image_embed_resolved_to_exact_attachment_on_all_os": true,
+    "attachment_revision_sha256_matches_snapshot_on_all_os": true,
+    "decoded_dimensions": "1254x1254",
+    "decoded_rgba_bytes": 6290064,
+    "accessible_alt_text": "Vault image attachment",
+    "resolved_count_and_image_visible_in_native_window_on_all_os": true,
+    "vault_unchanged_after_resolution_on_all_os": true,
+    "app_data_policy_passed_on_all_os": true,
+    "picker_cancelled_and_vault_preserved_on_all_os": true,
+    "obsidian_reopen_passed_on_all_os": true,
+    "all_seven_workflows_passed_on_exact_sha": true,
+    "local_executable_validation": "none"
+  },
+  "roundtrip_platforms": [
+    {
+      "os": "Linux",
+      "job_id": 114388189414,
+      "artifact_id": 11692076957,
+      "artifact_name": "obsidian-vault-roundtrip-Linux-e78409a4c721e63c866ee6b7fd4411d96c277ded",
+      "artifact_size_in_bytes": 7702415,
+      "artifact_digest": "sha256:fe085c3403748e7fa5da2102f3e674228cc20c3c718e565a413830c88a7b3c28",
+      "conclusion": "success",
+      "runner": {
+        "image": "ubuntu24",
+        "version": "20261004.327.1",
+        "architecture": "x64"
+      },
+      "reference_application": {
+        "product": "Obsidian Desktop",
+        "version": "1.14.4",
+        "asset": "Obsidian-1.14.4.AppImage",
+        "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+        "appimage_sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa",
+        "source_platform": "Linux x86_64",
+        "runner_architecture": "x64",
+        "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+      },
+      "fixture_note": {
+        "path": "Untitled.md",
+        "bytes": 99,
+        "sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078"
+      },
+      "attachment": {
+        "path": "Assets/roundtrip image.png",
+        "bytes": 1371546,
+        "sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6"
+      },
+      "selection": {
+        "strategy": "previous_button",
+        "exact_path": "Untitled.md",
+        "confirmed": true
+      },
+      "resolution": {
+        "status": "passed",
+        "link_diagnostic": "OpenObsidian CI link resolution: source=Untitled.md, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false",
+        "embed_diagnostic": "OpenObsidian CI note embed: source=Untitled.md, index=0, raw=\"![[Assets/roundtrip image.png]]\", status=Resolved, target=Assets/roundtrip image.png, disposition=image, revision_sha256=abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6, dimensions=1254x1254, decoded_rgba_bytes=6290064, alt=\"Vault image attachment\"",
+        "decoded_image": {
+          "width": 1254,
+          "height": 1254,
+          "rgba_bytes": 6290064,
+          "revision_sha256_matches_attachment": true,
+          "alt_text": "Vault image attachment"
+        },
+        "link_status_visible": true,
+        "resolved_count_visible": true,
+        "image_attachment_visible": true,
+        "result_screenshot": "openobsidian-resolved-image-embed.png",
+        "result_window_screenshot": "openobsidian-resolved-image-embed-window.png"
+      },
+      "picker_cancellation": {
+        "picker_open_verified": true,
+        "picker_closed_verified": true,
+        "vault_unchanged": true,
+        "app_data_unchanged": true,
+        "app_data_policy_passed": true,
+        "app_data_changed_paths": []
+      },
+      "snapshot_policy": {
+        "vault_unchanged_after_resolution": true,
+        "vault_changed_paths": [],
+        "app_data_policy_passed": true,
+        "app_data_changed_paths": []
+      },
+      "obsidian_reopen": {
+        "status": "passed",
+        "note_path": "Untitled.md",
+        "attachment_path": "Assets/roundtrip image.png",
+        "workspace_state_changes": []
+      }
+    },
+    {
+      "os": "macOS",
+      "job_id": 114388189651,
+      "artifact_id": 11692006863,
+      "artifact_name": "obsidian-vault-roundtrip-macOS-e78409a4c721e63c866ee6b7fd4411d96c277ded",
+      "artifact_size_in_bytes": 7767855,
+      "artifact_digest": "sha256:bc7e4c18ff4e6121ee6261b7798a1b5d0647ea0a1f5bebdec6774cf03ebd8018",
+      "conclusion": "success",
+      "runner": {
+        "image": "macos26",
+        "version": "20260907.0351.1",
+        "architecture": "arm64"
+      },
+      "reference_application": {
+        "product": "Obsidian Desktop",
+        "version": "1.14.4",
+        "asset": "Obsidian-1.14.4.dmg",
+        "sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70",
+        "source_platform": "official macOS desktop build",
+        "runner_architecture": "arm64",
+        "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+      },
+      "fixture_note": {
+        "path": "Untitled.md",
+        "bytes": 99,
+        "sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078"
+      },
+      "attachment": {
+        "path": "Assets/roundtrip image.png",
+        "bytes": 1371546,
+        "sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6"
+      },
+      "selection": {
+        "strategy": "previous_button",
+        "exact_path": "Untitled.md",
+        "confirmed": true
+      },
+      "resolution": {
+        "status": "passed",
+        "link_diagnostic": "OpenObsidian CI link resolution: source=Untitled.md, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false",
+        "embed_diagnostic": "OpenObsidian CI note embed: source=Untitled.md, index=0, raw=\"![[Assets/roundtrip image.png]]\", status=Resolved, target=Assets/roundtrip image.png, disposition=image, revision_sha256=abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6, dimensions=1254x1254, decoded_rgba_bytes=6290064, alt=\"Vault image attachment\"",
+        "decoded_image": {
+          "width": 1254,
+          "height": 1254,
+          "rgba_bytes": 6290064,
+          "revision_sha256_matches_attachment": true,
+          "alt_text": "Vault image attachment"
+        },
+        "link_status_visible": true,
+        "resolved_count_visible": true,
+        "image_attachment_visible": true,
+        "result_screenshot": "openobsidian-resolved-image-embed.png",
+        "result_window_screenshot": "openobsidian-resolved-image-embed-window.png"
+      },
+      "picker_cancellation": {
+        "picker_open_verified": true,
+        "picker_closed_verified": true,
+        "vault_unchanged": true,
+        "app_data_unchanged": false,
+        "app_data_policy_passed": true,
+        "app_data_changed_paths": [
+          "app.ron"
+        ]
+      },
+      "snapshot_policy": {
+        "vault_unchanged_after_resolution": true,
+        "vault_changed_paths": [],
+        "app_data_policy_passed": true,
+        "app_data_changed_paths": [
+          "app.ron"
+        ]
+      },
+      "obsidian_reopen": {
+        "status": "passed",
+        "note_path": "Untitled.md",
+        "attachment_path": "Assets/roundtrip image.png",
+        "workspace_state_changes": []
+      }
+    },
+    {
+      "os": "Windows",
+      "job_id": 114388189508,
+      "artifact_id": 11690814982,
+      "artifact_name": "obsidian-vault-roundtrip-Windows-e78409a4c721e63c866ee6b7fd4411d96c277ded",
+      "artifact_size_in_bytes": 8042074,
+      "artifact_digest": "sha256:9f928fa2647b5315698923a83adf05adb86ab178a8e1968fb26cd709928ecea9",
+      "conclusion": "success",
+      "runner": {
+        "image": "win25-vs2026",
+        "version": "20260925.250.1",
+        "architecture": "x64"
+      },
+      "reference_application": {
+        "product": "Obsidian Desktop",
+        "version": "1.14.4",
+        "asset": "Obsidian-1.14.4.exe",
+        "sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00",
+        "source_platform": "Windows x86_64",
+        "runner_architecture": "x64",
+        "fixture_authoring": "Open the generated vault in the pinned desktop app, create a new note with its editor action, and insert the seed text through the renderer keyboard input protocol."
+      },
+      "fixture_note": {
+        "path": "Untitled.md",
+        "bytes": 99,
+        "sha256": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078"
+      },
+      "attachment": {
+        "path": "Assets/roundtrip image.png",
+        "bytes": 1371546,
+        "sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6"
+      },
+      "selection": {
+        "strategy": "windows_ui_automation_exact_path_from_expanded_selector",
+        "exact_path": "Untitled.md",
+        "confirmed": true
+      },
+      "resolution": {
+        "status": "passed",
+        "link_diagnostic": "OpenObsidian CI link resolution: source=Untitled.md, total=1, resolved=1, unresolved=0, ambiguous=0, external=0, embed_roots=1, truncated=false",
+        "embed_diagnostic": "OpenObsidian CI note embed: source=Untitled.md, index=0, raw=\"![[Assets/roundtrip image.png]]\", status=Resolved, target=Assets/roundtrip image.png, disposition=image, revision_sha256=abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6, dimensions=1254x1254, decoded_rgba_bytes=6290064, alt=\"Vault image attachment\"",
+        "decoded_image": {
+          "width": 1254,
+          "height": 1254,
+          "rgba_bytes": 6290064,
+          "revision_sha256_matches_attachment": true,
+          "alt_text": "Vault image attachment"
+        },
+        "link_status_visible": true,
+        "resolved_count_visible": true,
+        "image_attachment_visible": true,
+        "result_screenshot": "openobsidian-resolved-image-embed.png",
+        "result_window_screenshot": "openobsidian-resolved-image-embed-window.png"
+      },
+      "picker_cancellation": {
+        "picker_open_verified": true,
+        "picker_closed_verified": true,
+        "vault_unchanged": true,
+        "app_data_unchanged": true,
+        "app_data_policy_passed": true,
+        "app_data_changed_paths": []
+      },
+      "snapshot_policy": {
+        "vault_unchanged_after_resolution": true,
+        "vault_changed_paths": [],
+        "app_data_policy_passed": true,
+        "app_data_changed_paths": []
+      },
+      "obsidian_reopen": {
+        "status": "passed",
+        "note_path": "Untitled.md",
+        "attachment_path": "Assets/roundtrip image.png",
+        "workspace_state_changes": []
+      }
+    }
+  ],
+  "superseded_attempts": [
+    {
+      "sha": "416b18149ab853d461f8c1bdeaddeea49df17c95",
+      "finding": "Linux and macOS passed. Windows UI Automation selected the exact note but failed when the harness invoked an unsupported button pattern to dismiss the selector.",
+      "correction": "Use Escape to dismiss the selector and verify its exact option is no longer visible."
+    },
+    {
+      "sha": "140b875bf0dd4a0afa2a2933b06dd076f4dfb6f0",
+      "finding": "Linux and macOS passed. Windows selected the exact note and resolved the embed, but periodic watcher reconciliation cleared the visible result before screenshot verification; Rust CI also had a transient Windows plugin-probe failure.",
+      "correction": "Wait for any refresh queued behind resolution to settle, then resolve again before capturing the result."
+    }
+  ],
+  "limitations": [
+    "This accepts only C01.2-41. Parent requirements C01 and C01.2 remain pending until the broader reference-app matrix is complete.",
+    "On macOS the only app-data differences observed during the accepted flows were app.ron eframe UI-state persistence covered by the existing policy; vault content and Obsidian workspace state remained unchanged.",
+    "The conditional retry after a queued periodic refresh was added but was not needed on this passing SHA.",
+    "No local tests, builds, formatter, linter, or application launches were used."
+  ]
+}
