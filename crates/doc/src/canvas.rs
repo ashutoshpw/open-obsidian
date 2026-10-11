@@ -44,9 +44,7 @@ impl CanvasDocument {
         let matching_indices = nodes
             .iter()
             .enumerate()
-            .filter(|(_, node)| {
-                node.get("id").and_then(Value::as_str) == Some(node_id)
-            })
+            .filter(|(_, node)| node.get("id").and_then(Value::as_str) == Some(node_id))
             .map(|(index, _)| index)
             .collect::<Vec<_>>();
         let node_index = match matching_indices.as_slice() {
@@ -288,7 +286,8 @@ mod tests {
             let round_tripped = parse_canvas(&encoded)
                 .unwrap_or_else(|error| panic!("{case_id}: edited document must parse: {error}"));
             assert_eq!(
-                round_tripped.as_json(), expected,
+                round_tripped.as_json(),
+                expected,
                 "{case_id}: edited semantic round trip"
             );
         }
@@ -307,9 +306,8 @@ mod tests {
             let case_id = case["id"]
                 .as_str()
                 .expect("each invalid C06 text-card edit must have an id");
-            let source = serde_json::to_vec(&case["before"]).unwrap_or_else(|error| {
-                panic!("{case_id}: before document must encode: {error}")
-            });
+            let source = serde_json::to_vec(&case["before"])
+                .unwrap_or_else(|error| panic!("{case_id}: before document must encode: {error}"));
             let mut document = parse_canvas(&source)
                 .unwrap_or_else(|error| panic!("{case_id}: before document must parse: {error}"));
             let original = document.clone();

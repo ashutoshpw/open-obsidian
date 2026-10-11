@@ -4152,3 +4152,15 @@ typed non-mutating failures for missing, duplicate, and non-text node IDs. The
 operation has no vault or filesystem path and cannot create a note. Full Canvas
 persistence, note extraction, revision-checked note creation, and the explicit
 UI action remain pending under C06/C06.1.
+
+R2.8.89 attempt 1 ran all seven required workflows on exact source SHA
+`992e92f161f884fcb5393322e428113bf3ef2245`. Inventory, quality, desktop build,
+plugin renderer, loaded-plugin workflows, and Obsidian 1.14.4 round-trip passed.
+Rust CI passed workspace tests on Ubuntu, all checks on macOS and Windows, and
+locked workspace tests on Rust 1.95; Ubuntu failed only its formatting check.
+All three Obsidian round-trip reports confirm `C06 Reference.canvas` reopened
+with its referenced block visible and its 741-byte source SHA unchanged after
+both shutdowns. Exact run/job IDs, artifact IDs and digests, and report hashes
+are in `evidence/r2.8.89-attempt-1-992e92f.json`. The exact three line-layout
+changes from GitHub's formatter log are applied; the correction awaits its
+source commit and fresh exact-SHA CI. No local executable validation was run.
