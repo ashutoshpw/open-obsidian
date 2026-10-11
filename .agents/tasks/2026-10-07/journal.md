@@ -3513,6 +3513,25 @@ root and CI-only tests. Keep portable selection unavailable, and keep C09 and
 C09.1 pending. No local tests, builds, formatters, validators, or application
 launch were run.
 
+## 2026-10-11T11:02:36Z — R2.8.80 tracker evidence passed; R2.8.81 source ready
+
+Tracker evidence checkpoint SHA `21c801a63fa64cc7c996d45064026ad4fb8a2b42`
+passed all six documentation-triggered workflows: inventory 38133653183,
+quality 38133653174, desktop build 38133653141, plugin renderer 38133653116,
+loaded-plugin workflows 38133653206, and Rust CI 38133653218. Rust CI passed
+on Rust 1.95, Ubuntu, macOS, and Windows. The path-filtered Obsidian round-trip
+did not trigger for this tracker-only commit; Linux, macOS, and Windows passed
+on implementation SHA `b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee`. Exact job IDs
+are in `evidence/r2.8.80-tracker-checkpoint-21c801a.json`.
+
+R2.8.81 adds a private injected app-data-root seam while keeping production
+root selection after vault resolution and canonicalization. Cross-platform
+tests check the hashed location, ownership markers, unchanged vault paths and
+bytes, and rejection of an in-vault root before creation. A parallel read-only
+review found no blocker. The source commit is pushed for exact-SHA validation;
+all seven required workflows are pending. C09 and C09.1 remain pending. No
+local tests, builds, formatters, validators, or application launch were run.
+
 ## 2026-10-11T10:53:45Z — R2.8.80 tracker checkpoint accepted; R2.8.81 prepared
 
 Tracker SHA `9a00847a683450aa667d74805f07c9ed98d1cb66` passed all six

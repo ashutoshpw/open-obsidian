@@ -152,6 +152,21 @@ pub fn vault_app_data_directory_under(
 
 /// Prepare the matching per-vault user-data directory and restrict it to the current user.
 pub fn prepare_vault_app_data(vault_root: &Path) -> Result<PathBuf, UserDataError> {
+    prepare_vault_app_data_with_user_data_root(vault_root, app_user_data_directory)
+}
+
+fn prepare_vault_app_data_under(
+    vault_root: &Path,
+    user_data_root: &Path,
+) -> Result<PathBuf, UserDataError> {
+    let user_data_root = user_data_root.to_path_buf();
+    prepare_vault_app_data_with_user_data_root(vault_root, move || Ok(user_data_root))
+}
+
+fn prepare_vault_app_data_with_user_data_root(
+    vault_root: &Path,
+    user_data_root: impl FnOnce() -> Result<PathBuf, UserDataError>,
+) -> Result<PathBuf, UserDataError> {
     let resolved_root = with_preparation_operation(
         "resolve selected vault path",
         resolve_legacy_path(vault_root),
@@ -162,7 +177,7 @@ pub fn prepare_vault_app_data(vault_root: &Path) -> Result<PathBuf, UserDataErro
     )?;
     let user_data_root = with_preparation_operation(
         "resolve current user's app-data directory",
-        app_user_data_directory(),
+        user_data_root(),
     )?;
 
     // Check the future location before creating any of its directories so selecting a
@@ -905,6 +920,108 @@ mod tests {
             directory,
             PathBuf::from(r"C:\AppData\OpenObsidian\vaults\21e3a7e70213929e99aaceb9")
         );
+    }
+
+    #[test]
+    fn prepares_private_app_data_outside_vault_with_injected_user_data_root() {
+        let temporary = unique_test_directory();
+        let vault_root = temporary.join("vault");
+        let notes_directory = vault_root.join("Notes");
+        fs::create_dir_all(&notes_directory).unwrap();
+        let note_path = notes_directory.join("Welcome.md");
+        let original_note = b"---\r\ntitle: Welcome\r\n---\r\nExisting vault bytes.\r\n";
+        fs::write(&note_path, original_note).unwrap();
+
+        let mut original_root_entries = fs::read_dir(&vault_root)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        original_root_entries.sort();
+        let mut original_note_entries = fs::read_dir(&notes_directory)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        original_note_entries.sort();
+
+        let user_data_root = temporary.join("xdg-config").join(PRODUCT_NAME);
+        let app_data = prepare_vault_app_data_under(&vault_root, &user_data_root).unwrap();
+        let canonical_vault = fs::canonicalize(&vault_root).unwrap();
+        let canonical_user_data_root = fs::canonicalize(&user_data_root).unwrap();
+
+        assert!(!app_data.starts_with(&canonical_vault));
+        assert!(app_data.starts_with(&canonical_user_data_root));
+        assert_eq!(
+            app_data,
+            vault_app_data_directory_under(&canonical_user_data_root, &vault_root).unwrap()
+        );
+        assert_eq!(
+            fs::read(canonical_user_data_root.join(APP_DATA_ROOT_MARKER)).unwrap(),
+            APP_DATA_ROOT_MARKER_CONTENT
+        );
+        assert_eq!(
+            fs::read(app_data.join(VAULT_DATA_MARKER)).unwrap(),
+            VAULT_DATA_MARKER_CONTENT
+        );
+        assert_eq!(fs::read(&note_path).unwrap(), original_note);
+        let mut actual_root_entries = fs::read_dir(&vault_root)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        actual_root_entries.sort();
+        assert_eq!(actual_root_entries, original_root_entries);
+        let mut actual_note_entries = fs::read_dir(&notes_directory)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        actual_note_entries.sort();
+        assert_eq!(actual_note_entries, original_note_entries);
+
+        fs::remove_dir_all(temporary).unwrap();
+    }
+
+    #[test]
+    fn rejects_in_vault_app_data_path_before_creating_anything() {
+        let temporary = unique_test_directory();
+        let vault_root = temporary.join("vault");
+        let notes_directory = vault_root.join("Notes");
+        fs::create_dir_all(&notes_directory).unwrap();
+        let note_path = notes_directory.join("Welcome.md");
+        let original_note = b"The existing vault must remain unchanged.\n";
+        fs::write(&note_path, original_note).unwrap();
+
+        let mut original_root_entries = fs::read_dir(&vault_root)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        original_root_entries.sort();
+        let mut original_note_entries = fs::read_dir(&notes_directory)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        original_note_entries.sort();
+
+        let user_data_root = vault_root.join(".obsidian").join(PRODUCT_NAME);
+        assert!(matches!(
+            prepare_vault_app_data_under(&vault_root, &user_data_root),
+            Err(UserDataError::DataDirectoryInsideVault)
+        ));
+        assert!(!user_data_root.exists());
+        assert!(!vault_root.join(".obsidian").exists());
+        assert_eq!(fs::read(&note_path).unwrap(), original_note);
+        let mut actual_root_entries = fs::read_dir(&vault_root)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        actual_root_entries.sort();
+        assert_eq!(actual_root_entries, original_root_entries);
+        let mut actual_note_entries = fs::read_dir(&notes_directory)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        actual_note_entries.sort();
+        assert_eq!(actual_note_entries, original_note_entries);
+
+        fs::remove_dir_all(temporary).unwrap();
     }
 
     #[cfg(unix)]

@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T10:53:45Z",
+  "updated_at": "2026-10-11T11:02:36Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "9a00847a683450aa667d74805f07c9ed98d1cb66",
+  "last_reconciled_head": "21c801a63fa64cc7c996d45064026ad4fb8a2b42",
   "current_milestone": "R2.8.81",
-  "next_action": "The R2.8.80 checkpoint on exact tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66 passed all six documentation workflows. Push this evidence checkpoint and wait for its exact-SHA documentation workflows; then push the prepared R2.8.81 source and tests for seven-workflow CI. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.80 source SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee passed all seven workflows, and tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66 passed all six documentation workflows. Exact tracker run/job IDs and the implementation round-trip reference are in evidence/r2.8.80-tracker-checkpoint-9a00847.json. This checkpoint evidence update is awaiting its own documentation CI. No local executable validation was run.",
+  "next_action": "The R2.8.80 tracker evidence checkpoint on exact SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation workflows. R2.8.81 source and tests are pushed with this tracker update; inspect all seven required workflows on the exact implementation SHA. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.80 implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee passed all seven workflows; tracker checkpoint SHAs 9a00847a683450aa667d74805f07c9ed98d1cb66 and 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation workflows. R2.8.81 source and tests are pushed with exact-SHA seven-workflow validation pending. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -300,9 +300,10 @@
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.74 / C01.2-42 passed on exact implementation SHA 79526587c3ed3ead47a0cc682baa4a8f92ecb26b. All seven required GitHub Actions workflows passed, with the quality workflow passing on same-SHA attempt 2 after a transient Ubuntu Electron retrieval-boundary timeout. Obsidian 1.14.4-authored image removal, fresh Unresolved/targetless/not_rendered diagnostics, unchanged note source, snapshots, and reopen passed on Linux, macOS, and Windows. Evidence: evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json. Parent C01/C01.2 remain pending; no local executable validation was used.",
     "R2.8.80 / C09 theme and snippet CSS asset inventory passed all seven required GitHub Actions workflows on exact source SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee, including Rust 1.95 and the Linux/macOS/Windows Obsidian round-trip. Evidence: evidence/r2.8.80-c09-style-inventory-b6f0bbb.json. C09 and C09.1 remain pending; no local executable validation was used.",
-    "R2.8.80 tracker checkpoint SHA 9a00847a683450aa667d74805f07c9ed98d1cb66 passed all six documentation-triggered workflows, including the Rust 1.95, Ubuntu, macOS, and Windows jobs. The path-filtered Obsidian round-trip remains covered by implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. Evidence: evidence/r2.8.80-tracker-checkpoint-9a00847.json."
+    "R2.8.80 tracker checkpoint SHA 9a00847a683450aa667d74805f07c9ed98d1cb66 passed all six documentation-triggered workflows, including the Rust 1.95, Ubuntu, macOS, and Windows jobs. The path-filtered Obsidian round-trip remains covered by implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. Evidence: evidence/r2.8.80-tracker-checkpoint-9a00847.json.",
+    "R2.8.80 tracker evidence checkpoint SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation-triggered workflows, including Rust 1.95 and Ubuntu/macOS/Windows Rust CI. The path-filtered Obsidian round-trip remains covered by implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee. Evidence: evidence/r2.8.80-tracker-checkpoint-21c801a.json."
   ],
-  "push_status": "R2.8.80 source SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee passed all seven workflows, and tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66 passed all six documentation workflows. Exact tracker run/job IDs and the implementation round-trip reference are in evidence/r2.8.80-tracker-checkpoint-9a00847.json. This checkpoint evidence update is awaiting its own documentation CI. No local executable validation was run.",
+  "push_status": "R2.8.80 implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee passed all seven workflows; tracker checkpoint SHAs 9a00847a683450aa667d74805f07c9ed98d1cb66 and 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation workflows. R2.8.81 source and tests are pushed with exact-SHA seven-workflow validation pending. No local executable validation was run.",
   "ci_results": [
     {
       "name": "inventory",
@@ -27265,15 +27266,15 @@
       "evidence": "evidence/r2.8.80-c09-style-inventory-b6f0bbb.json",
       "tracker_checkpoint_validation": {
         "status": "passed",
-        "tracker_sha": "9a00847a683450aa667d74805f07c9ed98d1cb66",
+        "tracker_sha": "21c801a63fa64cc7c996d45064026ad4fb8a2b42",
         "conclusion": "passed",
         "workflow_runs": {
-          "inventory": 38132934956,
-          "quality": 38132934911,
-          "desktop_build": 38132934909,
-          "plugin_renderer": 38132934942,
-          "loaded_plugin_workflows": 38132934924,
-          "rust_ci": 38132934912
+          "inventory": 38133653183,
+          "quality": 38133653174,
+          "desktop_build": 38133653141,
+          "plugin_renderer": 38133653116,
+          "loaded_plugin_workflows": 38133653206,
+          "rust_ci": 38133653218
         },
         "required_workflows": [
           "Rust migration inventory",
@@ -27283,11 +27284,13 @@
           "OpenObsidian loaded plugin workflows",
           "OpenObsidian Rust CI"
         ],
-        "evidence": "evidence/r2.8.80-tracker-checkpoint-9a00847.json",
-        "finding": "All six documentation-triggered workflows passed on exact tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66. The path-filtered Obsidian round-trip did not trigger; Linux, macOS and Windows passed on implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee.",
+        "evidence": "evidence/r2.8.80-tracker-checkpoint-21c801a.json",
+        "prior_tracker_sha": "9a00847a683450aa667d74805f07c9ed98d1cb66",
+        "prior_evidence": "evidence/r2.8.80-tracker-checkpoint-9a00847.json",
+        "finding": "All six documentation-triggered workflows passed on exact tracker SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42. The path-filtered Obsidian round-trip did not trigger; Linux, macOS and Windows passed on implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee.",
         "path_filtered_workflow": "Obsidian vault round-trip is covered on implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee and is not expected to trigger for the documentation-only tracker checkpoint."
       },
-      "next_action": "The R2.8.80 tracker checkpoint passed on exact tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66. Push the evidence checkpoint, wait for its documentation workflows, then continue with R2.8.81 as a separate app-metadata separation boundary slice in crates/platform. Keep C09 and C09.1 pending."
+      "next_action": "The R2.8.80 tracker evidence checkpoint passed on exact tracker SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42. R2.8.81 carries the app-metadata separation boundary slice in crates/platform; its source validation is pending on the exact pushed implementation SHA. Keep C09 and C09.1 pending."
     },
     "R2.8.81": {
       "status": "in_progress",
@@ -27311,7 +27314,7 @@
       ],
       "implementation_sha": null,
       "ci_attempts": [],
-      "next_action": "The R2.8.80 checkpoint passed on exact tracker SHA 9a00847a683450aa667d74805f07c9ed98d1cb66. After this tracker evidence update passes its documentation workflows, push the source and tests for fresh exact-SHA seven-workflow validation; keep C09/C09.1 pending."
+      "next_action": "All seven required workflows are pending on the exact R2.8.81 implementation SHA. Record a passing partial C09 app-metadata boundary result only after every required workflow passes; keep C09/C09.1 pending."
     }
   },
   "ci_preparation": {
