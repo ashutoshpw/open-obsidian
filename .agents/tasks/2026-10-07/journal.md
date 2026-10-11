@@ -3574,3 +3574,23 @@ checks passed. These failures do not implicate the app-data change; the next
 exact-SHA run must pass all seven workflows before this partial C09 slice is
 accepted. C09 and C09.1 remain pending. No local tests, builds, formatters,
 validators, or application launches were run.
+
+## 2026-10-11T11:27:57Z — R2.8.81 accepted on exact source SHA
+
+Corrected source SHA `fb5105853f7e7a34ea64acc5c095e5358e44791e` passed all seven
+required GitHub Actions workflows. Rust CI passed on Ubuntu, macOS, Windows,
+and the Rust 1.95 MSRV. Quality, inventory, desktop build, plugin renderer,
+loaded-plugin workflows, and the Linux/macOS/Windows Obsidian round-trip also
+passed. Exact run/job IDs and round-trip artifact metadata are recorded in
+`evidence/r2.8.81-c09-app-data-separation-fb51058.json`; the rejected first
+attempt is retained in `evidence/r2.8.81-attempt-1-64fdca0.json`.
+
+R2.8.81 is accepted as a partial C09 app-metadata boundary slice. The test-only
+annotation fixed the Clippy dead-code issue without changing production path
+selection. The initial Electron retrieval timeout and Linux/Windows UI
+automation failures did not reproduce on retry; all round-trip reports show
+the app-data root outside the vault and no unintended app-data changes. Parent
+C09 and C09.1 remain pending. After the tracker checkpoint passes, the next
+bounded candidate is R2.8.82: canonical theme identity with read-only CSS
+safety analysis. No local tests, builds, formatters, validators, or application
+launches were run.

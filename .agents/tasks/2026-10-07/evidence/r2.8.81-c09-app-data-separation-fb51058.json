@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.81 / C09 app-data boundary test seam",
+  "tested_source_sha": "fb5105853f7e7a34ea64acc5c095e5358e44791e",
+  "recorded_at": "2026-10-11T11:26:34Z",
+  "conclusion": "accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38134923093,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923093",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 114456725679, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 38134923117,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923117",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114456726115, "conclusion": "success"},
+        "ubuntu": {"job_id": 114456726209, "conclusion": "success"},
+        "macos": {"job_id": 114456726250, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38134923113,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923113",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114456725942, "conclusion": "success"},
+        "windows": {"job_id": 114456726140, "conclusion": "success"},
+        "macos": {"job_id": 114456726214, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38134923166,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923166",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114456726145, "conclusion": "success"},
+        "macos": {"job_id": 114456726394, "conclusion": "success"},
+        "windows": {"job_id": 114456726458, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38134923171,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923171",
+      "conclusion": "success",
+      "jobs": {
+        "macos": {"job_id": 114456726110, "conclusion": "success"},
+        "ubuntu": {"job_id": 114456726201, "conclusion": "success"},
+        "windows": {"job_id": 114456726206, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38134923143,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923143",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114456726148, "conclusion": "success"},
+        "ubuntu": {"job_id": 114456726309, "conclusion": "success"},
+        "macos": {"job_id": 114456726314, "conclusion": "success"},
+        "minimum_supported_rust_1_95": {"job_id": 114456726392, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38134923134,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134923134",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114456726540, "conclusion": "success"},
+        "macos": {"job_id": 114456726720, "conclusion": "success"},
+        "ubuntu": {"job_id": 114456726856, "conclusion": "success"}
+      },
+      "artifacts": {
+        "windows": {
+          "artifact_id": 11700937167,
+          "name": "obsidian-vault-roundtrip-Windows-fb5105853f7e7a34ea64acc5c095e5358e44791e",
+          "size_bytes": 9791015,
+          "sha256_digest": "80b91477abe377cc635d9fba52e7c9d0780565038adbbbc52b0b5d2a03ec73b0"
+        },
+        "macos": {
+          "artifact_id": 11700408544,
+          "name": "obsidian-vault-roundtrip-macOS-fb5105853f7e7a34ea64acc5c095e5358e44791e",
+          "size_bytes": 9368413,
+          "sha256_digest": "62a2312e952ff550ec87f08afee88dddda2f3b3e698e6c14a2116454b9eb3e85"
+        },
+        "linux": {
+          "artifact_id": 11700263947,
+          "name": "obsidian-vault-roundtrip-Linux-fb5105853f7e7a34ea64acc5c095e5358e44791e",
+          "size_bytes": 8349014,
+          "sha256_digest": "d16c70e396d0f4310a2ce645718c75cb9d03b097e915f44cfdb93a598e7c0e92"
+        }
+      },
+      "findings": "All three reports passed. The Windows preview close was found and invoked; Linux found the zenity picker, cancelled it, and restored the vault UI. All reports confirm app-data remained outside the vault and Obsidian reopen passed."
+    }
+  },
+  "correction": "Scoped prepare_vault_app_data_under to test builds; the production wrapper and platform app-data root selection remain unchanged.",
+  "acceptance_status": "Accepted as a partial C09 app-metadata boundary slice on exact source SHA fb5105853f7e7a34ea64acc5c095e5358e44791e. All seven required GitHub Actions workflows passed, including Rust 1.95 and Linux/macOS/Windows Obsidian 1.14.4 round-trip. The first attempt's Clippy issue was corrected; its Ubuntu Electron retrieval timeout and Linux/Windows UI automation failures did not reproduce. Parent C09 remains pending for CSS/theme analysis and broader settings; C09.1 remains pending for mediated plugin writes. No local tests, builds, formatters, validators, or application launches were run."
+}
