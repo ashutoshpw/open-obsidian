@@ -4428,3 +4428,26 @@ then a separate explicit egui action creates a note from the reviewed text.
 It does not include Canvas editing or the reference-app create-note scenario;
 C06/C06.1 remain pending. No local tests, builds, formatters, validators, or
 application launches were run.
+
+## 2026-10-12 — R2.8.93 accepted; R2.8.94 drafts in review
+
+R2.8.93 attempt 2 was accepted on exact source SHA
+`325ce3ab806f3e41564f12a8d61ef7562ffa45e9`. All seven required GitHub Actions
+workflows passed, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95,
+and the pinned Obsidian 1.14.4 round-trip on Ubuntu, Windows, and macOS. Run
+and job IDs plus artifact IDs and archive digests are recorded in
+[`evidence/r2.8.93-attempt-2-325ce3a.json`](evidence/r2.8.93-attempt-2-325ce3a.json).
+Attempt 1's Ubuntu formatting-only failure remains documented in its original
+evidence file.
+
+R2.8.94's engine preview and explicit egui create action are drafted in an
+isolated worktree. Review found and fixed the vault-switch busy-state race and
+two invalid non-ASCII Rust byte-string literals in its Harness coverage. The
+separate pinned Obsidian create-note round-trip harness is also drafted and
+awaiting adversarial review. It checks no writes before confirmation, exact
+note bytes, unchanged Canvas bytes, and first-open/reopen visibility. Canvas
+editing and C06/C06.1 acceptance remain pending.
+
+No local tests, builds, formatters, or application launches were run. A
+non-executable `git diff --check` was inadvertently run while inspecting the
+isolated UI draft and returned clean; no further local validation is planned.
