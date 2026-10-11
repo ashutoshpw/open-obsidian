@@ -2312,9 +2312,11 @@ async function clickVisibleOpenObsidianControl(
       xFraction = (anchor.left + anchor.width + 55 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
-      const verticalControlOffset = controlName === "Close source preview"
-        ? anchorPhrase === "Note source preview" ? 70 : 28
-        : 18;
+      let verticalControlOffset = 18;
+      if (controlName === "Close source preview") {
+        verticalControlOffset = anchorPhrase === "Note source preview" ? 70 : 28;
+        if (process.platform === "darwin" && anchorPhrase === "Note source preview") verticalControlOffset = 86;
+      }
       xFraction = (anchor.left + 75 * scaleX) / ocrSize.width;
       yFraction = (anchor.top + verticalControlOffset * scaleY) / ocrSize.height;
     }
@@ -3490,7 +3492,7 @@ async function runReferenceImageAttachmentRemoval(
   removalReport.refreshed_markdown_count_visible = true;
   removalReport.refresh_screenshot = relative(reportDirectory, refreshed.pngPath);
   removalReport.refresh_window_screenshot = relative(reportDirectory, refreshed.windowPngPath);
-  const staleResolvedCountVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, "Resolved: 1");
+  const staleResolvedCountVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, "Resolved: 1", 1);
   const staleImageVisible = ocrTextContainsFuzzyPhrase(refreshed.ocrText, `Vault image: ${attachmentPath}`);
   removalReport.stale_resolved_count_visible_after_refresh = staleResolvedCountVisible;
   removalReport.stale_image_visible_after_refresh = staleImageVisible;

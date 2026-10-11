@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T05:02:06Z",
+  "updated_at": "2026-10-11T05:10:03Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "8d7ed2f0d657bf25defe06458101bd7d8234f619",
+  "last_reconciled_head": "3232359881d19960862279bfee0a78af38c014e3",
   "current_milestone": "R2.8.74",
-  "next_action": "Implement the C01.2-42 pinned Obsidian reference-app flow for external image-attachment removal, refresh, fresh unresolved rendering, and reopen; validate only in GitHub Actions and keep C01/C01.2 pending.",
+  "next_action": "Correct the C01.2-42 OCR false positive and macOS source-preview close fallback from GitHub Actions evidence, then rerun all seven required workflows on a fresh exact SHA.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -25131,7 +25131,31 @@
         "Separate read-only preview evidence from C02.1 render/edit acceptance and keep the requirement pending until the full criteria are evidenced.",
         "Choose and document the next scoped Rust implementation slice from the remaining C02.1 gaps."
       ],
-      "implementation_commits": [],
+      "implementation_commits": [
+        "3232359881d19960862279bfee0a78af38c014e3"
+      ],
+      "ci_attempts": [
+        {
+          "source_sha": "3232359881d19960862279bfee0a78af38c014e3",
+          "workflow_run_ids": {
+            "inventory": 38113516716,
+            "quality": 38113516707,
+            "desktop_build": 38113516711,
+            "plugin_renderer": 38113516710,
+            "loaded_plugin_workflows": 38113516720,
+            "rust_ci": 38113516715,
+            "obsidian_vault_roundtrip": 38113516719
+          },
+          "companion_workflows": "All six companion workflows passed, including every three-platform matrix.",
+          "roundtrip_platform_conclusions": {
+            "ubuntu-24.04": "failure: two-edit fuzzy OCR matched Resolve wiki links as Resolved: 1",
+            "windows-latest": "failure: same two-edit fuzzy OCR false positive; screenshot contained no resolved image output",
+            "macos-latest": "failure: OCR fallback click landed above Close source preview; the preceding external-note preview stayed open"
+          },
+          "evidence": "evidence/r2.8.74-c01.2-42-attempt-1-3232359.json",
+          "correction": "Limit stale-count fuzzy matching to one edit and move the macOS preview-close anchor click lower based on the screenshot."
+        }
+      ],
       "tracker_checkpoint": {
         "sha": "bb61601e1a8358c665cebd3cda544782c497a585",
         "inventory_run_id": 38092858681,
@@ -26031,7 +26055,7 @@
         "Obsidian vault round-trip acceptance"
       ],
       "evidence": "evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json",
-      "next_action": "Push the bounded harness change, inspect exact-SHA CI and cross-platform artifacts, then update acceptance and tracker evidence."
+      "next_action": "Push the focused CI-evidence corrections, inspect exact-SHA CI and all three round-trip artifacts, then update acceptance and tracker evidence."
     }
   },
   "ci_preparation": {

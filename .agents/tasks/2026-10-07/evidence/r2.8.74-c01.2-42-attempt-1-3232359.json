@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.74-C01.2-42-reference-app-image-attachment-removal",
+  "source_sha": "3232359881d19960862279bfee0a78af38c014e3",
+  "status": "failed",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38113516716,
+      "job_id": 114393752340,
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38113516707,
+      "jobs": {
+        "macos-latest": {"job_id": 114393752551, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114393752738, "conclusion": "success"},
+        "windows-latest": {"job_id": 114393752783, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38113516711,
+      "jobs": {
+        "windows-latest": {"job_id": 114393752400, "conclusion": "success"},
+        "macos-latest": {"job_id": 114393752523, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114393752652, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38113516710,
+      "jobs": {
+        "windows-latest": {"job_id": 114393752606, "conclusion": "success"},
+        "macos-latest": {"job_id": 114393752716, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114393752790, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38113516720,
+      "jobs": {
+        "macos-latest": {"job_id": 114393752653, "conclusion": "success"},
+        "windows-latest": {"job_id": 114393752775, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114393752828, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38113516715,
+      "jobs": {
+        "windows-latest": {"job_id": 114393752459, "conclusion": "success"},
+        "macos-latest": {"job_id": 114393752630, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114393752706, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38113516719,
+      "jobs": {
+        "ubuntu-24.04": {"job_id": 114393752404, "conclusion": "failure"},
+        "windows-latest": {"job_id": 114393752576, "conclusion": "failure"},
+        "macos-latest": {"job_id": 114393752589, "conclusion": "failure"}
+      }
+    }
+  },
+  "roundtrip_artifacts": {
+    "ubuntu-24.04": {
+      "artifact_id": 11692816616,
+      "artifact_digest": "sha256:976926d105690819eaf422fe922ae18769cc02cc845f914a4ae634328356f220",
+      "report_sha256": "47ed0d2f1a388ca6d565ddfde2fc6ca1919c0f0f16b2a4f6a41ab363edeb288b",
+      "report_path": "obsidian-vault-roundtrip-report.json",
+      "finding": "The stale-count guard reported a false positive. OCR showed the Resolve wiki links control label, not a resolved count; the two-edit fuzzy match confused Resolve wiki with Resolved: 1."
+    },
+    "windows-latest": {
+      "artifact_id": 11692925525,
+      "artifact_digest": "sha256:2ca0bdfa03ece67147d03cc449352b2e17ceb56425aa410a525870c56b663238",
+      "report_sha256": "c56ea2c8f6886c396fb2c75b717b7a744c5d649ae2e297e782e0719fa2651af3",
+      "report_path": "obsidian-vault-roundtrip-report.json",
+      "finding": "The stale-count guard reported the same false positive as Ubuntu; the captured window had no resolved count or image output."
+    },
+    "macos-latest": {
+      "artifact_id": 11691944980,
+      "artifact_digest": "sha256:c8fc75599d0338a6a62d7c838a078dd2d34ee5d4f187fbae26d8325c914ea0e4",
+      "report_sha256": "22c2a52d3ef91439f458cded440bdca9cb97d387f9d7e8f053be780424537002",
+      "report_path": "obsidian-vault-roundtrip-report.json",
+      "finding": "The prior external-note preview remained open because the macOS OCR fallback clicked at screen y=305, above the visible Close source preview control."
+    }
+  },
+  "correction": {
+    "stale_count_ocr": "Limit fuzzy matching for the short Resolved: 1 status label to one edit so Resolve wiki links cannot match it.",
+    "macos_preview_close": "Move the macOS Note source preview anchor fallback click from 70 to 86 points below the heading, matching the captured control position.",
+    "next_validation": "Push a focused correction and rerun all seven required workflows on its exact SHA."
+  },
+  "parallel_step_groups": "Existing GitHub Actions native parallel groups passed in all applicable workflow runs on this source SHA.",
+  "no_local_executable_validation": true
+}

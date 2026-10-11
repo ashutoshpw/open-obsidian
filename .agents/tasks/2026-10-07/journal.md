@@ -3057,3 +3057,18 @@ The linked GitHub Actions `parallel:` step feature is already implemented in
 the applicable workflows and has exact-SHA CI evidence; remaining single
 validation/setup flows have dependencies that do not admit a safe additional
 parallel group. No local executable validation was run.
+
+### R2.8.74 / C01.2-42 attempt 1 on `3232359`
+
+Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows,
+and Rust CI passed on exact SHA `3232359881d19960862279bfee0a78af38c014e3`.
+The focused Obsidian round-trip failed on all three platforms: Ubuntu and
+Windows exposed a false positive because two-edit OCR matching treated the
+`Resolve wiki links` control label as stale `Resolved: 1`; the Windows capture
+showed no resolved count or image. On macOS, the accessibility API could not
+find **Close source preview** and the OCR fallback click landed above the
+visible button. Artifact IDs, digests, report hashes, run/job IDs, and findings
+are in [evidence/r2.8.74-c01.2-42-attempt-1-3232359.json](evidence/r2.8.74-c01.2-42-attempt-1-3232359.json).
+The next commit narrows stale-count OCR matching and corrects the macOS click
+offset, then reruns all seven workflows on its exact SHA. No local executable
+validation was run.
