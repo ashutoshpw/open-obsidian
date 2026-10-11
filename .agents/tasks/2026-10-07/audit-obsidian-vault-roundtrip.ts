@@ -874,6 +874,12 @@ function ocrTokenMatches(token: string, expected: string): boolean {
   return previous[expected.length] <= 1;
 }
 
+function ocrTextContainsPhrase(text: string, phrase: string): boolean {
+  const normalizedText = text.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const normalizedPhrase = phrase.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return normalizedText.includes(normalizedPhrase);
+}
+
 function nativeFolderPickerVisibleInOcr(text: string): boolean {
   const compact = text.toLowerCase().replace(/[^a-z]/g, "");
   if (compact.includes("openanexistingvault") || compact.includes("openexistingvault")) return true;
@@ -1910,7 +1916,7 @@ async function cancelOpenObsidianNativePicker(
   };
 }
 
-async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess, prefix = "openobsidian-vault"): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string}> {
+async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess, prefix = "openobsidian-vault"): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string; windowGeometry?: string}> {
   await focusOpenObsidian(child);
   const pngPath = await captureDesktopScreenshot(`${prefix}.png`);
   const windowsCapture = process.platform === "win32"
@@ -1932,10 +1938,137 @@ async function captureOpenObsidianScreenshot(windowId: string, child: ChildProce
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
   const pageSegmentationModes = process.platform === "darwin" || process.platform === "win32" ? ["11", "6"] : ["6"];
   const ocrText = pageSegmentationModes.map((mode) => execFileSync(tesseract, [ocrPngPath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
-  return {pngPath, windowPngPath, ocrPngPath, ocrText};
+  return {pngPath, windowPngPath, ocrPngPath, ocrText, ...(windowsCapture ? {windowGeometry: windowsCapture.geometry} : {})};
 }
 
-async function invokeNativeAccessibleControl(child: ChildProcess, controlName: string): Promise<string> {
+type OcrWordBounds = {text: string; left: number; top: number; width: number; height: number};
+
+function findOcrPhraseBounds(tsv: string, phrase: string): OcrWordBounds | null {
+  const expected = phrase.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const words: OcrWordBounds[] = [];
+  for (const line of tsv.split(/\r?\n/).slice(1)) {
+    const columns = line.split("\t");
+    if (columns[0] !== "5" || columns.length < 12) continue;
+    const text = (columns[11] ?? "").trim();
+    if (!text) continue;
+    const [left, top, width, height] = columns.slice(6, 10).map(Number);
+    if (![left, top, width, height].every(Number.isFinite)) continue;
+    words.push({text, left, top, width, height});
+  }
+  const normalized = words.map((word) => word.text.toLowerCase().replace(/[^a-z0-9]/g, ""));
+  for (let start = 0; expected.length > 0 && start + expected.length <= words.length; start += 1) {
+    if (!expected.every((token, offset) => ocrTokenMatches(normalized[start + offset] ?? "", token))) continue;
+    const match = words.slice(start, start + expected.length);
+    const left = Math.min(...match.map((word) => word.left));
+    const top = Math.min(...match.map((word) => word.top));
+    const right = Math.max(...match.map((word) => word.left + word.width));
+    const bottom = Math.max(...match.map((word) => word.top + word.height));
+    return {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
+  }
+  return null;
+}
+
+async function pngDimensions(path: string): Promise<{width: number; height: number}> {
+  const bytes = await readFile(path);
+  if (bytes.length < 24 || bytes.toString("ascii", 1, 4) !== "PNG") throw new Error(`Could not read PNG dimensions from ${path}`);
+  return {width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20)};
+}
+
+function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: number; width: number; height: number} {
+  const script = `on run argv
+    tell application "System Events"
+      set targetProcess to first process whose unix id is (item 1 of argv as integer)
+      set windowPosition to position of window 1 of targetProcess
+      set windowSize to size of window 1 of targetProcess
+      return (item 1 of windowPosition as integer) & "," & (item 2 of windowPosition as integer) & "," & (item 1 of windowSize as integer) & "," & (item 2 of windowSize as integer)
+    end tell
+  end run`;
+  const value = execFileSync("osascript", ["-e", script, String(child.pid ?? -1)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  const bounds = value.match(/-?\d+/g)?.map(Number) ?? [];
+  if (bounds.length < 4 || bounds[2] <= 0 || bounds[3] <= 0) throw new Error(`Could not read OpenObsidian's visible macOS window bounds: ${value}`);
+  return {x: bounds[0] ?? 0, y: bounds[1] ?? 0, width: bounds[2] ?? 0, height: bounds[3] ?? 0};
+}
+
+async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: string, controlName: string, accessibilityFailure: string): Promise<string> {
+  const capture = await captureOpenObsidianScreenshot(windowId, child, "openobsidian-control-target");
+  const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
+  const tsv = execFileSync(tesseract, [capture.ocrPngPath, "stdout", "--psm", "6", "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+  const bounds = findOcrPhraseBounds(tsv, controlName);
+  if (!bounds) throw new Error(`Accessibility failed (${accessibilityFailure}); OCR could not locate ${JSON.stringify(controlName)}; OCR=${JSON.stringify(capture.ocrText.slice(0, 2_000))}`);
+  const ocrSize = await pngDimensions(capture.ocrPngPath);
+  const xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
+  const yFraction = (bounds.top + bounds.height / 2) / ocrSize.height;
+  let interaction: string;
+
+  if (process.platform === "linux") {
+    const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+    const read = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(\\d+)$`, "m"))?.[1] ?? NaN);
+    const width = read("WIDTH");
+    const height = read("HEIGHT");
+    if (!(width > 0 && height > 0)) throw new Error(`Could not read Linux OpenObsidian window size for OCR click: ${geometry}`);
+    const x = Math.round(xFraction * width);
+    const y = Math.round(yFraction * height);
+    xdotool("windowfocus", "--sync", windowId);
+    xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+    xdotool("click", "1");
+    interaction = `xdotool clicked OCR match ${JSON.stringify(bounds.text)} at window coordinates (${x}, ${y}) in ${windowId}`;
+  } else if (process.platform === "darwin") {
+    const window = macOSOpenObsidianWindowBounds(child);
+    const x = Math.round(window.x + xFraction * window.width);
+    const y = Math.round(window.y + yFraction * window.height);
+    const swiftPath = join(workDirectory, "openobsidian-native-control-click.swift");
+    await writeFile(swiftPath, `import AppKit
+import CoreGraphics
+import Foundation
+
+guard CommandLine.arguments.count == 3,
+      let x = Double(CommandLine.arguments[1]),
+      let y = Double(CommandLine.arguments[2]) else {
+    fatalError("Expected screen x and y coordinates")
+}
+let point = CGPoint(x: x, y: y)
+for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
+        fatalError("Could not create a mouse event")
+    }
+    event.post(tap: .cghidEventTap)
+    if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
+}
+`);
+    execFileSync("swift", [swiftPath, String(x), String(y)], {stdio: "ignore"});
+    interaction = `CoreGraphics clicked OCR match ${JSON.stringify(bounds.text)} at screen coordinates (${x}, ${y})`;
+  } else if (process.platform === "win32") {
+    const geometry = capture.windowGeometry?.match(/x=(-?\d+) y=(-?\d+) width=(\d+) height=(\d+)/);
+    if (!geometry) throw new Error(`Could not read OpenObsidian window geometry for OCR click: ${capture.windowGeometry ?? "unavailable"}`);
+    const [, xText, yText, widthText, heightText] = geometry;
+    const x = Math.round(Number(xText) + xFraction * Number(widthText));
+    const y = Math.round(Number(yText) + yFraction * Number(heightText));
+    const script = `
+      $ErrorActionPreference = "Stop"
+      Add-Type -TypeDefinition @'
+        using System;
+        using System.Runtime.InteropServices;
+        public static class OpenObsidianOcrControlClick {
+          [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
+          [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extraInfo);
+        }
+'@
+      if (-not [OpenObsidianOcrControlClick]::SetCursorPos(${x}, ${y})) { throw "Could not move the pointer to the OCR matched control" }
+      Start-Sleep -Milliseconds 80
+      [OpenObsidianOcrControlClick]::mouse_event(0x0002, 0, 0, 0, [UIntPtr]::Zero)
+      Start-Sleep -Milliseconds 60
+      [OpenObsidianOcrControlClick]::mouse_event(0x0004, 0, 0, 0, [UIntPtr]::Zero)
+      Write-Output "Clicked OCR matched control at (${x}, ${y})."
+    `;
+    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    interaction = `${output} OCR match=${JSON.stringify(bounds.text)}`;
+  } else {
+    throw new Error(`OCR control activation is not configured for ${process.platform}`);
+  }
+  return `Visible OCR fallback after accessibility failure ${JSON.stringify(accessibilityFailure)}; ${interaction}; screenshot=${relative(reportDirectory, capture.windowPngPath)}`;
+}
+
+async function invokeNativeAccessibleControl(child: ChildProcess, windowId: string, controlName: string): Promise<string> {
   const processId = child.pid;
   if (!processId) throw new Error("OpenObsidian did not expose its process id for native accessibility automation");
 
@@ -2001,7 +2134,7 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      throw new Error(`Linux AT-SPI could not activate ${JSON.stringify(controlName)}: ${output || failure.message}`);
+      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Linux AT-SPI: ${output || failure.message}`);
     }
   }
 
@@ -2044,7 +2177,7 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      throw new Error(`macOS Accessibility could not activate ${JSON.stringify(controlName)}: ${output || failure.message}`);
+      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `macOS Accessibility: ${output || failure.message}`);
     }
   }
 
@@ -2116,7 +2249,7 @@ sys.exit(1)
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
       const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
-      throw new Error(`Windows UI Automation could not activate ${JSON.stringify(controlName)}: ${output || failure.message}`);
+      return await clickVisibleOpenObsidianControl(child, windowId, controlName, `Windows UI Automation: ${output || failure.message}`);
     }
   }
 
@@ -2144,19 +2277,19 @@ async function runReferenceSourcePreview(
   previewReport.vault_snapshot_before = vaultBefore;
   previewReport.app_data_snapshot_before = appDataBefore;
 
-  previewReport.expand_preview_action = await invokeNativeAccessibleControl(child, "Note source preview");
+  previewReport.expand_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Note source preview");
   await delay(500);
-  previewReport.read_source_action = await invokeNativeAccessibleControl(child, "Read note source preview");
+  previewReport.read_source_action = await invokeNativeAccessibleControl(child, window.window_id, "Read note source preview");
 
   const visiblePreview = await waitFor("OpenObsidian to display the selected reference source", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview");
     previewReport.preview_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => capture.ocrText.includes("Original bytes stay untouched."), 30_000);
+  }, (capture) => ocrTextContainsPhrase(capture.ocrText, "Original bytes stay untouched"), 30_000);
   previewReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
   previewReport.preview_window_screenshot = relative(reportDirectory, visiblePreview.windowPngPath);
-  previewReport.source_marker_visible = visiblePreview.ocrText.includes("Original bytes stay untouched.");
+  previewReport.source_marker_visible = ocrTextContainsPhrase(visiblePreview.ocrText, "Original bytes stay untouched");
 
   const vaultAfterPreview = await snapshotTree(vaultRoot);
   const appDataAfterPreview = await snapshotTree(appDataRoot);
@@ -2167,13 +2300,13 @@ async function runReferenceSourcePreview(
   previewReport.vault_unchanged_after_preview = true;
   previewReport.app_data_unchanged_after_preview = true;
 
-  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, "Close source preview");
+  previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview");
   const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
     previewReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => !capture.ocrText.includes("Original bytes stay untouched.") && capture.ocrText.includes("Read note source preview"), 30_000);
+  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, "Original bytes stay untouched") && ocrTextContainsPhrase(capture.ocrText, "Read note source preview"), 30_000);
   previewReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
   previewReport.preview_closed = true;
 
