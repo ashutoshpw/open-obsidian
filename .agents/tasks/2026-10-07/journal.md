@@ -3090,3 +3090,26 @@ IDs, all three reports, hashes, and artifact digests are in
 The next exact-SHA correction line-anchors the negative OCR check and gives the
 deferred reconciliation time to finish before the final resolution screenshot.
 No local executable validation was run.
+
+
+### R2.8.74 / C01.2-42 accepted on `7952658`
+
+All seven required GitHub Actions workflows passed for exact implementation SHA
+`79526587c3ed3ead47a0cc682baa4a8f92ecb26b`. The quality workflow's first
+Ubuntu attempt timed out in the Electron retrieval-boundary audit; the same-SHA
+rerun passed on Ubuntu, macOS, and Windows. Rust CI, desktop build, plugin
+renderer, loaded-plugin workflows, and migration inventory passed.
+
+All three pinned Obsidian 1.14.4 round-trip artifacts passed. On each platform,
+external removal changed only `Assets/roundtrip image.png`; `Untitled.md` and
+its `![[Assets/roundtrip image.png]]` source remained byte-identical. Refresh
+cleared the old resolved count and image, and fresh resolution showed
+`Unresolved`, no target, `not_rendered`, and the missing-attachment message.
+Picker cancellation and Obsidian reopen passed with the note source intact and
+the attachment absent. Vault/app-data snapshots passed; macOS persisted only
+the previously permitted eframe `app.ron` UI state. Run/job IDs, artifact
+digests, and report hashes are in
+[evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json](evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json).
+Existing GitHub Actions `parallel:` groups passed where applicable. No local
+executable validation was run. C01.2-42 is accepted; parent C01/C01.2 remain
+pending. Next: push the tracker checkpoint and verify it through GitHub Actions.

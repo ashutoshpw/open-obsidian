@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.74-C01.2-42-reference-app-image-attachment-removal",
+  "source_sha": "79526587c3ed3ead47a0cc682baa4a8f92ecb26b",
+  "status": "accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38114416233,
+      "attempt": 1,
+      "job_id": 114396352954,
+      "conclusion": "success"
+    },
+    "quality": {
+      "run_id": 38114416229,
+      "attempts": [
+        {
+          "attempt": 1,
+          "ubuntu_job_id": 114396353184,
+          "conclusion": "failure",
+          "finding": "The Electron vault round-trip retrieval-boundary audit timed out before finding a local retrieval result; macOS and Windows passed."
+        },
+        {
+          "attempt": 2,
+          "jobs": {
+            "ubuntu-latest": {"job_id": 114396748295, "conclusion": "success"},
+            "windows-latest": {"job_id": 114396748906, "conclusion": "success"},
+            "macos-latest": {"job_id": 114396749355, "conclusion": "success"}
+          },
+          "conclusion": "success"
+        }
+      ]
+    },
+    "desktop_build": {
+      "run_id": 38114416218,
+      "jobs": {
+        "macos-latest": {"job_id": 114396352851, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114396352953, "conclusion": "success"},
+        "windows-latest": {"job_id": 114396352995, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38114416222,
+      "jobs": {
+        "windows-latest": {"job_id": 114396352932, "conclusion": "success"},
+        "macos-latest": {"job_id": 114396353056, "conclusion": "success"},
+        "ubuntu-latest": {"job_id": 114396353060, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38114416220,
+      "jobs": {
+        "ubuntu-latest": {"job_id": 114396353115, "conclusion": "success"},
+        "windows-latest": {"job_id": 114396353237, "conclusion": "success"},
+        "macos-latest": {"job_id": 114396353282, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38114416224,
+      "jobs": {
+        "rust (windows-latest)": {"job_id": 114396352820, "conclusion": "success"},
+        "rust (ubuntu-latest)": {"job_id": 114396352971, "conclusion": "success"},
+        "rust (macos-latest)": {"job_id": 114396353088, "conclusion": "success"}
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38114416225,
+      "jobs": {
+        "windows-latest": {"job_id": 114396352976, "conclusion": "success"},
+        "macos-latest": {"job_id": 114396353065, "conclusion": "success"},
+        "ubuntu-24.04": {"job_id": 114396353099, "conclusion": "success"}
+      },
+      "artifacts": {
+        "Linux": {
+          "artifact_id": 11692578198,
+          "artifact_digest": "sha256:190366e26ca4cfe2827b0828997684410038587cdab10ab29e3e8a278e966674",
+          "report_sha256": "c18ecafb657a392fa5758adc0699282d4cc2611881a17ca188d83ae8bcace552",
+          "status": "passed",
+          "attachment_absent_after_removal_and_reopen": true,
+          "embed_source_persisted": true,
+          "fresh_resolution": "Unresolved, target=<none>, disposition=not_rendered",
+          "stale_image_and_resolved_count_absent": true,
+          "missing_attachment_message_visible": true,
+          "vault_and_app_data_policy_passed": true
+        },
+        "macOS": {
+          "artifact_id": 11693431192,
+          "artifact_digest": "sha256:71b1261cea9f69955a9639fdf7e39461c3aeccbca06dc05d5c79df765eb1c72e",
+          "report_sha256": "4d0b391d6a2df04b8fedbfbe0355ebaeff0f130aa92ff7d94ec385644506fbb5",
+          "status": "passed",
+          "attachment_absent_after_removal_and_reopen": true,
+          "embed_source_persisted": true,
+          "fresh_resolution": "Unresolved, target=<none>, disposition=not_rendered",
+          "stale_image_and_resolved_count_absent": true,
+          "missing_attachment_message_visible": true,
+          "vault_and_app_data_policy_passed": true,
+          "eframe_app_ron_change_within_existing_platform_policy": true
+        },
+        "Windows": {
+          "artifact_id": 11693201683,
+          "artifact_digest": "sha256:67306085c80c8b18eee110558d3eb615f81a321414b0087c823361b881218705",
+          "report_sha256": "a0cd304b8a2266e15ebdaaa773cbd64c8671cfa17f640ce66a776774104b255b",
+          "status": "passed",
+          "attachment_absent_after_removal_and_reopen": true,
+          "embed_source_persisted": true,
+          "fresh_resolution": "Unresolved, target=<none>, disposition=not_rendered",
+          "stale_image_and_resolved_count_absent": true,
+          "missing_attachment_message_visible": true,
+          "vault_and_app_data_policy_passed": true
+        }
+      }
+    }
+  },
+  "cross_platform_assertions": {
+    "authored_note_path": "Untitled.md",
+    "authored_note_sha256_before_and_after_attachment_removal": "31bf4fdab15c647790515db4579e1a6a498be79a2103b447ca4e3197888b6078",
+    "embed_source": "![[Assets/roundtrip image.png]]",
+    "removed_attachment_path": "Assets/roundtrip image.png",
+    "removed_attachment_sha256": "abfbe5766a4f6c4c59ef42c39916f1c51a09cc2d960e6e34b309565a8049f7f6",
+    "only_external_vault_change_after_removal": "Assets/roundtrip image.png",
+    "obsidian_reopen_passed_on_all_three_platforms": true,
+    "no_non_workspace_vault_changes_after_reopen": true
+  },
+  "parallel_step_groups": "Existing GitHub Actions native parallel groups ran in the applicable workflows on this source SHA; no local timing or execution claim is made.",
+  "no_local_executable_validation": true
+}
