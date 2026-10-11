@@ -99,6 +99,26 @@
         "windows": {"job_id": 114438870869, "conclusion": "success"},
         "macos": {"job_id": 114438871060, "conclusion": "success"},
         "ubuntu": {"job_id": 114438871119, "conclusion": "success"}
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11698885957,
+          "name": "obsidian-vault-roundtrip-Linux-35719d51be1cbc91ee71c72a1c2a45edb7fac253",
+          "size_bytes": 8348505,
+          "sha256_digest": "8d191967fb38d407eba544abe3b57d22b8efaef0b4175820296448a73525a4be"
+        },
+        "macos": {
+          "artifact_id": 11698601958,
+          "name": "obsidian-vault-roundtrip-macOS-35719d51be1cbc91ee71c72a1c2a45edb7fac253",
+          "size_bytes": 9381910,
+          "sha256_digest": "7e544d2e392ab20d49286e656ece7fff85ee123336888239d191cfd0838e59a9"
+        },
+        "windows": {
+          "artifact_id": 11698595925,
+          "name": "obsidian-vault-roundtrip-Windows-35719d51be1cbc91ee71c72a1c2a45edb7fac253",
+          "size_bytes": 9310478,
+          "sha256_digest": "776d73657b10e816960182f4a0f816825962632bda33b78e284dcbd438f4485d"
+        }
       }
     }
   },

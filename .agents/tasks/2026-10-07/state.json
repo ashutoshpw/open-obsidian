@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T09:45:01Z",
+  "updated_at": "2026-10-11T09:57:16Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "b61541bd8f6842d600ad264e72e29b03759857ab",
   "current_milestone": "R2.8.79",
-  "next_action": "R2.8.79 attempt 1 completed on 35719d51be1cbc91ee71c72a1c2a45edb7fac253. Record the failed inventory and Rust CI findings, then commit and push the targeted import, formatting, and fixture-inventory corrections to main for a fresh exact-SHA run of all seven required workflows. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.79 source SHA 35719d51be1cbc91ee71c72a1c2a45edb7fac253 is pushed. Five of seven workflows passed, including all three Obsidian round-trip jobs; inventory and Rust CI failed. Corrective changes and attempt evidence are prepared locally. No local executable validation was run.",
+  "next_action": "R2.8.79 attempt 2 completed on a4406a7aaa57deac9b5716cd88a225c05c371112. Record the failed Rust CI findings, then push the mode-trim and rustfmt corrections to main for a fresh exact-SHA run of all seven required workflows. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.79 source SHA a4406a7aaa57deac9b5716cd88a225c05c371112 is pushed. Six of seven workflows passed, including all three Obsidian round-trip jobs; Rust CI failed on the BOM mode fixture, and Ubuntu also reported formatting differences. Corrective changes and attempt evidence are prepared locally. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -27009,7 +27009,8 @@
       "status": "in_progress",
       "starting_sha": "b61541bd8f6842d600ad264e72e29b03759857ab",
       "implementation_commits": [
-        "35719d51be1cbc91ee71c72a1c2a45edb7fac253"
+        "35719d51be1cbc91ee71c72a1c2a45edb7fac253",
+        "a4406a7aaa57deac9b5716cd88a225c05c371112"
       ],
       "ci_attempts": [
         {
@@ -27036,6 +27037,31 @@
           },
           "findings": "Inventory rejected the changed fixtures/configuration-inventory.json baseline digest. Rust CI failed on all OSes and Rust 1.95 because the vault test module did not import AppearanceMode; Ubuntu also reported formatting changes in crates/vault/src/configuration.rs and crates/vault/src/lib.rs. Quality, desktop build, plugin renderer, loaded-plugin workflows, and the Linux/macOS/Windows Obsidian round-trip passed. Full job details are in the attempt evidence.",
           "evidence": "evidence/r2.8.79-attempt-1-35719d5.json"
+        },
+        {
+          "attempt": 2,
+          "implementation_sha": "a4406a7aaa57deac9b5716cd88a225c05c371112",
+          "conclusion": "not_accepted",
+          "workflow_runs": {
+            "inventory": 38129595422,
+            "quality": 38129595399,
+            "desktop_build": 38129595396,
+            "plugin_renderer": 38129595389,
+            "loaded_plugin_workflows": 38129595406,
+            "rust_ci": 38129595419,
+            "obsidian_vault_roundtrip": 38129595409
+          },
+          "job_conclusions": {
+            "inventory": {"114440972553": "success"},
+            "quality": {"114440972635": "success", "114440972653": "success", "114440972690": "success"},
+            "desktop_build": {"114440972568": "success", "114440972695": "success", "114440972774": "success"},
+            "plugin_renderer": {"114440972307": "success", "114440972426": "success", "114440972493": "success"},
+            "loaded_plugin_workflows": {"114440972549": "success", "114440972651": "success", "114440972724": "success"},
+            "rust_ci": {"114440972422": "failure", "114440972524": "failure", "114440972536": "failure", "114440972537": "failure"},
+            "obsidian_vault_roundtrip": {"114440972613": "success", "114440972749": "success", "114440972795": "success"}
+          },
+          "findings": "Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and the Linux/macOS/Windows Obsidian round-trip passed. Rust CI failed on all platforms and Rust 1.95 because the fixture-backed projection returned Unknown rather than Dark for the BOM-prefixed mode; Ubuntu also reported rustfmt reflow changes in crates/vault/src/lib.rs. Round-trip artifact metadata and exact job details are in the attempt evidence.",
+          "evidence": "evidence/r2.8.79-attempt-2-a4406a7.json"
         }
       ],
       "scope": "Add a typed, read-only projection of explicitly supported appearance.json settings in crates/doc and expose it from vault configuration discovery. Retain exact source bytes and unknown JSON keys; do not apply CSS or modify vault files.",
@@ -27054,7 +27080,7 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "next_action": "Commit and push the targeted import, rustfmt, and fixture-inventory corrections, then capture every required GitHub Actions job on the corrected exact source SHA."
+      "next_action": "Push the targeted ECMAScript mode-trimming and rustfmt corrections, then capture every required GitHub Actions job on the corrected exact source SHA."
     }
   },
   "ci_preparation": {

@@ -3418,3 +3418,22 @@ configuration fixture digest in the migration inventory. The ECMAScript trim
 parity fixture now covers BOM trimming and U+0085 preservation. These changes
 will be committed and pushed as a small corrective phase for a fresh exact-SHA
 GitHub Actions run. No local tests, builds, formatters, or validators were run.
+
+## 2026-10-11T09:57:16Z — R2.8.79 attempt 2 review
+
+Corrective source SHA `a4406a7aaa57deac9b5716cd88a225c05c371112` completed all
+seven required workflows. Inventory 38129595422, quality 38129595399, desktop
+build 38129595396, plugin renderer 38129595389, loaded-plugin workflows
+38129595406, and Obsidian round-trip 38129595409 passed. Round-trip passed on
+Linux, Windows, and macOS. Rust CI 38129595419 failed on Ubuntu, macOS,
+Windows, and Rust 1.95: the BOM-prefixed mode fixture projected as `Unknown`
+instead of `Dark`. Ubuntu also reported rustfmt reflow in the `crates/vault`
+public re-export and test import. Exact jobs and round-trip artifact digests
+are in `evidence/r2.8.79-attempt-2-a4406a7.json`.
+
+The mode parser now uses the ECMAScript whitespace helper, and the two
+`crates/vault/src/lib.rs` layouts match the Ubuntu rustfmt output. Attempt 1's
+round-trip artifact IDs and digests are also recorded in its evidence file.
+These changes will be pushed as a small correction for a fresh exact-SHA run
+of all seven workflows. No local tests, builds, formatters, or validators were
+run.

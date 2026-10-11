@@ -44,7 +44,10 @@ pub fn parse_appearance_settings(raw: &Map<String, Value>) -> AppearanceSettings
     let mode_value = ["mode", "themeMode", "colorScheme", "theme"]
         .into_iter()
         .find_map(|key| raw.get(key).filter(|value| !value.is_null()));
-    let mode = match mode_value.and_then(Value::as_str).map(str::trim) {
+    let mode = match mode_value
+        .and_then(Value::as_str)
+        .map(|value| value.trim_matches(is_ecmascript_whitespace))
+    {
         Some(value) if value.eq_ignore_ascii_case("light") => AppearanceMode::Light,
         Some(value) if value.eq_ignore_ascii_case("dark") => AppearanceMode::Dark,
         Some(value) if value.eq_ignore_ascii_case("system") => AppearanceMode::System,

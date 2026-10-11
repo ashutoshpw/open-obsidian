@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.79 / C09 typed appearance settings projection",
+  "attempt": 2,
+  "tested_source_sha": "a4406a7aaa57deac9b5716cd88a225c05c371112",
+  "recorded_at": "2026-10-11T09:57:16Z",
+  "conclusion": "not_accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38129595422,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595422",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 114440972553, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 38129595399,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595399",
+      "conclusion": "success",
+      "jobs": {
+        "windows": {"job_id": 114440972635, "conclusion": "success"},
+        "macos": {"job_id": 114440972653, "conclusion": "success"},
+        "ubuntu": {"job_id": 114440972690, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38129595396,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595396",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114440972568, "conclusion": "success"},
+        "macos": {"job_id": 114440972695, "conclusion": "success"},
+        "windows": {"job_id": 114440972774, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38129595389,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595389",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114440972307, "conclusion": "success"},
+        "windows": {"job_id": 114440972426, "conclusion": "success"},
+        "macos": {"job_id": 114440972493, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38129595406,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595406",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114440972549, "conclusion": "success"},
+        "windows": {"job_id": 114440972651, "conclusion": "success"},
+        "macos": {"job_id": 114440972724, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38129595419,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595419",
+      "conclusion": "failure",
+      "jobs": {
+        "minimum_supported_rust_1_95": {
+          "job_id": 114440972422,
+          "conclusion": "failure",
+          "finding": "The locked Rust 1.95.0 workspace tests failed because the BOM-prefixed mode fixture projected as Unknown instead of Dark."
+        },
+        "macos": {
+          "job_id": 114440972524,
+          "conclusion": "failure",
+          "finding": "The fixture-backed appearance projection test expected Dark but received Unknown for the BOM-prefixed mode."
+        },
+        "ubuntu": {
+          "job_id": 114440972536,
+          "conclusion": "failure",
+          "findings": [
+            "The fixture-backed appearance projection test expected Dark but received Unknown for the BOM-prefixed mode.",
+            "cargo fmt --all -- --check reported reflow changes in the public re-export and test import in crates/vault/src/lib.rs."
+          ]
+        },
+        "windows": {
+          "job_id": 114440972537,
+          "conclusion": "failure",
+          "finding": "The fixture-backed appearance projection test expected Dark but received Unknown for the BOM-prefixed mode."
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38129595409,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38129595409",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114440972613, "conclusion": "success"},
+        "windows": {"job_id": 114440972749, "conclusion": "success"},
+        "macos": {"job_id": 114440972795, "conclusion": "success"}
+      },
+      "artifacts": {
+        "linux": {
+          "artifact_id": 11698968006,
+          "name": "obsidian-vault-roundtrip-Linux-a4406a7aaa57deac9b5716cd88a225c05c371112",
+          "size_bytes": 8349445,
+          "sha256_digest": "e570984bbe74a121d5f54f675b257eb42d4281bd95cadae0a77fec93fd29ed66"
+        },
+        "macos": {
+          "artifact_id": 11698883111,
+          "name": "obsidian-vault-roundtrip-macOS-a4406a7aaa57deac9b5716cd88a225c05c371112",
+          "size_bytes": 9309359,
+          "sha256_digest": "d4a5345b7cd9fd326b15396fb9ee8db47a88d8cbc24c8bb2e92a7f40d78e12c2"
+        },
+        "windows": {
+          "artifact_id": 11698606925,
+          "name": "obsidian-vault-roundtrip-Windows-a4406a7aaa57deac9b5716cd88a225c05c371112",
+          "size_bytes": 9308152,
+          "sha256_digest": "6569d6f867a4ec595dc42085dc72540ff87efa2338c4efa001cd34ab490084d8"
+        }
+      }
+    }
+  },
+  "corrections_prepared_after_ci": [
+    "Use the ECMAScript whitespace helper when trimming mode values so U+FEFF and U+00A0 are handled like JavaScript String.trim().",
+    "Apply the exact rustfmt reflow from the Ubuntu job to crates/vault/src/lib.rs."
+  ],
+  "acceptance_status": "The typed appearance projection remains unaccepted until all seven required workflows pass on a corrected exact source SHA. No local tests, builds, formatters, or validators were run."
+}
