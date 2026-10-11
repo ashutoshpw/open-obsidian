@@ -1281,6 +1281,16 @@
       "fixture_reader": "crates/testkit"
     },
     {
+      "path": "fixtures/c06-canvas.json",
+      "sha256": "b0910de2f80e74f046eeef5f975b9a92bb10c985deb088a21407480250403ae8",
+      "rust_owner": "crates/doc",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "C06 Canvas envelope codec cases cover known node/edge shapes and unknown fields; pinned Obsidian reopen evidence remains pending.",
+      "fixture_reader": "crates/doc"
+    },
+    {
       "path": "fixtures/delivery-workflows.json",
       "sha256": "244c13d01f27b0e1dae57f8bb65c7f1dce211e4d87259c041b2df8f001e3ae39",
       "rust_owner": "xtask",

@@ -1,5 +1,6 @@
 //! Lossless document values shared by the vault engine and native UI.
 
+mod canvas;
 mod configuration;
 mod hotkeys;
 mod markdown_preview;
@@ -7,6 +8,7 @@ mod merge;
 mod themes;
 mod yaml;
 
+pub use canvas::{CanvasDocument, CanvasError, encode_canvas, parse_canvas};
 pub use configuration::{
     AppSettings, AppearanceMode, AppearanceSettings, DailyNoteSettings, TemplateSettings,
     parse_app_settings, parse_appearance_settings, parse_daily_note_settings,

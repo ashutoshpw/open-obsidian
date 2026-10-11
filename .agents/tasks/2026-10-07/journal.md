@@ -4031,3 +4031,17 @@ One audit agent accidentally ran `git diff --check` on this uncommitted work; it
 produced no output and was not used as validation evidence. No repository code
 was changed by that command. All acceptance validation remains assigned to
 GitHub Actions.
+
+R2.8.87 documentation-only tracker checkpoint SHA
+`ce59d7399caf58d498529dd29794c2c2c44c93dd` passed all six required workflows
+on attempt 1, including Rust CI on Ubuntu, macOS, Windows, and Rust 1.95. Exact
+run/job IDs are in `evidence/r2.8.87-tracker-checkpoint-ce59d73.json`. The
+path-filtered Obsidian round-trip remains covered by accepted implementation SHA
+`8891393ff5955a1797a8d6626c2d4d17d6509552`.
+
+R2.8.88 is in progress as a bounded C06 Canvas codec and pinned reference-reopen
+slice. Its source commit includes the semantic parser/encoder, fixture-driven
+known/unknown field and malformed-input coverage, fixture inventory row, and
+three-platform Obsidian reopen audit. Full C06 and C06.1 remain pending: this
+slice does not implement Canvas editing, explicit note creation, vault writes,
+or UI integration. No local executable validation is used for acceptance.

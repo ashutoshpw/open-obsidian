@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c06-canvas",
+  "valid_cases": [
+    {
+      "id": "all-node-and-edge-fields-with-unknown-values",
+      "document": {
+        "nodes": [
+          {
+            "id": "text-1",
+            "type": "text",
+            "x": 10,
+            "y": 20,
+            "width": 320,
+            "height": 140,
+            "text": "Canvas text card",
+            "color": "1",
+            "style": {"font": "future-font", "align": "center"},
+            "unknownNode": {"keep": true, "nested": ["opaque", 7]}
+          },
+          {
+            "id": "file-1",
+            "type": "file",
+            "x": 370,
+            "y": 20,
+            "width": 240,
+            "height": 150,
+            "file": "Notes/Target.md",
+            "subpath": "#Heading^block-id",
+            "label": "Target note",
+            "color": "2",
+            "unknownFileMetadata": {"keep": [true, null]}
+          },
+          {
+            "id": "link-1",
+            "type": "link",
+            "x": 650,
+            "y": 20,
+            "width": 240,
+            "height": 100,
+            "url": "https://example.com/reference",
+            "label": "External reference",
+            "color": "3"
+          },
+          {
+            "id": "group-1",
+            "type": "group",
+            "x": 10,
+            "y": 220,
+            "width": 620,
+            "height": 260,
+            "label": "Research group",
+            "children": ["text-1", "file-1"],
+            "background": "Assets/group-background.png",
+            "backgroundStyle": "cover",
+            "style": {"border": "dashed"}
+          }
+        ],
+        "edges": [
+          {
+            "id": "edge-1",
+            "fromNode": "text-1",
+            "fromSide": "right",
+            "fromEnd": "arrow",
+            "toNode": "file-1",
+            "toSide": "left",
+            "toEnd": "none",
+            "color": "4",
+            "label": "supports",
+            "unknownEdge": {"keep": true, "metadata": {"revision": 2}}
+          }
+        ],
+        "unknownRoot": {"keep": true, "items": ["opaque", {"future": false}]}
+      }
+    },
+    {
+      "id": "empty-document",
+      "document": {"nodes": [], "edges": []}
+    }
+  ],
+  "invalid_cases": [
+    {
+      "id": "malformed-json",
+      "source": "{\"nodes\":[,],\"edges\":[]}",
+      "error": "malformed_json"
+    },
+    {
+      "id": "root-is-not-an-object",
+      "source": "[]",
+      "error": "invalid_shape"
+    },
+    {
+      "id": "nodes-array-is-missing",
+      "source": "{\"edges\":[]}",
+      "error": "invalid_shape"
+    },
+    {
+      "id": "nodes-is-not-an-array",
+      "source": "{\"nodes\":{},\"edges\":[]}",
+      "error": "invalid_shape"
+    },
+    {
+      "id": "edges-array-is-missing",
+      "source": "{\"nodes\":[]}",
+      "error": "invalid_shape"
+    },
+    {
+      "id": "edges-is-not-an-array",
+      "source": "{\"nodes\":[],\"edges\":{}}",
+      "error": "invalid_shape"
+    }
+  ]
+}
