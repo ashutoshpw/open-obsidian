@@ -3985,3 +3985,11 @@ corrected to `crates/plugins`; R2.8.87 will add a pure deny-only
 will not claim full enforcement until Rust discovery and enablement callsites
 route through the policy and present the decision. No local tests, builds,
 formatters, validators, or application launches were run.
+
+The R2.8.86 tracker checkpoint at `c09cc905858acef6009582ab02135395ff4a0e0b`
+passed all six documentation workflows. Quality's initial Ubuntu job timed
+out at the known Electron local-retrieval boundary; its same-SHA retry passed.
+Exact run and job IDs are in
+`evidence/r2.8.86-tracker-checkpoint-c09cc90.json`. The Obsidian round-trip
+remains covered by implementation SHA `a7d718c9d216df26776c2022a29d6d9e1babb66d`.
+No local executable validation was run.

@@ -1609,3 +1609,123 @@ mod c02_byte_roundtrip_fixture_tests {
         assert_eq!(round_trip.as_slice(), markdown.as_bytes());
     }
 }
+
+#[cfg(test)]
+mod plugin_config_policy_fixture_tests {
+    use openobsidian_plugins::{ConfigurationWriteRequest, deny_configuration_write};
+    use serde_json::Value;
+
+    const PLUGIN_ISOLATION_FIXTURE: &str =
+        include_str!("../../../fixtures/plugin-isolation.json");
+
+    #[test]
+    fn c09_policy_fixture_denies_discovery_and_enablement_requests() {
+        let fixture: Value = serde_json::from_str(PLUGIN_ISOLATION_FIXTURE)
+            .expect("plugin-isolation fixture must be valid JSON");
+        let policy_fixture = &fixture["c09_plugin_config_policy"];
+
+        assert_eq!(policy_fixture["id"], "fixture:c09-plugin-config-policy");
+        let cases = policy_fixture["cases"]
+            .as_array()
+            .expect("configuration policy fixture cases must be an array");
+        assert_eq!(cases.len(), 2);
+
+        for (case, expected_id) in cases.iter().zip(["discovery", "enablement"]) {
+            let case_id = case["id"].as_str().expect("policy case must have an id");
+            assert_eq!(case_id, expected_id);
+
+            let request = &case["request"];
+            assert_eq!(request["capability"], "configuration.write");
+            let plugin_id = request["pluginId"]
+                .as_str()
+                .expect("policy request must have a plugin id");
+            let target = request["target"]
+                .as_str()
+                .expect("policy request must have a target");
+            let detail = request["detail"]
+                .as_str()
+                .expect("policy request must have reproduction detail");
+            let denial = deny_configuration_write(ConfigurationWriteRequest {
+                plugin_id,
+                target: Some(target),
+                detail: Some(detail),
+            });
+
+            let expected = &case["expected"];
+            assert_eq!(
+                denial.decision,
+                expected["decision"]
+                    .as_str()
+                    .expect("expected decision must be a string"),
+                "{case_id}: policy decision"
+            );
+
+            let record = &denial.record;
+            let expected_record = &expected["record"];
+            assert_eq!(
+                record.id,
+                expected_record["id"]
+                    .as_str()
+                    .expect("expected record id must be a string"),
+                "{case_id}: record id"
+            );
+            assert_eq!(
+                record.plugin_id,
+                expected_record["pluginId"]
+                    .as_str()
+                    .expect("expected plugin id must be a string"),
+                "{case_id}: plugin id"
+            );
+            assert_eq!(
+                record.capability,
+                expected_record["capability"]
+                    .as_str()
+                    .expect("expected capability must be a string"),
+                "{case_id}: capability"
+            );
+            assert_eq!(
+                record.status,
+                expected_record["status"]
+                    .as_str()
+                    .expect("expected status must be a string"),
+                "{case_id}: status"
+            );
+            assert_eq!(
+                record.visible,
+                expected_record["visible"]
+                    .as_bool()
+                    .expect("expected visibility must be a boolean"),
+                "{case_id}: visibility"
+            );
+            assert_eq!(
+                record.reproduction,
+                expected_record["reproduction"]
+                    .as_str()
+                    .expect("expected reproduction must be a string"),
+                "{case_id}: reproduction"
+            );
+            let expected_alternatives = expected_record["safeAlternativesAttempted"]
+                .as_array()
+                .expect("expected safe alternatives must be an array")
+                .iter()
+                .map(|alternative| {
+                    alternative
+                        .as_str()
+                        .expect("safe alternative must be a string")
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(
+                record.safe_alternatives_attempted,
+                expected_alternatives.as_slice(),
+                "{case_id}: safe alternatives"
+            );
+            assert_eq!(
+                record.scope,
+                expected_record["scope"]
+                    .as_str()
+                    .expect("expected scope must be a string"),
+                "{case_id}: scope"
+            );
+        }
+    }
+}

@@ -10,5 +10,6 @@ workspace = true
 
 [dev-dependencies]
 openobsidian-doc = { workspace = true }
+openobsidian-plugins = { workspace = true }
 openobsidian-vault = { workspace = true }
 serde_json = { workspace = true }

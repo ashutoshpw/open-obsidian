@@ -1523,12 +1523,12 @@
     },
     {
       "path": "fixtures/plugin-isolation.json",
-      "sha256": "57286a39aef26dedc16a1e2a38f80c87b911b4ade04d42467f8968d874ea63d7",
+      "sha256": "6ea12e14fc992f2c809ef8d1f7f75d4df138b2504048a2d9361e9efe6f01de1b",
       "rust_owner": "crates/plugins",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R4",
-      "purpose": "Existing responsibility mapped to the Rust workspace owner; executable acceptance remains pending until its migration phase.",
+      "purpose": "D15 plugin-isolation contract; R2.8.87 testkit coverage uses the shared configuration.write denial case, while broader isolation checks remain R4.",
       "fixture_reader": "crates/testkit"
     },
     {

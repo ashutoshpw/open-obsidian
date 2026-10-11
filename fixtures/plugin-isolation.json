@@ -8,6 +8,55 @@
     "denied": ["vault.direct-write", "configuration.write", "filesystem.direct", "network.request", "process.spawn", "credentials.read", "dom.privileged"]
   },
   "required_record_fields": ["reproduction", "safeAlternativesAttempted", "scope", "visible"],
+  "c09_plugin_config_policy": {
+    "id": "fixture:c09-plugin-config-policy",
+    "cases": [
+      {
+        "id": "discovery",
+        "request": {
+          "pluginId": "fixture-plugin",
+          "capability": "configuration.write",
+          "target": ".obsidian/plugins/fixture-plugin/data.json",
+          "detail": "plugin settings write requested during discovery"
+        },
+        "expected": {
+          "decision": "deny",
+          "record": {
+            "id": "D15:fixture-plugin:configuration.write",
+            "pluginId": "fixture-plugin",
+            "capability": "configuration.write",
+            "status": "unsupported_security",
+            "visible": true,
+            "reproduction": "plugin settings write requested during discovery",
+            "safeAlternativesAttempted": ["mediated vault read", "preview broker", "workflow disabled"],
+            "scope": "plugin-runtime"
+          }
+        }
+      },
+      {
+        "id": "enablement",
+        "request": {
+          "pluginId": "fixture-plugin",
+          "capability": "configuration.write",
+          "target": ".obsidian/plugins/fixture-plugin/data.json",
+          "detail": "plugin settings write requested during enablement"
+        },
+        "expected": {
+          "decision": "deny",
+          "record": {
+            "id": "D15:fixture-plugin:configuration.write",
+            "pluginId": "fixture-plugin",
+            "capability": "configuration.write",
+            "status": "unsupported_security",
+            "visible": true,
+            "reproduction": "plugin settings write requested during enablement",
+            "safeAlternativesAttempted": ["mediated vault read", "preview broker", "workflow disabled"],
+            "scope": "plugin-runtime"
+          }
+        }
+      }
+    ]
+  },
   "safe_alternatives": ["mediated vault read", "preview broker", "workflow disabled"],
   "runtime_probe": {
     "command": "bun run audit:plugin-runtime:all",
