@@ -2303,8 +2303,12 @@ async function runReferenceSourcePreview(
   const vaultBefore = await snapshotTree(vaultRoot);
   ensureExactSnapshot(vaultBaseline, vaultBefore, "OpenObsidian vault before reference source preview");
   const appDataBefore = await snapshotTree(appDataRoot);
+  const canonicalVaultRoot = await realpath(vaultRoot);
+  const canonicalAppDataRoot = await realpath(appDataRoot);
+  const forbiddenPersistencePaths = [vaultRoot, canonicalVaultRoot, appDataRoot, canonicalAppDataRoot];
   previewReport.vault_snapshot_before = vaultBefore;
   previewReport.app_data_snapshot_before = appDataBefore;
+  previewReport.app_data_change_policy = "App data remains byte-identical except macOS app.ron eframe window/egui UI-state persistence, which is inspected for vault and app-data paths.";
 
   previewReport.expand_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Note source preview");
   await delay(500);
@@ -2322,12 +2326,25 @@ async function runReferenceSourcePreview(
 
   const vaultAfterPreview = await snapshotTree(vaultRoot);
   const appDataAfterPreview = await snapshotTree(appDataRoot);
-  ensureExactSnapshot(vaultBefore, vaultAfterPreview, "OpenObsidian reference source preview");
-  ensureExactSnapshot(appDataBefore, appDataAfterPreview, "OpenObsidian app data during reference source preview");
+  const vaultChangesAfterPreview = changedPaths(vaultBefore, vaultAfterPreview);
+  const appDataChangesAfterPreview = changedPaths(appDataBefore, appDataAfterPreview);
+  const eframeFilesAfterPreview = await readSnapshotTextFiles(appDataRoot, appDataAfterPreview, (path) => path.toLowerCase().endsWith(".ron"));
   previewReport.vault_snapshot_after_preview = vaultAfterPreview;
   previewReport.app_data_snapshot_after_preview = appDataAfterPreview;
-  previewReport.vault_unchanged_after_preview = true;
-  previewReport.app_data_unchanged_after_preview = true;
+  previewReport.vault_changes_after_preview = vaultChangesAfterPreview;
+  previewReport.app_data_changes_after_preview = appDataChangesAfterPreview;
+  previewReport.eframe_persistence_files_after_preview = eframeFilesAfterPreview;
+  previewReport.vault_unchanged_after_preview = vaultChangesAfterPreview.length === 0;
+  previewReport.app_data_unchanged_after_preview = appDataChangesAfterPreview.length === 0;
+  await saveReport();
+  ensureExactSnapshot(vaultBefore, vaultAfterPreview, "OpenObsidian reference source preview");
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterPreview,
+    eframeFilesAfterPreview,
+    "OpenObsidian app data during reference source preview",
+    forbiddenPersistencePaths,
+  );
+  previewReport.app_data_change_policy_passed_after_preview = true;
 
   previewReport.close_preview_action = await invokeNativeAccessibleControl(child, window.window_id, "Close source preview");
   const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
@@ -2341,12 +2358,25 @@ async function runReferenceSourcePreview(
 
   const vaultAfterClose = await snapshotTree(vaultRoot);
   const appDataAfterClose = await snapshotTree(appDataRoot);
-  ensureExactSnapshot(vaultBefore, vaultAfterClose, "OpenObsidian reference preview close");
-  ensureExactSnapshot(appDataBefore, appDataAfterClose, "OpenObsidian app data after reference preview close");
+  const vaultChangesAfterClose = changedPaths(vaultBefore, vaultAfterClose);
+  const appDataChangesAfterClose = changedPaths(appDataBefore, appDataAfterClose);
+  const eframeFilesAfterClose = await readSnapshotTextFiles(appDataRoot, appDataAfterClose, (path) => path.toLowerCase().endsWith(".ron"));
   previewReport.vault_snapshot_after_close = vaultAfterClose;
   previewReport.app_data_snapshot_after_close = appDataAfterClose;
-  previewReport.vault_unchanged_after_close = true;
-  previewReport.app_data_unchanged_after_close = true;
+  previewReport.vault_changes_after_close = vaultChangesAfterClose;
+  previewReport.app_data_changes_after_close = appDataChangesAfterClose;
+  previewReport.eframe_persistence_files_after_close = eframeFilesAfterClose;
+  previewReport.vault_unchanged_after_close = vaultChangesAfterClose.length === 0;
+  previewReport.app_data_unchanged_after_close = appDataChangesAfterClose.length === 0;
+  await saveReport();
+  ensureExactSnapshot(vaultBefore, vaultAfterClose, "OpenObsidian reference preview close");
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    appDataChangesAfterClose,
+    eframeFilesAfterClose,
+    "OpenObsidian app data after reference preview close",
+    forbiddenPersistencePaths,
+  );
+  previewReport.app_data_change_policy_passed_after_close = true;
   previewReport.status = "passed";
   await saveReport();
 }
