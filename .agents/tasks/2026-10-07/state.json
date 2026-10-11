@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T06:30:25Z",
+  "updated_at": "2026-10-11T07:06:27Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "64f77e7200829dde897ec43bde0b0fef49d0b3ac",
-  "current_milestone": "R2.8.75",
-  "next_action": "Correct the Linux post-refresh selection assertion and Obsidian Restricted Mode reopen evidence, then push and run all seven required workflows on the exact SHA. Keep C01.2-43 and parent C01/C01.2 pending until the corrected exact-SHA evidence passes.",
+  "last_reconciled_head": "3354878b1ef3fd45f42d9604f35ba65e613a9def",
+  "current_milestone": "R2.8.76",
+  "next_action": "Inspect all seven exact-SHA GitHub Actions workflows and the Linux, macOS, and Windows round-trip artifacts for R2.8.76. Keep C01.2-44 and parent C01/C01.2 pending until the evidence passes.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -46,7 +46,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "e78409a4c721e63c866ee6b7fd4411d96c277ded"
+      "implementation_sha": "938f4cda4885efc09d75e6d1eeb182398cacf229"
     },
     "R3": {
       "status": "pending",
@@ -298,7 +298,7 @@
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.74 / C01.2-42 passed on exact implementation SHA 79526587c3ed3ead47a0cc682baa4a8f92ecb26b. All seven required GitHub Actions workflows passed, with the quality workflow passing on same-SHA attempt 2 after a transient Ubuntu Electron retrieval-boundary timeout. Obsidian 1.14.4-authored image removal, fresh Unresolved/targetless/not_rendered diagnostics, unchanged note source, snapshots, and reopen passed on Linux, macOS, and Windows. Evidence: evidence/r2.8.74-c01.2-42-reference-app-image-attachment-removal.json. Parent C01/C01.2 remain pending; no local executable validation was used."
   ],
-  "push_status": "R2.8.74/C01.2-42 remains the latest accepted milestone. Initial R2.8.75 implementation SHA 64f77e7200829dde897ec43bde0b0fef49d0b3ac is pushed to origin/main. Inventory, quality, desktop, plugin renderer, loaded plugins, and Rust CI passed. Round-trip attempt 1 failed its Linux selected-path OCR assertion, and macOS/Windows reopen screenshots show an unresolved Obsidian trust dialog; C01.2-43 is not accepted. Correct the evidence harness and obtain fresh exact-SHA CI. All executable validation remains GitHub Actions only.",
+  "push_status": "R2.8.76 C01.2-44 is the active slice; exact-SHA GitHub Actions results and cross-platform artifact inspection are required before acceptance. All executable validation remains in CI.",
   "ci_results": [
     {
       "name": "inventory",
@@ -26664,6 +26664,31 @@
         },
         "conclusion": "All six documentation-triggered workflows passed on this exact tracker SHA, including every platform matrix. The Obsidian round-trip workflow was not triggered for documentation-only changes; all three reference-app jobs passed on implementation SHA 938f4cda4885efc09d75e6d1eeb182398cacf229."
       }
+    },
+    "R2.8.76": {
+      "status": "in_progress",
+      "starting_sha": "3354878b1ef3fd45f42d9604f35ba65e613a9def",
+      "implementation_commits": [],
+      "ci_attempts": [],
+      "scope": "Exercise an external rename of the selected, visibly previewed, Obsidian-authored BOM/CRLF note in the running OpenObsidian desktop; verify the rename changes only its path, refresh clears stale preview and selects the renamed path, no-op reads preserve snapshots, and Obsidian 1.14.4 reopens the renamed note.",
+      "acceptance": [
+        "On Ubuntu, macOS, and Windows, renaming After refresh.md to After refresh renamed.md while its source preview is open changes only those two vault paths and preserves the exact byte length and SHA-256.",
+        "The external rename leaves the Markdown count and separate app-data snapshot unchanged. Refresh clears the stale preview, reports the exact fallback selection, and preserves the count; re-preview and no-op close preserve the post-rename snapshots.",
+        "Obsidian 1.14.4 reopens the same vault in Restricted Mode, lists the renamed path and not the old path, and visibly renders the preserved edited source. The post-reopen vault differs only in allowlisted Obsidian workspace state.",
+        "All seven required GitHub Actions workflows pass on the exact pushed implementation SHA; inspect all three round-trip artifacts and screenshots. No local executable validation is allowed.",
+        "Accept C01.2-44 only. Keep parent C01/C01.2 pending until their broader acceptance criteria pass."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "next_action": "Inspect all seven exact-SHA GitHub Actions workflows and each Linux, macOS, and Windows round-trip artifact. Correct only from CI evidence; do not use local executable validation.",
+      "evidence": "evidence/r2.8.76-c01-readonly-audit.md"
     }
   },
   "ci_preparation": {

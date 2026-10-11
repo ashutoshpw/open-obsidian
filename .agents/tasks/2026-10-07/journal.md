@@ -3218,3 +3218,5 @@ step groups passed on both the implementation and tracker checkpoints.
 Next: audit the remaining C01/C01.2 read-only requirements and choose the next
 bounded gap. Parent C01/C01.2 remain pending; executable validation stays in
 GitHub Actions.
+
+R2.8.76 is in progress. The fresh C01/C01.2 read-only audit found that C01.2-24 covers external note rename only in the synthetic egui harness, not in the pinned Obsidian-authored reference-app flow. C01.2-44 now adds an external rename while the edited note source preview is open, exact path/hash snapshots, refresh fallback and stale-preview checks, no-op read/close snapshots, and Obsidian 1.14.4 reopen. Seven-workflow exact-SHA CI and all three platform artifacts are pending. Parent C01/C01.2 remain pending; no local executable validation was run. See evidence/r2.8.76-c01-readonly-audit.md.
