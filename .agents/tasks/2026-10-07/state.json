@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T02:44:53Z",
+  "updated_at": "2026-10-11T02:56:47Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0",
+  "last_reconciled_head": "de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
   "current_milestone": "R2.8.72",
-  "next_action": "Commit and push the exact-path navigation diagnostics and Windows menu-open correction; inspect the resulting exact-SHA GitHub Actions runs.",
+  "next_action": "Select the next uncovered reference-app read-only flow for R2.8.73; keep parent C01/C01.2 pending and run executable validation only in GitHub Actions.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -295,7 +295,7 @@
     "R2.8.62 fixture-driven CommonMark table preview passed all seven required GitHub Actions workflows on exact implementation SHA d793bcb60dad1d6b4b9447e887a5ff91f7cd74b6. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. Evidence: evidence/r2.8.62-commonmark-basics-table-fixture-d793bcb.json. Full C02.1 and R3-R7 remain pending.",
     "R2.8.63 fixture-driven single inline highlight preview passed all seven required GitHub Actions workflows on corrected exact implementation SHA 2a5a304362cf1ed73adc8adc31035b51dac992ac. The focused Rust UI test passed on Ubuntu, macOS, and Windows with 96 ui-egui tests passing on each platform. An initial rustfmt-only failure was corrected; same-SHA quality and Obsidian vault retries passed after intermittent macOS Electron/Obsidian timeouts. Evidence: evidence/r2.8.63-single-highlight-fixture-2a5a304.json. Full C02.1 and R3-R7 remain pending."
   ],
-  "push_status": "R2.8.72 implementation SHA be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0 is pushed to origin/main. Inventory, plugin renderer, loaded-plugin workflows, quality, desktop build, and Rust CI passed; Obsidian 1.14.4 round-trip passed on macOS and failed on Linux/Windows. Exact run/job IDs and artifact digests are recorded in evidence/r2.8.72-roundtrip-ci-be4cbc0.json. The next correction records the exact selected path after Previous note and opens the Windows selector before UI Automation. GitHub Actions remains the only executable validation environment.",
+  "push_status": "R2.8.72 / C01.2-40 is accepted on exact implementation SHA de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9. All seven required workflows passed across Ubuntu, macOS, and Windows; OpenObsidian quality attempt 2 passed after a same-SHA Ubuntu Electron retrieval-boundary failure on attempt 1. Per-platform selection, preview, snapshots, Obsidian reopen, runner/reference-app versions, and artifact hashes are recorded in evidence/r2.8.72-c01.2-40-de43f2d.json. No local executable validation was run.",
   "ci_results": [
     {
       "name": "inventory",
@@ -25143,7 +25143,7 @@
       "next_action": "C01.2-39 is accepted with exact-SHA cross-platform evidence. Keep parent C01/C01.2 pending and select the next uncovered reference-app read-only flow."
     },
     "R2.8.72": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "a3aafa3ef954093239a4d128d81de6ec1622fe5f",
       "scope": "Exercise external note creation, explicit note-list refresh, note selection, source preview, and Obsidian reopen in the actual cross-platform desktop round-trip.",
       "acceptance": [
@@ -25162,7 +25162,8 @@
         "5788a79c46e2aeb56abf34590754ccc6cb789e53",
         "f85d619b5d8c64dd2afe2b95509e5fadf6f41c25",
         "be082a4864b38d28cf2ab15489d7ed84c47b5271",
-        "be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0"
+        "be4cbc0db3ef3e8ed5a1c0cc2368d6cef6a036a0",
+        "de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9"
       ],
       "ci_attempts": [
         {
@@ -25422,9 +25423,70 @@
           },
           "finding": "The macOS reference-app round-trip passed. The Windows lookup ran while the Note to inspect popup was closed. The Linux screenshot visibly showed After refresh.md as selected, but OCR did not recognize the label and stopped before source-marker validation.",
           "evidence": "evidence/r2.8.72-roundtrip-ci-be4cbc0.json"
+        },
+        {
+          "source_sha": "de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
+          "workflow": "Obsidian vault round-trip acceptance",
+          "run_id": 38106186965,
+          "status": "completed",
+          "conclusion": "success",
+          "jobs": {
+            "ubuntu-24.04": {
+              "job_id": 114372107946,
+              "conclusion": "success",
+              "artifact_id": 11689718113,
+              "artifact_digest": "sha256:f78990de317b58229e149cc5c3512af7163968b780792a5bfbc821ac136ba14b"
+            },
+            "macos-latest": {
+              "job_id": 114372107792,
+              "conclusion": "success",
+              "artifact_id": 11689688167,
+              "artifact_digest": "sha256:98f73a66b6c6936b362660ad9fdcc655d168c00b5c83a678da96405e7963b260"
+            },
+            "windows-latest": {
+              "job_id": 114372107983,
+              "conclusion": "success",
+              "artifact_id": 11689582483,
+              "artifact_digest": "sha256:0ff3dcbfed38eca075138be256bdb12b6ec8c5a4c30bc2db2dd3f6b7104ebc98"
+            }
+          },
+          "required_workflow_runs": {
+            "inventory": {
+              "run_id": 38106187013,
+              "conclusion": "success"
+            },
+            "quality": {
+              "run_id": 38106187005,
+              "attempt": 2,
+              "conclusion": "success"
+            },
+            "desktop_build": {
+              "run_id": 38106187009,
+              "conclusion": "success"
+            },
+            "plugin_renderer": {
+              "run_id": 38106186978,
+              "conclusion": "success"
+            },
+            "loaded_plugin_workflows": {
+              "run_id": 38106186983,
+              "conclusion": "success"
+            },
+            "rust_ci": {
+              "run_id": 38106187008,
+              "conclusion": "success"
+            },
+            "obsidian_vault_roundtrip": {
+              "run_id": 38106186965,
+              "conclusion": "success"
+            }
+          },
+          "finding": "C01.2-40 passed. Linux/macOS CI diagnostics confirmed the Previous note action selected After refresh.md; Windows UI Automation selected the exact menu item. All platforms showed the unique source marker, closed preview, preserved vault/app-data policy, and reopened the unchanged 129-byte note in Obsidian.",
+          "evidence": "evidence/r2.8.72-c01.2-40-de43f2d.json"
         }
       ],
-      "next_action": "Commit and push the exact-path navigation diagnostics and Windows menu-open correction; inspect the resulting exact-SHA GitHub Actions runs."
+      "next_action": "C01.2-40 is accepted with exact-SHA cross-platform evidence. Select the next uncovered reference-app read-only flow for R2.8.73; keep parent C01/C01.2 pending.",
+      "completed_at": "2026-10-11T02:56:47Z"
     }
   },
   "ci_preparation": {

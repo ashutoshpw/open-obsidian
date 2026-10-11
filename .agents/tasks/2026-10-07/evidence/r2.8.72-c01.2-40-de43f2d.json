@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T02:54:30Z",
+  "milestone": "R2.8.72 / C01.2-40",
+  "source_sha": "de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
+  "source_commit": "[rust R2.8.72] Verify external note selection",
+  "required_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38106187013,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106187013",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114372107805, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38106187005,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106187005",
+      "attempt": 2,
+      "conclusion": "success",
+      "attempts": [
+        {
+          "attempt": 1,
+          "conclusion": "failure",
+          "jobs": [
+            {"name": "ubuntu-latest", "job_id": 114372108202, "conclusion": "failure"},
+            {"name": "macos-latest", "job_id": 114372108195, "conclusion": "success"},
+            {"name": "windows-latest", "job_id": 114372108057, "conclusion": "success"}
+          ],
+          "finding": "The Ubuntu Electron vault audit did not reach its local retrieval boundary on the first attempt. Same-SHA retry passed."
+        },
+        {
+          "attempt": 2,
+          "conclusion": "success",
+          "jobs": [
+            {"name": "ubuntu-latest", "job_id": 114372477310, "conclusion": "success"},
+            {"name": "windows-latest", "job_id": 114372478351, "conclusion": "success"},
+            {"name": "macos-latest", "job_id": 114372496762, "conclusion": "success"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38106187009,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106187009",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114372107830, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114372107918, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114372107958, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38106186978,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106186978",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114372107930, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114372108021, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114372108102, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38106186983,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106186983",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "macos-latest", "job_id": 114372107642, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114372107853, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114372107900, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38106187008,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106187008",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 114372107803, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114372108033, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 114372108080, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "Obsidian vault round-trip acceptance",
+      "run_id": 38106186965,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38106186965",
+      "conclusion": "success",
+      "reference_application": "Obsidian 1.14.4",
+      "jobs": [
+        {
+          "name": "Linux",
+          "job_id": 114372107946,
+          "conclusion": "success",
+          "runner": {"image": "ubuntu24", "version": "20261004.327.1", "architecture": "x64"},
+          "reference_app_asset": {
+            "name": "Obsidian-1.14.4.AppImage",
+            "sha256": "6362ddbeeeebb7bbccb48fae009572cf2284ef92f5c919c1332aba48de6ffeaa"
+          },
+          "artifact": {
+            "id": 11689718113,
+            "name": "obsidian-vault-roundtrip-Linux-de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
+            "size_in_bytes": 5098968,
+            "digest": "sha256:f78990de317b58229e149cc5c3512af7163968b780792a5bfbc821ac136ba14b"
+          },
+          "selection": "Previous note button; CI diagnostics recorded selected=After refresh.md",
+          "external_note": {
+            "path": "After refresh.md",
+            "bytes": 129,
+            "sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+            "source_marker_visible": true,
+            "source_unchanged_after_reopen": true,
+            "path_visible_in_reopened_file_explorer": true
+          },
+          "vault_changes_after_creation": ["After refresh.md"],
+          "vault_unchanged_after_preview_close": true,
+          "app_data_policy_passed": true,
+          "reference_workspace_state_changes": [],
+          "non_workspace_paths_unchanged_after_reopen": true
+        },
+        {
+          "name": "macOS",
+          "job_id": 114372107792,
+          "conclusion": "success",
+          "runner": {"image": "macos26", "version": "20260907.0351.1", "architecture": "arm64"},
+          "reference_app_asset": {
+            "name": "Obsidian-1.14.4.dmg",
+            "sha256": "dcf818dd20ee5d9dd3e782eee0c0c4c47cc225383b051c2fc9af7d5772f59f70"
+          },
+          "artifact": {
+            "id": 11689688167,
+            "name": "obsidian-vault-roundtrip-macOS-de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
+            "size_in_bytes": 6194632,
+            "digest": "sha256:98f73a66b6c6936b362660ad9fdcc655d168c00b5c83a678da96405e7963b260"
+          },
+          "selection": "Previous note button; CI diagnostics recorded selected=After refresh.md",
+          "external_note": {
+            "path": "After refresh.md",
+            "bytes": 129,
+            "sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+            "source_marker_visible": true,
+            "source_unchanged_after_reopen": true,
+            "path_visible_in_reopened_file_explorer": true
+          },
+          "vault_changes_after_creation": ["After refresh.md"],
+          "vault_unchanged_after_preview_close": true,
+          "app_data_policy_passed": true,
+          "reference_workspace_state_changes": [],
+          "non_workspace_paths_unchanged_after_reopen": true
+        },
+        {
+          "name": "Windows",
+          "job_id": 114372107983,
+          "conclusion": "success",
+          "runner": {"image": "win25-vs2026", "version": "20260925.250.1", "architecture": "x64"},
+          "reference_app_asset": {
+            "name": "Obsidian-1.14.4.exe",
+            "sha256": "28662520368d5956df7798076b8370ac730164a8863dcd4f678ced53f63faa00"
+          },
+          "artifact": {
+            "id": 11689582483,
+            "name": "obsidian-vault-roundtrip-Windows-de43f2dd78cb1d5228a9e093d2deaa80e91dd7e9",
+            "size_in_bytes": 5788421,
+            "digest": "sha256:0ff3dcbfed38eca075138be256bdb12b6ec8c5a4c30bc2db2dd3f6b7104ebc98"
+          },
+          "selection": "Windows UI Automation exact menu item selection",
+          "external_note": {
+            "path": "After refresh.md",
+            "bytes": 129,
+            "sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+            "source_marker_visible": true,
+            "source_unchanged_after_reopen": true,
+            "path_visible_in_reopened_file_explorer": true
+          },
+          "vault_changes_after_creation": ["After refresh.md"],
+          "vault_unchanged_after_preview_close": true,
+          "app_data_policy_passed": true,
+          "reference_workspace_state_changes": [],
+          "non_workspace_paths_unchanged_after_reopen": true
+        }
+      ]
+    }
+  ],
+  "acceptance": {
+    "external_write_created_exactly_one_note": true,
+    "refreshed_markdown_count_visible": 3,
+    "selected_path_verified": true,
+    "source_marker_visible_only_during_preview": true,
+    "vault_and_app_data_policy_preserved": true,
+    "external_note_reopened_unchanged_in_obsidian": true,
+    "all_required_workflows_passed_on_exact_sha": true,
+    "local_executable_validation": "none"
+  },
+  "limitations": [
+    "C01.2-40 is accepted for the tested pinned runner and Obsidian 1.14.4 configurations; this does not complete the broader parent C01 or C01.2 acceptance matrix.",
+    "No local executable tests, builds, formatters, linters, probes, or application launches were run."
+  ]
+}
