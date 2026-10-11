@@ -2,13 +2,13 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T20:13:29+00:00",
+  "updated_at": "2026-10-11T20:30:24+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
   "current_milestone": "R2.8.91",
-  "next_action": "Complete R2.8.91: resolve the capability filesystem dependency lockfile in GitHub CI, finish journal/recovery and failure-injection coverage, then pass all seven workflows on the exact pushed source SHA. Keep Canvas text extraction as the following document-layer slice; keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
+  "next_action": "Push the R2.8.91 CI corrections (inventory exclusion, GitHub-reported Rust formatting, and test helper import), then obtain all seven required workflows on that exact SHA. Keep Canvas text extraction as the following document-layer slice; keep C06/C06.1 pending until explicit native UI behavior also passes exact-SHA GitHub CI.",
   "push_status": "R2.8.90 was accepted on exact SHA 612fc550c7061d751672790f2b2b21869e990a9d after all seven required workflows passed. The tracker checkpoint at 25d5962ab1bfbdae562a1a67ca21e5ada2eed948 passed all six workflows triggered by the documentation push; its path-filtered Obsidian round-trip remains accepted on 612fc550c7061d751672790f2b2b21869e990a9d. See evidence/r2.8.90-attempt-3-612fc55.json and evidence/r2.8.91-starting-checkpoint-25d5962.json. R2.8.91 implementation is in progress and has not passed exact-SHA CI. C06 and C06.1 remain pending for native Canvas UI and explicit note creation.",
   "blockers": [],
   "phases": {
@@ -30200,7 +30200,42 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "15b8eef965fb3ab6e21394ffcb8fad68c8c3f038",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.91-attempt-1-15b8eef.json",
+          "workflow_runs": {
+            "inventory": 38171255873,
+            "quality": 38171255828,
+            "desktop_build": 38171255966,
+            "plugin_renderer": 38171255846,
+            "loaded_plugins": 38171255859,
+            "rust_ci": 38171255867,
+            "vault_roundtrip": 38171255821
+          },
+          "finding": "Four of seven required workflows passed. Inventory rejected the migration resolver workflow; Rust CI and the vault round-trip were blocked by the unresolved Cargo.lock.",
+          "correction": "Resolve and commit Cargo.lock through GitHub Actions, then exclude the migration-only resolver workflow from the legacy inventory."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "f975e48d8887c79e72623c85bac75a4cabecc723",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.91-attempt-2-f975e48.json",
+          "workflow_runs": {
+            "inventory": 38171443163,
+            "quality": 38171443192,
+            "desktop_build": 38171443149,
+            "plugin_renderer": 38171443175,
+            "loaded_plugins": 38171443152,
+            "rust_ci": 38171443147,
+            "vault_roundtrip": 38171443146
+          },
+          "finding": "Five of seven required workflows passed, including the three-platform Obsidian round-trip. Inventory found the resolver workflow, while Rust CI reported formatting differences and an unimported test helper.",
+          "correction": "Add the inventory exclusion, apply GitHub's formatter output, and import create_temporary_name in the test module."
+        }
+      ],
       "lockfile_resolution": {
         "source_sha": "15b8eef965fb3ab6e21394ffcb8fad68c8c3f038",
         "workflow_run_id": 38171266213,
@@ -30214,7 +30249,7 @@
         "evidence": "evidence/r2.8.91-cargo-lock-resolution-15b8eef.json"
       },
       "implementation_sha": null,
-      "push_status": "The create-only API, capability-relative publication, identity-checked staging, fail-closed recovery for ambiguous partial/foreign stages, and failure-injection coverage are committed at 15b8eef. The Rust 1.95 GitHub Actions resolver passed on that SHA and produced Cargo.lock; artifact and file digests are in evidence/r2.8.91-cargo-lock-resolution-15b8eef.json. Commit the lockfile, then require all seven workflows to pass on the exact locked implementation SHA before acceptance. No local executable validation was run.",
+      "push_status": "The create-only API, capability-relative publication, identity-checked staging, fail-closed recovery for ambiguous partial/foreign stages, and failure-injection coverage are committed at 15b8eef; the GitHub-resolved Cargo.lock is committed at f975e48. Attempt 1 passed four of seven workflows; attempt 2 passed five, including three-platform round-trip. Their failures and exact job IDs are recorded in the attempt evidence. The working tree contains the formatter/import and inventory corrections; push them and rerun all seven workflows on the exact correction SHA before acceptance. No local executable validation was run.",
       "tracker_checkpoint_sha": "25d5962ab1bfbdae562a1a67ca21e5ada2eed948",
       "tracker_checkpoint_outcome": "passed",
       "tracker_checkpoint_evidence": "evidence/r2.8.91-starting-checkpoint-25d5962.json",

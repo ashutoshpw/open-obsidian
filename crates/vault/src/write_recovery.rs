@@ -117,10 +117,9 @@ impl VaultStore {
                         continue;
                     }
                 };
-                if let Err(reason) = self.cleanup_terminal_create_staging(
-                    &record,
-                    state == Some("committed"),
-                ) {
+                if let Err(reason) =
+                    self.cleanup_terminal_create_staging(&record, state == Some("committed"))
+                {
                     report.needs_attention.push(VaultWriteRecoveryIssue {
                         operation_id: record.operation_id,
                         reason,
@@ -325,11 +324,7 @@ impl VaultStore {
         let (publish_outcome, temporary_identity) = match current {
             Some(current) if current.revision_sha256 == record.next_revision => {
                 let identity = self
-                    .open_create_entry_identity_at(
-                        &parent,
-                        &target_name,
-                        &record.relative_path,
-                    )
+                    .open_create_entry_identity_at(&parent, &target_name, &record.relative_path)
                     .map_err(|error| error.to_string())?;
                 let stage_matches = match identity.as_ref() {
                     Some(identity) => self
@@ -359,12 +354,7 @@ impl VaultStore {
                 },
                 None,
             ),
-            None => self.publish_recovered_create(
-                record,
-                &parent,
-                &target_name,
-                &incoming,
-            )?,
+            None => self.publish_recovered_create(record, &parent, &target_name, &incoming)?,
         };
 
         if let CreatePublishOutcome::Conflict { current_revision } = publish_outcome {
@@ -383,8 +373,9 @@ impl VaultStore {
                 false,
                 temporary_identity.as_ref(),
             )?;
-            sync_create_directory(&parent)
-                .map_err(|error| format!("create conflict staging cleanup could not be synced: {error}"))?;
+            sync_create_directory(&parent).map_err(|error| {
+                format!("create conflict staging cleanup could not be synced: {error}")
+            })?;
             self.append_create_journal(
                 &record.operation_id,
                 "conflict",
@@ -455,8 +446,9 @@ impl VaultStore {
             true,
             Some(temporary_identity),
         )?;
-        sync_create_directory(&parent)
-            .map_err(|error| format!("recovered create staging cleanup could not be synced: {error}"))?;
+        sync_create_directory(&parent).map_err(|error| {
+            format!("recovered create staging cleanup could not be synced: {error}")
+        })?;
         Ok(RecoveryOutcome::Recovered)
     }
 
@@ -476,7 +468,9 @@ impl VaultStore {
         let staged = self
             .read_create_target_at(parent, &temporary_name, &record.relative_path)
             .map_err(|error| error.to_string())?
-            .ok_or_else(|| "create recovery staging file disappeared before publication".to_owned())?;
+            .ok_or_else(|| {
+                "create recovery staging file disappeared before publication".to_owned()
+            })?;
         if staged.revision_sha256 != record.next_revision
             || !self
                 .create_entry_matches_handle_at(
@@ -487,7 +481,9 @@ impl VaultStore {
                 )
                 .map_err(|error| error.to_string())?
         {
-            return Err("create recovery staging file failed its identity or revision check".to_owned());
+            return Err(
+                "create recovery staging file failed its identity or revision check".to_owned(),
+            );
         }
         match parent.hard_link(&temporary_name, parent, target_name) {
             Ok(()) => {
@@ -508,12 +504,13 @@ impl VaultStore {
                     {
                         Ok((CreatePublishOutcome::Published, Some(temporary_identity)))
                     }
-                    Some(read) => Ok((CreatePublishOutcome::Conflict {
-                        current_revision: read.revision_sha256,
-                    }, Some(temporary_identity))),
-                    None => Err(
-                        "create target disappeared during recovery publication".to_owned(),
-                    ),
+                    Some(read) => Ok((
+                        CreatePublishOutcome::Conflict {
+                            current_revision: read.revision_sha256,
+                        },
+                        Some(temporary_identity),
+                    )),
+                    None => Err("create target disappeared during recovery publication".to_owned()),
                 }
             }
             Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {
@@ -534,12 +531,13 @@ impl VaultStore {
                     {
                         Ok((CreatePublishOutcome::Published, Some(temporary_identity)))
                     }
-                    Some(read) => Ok((CreatePublishOutcome::Conflict {
-                        current_revision: read.revision_sha256,
-                    }, Some(temporary_identity))),
-                    None => Err(
-                        "create target disappeared during recovery publication".to_owned(),
-                    ),
+                    Some(read) => Ok((
+                        CreatePublishOutcome::Conflict {
+                            current_revision: read.revision_sha256,
+                        },
+                        Some(temporary_identity),
+                    )),
+                    None => Err("create target disappeared during recovery publication".to_owned()),
                 }
             }
             Err(error) => Err(format!(
@@ -634,7 +632,7 @@ impl VaultStore {
                     }
                     _ => {
                         return Err(
-                            "create conflict history is only partially preserved".to_owned(),
+                            "create conflict history is only partially preserved".to_owned()
                         );
                     }
                 }

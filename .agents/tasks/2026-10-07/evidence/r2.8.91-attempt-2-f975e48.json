@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.91",
+  "attempt": 2,
+  "source_sha": "f975e48d8887c79e72623c85bac75a4cabecc723",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38171443163,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443163",
+      "jobs": [{"id": 114564714888, "name": "inventory", "conclusion": "failure"}],
+      "failure": "The inventory check reported .github/workflows/resolve-cargo-lock.yml as an untracked project file."
+    },
+    "quality": {
+      "id": 38171443192,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443192",
+      "jobs": [
+        {"id": 114564715139, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114564715241, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114564715353, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38171443149,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443149",
+      "jobs": [
+        {"id": 114564715120, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114564715328, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114564715332, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38171443175,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443175",
+      "jobs": [
+        {"id": 114564715101, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114564715288, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114564715293, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38171443152,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443152",
+      "jobs": [
+        {"id": 114564714932, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114564715154, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114564715212, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38171443147,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443147",
+      "jobs": [
+        {"id": 114564714749, "name": "minimum supported Rust (1.95)", "conclusion": "failure"},
+        {"id": 114564714887, "name": "rust (windows-latest)", "conclusion": "failure"},
+        {"id": 114564714891, "name": "rust (macos-latest)", "conclusion": "failure"},
+        {"id": 114564714896, "name": "rust (ubuntu-latest)", "conclusion": "failure"}
+      ],
+      "failure": "Ubuntu reported rustfmt layout differences. All four Rust jobs failed because tests referenced create_temporary_name without importing it into the test module."
+    },
+    "vault_roundtrip": {
+      "id": 38171443146,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38171443146",
+      "jobs": [
+        {"id": 114564715128, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {"id": 114564715271, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success"},
+        {"id": 114564715292, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success"}
+      ]
+    }
+  },
+  "finding": "Five of seven required workflows passed, including the full Linux/macOS/Windows Obsidian round-trip. Rust CI and inventory failed. The formatter output and compiler diagnostics provided the exact correction needed.",
+  "correction": "Exclude the resolver workflow from source inventory, apply GitHub's reported rustfmt layout to vault sources, and import create_temporary_name in the test module.",
+  "local_executable_validation": "none; all executable validation ran in GitHub Actions."
+}

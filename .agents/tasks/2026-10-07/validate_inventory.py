@@ -79,6 +79,8 @@ actual.discard(".github/workflows/rust.yml")
 actual.discard(".github/workflows/obsidian-reference-feasibility.yml")
 # The pinned Linux vault author/open/reopen workflow is migration acceptance tooling.
 actual.discard(".github/workflows/obsidian-vault-roundtrip.yml")
+# The manual Cargo.lock resolver is migration dependency tooling.
+actual.discard(".github/workflows/resolve-cargo-lock.yml")
 if actual != recorded:
     errors.append(f"File inventory differs: added={actual-recorded}, missing={recorded-actual}")
 for item in inventory["files"]:

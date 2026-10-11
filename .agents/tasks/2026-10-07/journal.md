@@ -4301,3 +4301,25 @@ are recorded in `evidence/r2.8.91-cargo-lock-resolution-15b8eef.json`. This was
 metadata resolution only, not compilation or tests. Next: commit and push the
 lockfile, then obtain all seven required R2.8.91 workflows on the exact locked
 implementation SHA before acceptance.
+
+R2.8.91 attempt 1 ran all seven required workflows on exact SHA
+`15b8eef965fb3ab6e21394ffcb8fad68c8c3f038`. Quality, desktop build, plugin
+renderer, and loaded-plugin workflows passed. Inventory rejected the new
+resolver workflow, while Rust CI and all three vault round-trip jobs failed
+because the lockfile had not yet been resolved. Run and job IDs and outcomes
+are in `evidence/r2.8.91-attempt-1-15b8eef.json`. This attempt was not accepted.
+
+Attempt 2 ran all seven workflows on exact lockfile-bearing SHA
+`f975e48d8887c79e72623c85bac75a4cabecc723`. Quality, desktop build, plugin
+renderer, loaded plugins, and the Obsidian 1.14.4 vault round-trip passed; the
+round-trip passed on Linux, macOS, and Windows. Inventory still reported the
+resolver workflow, and Rust CI reported formatter differences plus a missing
+test-module import for `create_temporary_name`. Exact run and job IDs are in
+`evidence/r2.8.91-attempt-2-f975e48.json`. This attempt was not accepted.
+
+The next correction applies the exact formatter changes shown in GitHub CI,
+imports the temporary-name helper in the test module, and excludes the
+migration-only lockfile resolver from the legacy source inventory. A static
+review compared the source against the saved GitHub formatter diff and
+confirmed the reported formatting hunks and test import are addressed. No
+local executable validation was run.

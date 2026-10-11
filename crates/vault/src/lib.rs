@@ -1,5 +1,9 @@
 //! Source-preserving vault reads and revision-bound rename previews.
 
+use cap_fs_ext::{DirExt, FollowSymlinks, OpenOptionsFollowExt};
+use cap_std::fs::{
+    Dir as CapabilityDir, File as CapabilityFile, OpenOptions as CapabilityOpenOptions,
+};
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
     AppearanceMode, AppearanceSettings, DailyNoteSettings, HotkeyBinding, HotkeysSettings,
@@ -13,10 +17,6 @@ use openobsidian_doc::{
     RawDocument, RenamePlanFile, build_link_rename_plan, guard_note_transclusion, resolve_link,
     resolve_link_with_sources, resolve_link_with_subpath_statuses, slice_markdown_subpath,
     three_way_merge_bytes,
-};
-use cap_fs_ext::{DirExt, FollowSymlinks, OpenOptionsFollowExt};
-use cap_std::fs::{
-    Dir as CapabilityDir, File as CapabilityFile, OpenOptions as CapabilityOpenOptions,
 };
 use same_file::Handle as SameFileHandle;
 use sha2::{Digest, Sha256};
@@ -1598,10 +1598,7 @@ impl VaultStore {
     /// Incoming bytes are preserved in app-owned recovery history before the
     /// prepared journal record. Publication uses a hard link from a complete,
     /// same-directory temporary file so readers never observe a partial target.
-    pub fn create_new(
-        &self,
-        request: VaultCreateRequest,
-    ) -> Result<VaultCreateResult, VaultError> {
+    pub fn create_new(&self, request: VaultCreateRequest) -> Result<VaultCreateResult, VaultError> {
         let relative_path = normalize_relative_path(&request.relative_path)?;
         let relative_path_text = path_to_slashes(&relative_path)?;
         // Keep the checked parent directory open through publication. Every
@@ -1724,9 +1721,8 @@ impl VaultStore {
                         return Err(error);
                     }
                     Err(path_error) => {
-                        let reason = format!(
-                            "create failed: {error}; target check failed: {path_error}"
-                        );
+                        let reason =
+                            format!("create failed: {error}; target check failed: {path_error}");
                         let _ = self.append_create_journal(
                             &operation_id,
                             "recovery_required",
@@ -1838,9 +1834,8 @@ impl VaultStore {
             &next_revision,
             None,
         ) {
-            let reason = format!(
-                "file was published but its commit journal failed: {journal_error}"
-            );
+            let reason =
+                format!("file was published but its commit journal failed: {journal_error}");
             let _ = self.append_create_journal(
                 &operation_id,
                 "recovery_required",
@@ -2024,18 +2019,27 @@ impl VaultStore {
                             relative_path,
                             expected_file,
                         )
-                        .map_err(|error| format!("create staging identity cannot be checked: {error}"))?
+                        .map_err(|error| {
+                            format!("create staging identity cannot be checked: {error}")
+                        })?
                     {
-                        return Err("create staging entry is not owned by this operation".to_owned());
+                        return Err(
+                            "create staging entry is not owned by this operation".to_owned()
+                        );
                     }
                     if !require_target_link && staged.revision_sha256 != expected_revision {
-                        return Err("create staging file no longer matches the operation's revision".to_owned());
+                        return Err(
+                            "create staging file no longer matches the operation's revision"
+                                .to_owned(),
+                        );
                     }
                 }
                 if require_target_link {
                     let target = self
                         .read_create_target_at(parent, target_name, relative_path)
-                        .map_err(|error| format!("published create target cannot be checked: {error}"))?;
+                        .map_err(|error| {
+                            format!("published create target cannot be checked: {error}")
+                        })?;
                     if !matches!(target.as_ref(), Some(target) if target.revision_sha256 == staged.revision_sha256)
                     {
                         return Err("published create target and staging bytes differ".to_owned());
@@ -2047,12 +2051,19 @@ impl VaultStore {
                             target_name,
                             relative_path,
                         )
-                        .map_err(|error| format!("create staging identity cannot be checked: {error}"))?
+                        .map_err(|error| {
+                            format!("create staging identity cannot be checked: {error}")
+                        })?
                     {
-                        return Err("create staging entry is not the published target's file".to_owned());
+                        return Err(
+                            "create staging entry is not the published target's file".to_owned()
+                        );
                     }
                 } else if expected_file.is_none() {
-                    return Err("create staging entry ownership cannot be verified after interruption".to_owned());
+                    return Err(
+                        "create staging entry ownership cannot be verified after interruption"
+                            .to_owned(),
+                    );
                 }
                 #[cfg(test)]
                 if self.fail_create_temporary_cleanup {
@@ -2062,7 +2073,9 @@ impl VaultStore {
                     .remove_file(temporary_name)
                     .map_err(|error| format!("create staging file cannot be removed: {error}"))
             }
-            Err(error) => Err(format!("create staging file cannot be checked: {error}")),
+            Err(error) => Err(format!(
+                "create staging file cannot be checked: {error}"
+            )),
         }
     }
 
@@ -2085,9 +2098,9 @@ impl VaultStore {
                             relative_path,
                             expected_file,
                         )
-                    .map_err(|error| {
-                        format!("failed create staging identity cannot be checked: {error}")
-                    })?
+                        .map_err(|error| {
+                            format!("failed create staging identity cannot be checked: {error}")
+                        })?
                 {
                     return Err("failed create staging entry is not owned by this operation".into());
                 }
@@ -2095,7 +2108,9 @@ impl VaultStore {
                     format!("failed create staging file cannot be removed: {error}")
                 })
             }
-            Err(error) => Err(format!("failed create staging file cannot be checked: {error}")),
+            Err(error) => Err(format!(
+                "failed create staging file cannot be checked: {error}"
+            )),
         }
     }
 
@@ -2296,7 +2311,9 @@ impl VaultStore {
             options.write(true).create_new(true);
             let mut temporary = parent.open_with(&temporary_name, &options)?;
             owns_temporary = true;
-            owned_identity = Some(SameFileHandle::from_file(temporary.try_clone()?.into_std())?);
+            owned_identity = Some(SameFileHandle::from_file(
+                temporary.try_clone()?.into_std(),
+            )?);
             #[cfg(test)]
             if let Some(prefix_length) = self.fail_create_write_after_bytes {
                 temporary.write_all(&bytes[..prefix_length.min(bytes.len())])?;
@@ -2333,9 +2350,9 @@ impl VaultStore {
                     parent,
                     &temporary_name,
                     relative_path,
-                    owned_identity
-                        .as_ref()
-                        .ok_or_else(|| io::Error::other("create staging identity is unavailable"))?,
+                    owned_identity.as_ref().ok_or_else(|| {
+                        io::Error::other("create staging identity is unavailable")
+                    })?,
                 )
                 .map_err(|error| io::Error::other(error.to_string()))?
             {
@@ -2380,15 +2397,19 @@ impl VaultStore {
                 relative_path: relative_path.to_path_buf(),
                 source,
             }),
-            Err(source) => match owned_identity.as_ref().ok_or_else(|| {
-                "failed create staging identity could not be retained".to_owned()
-            }).and_then(|identity| self.remove_failed_create_temporary_at(
-                parent,
-                &temporary_name,
-                relative_path,
-                bytes,
-                identity,
-            )) {
+            Err(source) => match owned_identity
+                .as_ref()
+                .ok_or_else(|| "failed create staging identity could not be retained".to_owned())
+                .and_then(|identity| {
+                    self.remove_failed_create_temporary_at(
+                        parent,
+                        &temporary_name,
+                        relative_path,
+                        bytes,
+                        identity,
+                    )
+                })
+            {
                 Ok(()) => Err(VaultError::WriteFailed {
                     relative_path: relative_path.to_path_buf(),
                     source,
@@ -2879,8 +2900,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        AppearanceMode, HotkeyBinding, LinkKind, LinkReference, MAX_NOTE_SOURCE_PREVIEW_BYTES,
-        MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource, TransclusionBlockReason,
+        AppearanceMode, create_temporary_name, HotkeyBinding, LinkKind, LinkReference,
+        MAX_NOTE_SOURCE_PREVIEW_BYTES, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
+        TransclusionBlockReason,
         VaultCreateRequest, VaultError, VaultHistoryKind, VaultNoteEmbedDisposition, VaultRoot,
         VaultStore, VaultStyleAssetKind, VaultWriteRequest, sha256_hex,
     };
@@ -4194,7 +4216,10 @@ mod tests {
         assert_eq!(fs::read(preserved_path).unwrap(), incoming);
         let journal = journal_entries(&app_data_temp.0);
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "conflict"]
         );
         assert!(journal.iter().all(|entry| entry["operation"] == "create"));
@@ -4227,7 +4252,10 @@ mod tests {
         assert!(!target.exists());
         let journal = journal_entries(&app_data_temp.0);
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "failed"]
         );
         let operation_id = journal[0]["id"].as_str().unwrap();
@@ -4305,7 +4333,10 @@ mod tests {
         assert!(recovered_history.iter().all(|record| !record.protected));
         let journal = journal_entries(&app_data_temp.0);
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "committed"]
         );
         assert!(
@@ -4342,7 +4373,10 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec!["prepared", "recovery_required"]
         );
-        let operation_id = journal_before_recovery[0]["id"].as_str().unwrap().to_owned();
+        let operation_id = journal_before_recovery[0]["id"]
+            .as_str()
+            .unwrap()
+            .to_owned();
         drop(store);
 
         let store = VaultStore::open(&vault_temp.0, &app_data_temp.0).unwrap();
@@ -4353,7 +4387,10 @@ mod tests {
         assert_eq!(fs::read(&target).unwrap(), incoming);
         let journal = journal_entries(&app_data_temp.0);
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "recovery_required", "committed"]
         );
     }
@@ -4463,7 +4500,10 @@ mod tests {
         );
         let journal = journal_entries(&app_data_temp.0);
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "conflict"]
         );
     }
@@ -4489,9 +4529,7 @@ mod tests {
             .as_str()
             .unwrap()
             .to_owned();
-        let temporary_path = vault_temp
-            .0
-            .join(create_temporary_name(&operation_id));
+        let temporary_path = vault_temp.0.join(create_temporary_name(&operation_id));
         assert!(temporary_path.exists());
         assert_eq!(fs::read(&target).unwrap(), incoming);
         drop(store);
@@ -4567,7 +4605,10 @@ mod tests {
         );
         let journal = journal_entries(&app_data_temp.0);
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "conflict"]
         );
     }
@@ -4595,11 +4636,16 @@ mod tests {
             )
             .unwrap();
         store
-            .append_create_journal(operation_id, "prepared", "Partial.md", None, &revision, None)
+            .append_create_journal(
+                operation_id,
+                "prepared",
+                "Partial.md",
+                None,
+                &revision,
+                None,
+            )
             .unwrap();
-        let temporary_path = vault_temp
-            .0
-            .join(create_temporary_name(operation_id));
+        let temporary_path = vault_temp.0.join(create_temporary_name(operation_id));
         fs::write(&temporary_path, &incoming[..8]).unwrap();
         drop(store);
 
@@ -4777,12 +4823,16 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(journal_states.first(), Some(&"prepared"));
         assert_eq!(journal_states.last(), Some(&"recovery_required"));
-        assert!(!journal_states.iter().any(|state| {
-            matches!(*state, "committed" | "conflict")
-        }));
-        assert!(store
-            .read_conflict(&format!("{operation_id}-incoming"), &relative_path)
-            .is_ok());
+        assert!(
+            !journal_states
+                .iter()
+                .any(|state| { matches!(*state, "committed" | "conflict") })
+        );
+        assert!(
+            store
+                .read_conflict(&format!("{operation_id}-incoming"), &relative_path)
+                .is_ok()
+        );
     }
 
     #[test]
@@ -4805,9 +4855,7 @@ mod tests {
 
         let journal = journal_entries(&app_data_temp.0);
         let operation_id = journal[0]["id"].as_str().unwrap();
-        let temporary_path = vault_temp
-            .0
-            .join(create_temporary_name(operation_id));
+        let temporary_path = vault_temp.0.join(create_temporary_name(operation_id));
         assert!(!target.exists());
         assert!(!temporary_path.exists());
         assert_eq!(
@@ -4821,7 +4869,10 @@ mod tests {
             incoming
         );
         assert_eq!(
-            journal.iter().map(|entry| entry["state"].as_str().unwrap()).collect::<Vec<_>>(),
+            journal
+                .iter()
+                .map(|entry| entry["state"].as_str().unwrap())
+                .collect::<Vec<_>>(),
             vec!["prepared", "failed"]
         );
     }
@@ -4847,9 +4898,7 @@ mod tests {
 
         let journal = journal_entries(&app_data_temp.0);
         let operation_id = journal[0]["id"].as_str().unwrap();
-        let temporary_path = vault_temp
-            .0
-            .join(create_temporary_name(operation_id));
+        let temporary_path = vault_temp.0.join(create_temporary_name(operation_id));
         assert!(!target.exists());
         assert_eq!(fs::read(&temporary_path).unwrap(), replacement);
         assert_eq!(
