@@ -34,6 +34,30 @@ impl CanvasDocument {
             .expect("CanvasDocument always contains an edges array")
     }
 
+    /// Returns the stored text from one uniquely identified text node.
+    ///
+    /// The returned text is not trimmed or normalized. This document-only
+    /// operation does not mutate the Canvas or create a note.
+    pub fn extract_text_node(&self, node_id: &str) -> Result<&str, CanvasError> {
+        let mut matching_nodes = self
+            .nodes()
+            .iter()
+            .filter(|node| node.get("id").and_then(Value::as_str) == Some(node_id));
+        let node = matching_nodes
+            .next()
+            .ok_or_else(|| CanvasError::NodeNotFound(node_id.to_owned()))?;
+        if matching_nodes.next().is_some() {
+            return Err(CanvasError::AmbiguousNodeId(node_id.to_owned()));
+        }
+        if node.get("type").and_then(Value::as_str) != Some("text") {
+            return Err(CanvasError::NotTextNode(node_id.to_owned()));
+        }
+
+        node.get("text")
+            .and_then(Value::as_str)
+            .ok_or_else(|| CanvasError::TextContentUnavailable(node_id.to_owned()))
+    }
+
     /// Replaces the text on one uniquely identified text node.
     ///
     /// This document-only operation does not create notes or write to a vault.
@@ -64,7 +88,7 @@ impl CanvasDocument {
     }
 }
 
-/// Why a JSON Canvas document could not be parsed, encoded, or edited.
+/// Why a JSON Canvas document could not be parsed, encoded, edited, or extracted.
 #[derive(Debug)]
 pub enum CanvasError {
     /// The source is not valid UTF-8 JSON.
@@ -79,6 +103,8 @@ pub enum CanvasError {
     AmbiguousNodeId(String),
     /// The requested node exists but is not a text node.
     NotTextNode(String),
+    /// The requested text node does not contain a string-valued text field.
+    TextContentUnavailable(String),
 }
 
 impl fmt::Display for CanvasError {
@@ -98,6 +124,9 @@ impl fmt::Display for CanvasError {
             Self::NotTextNode(node_id) => {
                 write!(formatter, "Canvas node is not a text card: {node_id}")
             }
+            Self::TextContentUnavailable(node_id) => {
+                write!(formatter, "Canvas text card has no string text: {node_id}")
+            }
         }
     }
 }
@@ -109,7 +138,8 @@ impl std::error::Error for CanvasError {
             Self::InvalidDocumentShape
             | Self::NodeNotFound(_)
             | Self::AmbiguousNodeId(_)
-            | Self::NotTextNode(_) => None,
+            | Self::NotTextNode(_)
+            | Self::TextContentUnavailable(_) => None,
         }
     }
 }
@@ -290,6 +320,91 @@ mod tests {
                 expected,
                 "{case_id}: edited semantic round trip"
             );
+        }
+    }
+
+    #[test]
+    fn fixture_extraction_returns_exact_text_without_mutating_the_document() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_FIXTURE)
+            .expect("C06 text-card fixture must be JSON");
+        let cases = fixture["valid_extractions"]
+            .as_array()
+            .expect("C06 text-card fixture must contain valid extractions");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"]
+                .as_str()
+                .expect("each valid extraction must have an id");
+            let source = serde_json::to_vec(&case["document"]).unwrap_or_else(|error| {
+                panic!("{case_id}: extraction document must encode: {error}")
+            });
+            let document = parse_canvas(&source)
+                .unwrap_or_else(|error| panic!("{case_id}: document must parse: {error}"));
+            let original = document.clone();
+            let actual = document
+                .extract_text_node(
+                    case["node_id"]
+                        .as_str()
+                        .unwrap_or_else(|| panic!("{case_id}: node_id must be a string")),
+                )
+                .unwrap_or_else(|error| panic!("{case_id}: extraction must succeed: {error}"));
+            let expected = case["text"]
+                .as_str()
+                .unwrap_or_else(|| panic!("{case_id}: expected text must be a string"));
+
+            assert_eq!(actual, expected, "{case_id}: exact extracted text");
+            assert_eq!(document, original, "{case_id}: extraction is immutable");
+        }
+    }
+
+    #[test]
+    fn invalid_fixture_extractions_fail_without_mutating_the_document() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_FIXTURE)
+            .expect("C06 text-card fixture must be JSON");
+        let cases = fixture["invalid_extractions"]
+            .as_array()
+            .expect("C06 text-card fixture must contain invalid extractions");
+        assert!(!cases.is_empty());
+
+        for case in cases {
+            let case_id = case["id"]
+                .as_str()
+                .expect("each invalid extraction must have an id");
+            let source = serde_json::to_vec(&case["document"]).unwrap_or_else(|error| {
+                panic!("{case_id}: extraction document must encode: {error}")
+            });
+            let document = parse_canvas(&source)
+                .unwrap_or_else(|error| panic!("{case_id}: document must parse: {error}"));
+            let original = document.clone();
+            let error = document
+                .extract_text_node(
+                    case["node_id"]
+                        .as_str()
+                        .unwrap_or_else(|| panic!("{case_id}: node_id must be a string")),
+                )
+                .expect_err("invalid fixture extraction must fail");
+
+            match case["error"].as_str() {
+                Some("node_not_found") => assert!(
+                    matches!(&error, CanvasError::NodeNotFound(_)),
+                    "{case_id}: expected missing node error, received {error}"
+                ),
+                Some("ambiguous_node_id") => assert!(
+                    matches!(&error, CanvasError::AmbiguousNodeId(_)),
+                    "{case_id}: expected ambiguous ID error, received {error}"
+                ),
+                Some("not_text_node") => assert!(
+                    matches!(&error, CanvasError::NotTextNode(_)),
+                    "{case_id}: expected non-text node error, received {error}"
+                ),
+                Some("text_content_unavailable") => assert!(
+                    matches!(&error, CanvasError::TextContentUnavailable(_)),
+                    "{case_id}: expected unavailable text error, received {error}"
+                ),
+                other => panic!("{case_id}: unsupported expected error {other:?}"),
+            }
+            assert_eq!(document, original, "{case_id}: failed extraction is immutable");
         }
     }
 

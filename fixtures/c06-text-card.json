@@ -117,5 +117,83 @@
         "edges": []
       }
     }
+  ],
+  "valid_extractions": [
+    {
+      "id": "extract-unicode-multiline-trailing-newline-exactly",
+      "node_id": "text-extract",
+      "text": "  Café 🧭\r\nsecond line\n",
+      "document": {
+        "nodes": [
+          {
+            "id": "text-extract",
+            "type": "text",
+            "text": "  Café 🧭\r\nsecond line\n",
+            "unknownNode": {"preserve": true}
+          }
+        ],
+        "edges": [],
+        "unknownRoot": {"preserve": true}
+      }
+    },
+    {
+      "id": "extract-empty-string",
+      "node_id": "empty-text",
+      "text": "",
+      "document": {
+        "nodes": [{"id": "empty-text", "type": "text", "text": ""}],
+        "edges": []
+      }
+    }
+  ],
+  "invalid_extractions": [
+    {
+      "id": "extract-missing-node-id",
+      "node_id": "absent",
+      "error": "node_not_found",
+      "document": {
+        "nodes": [{"id": "text-1", "type": "text", "text": "present"}],
+        "edges": []
+      }
+    },
+    {
+      "id": "extract-duplicate-node-id",
+      "node_id": "duplicate",
+      "error": "ambiguous_node_id",
+      "document": {
+        "nodes": [
+          {"id": "duplicate", "type": "text", "text": "first"},
+          {"id": "duplicate", "type": "text", "text": "second"}
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "extract-non-text-node",
+      "node_id": "file-1",
+      "error": "not_text_node",
+      "document": {
+        "nodes": [{"id": "file-1", "type": "file", "file": "Notes/Target.md"}],
+        "edges": []
+      }
+    },
+    {
+      "id": "extract-missing-text-field",
+      "node_id": "text-missing",
+      "error": "text_content_unavailable",
+      "document": {
+        "nodes": [{"id": "text-missing", "type": "text"}],
+        "edges": []
+      }
+    },
+    {
+      "id": "extract-non-string-text-field",
+      "node_id": "text-number",
+      "error": "text_content_unavailable",
+      "document": {
+        "nodes": [{"id": "text-number", "type": "text", "text": 42}],
+        "edges": []
+      }
+    }
   ]
 }

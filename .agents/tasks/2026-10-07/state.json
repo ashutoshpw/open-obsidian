@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T21:23:34+00:00",
+  "updated_at": "2026-10-11T21:25:29+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
   "last_reconciled_head": "336e745aac2238c037104ab6cfdb686b59b41d3e",
   "current_milestone": "R2.8.92",
-  "next_action": "Implement the pure CanvasDocument::extract_text_node(&self, node_id: &str) -> Result<&str, CanvasError> document operation in crates/doc, extending the C06 text-card fixture and its inventory hash. Preserve exact text, return typed errors for missing/ambiguous/non-text/missing-or-non-string text, and prove the document is unchanged. Keep engine orchestration, native UI, explicit note creation, and C06/C06.1 acceptance for later milestones; continue using GitHub Actions only for executable validation.",
-  "push_status": "R2.8.91 was accepted on exact implementation SHA 336e745aac2238c037104ab6cfdb686b59b41d3e after all seven required workflows passed. Rust CI attempt 1 was cancelled after a Windows workspace-test stall; same-SHA attempt 2 passed all four jobs. See evidence/r2.8.91-attempt-4-336e745.json. Next: implement R2.8.92 as pure Canvas text extraction, with no engine or UI changes. C06/C06.1 remain pending.",
+  "next_action": "Commit and push the R2.8.92 document, fixture, inventory, and tracker changes; run all seven required GitHub Actions workflows against that exact SHA. Keep C06/C06.1 pending until later engine orchestration and explicit native note-creation behavior are implemented and accepted.",
+  "push_status": "R2.8.91 was accepted on exact implementation SHA 336e745aac2238c037104ab6cfdb686b59b41d3e after all seven required workflows passed. Rust CI attempt 1 was cancelled after a Windows workspace-test stall; same-SHA attempt 2 passed all four jobs. See evidence/r2.8.91-attempt-4-336e745.json. R2.8.92 source, fixture, inventory, and tracker changes are prepared in the working tree and are not committed or pushed. No local executable validation was run; exact-SHA GitHub Actions validation is pending. C06/C06.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -30503,7 +30503,7 @@
       }
     },
     "R2.8.92": {
-      "status": "pending",
+      "status": "in_progress",
       "starting_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e",
       "scope": "Add pure Canvas text-node extraction to the document crate. It returns the exact stored text for one uniquely identified text node and does not mutate the Canvas document. This slice does not add engine orchestration, vault writes, a native UI action, or explicit note creation.",
       "acceptance": [
@@ -30527,7 +30527,7 @@
       ],
       "attempts": [],
       "implementation_sha": null,
-      "push_status": "Planned after R2.8.91 acceptance. Keep this source slice limited to crates/doc and its existing Canvas fixture/inventory entry; use only GitHub Actions for executable validation."
+      "push_status": "The pure extraction API, fixture-driven immutable success/failure coverage, fixture inventory digest, and tracker update are prepared in the working tree. Not committed or pushed; all seven exact-SHA GitHub Actions workflows remain pending. Engine, vault, UI, and C06/C06.1 acceptance remain out of scope."
     }
   },
   "ci_preparation": {

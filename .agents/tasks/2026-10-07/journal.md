@@ -4345,8 +4345,23 @@ archive digests are in
 [`evidence/r2.8.91-attempt-4-336e745.json`](evidence/r2.8.91-attempt-4-336e745.json).
 No local executable validation was run.
 
-R2.8.92 is planned as a pure `CanvasDocument::extract_text_node` operation in
-`crates/doc`, extending the existing C06 text-card fixture with exact valid and
-invalid extraction cases. It will preserve empty, Unicode, multiline, and
-trailing-newline text and leave the document unchanged. Engine orchestration,
-native UI, explicit note creation, and C06/C06.1 acceptance remain pending.
+## 2026-10-11 — R2.8.92 pure Canvas text extraction implementation
+
+Added `CanvasDocument::extract_text_node(&self, node_id: &str) -> Result<&str,
+CanvasError>` in `crates/doc`. It follows the existing unique-ID and text-node
+checks and returns a typed `TextContentUnavailable` error when a text node has
+no string-valued text field. The borrowed result preserves empty, Unicode,
+multiline, and trailing-newline content without mutating the Canvas.
+
+Extended `fixtures/c06-text-card.json` with exact extraction cases and
+fixture-driven tests for successful and rejected extractions. The cases cover
+Unicode with mixed CRLF/LF line endings, a trailing newline, empty text,
+missing and duplicate IDs, non-text nodes, and absent or non-string text. Each
+case asserts the document remains unchanged. Updated the existing `crates/doc`
+inventory entry and fixture SHA-256. Engine orchestration, vault writes, native
+UI, explicit note creation, and C06/C06.1 acceptance remain pending.
+
+These changes are prepared in the working tree and have not been committed or
+pushed. No local tests, builds, formatters, validators, or application launches
+were run. Next: commit and push the coherent slice, then obtain all seven
+required workflows on its exact SHA through GitHub Actions.
