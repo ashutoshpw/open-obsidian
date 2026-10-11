@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T21:32:00+00:00",
+  "updated_at": "2026-10-11T21:47:08+00:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "e5ee89a48f50e43026953e6361bb7312b58b16fa",
-  "current_milestone": "R2.8.92",
-  "next_action": "Commit and push the GitHub-reported R2.8.92 formatting correction with attempt-1 evidence; run all seven required workflows against that exact corrected SHA. Keep C06/C06.1 pending until later engine orchestration and explicit native note-creation behavior are implemented and accepted.",
-  "push_status": "R2.8.92 implementation was pushed on exact source SHA e5ee89a48f50e43026953e6361bb7312b58b16fa. Attempt 1 passed inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows; Ubuntu Rust CI failed only the formatting check at crates/doc/src/canvas.rs:404, while MSRV and vault round-trip jobs were still running at evidence capture. See evidence/r2.8.92-attempt-1-e5ee89a.json. The exact formatting layout has been applied in the working tree; its correction and attempt evidence are not yet committed or pushed. No local executable validation was run. C06/C06.1 remain pending.",
+  "last_reconciled_head": "1a025db5ef713eb6e89c4f7654e97e125af9d992",
+  "current_milestone": "R2.8.93",
+  "next_action": "Run all seven required GitHub Actions workflows on the pushed R2.8.93 engine implementation SHA. Keep native UI integration, Obsidian create-note acceptance, and C06/C06.1 acceptance pending.",
+  "push_status": "R2.8.92 was accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven required workflows passed; see evidence/r2.8.92-attempt-2-1a025db.json. The R2.8.93 engine-only note-creation slice is included in the current source checkpoint and its exact-SHA GitHub Actions CI is pending. No local executable validation was run. Native UI integration and C06/C06.1 acceptance remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "336e745aac2238c037104ab6cfdb686b59b41d3e"
+      "implementation_sha": "1a025db5ef713eb6e89c4f7654e97e125af9d992"
     },
     "R3": {
       "status": "pending",
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.92 accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992 after all seven required GitHub Actions workflows passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; Obsidian 1.14.4 vault round-trip passed on Linux, macOS, and Windows. Attempt 1 failed only Ubuntu formatting and is retained in evidence/r2.8.92-attempt-1-e5ee89a.json; accepted attempt 2 evidence is evidence/r2.8.92-attempt-2-1a025db.json. C06/C06.1 and native note-creation UI remain pending. No local executable validation was run.",
     "R2.8.92 attempt 1 ran on exact source SHA e5ee89a48f50e43026953e6361bb7312b58b16fa. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Ubuntu Rust CI failed only formatting at crates/doc/src/canvas.rs:404 after workspace tests passed; macOS and Windows Rust jobs passed, while MSRV and the three vault round-trip jobs were still running when captured. Evidence is in evidence/r2.8.92-attempt-1-e5ee89a.json. The exact CI-requested formatting layout is applied in the working tree for the correction push. This attempt is not accepted. No local executable validation was run.",
     "R2.8.91 accepted on exact source SHA 336e745aac2238c037104ab6cfdb686b59b41d3e after all seven required GitHub Actions workflows passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; the Obsidian 1.14.4 round-trip passed on all three platforms. Rust CI attempt 1 was cancelled after the Windows workspace-test step stalled, and attempt 2 passed all four jobs on the same SHA. Workflow/job IDs and archive digests are recorded in evidence/r2.8.91-attempt-4-336e745.json. No local executable validation was run.",
     "R2.8.83 documentation-only tracker checkpoint SHA 9176467a8b77bc1963352421867cc87f7dfc9798 passed all six required documentation workflows, including Rust CI on Ubuntu, macOS, Windows and Rust 1.95. The path-filtered round-trip passed on implementation SHA 6d4d891d61acad3ad1c3bbdf8d2b409ab5aa2aef. Exact run/job IDs are in evidence/r2.8.83-tracker-checkpoint-9176467.json. No local executable validation was run.",

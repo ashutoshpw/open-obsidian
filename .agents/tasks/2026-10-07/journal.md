@@ -4372,3 +4372,34 @@ and job IDs and captured statuses are in
 This attempt is not accepted. The exact formatting layout requested by GitHub
 CI is applied in the working tree for a correction push. No local tests,
 builds, formatters, validators, or application launches were run.
+
+R2.8.92 attempt 2 was accepted on exact source SHA
+`1a025db5ef713eb6e89c4f7654e97e125af9d992`. All seven required workflows
+passed: inventory, quality, desktop build, plugin renderer, loaded plugins,
+Rust CI on Ubuntu/macOS/Windows and Rust 1.95, and the pinned Obsidian 1.14.4
+vault round-trip on Linux/macOS/Windows. Workflow/job IDs and artifact archive
+digests are recorded in
+[`evidence/r2.8.92-attempt-2-1a025db.json`](evidence/r2.8.92-attempt-2-1a025db.json).
+No local executable validation was run. C06/C06.1 remain pending.
+
+## 2026-10-11 — R2.8.93 revision-checked text-card note creation
+
+Added an engine-only `VaultSession::create_canvas_note_from_text_node` operation.
+It checks the caller's observed Canvas revision, parses and extracts one text
+node, and creates a new Markdown note with the exact text-card bytes through
+`VaultStore::create_new`. The Canvas is never modified. The method documents
+that revision checking and note publication are not atomic across files and
+that creation uses the validated snapshot. Non-Markdown destinations fail with
+a typed error before reading the Canvas.
+
+The fixture-driven engine coverage checks exact Unicode/mixed-line-ending text,
+lowercase and uppercase Markdown extensions, unchanged Canvas and sibling
+files, stale revisions, missing/duplicate/non-text/invalid text cards,
+malformed Canvas data, existing destination conflicts, traversal using POSIX
+and Windows separators, and missing parent directories. The fixture SHA is
+recorded in `inventory.json`. Native UI confirmation, C06/C06.1 acceptance, and
+the pinned Obsidian create-note round-trip remain pending. No local tests,
+builds, formatters, validators, or application launches were run.
+
+R2.8.93 source and fixture changes are included in the current checkpoint for
+exact-SHA GitHub Actions validation. No local executable validation was run.

@@ -9,12 +9,12 @@ pub use openobsidian_vault::{
     VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultNoteEmbedResolution, VaultReadPreview,
-    VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport, VaultRenameResult,
-    VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
+    VaultCreateResult, VaultRenamePreview, VaultRenameRecoveryIssue, VaultRenameRecoveryReport,
+    VaultRenameResult, VaultWatchError, VaultWatchHint, VaultWatcher, VaultWriteRecoveryIssue,
     VaultWriteRecoveryReport, VaultWriteRequest, VaultWriteResult, analyze_markdown_preview,
     plan_history_retention,
 };
-use openobsidian_vault::{VaultEntry, VaultRead, VaultStore};
+use openobsidian_vault::{VaultCreateRequest, VaultEntry, VaultRead, VaultStore};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
@@ -125,6 +125,48 @@ impl VaultSession {
         })?)
     }
 
+    /// Reads one Canvas snapshot and validates it against the caller's observed
+    /// revision, then creates a note from that snapshot's exact text-card contents.
+    /// An external Canvas edit after the read is not atomically excluded. This
+    /// API never modifies the Canvas.
+    pub fn create_canvas_note_from_text_node(
+        &self,
+        canvas_relative_path: impl AsRef<Path>,
+        expected_canvas_revision_sha256: &str,
+        node_id: &str,
+        note_relative_path: impl AsRef<Path>,
+    ) -> Result<CanvasNoteCreateResult, CanvasNoteCreateError> {
+        let canvas_relative_path = normalize_portable_path(canvas_relative_path.as_ref())?;
+        let note_relative_path = normalize_portable_path(note_relative_path.as_ref())?;
+        if !note_relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
+        {
+            return Err(VaultError::NotMarkdownNote(note_relative_path).into());
+        }
+
+        let current = self.read(&canvas_relative_path)?;
+        if current.revision_sha256 != expected_canvas_revision_sha256 {
+            return Err(CanvasNoteCreateError::StaleRevision {
+                relative_path: canvas_relative_path,
+                expected_revision: expected_canvas_revision_sha256.to_owned(),
+                current_revision: current.revision_sha256,
+            });
+        }
+
+        let document = parse_canvas(current.document.as_bytes())?;
+        let text = document.extract_text_node(node_id)?;
+        let created = self.store.create_new(VaultCreateRequest {
+            relative_path: note_relative_path.clone(),
+            bytes: text.as_bytes().to_vec(),
+        })?;
+
+        Ok(CanvasNoteCreateResult {
+            relative_path: note_relative_path,
+            created,
+        })
+    }
+
     /// Extracts a note's links and resolves them against a stable, confined vault snapshot.
     pub fn resolve_links_for_note(
         &self,
@@ -220,6 +262,15 @@ impl VaultSession {
     }
 }
 
+/// A newly created note copied from one revision-checked Canvas text card.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CanvasNoteCreateResult {
+    /// The normalized vault-relative path of the new note.
+    pub relative_path: PathBuf,
+    /// The created bytes, revision, and journal operation identifier.
+    pub created: VaultCreateResult,
+}
+
 fn normalize_portable_path(relative_path: &Path) -> Result<PathBuf, VaultError> {
     let relative_path = relative_path.to_str().ok_or(VaultError::InvalidPath)?;
     Ok(PathBuf::from(relative_path.replace('\\', "/")))
@@ -239,6 +290,24 @@ pub enum CanvasEditError {
     #[error(transparent)]
     Canvas(#[from] openobsidian_doc::CanvasError),
     /// The confined vault read or revision-checked journal write failed.
+    #[error(transparent)]
+    Vault(#[from] VaultError),
+}
+
+/// Failure to create a note from a revision-checked Canvas text card.
+#[derive(Debug, thiserror::Error)]
+pub enum CanvasNoteCreateError {
+    /// The caller's Canvas snapshot became stale before extraction started.
+    #[error("Canvas revision changed for {relative_path}; reopen it before creating a note")]
+    StaleRevision {
+        relative_path: PathBuf,
+        expected_revision: String,
+        current_revision: String,
+    },
+    /// The Canvas could not be parsed or the text card could not be extracted.
+    #[error(transparent)]
+    Canvas(#[from] openobsidian_doc::CanvasError),
+    /// The confined read or create-only vault operation failed.
     #[error(transparent)]
     Vault(#[from] VaultError),
 }
@@ -510,6 +579,406 @@ mod tests {
     }
 
     #[test]
+    fn fixture_creates_notes_from_canvas_text_without_changing_canvas_or_siblings() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
+            .expect("C06.1 vault fixture must be valid JSON");
+        for case in fixture["valid_creations"]
+            .as_array()
+            .expect("C06.1 fixture must contain valid note creations")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let canvas_storage_path = case["canvas_storage_path"]
+                .as_str()
+                .unwrap_or(canvas_path);
+            let note_path = case["note_path"].as_str().unwrap();
+            let note_storage_path = case["note_storage_path"].as_str().unwrap_or(note_path);
+            let node_id = case["node_id"].as_str().unwrap();
+            let expected_text = case["expected_text"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap_or_else(|error| {
+                panic!("{case_id}: Canvas before value must encode: {error}")
+            });
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::create_dir_all(vault.join("Notes"))
+                .unwrap_or_else(|error| panic!("{case_id}: create Notes folder: {error}"));
+            if let Some(parent) = PathBuf::from(canvas_storage_path).parent() {
+                fs::create_dir_all(vault.join(parent))
+                    .unwrap_or_else(|error| panic!("{case_id}: create Canvas folder: {error}"));
+            }
+            for untouched in case["untouched_files"].as_array().unwrap() {
+                let path = untouched["path"].as_str().unwrap();
+                let text = untouched["text"].as_str().unwrap();
+                fs::write(vault.join(path), text.as_bytes())
+                    .unwrap_or_else(|error| panic!("{case_id}: seed {path}: {error}"));
+            }
+            fs::write(vault.join(canvas_storage_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+
+            let session = VaultSession::open(&vault, &app_data)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let observed = session.read(canvas_path).unwrap();
+            let result = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    node_id,
+                    note_path,
+                )
+                .unwrap_or_else(|error| panic!("{case_id}: create note: {error}"));
+
+            assert_eq!(
+                result.relative_path,
+                PathBuf::from(note_storage_path),
+                "{case_id}: returned path is normalized"
+            );
+            assert_eq!(
+                fs::read(vault.join(note_storage_path)).unwrap(),
+                expected_text.as_bytes(),
+                "{case_id}: note contains the exact text-card bytes"
+            );
+            assert_eq!(
+                result.created.read.document.as_bytes(),
+                expected_text.as_bytes(),
+                "{case_id}: create result contains the exact text-card bytes"
+            );
+            assert!(
+                !result.created.operation_id.is_empty(),
+                "{case_id}: create result includes its journal operation"
+            );
+            assert_eq!(
+                fs::read(vault.join(canvas_storage_path)).unwrap(),
+                source,
+                "{case_id}: note creation leaves Canvas bytes unchanged"
+            );
+            for untouched in case["untouched_files"].as_array().unwrap() {
+                let path = untouched["path"].as_str().unwrap();
+                let text = untouched["text"].as_str().unwrap();
+                assert_eq!(
+                    fs::read(vault.join(path)).unwrap(),
+                    text.as_bytes(),
+                    "{case_id}: note creation leaves {path} unchanged"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn stale_canvas_revision_rejects_note_creation_before_publishing() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
+            .expect("C06.1 vault fixture must be valid JSON");
+        for case in fixture["stale_creations"]
+            .as_array()
+            .expect("C06.1 fixture must contain stale note creations")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let note_path = case["note_path"].as_str().unwrap();
+            let node_id = case["node_id"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap();
+            let external_bytes = serde_json::to_vec(&case["external_after"]).unwrap();
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::create_dir_all(vault.join("Notes"))
+                .unwrap_or_else(|error| panic!("{case_id}: create Notes folder: {error}"));
+            fs::write(vault.join(canvas_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+            let session = VaultSession::open(&vault, &app_data)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let observed = session.read(canvas_path).unwrap();
+            fs::write(vault.join(canvas_path), &external_bytes)
+                .unwrap_or_else(|error| panic!("{case_id}: simulate external edit: {error}"));
+            let external_revision = session.read(canvas_path).unwrap().revision_sha256;
+
+            let error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    node_id,
+                    note_path,
+                )
+                .expect_err("stale Canvas revision must reject note creation");
+            match error {
+                CanvasNoteCreateError::StaleRevision {
+                    relative_path,
+                    expected_revision,
+                    current_revision,
+                } => {
+                    assert_eq!(relative_path, PathBuf::from(canvas_path), "{case_id}: path");
+                    assert_eq!(
+                        expected_revision, observed.revision_sha256,
+                        "{case_id}: observed revision"
+                    );
+                    assert_eq!(
+                        current_revision, external_revision,
+                        "{case_id}: current revision"
+                    );
+                }
+                other => panic!("{case_id}: expected stale revision, received {other:?}"),
+            }
+            assert_eq!(
+                fs::read(vault.join(canvas_path)).unwrap(),
+                external_bytes,
+                "{case_id}: external Canvas bytes remain authoritative"
+            );
+            assert!(
+                !vault.join(note_path).exists(),
+                "{case_id}: stale Canvas must not create the note"
+            );
+        }
+    }
+
+    #[test]
+    fn invalid_canvas_text_cards_do_not_create_notes() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
+            .expect("C06.1 vault fixture must be valid JSON");
+        for case in fixture["invalid_creations"]
+            .as_array()
+            .expect("C06.1 fixture must contain invalid note creations")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let note_path = case["note_path"].as_str().unwrap();
+            let node_id = case["node_id"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap();
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::create_dir_all(vault.join("Notes"))
+                .unwrap_or_else(|error| panic!("{case_id}: create Notes folder: {error}"));
+            fs::write(vault.join(canvas_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+            let session = VaultSession::open(&vault, &app_data)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let observed = session.read(canvas_path).unwrap();
+            let error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    node_id,
+                    note_path,
+                )
+                .expect_err("invalid Canvas text node must reject note creation");
+
+            let matches_expected = match case["error"].as_str().unwrap() {
+                "node_not_found" => matches!(
+                    &error,
+                    CanvasNoteCreateError::Canvas(CanvasError::NodeNotFound(_))
+                ),
+                "ambiguous_node_id" => matches!(
+                    &error,
+                    CanvasNoteCreateError::Canvas(CanvasError::AmbiguousNodeId(_))
+                ),
+                "not_text_node" => matches!(
+                    &error,
+                    CanvasNoteCreateError::Canvas(CanvasError::NotTextNode(_))
+                ),
+                "text_content_unavailable" => matches!(
+                    &error,
+                    CanvasNoteCreateError::Canvas(CanvasError::TextContentUnavailable(_))
+                ),
+                other => panic!("{case_id}: unsupported expected error {other}"),
+            };
+            assert!(matches_expected, "{case_id}: received {error:?}");
+            assert_eq!(
+                fs::read(vault.join(canvas_path)).unwrap(),
+                source,
+                "{case_id}: invalid extraction leaves Canvas bytes unchanged"
+            );
+            assert!(
+                !vault.join(note_path).exists(),
+                "{case_id}: invalid extraction must not create the note"
+            );
+        }
+    }
+
+    #[test]
+    fn existing_note_destination_is_preserved_and_creation_conflict_is_typed() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
+            .expect("C06.1 vault fixture must be valid JSON");
+        for case in fixture["destination_conflicts"]
+            .as_array()
+            .expect("C06.1 fixture must contain destination conflicts")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let note_path = case["note_path"].as_str().unwrap();
+            let node_id = case["node_id"].as_str().unwrap();
+            let existing_text = case["existing_note_text"].as_str().unwrap();
+            let expected_incoming_text = case["expected_incoming_text"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap();
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::create_dir_all(vault.join("Notes"))
+                .unwrap_or_else(|error| panic!("{case_id}: create Notes folder: {error}"));
+            fs::write(vault.join(canvas_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+            fs::write(vault.join(note_path), existing_text.as_bytes())
+                .unwrap_or_else(|error| panic!("{case_id}: seed existing note: {error}"));
+            let session = VaultSession::open(&vault, &app_data)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let observed = session.read(canvas_path).unwrap();
+
+            let error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    node_id,
+                    note_path,
+                )
+                .expect_err("existing note must reject create-only publication");
+            let preserved_path = match error {
+                CanvasNoteCreateError::Vault(VaultError::CreateDestinationExists {
+                    relative_path,
+                    preserved_path,
+                }) => {
+                    assert_eq!(relative_path, PathBuf::from(note_path), "{case_id}: target");
+                    preserved_path
+                }
+                other => panic!("{case_id}: expected create conflict, received {other:?}"),
+            };
+
+            assert_eq!(
+                fs::read(vault.join(note_path)).unwrap(),
+                existing_text.as_bytes(),
+                "{case_id}: existing note bytes are never overwritten"
+            );
+            assert_eq!(
+                fs::read(preserved_path).unwrap(),
+                expected_incoming_text.as_bytes(),
+                "{case_id}: rejected incoming note is preserved"
+            );
+            assert_eq!(
+                fs::read(vault.join(canvas_path)).unwrap(),
+                source,
+                "{case_id}: conflict leaves Canvas bytes unchanged"
+            );
+        }
+    }
+
+    #[test]
+    fn unsafe_and_missing_note_destinations_fail_without_creating_paths() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
+            .expect("C06.1 vault fixture must be valid JSON");
+        for case in fixture["unsafe_note_paths"]
+            .as_array()
+            .expect("C06.1 fixture must contain unsafe note paths")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let note_path = case["note_path"].as_str().unwrap();
+            let expected_outside_path = case["expected_outside_path"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap();
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::write(vault.join(canvas_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+            let session = VaultSession::open(&vault, &app_data).unwrap();
+            let observed = session.read(canvas_path).unwrap();
+            let error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    case["node_id"].as_str().unwrap(),
+                    note_path,
+                )
+                .expect_err("unsafe note path must be rejected");
+            assert!(
+                matches!(
+                    &error,
+                    CanvasNoteCreateError::Vault(VaultError::InvalidPath)
+                ),
+                "{case_id}: expected an invalid-path error, received {error:?}"
+            );
+            assert!(
+                !temporary.0.join(expected_outside_path).exists(),
+                "{case_id}: path traversal must not write outside the vault"
+            );
+        }
+
+        for case in fixture["missing_parent_creations"]
+            .as_array()
+            .expect("C06.1 fixture must contain missing-parent note paths")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let note_path = case["note_path"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap();
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::write(vault.join(canvas_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+            let session = VaultSession::open(&vault, &app_data).unwrap();
+            let observed = session.read(canvas_path).unwrap();
+            let error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    case["node_id"].as_str().unwrap(),
+                    note_path,
+                )
+                .expect_err("missing parent must reject note creation");
+            assert!(
+                matches!(&error, CanvasNoteCreateError::Vault(_)),
+                "{case_id}: expected a vault creation error, received {error:?}"
+            );
+            assert!(
+                !vault.join("Missing").exists(),
+                "{case_id}: creation must not create parent directories"
+            );
+        }
+    }
+
+    #[test]
+    fn non_markdown_note_destinations_are_rejected_without_mutation() {
+        let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
+            .expect("C06.1 vault fixture must be valid JSON");
+        for case in fixture["invalid_note_extensions"]
+            .as_array()
+            .expect("C06.1 fixture must contain invalid note extensions")
+        {
+            let case_id = case["id"].as_str().unwrap();
+            let canvas_path = case["canvas_path"].as_str().unwrap();
+            let note_path = case["note_path"].as_str().unwrap();
+            let node_id = case["node_id"].as_str().unwrap();
+            let source = serde_json::to_vec(&case["before"]).unwrap();
+            let temporary = TempTree::new();
+            let (vault, app_data) = temporary.layout();
+            fs::create_dir_all(vault.join("Notes"))
+                .unwrap_or_else(|error| panic!("{case_id}: create Notes folder: {error}"));
+            fs::write(vault.join(canvas_path), &source)
+                .unwrap_or_else(|error| panic!("{case_id}: seed Canvas: {error}"));
+            let session = VaultSession::open(&vault, &app_data)
+                .unwrap_or_else(|error| panic!("{case_id}: open fixture vault: {error}"));
+            let observed = session.read(canvas_path).unwrap();
+
+            let error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    node_id,
+                    note_path,
+                )
+                .expect_err("non-Markdown destination must reject note creation");
+            match error {
+                CanvasNoteCreateError::Vault(VaultError::NotMarkdownNote(path)) => {
+                    assert_eq!(path, PathBuf::from(note_path), "{case_id}: rejected path");
+                }
+                other => panic!("{case_id}: expected non-Markdown error, received {other:?}"),
+            }
+
+            assert!(
+                !vault.join(note_path).exists(),
+                "{case_id}: non-Markdown destination must not be created"
+            );
+            assert_eq!(
+                fs::read(vault.join(canvas_path)).unwrap(),
+                source,
+                "{case_id}: rejected destination leaves Canvas bytes unchanged"
+            );
+        }
+    }
+
+    #[test]
     fn malformed_and_unsafe_canvas_paths_fail_without_writing() {
         let fixture: Value = serde_json::from_str(C06_TEXT_CARD_VAULT_FIXTURE)
             .expect("C06.1 vault edit fixture must be valid JSON");
@@ -549,6 +1018,31 @@ mod tests {
                 "{case_id}: malformed Canvas bytes must remain unchanged"
             );
             assert!(!vault.join("Notes/Created.md").exists());
+
+            let create_error = session
+                .create_canvas_note_from_text_node(
+                    canvas_path,
+                    &observed.revision_sha256,
+                    "text-1",
+                    "Notes/Created.md",
+                )
+                .expect_err("malformed Canvas must reject note creation");
+            let expected_create_error_matches = match case["error"].as_str().unwrap() {
+                "malformed_json" => matches!(
+                    &create_error,
+                    CanvasNoteCreateError::Canvas(CanvasError::MalformedJson(_))
+                ),
+                "invalid_document_shape" => matches!(
+                    &create_error,
+                    CanvasNoteCreateError::Canvas(CanvasError::InvalidDocumentShape)
+                ),
+                other => panic!("{case_id}: unsupported expected error {other}"),
+            };
+            assert!(
+                expected_create_error_matches,
+                "{case_id}: received {create_error:?}"
+            );
+            assert!(!vault.join("Notes/Created.md").exists());
         }
 
         let temporary = TempTree::new();
@@ -575,6 +1069,23 @@ mod tests {
                 other => panic!("{case_id}: unsupported error fixture {other}"),
             };
             assert!(expected_error_matches, "{case_id}: received {error:?}");
+            assert!(!vault.join("Notes/Created.md").exists());
+
+            let create_error = session
+                .create_canvas_note_from_text_node(
+                    case["canvas_path"].as_str().unwrap(),
+                    "observed-revision",
+                    "text-1",
+                    "Notes/Created.md",
+                )
+                .expect_err("outside-vault Canvas path must reject note creation");
+            assert!(
+                matches!(
+                    &create_error,
+                    CanvasNoteCreateError::Vault(VaultError::InvalidPath)
+                ),
+                "{case_id}: expected invalid path, received {create_error:?}"
+            );
             assert!(!vault.join("Notes/Created.md").exists());
         }
     }

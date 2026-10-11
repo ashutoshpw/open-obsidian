@@ -92,6 +92,163 @@
       ]
     }
   ],
+  "valid_creations": [
+    {
+      "id": "create-note-from-text-card-preserves-exact-text-and-portable-paths",
+      "canvas_path": "Boards\\Board.canvas",
+      "canvas_storage_path": "Boards/Board.canvas",
+      "note_path": "Notes\\Created.md",
+      "note_storage_path": "Notes/Created.md",
+      "node_id": "text-1",
+      "expected_text": "  Café 🧭\r\nsecond line\n",
+      "before": {
+        "nodes": [
+          {
+            "id": "text-1",
+            "type": "text",
+            "text": "  Café 🧭\r\nsecond line\n",
+            "unknownNode": {"keep": true}
+          },
+          {
+            "id": "file-1",
+            "type": "file",
+            "file": "Notes/Target.md",
+            "subpath": "#^block-id"
+          }
+        ],
+        "edges": [{"id": "edge-1", "fromNode": "text-1", "toNode": "file-1"}],
+        "unknownRoot": {"keep": true}
+      },
+      "untouched_files": [
+        {"path": "Notes/Target.md", "text": "# Target\r\n\r\nKeep these bytes.\r\n"}
+      ]
+    },
+    {
+      "id": "create-note-from-text-card-accepts-uppercase-markdown-extension",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Uppercase.MD",
+      "node_id": "text-upper",
+      "expected_text": "Uppercase extension accepted\n",
+      "before": {
+        "nodes": [
+          {"id": "text-upper", "type": "text", "text": "Uppercase extension accepted\n"}
+        ],
+        "edges": []
+      },
+      "untouched_files": []
+    }
+  ],
+  "stale_creations": [
+    {
+      "id": "stale-observed-canvas-revision-does-not-create-note",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "text-1",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "draft"}], "edges": []},
+      "external_after": {
+        "nodes": [{"id": "text-1", "type": "text", "text": "external edit"}],
+        "edges": []
+      }
+    }
+  ],
+  "invalid_creations": [
+    {
+      "id": "create-from-missing-node",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "absent",
+      "error": "node_not_found",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "draft"}], "edges": []}
+    },
+    {
+      "id": "create-from-duplicate-node-id",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "duplicate",
+      "error": "ambiguous_node_id",
+      "before": {
+        "nodes": [
+          {"id": "duplicate", "type": "text", "text": "first"},
+          {"id": "duplicate", "type": "text", "text": "second"}
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "create-from-non-text-node",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "file-1",
+      "error": "not_text_node",
+      "before": {"nodes": [{"id": "file-1", "type": "file", "file": "Target.md"}], "edges": []}
+    },
+    {
+      "id": "create-from-text-node-without-text",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "text-missing",
+      "error": "text_content_unavailable",
+      "before": {"nodes": [{"id": "text-missing", "type": "text"}], "edges": []}
+    },
+    {
+      "id": "create-from-text-node-with-non-string-text",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "text-number",
+      "error": "text_content_unavailable",
+      "before": {"nodes": [{"id": "text-number", "type": "text", "text": 42}], "edges": []}
+    }
+  ],
+  "destination_conflicts": [
+    {
+      "id": "create-never-overwrites-an-existing-note",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.md",
+      "node_id": "text-1",
+      "expected_incoming_text": "incoming exact text\n",
+      "existing_note_text": "keep existing bytes\r\n",
+      "before": {
+        "nodes": [{"id": "text-1", "type": "text", "text": "incoming exact text\n"}],
+        "edges": []
+      }
+    }
+  ],
+  "unsafe_note_paths": [
+    {
+      "id": "create-rejects-parent-traversal",
+      "canvas_path": "Board.canvas",
+      "note_path": "../outside.md",
+      "expected_outside_path": "outside.md",
+      "node_id": "text-1",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "must stay inside"}], "edges": []}
+    },
+    {
+      "id": "create-rejects-windows-parent-traversal",
+      "canvas_path": "Board.canvas",
+      "note_path": "..\\outside-windows.md",
+      "expected_outside_path": "outside-windows.md",
+      "node_id": "text-1",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "must stay inside"}], "edges": []}
+    }
+  ],
+  "missing_parent_creations": [
+    {
+      "id": "create-does-not-create-missing-parent-directory",
+      "canvas_path": "Board.canvas",
+      "note_path": "Missing/Created.md",
+      "node_id": "text-1",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "no parent"}], "edges": []}
+    }
+  ],
+  "invalid_note_extensions": [
+    {
+      "id": "create-rejects-non-markdown-destination",
+      "canvas_path": "Board.canvas",
+      "note_path": "Notes/Created.txt",
+      "node_id": "text-1",
+      "before": {"nodes": [{"id": "text-1", "type": "text", "text": "must stay in Canvas"}], "edges": []}
+    }
+  ],
   "invalid_edits": [
     {
       "id": "missing-node-id",

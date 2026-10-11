@@ -1302,12 +1302,12 @@
     },
     {
       "path": "fixtures/c06-text-card-vault.json",
-      "sha256": "924d83ca8b44b65fecb6edff4f3fcf20b6528ca8ed0bbe31fead8123171bce54",
+      "sha256": "e562c3c50ea37a15fcad7f66d7121edfdd6adac24a00f982b97788c07ff64ef3",
       "rust_owner": "crates/engine",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "C06.1 VaultSession fixture covers persisted revision-checked Canvas text edits, semantic unknown-field preservation, stale/malformed/invalid/path failures, and no note creation.",
+      "purpose": "C06.1 VaultSession fixture covers persisted revision-checked Canvas text edits, exact text-node Markdown note creation, no-clobber conflicts, semantic unknown-field preservation, stale/malformed/invalid/path failures, and no note creation on edit.",
       "fixture_reader": "crates/engine"
     },
     {
