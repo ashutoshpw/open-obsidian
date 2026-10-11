@@ -3893,3 +3893,28 @@ broader than the legacy workflow's `.obsidian`-only read path and will not be
 described as exact workflow parity. Template execution, date expansion,
 planning, writes, and UI behavior are out of scope. No local tests,
 builds, formatters, validators, or application launches were run.
+
+## 2026-10-11T14:22:32Z — R2.8.84 tracker checkpoint accepted; R2.8.85 source prepared
+
+The documentation-only tracker SHA
+`96a1224525e3c195a6dd5ac54f0ecaeee81a04b8` passed all six required workflows.
+Inventory, desktop build, plugin renderer, loaded plugin workflows, and Rust CI
+passed on attempt 1. Quality passed on attempt 3 after two macOS retries timed
+out at the local retrieval boundary; attempt 3 passed while the parallel
+plugin lifecycle audit was running. Exact run and job results are recorded in
+`evidence/r2.8.84-tracker-checkpoint-96a1224.json`. The path-filtered
+round-trip remains covered by implementation SHA
+`16b5f362ba2ca922bcac4a492248e09a7dbfcd8f`.
+
+R2.8.85 now projects typed template-folder and daily-note settings from exact
+root configuration files while preserving source JSON bytes, unknown fields,
+and generic nested plugin files. Its fixture includes alternate roots,
+malformed/non-object files, unsafe paths and types, CRLF bytes, and unchanged
+snapshot checks. The Rust APIs accept parsed JSON object maps; discovery omits
+non-object inputs before projection. C09 and C09.1 remain pending. Only
+GitHub Actions will validate the source SHA; the seven required workflows
+include the path-filtered Obsidian round-trip.
+
+Process note: a local `git diff --check` was accidentally run during review.
+No project tests, builds, formatters, or application launches were run; all
+project validation remains assigned to GitHub Actions.

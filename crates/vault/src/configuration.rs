@@ -2,8 +2,9 @@
 
 use super::{VaultError, VaultRoot, path_to_slashes, sha256_hex};
 use openobsidian_doc::{
-    AppSettings, AppearanceSettings, HotkeysSettings, ThemeStyleAnalysis, analyze_theme_stylesheet,
-    parse_app_settings, parse_appearance_settings, parse_hotkeys_settings,
+    AppSettings, AppearanceSettings, DailyNoteSettings, HotkeysSettings, TemplateSettings,
+    ThemeStyleAnalysis, analyze_theme_stylesheet, parse_app_settings, parse_appearance_settings,
+    parse_daily_note_settings, parse_hotkeys_settings, parse_template_settings,
 };
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
@@ -86,6 +87,10 @@ pub struct VaultConfiguration {
     pub app_settings: BTreeMap<String, AppSettings>,
     /// Data-only command bindings from root `hotkeys.json` files, keyed by vault-relative path.
     pub hotkeys: BTreeMap<String, HotkeysSettings>,
+    /// Data-only template folder settings from root `templates.json` files, keyed by vault-relative path.
+    pub template_settings: BTreeMap<String, TemplateSettings>,
+    /// Data-only daily-note settings from root `daily-notes.json` files, keyed by vault-relative path.
+    pub daily_note_settings: BTreeMap<String, DailyNoteSettings>,
     /// Raw CSS theme and snippet assets, sorted by vault-relative path.
     pub styles: Vec<VaultStyleAsset>,
 }
@@ -150,6 +155,8 @@ impl VaultRoot {
                 &mut result.appearance,
                 &mut result.app_settings,
                 &mut result.hotkeys,
+                &mut result.template_settings,
+                &mut result.daily_note_settings,
             )?;
             discover_style_assets(self, &directory, &mut result.styles)?;
         }
@@ -168,6 +175,8 @@ fn discover_directory(
     appearance: &mut BTreeMap<String, AppearanceSettings>,
     app_settings: &mut BTreeMap<String, AppSettings>,
     hotkeys: &mut BTreeMap<String, HotkeysSettings>,
+    template_settings: &mut BTreeMap<String, TemplateSettings>,
+    daily_note_settings: &mut BTreeMap<String, DailyNoteSettings>,
 ) -> Result<(), VaultError> {
     let Some(directory) = confined_directory(vault, directory)? else {
         return Ok(());
@@ -187,6 +196,8 @@ fn discover_directory(
                     appearance,
                     app_settings,
                     hotkeys,
+                    template_settings,
+                    daily_note_settings,
                 )?;
             }
             continue;
@@ -212,6 +223,12 @@ fn discover_directory(
         }
         if is_root_configuration_file(&relative_path, "hotkeys.json") {
             hotkeys.insert(relative_path.clone(), parse_hotkeys_settings(&object));
+        }
+        if is_root_configuration_file(&relative_path, "templates.json") {
+            template_settings.insert(relative_path.clone(), parse_template_settings(&object));
+        }
+        if is_root_configuration_file(&relative_path, "daily-notes.json") {
+            daily_note_settings.insert(relative_path.clone(), parse_daily_note_settings(&object));
         }
         json.insert(relative_path, VaultConfigurationFile { raw_bytes, object });
     }

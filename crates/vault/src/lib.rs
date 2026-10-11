@@ -2,11 +2,11 @@
 
 use image::{ImageFormat, ImageReader, Limits as ImageLimits};
 pub use openobsidian_doc::{
-    AppearanceMode, AppearanceSettings, HotkeyBinding, HotkeysSettings, LinkKind, LinkReference,
-    LinkRenameAction, LinkResolution, LinkResolutionStatus, LinkSubpathSlice, LinkSubpathStatus,
-    MarkdownPreviewAnalysis, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, MergeConflict,
-    MergeStatus, ThreeWayMergeResult, TransclusionBlockReason, TransclusionGuard,
-    analyze_markdown_preview,
+    AppearanceMode, AppearanceSettings, DailyNoteSettings, HotkeyBinding, HotkeysSettings,
+    LinkKind, LinkReference, LinkRenameAction, LinkResolution, LinkResolutionStatus,
+    LinkSubpathSlice, LinkSubpathStatus, MarkdownPreviewAnalysis, MarkdownPreviewDisposition,
+    MarkdownUnsupportedSyntax, MergeConflict, MergeStatus, TemplateSettings,
+    ThreeWayMergeResult, TransclusionBlockReason, TransclusionGuard, analyze_markdown_preview,
 };
 use openobsidian_doc::{
     LinkRenamePlan, LinkRenamePlanError, MAX_NOTE_TRANSCLUSION_SOURCE_BYTES, MarkdownSource,
@@ -2729,6 +2729,92 @@ mod tests {
                 .json
                 .contains_key(".obsidian/plugins/sample/hotkeys.json")
         );
+        let expected_template_settings_paths = expected["template_settings_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|path| path.as_str().unwrap().to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            discovered
+                .template_settings
+                .keys()
+                .cloned()
+                .collect::<Vec<_>>(),
+            expected_template_settings_paths
+        );
+        assert_eq!(
+            discovered.template_settings[".obsidian/templates.json"].folder,
+            "Templates"
+        );
+        assert!(
+            discovered.template_settings[".obsidian/templates.json"]
+                .issues
+                .is_empty()
+        );
+        assert_eq!(
+            discovered.template_settings[".obsidian-mobile/templates.json"].folder,
+            "Mobile Templates"
+        );
+        assert_eq!(
+            discovered.json[".obsidian/templates.json"].object["futureTemplateOption"]["keep"],
+            serde_json::json!(true)
+        );
+        assert!(
+            !discovered
+                .template_settings
+                .contains_key(".obsidian/plugins/sample/templates.json")
+        );
+        assert!(
+            discovered
+                .json
+                .contains_key(".obsidian/plugins/sample/templates.json")
+        );
+
+        let expected_daily_note_settings_paths = expected["daily_note_settings_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|path| path.as_str().unwrap().to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            discovered
+                .daily_note_settings
+                .keys()
+                .cloned()
+                .collect::<Vec<_>>(),
+            expected_daily_note_settings_paths
+        );
+        let desktop_daily_notes = &discovered.daily_note_settings[".obsidian/daily-notes.json"];
+        assert_eq!(desktop_daily_notes.folder, "Daily");
+        assert_eq!(desktop_daily_notes.format, "YYYY/MM/YYYY-MM-DD");
+        assert_eq!(
+            desktop_daily_notes.template.as_deref(),
+            Some("Templates/Daily.md")
+        );
+        assert!(desktop_daily_notes.issues.is_empty());
+        assert_eq!(
+            discovered.json[".obsidian/daily-notes.json"].object["futureDailyNoteOption"],
+            serde_json::json!("keep")
+        );
+        let mobile_daily_notes =
+            &discovered.daily_note_settings[".obsidian-mobile/daily-notes.json"];
+        assert_eq!(mobile_daily_notes.folder, "Mobile Daily");
+        assert_eq!(mobile_daily_notes.format, "DD-MM-YYYY");
+        assert_eq!(
+            mobile_daily_notes.template.as_deref(),
+            Some("Mobile/Templates/Daily.md")
+        );
+        assert!(
+            !discovered
+                .daily_note_settings
+                .contains_key(".obsidian/plugins/sample/daily-notes.json")
+        );
+        assert!(
+            discovered
+                .json
+                .contains_key(".obsidian/plugins/sample/daily-notes.json")
+        );
         let appearance = &discovered.appearance[".obsidian-mobile/appearance.json"];
         assert_eq!(appearance.mode, AppearanceMode::Dark);
         assert_eq!(appearance.css_theme.as_deref(), Some("Custom"));
@@ -2850,6 +2936,8 @@ mod tests {
 
         assert!(discovered.folders.is_empty());
         assert!(discovered.json.is_empty());
+        assert!(discovered.template_settings.is_empty());
+        assert!(discovered.daily_note_settings.is_empty());
         assert!(discovered.styles.is_empty());
         assert_eq!(before, vault.snapshot().unwrap());
         assert!(!temp.0.join(".obsidian").exists());

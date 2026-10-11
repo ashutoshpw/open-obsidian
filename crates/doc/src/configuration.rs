@@ -23,6 +23,128 @@ pub fn parse_app_settings(raw: &Map<String, Value>) -> AppSettings {
     }
 }
 
+/// A data-only projection of the configured templates folder.
+///
+/// The source JSON object and bytes remain authoritative. `folder` follows the
+/// legacy parser's lexical path check and is inert data; it is not sufficient
+/// authorization for filesystem access.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct TemplateSettings {
+    /// Legacy-validated folder value, or an empty string for the vault root.
+    pub folder: String,
+    /// Configuration issues reported by the legacy parser's supported fields.
+    pub issues: Vec<String>,
+}
+
+/// Projects the supported folder field from a parsed `templates.json` object.
+///
+/// Missing and empty folder values select the vault root. Unknown fields stay
+/// available in the source object held by the caller.
+pub fn parse_template_settings(raw: &Map<String, Value>) -> TemplateSettings {
+    let Some(value) = raw.get("folder") else {
+        return TemplateSettings::default();
+    };
+    let Some(folder) = safe_relative_path(value, true) else {
+        return TemplateSettings {
+            folder: String::new(),
+            issues: vec!["Template folder must be a safe relative path".to_owned()],
+        };
+    };
+    TemplateSettings {
+        folder,
+        issues: Vec::new(),
+    }
+}
+
+/// A data-only projection of supported daily-note configuration fields.
+///
+/// The source JSON object and bytes remain authoritative. `folder` and
+/// `template` follow the legacy parser's lexical path check and are inert data;
+/// they are not sufficient authorization for filesystem access.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct DailyNoteSettings {
+    /// Legacy-validated folder value, or an empty string for the vault root.
+    pub folder: String,
+    /// Configured date format, defaulting to `YYYY-MM-DD`.
+    pub format: String,
+    /// Optional legacy-validated template value.
+    pub template: Option<String>,
+    /// Configuration issues reported by the legacy parser's supported fields.
+    pub issues: Vec<String>,
+}
+
+impl Default for DailyNoteSettings {
+    fn default() -> Self {
+        Self {
+            folder: String::new(),
+            format: "YYYY-MM-DD".to_owned(),
+            template: None,
+            issues: Vec::new(),
+        }
+    }
+}
+
+/// Projects supported fields from a parsed `daily-notes.json` object.
+///
+/// Blank or non-string formats use the legacy `YYYY-MM-DD` default. Unknown
+/// fields stay available in the source object held by the caller.
+pub fn parse_daily_note_settings(raw: &Map<String, Value>) -> DailyNoteSettings {
+    let mut settings = DailyNoteSettings::default();
+
+    if let Some(value) = raw.get("folder") {
+        if let Some(folder) = safe_relative_path(value, true) {
+            settings.folder = folder;
+        } else {
+            settings
+                .issues
+                .push("Daily-note folder must be a safe relative path".to_owned());
+        }
+    }
+
+    if let Some(format) = raw
+        .get("format")
+        .and_then(Value::as_str)
+        .map(|value| value.trim_matches(is_ecmascript_whitespace))
+        .filter(|value| !value.is_empty())
+    {
+        settings.format = format.to_owned();
+    }
+
+    match raw.get("template") {
+        None | Some(Value::Null) => {}
+        Some(Value::String(value)) if value.is_empty() => {}
+        Some(value) => match safe_relative_path(value, false) {
+            Some(template) => settings.template = Some(template),
+            None => settings
+                .issues
+                .push("Daily-note template must be a safe relative path".to_owned()),
+        },
+    }
+
+    settings
+}
+
+fn safe_relative_path(value: &Value, allow_empty: bool) -> Option<String> {
+    let value = value.as_str()?;
+    if (!allow_empty && value.is_empty())
+        || value.starts_with('/')
+        || value.contains('\\')
+        || value.contains('\0')
+    {
+        return None;
+    }
+    if value.is_empty() {
+        return Some(String::new());
+    }
+    if value
+        .split('/')
+        .any(|segment| segment.is_empty() || segment == "." || segment == "..")
+    {
+        return None;
+    }
+    Some(value.to_owned())
+}
+
 /// The appearance mode requested by an Obsidian vault configuration file.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AppearanceMode {
@@ -134,8 +256,9 @@ fn is_ecmascript_whitespace(character: char) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        AppSettings, AppearanceMode, AppearanceSettings, parse_app_settings,
-        parse_appearance_settings,
+        AppSettings, AppearanceMode, AppearanceSettings, DailyNoteSettings, TemplateSettings,
+        parse_app_settings, parse_appearance_settings, parse_daily_note_settings,
+        parse_template_settings,
     };
     use serde_json::{Map, Value};
 
@@ -166,6 +289,102 @@ mod tests {
         }
 
         assert_eq!(parse_app_settings(&Map::new()), AppSettings::default());
+    }
+
+    #[test]
+    fn projects_only_supported_template_settings_from_fixture_cases() {
+        let fixture: Value = serde_json::from_str(CONFIGURATION_FIXTURE)
+            .expect("configuration fixture must be valid JSON");
+
+        for case in fixture["template_settings_cases"]
+            .as_array()
+            .expect("template settings cases must be an array")
+        {
+            let raw: Map<String, Value> = case["source"]
+                .as_object()
+                .expect("template settings source must be a JSON object")
+                .clone();
+            let original = raw.clone();
+            let projected = parse_template_settings(&raw);
+            let expected = &case["expected"];
+            let expected_issues = expected["issues"]
+                .as_array()
+                .expect("expected template settings issues must be an array")
+                .iter()
+                .map(|issue| {
+                    issue
+                        .as_str()
+                        .expect("expected template settings issue must be a string")
+                        .to_owned()
+                })
+                .collect::<Vec<_>>();
+
+            assert_eq!(
+                projected,
+                TemplateSettings {
+                    folder: expected["folder"]
+                        .as_str()
+                        .expect("expected template folder must be a string")
+                        .to_owned(),
+                    issues: expected_issues,
+                }
+            );
+            assert_eq!(raw, original);
+        }
+
+        assert_eq!(parse_template_settings(&Map::new()), TemplateSettings::default());
+    }
+
+    #[test]
+    fn projects_only_supported_daily_note_settings_from_fixture_cases() {
+        let fixture: Value = serde_json::from_str(CONFIGURATION_FIXTURE)
+            .expect("configuration fixture must be valid JSON");
+
+        for case in fixture["daily_note_settings_cases"]
+            .as_array()
+            .expect("daily-note settings cases must be an array")
+        {
+            let raw: Map<String, Value> = case["source"]
+                .as_object()
+                .expect("daily-note settings source must be a JSON object")
+                .clone();
+            let original = raw.clone();
+            let projected = parse_daily_note_settings(&raw);
+            let expected = &case["expected"];
+            let expected_issues = expected["issues"]
+                .as_array()
+                .expect("expected daily-note settings issues must be an array")
+                .iter()
+                .map(|issue| {
+                    issue
+                        .as_str()
+                        .expect("expected daily-note settings issue must be a string")
+                        .to_owned()
+                })
+                .collect::<Vec<_>>();
+
+            assert_eq!(
+                projected,
+                DailyNoteSettings {
+                    folder: expected["folder"]
+                        .as_str()
+                        .expect("expected daily-note folder must be a string")
+                        .to_owned(),
+                    format: expected["format"]
+                        .as_str()
+                        .expect("expected daily-note format must be a string")
+                        .to_owned(),
+                    template: expected["template"].as_str().map(str::to_owned),
+                    issues: expected_issues,
+                }
+            );
+            assert_eq!(raw, original);
+        }
+
+        assert_eq!(
+            parse_daily_note_settings(&Map::new()),
+            DailyNoteSettings::default()
+        );
     }
 
     #[test]

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "fixture:c09-configuration-inventory",
   "covers": ["C09"],
-  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project the fixture-backed root app.json line-number field, supported appearance settings, and data-only root hotkey bindings without following symlinks or creating files.",
+  "purpose": "Discover existing root Obsidian configuration folders, preserve valid JSON object bytes, and project the fixture-backed root app.json line-number field, templates and daily-note settings, supported appearance settings, and data-only root hotkey bindings without following symlinks or creating files.",
   "directories": [
     ".obsidian",
     ".obsidian-broken",
@@ -29,8 +29,24 @@
       "source": "{\"showLineNumber\":false,\"futureMobileOption\":\"keep\"}\n"
     },
     {
+      "relative_path": ".obsidian/daily-notes.json",
+      "source": "{\"folder\":\"Daily\",\"format\":\"YYYY/MM/YYYY-MM-DD\",\r\n\"template\":\"Templates/Daily.md\",\"futureDailyNoteOption\":\"keep\"}\r\n"
+    },
+    {
+      "relative_path": ".obsidian/templates.json",
+      "source": "{\"folder\":\"Templates\",\r\n\"futureTemplateOption\":{\"keep\":true}}\r\n"
+    },
+    {
+      "relative_path": ".obsidian-mobile/daily-notes.json",
+      "source": "{\"folder\":\"Mobile Daily\",\"format\":\"DD-MM-YYYY\",\r\n\"template\":\"Mobile/Templates/Daily.md\",\"mobileFutureDailyOption\":true}\r\n"
+    },
+    {
       "relative_path": ".obsidian/workspace.json",
       "source": "[]\n"
+    },
+    {
+      "relative_path": ".obsidian-mobile/templates.json",
+      "source": "{\"folder\":\"Mobile Templates\",\"mobileFutureTemplateOption\":true}\n"
     },
     {
       "relative_path": ".obsidian/application.JSON",
@@ -43,6 +59,14 @@
     {
       "relative_path": ".obsidian/plugins/sample/app.json",
       "source": "{\"showLineNumber\":true,\"pluginOnlyOption\":true}\n"
+    },
+    {
+      "relative_path": ".obsidian/plugins/sample/daily-notes.json",
+      "source": "{\"folder\":\"PluginDaily\",\"format\":\"DD-MM-YYYY\",\"pluginOnlyOption\":true}\n"
+    },
+    {
+      "relative_path": ".obsidian/plugins/sample/templates.json",
+      "source": "{\"folder\":\"PluginTemplates\",\"pluginOnlyOption\":true}\n"
     },
     {
       "relative_path": ".obsidian/hotkeys.json",
@@ -117,6 +141,14 @@
       "source": "{invalid json}\n"
     },
     {
+      "relative_path": ".obsidian-broken/templates.json",
+      "source": "{invalid json}\n"
+    },
+    {
+      "relative_path": ".obsidian-broken/daily-notes.json",
+      "source": "[]\n"
+    },
+    {
       "relative_path": ".obsidian-mobile/appearance.json",
       "source": "{\"mode\":\" dark \",\"themeMode\":\"light\",\"colorScheme\":\"system\",\"theme\":\"Northstar\",\"cssTheme\":\" Custom \",\"enabledCssSnippets\":[\" Minimal \",\"Readable\",\"\",\"Minimal\",9],\"accentColor\":\" #3366ff \",\"baseFontSize\":15,\"futureAppearanceKey\":7}\n"
     },
@@ -157,6 +189,90 @@
     {
       "source": {"showLineNumber": "enabled"},
       "expected": {"showLineNumber": null}
+    }
+  ],
+  "template_settings_cases": [
+    {
+      "source": {"folder": "Templates", "futureTemplateOption": {"keep": true}},
+      "expected": {"folder": "Templates", "issues": []}
+    },
+    {
+      "source": {"futureTemplateOption": true},
+      "expected": {"folder": "", "issues": []}
+    },
+    {
+      "source": {"folder": ""},
+      "expected": {"folder": "", "issues": []}
+    },
+    {
+      "source": {"folder": "../Templates"},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "/outside"},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "Templates//Daily"},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "Templates/./Daily"},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "Templates\u0000Daily"},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "Templates\\Daily"},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "C:/outside"},
+      "expected": {"folder": "C:/outside", "issues": []}
+    },
+    {
+      "source": {"folder": null},
+      "expected": {"folder": "", "issues": ["Template folder must be a safe relative path"]}
+    }
+  ],
+  "daily_note_settings_cases": [
+    {
+      "source": {"folder": "Daily", "format": "YYYY/MM/YYYY-MM-DD", "template": "Templates/Daily.md", "futureDailyNoteOption": "keep"},
+      "expected": {"folder": "Daily", "format": "YYYY/MM/YYYY-MM-DD", "template": "Templates/Daily.md", "issues": []}
+    },
+    {
+      "source": {},
+      "expected": {"folder": "", "format": "YYYY-MM-DD", "template": null, "issues": []}
+    },
+    {
+      "source": {"folder": "", "format": " ", "template": ""},
+      "expected": {"folder": "", "format": "YYYY-MM-DD", "template": null, "issues": []}
+    },
+    {
+      "source": {"folder": " Daily ", "format": " YYYY-MM-DD ", "template": null},
+      "expected": {"folder": " Daily ", "format": "YYYY-MM-DD", "template": null, "issues": []}
+    },
+    {
+      "source": {"folder": "Daily", "format": "\uFEFFYYYY-MM-DD\u00A0", "template": null},
+      "expected": {"folder": "Daily", "format": "YYYY-MM-DD", "template": null, "issues": []}
+    },
+    {
+      "source": {"folder": "../Daily", "format": 7, "template": "/outside.md"},
+      "expected": {"folder": "", "format": "YYYY-MM-DD", "template": null, "issues": ["Daily-note folder must be a safe relative path", "Daily-note template must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "Daily", "format": "YYYY-MM-DD", "template": 7},
+      "expected": {"folder": "Daily", "format": "YYYY-MM-DD", "template": null, "issues": ["Daily-note template must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": 7, "format": "YYYY-MM-DD", "template": "Templates/../Daily.md"},
+      "expected": {"folder": "", "format": "YYYY-MM-DD", "template": null, "issues": ["Daily-note folder must be a safe relative path", "Daily-note template must be a safe relative path"]}
+    },
+    {
+      "source": {"folder": "Daily", "format": "YYYY-MM-DD", "template": "Templates\\Daily.md"},
+      "expected": {"folder": "Daily", "format": "YYYY-MM-DD", "template": null, "issues": ["Daily-note template must be a safe relative path"]}
     }
   ],
   "appearance_cases": [
@@ -290,12 +406,18 @@
     "json_paths": [
       ".obsidian-mobile/app.json",
       ".obsidian-mobile/appearance.json",
+      ".obsidian-mobile/daily-notes.json",
       ".obsidian-mobile/hotkeys.json",
+      ".obsidian-mobile/templates.json",
       ".obsidian/app.json",
+      ".obsidian/daily-notes.json",
       ".obsidian/hotkeys.json",
       ".obsidian/plugins/sample/app.json",
+      ".obsidian/plugins/sample/daily-notes.json",
       ".obsidian/plugins/sample/data.json",
       ".obsidian/plugins/sample/hotkeys.json",
+      ".obsidian/plugins/sample/templates.json",
+      ".obsidian/templates.json",
       ".obsidian/themes/Solarized/manifest.json"
     ],
     "app_settings_paths": [
@@ -305,6 +427,14 @@
     "hotkeys_paths": [
       ".obsidian-mobile/hotkeys.json",
       ".obsidian/hotkeys.json"
+    ],
+    "template_settings_paths": [
+      ".obsidian-mobile/templates.json",
+      ".obsidian/templates.json"
+    ],
+    "daily_note_settings_paths": [
+      ".obsidian-mobile/daily-notes.json",
+      ".obsidian/daily-notes.json"
     ],
     "style_assets": [
       {

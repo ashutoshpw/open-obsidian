@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.84",
+  "tracker_sha": "96a1224525e3c195a6dd5ac54f0ecaeee81a04b8",
+  "implementation_sha": "16b5f362ba2ca922bcac4a492248e09a7dbfcd8f",
+  "outcome": "accepted",
+  "required_documentation_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38146163051,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146163051",
+      "jobs": [
+        {"id": 114489853454, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38146163101,
+      "attempt": 3,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146163101/attempts/3",
+      "jobs": [
+        {"id": 114490847710, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114490848540, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114490848910, "name": "ubuntu-latest", "conclusion": "success"}
+      ],
+      "attempt_history": [
+        {
+          "attempt": 1,
+          "conclusion": "failure",
+          "jobs": [
+            {"id": 114489854191, "name": "ubuntu-latest", "conclusion": "success"},
+            {"id": 114489854298, "name": "macos-latest", "conclusion": "failure"},
+            {"id": 114489854421, "name": "windows-latest", "conclusion": "success"}
+          ],
+          "failure": "The macOS Electron vault audit reached completed indexing but did not observe the local retrieval boundary before its 20-second wait expired."
+        },
+        {
+          "attempt": 2,
+          "conclusion": "failure",
+          "jobs": [
+            {"id": 114490359650, "name": "macos-latest", "conclusion": "failure"},
+            {"id": 114490360518, "name": "ubuntu-latest", "conclusion": "success"},
+            {"id": 114490378405, "name": "windows-latest", "conclusion": "success"}
+          ],
+          "failure": "The same macOS retrieval-boundary wait timed out on the unchanged SHA."
+        },
+        {
+          "attempt": 3,
+          "conclusion": "success",
+          "jobs": [
+            {"id": 114490847710, "name": "macos-latest", "conclusion": "success"},
+            {"id": 114490848540, "name": "windows-latest", "conclusion": "success"},
+            {"id": 114490848910, "name": "ubuntu-latest", "conclusion": "success"}
+          ],
+          "finding": "The Electron vault audit passed while the independent plugin lifecycle audit still ran in the same parallel group; the timeout is intermittent and no workflow change was made."
+        }
+      ]
+    },
+    "desktop_build": {
+      "id": 38146163107,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146163107",
+      "jobs": [
+        {"id": 114489853760, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114489853925, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114489853982, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38146163048,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146163048",
+      "jobs": [
+        {"id": 114489853608, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114489853782, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114489853786, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38146163162,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146163162",
+      "jobs": [
+        {"id": 114489854069, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114489854126, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114489854187, "name": "ubuntu-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38146163096,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38146163096",
+      "jobs": [
+        {"id": 114489853572, "name": "minimum supported Rust (1.95)", "conclusion": "success"},
+        {"id": 114489853691, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114489853747, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114489853840, "name": "rust (ubuntu-latest)", "conclusion": "success"}
+      ]
+    }
+  },
+  "roundtrip_note": "The documentation-only tracker commit did not trigger the path-filtered Obsidian round-trip. The pinned Obsidian 1.14.4 round-trip passed on implementation SHA 16b5f362ba2ca922bcac4a492248e09a7dbfcd8f.",
+  "local_executable_validation": "none",
+  "accepted_scope": "Tracker checkpoint for the partial C09 app-settings projection. C09 and C09.1 remain pending."
+}
