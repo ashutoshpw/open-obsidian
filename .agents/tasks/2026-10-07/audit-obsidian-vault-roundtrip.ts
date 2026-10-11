@@ -2698,19 +2698,21 @@ async function selectReferenceNoteForEmbedResolution(
   }
 
   if (process.platform === "win32") {
-    const openMenuAction = await invokeNativeAccessibleControl(
-      child,
+    const openMenuScreenshot = await captureOpenObsidianScreenshot(
       windowId,
-      "Note to inspect",
-      currentPath,
+      child,
+      "openobsidian-authored-image-note-selector",
     );
+    if (!ocrTextContainsPhrase(openMenuScreenshot.ocrText, targetPath)) {
+      throw new Error(`The Windows note selector did not retain its expanded options for exact UI Automation selection of ${targetPath}; OCR=${JSON.stringify(openMenuScreenshot.ocrText.slice(0, 2_000))}`);
+    }
     const selectionAction = await invokeNativeAccessibleControl(child, windowId, targetPath);
     if (!windowsSelectionConfirmsPath(selectionAction, targetPath)) {
       throw new Error(`Windows UI Automation did not confirm exact authored-note selection: ${selectionAction}`);
     }
     return {
-      strategy: "windows_ui_automation_exact_path",
-      open_menu_action: openMenuAction,
+      strategy: "windows_ui_automation_exact_path_from_expanded_selector",
+      expanded_selector_screenshot: relative(reportDirectory, openMenuScreenshot.pngPath),
       selection_action: selectionAction,
       exact_selected_path: targetPath,
     };
