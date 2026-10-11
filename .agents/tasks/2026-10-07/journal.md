@@ -4240,3 +4240,20 @@ launched. Exact run/job IDs and successful artifact digests are in
 The retry uses the allowed single `crates/engine` tracker owner, qualifies
 `thiserror 2.0.21`, and applies the formatter layout shown in CI logs. No local
 executable validation was run.
+
+R2.8.90 attempt 2 was pushed as exact source SHA
+`a5f08ae4c01658fc7c3ff5b4a11bf966977eb880`. Inventory, quality, desktop
+build, plugin renderer, loaded-plugin workflows, and the Obsidian 1.14.4
+round-trip all passed on their exact run and platform matrices. Rust CI passed
+formatting, workspace tests, and Clippy on Ubuntu, macOS, and Windows; the Rust
+1.95 locked workspace tests passed. All three platform jobs stopped at the
+layer gate because `xtask layers` did not yet allow the intended
+`openobsidian-engine -> openobsidian-doc` edge. The pinned reference Canvas
+reopened with its marker and linked content visible, and its 741-byte source
+SHA-256 `2258580368625a06b2b3d2f5b0576b032678b0a7bc73d1292716642c9c7f4cc5`
+remained unchanged after shutdown and reopen on all three platforms. Artifact
+digests, round-trip report hashes, and exact job IDs are in
+[`evidence/r2.8.90-attempt-2-a5f08ae.json`](evidence/r2.8.90-attempt-2-a5f08ae.json).
+The correction updates the architecture allow-map so the engine can compose
+the pure document operation with the revision-checked vault write. No local
+executable validation was run.

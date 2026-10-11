@@ -56,9 +56,10 @@ fn check_layers() -> Result<(), String> {
     let allowed: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::from([
         ("openobsidian-doc", BTreeSet::from([])),
         ("openobsidian-vault", BTreeSet::from(["openobsidian-doc"])),
+        // Engine composes pure document transforms with revision-checked vault operations.
         (
             "openobsidian-engine",
-            BTreeSet::from(["openobsidian-vault"]),
+            BTreeSet::from(["openobsidian-doc", "openobsidian-vault"]),
         ),
         ("openobsidian-platform", BTreeSet::from([])),
         (
