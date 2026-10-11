@@ -460,6 +460,9 @@ impl OpenObsidianApp {
             ui.colored_label(eframe::egui::Color32::YELLOW, error);
         }
         if refresh_note_list_requested {
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                eprintln!("OpenObsidian CI vault refresh request: source=manual_button");
+            }
             self.start_vault_refresh();
         }
         if self.session.is_some() {
@@ -1881,6 +1884,13 @@ impl OpenObsidianApp {
         let Some(mut session) = self.session.as_ref().map(|session| (**session).clone()) else {
             return;
         };
+        let ci_diagnostics = std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some();
+        let entries_before = session.entries().len();
+        if ci_diagnostics {
+            eprintln!(
+                "OpenObsidian CI vault refresh scheduled: entries_before={entries_before}"
+            );
+        }
         let note_preview_guard = self
             .last_note_preview_write
             .clone()
@@ -1894,7 +1904,21 @@ impl OpenObsidianApp {
         self.vault_refresh_status = None;
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
-            let result = match session.refresh_entries() {
+            let worker_started = Instant::now();
+            if ci_diagnostics {
+                eprintln!("OpenObsidian CI vault refresh worker started");
+            }
+            let refresh_result = session.refresh_entries();
+            if ci_diagnostics {
+                eprintln!(
+                    "OpenObsidian CI vault refresh scan finished: succeeded={}, entries_before={}, entries_after={}, elapsed_ms={}",
+                    refresh_result.is_ok(),
+                    entries_before,
+                    session.entries().len(),
+                    worker_started.elapsed().as_millis()
+                );
+            }
+            let result = match refresh_result {
                 Ok(()) => {
                     let preserve_note_preview = note_preview_guard.as_ref().is_some_and(
                         |(path, expected_revision)| {
@@ -1906,28 +1930,52 @@ impl OpenObsidianApp {
                                 == Some(expected_revision.as_str())
                         },
                     );
+                    if ci_diagnostics {
+                        eprintln!(
+                            "OpenObsidian CI vault refresh preview guard finished: preserved={preserve_note_preview}"
+                        );
+                    }
                     Ok(VaultRefreshOutcome {
                         session,
                         preserve_note_preview,
                     })
                 }
-                Err(_) => Err(
-                    "The note list could not be refreshed safely. The existing listing remains available."
-                        .to_owned(),
-                ),
+                Err(_) => {
+                    if ci_diagnostics {
+                        eprintln!("OpenObsidian CI vault refresh scan failed");
+                    }
+                    Err(
+                        "The note list could not be refreshed safely. The existing listing remains available."
+                            .to_owned(),
+                    )
+                }
             };
-            let _ = sender.send(result);
+            if ci_diagnostics {
+                eprintln!(
+                    "OpenObsidian CI vault refresh worker finished: succeeded={}, elapsed_ms={}",
+                    result.is_ok(),
+                    worker_started.elapsed().as_millis()
+                );
+            }
+            let result_delivered = sender.send(result).is_ok();
+            if ci_diagnostics {
+                eprintln!(
+                    "OpenObsidian CI vault refresh result delivery: delivered={result_delivered}"
+                );
+            }
         });
         self.vault_refresh_receiver = Some(receiver);
     }
 
     fn poll_vault_change_hints(&mut self, ui: &mut eframe::egui::Ui) {
-        if self
-            .vault_watcher
-            .as_mut()
-            .and_then(VaultWatcher::poll)
-            .is_some()
-        {
+        let watcher_hint = self.vault_watcher.as_mut().and_then(VaultWatcher::poll);
+        if let Some(hint) = watcher_hint {
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                eprintln!(
+                    "OpenObsidian CI vault watcher hint: hint={hint:?}, refresh_in_flight={}",
+                    self.vault_refresh_receiver.is_some()
+                );
+            }
             self.vault_rescan_pending = true;
         }
 
@@ -1962,6 +2010,9 @@ impl OpenObsidianApp {
             || self.note_source_editing();
         if self.vault_rescan_pending && !operation_busy {
             self.vault_rescan_pending = false;
+            if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                eprintln!("OpenObsidian CI vault refresh request: source=watcher_reconciliation");
+            }
             self.start_vault_refresh();
         } else if self.vault_rescan_pending {
             ui.ctx().request_repaint_after(Duration::from_millis(100));
@@ -2233,6 +2284,12 @@ impl OpenObsidianApp {
         let result = self.vault_refresh_receiver.as_ref().map(Receiver::try_recv);
         match result {
             Some(Ok(Ok(outcome))) => {
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!(
+                        "OpenObsidian CI vault refresh result consumed: succeeded=true, entries={}",
+                        outcome.session.entries().len()
+                    );
+                }
                 self.vault_refresh_receiver = None;
                 let VaultRefreshOutcome {
                     session,
@@ -2290,11 +2347,17 @@ impl OpenObsidianApp {
                 ));
             }
             Some(Ok(Err(error))) => {
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!("OpenObsidian CI vault refresh result consumed: succeeded=false");
+                }
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_status = None;
                 self.vault_refresh_error = Some(error);
             }
             Some(Err(TryRecvError::Disconnected)) => {
+                if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some() {
+                    eprintln!("OpenObsidian CI vault refresh result channel disconnected");
+                }
                 self.vault_refresh_receiver = None;
                 self.vault_refresh_status = None;
                 self.vault_refresh_error =

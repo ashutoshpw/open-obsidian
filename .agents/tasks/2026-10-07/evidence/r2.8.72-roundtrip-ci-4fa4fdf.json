@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T01:36:03Z",
+  "milestone": "R2.8.72",
+  "source_sha": "4fa4fdf5e3b588341e1f2aa044513833b12f068e",
+  "source_commit": "[rust R2.8.72] Stabilize reference note controls",
+  "roundtrip_workflow": {
+    "name": "Obsidian vault round-trip acceptance",
+    "run_id": 38101532872,
+    "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532872",
+    "status": "completed",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "os": "macOS",
+        "job_id": 114358273932,
+        "conclusion": "failure",
+        "artifact": {
+          "id": 11687588891,
+          "name": "obsidian-vault-roundtrip-macOS-4fa4fdf5e3b588341e1f2aa044513833b12f068e",
+          "size_in_bytes": 3458127,
+          "digest": "sha256:624bbb311808496dd6935a8dc1aaca2f3c65e1049c07826077965c10caaf0ab5"
+        },
+        "finding": "The externally created note and updated count were visible, but the UI remained in the refreshing state until timeout. The worker receiver stayed active after the manual refresh click."
+      },
+      {
+        "os": "Windows",
+        "job_id": 114358274080,
+        "conclusion": "failure",
+        "artifact": {
+          "id": 11687713647,
+          "name": "obsidian-vault-roundtrip-Windows-4fa4fdf5e3b588341e1f2aa044513833b12f068e",
+          "size_in_bytes": 3847738,
+          "digest": "sha256:a3fb32f423c6dbf39e0c7181e56a76408388479c85a74b8b2befa9054ceed0b4"
+        },
+        "finding": "Windows UI Automation selected the exact After refresh.md radio item with SelectionItemPattern.Select. The screenshot OCR read the label as Afterrefresh.nd i, so the strict OCR assertion timed out before preview."
+      },
+      {
+        "os": "Linux",
+        "job_id": 114358274099,
+        "conclusion": "failure",
+        "artifact": {
+          "id": 11688021771,
+          "name": "obsidian-vault-roundtrip-Linux-4fa4fdf5e3b588341e1f2aa044513833b12f068e",
+          "size_in_bytes": 3061021,
+          "digest": "sha256:d22991defdc89d5a7d8c370b21bf49fb4545f18c3414a655488bd78ff1bd7106"
+        },
+        "finding": "The visible count remained at two Markdown files and the UI stayed in the refreshing state until timeout after the manual refresh click."
+      }
+    ]
+  },
+  "external_creation": {
+    "note_path": "After refresh.md",
+    "bytes": 129,
+    "sha256": "7048191bb325cea95a09e07ae6de4df9132a38e9b12e5cca0b0d38d6c8fc62d6",
+    "expected_markdown_count": 3,
+    "result": "All three reports recorded the intended single-file vault change and unchanged app data during external creation."
+  },
+  "companion_workflows": [
+    {
+      "name": "Rust migration inventory",
+      "run_id": 38101532927,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532927",
+      "conclusion": "success",
+      "jobs": [{"name": "inventory", "job_id": 114358273872, "conclusion": "success"}]
+    },
+    {
+      "name": "OpenObsidian plugin renderer matrix",
+      "run_id": 38101532956,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532956",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114358274135, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114358274217, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114358274296, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian loaded plugin workflows",
+      "run_id": 38101532875,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532875",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114358273783, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114358273923, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114358273964, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian quality",
+      "run_id": 38101532866,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532866",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "ubuntu-latest", "job_id": 114358274112, "conclusion": "success"},
+        {"name": "windows-latest", "job_id": 114358274268, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114358274329, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian desktop build",
+      "run_id": 38101532858,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532858",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "windows-latest", "job_id": 114358273795, "conclusion": "success"},
+        {"name": "macos-latest", "job_id": 114358274005, "conclusion": "success"},
+        {"name": "ubuntu-latest", "job_id": 114358274024, "conclusion": "success"}
+      ]
+    },
+    {
+      "name": "OpenObsidian Rust CI",
+      "run_id": 38101532864,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38101532864",
+      "conclusion": "success",
+      "jobs": [
+        {"name": "rust (ubuntu-latest)", "job_id": 114358273671, "conclusion": "success"},
+        {"name": "rust (windows-latest)", "job_id": 114358273867, "conclusion": "success"},
+        {"name": "rust (macos-latest)", "job_id": 114358274000, "conclusion": "success"}
+      ]
+    }
+  ],
+  "next_action": "Add CI-only Rust refresh-worker stage diagnostics and use exact Windows UI Automation selection evidence plus bounded OCR tolerance, then push a focused correction and inspect exact-SHA GitHub Actions."
+}

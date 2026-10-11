@@ -883,6 +883,59 @@ function ocrTextContainsPhrase(text: string, phrase: string): boolean {
   return normalizedText.includes(normalizedPhrase);
 }
 
+function editDistanceWithinLimit(left: string, right: string, limit: number): boolean {
+  if (Math.abs(left.length - right.length) > limit) return false;
+
+  let previous = Array.from({length: right.length + 1}, (_, index) => index);
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    const current = [leftIndex];
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      current.push(Math.min(
+        (current[rightIndex - 1] ?? 0) + 1,
+        (previous[rightIndex] ?? 0) + 1,
+        (previous[rightIndex - 1] ?? 0) + Number(left[leftIndex - 1] !== right[rightIndex - 1]),
+      ));
+    }
+    previous = current;
+  }
+  return (previous[right.length] ?? Number.POSITIVE_INFINITY) <= limit;
+}
+
+function ocrTextContainsFuzzyPhrase(text: string, phrase: string, maxEdits = 2): boolean {
+  const normalizedPhrase = phrase.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!normalizedPhrase) return false;
+  const minimumLength = Math.max(1, normalizedPhrase.length - maxEdits);
+  const maximumLength = normalizedPhrase.length + maxEdits;
+
+  for (const line of text.split(/\r?\n/)) {
+    const normalizedLine = line.toLowerCase().replace(/[^a-z0-9]/g, "");
+    for (let length = minimumLength; length <= maximumLength; length += 1) {
+      for (let start = 0; start + length <= normalizedLine.length; start += 1) {
+        if (editDistanceWithinLimit(normalizedLine.slice(start, start + length), normalizedPhrase, maxEdits)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function windowsSelectionConfirmsPath(action: unknown, expectedPath: string): boolean {
+  if (typeof action !== "string") return false;
+  try {
+    const selection = JSON.parse(action) as {
+      action?: unknown;
+      control_type?: unknown;
+      name?: unknown;
+    };
+    return selection.name === expectedPath
+      && selection.control_type === "ControlType.RadioButton"
+      && selection.action === "SelectionItemPattern.Select";
+  } catch {
+    return false;
+  }
+}
+
 function nativeFolderPickerVisibleInOcr(text: string): boolean {
   const compact = text.toLowerCase().replace(/[^a-z]/g, "");
   if (compact.includes("openanexistingvault") || compact.includes("openexistingvault")) return true;
@@ -2262,7 +2315,8 @@ sys.exit(1)
             $current = $element.Current
             if ($current.Name) { $visibleNames += "$($current.ControlType.ProgrammaticName):$($current.Name)" }
             if ($current.Name -ne $targetName) { continue }
-            if ($waitForEnabled -and -not $current.IsEnabled) { continue }
+            $enabledBeforeActivation = [bool]$current.IsEnabled
+            if ($waitForEnabled -and -not $enabledBeforeActivation) { continue }
             try {
               $element.GetCurrentPattern([System.Windows.Automation.ScrollItemPattern]::Pattern).ScrollIntoView()
             } catch {}
@@ -2295,11 +2349,15 @@ sys.exit(1)
               } catch {}
             }
             if (-not $method) { throw "Control was found but exposes no usable UI Automation activation pattern" }
+            $enabledAfterActivation = $null
+            try { $enabledAfterActivation = [bool]$element.Current.IsEnabled } catch {}
             [pscustomobject]@{
               name = $current.Name
               control_type = $current.ControlType.ProgrammaticName
               action = $method
-              is_enabled = [bool]$current.IsEnabled
+              is_enabled = $enabledBeforeActivation
+              is_enabled_before_activation = $enabledBeforeActivation
+              is_enabled_after_activation = $enabledAfterActivation
               is_offscreen = [bool]$current.IsOffscreen
             } | ConvertTo-Json -Compress
             exit 0
@@ -2562,12 +2620,17 @@ async function runReferenceExternalNoteRefresh(
     refreshReport.select_external_note_action = await selectFirstNoteFromOpenInspectorMenu(child, externalRefreshMarkdownPath, sortedNotePaths);
   }
   refreshReport.external_note_visible_in_selector = true;
+  const selectedByWindowsUiAutomation = process.platform === "win32"
+    && windowsSelectionConfirmsPath(refreshReport.select_external_note_action, externalRefreshMarkdownPath);
+  refreshReport.external_note_selected_by_exact_windows_uia = selectedByWindowsUiAutomation;
   const selectedNote = await waitFor("OpenObsidian to select the externally added note", async () => {
     await delay(350);
     const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-selected");
     refreshReport.selected_note_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
+  }, (capture) => selectedByWindowsUiAutomation
+    || ocrTextContainsPhrase(capture.ocrText, externalRefreshMarkdownPath)
+    || ocrTextContainsFuzzyPhrase(capture.ocrText, externalRefreshMarkdownPath), 15_000);
   refreshReport.selected_note_screenshot = relative(reportDirectory, selectedNote.pngPath);
   refreshReport.external_note_selected = true;
 
