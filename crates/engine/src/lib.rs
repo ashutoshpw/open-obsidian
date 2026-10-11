@@ -125,6 +125,42 @@ impl VaultSession {
         })?)
     }
 
+    /// Reads one bounded Canvas snapshot and extracts the exact text from one text card.
+    /// The returned revision identifies the bytes used for the preview and can be passed to
+    /// `create_canvas_note_from_text_node` to reject a stale preview.
+    pub fn preview_canvas_text_node(
+        &self,
+        relative_path: impl AsRef<Path>,
+        node_id: &str,
+    ) -> Result<CanvasTextNodePreview, CanvasTextNodePreviewError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        if !relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("canvas"))
+        {
+            return Err(CanvasTextNodePreviewError::NotCanvasFile(relative_path));
+        }
+
+        let snapshot = self.read_preview(&relative_path)?;
+        if snapshot.truncated {
+            return Err(CanvasTextNodePreviewError::TooLarge { relative_path });
+        }
+        let revision_sha256 = snapshot
+            .revision_sha256
+            .ok_or_else(|| CanvasTextNodePreviewError::TooLarge {
+                relative_path: relative_path.clone(),
+            })?;
+        let document = parse_canvas(snapshot.source.as_bytes())?;
+        let text = document.extract_text_node(node_id)?.to_owned();
+
+        Ok(CanvasTextNodePreview {
+            relative_path,
+            revision_sha256,
+            node_id: node_id.to_owned(),
+            text,
+        })
+    }
+
     /// Reads one Canvas snapshot and validates it against the caller's observed
     /// revision, then creates a note from that snapshot's exact text-card contents.
     /// An external Canvas edit after the read is not atomically excluded. This
@@ -138,6 +174,12 @@ impl VaultSession {
     ) -> Result<CanvasNoteCreateResult, CanvasNoteCreateError> {
         let canvas_relative_path = normalize_portable_path(canvas_relative_path.as_ref())?;
         let note_relative_path = normalize_portable_path(note_relative_path.as_ref())?;
+        if !canvas_relative_path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("canvas"))
+        {
+            return Err(CanvasNoteCreateError::NotCanvasFile(canvas_relative_path));
+        }
         if !note_relative_path
             .extension()
             .is_some_and(|extension| extension.eq_ignore_ascii_case("md"))
@@ -271,6 +313,36 @@ pub struct CanvasNoteCreateResult {
     pub created: VaultCreateResult,
 }
 
+/// Failure to read a bounded, revisioned Canvas text-card preview.
+#[derive(Debug, thiserror::Error)]
+pub enum CanvasTextNodePreviewError {
+    /// The source path does not have a `.canvas` extension.
+    #[error("vault path is not a Canvas file: {0}")]
+    NotCanvasFile(PathBuf),
+    /// The Canvas exceeds the bounded source-preview size.
+    #[error("Canvas is too large to preview safely: {relative_path}")]
+    TooLarge { relative_path: PathBuf },
+    /// The Canvas could not be parsed or the requested text card could not be extracted.
+    #[error(transparent)]
+    Canvas(#[from] openobsidian_doc::CanvasError),
+    /// The confined vault read failed.
+    #[error(transparent)]
+    Vault(#[from] VaultError),
+}
+
+/// Exact text and source revision captured for an explicit Canvas text-card preview.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CanvasTextNodePreview {
+    /// The normalized vault-relative Canvas path.
+    pub relative_path: PathBuf,
+    /// SHA-256 of the complete Canvas bytes used for this preview.
+    pub revision_sha256: String,
+    /// The uniquely selected text-card ID.
+    pub node_id: String,
+    /// Exact text-card contents, including whitespace and line endings.
+    pub text: String,
+}
+
 fn normalize_portable_path(relative_path: &Path) -> Result<PathBuf, VaultError> {
     let relative_path = relative_path.to_str().ok_or(VaultError::InvalidPath)?;
     Ok(PathBuf::from(relative_path.replace('\\', "/")))
@@ -297,6 +369,9 @@ pub enum CanvasEditError {
 /// Failure to create a note from a revision-checked Canvas text card.
 #[derive(Debug, thiserror::Error)]
 pub enum CanvasNoteCreateError {
+    /// The source path does not have a `.canvas` extension.
+    #[error("vault path is not a Canvas file: {0}")]
+    NotCanvasFile(PathBuf),
     /// The caller's Canvas snapshot became stale before extraction started.
     #[error("Canvas revision changed for {relative_path}; reopen it before creating a note")]
     StaleRevision {
@@ -659,6 +734,54 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn canvas_note_creation_rejects_non_canvas_source_extensions_without_mutation() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let source = br#"{"nodes":[{"id":"text-1","type":"text","text":"body"}],"edges":[]}"#;
+        fs::write(vault.join("Board.md"), source).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+        let revision = session.read("Board.md").unwrap().revision_sha256;
+
+        let error = session
+            .create_canvas_note_from_text_node("Board.md", &revision, "text-1", "Created.md")
+            .expect_err("a Markdown path must not be accepted as a Canvas source");
+
+        assert!(matches!(
+            error,
+            CanvasNoteCreateError::NotCanvasFile(path) if path == PathBuf::from("Board.md")
+        ));
+        assert!(!vault.join("Created.md").exists());
+        assert_eq!(fs::read(vault.join("Board.md")).unwrap(), source);
+    }
+
+    #[test]
+    fn canvas_text_node_preview_returns_exact_text_and_the_source_revision() {
+        let temporary = TempTree::new();
+        let (vault, app_data) = temporary.layout();
+        let source = b"{\"nodes\":[{\"id\":\"text-1\",\"type\":\"text\",\"text\":\"  exact\\r\\nbody\\n\"}],\"edges\":[]}\r\n";
+        fs::write(vault.join("Board.canvas"), source).unwrap();
+        let session = VaultSession::open(&vault, &app_data).unwrap();
+
+        let preview = session
+            .preview_canvas_text_node("Board.canvas", "text-1")
+            .unwrap();
+
+        assert_eq!(preview.relative_path, PathBuf::from("Board.canvas"));
+        assert_eq!(preview.node_id, "text-1");
+        assert_eq!(preview.text.as_bytes(), b"  exact\r\nbody\n");
+        assert_eq!(
+            preview.revision_sha256,
+            session.read("Board.canvas").unwrap().revision_sha256
+        );
+        assert_eq!(fs::read(vault.join("Board.canvas")).unwrap(), source);
+        assert!(matches!(
+            session.preview_canvas_text_node("Notes/Index.md", "text-1"),
+            Err(CanvasTextNodePreviewError::NotCanvasFile(path))
+                if path == PathBuf::from("Notes/Index.md")
+        ));
     }
 
     #[test]

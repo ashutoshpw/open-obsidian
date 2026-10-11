@@ -45,6 +45,7 @@ const noteEmbed = "![[Assets/roundtrip image.png]]";
 const noteContents = `${noteMarker}\n\n${noteEmbed}\n`;
 const canvasPath = "C06 Reference.canvas";
 const canvasMarker = "Canvas text card";
+const canvasNotePath = "Notes/Canvas text card.md";
 const canvasTargetPath = "Notes/Target.md";
 const canvasTargetMarkdown = "# Heading\n\nTarget for the C06 Canvas fixture subpath. ^block-id\n";
 const canvasTargetText = "Target for the C06 Canvas fixture subpath.";
@@ -97,14 +98,14 @@ const report: Record<string, unknown> = {
   obsidian_authoring: {status: "pending"},
   openobsidian_open: {status: "pending"},
   obsidian_reopen: {status: "pending"},
-  canvas_reference_reopen: {status: "pending"},
+  canvas_reference_reopen: {status: "pending", note_creation: {status: "pending"}},
   vault_snapshots: {},
   openobsidian_app_data: {},
   workspace_state_allowlist: workspaceStateAllowlist,
   acceptance_limits: [
-    "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
+    "The run proves read-only startup, source preview and close, external note creation, in-place edit, and rename followed by explicit UI refresh and preview, native image-embed resolution and external attachment removal followed by refresh/re-resolution, plus explicit Canvas text-card note preview/review/confirmation before first-open and reopened-vault visibility, native folder-picker selection and cancellation, and Obsidian reopen on the recorded runner platform only; other operating systems require their own passing artifact.",
     "The deliberate external note creation, in-place note edit, attachment removal, and note rename each establish a new baseline; all subsequent no-op operations must preserve the latest applicable baseline exactly.",
-    "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, exposes its text marker and referenced block content, and checks exact source bytes after both shutdowns; the codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
+    "The Canvas check uses a dedicated reference-compatible fixture and fresh Obsidian profile, previews and explicitly creates one Markdown note with exact text-card bytes while preserving the Canvas source, exposes both the Canvas marker and referenced block content, and checks exact Canvas and note bytes after both shutdowns; the codec's rich unknown-field fixture remains covered by Rust tests and is not opened by Obsidian. This does not certify every Canvas workflow or cross-platform behavior beyond the recorded runner.",
     "This run does not certify native in-app note editing or saving, all product C01 flows, or general plugin/theme compatibility.",
   ],
 };
@@ -1813,13 +1814,18 @@ async function focusOpenObsidian(child: ChildProcess): Promise<void> {
   execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {stdio: "ignore"});
 }
 
-async function clickOpenVaultButton(child: ChildProcess, windowId: string): Promise<string> {
+async function clickOpenVaultButton(
+  child: ChildProcess,
+  windowId: string,
+  screenshotName = "openobsidian-vault-picker-cancel-click.png",
+  reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
+): Promise<string> {
   await focusOpenObsidian(child);
   if (process.platform === "linux") {
     const clicked = await clickOpenVaultButtonLinux(windowId, join(reportDirectory, "openobsidian.log"));
     await delay(500);
-    const screenshot = await captureDesktopScreenshot("openobsidian-vault-picker-cancel-click.png");
-    (report.openobsidian_open as Record<string, unknown>).picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
+    const screenshot = await captureDesktopScreenshot(screenshotName);
+    reportTarget.picker_cancel_click_screenshot = relative(reportDirectory, screenshot);
     return `Activated OpenObsidian (focus ${clicked.focused_window_before_activation} -> ${clicked.focused_window_after_activation}), moved to (${clicked.click_x}, ${clicked.click_y}), and waited for egui hover before clicking; window=${clicked.window_x},${clicked.window_y},${clicked.window_width},${clicked.window_height}; pointer_before_click=${clicked.pointer_before_click}; egui_hover_event=${clicked.egui_hover_event ?? "unobserved"}; keyboard_fallback=${clicked.keyboard_fallback}.`;
   }
   if (process.platform === "darwin") {
@@ -1939,16 +1945,29 @@ async function clickOpenVaultButton(child: ChildProcess, windowId: string): Prom
   throw new Error(`Unsupported OpenObsidian folder picker platform ${process.platform}`);
 }
 
-async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, window: {window_id: string}): Promise<Record<string, unknown>> {
+async function selectOpenObsidianVaultFromNativePicker(
+  child: ChildProcess,
+  window: {window_id: string},
+  targetRoot = vaultRoot,
+  reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
+  screenshotPrefix = "openobsidian",
+): Promise<Record<string, unknown>> {
   const screenshots: string[] = [];
+  const openReport = reportTarget;
+  const screenshot = (name: string) => `${screenshotPrefix}-${name}.png`;
   await focusOpenObsidian(child);
   if (process.platform === "linux") xdotool("windowfocus", "--sync", window.window_id);
-  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-home.png")));
+  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("vault-picker-home"))));
 
-  const openButtonInteraction = await clickOpenVaultButton(child, window.window_id);
+  const openButtonInteraction = await clickOpenVaultButton(
+    child,
+    window.window_id,
+    screenshot("vault-picker-cancel-click"),
+    reportTarget,
+  );
 
   await delay(750);
-  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-picker.png")));
+  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-picker"))));
   const pickerWindowId = process.platform === "linux" ? activeWindowId() : null;
   const pickerWindowTitle = process.platform === "linux" ? activeWindowTitle() : "native platform folder picker";
   let pathEntryInteraction: string;
@@ -1961,33 +1980,31 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     await delay(250);
     xdotool("key", "ctrl+l");
     await delay(500);
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-location-entry.png")));
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-location-entry"))));
     xdotool("mousemove", "--window", pickerWindowId, "400", "22");
     xdotool("click", "1");
     xdotool("key", "ctrl+a");
     xdotool("key", "BackSpace");
     await delay(250);
-    const clearedLocationScreenshot = await captureDesktopScreenshot("openobsidian-native-folder-location-entry-cleared.png");
+    const clearedLocationScreenshot = await captureDesktopScreenshot(screenshot("native-folder-location-entry-cleared"));
     screenshots.push(relative(reportDirectory, clearedLocationScreenshot));
     const clearedLocationOcr = await readScreenshotOcr(clearedLocationScreenshot);
-    execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {input: vaultRoot, stdio: ["pipe", "ignore", "ignore"]});
+    execFileSync("xclip", ["-selection", "clipboard", "-loops", "1", "-in"], {input: targetRoot, stdio: ["pipe", "ignore", "ignore"]});
     xdotool("key", "ctrl+v");
     await delay(500);
-    const enteredPathScreenshot = await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png");
+    const enteredPathScreenshot = await captureDesktopScreenshot(screenshot("native-folder-path-entered"));
     screenshots.push(relative(reportDirectory, enteredPathScreenshot));
     const enteredPathOcr = await readScreenshotOcr(enteredPathScreenshot);
-    const openReport = report.openobsidian_open as Record<string, unknown>;
     openReport.linux_folder_selection_location_entry_after_clear_ocr = clearedLocationOcr.slice(0, 2_000);
     openReport.linux_folder_selection_location_entry_ocr = enteredPathOcr.slice(0, 2_000);
-    openReport.linux_folder_selection_location_entry_contains_fixture_path = enteredPathOcr.includes(vaultRoot);
+    openReport.linux_folder_selection_location_entry_contains_fixture_path = enteredPathOcr.includes(targetRoot);
     await saveReport();
     pathEntryInteraction = "Focused and cleared the Ctrl+L location entry, then pasted the full absolute fixture path from the CI clipboard.";
     const clicked = clickWindowOpenButton(pickerWindowId);
     folderSelectionInteraction = `Clicked the native folder dialog confirmation at (${clicked.click_x}, ${clicked.click_y}) after entering the fixture path.`;
     await delay(750);
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-opened.png")));
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-path-opened"))));
     if (activeWindowId() === pickerWindowId) {
-      const openReport = report.openobsidian_open as Record<string, unknown>;
       openReport.linux_folder_selection_interaction = folderSelectionInteraction;
       openReport.linux_folder_selection_click = clicked;
       openReport.linux_folder_selection_screenshots = screenshots.slice();
@@ -2008,9 +2025,9 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
       15_000,
     );
     if (!pickerAccessibility) throw new Error(`The native macOS folder picker did not appear before path entry; accessibility windows=${macOSApplicationWindowDescriptions(child)}`);
-    (report.openobsidian_open as Record<string, unknown>).native_picker_accessibility_windows = pickerAccessibility;
+    reportTarget.native_picker_accessibility_windows = pickerAccessibility;
     await saveReport();
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-picker-ready.png")));
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-picker-ready"))));
     const pathScript = `on run argv
       tell application "System Events"
         set targetProcess to first process whose unix id is (item 1 of argv as integer)
@@ -2023,15 +2040,15 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
         delay 1
       end tell
     end run`;
-    execFileSync("osascript", ["-e", pathScript, String(child.pid ?? -1), vaultRoot], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]});
+    execFileSync("osascript", ["-e", pathScript, String(child.pid ?? -1), targetRoot], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]});
     await delay(500);
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
-    (report.openobsidian_open as Record<string, unknown>).native_picker_screenshots = screenshots.slice();
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-path-entered"))));
+    reportTarget.native_picker_screenshots = screenshots.slice();
     await saveReport();
     folderSelectionInteraction = await clickMacOSNativePickerOpenButton(child);
     await delay(500);
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-selected.png")));
-    (report.openobsidian_open as Record<string, unknown>).native_picker_screenshots = screenshots.slice();
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-path-selected"))));
+    reportTarget.native_picker_screenshots = screenshots.slice();
     await saveReport();
     pathEntryInteraction = "Used Command-Shift-G with the full absolute fixture path; the native Open button was clicked using the Open panel's accessible bounds.";
   } else {
@@ -2045,10 +2062,10 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
       $shell.SendKeys("{ENTER}")
     `;
     execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", pathScript], {
-      env: {...process.env, OPENOBSIDIAN_PICKER_VAULT_PATH: vaultRoot},
+      env: {...process.env, OPENOBSIDIAN_PICKER_VAULT_PATH: targetRoot},
       stdio: "ignore",
     });
-    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-native-folder-path-entered.png")));
+    screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("native-folder-path-entered"))));
     const selectScript = `
       $ErrorActionPreference = "Stop"
       Add-Type -AssemblyName UIAutomationClient
@@ -2104,7 +2121,7 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
   }
 
   await delay(1_000);
-  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot("openobsidian-vault-picker-selected.png")));
+  screenshots.push(relative(reportDirectory, await captureDesktopScreenshot(screenshot("vault-picker-selected"))));
   return {
     open_button_interaction: openButtonInteraction,
     picker_window_id: pickerWindowId,
@@ -2112,7 +2129,7 @@ async function selectOpenObsidianVaultFromNativePicker(child: ChildProcess, wind
     path_entry_interaction: pathEntryInteraction,
     folder_selection_interaction: folderSelectionInteraction,
     screenshots,
-    selected_path: "$RUNNER_TEMP/openobsidian-c01-roundtrip/C01.2 Roundtrip Fixture",
+    selected_path: `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, targetRoot).split(sep).join("/")}`,
   };
 }
 
@@ -2299,7 +2316,12 @@ async function cancelOpenObsidianNativePicker(
   };
 }
 
-async function captureOpenObsidianScreenshot(windowId: string, child: ChildProcess, prefix = "openobsidian-vault"): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string; windowGeometry?: string}> {
+async function captureOpenObsidianScreenshot(
+  windowId: string,
+  child: ChildProcess,
+  prefix = "openobsidian-vault",
+  reportTarget: Record<string, unknown> = report.openobsidian_open as Record<string, unknown>,
+): Promise<{pngPath: string; windowPngPath: string; ocrPngPath: string; ocrText: string; windowGeometry?: string}> {
   await focusOpenObsidian(child);
   const pngPath = await captureDesktopScreenshot(`${prefix}.png`);
   const windowsCapture = process.platform === "win32"
@@ -2311,7 +2333,7 @@ async function captureOpenObsidianScreenshot(windowId: string, child: ChildProce
       ? await captureMacOSWindowScreenshot(child.pid ?? -1, `${prefix}-window.png`)
       : windowsCapture?.pngPath ?? pngPath;
   if (windowsCapture) {
-    (report.openobsidian_open as Record<string, unknown>).native_window = {
+    reportTarget.native_window = {
       window_id: windowsCapture.window_id,
       title: windowsCapture.title,
       geometry: windowsCapture.geometry,
@@ -4751,6 +4773,537 @@ async function assertCanvasReferenceSource(
   return {bytes: bytes.length, sha256};
 }
 
+async function assertCanvasCreatedNoteSource(expectedBytes: Buffer, stage: string): Promise<{bytes: number; sha256: string}> {
+  const bytes = await readFile(join(canvasVaultRoot, canvasNotePath));
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  const expectedSha256 = createHash("sha256").update(expectedBytes).digest("hex");
+  if (!bytes.equals(expectedBytes)) {
+    const filename = stage.includes("first") ? "canvas-note-after-first-obsidian-close.md" : "canvas-note-after-reopen-obsidian-close.md";
+    await writeFile(join(reportDirectory, filename), bytes);
+    throw new Error(`Obsidian changed the created Canvas note after ${stage}: expected ${expectedBytes.length} bytes / ${expectedSha256}, got ${bytes.length} bytes / ${sha256}`);
+  }
+  return {bytes: bytes.length, sha256};
+}
+
+async function verifyCanvasCreatedNoteVisible(
+  connection: DevToolsConnection,
+  screenshot: string,
+  label: string,
+): Promise<{
+  body: string;
+  editor: string;
+  title: string;
+  paths: string[];
+  active_file_path: string | null;
+  active_tree_path: string | null;
+  active_view_type: string | null;
+  active_view_is_markdown: boolean;
+  active_view_text: string;
+}> {
+  const readVisible = async () => await connection.evaluateJson<{
+    body: string;
+    editor: string;
+    title: string;
+    paths: string[];
+    active_file_path: string | null;
+    active_tree_path: string | null;
+    active_view_type: string | null;
+    active_view_is_markdown: boolean;
+    active_view_text: string;
+  }>(`(() => ({
+    body: document.body?.innerText ?? '',
+    editor: [...document.querySelectorAll('[contenteditable="true"]')].map((element) => element.innerText ?? '').join('\\n'),
+    title: document.title,
+    paths: [...document.querySelectorAll('[data-path]')].map((element) => element.getAttribute('data-path') || ''),
+    active_file_path: window.app?.workspace?.getActiveFile?.()?.path
+      ?? window.app?.workspace?.activeLeaf?.view?.file?.path
+      ?? null,
+    active_tree_path: [...document.querySelectorAll('[data-path].is-active')]
+      .map((element) => element.getAttribute('data-path') || '')
+      .find(Boolean)
+      ?? null,
+    active_view_type: window.app?.workspace?.activeLeaf?.view?.getViewType?.()
+      ?? document.querySelector('.workspace-leaf.mod-active')?.getAttribute('data-type')
+      ?? null,
+    active_view_is_markdown: Boolean(
+      window.app?.workspace?.activeLeaf?.view?.getViewType?.() === 'markdown'
+      || document.querySelector('.workspace-leaf.mod-active')?.querySelector('.markdown-source-view, .markdown-preview-view')
+    ),
+    active_view_text: (() => {
+      const leaf = document.querySelector('.workspace-leaf.mod-active');
+      const content = leaf?.querySelector('.cm-content[contenteditable="true"], .markdown-preview-view');
+      return content?.innerText ?? '';
+    })()
+  }))()`);
+  let visible = await readVisible();
+  const notesFolder = canvasNotePath.split("/")[0] ?? "Notes";
+  if (!visible.paths.includes(canvasNotePath) && visible.paths.includes(notesFolder)) {
+    await connection.evaluate(`(() => {
+      const folder = [...document.querySelectorAll('[data-path]')]
+        .find((element) => element.getAttribute('data-path') === ${JSON.stringify(notesFolder)});
+      folder?.click();
+    })()`);
+    visible = await waitFor(
+      `${label}: Obsidian to expand the Notes folder`,
+      readVisible,
+      (value) => value.paths.includes(canvasNotePath),
+      10_000,
+    );
+  }
+  const selected = await connection.evaluateJson<boolean>(`(() => {
+    const target = [...document.querySelectorAll('[data-path]')]
+      .find((element) => element.getAttribute('data-path') === ${JSON.stringify(canvasNotePath)});
+    target?.click();
+    return Boolean(target);
+  })()`);
+  if (!selected) throw new Error(`${label}: Obsidian did not expose ${canvasNotePath} for selection`);
+  visible = await waitFor(
+    `${label}: Obsidian to render the explicitly created note`,
+    readVisible,
+    (value) => value.paths.includes(canvasNotePath)
+      && (value.active_file_path === canvasNotePath || value.active_tree_path === canvasNotePath)
+      && value.active_view_is_markdown
+      && value.active_view_text.includes(canvasMarker)
+      && !value.body.includes("Do you trust the author of this vault?"),
+    30_000,
+  );
+  if (!visible.paths.includes(canvasNotePath)
+    || (visible.active_file_path !== canvasNotePath && visible.active_tree_path !== canvasNotePath)
+    || !visible.active_view_is_markdown
+    || !visible.active_view_text.includes(canvasMarker)) {
+    throw new Error(label + ": Obsidian did not make the created Markdown file the active rendered note; active_file_path="
+      + JSON.stringify(visible.active_file_path)
+      + ", active_tree_path=" + JSON.stringify(visible.active_tree_path)
+      + ", active_view_type=" + JSON.stringify(visible.active_view_type)
+      + ", active_view_text=" + JSON.stringify(visible.active_view_text.slice(0, 2_000)));
+  }
+  await captureObsidianScreenshot(connection, screenshot);
+  return visible;
+}
+
+async function replaceOpenObsidianTextInput(
+  child: ChildProcess,
+  controlName: string,
+  value: string,
+): Promise<string> {
+  const processId = child.pid;
+  if (!processId) throw new Error("OpenObsidian did not expose its process id for Canvas text entry");
+  if (process.platform === "linux") {
+    const script = `
+import json
+import sys
+import time
+import pyatspi
+
+process_id = int(sys.argv[1])
+target_name = sys.argv[2]
+replacement = sys.argv[3]
+deadline = time.monotonic() + 20
+last_matches = []
+while time.monotonic() < deadline:
+    pending = [pyatspi.Registry.getDesktop(0)]
+    seen = set()
+    while pending:
+        accessible = pending.pop()
+        try:
+            name = accessible.getName() or ""
+            role = accessible.getRoleName() or ""
+            try:
+                owner_pid = accessible.get_process_id()
+            except Exception:
+                owner_pid = None
+            if owner_pid == process_id and name == target_name:
+                last_matches.append(role)
+                try:
+                    editable = accessible.queryEditableText()
+                    editable.setTextContents(replacement)
+                    time.sleep(0.15)
+                    text = accessible.queryText()
+                    current = text.getText(0, text.getCharacterCount())
+                    if current != replacement:
+                        raise RuntimeError("editable text value did not match after replacement")
+                    print(json.dumps({"name": name, "role": role, "action": "EditableText.setTextContents", "value": current}))
+                    sys.exit(0)
+                except Exception:
+                    pass
+            child_count = accessible.getChildCount()
+            for index in range(child_count):
+                child_accessible = accessible.getChildAtIndex(index)
+                try:
+                    identity = child_accessible.get_hash()
+                except Exception:
+                    identity = id(child_accessible)
+                if identity not in seen:
+                    seen.add(identity)
+                    pending.append(child_accessible)
+        except Exception:
+            continue
+    time.sleep(0.25)
+print(json.dumps({"error": "editable accessible field was not found", "target": target_name, "process_id": process_id, "matching_roles": last_matches[-20:]}), file=sys.stderr)
+sys.exit(1)
+`;
+    try {
+      const output = execFileSync("python3", ["-c", script, String(processId), controlName, value], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim();
+      await delay(250);
+      return output;
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+      const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+      throw new Error(`Could not set the accessible OpenObsidian ${controlName} field: ${output || failure.message}`);
+    }
+  } else if (process.platform === "darwin") {
+    const script = `on run argv
+      set processId to (item 1 of argv) as integer
+      set targetName to item 2 of argv
+      set replacement to item 3 of argv
+      tell application "System Events"
+        set targetProcess to first process whose unix id is processId
+        set frontmost of targetProcess to true
+        repeat with candidate in entire contents of window 1 of targetProcess
+          try
+            if (name of candidate as text) is targetName and (role of candidate as text) is "AXTextField" then
+              set value of candidate to replacement
+              delay 0.15
+              if (value of candidate as text) is not replacement then error "Accessible value did not match after replacement"
+              return "AXTextField.setValue|" & targetName
+            end if
+          end try
+        end repeat
+        error "Editable text field was not found: " & targetName
+      end tell
+    end run`;
+    const output = execFileSync("osascript", ["-e", script, String(processId), controlName, value], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+    await delay(250);
+    return output;
+  } else if (process.platform === "win32") {
+    const script = `
+      $ErrorActionPreference = "Stop"
+      Add-Type -AssemblyName UIAutomationClient
+      Add-Type -AssemblyName UIAutomationTypes
+      $processId = [int]$env:OPENOBSIDIAN_WINDOW_PROCESS_ID
+      $targetName = $env:OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME
+      $replacement = $env:OPENOBSIDIAN_CANVAS_TEXT_ENTRY
+      $root = [System.Windows.Automation.AutomationElement]::RootElement
+      $processCondition = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ProcessIdProperty,
+        $processId
+      )
+      $deadline = [DateTime]::UtcNow.AddSeconds(20)
+      do {
+        $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, $processCondition)
+        foreach ($element in $elements) {
+          try {
+            $current = $element.Current
+            if ($current.Name -ne $targetName -or $current.ControlType -ne [System.Windows.Automation.ControlType]::Edit) { continue }
+            $pattern = $element.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
+            if ($pattern.Current.IsReadOnly) { throw "The accessible edit field is read-only: $targetName" }
+            $pattern.SetValue($replacement)
+            Start-Sleep -Milliseconds 150
+            $actual = [string]$pattern.Current.Value
+            if ($actual -cne $replacement) { throw "Accessible value did not match after replacement: $targetName" }
+            [pscustomobject]@{name = $targetName; action = "ValuePattern.SetValue"; value = $actual} | ConvertTo-Json -Compress
+            exit 0
+          } catch {
+            if ($_.Exception.Message -like "The accessible edit field is read-only:*" -or $_.Exception.Message -like "Accessible value did not match*" ) { throw }
+          }
+        }
+        Start-Sleep -Milliseconds 250
+      } while ([DateTime]::UtcNow -lt $deadline)
+      throw "Accessible editable field was not found: $targetName"
+    `;
+    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        OPENOBSIDIAN_WINDOW_PROCESS_ID: String(processId),
+        OPENOBSIDIAN_ACCESSIBLE_CONTROL_NAME: controlName,
+        OPENOBSIDIAN_CANVAS_TEXT_ENTRY: value,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+    await delay(250);
+    return output;
+  } else {
+    throw new Error(`Canvas text entry is not configured for ${process.platform}`);
+  }
+}
+
+async function runOpenObsidianCanvasNoteCreation(
+  seedSnapshot: SnapshotEntry[],
+  expectedCanvas: {bytes: number; sha256: string},
+): Promise<SnapshotEntry[]> {
+  const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
+  const noteReport = canvasReport.note_creation as Record<string, unknown>;
+  const snapshots = report.vault_snapshots as Record<string, unknown>;
+  const expectedNoteBytes = Buffer.from(canvasMarker, "utf8");
+  const expectedNoteSha256 = createHash("sha256").update(expectedNoteBytes).digest("hex");
+  const userConfigRoot = join(workDirectory, "openobsidian-canvas-user-config");
+  const homeRoot = join(workDirectory, "openobsidian-canvas-home");
+  const localDataRoot = join(workDirectory, "openobsidian-canvas-local-data");
+  const appEnv: NodeJS.ProcessEnv = {...process.env, HOME: homeRoot};
+  let appDataRoot: string;
+  if (process.platform === "win32") {
+    appEnv.APPDATA = userConfigRoot;
+    appEnv.LOCALAPPDATA = localDataRoot;
+    appEnv.USERPROFILE = homeRoot;
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  } else if (process.platform === "darwin") {
+    appDataRoot = join(homeRoot, "Library", "Application Support", "OpenObsidian");
+  } else {
+    appEnv.XDG_CONFIG_HOME = userConfigRoot;
+    appEnv.XDG_CACHE_HOME = join(workDirectory, "openobsidian-canvas-cache");
+    appEnv.XDG_DATA_HOME = join(workDirectory, "openobsidian-canvas-data");
+    appEnv.LIBGL_ALWAYS_SOFTWARE = "1";
+    appEnv.WGPU_BACKEND = "gl";
+    appDataRoot = join(userConfigRoot, "OpenObsidian");
+  }
+  await mkdir(join(homeRoot, "Desktop"), {recursive: true});
+  noteReport.status = "running";
+  noteReport.source_canvas_path = canvasPath;
+  noteReport.source_text_node_id = "text-1";
+  noteReport.output_path = canvasNotePath;
+  noteReport.expected_note_bytes = expectedNoteBytes.length;
+  noteReport.expected_note_sha256 = expectedNoteSha256;
+  noteReport.body_is_exact_canvas_text = true;
+  noteReport.accessible_labels = [
+    "Canvas path",
+    "Text card ID",
+    "New Markdown path",
+    "Preview note creation",
+    "Review and confirm note creation",
+    "Confirm and create note",
+  ];
+  const screenshots: Record<string, string> = {};
+  let child: ChildProcess | undefined;
+  let window: {window_id: string; title: string; geometry: string} | undefined;
+  try {
+    child = launchLogged(openObsidianBinary, [], join(reportDirectory, "openobsidian-canvas-note-create.log"), appEnv);
+    noteReport.pid = child.pid ?? null;
+    await delay(1_000);
+    if (child.exitCode !== null || child.signalCode !== null) {
+      throw new Error(`OpenObsidian exited before Canvas note creation (code=${child.exitCode}, signal=${child.signalCode})`);
+    }
+    if (process.platform === "linux") {
+      const x11Window = await waitFor("OpenObsidian Canvas note-creation window to become visible", async () => {
+        try {
+          const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "OpenObsidian"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          const windowId = output.trim().split(/\s+/).filter(Boolean).at(-1);
+          if (!windowId) return null;
+          const title = execFileSync("xdotool", ["getwindowname", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+          const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+          return {window_id: windowId, title, geometry};
+        } catch {
+          return null;
+        }
+      }, (value) => value !== null, 30_000);
+      if (!x11Window) throw new Error("OpenObsidian did not expose a visible Canvas note-creation window");
+      window = x11Window;
+      xdotool("windowfocus", "--sync", window.window_id);
+    } else {
+      window = {window_id: String(child.pid ?? "unknown"), title: "OpenObsidian Canvas note-creation window", geometry: "native window bounds captured during screenshot"};
+    }
+    noteReport.window = window;
+    noteReport.native_picker = await selectOpenObsidianVaultFromNativePicker(
+      child,
+      window,
+      canvasVaultRoot,
+      noteReport,
+      "openobsidian-canvas-note-create",
+    );
+    const initialMarkdownCount = countMarkdownFiles(seedSnapshot);
+    const opened = await waitFor("OpenObsidian to render the Canvas fixture vault", async () => {
+      await delay(750);
+      return await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-selected", noteReport);
+    }, (capture) => capture.ocrText.includes(canvasVaultName)
+      && new RegExp(`${initialMarkdownCount}\\s+Markdown files found`, "i").test(capture.ocrText), 30_000);
+    screenshots.vault_selected = relative(reportDirectory, opened.windowPngPath);
+    noteReport.selected_vault_visible = true;
+    noteReport.markdown_count_before_creation = initialMarkdownCount;
+    const canonicalVault = await realpath(canvasVaultRoot);
+    const canonicalAppData = await realpath(appDataRoot);
+    const relativeAppData = relative(canonicalVault, canonicalAppData);
+    if (relativeAppData === "" || (!relativeAppData.startsWith(`..${sep}`) && relativeAppData !== ".." && !relativeAppData.startsWith(sep))) {
+      throw new Error("OpenObsidian's Canvas note-creation application data directory is inside the selected vault");
+    }
+    noteReport.app_data_root = `$RUNNER_TEMP/openobsidian-c01-roundtrip/${relative(workDirectory, appDataRoot).split(sep).join("/")}`;
+    noteReport.app_data_canonical_root_is_outside_vault = true;
+    const appDataBeforeCreation = await snapshotTree(appDataRoot);
+    noteReport.app_data_snapshot_before_creation = appDataBeforeCreation;
+
+    const noteBefore = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(seedSnapshot, noteBefore, "Canvas vault before native note-creation preview");
+    const canvasBytesBefore = await readFile(join(canvasVaultRoot, canvasPath));
+    if (canvasBytesBefore.length !== expectedCanvas.bytes || createHash("sha256").update(canvasBytesBefore).digest("hex") !== expectedCanvas.sha256) {
+      throw new Error("OpenObsidian changed the Canvas source before note creation");
+    }
+    if (noteBefore.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error(`Canvas note destination already exists before explicit confirmation: ${canvasNotePath}`);
+    }
+    noteReport.vault_snapshot_before_preview = noteBefore;
+    noteReport.destination_absent_before_confirmation = true;
+
+    const interactions: Record<string, string> = {};
+    noteReport.interactions = interactions;
+    interactions.canvas_path = await replaceOpenObsidianTextInput(child, "Canvas path", canvasPath);
+    interactions.text_card_id = await replaceOpenObsidianTextInput(child, "Text card ID", "text-1");
+    interactions.new_markdown_path = await replaceOpenObsidianTextInput(child, "New Markdown path", canvasNotePath);
+    const ready = await waitFor(
+      "OpenObsidian to show the entered Canvas card and new note path",
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-form", noteReport),
+      (capture) => capture.ocrText.includes(canvasNotePath)
+        && capture.ocrText.includes("text-1")
+        && capture.ocrText.includes(canvasPath),
+      30_000,
+    );
+    screenshots.form = relative(reportDirectory, ready.windowPngPath);
+    noteReport.form_ocr = ready.ocrText.slice(0, 4_000);
+    const afterForm = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(noteBefore, afterForm, "Canvas note-creation form must not write to the vault");
+    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0
+      || afterForm.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Entering Canvas note-creation form values wrote to the vault or changed the source Canvas");
+    }
+    noteReport.vault_snapshot_after_form = afterForm;
+    noteReport.no_write_during_form_entry = true;
+
+    interactions.preview = await invokeNativeAccessibleControl(child, window.window_id, "Preview note creation", undefined, true);
+    const preview = await waitFor(
+      "OpenObsidian to show the exact Canvas text-card preview",
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-preview", noteReport),
+      (capture) => capture.ocrText.includes(canvasMarker)
+        && capture.ocrText.includes(canvasNotePath)
+        && capture.ocrText.includes(canvasPath),
+      30_000,
+    );
+    screenshots.preview = relative(reportDirectory, preview.windowPngPath);
+    noteReport.preview_ocr = preview.ocrText.slice(0, 4_000);
+    const afterPreview = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(noteBefore, afterPreview, "Canvas note-creation preview must not write to the vault");
+    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0) {
+      throw new Error("Canvas note-creation preview changed the source Canvas bytes");
+    }
+    if (afterPreview.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Canvas note-creation preview wrote the Markdown destination before confirmation");
+    }
+    noteReport.vault_snapshot_after_preview = afterPreview;
+    noteReport.no_write_during_preview = true;
+
+    interactions.review = await invokeNativeAccessibleControl(child, window.window_id, "Review and confirm note creation", undefined, true);
+    const review = await waitFor(
+      "OpenObsidian to show the final Canvas note-creation confirmation",
+      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-review", noteReport),
+      (capture) => capture.ocrText.includes(canvasMarker)
+        && capture.ocrText.includes(canvasNotePath)
+        && capture.ocrText.includes("Confirm and create note"),
+      30_000,
+    );
+    screenshots.review = relative(reportDirectory, review.windowPngPath);
+    noteReport.review_ocr = review.ocrText.slice(0, 4_000);
+    const afterReview = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(afterPreview, afterReview, "Canvas note-creation review must not write to the vault");
+    if (afterReview.some((entry) => entry.path === canvasNotePath)) {
+      throw new Error("Canvas note-creation review wrote the Markdown destination before explicit confirmation");
+    }
+    noteReport.vault_snapshot_after_review = afterReview;
+    noteReport.no_write_during_review = true;
+
+    interactions.confirm = await invokeNativeAccessibleControl(child, window.window_id, "Confirm and create note", undefined, true);
+    const confirmedBytes = await waitFor("OpenObsidian to create the confirmed Canvas note", async () => {
+      try {
+        return await readFile(join(canvasVaultRoot, canvasNotePath));
+      } catch {
+        return null;
+      }
+    }, (bytes) => bytes !== null, 15_000);
+    if (confirmedBytes === null) {
+      throw new Error(`OpenObsidian did not create the confirmed Canvas note at ${canvasNotePath}`);
+    }
+    if (!confirmedBytes.equals(expectedNoteBytes)) {
+      await writeFile(join(reportDirectory, "canvas-note-creation-incorrect-output.md"), confirmedBytes);
+      throw new Error(`Created Canvas note bytes differ from the exact text card body: expected ${expectedNoteBytes.length} bytes / ${expectedNoteSha256}, got ${confirmedBytes.length} bytes / ${createHash("sha256").update(confirmedBytes).digest("hex")}`);
+    }
+    const afterCreate = await snapshotTree(canvasVaultRoot);
+    const createChanges = changedPaths(afterReview, afterCreate);
+    if (createChanges.length !== 1 || createChanges[0]?.path !== canvasNotePath || createChanges[0]?.before !== undefined || createChanges[0]?.after?.kind !== "file") {
+      throw new Error(`Explicit Canvas note creation changed unexpected vault paths: ${JSON.stringify(createChanges).slice(0, 4_000)}`);
+    }
+    const canvasBytesAfter = await readFile(join(canvasVaultRoot, canvasPath));
+    const canvasHashAfter = createHash("sha256").update(canvasBytesAfter).digest("hex");
+    if (canvasBytesAfter.length !== expectedCanvas.bytes || canvasHashAfter !== expectedCanvas.sha256) {
+      await writeFile(join(reportDirectory, "canvas-note-creation-changed-source.canvas"), canvasBytesAfter);
+      throw new Error("Explicit Canvas note creation changed the Canvas source bytes");
+    }
+    noteReport.status = "passed";
+    noteReport.confirmation_interaction = interactions.confirm;
+    noteReport.interactions = interactions;
+    noteReport.screenshots = screenshots;
+    noteReport.expected_note_body_sha256 = expectedNoteSha256;
+    noteReport.created_note_bytes = confirmedBytes.length;
+    noteReport.created_note_sha256 = createHash("sha256").update(confirmedBytes).digest("hex");
+    noteReport.created_note_matches_exact_canvas_text = true;
+    noteReport.vault_changes_from_explicit_creation = createChanges;
+    noteReport.canvas_bytes_before_creation = {bytes: canvasBytesBefore.length, sha256: expectedCanvas.sha256};
+    noteReport.canvas_bytes_after_creation = {bytes: canvasBytesAfter.length, sha256: canvasHashAfter};
+    noteReport.canvas_unchanged = true;
+    noteReport.vault_snapshot_after_creation = afterCreate;
+    snapshots.canvas_note_creation_before = noteBefore;
+    snapshots.canvas_note_creation_after = afterCreate;
+    await writeFile(join(reportDirectory, "canvas-note-creation-before.json"), `${JSON.stringify(noteBefore, null, 2)}\n`);
+    await writeFile(join(reportDirectory, "canvas-note-creation-after.json"), `${JSON.stringify(afterCreate, null, 2)}\n`);
+    await writeFile(join(reportDirectory, "canvas-note-creation-source.canvas"), canvasBytesAfter);
+    await writeFile(join(reportDirectory, "canvas-note-creation-note.md"), confirmedBytes);
+    noteReport.artifacts = {
+      openobsidian_log: "openobsidian-canvas-note-create.log",
+      before_snapshot: "canvas-note-creation-before.json",
+      after_snapshot: "canvas-note-creation-after.json",
+      source_canvas_bytes: "canvas-note-creation-source.canvas",
+      created_note_bytes: "canvas-note-creation-note.md",
+    };
+    await saveReport();
+
+    await delay(1_000);
+    await stopProcess(child);
+    child = undefined;
+    const afterClose = await snapshotTree(canvasVaultRoot);
+    ensureExactSnapshot(afterCreate, afterClose, "OpenObsidian close after Canvas note creation");
+    if ((await readFile(join(canvasVaultRoot, canvasPath))).compare(canvasBytesBefore) !== 0) {
+      throw new Error("OpenObsidian changed the Canvas source after note creation when closing");
+    }
+    noteReport.vault_snapshot_after_close = afterClose;
+    const appDataAfterCreation = await snapshotTree(appDataRoot);
+    const appDataChangesFromCreation = changedPaths(appDataBeforeCreation, appDataAfterCreation);
+    const eframeFilesAfterCreation = await readSnapshotTextFiles(
+      appDataRoot,
+      appDataAfterCreation,
+      (path) => path.toLowerCase().endsWith(".ron"),
+    );
+    ensureAppDataChangesAreMacEframeUiStateOnly(
+      appDataChangesFromCreation,
+      eframeFilesAfterCreation,
+      "OpenObsidian app data after explicit Canvas note creation",
+      [canvasVaultRoot, canonicalVault, appDataRoot, canonicalAppData],
+    );
+    noteReport.app_data_snapshot_after_creation = appDataAfterCreation;
+    noteReport.app_data_changes_from_creation = appDataChangesFromCreation;
+    noteReport.app_data_change_policy_passed = true;
+    noteReport.eframe_persistence_files_after_creation = eframeFilesAfterCreation;
+    noteReport.vault_unchanged_after_close = true;
+    await saveReport();
+    return afterClose;
+  } catch (error) {
+    noteReport.status = "failed";
+    noteReport.error = error instanceof Error ? error.message : String(error);
+    noteReport.screenshots = screenshots;
+    await saveReport();
+    throw error;
+  } finally {
+    await stopProcess(child).catch(() => undefined);
+  }
+}
+
 async function runCanvasReferenceProbe(): Promise<void> {
   const profileDirectory = join(workDirectory, "canvas-obsidian-profile");
   const canvasReport = report.canvas_reference_reopen as Record<string, unknown>;
@@ -4764,6 +5317,19 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const expectedCanvas = await createCanvasReferenceFixture();
     const seedSnapshot = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_seed = seedSnapshot;
+    const expectedCreatedNoteBytes = Buffer.from(canvasMarker, "utf8");
+    const postCreateBaseline = await runOpenObsidianCanvasNoteCreation(seedSnapshot, expectedCanvas);
+    snapshots.canvas_reference_after_native_note_creation = postCreateBaseline;
+    canvasReport.note_creation_baseline_includes_created_note = postCreateBaseline.some((entry) => (
+      entry.path === canvasNotePath
+      && entry.kind === "file"
+      && entry.bytes === expectedCreatedNoteBytes.length
+      && entry.sha256 === createHash("sha256").update(expectedCreatedNoteBytes).digest("hex")
+    ));
+    if (!canvasReport.note_creation_baseline_includes_created_note) {
+      throw new Error("The post-creation Canvas vault baseline does not contain the exact new Markdown note");
+    }
+    const noteBeforeFirstOpen = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "before the first Obsidian open");
     firstProcess = await createObsidianProfile(profileDirectory, 9224, "obsidian-canvas-first-open.log");
     const first = await connectObsidian(9224);
     firstConnection = first.connection;
@@ -4771,6 +5337,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
       devtools_browser: first.browserVersion,
       first_target: {title: first.target.title ?? "", url: first.target.url ?? ""},
       source_before_open: expectedCanvas,
+      created_note_source_before_open: noteBeforeFirstOpen,
     };
     canvasReport.first_session = firstSession;
     const firstRunBody = await waitForRenderer(
@@ -4804,6 +5371,34 @@ async function runCanvasReferenceProbe(): Promise<void> {
       sha256: firstView.sha256,
       screenshot: "obsidian-canvas-first-open.png",
     };
+    const firstCreatedNoteView = await verifyCanvasCreatedNoteVisible(
+      firstConnection,
+      "obsidian-canvas-created-note-first-open.png",
+      "Canvas-created Markdown note first open",
+    );
+    const firstCreatedNoteSource = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "during the first Obsidian open");
+    firstSession.created_note_view = {
+      path: canvasNotePath,
+      path_visible_in_file_explorer: firstCreatedNoteView.paths.includes(canvasNotePath),
+      active_file_path: firstCreatedNoteView.active_file_path,
+      active_tree_path: firstCreatedNoteView.active_tree_path,
+      active_view_type: firstCreatedNoteView.active_view_type,
+      active_view_is_markdown: firstCreatedNoteView.active_view_is_markdown,
+      exact_text_card_body_visible: firstCreatedNoteView.active_view_text.includes(canvasMarker),
+      title: firstCreatedNoteView.title,
+      body: firstCreatedNoteView.body.slice(0, 2_000),
+      editor: firstCreatedNoteView.editor.slice(0, 2_000),
+      active_view_text: firstCreatedNoteView.active_view_text.slice(0, 2_000),
+      source_bytes: firstCreatedNoteSource.bytes,
+      source_sha256: firstCreatedNoteSource.sha256,
+      screenshot: "obsidian-canvas-created-note-first-open.png",
+    };
+    if (!firstSession.created_note_view || !firstCreatedNoteView.paths.includes(canvasNotePath)
+      || (firstCreatedNoteView.active_file_path !== canvasNotePath && firstCreatedNoteView.active_tree_path !== canvasNotePath)
+      || !firstCreatedNoteView.active_view_is_markdown
+      || !firstCreatedNoteView.active_view_text.includes(canvasMarker)) {
+      throw new Error("Obsidian's first open did not activate and render the explicitly created Canvas text-card Markdown note");
+    }
     await delay(2_000);
     await stopProcess(firstProcess, firstConnection);
     firstProcess = undefined;
@@ -4812,7 +5407,9 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const afterFirstClose = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_after_first_close = afterFirstClose;
     const firstCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, "the first Obsidian shutdown");
-    const firstCloseChanges = changedPaths(seedSnapshot, afterFirstClose);
+    const firstCloseNote = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "the first Obsidian shutdown");
+    firstSession.created_note_source_after_close = firstCloseNote;
+    const firstCloseChanges = changedPaths(postCreateBaseline, afterFirstClose);
     const firstCloseUnexpectedChanges = firstCloseChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
     if (firstCloseUnexpectedChanges.length > 0) {
       throw new Error(`Canvas reference first open changed non-workspace vault content: ${JSON.stringify(firstCloseUnexpectedChanges).slice(0, 6_000)}`);
@@ -4823,6 +5420,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
 
     const beforeSecondOpen = afterFirstClose;
     snapshots.canvas_reference_before_second_open = beforeSecondOpen;
+    const noteBeforeSecondOpen = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "before the reopened Obsidian session");
     secondProcess = await createObsidianProfile(profileDirectory, 9225, "obsidian-canvas-reopen.log");
     const second = await connectObsidian(9225);
     secondConnection = second.connection;
@@ -4830,6 +5428,7 @@ async function runCanvasReferenceProbe(): Promise<void> {
       devtools_browser: second.browserVersion,
       first_target: {title: second.target.title ?? "", url: second.target.url ?? ""},
       source_before_reopen: expectedCanvas,
+      created_note_source_before_reopen: noteBeforeSecondOpen,
     };
     canvasReport.second_session = secondSession;
     await chooseRestrictedMode(secondConnection, secondSession, canvasVaultName, canvasMarker);
@@ -4850,6 +5449,34 @@ async function runCanvasReferenceProbe(): Promise<void> {
       sha256: secondView.sha256,
       screenshot: "obsidian-canvas-reopened.png",
     };
+    const secondCreatedNoteView = await verifyCanvasCreatedNoteVisible(
+      secondConnection,
+      "obsidian-canvas-created-note-reopened.png",
+      "Canvas-created Markdown note reopen",
+    );
+    const secondCreatedNoteSource = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "during the reopened Obsidian session");
+    secondSession.created_note_view = {
+      path: canvasNotePath,
+      path_visible_in_file_explorer: secondCreatedNoteView.paths.includes(canvasNotePath),
+      active_file_path: secondCreatedNoteView.active_file_path,
+      active_tree_path: secondCreatedNoteView.active_tree_path,
+      active_view_type: secondCreatedNoteView.active_view_type,
+      active_view_is_markdown: secondCreatedNoteView.active_view_is_markdown,
+      exact_text_card_body_visible: secondCreatedNoteView.active_view_text.includes(canvasMarker),
+      title: secondCreatedNoteView.title,
+      body: secondCreatedNoteView.body.slice(0, 2_000),
+      editor: secondCreatedNoteView.editor.slice(0, 2_000),
+      active_view_text: secondCreatedNoteView.active_view_text.slice(0, 2_000),
+      source_bytes: secondCreatedNoteSource.bytes,
+      source_sha256: secondCreatedNoteSource.sha256,
+      screenshot: "obsidian-canvas-created-note-reopened.png",
+    };
+    if (!secondCreatedNoteView.paths.includes(canvasNotePath)
+      || (secondCreatedNoteView.active_file_path !== canvasNotePath && secondCreatedNoteView.active_tree_path !== canvasNotePath)
+      || !secondCreatedNoteView.active_view_is_markdown
+      || !secondCreatedNoteView.active_view_text.includes(canvasMarker)) {
+      throw new Error("Obsidian's reopened session did not activate and render the explicitly created Canvas text-card Markdown note");
+    }
     await delay(2_000);
     await stopProcess(secondProcess, secondConnection);
     secondProcess = undefined;
@@ -4858,6 +5485,8 @@ async function runCanvasReferenceProbe(): Promise<void> {
     const afterSecondClose = await snapshotTree(canvasVaultRoot);
     snapshots.canvas_reference_after_reopen = afterSecondClose;
     const secondCloseCanvas = await assertCanvasReferenceSource(expectedCanvas, "the reopened Obsidian shutdown");
+    const secondCloseNote = await assertCanvasCreatedNoteSource(expectedCreatedNoteBytes, "the reopened Obsidian shutdown");
+    secondSession.created_note_source_after_close = secondCloseNote;
     const reopenChanges = changedPaths(beforeSecondOpen, afterSecondClose);
     const allowedWorkspaceChanges = reopenChanges.filter((change) => workspaceStateAllowlist.includes(change.path));
     const unexpectedChanges = reopenChanges.filter((change) => !workspaceStateAllowlist.includes(change.path));
@@ -4870,6 +5499,20 @@ async function runCanvasReferenceProbe(): Promise<void> {
     canvasReport.marker_visible_after_reopen = secondView.body.includes(canvasMarker);
     canvasReport.path_visible_after_reopen = secondView.paths.includes(canvasPath);
     canvasReport.target_subpath_content_visible_after_reopen = secondView.body.includes(canvasTargetText);
+    canvasReport.created_note_path = canvasNotePath;
+    canvasReport.created_note_body_bytes = expectedCreatedNoteBytes.length;
+    canvasReport.created_note_body_sha256 = createHash("sha256").update(expectedCreatedNoteBytes).digest("hex");
+    canvasReport.created_note_visible_on_first_open = firstCreatedNoteView.paths.includes(canvasNotePath)
+      && (firstCreatedNoteView.active_file_path === canvasNotePath || firstCreatedNoteView.active_tree_path === canvasNotePath)
+      && firstCreatedNoteView.active_view_is_markdown
+      && firstCreatedNoteView.active_view_text.includes(canvasMarker);
+    canvasReport.created_note_visible_after_reopen = secondCreatedNoteView.paths.includes(canvasNotePath)
+      && (secondCreatedNoteView.active_file_path === canvasNotePath || secondCreatedNoteView.active_tree_path === canvasNotePath)
+      && secondCreatedNoteView.active_view_is_markdown
+      && secondCreatedNoteView.active_view_text.includes(canvasMarker);
+    canvasReport.created_note_bytes_unchanged_after_both_shutdowns = firstCloseNote.sha256 === secondCloseNote.sha256
+      && firstCloseNote.bytes === secondCloseNote.bytes
+      && firstCloseNote.sha256 === createHash("sha256").update(expectedCreatedNoteBytes).digest("hex");
     canvasReport.reopen_workspace_changes = allowedWorkspaceChanges;
     canvasReport.status = "passed";
   } catch (error) {
