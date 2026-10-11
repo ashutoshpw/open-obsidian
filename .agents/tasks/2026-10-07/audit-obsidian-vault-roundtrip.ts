@@ -948,6 +948,11 @@ function runTesseractOcr(imagePath: string, pageSegmentationModes: string[]): st
   return pageSegmentationModes.map((mode) => execFileSync(tesseract, [imagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
 }
 
+function runTesseractTsv(imagePath: string): string {
+  const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
+  return execFileSync(tesseract, [imagePath, "stdout", "--psm", "6", "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+}
+
 function ocrTokenMatches(token: string, expected: string): boolean {
   if (token === expected) return true;
   if (Math.abs(token.length - expected.length) > 1) return false;
@@ -1008,6 +1013,10 @@ function ocrTextContainsFuzzyPhrase(text: string, phrase: string, maxEdits = 2):
     }
   }
   return false;
+}
+
+function ocrTextContainsFuzzyPhraseAcrossLines(text: string, phrase: string, maxEdits = 1): boolean {
+  return ocrTextContainsFuzzyPhrase(text.replace(/\r?\n/g, " "), phrase, maxEdits);
 }
 
 function windowsSelectionConfirmsPath(action: unknown, expectedPath: string): boolean {
@@ -2329,9 +2338,23 @@ async function captureOpenObsidianScreenshot(
   return {pngPath, windowPngPath, ocrPngPath, ocrText, ...(windowsCapture ? {windowGeometry: windowsCapture.geometry} : {})};
 }
 
+async function withSourcePaneOcr<T extends {ocrPngPath: string}>(capture: T): Promise<T & {
+  sourcePaneOcrText: string;
+  sourcePaneLabelVisible: boolean;
+  sourcePaneOcrCropPath: string | null;
+}> {
+  const sourcePane = await readSourcePaneOcr(capture.ocrPngPath);
+  return {
+    ...capture,
+    sourcePaneOcrText: sourcePane.text,
+    sourcePaneLabelVisible: sourcePane.labelVisible,
+    sourcePaneOcrCropPath: sourcePane.cropPath,
+  };
+}
+
 type OcrWordBounds = {text: string; left: number; top: number; width: number; height: number};
 
-function findOcrPhraseBounds(tsv: string, phrase: string): OcrWordBounds | null {
+function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0): OcrWordBounds | null {
   const expected = phrase.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const words: OcrWordBounds[] = [];
   for (const line of tsv.split(/\r?\n/).slice(1)) {
@@ -2351,6 +2374,7 @@ function findOcrPhraseBounds(tsv: string, phrase: string): OcrWordBounds | null 
     const top = Math.min(...match.map((word) => word.top));
     const right = Math.max(...match.map((word) => word.left + word.width));
     const bottom = Math.max(...match.map((word) => word.top + word.height));
+    if (top < minimumTop) continue;
     return {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
   }
   return null;
@@ -2360,6 +2384,25 @@ async function pngDimensions(path: string): Promise<{width: number; height: numb
   const bytes = await readFile(path);
   if (bytes.length < 24 || bytes.toString("ascii", 1, 4) !== "PNG") throw new Error(`Could not read PNG dimensions from ${path}`);
   return {width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20)};
+}
+
+async function readSourcePaneOcr(ocrImagePath: string): Promise<{text: string; cropPath: string | null; labelVisible: boolean}> {
+  const tsv = runTesseractTsv(ocrImagePath);
+  const sourceLabel = findOcrPhraseBounds(tsv, "Original Markdown source");
+  if (!sourceLabel) return {text: "", cropPath: null, labelVisible: false};
+
+  const dimensions = await pngDimensions(ocrImagePath);
+  const left = Math.max(0, sourceLabel.left - 12);
+  const top = Math.min(dimensions.height - 1, sourceLabel.top + sourceLabel.height + 6);
+  const previewLabel = findOcrPhraseBounds(tsv, "Markdown preview", top);
+  const fallbackBottom = Math.min(dimensions.height, top + 420);
+  const bottom = Math.max(top + 1, Math.min(fallbackBottom, previewLabel?.top ?? fallbackBottom));
+  const width = dimensions.width - left;
+  const height = bottom - top;
+  const cropPath = join(reportDirectory, `openobsidian-source-pane-ocr-${Date.now()}.png`);
+  const imageMagick = process.platform === "linux" ? "convert" : "magick";
+  execFileSync(imageMagick, [ocrImagePath, "-crop", `${width}x${height}+${left}+${top}`, "+repage", cropPath], {stdio: "ignore"});
+  return {text: runTesseractOcr(cropPath, ["6"]), cropPath, labelVisible: true};
 }
 
 function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: number; width: number; height: number} {
@@ -2814,13 +2857,17 @@ async function runReferenceSourcePreview(
 
   const visiblePreview = await waitFor("OpenObsidian to display the selected reference source", async () => {
     await delay(350);
-    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview");
+    const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview"));
     previewReport.preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+    previewReport.preview_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+    previewReport.preview_source_pane_crop = capture.sourcePaneOcrCropPath
+      ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+      : null;
     return capture;
-  }, (capture) => ocrTextContainsPhrase(capture.ocrText, "Original bytes stay untouched"), 30_000);
+  }, (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, "Original bytes stay untouched", 1), 30_000);
   previewReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
   previewReport.preview_window_screenshot = relative(reportDirectory, visiblePreview.windowPngPath);
-  previewReport.source_marker_visible = ocrTextContainsPhrase(visiblePreview.ocrText, "Original bytes stay untouched");
+  previewReport.source_marker_visible = ocrTextContainsFuzzyPhraseAcrossLines(visiblePreview.sourcePaneOcrText, "Original bytes stay untouched", 1);
 
   const vaultAfterPreview = await snapshotTree(vaultRoot);
   const appDataAfterPreview = await snapshotTree(appDataRoot);
@@ -2852,10 +2899,11 @@ async function runReferenceSourcePreview(
   );
   const closedPreview = await waitFor("OpenObsidian to close the reference source preview", async () => {
     await delay(350);
-    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed");
+    const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-source-preview-closed"));
     previewReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, "Original bytes stay untouched"), 30_000);
+  }, (capture) => !capture.sourcePaneLabelVisible
+    && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, "Original bytes stay untouched", 1), 30_000);
   previewReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
   previewReport.preview_closed = true;
 
@@ -3291,10 +3339,14 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.read_source_action = await invokeNativeAccessibleControl(child, window.window_id, "Read note source preview");
   const visiblePreview = await waitFor("OpenObsidian to preview the externally added note source", async () => {
     await delay(350);
-    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-source-preview");
+    const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-source-preview"));
     refreshReport.preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+    refreshReport.preview_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+    refreshReport.preview_source_pane_crop = capture.sourcePaneOcrCropPath
+      ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+      : null;
     return capture;
-  }, (capture) => ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker), 30_000);
+  }, (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalRefreshMarker, 1), 30_000);
   refreshReport.preview_screenshot = relative(reportDirectory, visiblePreview.pngPath);
   refreshReport.preview_window_screenshot = relative(reportDirectory, visiblePreview.windowPngPath);
   refreshReport.external_source_marker_visible = true;
@@ -3323,7 +3375,7 @@ async function runReferenceExternalNoteRefresh(
   refreshReport.vault_unchanged_after_preview = true;
   refreshReport.app_data_change_policy_passed_after_preview = true;
 
-  const originalSourceMarkerVisible = ocrTextContainsPhrase(visiblePreview.ocrText, externalRefreshMarker);
+  const originalSourceMarkerVisible = ocrTextContainsFuzzyPhraseAcrossLines(visiblePreview.sourcePaneOcrText, externalRefreshMarker, 1);
   const editReport: Record<string, unknown> = {
     status: "in_progress",
     note_path: externalRefreshMarkdownPath,
@@ -3433,15 +3485,20 @@ async function runReferenceExternalNoteRefresh(
     "OpenObsidian to clear the stale source preview after the external note edit",
     async () => {
       await delay(350);
-      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-edit-refresh");
+      const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-edit-refresh"));
       editReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
+      editReport.refresh_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+      editReport.refresh_source_pane_crop = capture.sourcePaneOcrCropPath
+        ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+        : null;
       return capture;
     },
     (capture) => (
       ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
       && new RegExp(markdownCountAfterEdit + "\\s+Markdown files found", "i").test(capture.ocrText)
-      && !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker)
-      && !ocrTextContainsPhrase(capture.ocrText, externalEditedMarker)
+      && !capture.sourcePaneLabelVisible
+      && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalRefreshMarker, 1)
+      && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalEditedMarker, 1)
     ),
     30_000,
   );
@@ -3475,12 +3532,16 @@ async function runReferenceExternalNoteRefresh(
     "OpenObsidian to preview the externally edited note source",
     async () => {
       await delay(350);
-      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-edited-source-preview");
+      const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-edited-source-preview"));
       editReport.updated_preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+      editReport.updated_preview_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+      editReport.updated_preview_source_pane_crop = capture.sourcePaneOcrCropPath
+        ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+        : null;
       return capture;
     },
-    (capture) => ocrTextContainsPhrase(capture.ocrText, externalEditedMarker)
-      && !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker),
+    (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalEditedMarker, 1)
+      && !ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalRefreshMarker, 1),
     30_000,
   );
   editReport.updated_preview_screenshot = relative(reportDirectory, updatedPreview.pngPath);
@@ -3523,11 +3584,12 @@ async function runReferenceExternalNoteRefresh(
   editReport.close_preview_action = refreshReport.close_preview_action;
   const closedPreview = await waitFor("OpenObsidian to close the externally edited note preview", async () => {
     await delay(350);
-    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-edited-preview-closed");
+    const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-edited-preview-closed"));
     refreshReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
     return capture;
-  }, (capture) => !ocrTextContainsPhrase(capture.ocrText, externalRefreshMarker)
-    && !ocrTextContainsPhrase(capture.ocrText, externalEditedMarker), 30_000);
+  }, (capture) => !capture.sourcePaneLabelVisible
+    && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalRefreshMarker, 1)
+    && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalEditedMarker, 1), 30_000);
   refreshReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);
   refreshReport.preview_closed = true;
   editReport.preview_closed = true;
@@ -4041,11 +4103,15 @@ async function runReferenceExternalNoteRename(
     "OpenObsidian to display the externally edited note source before rename",
     async () => {
       await delay(350);
-      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-before-rename");
+      const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-external-note-before-rename"));
       renameReport.preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+      renameReport.preview_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+      renameReport.preview_source_pane_crop = capture.sourcePaneOcrCropPath
+        ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+        : null;
       return capture;
     },
-    (capture) => ocrTextContainsPhrase(capture.ocrText, externalEditedMarker),
+    (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalEditedMarker, 1),
     30_000,
   );
   renameReport.preview_screenshot = relative(reportDirectory, previewBeforeRename.pngPath);
@@ -4176,14 +4242,19 @@ async function runReferenceExternalNoteRename(
     "OpenObsidian to clear the stale preview and select the renamed path after refresh",
     async () => {
       await delay(350);
-      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-rename-refresh");
+      const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-after-external-note-rename-refresh"));
       renameReport.refresh_screen_ocr = capture.ocrText.slice(0, 4_000);
+      renameReport.refresh_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+      renameReport.refresh_source_pane_crop = capture.sourcePaneOcrCropPath
+        ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+        : null;
       return capture;
     },
     (capture) => (
       ocrTextContainsFuzzyPhrase(capture.ocrText, "Note list refreshed")
       && new RegExp(expectedMarkdownCount + "\\s+Markdown files found", "i").test(capture.ocrText)
-      && !ocrTextContainsPhrase(capture.ocrText, externalEditedMarker)
+      && !capture.sourcePaneLabelVisible
+      && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalEditedMarker, 1)
     ),
     30_000,
   );
@@ -4212,11 +4283,15 @@ async function runReferenceExternalNoteRename(
     "OpenObsidian to preview the same source bytes through the renamed note path",
     async () => {
       await delay(350);
-      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-renamed-note-source-preview");
+      const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-renamed-note-source-preview"));
       renameReport.renamed_preview_screen_ocr = capture.ocrText.slice(0, 4_000);
+      renameReport.renamed_preview_source_pane_ocr = capture.sourcePaneOcrText.slice(0, 4_000);
+      renameReport.renamed_preview_source_pane_crop = capture.sourcePaneOcrCropPath
+        ? relative(reportDirectory, capture.sourcePaneOcrCropPath)
+        : null;
       return capture;
     },
-    (capture) => ocrTextContainsPhrase(capture.ocrText, externalEditedMarker),
+    (capture) => ocrTextContainsFuzzyPhraseAcrossLines(capture.sourcePaneOcrText, externalEditedMarker, 1),
     30_000,
   );
   renameReport.renamed_preview_screenshot = relative(reportDirectory, renamedPreview.pngPath);
@@ -4255,11 +4330,12 @@ async function runReferenceExternalNoteRename(
     "OpenObsidian to close the renamed note source preview",
     async () => {
       await delay(350);
-      const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-renamed-note-preview-closed");
+      const capture = await withSourcePaneOcr(await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-renamed-note-preview-closed"));
       renameReport.closed_screen_ocr = capture.ocrText.slice(0, 4_000);
       return capture;
     },
-    (capture) => !ocrTextContainsPhrase(capture.ocrText, externalEditedMarker),
+    (capture) => !capture.sourcePaneLabelVisible
+      && !ocrTextContainsFuzzyPhraseAcrossLines(capture.ocrText, externalEditedMarker, 1),
     30_000,
   );
   renameReport.closed_screenshot = relative(reportDirectory, closedPreview.pngPath);

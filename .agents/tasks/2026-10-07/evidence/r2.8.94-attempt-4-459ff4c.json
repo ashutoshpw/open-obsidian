@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.94",
+  "attempt": 4,
+  "captured_at": "2026-10-11T23:40:17Z",
+  "source_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+  "outcome": "not_accepted",
+  "required_workflows": [
+    "Rust migration inventory",
+    "OpenObsidian quality",
+    "OpenObsidian desktop build",
+    "OpenObsidian plugin renderer matrix",
+    "OpenObsidian loaded plugin workflows",
+    "OpenObsidian Rust CI",
+    "Obsidian vault round-trip acceptance"
+  ],
+  "workflow_runs": {
+    "inventory": {
+      "id": 38184320005,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184320005",
+      "jobs": [
+        { "id": 114603293240, "name": "inventory", "conclusion": "success" }
+      ]
+    },
+    "quality": {
+      "id": 38184319993,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184319993",
+      "jobs": [
+        { "id": 114603293364, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114603293537, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114603293548, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "desktop_build": {
+      "id": 38184319957,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184319957",
+      "jobs": [
+        { "id": 114603293157, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114603293307, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114603293345, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38184320007,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184320007",
+      "jobs": [
+        { "id": 114603293622, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114603293606, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114603293509, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38184320003,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184320003",
+      "jobs": [
+        { "id": 114603293392, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114603293490, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114603293521, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "rust_ci": {
+      "id": 38184319988,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184319988",
+      "jobs": [
+        { "id": 114603293342, "name": "rust (ubuntu-latest)", "conclusion": "failure", "result": "102 passed, 4 failed" },
+        { "id": 114603293361, "name": "rust (macos-latest)", "conclusion": "failure", "result": "102 passed, 4 failed" },
+        { "id": 114603293272, "name": "rust (windows-latest)", "conclusion": "failure", "result": "102 passed, 4 failed" },
+        { "id": 114603293130, "name": "minimum supported Rust (1.95)", "conclusion": "failure", "result": "102 passed, 4 failed" }
+      ],
+      "failure_detail": "All four targets failed the same four UI Harness tests. The note selector retained README.md after the test attempted to choose Notes/Welcome.md, Archive/Welcome.md, Guides/日本語 intro.md, or Notes/Invalid UTF-8.md. Each suite had 102 passing and 4 failing tests; Rust job logs are available from GitHub Actions. No Rust artifact was uploaded."
+    },
+    "vault_roundtrip": {
+      "id": 38184319989,
+      "head_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38184319989",
+      "jobs": [
+        { "id": 114603293191, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "failure" },
+        { "id": 114603293337, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "failure" },
+        { "id": 114603293455, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "failure" }
+      ],
+      "failure_detail": "The source marker remained visible in the screenshots, but full-window OCR missed the body on macOS and Windows. Linux OCR transcribed 'External note source stays exact.' as 'External nate source stays exact.' This is an OCR-readback failure; no vault data mismatch was reported."
+    }
+  },
+  "build_artifacts": [
+    { "workflow": "desktop_build", "platform": "windows-latest", "artifact_id": 11718997003, "sha256": "b11f6e8a1f45d640e615618e7a8776cf0bdc1bd750d70e15cc4e4ae18715d328" },
+    { "workflow": "desktop_build", "platform": "ubuntu-latest", "artifact_id": 11718992014, "sha256": "ee60d146ddd0af767eca79f7e8a2dbe7613f9b5cba2d1e4890cc76f487b6b70b" },
+    { "workflow": "desktop_build", "platform": "macos-latest", "artifact_id": 11718777593, "sha256": "168990050deb888094edafc97b9d3a0c0713bbd327b8626a2d6c9882fd7af335" },
+    { "workflow": "plugin_renderer", "platform": "windows-latest", "artifact_id": 11719305998, "sha256": "a390af7d5f2cb86290d63397bd523fa0fe97b83031a0d7babd54c2aaa42b83e4" },
+    { "workflow": "plugin_renderer", "platform": "macos-latest", "artifact_id": 11719146577, "sha256": "c8771e7062f761378387afb6a95da764ad403cd76afb37290819d771fb26434d" },
+    { "workflow": "plugin_renderer", "platform": "ubuntu-latest", "artifact_id": 11718767530, "sha256": "90a5f58075ca99e2b3c71af10727bb3af80542057c6ef37a586087f30ba16d" },
+    { "workflow": "loaded_plugins", "platform": "ubuntu-latest", "artifact_id": 11719116724, "sha256": "c957a5a284de217a8bb005763ff316838cf1aaf74c7046c47358bf473e84ace6" },
+    { "workflow": "loaded_plugins", "platform": "windows-latest", "artifact_id": 11718757568, "sha256": "60c4f992902ccd8bd8920db18d756423bb1bf36d3ae98091c5460d686d1ec0c3" },
+    { "workflow": "loaded_plugins", "platform": "macos-latest", "artifact_id": 11718653899, "sha256": "dc9a2d7b3a7bab989c87780ed48962ffaefef29364e038abf38854df3d495507" }
+  ],
+  "roundtrip_artifacts": [
+    { "job_id": 114603293191, "artifact_id": 11719500224, "archive_sha256": "5ab2d6557e1bba8f328acb2cb83c6ea3a514db688a0ba8107f924928188b4225" },
+    { "job_id": 114603293337, "artifact_id": 11719166755, "archive_sha256": "1157b03a7d827eab1f5f40ed5c51d147251b18229d9a6fd222b4c37f2cc9385f" },
+    { "job_id": 114603293455, "artifact_id": 11718787873, "archive_sha256": "7c985f215e5b4cec5dbf987a07656dd7ee1de12eb54a50e52c4ea9afde42057e" }
+  ],
+  "local_executable_validation": "none; validation ran in GitHub Actions CI only. A separate Canvas draft worktree had one accidental non-executable git diff --check which returned clean; no tests, builds, formatters, validators, or applications were run locally."
+}

@@ -1553,7 +1553,13 @@ impl OpenObsidianApp {
 
     fn show_rename(&mut self, ui: &mut eframe::egui::Ui) {
         ui.separator();
-        ui.heading("Rename Markdown note");
+        eframe::egui::CollapsingHeader::new("Rename Markdown note")
+            .id_salt("rename-markdown-note")
+            .default_open(false)
+            .show(ui, |ui| self.show_rename_contents(ui));
+    }
+
+    fn show_rename_contents(&mut self, ui: &mut eframe::egui::Ui) {
         ui.small(
             "Review every planned reference change before applying. Ambiguous and unresolved references stay unchanged.",
         );
@@ -4014,6 +4020,11 @@ mod tests {
             );
             std::thread::sleep(std::time::Duration::from_millis(2));
         }
+    }
+
+    fn open_rename_panel(harness: &mut Harness<'_, OpenObsidianApp>) {
+        harness.get_by_label("Rename Markdown note").click();
+        harness.step();
     }
 
     fn wait_for_links(harness: &mut Harness<'_, OpenObsidianApp>) {
@@ -10866,6 +10877,7 @@ mod tests {
         harness.get_by_label("Note transclusions");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), before_tree);
 
+        open_rename_panel(&mut harness);
         harness.get_by_label("Build rename preview").click();
         harness.step();
         wait_for_rename(&mut harness);
@@ -12542,6 +12554,7 @@ mod tests {
         };
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
+        open_rename_panel(&mut harness);
         harness.get_by_label("Build rename preview").click();
         harness.step();
         wait_for_rename(&mut harness);
@@ -12840,6 +12853,7 @@ mod tests {
         };
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
+        open_rename_panel(&mut harness);
         harness.get_by_label("Build rename preview").click();
         harness.step();
         wait_for_rename(&mut harness);
@@ -12967,6 +12981,7 @@ mod tests {
         };
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
 
+        open_rename_panel(&mut harness);
         harness.get_by_label("Build rename preview").click();
         harness.step();
         wait_for_rename(&mut harness);

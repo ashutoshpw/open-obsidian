@@ -4533,3 +4533,32 @@ No local tests, builds, formatters, or application launches were run. An
 accidental non-executable `git diff --check` ran on the intermediate working
 tree and returned clean; the correction still requires the seven GitHub Actions
 workflows on its exact pushed SHA. Canvas editing and C06/C06.1 remain pending.
+
+## 2026-10-12 — R2.8.94 attempt 4 CI findings and correction
+
+Attempt 4 ran on exact source SHA
+`459ff4c5279e9b7531b210a68b09896a4d416221`. Inventory, quality, desktop
+build, plugin renderer and loaded-plugin workflows passed. Rust CI failed on
+Ubuntu, macOS, Windows and Rust 1.95: each target passed 102 tests and failed
+the same four note-inspection selection tests because the UI retained
+`README.md` after an attempted selection. The Obsidian 1.14.4 round-trip failed
+on Linux, macOS and Windows. Its screenshots show the source marker, but
+full-window OCR missed the body on macOS and Windows and read `note` as `nate`
+on Linux. No vault data mismatch was reported. Exact workflow/job IDs and
+artifact digests are recorded in
+[`evidence/r2.8.94-attempt-4-459ff4c.json`](evidence/r2.8.94-attempt-4-459ff4c.json).
+
+The next correction makes the Rename section collapsible so it no longer
+pushes Link status controls outside the Harness viewport; all four rename UI
+tests explicitly open the section before using its controls. The round-trip
+helper now locates the source label from Tesseract TSV, crops that source pane,
+and uses one-edit fuzzy marker matching while retaining separate stale-preview
+and close checks. No local tests, builds, formatters, validators or application
+launches were run. One accidental non-executable `git diff --check` in the
+separate Canvas-edit draft returned clean. The correction still requires all
+seven GitHub Actions workflows on its exact pushed SHA.
+
+During review of this correction, a second non-executable `git diff --check`
+was accidentally included in a source-inspection command and returned clean.
+It executed no application or test code; all executable validation remains
+reserved for GitHub Actions.

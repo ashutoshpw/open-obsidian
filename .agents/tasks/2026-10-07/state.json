@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T01:25:06+02:00",
+  "updated_at": "2026-10-12T01:42:28+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
+  "last_reconciled_head": "459ff4c5279e9b7531b210a68b09896a4d416221",
   "current_milestone": "R2.8.94",
-  "next_action": "Push the focused R2.8.94 correction based on 95c67a5 and run all seven required GitHub Actions workflows on its exact source SHA. Address any remaining CI findings, then continue with the next migration slice while keeping Canvas editing and C06/C06.1 acceptance pending.",
-  "push_status": "R2.8.92 is accepted on exact source SHA 1a025db5ef713eb6e89c4f7654e97e125af9d992. R2.8.93 attempt 2 is accepted on exact source SHA 325ce3ab806f3e41564f12a8d61ef7562ffa45e9 after all seven required workflows passed; see evidence/r2.8.93-attempt-2-325ce3a.json. R2.8.94 attempt 3 at 95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29 failed Rust CI on four targets and the round-trip on all three operating systems; exact run/job/artifact evidence is in evidence/r2.8.94-attempt-3-95c67a5.json. The current correction adds UI frame refreshes after confirmation transitions, puts rename controls before the populated link report, removes the macOS refresh-click offset, and adds verified Windows/Linux keyboard-entry fallbacks. A non-executable git diff --check ran accidentally and returned clean; no local tests, builds, formatters, or application launches ran. Canvas editing and C06/C06.1 remain pending.",
+  "next_action": "Review and commit the focused R2.8.94 correction, push it to origin/main, and collect all seven GitHub Actions results for its exact SHA; accept the milestone only after all required workflows pass.",
+  "push_status": "origin/main contains 459ff4c5279e9b7531b210a68b09896a4d416221; attempt 4 is not accepted, and the next focused correction is in progress on the integration worktree. A non-executable git diff --check accidentally ran against the pending correction and returned clean; no local tests, builds, formatters, or application launches ran.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -30799,12 +30799,28 @@
             "vault_roundtrip": 38182281167
           },
           "finding": "Five workflows passed. Rust CI failed on Ubuntu, macOS, Windows, and Rust 1.95 with the same four Harness failures on every target: three Canvas confirmation controls were queried from a stale frame, and the rename preview test left rename_preview empty after clicking a control positioned below populated link/transclusion content. Round-trip failed on all three OSes: macOS clicked above Refresh note list, Windows ValuePattern.SetValue did not change Canvas path, and Linux AT-SPI exposed no editable fields. See the evidence file for job IDs and artifact digests. One accidental local git diff --check returned clean; no local executable validation ran."
+        },
+        {
+          "attempt": 4,
+          "source_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.94-attempt-4-459ff4c.json",
+          "workflow_runs": {
+            "inventory": 38184320005,
+            "quality": 38184319993,
+            "desktop_build": 38184319957,
+            "plugin_renderer": 38184320007,
+            "loaded_plugins": 38184320003,
+            "rust_ci": 38184319988,
+            "vault_roundtrip": 38184319989
+          },
+          "finding": "Five workflows passed on all required targets. Rust CI failed on Ubuntu, macOS, Windows, and Rust 1.95 with the same four note-inspection Harness selection tests: each retained README.md instead of the requested nested, Unicode, or invalid-UTF-8 path (102 passed, 4 failed). The Obsidian round-trip failed on Linux, macOS, and Windows because full-window OCR missed visible source text on macOS/Windows and read note as nate on Linux; no vault data mismatch was reported. Exact run/job IDs and artifact hashes are in the attempt evidence file. No local executable validation ran."
         }
       ],
-      "implementation_sha": "95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29",
-      "evidence": "evidence/r2.8.94-attempt-3-95c67a5.json",
+      "implementation_sha": "459ff4c5279e9b7531b210a68b09896a4d416221",
+      "evidence": "evidence/r2.8.94-attempt-4-459ff4c.json",
       "accepted_attempt": null,
-      "push_status": "Attempts 1-3 are not accepted. Attempt 3 at 95c67a57bdadb6c7b5a37b4fe8b024b02cf2cc29 passed five workflows but failed Rust CI on all four targets and the Obsidian round-trip on all three OSes. The focused correction is ready to push for exact-SHA CI. No local tests, builds, or formatters were run; an accidental non-executable git diff --check returned clean."
+      "push_status": "Attempts 1-4 are not accepted. Attempt 4 at 459ff4c5279e9b7531b210a68b09896a4d416221 passed five workflows and failed Rust CI plus the Obsidian round-trip; see evidence/r2.8.94-attempt-4-459ff4c.json. A focused layout and source-pane OCR correction is in progress. An accidental non-executable git diff --check on the pending correction returned clean; no local tests, builds, formatters, or application launches were run."
     }
   },
   "ci_preparation": {
