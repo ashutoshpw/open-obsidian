@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.83",
+  "attempt": 1,
+  "implementation_sha": "ece504236c0abb38c6fe765243f505965a4316fb",
+  "conclusion": "not_accepted",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38140952526,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952526",
+      "jobs": [
+        {"id": 114474539075, "name": "inventory", "conclusion": "success"}
+      ]
+    },
+    "quality": {
+      "id": 38140952527,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952527",
+      "jobs": [
+        {"id": 114474539138, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114474539269, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114474539311, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "desktop_build": {
+      "id": 38140952528,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952528",
+      "jobs": [
+        {"id": 114474539232, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114474539407, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114474539441, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38140952531,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952531",
+      "jobs": [
+        {"id": 114474539092, "name": "macos-latest", "conclusion": "success"},
+        {"id": 114474539158, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114474539256, "name": "windows-latest", "conclusion": "success"}
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38140952529,
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952529",
+      "jobs": [
+        {"id": 114474539249, "name": "ubuntu-latest", "conclusion": "success"},
+        {"id": 114474539393, "name": "windows-latest", "conclusion": "success"},
+        {"id": 114474539588, "name": "macos-latest", "conclusion": "success"}
+      ]
+    },
+    "rust_ci": {
+      "id": 38140952548,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952548",
+      "jobs": [
+        {"id": 114474539072, "name": "rust (ubuntu-latest)", "conclusion": "failure", "finding": "Check formatting failed; workspace tests succeeded."},
+        {"id": 114474539096, "name": "rust (windows-latest)", "conclusion": "success"},
+        {"id": 114474539145, "name": "rust (macos-latest)", "conclusion": "success"},
+        {"id": 114474538976, "name": "minimum supported Rust (1.95)", "conclusion": "success"}
+      ],
+      "finding": "GitHub rustfmt output identified layout changes in crates/doc/src/hotkeys.rs and crates/vault/src/lib.rs. The reported changes were applied for the follow-up source SHA."
+    },
+    "vault_roundtrip": {
+      "id": 38140952546,
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38140952546",
+      "jobs": [
+        {"id": 114474539263, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success"},
+        {
+          "id": 114474539217,
+          "name": "Obsidian 1.14.4 vault round-trip on macos-latest",
+          "conclusion": "failure",
+          "finding": "Timed out waiting for OpenObsidian to report the enabled Resolve link status button bounds.",
+          "artifact_id": 11703131541
+        },
+        {
+          "id": 114474539129,
+          "name": "Obsidian 1.14.4 vault round-trip on windows-latest",
+          "conclusion": "failure",
+          "finding": "Timed out waiting for OpenObsidian to preview the same source bytes through the renamed note path.",
+          "artifact_id": 11702892989
+        }
+      ],
+      "artifacts": {
+        "linux": 11702334790,
+        "windows": 11702892989,
+        "macos": 11703131541
+      }
+    }
+  },
+  "local_executable_validation": "none",
+  "next_action": "Apply the GitHub-reported formatting layout, then validate the exact follow-up source SHA on all seven required workflows."
+}

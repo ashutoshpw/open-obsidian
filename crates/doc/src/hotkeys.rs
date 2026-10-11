@@ -126,9 +126,7 @@ mod tests {
         .expect("inline hotkeys source must be an object");
         let projected = parse_hotkeys_settings(&raw);
 
-        assert!(!projected
-            .command_bindings
-            .contains_key("malformed-command"));
+        assert!(!projected.command_bindings.contains_key("malformed-command"));
         assert!(projected.command_bindings["malformed-binding"].is_empty());
         assert_eq!(raw["malformed-command"], "not-an-array");
         assert_eq!(raw["malformed-binding"][0]["modifiers"][1], 7);

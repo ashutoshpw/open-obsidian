@@ -3743,3 +3743,29 @@ documentation-only commit. No local executable validation was run.
 R2.8.83 source review found no apparent type/API issue; its root-path guard and
 fixture ordering match the inventory contract. The bounded source slice is
 ready for its exact-SHA seven-workflow CI push. C09 and C09.1 remain pending.
+
+## 2026-10-11T12:52:55Z — R2.8.83 source pushed; seven-workflow CI pending
+
+Implementation SHA `ece504236c0abb38c6fe765243f505965a4316fb` was pushed to `origin/main`. GitHub queued all
+seven required workflows: inventory run 38140952526, quality 38140952527,
+desktop build 38140952528, plugin renderer 38140952531, loaded plugins
+38140952529, Rust CI 38140952548, and Obsidian round-trip 38140952546. The
+source commit includes the R2.8.82 six-workflow tracker evidence and R2.8.83
+source research. The implementation remains pending until all seven exact-SHA
+workflows pass. No local tests, builds, formatters, validators, or application
+launches were run.
+
+## 2026-10-11T13:02:59Z — R2.8.83 first CI attempt identified formatter and UI timing issues
+
+Source SHA `ece504236c0abb38c6fe765243f505965a4316fb` passed inventory, quality, desktop build, plugin renderer,
+and loaded-plugin workflows. Rust CI passed on macOS, Windows, and Rust 1.95;
+Ubuntu workspace tests passed, while Ubuntu's formatter check reported exact
+layout changes in the new hotkeys assertions and imports. Those reported
+changes have been applied directly from GitHub's output.
+
+The Obsidian round-trip passed on Ubuntu. macOS timed out waiting for the
+enabled Resolve link status button bounds; Windows timed out while previewing
+the renamed note. Their logs and artifact IDs are recorded in
+`evidence/r2.8.83-attempt-1-ece5042.json`. The corrected source SHA will rerun all seven workflows, which
+will show whether those UI timeouts reproduce. No local tests, builds,
+formatters, validators, or application launches were run.
