@@ -829,11 +829,9 @@ async function captureWindowsWindowScreenshot(processId: number, filename: strin
 
 async function prepareScreenshotForOcr(imagePath: string): Promise<string> {
   const ocrImagePath = join(reportDirectory, "openobsidian-vault-window-ocr.png");
-  if (process.platform === "darwin" || process.platform === "win32") {
-    execFileSync("magick", [imagePath, "-colorspace", "Gray", "-level", "0%,35%", "-resize", "200%", ocrImagePath], {stdio: "ignore"});
-    return ocrImagePath;
-  }
-  return imagePath;
+  const imageMagick = process.platform === "linux" ? "convert" : "magick";
+  execFileSync(imageMagick, [imagePath, "-colorspace", "Gray", "-level", "0%,15%", "-resize", "200%", ocrImagePath], {stdio: "ignore"});
+  return ocrImagePath;
 }
 
 async function readScreenshotOcr(imagePath: string): Promise<string> {
@@ -1992,9 +1990,16 @@ function macOSOpenObsidianWindowBounds(child: ChildProcess): {x: number; y: numb
 async function clickVisibleOpenObsidianControl(child: ChildProcess, windowId: string, controlName: string, accessibilityFailure: string): Promise<string> {
   const capture = await captureOpenObsidianScreenshot(windowId, child, "openobsidian-control-target");
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
-  const tsv = execFileSync(tesseract, [capture.ocrPngPath, "stdout", "--psm", "6", "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
-  const bounds = findOcrPhraseBounds(tsv, controlName);
-  if (!bounds) throw new Error(`Accessibility failed (${accessibilityFailure}); OCR could not locate ${JSON.stringify(controlName)}; OCR=${JSON.stringify(capture.ocrText.slice(0, 2_000))}`);
+  const candidates = ["11", "6"].map((mode) => execFileSync(tesseract, [capture.ocrPngPath, "stdout", "--psm", mode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}));
+  let bounds: OcrWordBounds | null = null;
+  for (const candidate of candidates) {
+    bounds = findOcrPhraseBounds(candidate, controlName);
+    if (bounds) break;
+  }
+  if (!bounds) {
+    const detectedWords = candidates.map((candidate) => candidate.split(/\r?\n/).slice(1).map((line) => line.split("\t")[11]?.trim()).filter(Boolean).join(" ")).join(" | ");
+    throw new Error(`Accessibility failed (${accessibilityFailure}); OCR could not locate ${JSON.stringify(controlName)}; detected words=${JSON.stringify(detectedWords.slice(0, 2_000))}; OCR=${JSON.stringify(capture.ocrText.slice(0, 2_000))}`);
+  }
   const ocrSize = await pngDimensions(capture.ocrPngPath);
   const xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
   const yFraction = (bounds.top + bounds.height / 2) / ocrSize.height;
