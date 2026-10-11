@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-11T11:02:36Z",
+  "updated_at": "2026-10-11T11:15:43Z",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "21c801a63fa64cc7c996d45064026ad4fb8a2b42",
+  "last_reconciled_head": "64fdca004c6f5c2c3801fac7f14c86e10c503a04",
   "current_milestone": "R2.8.81",
-  "next_action": "The R2.8.80 tracker evidence checkpoint on exact SHA 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation workflows. R2.8.81 source and tests are pushed with this tracker update; inspect all seven required workflows on the exact implementation SHA. Keep C09 and C09.1 pending.",
-  "push_status": "R2.8.80 implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee passed all seven workflows; tracker checkpoint SHAs 9a00847a683450aa667d74805f07c9ed98d1cb66 and 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation workflows. R2.8.81 source and tests are pushed with exact-SHA seven-workflow validation pending. No local executable validation was run.",
+  "next_action": "R2.8.81 attempt 1 on exact source SHA 64fdca004c6f5c2c3801fac7f14c86e10c503a04 is not accepted: all seven workflows are terminal, with a Clippy dead-code failure and unrelated Electron/Obsidian UI automation failures. The corrected source is now committed; reconcile all seven workflows on that exact SHA. Keep C09 and C09.1 pending.",
+  "push_status": "R2.8.80 implementation SHA b6f0bbb2fd5f098864f2451ea7ac1626e058e3ee passed all seven workflows; tracker checkpoint SHAs 9a00847a683450aa667d74805f07c9ed98d1cb66 and 21c801a63fa64cc7c996d45064026ad4fb8a2b42 passed all six documentation workflows. R2.8.81 source SHA 64fdca004c6f5c2c3801fac7f14c86e10c503a04 was not accepted after all seven workflows completed. The corrected source and attempt evidence are in the current commit on main; exact-SHA validation is pending. No local executable validation was run.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -27313,8 +27313,25 @@
         "Obsidian vault round-trip acceptance"
       ],
       "implementation_sha": null,
-      "ci_attempts": [],
-      "next_action": "All seven required workflows are pending on the exact R2.8.81 implementation SHA. Record a passing partial C09 app-metadata boundary result only after every required workflow passes; keep C09/C09.1 pending."
+      "ci_attempts": [
+        {
+          "attempt": 1,
+          "implementation_sha": "64fdca004c6f5c2c3801fac7f14c86e10c503a04",
+          "conclusion": "not_accepted",
+          "workflow_runs": {
+            "inventory": 38134202988,
+            "quality": 38134202943,
+            "desktop_build": 38134202984,
+            "plugin_renderer": 38134203007,
+            "loaded_plugin_workflows": 38134203025,
+            "rust_ci": 38134202965,
+            "obsidian_vault_roundtrip": 38134202999
+          },
+          "findings": "MSRV, inventory, desktop build, plugin renderer, loaded-plugin workflows and macOS round-trip passed. Rust Clippy failed on Ubuntu, macOS and Windows because prepare_vault_app_data_under was unused in production; workspace tests passed on all three. Ubuntu quality timed out before final Electron retrieval metadata. Linux round-trip failed during native picker window discovery and Windows round-trip failed to locate Close source preview; both artifacts confirm app-data boundary checks passed.",
+          "evidence": "evidence/r2.8.81-attempt-1-64fdca0.json"
+        }
+      ],
+      "next_action": "Attempt 1 was not accepted. The corrected source excludes the injected-root test helper from production builds. Reconcile all seven required workflows on the current corrected R2.8.81 source SHA; review any repeated Electron or Obsidian UI automation failure from its GitHub artifact before accepting. Keep C09 and C09.1 pending."
     }
   },
   "ci_preparation": {

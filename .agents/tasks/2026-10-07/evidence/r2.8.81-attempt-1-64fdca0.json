@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "milestone": "R2.8.81 / C09 app-data boundary test seam",
+  "attempt": 1,
+  "tested_source_sha": "64fdca004c6f5c2c3801fac7f14c86e10c503a04",
+  "recorded_at": "2026-10-11T11:14:32Z",
+  "conclusion": "not_accepted",
+  "workflow_runs": {
+    "inventory": {
+      "run_id": 38134202988,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134202988",
+      "conclusion": "success",
+      "jobs": {"inventory": {"job_id": 114454614410, "conclusion": "success"}}
+    },
+    "quality": {
+      "run_id": 38134202943,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134202943",
+      "conclusion": "failure",
+      "jobs": {
+        "macos": {"job_id": 114454614624, "conclusion": "success"},
+        "ubuntu": {
+          "job_id": 114454614761,
+          "conclusion": "failure",
+          "finding": "The Electron vault audit timed out waiting for local retrieval metadata. It observed only `Local index complete · 1/1 Markdown files visited · 1 passages indexed · 3 excluded.` The same audit passed on recent Linux runs for b6f0bbb, 9a00847 and 21c801a, and passed on macOS and Windows for this SHA."
+        },
+        "windows": {"job_id": 114454614770, "conclusion": "success"}
+      }
+    },
+    "desktop_build": {
+      "run_id": 38134202984,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134202984",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114454614616, "conclusion": "success"},
+        "windows": {"job_id": 114454614702, "conclusion": "success"},
+        "macos": {"job_id": 114454614711, "conclusion": "success"}
+      }
+    },
+    "plugin_renderer": {
+      "run_id": 38134203007,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134203007",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114454614814, "conclusion": "success"},
+        "macos": {"job_id": 114454614959, "conclusion": "success"},
+        "windows": {"job_id": 114454614973, "conclusion": "success"}
+      }
+    },
+    "loaded_plugin_workflows": {
+      "run_id": 38134203025,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134203025",
+      "conclusion": "success",
+      "jobs": {
+        "ubuntu": {"job_id": 114454614943, "conclusion": "success"},
+        "windows": {"job_id": 114454615034, "conclusion": "success"},
+        "macos": {"job_id": 114454615076, "conclusion": "success"}
+      }
+    },
+    "rust_ci": {
+      "run_id": 38134202965,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134202965",
+      "conclusion": "failure",
+      "jobs": {
+        "minimum_supported_rust_1_95": {"job_id": 114454614446, "conclusion": "success"},
+        "windows": {
+          "job_id": 114454614541,
+          "conclusion": "failure",
+          "finding": "Clippy reported `prepare_vault_app_data_under` as dead code under `-D warnings`; workspace tests passed."
+        },
+        "macos": {
+          "job_id": 114454614627,
+          "conclusion": "failure",
+          "finding": "Clippy reported `prepare_vault_app_data_under` as dead code under `-D warnings`; workspace tests passed."
+        },
+        "ubuntu": {
+          "job_id": 114454614645,
+          "conclusion": "failure",
+          "finding": "Clippy reported `prepare_vault_app_data_under` as dead code under `-D warnings`; workspace tests passed."
+        }
+      }
+    },
+    "obsidian_vault_roundtrip": {
+      "run_id": 38134202999,
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38134202999",
+      "conclusion": "failure",
+      "jobs": {
+        "windows": {
+          "job_id": 114454614859,
+          "conclusion": "failure",
+          "finding": "After external note refresh, Windows UI Automation and OCR could not find `Close source preview`. The app-data boundary checks had passed."
+        },
+        "ubuntu": {
+          "job_id": 114454615001,
+          "conclusion": "failure",
+          "finding": "The round-trip stopped during native picker cancellation because `xdotool search --onlyvisible --name .` found no window. Earlier app-data policy checks passed, with the data root outside the vault and no app-data changes after preview operations."
+        },
+        "macos": {"job_id": 114454615015, "conclusion": "success"}
+      },
+      "artifacts": {
+        "windows": {
+          "artifact_id": 11700422023,
+          "name": "obsidian-vault-roundtrip-Windows-64fdca004c6f5c2c3801fac7f14c86e10c503a04",
+          "size_bytes": 4732920,
+          "sha256_digest": "561c4d160311943070d0abc6b62bbc79ec9993d5a2eee7a8bc1d863f5ae66777"
+        },
+        "linux": {
+          "artifact_id": 11700546870,
+          "name": "obsidian-vault-roundtrip-Linux-64fdca004c6f5c2c3801fac7f14c86e10c503a04",
+          "size_bytes": 7798135,
+          "sha256_digest": "02a16eea65e6ec1b78d7405e97f2b4ef9f9d8cdb4d749417f7c6e5b30cea4267"
+        },
+        "macos": {
+          "artifact_id": 11701090421,
+          "name": "obsidian-vault-roundtrip-macOS-64fdca004c6f5c2c3801fac7f14c86e10c503a04",
+          "size_bytes": 9310809,
+          "sha256_digest": "14d65c0270db8ce9558fdccab9891a62598cdaf036bc6a4ad567cb12b52ddda1"
+        }
+      }
+    }
+  },
+  "corrections_prepared_from_ci": [
+    "Scope `prepare_vault_app_data_under` to unit-test builds with `#[cfg(test)]`; both test call sites remain within the test module, while production uses the separate delegated helper.",
+    "Rerun all seven required workflows on the corrected exact source SHA. Recheck Electron and Obsidian UI automation failures in GitHub Actions; the source diff does not touch those paths and the round-trip artifacts show the app-data boundary assertions passed."
+  ],
+  "acceptance_status": "R2.8.81 is not accepted on this attempt. Rust MSRV, inventory, desktop, plugin renderer, and loaded-plugin workflows passed; Rust Clippy failed on all three platforms, Ubuntu quality retrieval timed out, and Linux/Windows Obsidian UI automation failed. The test-only Clippy fix is prepared for a new exact-SHA CI attempt. No local tests, builds, formatters, validators, or application launches were run."
+}

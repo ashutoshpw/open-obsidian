@@ -155,6 +155,7 @@ pub fn prepare_vault_app_data(vault_root: &Path) -> Result<PathBuf, UserDataErro
     prepare_vault_app_data_with_user_data_root(vault_root, app_user_data_directory)
 }
 
+#[cfg(test)]
 fn prepare_vault_app_data_under(
     vault_root: &Path,
     user_data_root: &Path,

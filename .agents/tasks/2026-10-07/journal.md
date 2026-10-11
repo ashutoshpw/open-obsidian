@@ -3552,3 +3552,25 @@ production root supplier runs after existing vault resolution and
 canonicalization. Exact-SHA validation is pending. C09 and C09.1 remain
 pending. No local tests, builds, formatters, validators, or application launch
 were run.
+
+## 2026-10-11T11:15:11Z — R2.8.81 attempt 1 CI findings
+
+Exact source SHA `64fdca004c6f5c2c3801fac7f14c86e10c503a04` completed all seven
+required workflows. The attempt is not accepted and its complete run, job, and
+artifact evidence is in `evidence/r2.8.81-attempt-1-64fdca0.json`. Inventory,
+desktop build, plugin renderer, loaded-plugin workflows, MSRV 1.95, and the
+macOS Obsidian round-trip passed. Rust Clippy failed on Ubuntu, macOS, and
+Windows because the private injected-root test helper was unused in production;
+the workspace tests passed on each platform. The helper now has `#[cfg(test)]`,
+preserving its two test call sites while excluding it from production builds.
+
+The Ubuntu quality workflow timed out while waiting for final local retrieval
+metadata in the Electron audit; recent Linux runs and this SHA's macOS and
+Windows jobs passed that audit. Linux Obsidian round-trip stopped at native
+picker window discovery and Windows stopped when accessibility automation
+could not find `Close source preview` after an external note refresh. Their
+artifacts confirm the app-data root stayed outside the vault and the boundary
+checks passed. These failures do not implicate the app-data change; the next
+exact-SHA run must pass all seven workflows before this partial C09 slice is
+accepted. C09 and C09.1 remain pending. No local tests, builds, formatters,
+validators, or application launches were run.
