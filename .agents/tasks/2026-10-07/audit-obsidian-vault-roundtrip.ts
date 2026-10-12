@@ -948,9 +948,9 @@ function runTesseractOcr(imagePath: string, pageSegmentationModes: string[]): st
   return pageSegmentationModes.map((mode) => execFileSync(tesseract, [imagePath, "stdout", "--psm", mode], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim()).filter(Boolean).join("\n");
 }
 
-function runTesseractTsv(imagePath: string): string {
+function runTesseractTsv(imagePath: string, pageSegmentationMode = "6"): string {
   const tesseract = process.platform === "win32" ? "tesseract.exe" : "tesseract";
-  return execFileSync(tesseract, [imagePath, "stdout", "--psm", "6", "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
+  return execFileSync(tesseract, [imagePath, "stdout", "--psm", pageSegmentationMode, "tsv"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
 }
 
 function ocrTokenMatches(token: string, expected: string): boolean {
@@ -2356,7 +2356,7 @@ async function withSourcePaneOcr<T extends {ocrPngPath: string; windowPngPath: s
 
 type OcrWordBounds = {text: string; left: number; top: number; width: number; height: number};
 
-function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0): OcrWordBounds | null {
+function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0, lastMatch = false): OcrWordBounds | null {
   const expected = phrase.toLowerCase().match(/[a-z0-9]+/g) ?? [];
   const words: OcrWordBounds[] = [];
   for (const line of tsv.split(/\r?\n/).slice(1)) {
@@ -2369,6 +2369,7 @@ function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0): OcrWo
     words.push({text, left, top, width, height});
   }
   const normalized = words.map((word) => word.text.toLowerCase().replace(/[^a-z0-9]/g, ""));
+  let selected: OcrWordBounds | null = null;
   for (let start = 0; expected.length > 0 && start + expected.length <= words.length; start += 1) {
     if (!expected.every((token, offset) => ocrTokenMatches(normalized[start + offset] ?? "", token))) continue;
     const match = words.slice(start, start + expected.length);
@@ -2377,9 +2378,11 @@ function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0): OcrWo
     const right = Math.max(...match.map((word) => word.left + word.width));
     const bottom = Math.max(...match.map((word) => word.top + word.height));
     if (top < minimumTop) continue;
-    return {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
+    const bounds = {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
+    if (!lastMatch) return bounds;
+    selected = bounds;
   }
-  return null;
+  return selected;
 }
 
 async function pngDimensions(path: string): Promise<{width: number; height: number}> {
@@ -5045,19 +5048,171 @@ function normalizeVisibleInputOcr(value: string): string {
     .trim();
 }
 
-function visibleInputValueOcrLineDistance(ocrText: string, controlName: string, value: string): number | null {
-  const normalizedLabel = normalizeVisibleInputOcr(controlName);
-  const expected = normalizeVisibleInputOcr(value);
-  const lines = ocrText.split(/\r?\n/).map(normalizeVisibleInputOcr);
-  const maximumDistance = controlName === "New Markdown path" ? 1 : 0;
-  for (let labelIndex = 0; labelIndex < lines.length; labelIndex += 1) {
-    if (!lines[labelIndex]?.includes(normalizedLabel)) continue;
-    for (let distance = 0; distance <= maximumDistance; distance += 1) {
-      const valueLine = lines[labelIndex + distance];
-      if (valueLine && ` ${valueLine} `.includes(` ${expected} `)) return distance;
-    }
+type CanvasInputFieldLayout = {
+  imagePath: string;
+  ocrImagePath: string;
+  imageDimensions: {width: number; height: number};
+  ocrDimensions: {width: number; height: number};
+  labelBoundsOcr: OcrWordBounds;
+  labelBoundsImage: OcrWordBounds;
+  fieldCenter: {x: number; y: number};
+  cropBounds: {left: number; top: number; width: number; height: number};
+  coordinateSpace: "window" | "desktop";
+};
+
+function canvasInputLabelXOffset(controlName: string): number {
+  if (controlName === "Canvas path") return 183;
+  if (controlName === "Text card ID") return 146;
+  if (controlName === "New Markdown path") return -415;
+  throw new Error(`No Canvas input layout is configured for ${controlName}`);
+}
+
+function canvasInputCropWidth(controlName: string): number {
+  if (controlName === "Canvas path") return 220;
+  if (controlName === "Text card ID") return 150;
+  if (controlName === "New Markdown path") return 220;
+  throw new Error(`No Canvas input crop is configured for ${controlName}`);
+}
+
+const initialCanvasInputValues: Readonly<Record<string, string>> = {
+  "Canvas path": "Boards/Idea.canvas",
+  "Text card ID": "text-1",
+  "New Markdown path": "Notes/Created.md",
+};
+
+async function locateCanvasTextInput(
+  capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
+  controlName: string,
+): Promise<CanvasInputFieldLayout> {
+  const coordinateSpace = process.platform === "darwin" ? "desktop" : "window";
+  const imagePath = coordinateSpace === "desktop" ? capture.pngPath : capture.windowPngPath;
+  const ocrImagePath = coordinateSpace === "desktop"
+    ? join(reportDirectory, `openobsidian-canvas-desktop-ocr-${Date.now()}.png`)
+    : capture.ocrPngPath;
+  if (coordinateSpace === "desktop") {
+    execFileSync("magick", [imagePath, "-colorspace", "Gray", "-level", "0%,15%", "-resize", "200%", ocrImagePath], {stdio: "ignore"});
   }
-  return null;
+  const imageDimensions = await pngDimensions(imagePath);
+  const ocrDimensions = await pngDimensions(ocrImagePath);
+  const scaleX = ocrDimensions.width / imageDimensions.width;
+  const scaleY = ocrDimensions.height / imageDimensions.height;
+  if (!(scaleX > 0 && scaleY > 0 && Number.isFinite(scaleX) && Number.isFinite(scaleY))) {
+    throw new Error(`Could not map the ${controlName} label from OCR pixels to the screenshot`);
+  }
+
+  const tsvCandidates = [runTesseractTsv(ocrImagePath, "6"), runTesseractTsv(ocrImagePath, "11")];
+  let labelBoundsOcr: OcrWordBounds | null = null;
+  for (const tsv of tsvCandidates) {
+    // The instruction above the form repeats these labels. Select the last visible match,
+    // which is the actual field label in the expanded form.
+    labelBoundsOcr = findOcrPhraseBounds(tsv, controlName, 0, true);
+    if (labelBoundsOcr) break;
+  }
+  if (!labelBoundsOcr) {
+    throw new Error(`Could not locate the visible ${controlName} label for screenshot-based input targeting: ${relative(reportDirectory, imagePath)}`);
+  }
+
+  const labelBoundsImage = {
+    text: labelBoundsOcr.text,
+    left: Math.round(labelBoundsOcr.left / scaleX),
+    top: Math.round(labelBoundsOcr.top / scaleY),
+    width: Math.max(1, Math.round(labelBoundsOcr.width / scaleX)),
+    height: Math.max(1, Math.round(labelBoundsOcr.height / scaleY)),
+  };
+  const rowOffset = controlName === "New Markdown path" ? 22 : 0;
+  const centerX = Math.round(labelBoundsImage.left + canvasInputLabelXOffset(controlName));
+  const centerY = Math.round(labelBoundsImage.top + labelBoundsImage.height / 2 + rowOffset);
+  const cropWidth = canvasInputCropWidth(controlName);
+  const cropHeight = 32;
+  const cropBounds = {
+    left: Math.max(0, Math.min(imageDimensions.width - 1, Math.round(centerX - cropWidth / 2))),
+    top: Math.max(0, Math.min(imageDimensions.height - 1, Math.round(centerY - cropHeight / 2))),
+    width: 0,
+    height: 0,
+  };
+  cropBounds.width = Math.min(cropWidth, imageDimensions.width - cropBounds.left);
+  cropBounds.height = Math.min(cropHeight, imageDimensions.height - cropBounds.top);
+  if (centerX < 0 || centerX >= imageDimensions.width || centerY < 0 || centerY >= imageDimensions.height
+    || cropBounds.width <= 0 || cropBounds.height <= 0) {
+    throw new Error(`The measured ${controlName} field center is outside the screenshot: center=(${centerX},${centerY}), image=${imageDimensions.width}x${imageDimensions.height}`);
+  }
+  return {
+    imagePath,
+    ocrImagePath,
+    imageDimensions,
+    ocrDimensions,
+    labelBoundsOcr,
+    labelBoundsImage,
+    fieldCenter: {x: centerX, y: centerY},
+    cropBounds,
+    coordinateSpace,
+  };
+}
+
+async function readCanvasInputScreenshotValue(
+  capture: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>,
+  controlName: string,
+  expectedValue: string,
+): Promise<{exact: boolean; text: string; cropPath: string; layout: CanvasInputFieldLayout}> {
+  const layout = await locateCanvasTextInput(capture, controlName);
+  const cropPath = join(reportDirectory, `openobsidian-canvas-input-${controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}-ocr.png`);
+  const {left, top, width, height} = layout.cropBounds;
+  const imageMagick = process.platform === "linux" ? "convert" : "magick";
+  execFileSync(imageMagick, [
+    layout.imagePath,
+    "-crop",
+    `${width}x${height}+${left}+${top}`,
+    "+repage",
+    "-colorspace",
+    "Gray",
+    "-resize",
+    "400%",
+    "-contrast-stretch",
+    "1%x3%",
+    cropPath,
+  ], {stdio: "ignore"});
+  const text = runTesseractOcr(cropPath, ["7", "6"]);
+  const exact = text.split(/\r?\n/).some((line) => normalizeVisibleInputOcr(line) === normalizeVisibleInputOcr(expectedValue));
+  return {exact, text, cropPath, layout};
+}
+
+async function clickMacOSDesktopFraction(xFraction: number, yFraction: number): Promise<string> {
+  if (!(Number.isFinite(xFraction) && Number.isFinite(yFraction)
+    && xFraction >= 0 && xFraction <= 1 && yFraction >= 0 && yFraction <= 1)) {
+    throw new Error(`macOS Canvas field click fractions fall outside the captured desktop: (${xFraction},${yFraction})`);
+  }
+  const swiftPath = join(workDirectory, "openobsidian-canvas-input-click.swift");
+  await writeFile(swiftPath, `import AppKit
+import CoreGraphics
+import Foundation
+
+guard CommandLine.arguments.count == 3,
+      let xFraction = Double(CommandLine.arguments[1]),
+      let yFraction = Double(CommandLine.arguments[2]) else {
+    fatalError("Expected desktop click fractions")
+}
+guard NSScreen.screens.count == 1 else {
+    fatalError("Canvas field click mapping requires the single-display macOS CI screen")
+}
+let displayBounds = CGDisplayBounds(CGMainDisplayID())
+guard displayBounds.width > 0, displayBounds.height > 0 else {
+    fatalError("Could not read the main macOS display bounds")
+}
+let point = CGPoint(
+    x: displayBounds.origin.x + CGFloat(xFraction) * displayBounds.width,
+    y: displayBounds.origin.y + CGFloat(yFraction) * displayBounds.height
+)
+for type in [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp] {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
+        fatalError("Could not create mouse event")
+    }
+    event.post(tap: .cghidEventTap)
+    if type == .leftMouseDown { Thread.sleep(forTimeInterval: 0.08) }
+}
+print("\\(point.x),\\(point.y)")
+`);
+  const point = execFileSync("swift", [swiftPath, String(xFraction), String(yFraction)], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  return `CoreGraphics clicked the OCR-positioned Canvas input at desktop fractions (${xFraction}, ${yFraction}), Quartz point (${point})`;
 }
 
 async function replaceLinuxOpenObsidianTextInputWithKeyboard(
@@ -5066,17 +5221,10 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   controlName: string,
   value: string,
 ): Promise<string> {
-  const calibratedFields: Record<string, {x: number; y: number}> = {
-    "Canvas path": {x: 201, y: 160},
-    "Text card ID": {x: 460, y: 160},
-    "New Markdown path": {x: 123, y: 182},
-  };
-  const calibratedPoint = calibratedFields[controlName];
-  if (!calibratedPoint) throw new Error(`No Linux Canvas input position is configured for ${controlName}`);
-
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
-  const labelOcrFound = before.ocrText.includes(controlName);
+  const layout = await locateCanvasTextInput(before, controlName);
+  const labelOcrFound = Boolean(layout.labelBoundsOcr);
   const screenshotSize = await pngDimensions(before.windowPngPath);
   const geometry = execFileSync("xdotool", ["getwindowgeometry", "--shell", windowId], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]});
   const readGeometry = (key: string): number => Number(geometry.match(new RegExp(`^${key}=(\\d+)$`, "m"))?.[1] ?? NaN);
@@ -5092,11 +5240,10 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     throw new Error(`Linux Canvas field coordinates require the captured 800x600 CI layout: window=${windowWidth}x${windowHeight}; screenshot=${screenshotSize.width}x${screenshotSize.height}`);
   }
 
-  // These centers are on the input rows in the current 800x600 expanded-form screenshot.
-  const screenshotX = Math.round(calibratedPoint.x * screenshotSize.width / 800);
-  const screenshotY = Math.round(calibratedPoint.y * screenshotSize.height / 600);
-  const clickX = Math.round(screenshotX * windowWidth / screenshotSize.width);
-  const clickY = Math.round(screenshotY * windowHeight / screenshotSize.height);
+  // X follows the label-to-field layout; Y follows the label itself so optional status
+  // messages above the form cannot move the click onto the adjacent input row.
+  const clickX = Math.round(layout.fieldCenter.x * windowWidth / screenshotSize.width);
+  const clickY = Math.round(layout.fieldCenter.y * windowHeight / screenshotSize.height);
 
   try {
     xdotool("windowfocus", "--sync", windowId);
@@ -5112,6 +5259,7 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   const verificationDeadline = Date.now() + 5_000;
   let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
   let verificationAttempts = 0;
+  let readback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
   while (Date.now() < verificationDeadline) {
     verificationAttempts += 1;
     verification = await captureOpenObsidianScreenshot(
@@ -5119,30 +5267,93 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
       child,
       `openobsidian-canvas-input-${fileSafeName}-readback-${verificationAttempts}`,
     );
-    if (visibleInputValueOcrLineDistance(verification.ocrText, controlName, value) !== null) break;
+    readback = await readCanvasInputScreenshotValue(verification, controlName, value);
+    if (readback.exact) break;
     await delay(200);
   }
-  const verificationLine = verification?.ocrText.split(/\r?\n/).map(normalizeVisibleInputOcr).find((line) => line.includes(normalizeVisibleInputOcr(controlName)));
-  const readbackLineDistance = verification
-    ? visibleInputValueOcrLineDistance(verification.ocrText, controlName, value)
-    : null;
-  if (!verification || readbackLineDistance === null) {
-    throw new Error(`Linux screenshot readback did not confirm the exact ${controlName} field value: expected_length=${value.length}; observed_row_length=${verificationLine?.length ?? 0}; click=(${clickX},${clickY}); attempts=${verificationAttempts}; screenshot=${verification ? relative(reportDirectory, verification.windowPngPath) : "unavailable"}`);
+  if (!verification || !readback?.exact) {
+    throw new Error(`Linux field-crop OCR did not confirm the exact ${controlName} value: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(readback?.text ?? "")}; click=(${clickX},${clickY}); attempts=${verificationAttempts}; crop=${readback ? relative(reportDirectory, readback.cropPath) : "unavailable"}; screenshot=${verification ? relative(reportDirectory, verification.windowPngPath) : "unavailable"}`);
   }
 
   return JSON.stringify({
     name: controlName,
-    action: "focused the measured-coordinate field after OCR label confirmation, then Ctrl+A and keyboard entry",
-    normalized_field_label_value_readback: true,
-    label_to_value_ocr_line_distance: readbackLineDistance,
+    action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
+    exact_readback: true,
+    readback_source: "magnified crop of the original screenshot",
+    readback_ocr: readback.text,
     expected_length: value.length,
+    readback_length: value.length,
     click_x: clickX,
     click_y: clickY,
-    position_source: "measured 800x600 field center",
+    position_source: "current visible label bounds and form layout",
     ocr_label_found: labelOcrFound,
     readback_attempts: verificationAttempts,
     before_screenshot: relative(reportDirectory, before.windowPngPath),
     readback_screenshot: relative(reportDirectory, verification.windowPngPath),
+    readback_crop: relative(reportDirectory, readback.cropPath),
+    readback_crop_bounds: readback.layout.cropBounds,
+  });
+}
+
+async function replaceMacOSOpenObsidianTextInputWithKeyboard(
+  child: ChildProcess,
+  windowId: string,
+  controlName: string,
+  value: string,
+): Promise<string> {
+  const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
+  const layout = await locateCanvasTextInput(before, controlName);
+  const click = await clickMacOSDesktopFraction(
+    layout.fieldCenter.x / layout.imageDimensions.width,
+    layout.fieldCenter.y / layout.imageDimensions.height,
+  );
+  const typeScript = `on run argv
+    set processId to (item 1 of argv) as integer
+    set replacement to item 2 of argv
+    tell application "System Events"
+      set targetProcess to first process whose unix id is processId
+      set frontmost of targetProcess to true
+      keystroke "a" using {command down}
+      delay 0.1
+      keystroke replacement
+    end tell
+  end run`;
+  execFileSync("osascript", ["-e", typeScript, String(child.pid ?? -1), value], {stdio: "ignore"});
+
+  const verificationDeadline = Date.now() + 5_000;
+  let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
+  let readback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
+  let verificationAttempts = 0;
+  while (Date.now() < verificationDeadline) {
+    verificationAttempts += 1;
+    verification = await captureOpenObsidianScreenshot(
+      windowId,
+      child,
+      `openobsidian-canvas-input-${fileSafeName}-readback-${verificationAttempts}`,
+    );
+    readback = await readCanvasInputScreenshotValue(verification, controlName, value);
+    if (readback.exact) break;
+    await delay(200);
+  }
+  if (!verification || !readback?.exact) {
+    throw new Error(`macOS field-crop OCR did not confirm the exact ${controlName} value after keyboard entry: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(readback?.text ?? "")}; click=${click}; attempts=${verificationAttempts}; crop=${readback ? relative(reportDirectory, readback.cropPath) : "unavailable"}; screenshot=${verification ? relative(reportDirectory, verification.pngPath) : "unavailable"}`);
+  }
+  return JSON.stringify({
+    name: controlName,
+    action: "focused the OCR-positioned field, then Cmd+A and keyboard entry",
+    exact_readback: true,
+    readback_source: "magnified crop of the original desktop screenshot",
+    readback_ocr: readback.text,
+    expected_length: value.length,
+    readback_length: value.length,
+    position_source: "current visible label bounds and form layout",
+    click,
+    readback_attempts: verificationAttempts,
+    before_screenshot: relative(reportDirectory, before.pngPath),
+    readback_screenshot: relative(reportDirectory, verification.pngPath),
+    readback_crop: relative(reportDirectory, readback.cropPath),
+    readback_crop_bounds: readback.layout.cropBounds,
   });
 }
 
@@ -5163,7 +5374,8 @@ import pyatspi
 
 process_id = int(sys.argv[1])
 target_name = sys.argv[2]
-replacement = sys.argv[3]
+initial_value = sys.argv[3]
+replacement = sys.argv[4]
 deadline = time.monotonic() + 20
 last_matches = []
 while time.monotonic() < deadline:
@@ -5178,17 +5390,21 @@ while time.monotonic() < deadline:
                 owner_pid = accessible.get_process_id()
             except Exception:
                 owner_pid = None
-            if owner_pid == process_id and name == target_name:
-                last_matches.append(role)
+            if owner_pid == process_id:
                 try:
                     editable = accessible.queryEditableText()
+                    text = accessible.queryText()
+                    current = text.getText(0, text.getCharacterCount())
+                    if name != target_name and current != initial_value:
+                        raise RuntimeError("editable field did not match its label or initial value")
+                    last_matches.append({"name": name, "role": role, "value_length": len(current)})
                     editable.setTextContents(replacement)
                     time.sleep(0.15)
                     text = accessible.queryText()
                     current = text.getText(0, text.getCharacterCount())
                     if current != replacement:
                         raise RuntimeError("editable text value did not match after replacement")
-                    print(json.dumps({"name": name, "role": role, "action": "EditableText.setTextContents", "value": current}))
+                    print(json.dumps({"name": name, "role": role, "action": "EditableText.setTextContents", "exact_readback": True, "expected_length": len(replacement), "readback_length": len(current)}))
                     sys.exit(0)
                 except Exception:
                     pass
@@ -5209,7 +5425,9 @@ print(json.dumps({"error": "editable accessible field was not found", "target": 
 sys.exit(1)
 `;
     try {
-      const output = execFileSync("python3", ["-c", script, String(processId), controlName, value], {
+      const initialValue = initialCanvasInputValues[controlName];
+      if (!initialValue) throw new Error(`No initial Linux Canvas value is configured for ${controlName}`);
+      const output = execFileSync("python3", ["-c", script, String(processId), controlName, initialValue, value], {
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
       }).trim();
@@ -5226,29 +5444,67 @@ sys.exit(1)
       }
     }
   } else if (process.platform === "darwin") {
+    const initialValue = initialCanvasInputValues[controlName];
+    if (!initialValue) throw new Error(`No initial macOS Canvas value is configured for ${controlName}`);
     const script = `on run argv
       set processId to (item 1 of argv) as integer
       set targetName to item 2 of argv
-      set replacement to item 3 of argv
+      set initialValue to item 3 of argv
+      set replacement to item 4 of argv
       tell application "System Events"
         set targetProcess to first process whose unix id is processId
         set frontmost of targetProcess to true
+        set matchingFields to {}
+        set fieldInventory to ""
         repeat with candidate in entire contents of window 1 of targetProcess
           try
-            if (name of candidate as text) is targetName and (role of candidate as text) is "AXTextField" then
-              set value of candidate to replacement
-              delay 0.15
-              if (value of candidate as text) is not replacement then error "Accessible value did not match after replacement"
-              return "AXTextField.setValue|" & targetName
+            set candidateRole to role of candidate as text
+            if candidateRole is "AXTextField" then
+              set candidateName to ""
+              set candidateValue to value of candidate as text
+              try
+                set candidateName to name of candidate as text
+              end try
+              set fieldInventory to fieldInventory & "[role=" & candidateRole & ",name=" & candidateName & ",value=" & candidateValue & "]"
+              if candidateValue is initialValue then set end of matchingFields to candidate
             end if
           end try
         end repeat
-        error "Editable text field was not found: " & targetName
+        if (count of matchingFields) is not 1 then error "Could not uniquely resolve the labeled " & targetName & " field by its initial value; matching_fields=" & (count of matchingFields) & "; fields=" & fieldInventory
+        set targetField to item 1 of matchingFields
+        set value of targetField to replacement
+        delay 0.15
+        if (value of targetField as text) is not replacement then error "Accessible value did not match after replacement for " & targetName
+        return "AXTextField.setValue|" & targetName & "|exact_readback=true"
       end tell
     end run`;
-    const output = execFileSync("osascript", ["-e", script, String(processId), controlName, value], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
-    await delay(250);
-    return output;
+    try {
+      const output = execFileSync("osascript", ["-e", script, String(processId), controlName, initialValue, value], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+      await delay(250);
+      return JSON.stringify({
+        name: controlName,
+        action: output,
+        exact_readback: true,
+        readback_source: "macOS accessibility value",
+        expected_length: value.length,
+        readback_length: value.length,
+        initial_value_match: initialValue,
+      });
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
+      const output = [failure.stdout, failure.stderr].filter(Boolean).map(String).join("\n").trim();
+      try {
+        const fallback = await replaceMacOSOpenObsidianTextInputWithKeyboard(child, windowId, controlName, value);
+        return JSON.stringify({
+          name: controlName,
+          accessibility_lookup_failure: output || failure.message,
+          fallback: JSON.parse(fallback),
+        });
+      } catch (fallbackError) {
+        const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : "unknown keyboard fallback error";
+        throw new Error(`Could not set the macOS OpenObsidian ${controlName} field by AX value or OCR-positioned keyboard fallback: ${output || failure.message}; fallback failed: ${fallbackMessage}`);
+      }
+    }
   } else if (process.platform === "win32") {
     const script = `
       $ErrorActionPreference = "Stop"
@@ -5486,17 +5742,35 @@ async function runOpenObsidianCanvasNoteCreation(
     );
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
     noteReport.expanded_form_ocr = expandedForm.ocrText.slice(0, 4_000);
-    interactions.canvas_path = await replaceOpenObsidianTextInput(child, window!.window_id, "Canvas path", canvasPath);
-    interactions.text_card_id = await replaceOpenObsidianTextInput(child, window!.window_id, "Text card ID", "text-1");
-    interactions.new_markdown_path = await replaceOpenObsidianTextInput(child, window!.window_id, "New Markdown path", canvasNotePath);
-    const ready = await waitFor(
-      "OpenObsidian to show the entered Canvas card and new note path",
-      async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-form", noteReport),
-      (capture) => capture.ocrText.includes(canvasNotePath)
-        && capture.ocrText.includes("text-1")
-        && capture.ocrText.includes(canvasPath),
-      30_000,
-    );
+    const canvasPathReadback = await replaceOpenObsidianTextInput(child, window!.window_id, "Canvas path", canvasPath);
+    const textCardIdReadback = await replaceOpenObsidianTextInput(child, window!.window_id, "Text card ID", "text-1");
+    const markdownPathReadback = await replaceOpenObsidianTextInput(child, window!.window_id, "New Markdown path", canvasNotePath);
+    interactions.canvas_path = canvasPathReadback;
+    interactions.text_card_id = textCardIdReadback;
+    interactions.new_markdown_path = markdownPathReadback;
+    const readbackEntries = [
+      ["Canvas path", canvasPathReadback],
+      ["Text card ID", textCardIdReadback],
+      ["New Markdown path", markdownPathReadback],
+    ] as Array<[string, string]>;
+    const fieldReadbacks = Object.fromEntries(readbackEntries.map(([name, result]) => {
+      try {
+        const parsed = JSON.parse(result) as {exact_readback?: boolean; fallback?: {exact_readback?: boolean}};
+        const exactReadback = parsed.exact_readback === true || parsed.fallback?.exact_readback === true;
+        return [name, {exact_readback: exactReadback, interaction: parsed}];
+      } catch {
+        return [name, {exact_readback: false, interaction: result}];
+      }
+    }));
+    noteReport.field_value_readbacks = fieldReadbacks;
+    const unverifiedFields = Object.entries(fieldReadbacks).filter(([, result]) => !(result as {exact_readback?: boolean}).exact_readback).map(([name]) => name);
+    if (unverifiedFields.length > 0) throw new Error(`Canvas form inputs did not provide exact field-value readbacks: ${unverifiedFields.join(", ")}`);
+    const ready = await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-form", noteReport);
+    if (!ready.ocrText.includes("Canvas path")
+      || !ready.ocrText.includes("Text card ID")
+      || !ready.ocrText.includes("New Markdown path")) {
+      throw new Error(`Canvas note-creation form labels were not visible after exact field-value readback: ${JSON.stringify(ready.ocrText.slice(0, 2_000))}`);
+    }
     screenshots.form = relative(reportDirectory, ready.windowPngPath);
     noteReport.form_ocr = ready.ocrText.slice(0, 4_000);
     const afterForm = await snapshotTree(canvasVaultRoot);
