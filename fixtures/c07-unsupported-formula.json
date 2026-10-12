@@ -82,6 +82,60 @@
         "row_count": 0,
         "issue_count": 1
       }
+    },
+    {
+      "id": "source-property-collision-does-not-drive-formula-sort",
+      "sort": [{"field": "bad", "direction": "asc"}],
+      "rows": [
+        {
+          "path": "z.md",
+          "properties": {
+            "bad": "first-by-property",
+            "status": "open"
+          }
+        },
+        {
+          "path": "a.md",
+          "properties": {
+            "bad": "second-by-property",
+            "status": "open"
+          }
+        }
+      ],
+      "expected": {
+        "row_count": 2,
+        "issue_count": 1,
+        "paths": ["a.md", "z.md"]
+      }
+    },
+    {
+      "id": "source-property-collision-does-not-create-formula-groups",
+      "groupBy": "bad",
+      "rows": [
+        {
+          "path": "z.md",
+          "properties": {
+            "bad": "Zulu source value",
+            "status": "open"
+          }
+        },
+        {
+          "path": "a.md",
+          "properties": {
+            "bad": "Ada source value",
+            "status": "open"
+          }
+        }
+      ],
+      "expected": {
+        "row_count": 2,
+        "issue_count": 1,
+        "paths": ["z.md", "a.md"],
+        "group_names": [""],
+        "group_paths": {
+          "": ["z.md", "a.md"]
+        }
+      }
     }
   ]
 }

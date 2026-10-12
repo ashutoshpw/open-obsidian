@@ -165,6 +165,209 @@
       }
     }
   },
+  "evaluation_edge_cases": [
+    {
+      "id": "missing-and-explicit-null-sort-separately",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Missing and null",
+          "sort": [{"field": "marker", "direction": "asc"}],
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Missing and null",
+      "rows": [
+        {"path": "value.md", "properties": {"marker": "value"}},
+        {"path": "null.md", "properties": {"marker": null}},
+        {"path": "missing.md", "properties": {}}
+      ],
+      "expected": {
+        "paths": ["missing.md", "null.md", "value.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "mixed-integer-and-float-numeric-order",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Mixed numeric order",
+          "sort": [{"field": "score", "direction": "asc"}],
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Mixed numeric order",
+      "rows": [
+        {"path": "int-two.md", "properties": {"score": 2}},
+        {"path": "float-one-point-five.md", "properties": {"score": 1.5}},
+        {"path": "float-two.md", "properties": {"score": 2.0}},
+        {"path": "int-one.md", "properties": {"score": 1}}
+      ],
+      "expected": {
+        "paths": ["int-one.md", "float-one-point-five.md", "float-two.md", "int-two.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "mixed-integer-and-float-order-preserves-precision-above-2-to-53",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Large mixed numeric order",
+          "sort": [{"field": "score", "direction": "asc"}],
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Large mixed numeric order",
+      "rows": [
+        {"path": "a-integer-next.md", "properties": {"score": 9007199254740993}},
+        {"path": "z-float-below.md", "properties": {"score": 9007199254740992.0}},
+        {"path": "b-integer-below.md", "properties": {"score": 9007199254740992}}
+      ],
+      "expected": {
+        "paths": ["b-integer-below.md", "z-float-below.md", "a-integer-next.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "mixed-integer-float-filter-preserves-precision-above-2-to-53",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "list",
+          "name": "Above large float threshold",
+          "filter": {
+            "kind": "comparison",
+            "field": "score",
+            "operator": "gt",
+            "value": 9007199254740992.0
+          },
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Above large float threshold",
+      "rows": [
+        {"path": "integer-next.md", "properties": {"score": 9007199254740993}},
+        {"path": "float-threshold.md", "properties": {"score": 9007199254740992.0}},
+        {"path": "integer-threshold.md", "properties": {"score": 9007199254740992}}
+      ],
+      "expected": {
+        "paths": ["integer-next.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "array-contains-compares-large-integer-and-float-exactly",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "list",
+          "name": "Contains exact large number",
+          "filter": {
+            "kind": "comparison",
+            "field": "numbers",
+            "operator": "contains",
+            "value": 9007199254740992.0
+          },
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Contains exact large number",
+      "rows": [
+        {"path": "integer-next.md", "properties": {"numbers": [9007199254740993]}},
+        {"path": "float-match.md", "properties": {"numbers": [9007199254740992.0]}},
+        {"path": "integer-match.md", "properties": {"numbers": [9007199254740992]}}
+      ],
+      "expected": {
+        "paths": ["float-match.md", "integer-match.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "integer-valued-float-limit-truncates-rows",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Float limit",
+          "sort": [{"field": "rank", "direction": "asc"}],
+          "limit": 1.0,
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Float limit",
+      "rows": [
+        {"path": "second.md", "properties": {"rank": 2}},
+        {"path": "first.md", "properties": {"rank": 1}}
+      ],
+      "expected": {
+        "paths": ["first.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "tied-sort-keys-use-ordinary-path-order",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Path tie",
+          "sort": [{"field": "rank", "direction": "asc"}],
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Path tie",
+      "rows": [
+        {"path": "a2.md", "properties": {"rank": 1}},
+        {"path": "a10.md", "properties": {"rank": 1}}
+      ],
+      "expected": {
+        "paths": ["a10.md", "a2.md"],
+        "group_names": []
+      }
+    },
+    {
+      "id": "groups-preserve-first-seen-order-after-limit",
+      "source": {
+        "version": 1,
+        "views": [{
+          "type": "table",
+          "name": "Limited groups",
+          "sort": [{"field": "rank", "direction": "asc"}],
+          "groupBy": "team",
+          "limit": 3,
+          "unknownView": {"keep": "view-field"}
+        }],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Limited groups",
+      "rows": [
+        {"path": "zulu-first.md", "properties": {"rank": 1, "team": "Zulu"}},
+        {"path": "ada.md", "properties": {"rank": 2, "team": "Ada"}},
+        {"path": "zulu-second.md", "properties": {"rank": 3, "team": "Zulu"}},
+        {"path": "beta-truncated.md", "properties": {"rank": 4, "team": "Beta"}}
+      ],
+      "expected": {
+        "paths": ["zulu-first.md", "ada.md", "zulu-second.md"],
+        "group_names": ["Zulu", "Ada"],
+        "group_paths": {
+          "Zulu": ["zulu-first.md", "zulu-second.md"],
+          "Ada": ["ada.md"]
+        }
+      }
+    }
+  ],
   "embedded_case": {
     "id": "embedded-definitions-retain-source-spans",
     "source": "# Overview\r\n\r\n\u0060\u0060\u0060base\r\nviews:\r\n  - type: list\r\n    name: Notes\r\n    unknownView: keep-me\r\n\u0060\u0060\u0060\r\n",
@@ -175,5 +378,18 @@
     "id": "unclosed-definition-is-an-issue",
     "source": "~~~base\nviews:\n  - type: list\n",
     "expected_issue": "Embedded base fence is not closed"
+  },
+  "nested_non_base_outer_fence_case": {
+    "id": "base-looking-fence-inside-other-fence-is-ignored",
+    "source": "````text\n```base\nviews:\n  - type: list\n    name: Trapped\n```\n````\n",
+    "expected_count": 0
+  },
+  "unicode_prefix_span_case": {
+    "id": "embedded-span-offsets-count-utf8-bytes-after-unicode-prefix",
+    "source": "🧭 heading\n\n```base\nviews:\n  - type: list\n    name: Notes\n```\n",
+    "expected_count": 1,
+    "expected_start_byte": 22,
+    "expected_end_byte": 60,
+    "expected_view": "Notes"
   }
 }

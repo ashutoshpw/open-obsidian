@@ -1312,22 +1312,22 @@
     },
     {
       "path": "fixtures/c07-bases.json",
-      "sha256": "55dfeb32c8bf62f8c02323b170fa7b658d07ddc1e21313f19443ac6b7f605db0",
+      "sha256": "a6c862ec62747626fe67d238b1683251b0cca3cdabd19a98afa6700fd846715d",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "C07 fixtures cover supported JSON and native YAML Bases definitions, filters, formulas, properties, sorting, grouping, view types, embedded source spans, and preservation of source bytes and unknown fields; visible Bases integration remains pending.",
+      "purpose": "C07 fixtures cover supported JSON and native YAML Bases definitions, filters, formulas, properties, missing/null and mixed numeric comparison, integer-valued limits, path tie ordering, first-seen grouping after truncation, view types, nested-fence exclusion, UTF-8 byte spans, and preservation of source bytes and unknown fields; visible Bases integration remains pending.",
       "fixture_reader": "crates/doc"
     },
     {
       "path": "fixtures/c07-unsupported-formula.json",
-      "sha256": "aa79b149ca6b2dba38bd457a5e73b8888d467474040eeda06170edc4b5e25bc6",
+      "sha256": "ddfd92ddf593dbbeb5f6747726c5dc83404c0ab7c2291bf9a9b3bdacf97c9f0d",
       "rust_owner": "crates/doc",
       "mapping_status": "reviewed",
       "status": "pending",
       "migration_phase": "R2",
-      "purpose": "C07.1 fixture covers unsupported formula issues, retained source, no fabricated result, property-name collisions, and empty or filtered row sets; visible issue presentation remains pending.",
+      "purpose": "C07.1 fixture covers unsupported formula issues, retained source, no fabricated result, property-name collision behavior in sorting and grouping, and empty or filtered row sets; visible issue presentation remains pending.",
       "fixture_reader": "crates/doc"
     },
     {
