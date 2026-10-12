@@ -292,7 +292,7 @@
     },
     {
       "path": "src/electron/main.ts",
-      "sha256": "8a7ad31980d0d761a3b48f91e83cedebb851dc0f71bba925dde217e4dd5b5700",
+      "sha256": "066175cb758bd85c7dc869e184d4134a88d7f91f8a5f47a9829c60b970d6c947",
       "rust_owner": "crates/platform",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -301,7 +301,7 @@
     },
     {
       "path": "src/electron/preload.ts",
-      "sha256": "d5ecfb366e8af7351bfdbee3bd3e8ca646e7f5bdc0971002a0b9f2adf9eb40a6",
+      "sha256": "33d8bb9bf35a06a24faf9fc59b8468a5df6d0d7621e322e9935e22c228ae3015",
       "rust_owner": "crates/platform",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -418,7 +418,7 @@
     },
     {
       "path": "src/renderer/renderer.ts",
-      "sha256": "224b3c4541b0a9eba534259c161ca24dd77f01540993df1546b86a5e85cfd06a",
+      "sha256": "1c23be1c2f8e9a4d6919560432c1ba6c7af32fbcf4d7bbf9ace5ca20704ba847",
       "rust_owner": "crates/ui-egui",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -436,7 +436,7 @@
     },
     {
       "path": "src/shared/api.ts",
-      "sha256": "bd0f8523bc99073897cdf6106480d350096e69f81bf9da1b8987bffdd405796d",
+      "sha256": "a3f884ae59a39b99c04ebdc61e0f1c96303d20e30a99716b42313bdeb88dd14d",
       "rust_owner": "crates/engine",
       "mapping_status": "reviewed",
       "status": "pending",
@@ -572,7 +572,7 @@
     },
     {
       "path": "tests/api.test.ts",
-      "sha256": "9019942d9a603cf4a5fa5f250c48938260676ab94513c2f3d7237e8813f33426",
+      "sha256": "103bc5941c457f048d1ab79ca6539f320df8a098b7edf0e9f5af0ea17e6f930e",
       "rust_owner": "crates/engine",
       "mapping_status": "reviewed",
       "status": "pending",

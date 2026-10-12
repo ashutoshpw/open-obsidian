@@ -4699,3 +4699,9 @@ No local tests, builds,
 formatters, linters, validators or application launches were run. The next
 commit will be pushed to `origin/main` for fresh exact-SHA GitHub Actions
 results after source review.
+
+## 2026-10-12 — R2.8.95 attempt 3 CI findings
+
+Attempt 3 ran on exact source SHA `a0053ac932b5aa55c18df7e30ccfdf5d45604583` and is not accepted. Quality, desktop build, plugin renderer, and loaded-plugin workflows passed across their required jobs. Inventory failed because five modified Electron files still carried baseline hashes. Rust CI passed the Rust 1.95 job and failed strict Clippy on Ubuntu, macOS, and Windows for five test-only `PathBuf` comparisons that should compare borrowed `Path` values. The pinned Obsidian round-trip failed on all three platforms: Linux OCR merged one field label; Windows `SendKeys` dropped the tail of a long input burst; macOS clicked the wrapped New Markdown field about 15 pixels too high after the form shifted on a vault-refresh status update, replacing the Canvas path and leaving the destination blank so Preview stayed disabled. Exact run/job IDs and 12 artifact IDs, sizes, and digests are recorded in [`evidence/r2.8.95-attempt-3-a0053ac.json`](evidence/r2.8.95-attempt-3-a0053ac.json).
+
+The next focused correction updates the five stale hashes, replaces owned-path comparisons with borrowed paths, matches the Linux label through a same-line OCR token-span fallback, sends Windows text in chunks with exact prefix readback, and makes macOS recapture after refresh activity before probing the blank destination field. The macOS readback clears the clipboard first and requires visible OCR from the destination row in addition to the exact copied value. The vault and exact-content readback assertions remain required. No local tests, builds, formatters, linters, validators, or application launches were run.
