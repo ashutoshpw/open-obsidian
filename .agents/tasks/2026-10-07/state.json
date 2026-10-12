@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T06:26:00+02:00",
+  "updated_at": "2026-10-12T06:40:09+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+  "last_reconciled_head": "471082995724190ff75c98e541a93f631e04a265",
   "current_milestone": "R2.8.95",
-  "next_action": "Push the three focused attempt 5 commits from this worktree to origin/main, then wait for and record all seven exact-SHA GitHub Actions workflows before accepting R2.8.95.",
-  "push_status": "R2.8.95 attempt 4 SHA b14b10c7dd4678f03a4ecf1a10b571d3321693fb is not accepted. Inventory, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed; quality failed on all three OSes because Knip reported the unlisted pbcopy binary; the pinned Obsidian round-trip passed on Linux and failed on macOS OCR of a visibly correct exact-readback destination and Windows long-text entry before Save. Exact run/job IDs and 12 artifact IDs, sizes, and archive digests are in evidence/r2.8.95-attempt-4-b14b10c.json. No vault write occurred at either failure point. Only GitHub Actions is used for executable validation.",
+  "next_action": "Push the focused Windows STA clipboard-paste correction with attempt 5 evidence to origin/main, then wait for and record all seven exact-SHA GitHub Actions workflows before accepting R2.8.95.",
+  "push_status": "R2.8.95 attempt 5 on exact SHA 471082995724190ff75c98e541a93f631e04a265 is not accepted. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed; the pinned Obsidian round-trip passed on Linux and macOS but failed on Windows during exact Canvas draft readback before Save. See evidence/r2.8.95-attempt-5-4710829.json for exact run/job IDs and 16 artifact IDs, sizes, and archive digests. No Canvas write or note creation occurred during Windows load/input.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb"
+      "implementation_sha": "471082995724190ff75c98e541a93f631e04a265"
     },
     "R3": {
       "status": "pending",
@@ -31707,7 +31707,7 @@
       "push_status": "Accepted on exact source SHA 325ce3ab806f3e41564f12a8d61ef7562ffa45e9 after all seven required GitHub Actions workflows passed. Attempt 1's Ubuntu formatting-only failure is retained in evidence/r2.8.93-attempt-1-392014b.json. Native UI, pinned create-note round-trip, Canvas editing, and C06/C06.1 acceptance remain pending."
     },
     "R2.8.94": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "325ce3ab806f3e41564f12a8d61ef7562ffa45e9",
       "scope": "Add an engine-owned, revision-stamped Canvas text-card preview and a separate explicit egui action that creates a new Markdown note from the reviewed text; add a pinned Obsidian 1.14.4 round-trip for no-write-before-confirmation, exact note bytes, unchanged Canvas bytes, and first-open/reopen visibility.",
       "acceptance": [
@@ -31937,12 +31937,44 @@
             "vault_roundtrip": 38200626278
           },
           "finding": "Quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Inventory failed on five unreconciled source hashes; Rust CI failed test-only cmp_owned comparisons on three OSes; the three Obsidian round-trips failed on UI automation. macOS field targeting missed the wrapped destination after the form shifted during vault refresh."
+        },
+        {
+          "attempt": 4,
+          "source_sha": "b14b10c7dd4678f03a4ecf1a10b571d3321693fb",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.95-attempt-4-b14b10c.json",
+          "workflow_runs": {
+            "inventory": 38202417325,
+            "quality": 38202417348,
+            "desktop_build": 38202417361,
+            "plugin_renderer": 38202417309,
+            "loaded_plugins": 38202417326,
+            "rust_ci": 38202417332,
+            "vault_roundtrip": 38202417307
+          },
+          "finding": "Inventory, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed. Quality failed on all three OSes because Knip reported unlisted pbcopy. The pinned Obsidian round-trip passed on Linux, while macOS OCR misread the visible .md suffix and Windows long-text entry failed exact readback before Save."
+        },
+        {
+          "attempt": 5,
+          "source_sha": "471082995724190ff75c98e541a93f631e04a265",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.95-attempt-5-4710829.json",
+          "workflow_runs": {
+            "inventory": 38203799629,
+            "quality": 38203799636,
+            "desktop_build": 38203799632,
+            "plugin_renderer": 38203799651,
+            "loaded_plugins": 38203799707,
+            "rust_ci": 38203799630,
+            "vault_roundtrip": 38203799691
+          },
+          "finding": "Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed, including Rust 1.95. The Obsidian round-trip passed on Linux and macOS. Windows passed its earlier C01.2 checks but failed exact readback while entering the 42-character Canvas draft at character offset 22; the 741-byte Canvas stayed unchanged and no explicit Save or note creation occurred. Exact run/job IDs and 16 artifact IDs, sizes, and archive digests are recorded in the attempt evidence."
         }
       ],
-      "implementation_sha": "a0053ac932b5aa55c18df7e30ccfdf5d45604583",
-      "evidence": "evidence/r2.8.95-attempt-3-a0053ac.json",
+      "implementation_sha": "471082995724190ff75c98e541a93f631e04a265",
+      "evidence": "evidence/r2.8.95-attempt-5-4710829.json",
       "accepted_attempt": null,
-      "push_status": "Attempt 3 at a0053ac932b5aa55c18df7e30ccfdf5d45604583 is not accepted. All seven exact-SHA workflows completed; inventory, Rust CI, and all three vault round-trips failed. Evidence is evidence/r2.8.95-attempt-3-a0053ac.json. Attempt 4 reconciles inventory hashes and Clippy comparisons, and fixes Linux, Windows, and refresh-aware macOS field automation."
+      "push_status": "R2.8.95 attempt 5 on exact SHA 471082995724190ff75c98e541a93f631e04a265 is not accepted. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed; the pinned Obsidian round-trip passed on Linux and macOS but failed on Windows during exact Canvas draft readback before Save. See evidence/r2.8.95-attempt-5-4710829.json for exact run/job IDs and 16 artifact IDs, sizes, and archive digests. No Canvas write or note creation occurred during Windows load/input."
     }
   },
   "ci_preparation": {
