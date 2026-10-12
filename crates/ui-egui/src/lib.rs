@@ -1057,13 +1057,24 @@ impl OpenObsidianApp {
             && !self.canvas_note_canvas_path.trim().is_empty()
             && !self.canvas_note_node_id.trim().is_empty()
             && !self.canvas_note_destination_path.trim().is_empty();
-        if ui
-            .add_enabled(
-                can_preview,
-                eframe::egui::Button::new("Preview note creation"),
-            )
-            .clicked()
+        let preview_response = ui.add_enabled(
+            can_preview,
+            eframe::egui::Button::new("Preview note creation"),
+        );
+        if std::env::var_os("OPENOBSIDIAN_CI_DIAGNOSTICS").is_some()
+            && ui.input(|input| !input.raw.events.is_empty())
         {
+            eprintln!(
+                "OpenObsidian CI canvas-note-preview input: enabled={can_preview}, response_rect={:?}, pixels_per_point={:.2}, pointer={:?}, hovered={}, clicked={}, events={:?}",
+                preview_response.rect,
+                ui.ctx().pixels_per_point(),
+                ui.input(|input| input.pointer.hover_pos()),
+                preview_response.hovered(),
+                preview_response.clicked(),
+                ui.input(|input| input.raw.events.clone()),
+            );
+        }
+        if preview_response.clicked() {
             self.start_canvas_note_preview();
         }
         if self.canvas_note_receiver.is_some() {

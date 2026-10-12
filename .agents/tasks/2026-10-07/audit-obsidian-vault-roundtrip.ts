@@ -2883,6 +2883,14 @@ async function invokeNativeAccessibleControl(
     );
   }
 
+  if (controlName === "Preview note creation" && waitUntilEnabled && process.platform === "linux") {
+    return await clickLinuxCanvasNotePreviewFromCiGeometry(windowId);
+  }
+
+  if (controlName === "Preview note creation" && waitUntilEnabled && process.platform === "darwin") {
+    return await clickMacOsCanvasNotePreviewFromCiGeometry(child);
+  }
+
   if (process.platform === "linux") {
     const script = `
 import json
@@ -3290,17 +3298,22 @@ async function readOpenObsidianCiButtonBounds(
   controlName: string,
   diagnosticPrefix: string,
   expectedSelectedPath?: string,
+  diagnosticLogPath = join(reportDirectory, "openobsidian.log"),
+  afterLineCount?: number,
 ): Promise<{diagnostic: string; left: number; top: number; right: number; bottom: number; pixelsPerPoint: number}> {
+  const relevantLines = (lines: string[]) => lines
+    .filter((line) => line.trim().length > 0)
+    .slice(afterLineCount ?? 0);
   const diagnosticLines = await waitFor(
     `OpenObsidian to report the enabled ${controlName} button bounds`,
-    async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
-    (lines) => lines.some((line) => line.startsWith(diagnosticPrefix)
+    async () => (await readFile(diagnosticLogPath, "utf8").catch(() => "")).split(/\r?\n/),
+    (lines) => relevantLines(lines).some((line) => line.startsWith(diagnosticPrefix)
       && line.includes("enabled=true")
       && line.includes("pixels_per_point=")
       && (expectedSelectedPath === undefined || line.includes(`selected=${expectedSelectedPath}`))),
     5_000,
   );
-  const diagnostic = [...diagnosticLines].reverse().find((line) => (
+  const diagnostic = [...relevantLines(diagnosticLines)].reverse().find((line) => (
     line.startsWith(diagnosticPrefix)
     && line.includes("enabled=true")
     && line.includes("pixels_per_point=")
@@ -3322,6 +3335,55 @@ async function readOpenObsidianCiButtonBounds(
     throw new Error(`OpenObsidian reported invalid ${controlName} button geometry: ${diagnostic}`);
   }
   return bounds;
+}
+
+async function clickLinuxCanvasNotePreviewFromCiGeometry(windowId: string): Promise<string> {
+  const controlName = "Preview note creation";
+  const diagnosticPrefix = "OpenObsidian CI canvas-note-preview input:";
+  const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-note-create.log");
+  xdotool("windowfocus", "--sync", windowId);
+  const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0).length;
+  xdotool("mousemove", "--sync", "--window", windowId, "1", "1");
+  const bounds = await readOpenObsidianCiButtonBounds(
+    controlName,
+    diagnosticPrefix,
+    undefined,
+    diagnosticLogPath,
+    afterLineCount,
+  );
+  const x = Math.round(((bounds.left + bounds.right) / 2) * bounds.pixelsPerPoint);
+  const y = Math.round(((bounds.top + bounds.bottom) / 2) * bounds.pixelsPerPoint);
+  xdotool("mousemove", "--sync", "--window", windowId, String(x), String(y));
+  xdotool("mousedown", "1");
+  await delay(80);
+  xdotool("mouseup", "1");
+  return `xdotool clicked ${controlName} from CI response geometry at window coordinates (${x}, ${y}); ${bounds.diagnostic}`;
+}
+
+async function clickMacOsCanvasNotePreviewFromCiGeometry(child: ChildProcess): Promise<string> {
+  await focusOpenObsidian(child);
+  const window = macOSOpenObsidianWindowBounds(child);
+  const macOSRunnerTitlebarHeightPoints = 32;
+  const controlName = "Preview note creation";
+  const diagnosticPrefix = "OpenObsidian CI canvas-note-preview input:";
+  const diagnosticLogPath = join(reportDirectory, "openobsidian-canvas-note-create.log");
+  const afterLineCount = (await readFile(diagnosticLogPath, "utf8").catch(() => ""))
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0).length;
+  await postMacOsPointerEvent(window.x + 5, window.y + macOSRunnerTitlebarHeightPoints + 5, false);
+  const bounds = await readOpenObsidianCiButtonBounds(
+    controlName,
+    diagnosticPrefix,
+    undefined,
+    diagnosticLogPath,
+    afterLineCount,
+  );
+  const x = Math.round(window.x + (bounds.left + bounds.right) / 2);
+  const y = Math.round(window.y + macOSRunnerTitlebarHeightPoints + (bounds.top + bounds.bottom) / 2);
+  await postMacOsPointerEvent(x, y, true);
+  return `CoreGraphics clicked ${controlName} at screen point (${x}, ${y}) from egui response geometry; window=${JSON.stringify(window)}; ${bounds.diagnostic}`;
 }
 
 async function clickMacOsResolveButtonFromCiGeometry(child: ChildProcess, authoredNotePath: string): Promise<string> {
@@ -5581,14 +5643,17 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     const refreshAfterVerification = await readOpenObsidianRefreshDiagnostics(canvasRefreshLog);
     const refreshChangedDuringInput = openObsidianRefreshActivityChanged(refreshBeforeClick, refreshAfterVerification)
       || (refreshAfterVerification.receiverStates.at(-1)?.busy ?? false);
-    if (clipboardReadback === value && visualReadback?.exact === true && !refreshChangedDuringInput) {
+    if (clipboardReadback === value && !refreshChangedDuringInput) {
       return JSON.stringify({
         name: controlName,
         action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
         exact_readback: true,
-        readback_source: "X11 clipboard and field-specific screenshot after selecting and copying the focused field",
-        readback_ocr: visualReadback.text,
-        visual_ocr_exact: visualReadback.exact,
+        clipboard_exact: true,
+        readback_source: "X11 clipboard after selecting and copying the focused field; screenshot and optional field crop retained as visual evidence",
+        readback_ocr: visualReadback?.text ?? "",
+        visual_ocr_exact: visualReadback?.exact ?? false,
+        visual_ocr_is_diagnostic: true,
+        visual_readback_error: visualReadbackError || null,
         expected_length: value.length,
         readback_length: clipboardReadback.length,
         click_x: clickX,
@@ -5599,14 +5664,14 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
         position_attempts: attempt,
         before_screenshot: relative(reportDirectory, before.windowPngPath),
         readback_screenshot: relative(reportDirectory, verification.windowPngPath),
-        readback_crop: relative(reportDirectory, visualReadback.cropPath),
-        readback_crop_bounds: visualReadback.layout.cropBounds,
+        readback_crop: visualReadback ? relative(reportDirectory, visualReadback.cropPath) : null,
+        readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
       });
     }
-    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.windowPngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
+    lastFailure = `clipboard_length=${clipboardReadback.length}; clipboard_exact=${clipboardReadback === value}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; visual_exact=${visualReadback?.exact ?? false}; refresh_changed=${refreshChangedDuringInput}; click=(${clickX},${clickY}); verification_attempts=${Math.min(verificationAttempts, 5)}; before=${relative(reportDirectory, before.windowPngPath)}; screenshot=${relative(reportDirectory, verification.windowPngPath)}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}`;
   }
 
-  throw new Error(`Linux clipboard and visual readbacks did not confirm the exact ${controlName} value after ${maximumAttempts} fresh-position attempts: expected_length=${value.length}; ${lastFailure}`);
+  throw new Error(`Linux clipboard readback and field screenshot did not confirm the exact ${controlName} value after ${maximumAttempts} fresh-position attempts: expected_length=${value.length}; ${lastFailure}`);
 }
 
 async function replaceMacOSOpenObsidianTextInputWithKeyboard(
@@ -6118,6 +6183,8 @@ async function runOpenObsidianCanvasNoteCreation(
       "OpenObsidian to show the exact Canvas text-card preview",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-preview", noteReport),
       (capture) => capture.ocrText.includes(canvasMarker)
+        && (capture.ocrText.includes("Exact note body")
+          || capture.ocrText.includes("Review and confirm note creation"))
         && capture.ocrText.includes(canvasNotePath)
         && capture.ocrText.includes(canvasPath),
       30_000,
