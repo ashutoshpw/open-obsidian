@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T07:33:15+02:00",
+  "updated_at": "2026-10-12T07:49:50+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+  "last_reconciled_head": "e74126380bae4e20c8b292c7994d9610a5852831",
   "current_milestone": "R2.8.96",
-  "next_action": "Verify origin/main is still at 1a0854d837f9d67432d6bafb35fb1405f8036c7d, push the focused R2.8.96 code, fixture, and tracker commits, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented.",
-  "push_status": "R2.8.96 attempt 1 ran on exact SHA 1a0854d837f9d67432d6bafb35fb1405f8036c7d and was not accepted: six workflows passed, while Rust CI failed on formatting and Clippy. Corrections are committed locally in 053d85c and 0884a12, with the attempt evidence reconciled. These commits have not yet been pushed. C07/C07.1 remain pending.",
+  "next_action": "Verify origin/main is still at e74126380bae4e20c8b292c7994d9610a5852831, push the focused R2.8.96 formatting correction 70a98e618a5e161d0fd1e59a604b1387a96a8a2e, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented.",
+  "push_status": "R2.8.96 attempt 2 ran on exact SHA e74126380bae4e20c8b292c7994d9610a5852831 and was not accepted: six workflows passed, while Rust CI failed only Ubuntu rustfmt. All three Obsidian round-trip jobs passed. The formatting correction is committed locally as 70a98e618a5e161d0fd1e59a604b1387a96a8a2e and has not yet received CI results. C07/C07.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -32029,19 +32029,38 @@
             "vault_roundtrip": 38206586290
           },
           "finding": "Six required workflows passed on the exact source SHA. Rust CI failed on Ubuntu rustfmt and Windows/macOS Clippy. The Rust 1.95 job and workspace tests passed. Source review identified additional Bases edge cases; corrections are in progress."
+        },
+        {
+          "attempt": 2,
+          "source_sha": "e74126380bae4e20c8b292c7994d9610a5852831",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.96-attempt-2-e741263.json",
+          "workflow_runs": {
+            "inventory": 38208527922,
+            "quality": 38208527935,
+            "desktop_build": 38208527968,
+            "plugin_renderer": 38208527985,
+            "loaded_plugins": 38208527924,
+            "rust_ci": 38208527940,
+            "vault_roundtrip": 38208527954
+          },
+          "finding": "Six of seven required workflows passed on the exact source SHA. All three Obsidian round-trip reports passed. Rust CI failed only Ubuntu formatting: workspace tests passed on all four targets and macOS/Windows Rust jobs passed; nine rustfmt hunks remain in crates/doc/src/bases.rs. The formatter correction is committed locally as 70a98e6 and awaits a new exact-SHA CI attempt."
         }
       ],
-      "implementation_sha": "0884a128dcdc14e20027e3aad251ef6d444118e4",
-      "evidence": "evidence/r2.8.96-attempt-1-1a0854d.json",
+      "implementation_sha": "70a98e618a5e161d0fd1e59a604b1387a96a8a2e",
+      "evidence": "evidence/r2.8.96-attempt-2-e741263.json",
       "accepted_attempt": null,
       "known_limits": [
         "No engine or UI callsite loads or renders Bases yet.",
         "C07 and C07.1 remain pending; visible unsupported-expression reporting is not implemented.",
         "The evaluator supports a bounded subset and does not claim full Bases compatibility.",
         "Exact JSON numeric ordering preserves integer precision above 2^53 and intentionally differs from legacy JavaScript Number rounding for those values.",
-        "Deterministic case-insensitive natural text ordering does not fully match ambient JavaScript locale collation for accents and non-ASCII strings; resolve or explicitly bound this before claiming full C07 parity."
+        "Deterministic case-insensitive natural text ordering does not fully match ambient JavaScript locale collation for accents and non-ASCII strings; resolve or explicitly bound this before claiming full C07 parity.",
+        "Native groupBy.direction remains an explicit bounded C07 limit/open decision; the legacy parser extracts the groupBy property and the legacy evaluator groups in first-seen JavaScript object order, so direction handling is not claimed.",
+        "Unknown bare identifiers are context-dependent property references; without rows or a linked fixture, they are not required to report as unsupported expressions.",
+        "Reporting date(today) as unsupported for empty or fully filtered inputs is a deliberate strengthening required by the linked fixture."
       ],
-      "push_status": "Attempt 1 on 1a0854d837f9d67432d6bafb35fb1405f8036c7d was not accepted because Rust CI failed. The correction code is committed in 053d85c and fixture/inventory updates in 0884a12; tracker evidence is committed separately. These commits are prepared locally for a fresh exact-SHA attempt. No local project validation has run."
+      "push_status": "Attempt 1 on 1a0854d837f9d67432d6bafb35fb1405f8036c7d and attempt 2 on e74126380bae4e20c8b292c7994d9610a5852831 were not accepted because Rust CI failed. Attempt 2 failed only Ubuntu rustfmt; the other six workflows, including the three-platform Obsidian round-trip, passed. Formatting correction 70a98e618a5e161d0fd1e59a604b1387a96a8a2e is committed locally and awaits a fresh exact-SHA CI attempt. No local project validation has run."
     }
   },
   "ci_preparation": {

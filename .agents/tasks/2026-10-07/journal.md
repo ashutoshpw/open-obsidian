@@ -4796,3 +4796,33 @@ strings; decision RM-12 records this boundary. The attempt is not accepted; C07
 and C07.1 remain pending. The commits are prepared locally and await an exact
 remote-base check and push for a new seven-workflow CI attempt. No local tests,
 builds, formatters, linters, validators, or application launches were run.
+
+## 2026-10-12 — R2.8.96 attempt 2 CI findings
+
+Attempt 2 ran on exact pushed SHA
+`e74126380bae4e20c8b292c7994d9610a5852831` and is not accepted. Six of seven
+required workflows passed: Rust migration inventory, quality, desktop build,
+plugin renderer, loaded-plugin workflows, and the pinned Obsidian 1.14.4
+round-trip. Rust CI failed only its Ubuntu formatting step. Workspace tests
+passed on Ubuntu, Windows, macOS, and Rust 1.95; macOS and Windows Rust jobs
+passed. Ubuntu rustfmt reported nine hunks in `crates/doc/src/bases.rs` at lines
+816, 1082, 2172, 2182, 2214, 2234, 2241, 2268, and 2286. Exact run/job IDs and
+all published artifact IDs, sizes, and archive digests are in
+[`evidence/r2.8.96-attempt-2-e741263.json`](evidence/r2.8.96-attempt-2-e741263.json).
+
+The three round-trip jobs passed on Linux, macOS, and Windows. Each report
+records the exact source SHA, unchanged non-workspace paths after reopen,
+preserved Canvas semantics and created-note bytes, and stable second-shutdown
+Canvas bytes. This is a regression gate; it does not establish Bases UI
+acceptance. C07 and C07.1 remain pending.
+
+Compatibility review records `groupBy.direction` as an explicit bounded C07
+limit/open decision because the legacy parser extracts the group property and
+does not apply a direction. Unknown bare identifiers remain context-dependent
+property references; no unsupported-expression requirement is inferred without
+rows or a linked fixture. The empty/fully filtered `date(today)` issue behavior
+is a deliberate strengthening required by its linked fixture.
+
+The nine formatter changes are committed locally as `70a98e6` and await a fresh
+exact-SHA CI attempt. No local tests, builds, formatters, linters, validators,
+or application launches were run.
