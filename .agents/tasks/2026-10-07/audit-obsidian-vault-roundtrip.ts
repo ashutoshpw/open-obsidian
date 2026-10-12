@@ -526,7 +526,20 @@ async function clickOpenVaultButtonLinux(windowId: string, applicationLogPath: s
 type X11WindowDescription = {window_id: string; title: string; window_class: string; geometry: string};
 
 function x11WindowInventory(): X11WindowDescription[] {
-  const output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "."], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  let output: string;
+  try {
+    output = execFileSync("xdotool", ["search", "--onlyvisible", "--name", "."], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      error.status === 1
+    ) {
+      return [];
+    }
+    throw error;
+  }
   return output.split(/\r?\n/).filter((windowId) => /^\d+$/.test(windowId)).map((windowId) => {
     const read = (args: string[]): string => {
       try {

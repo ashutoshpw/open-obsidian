@@ -4939,6 +4939,41 @@ Follow-up acceptance review identified missing selector interaction and
 compatibility path assertions; those are now covered, and the latest source
 review found no remaining acceptance gap or compile-level concern.
 
-No local validation was run. The focused commit and push are next, followed by
-the seven required GitHub Actions workflows on that exact SHA. No CI attempt
-is recorded yet; C07/C07.1 remain pending.
+No local validation was run. C07/C07.1 remain pending.
+
+## 2026-10-12 — R2.8.98 attempt 1 launched
+
+The focused UI slice was pushed to `origin/main` as exact source SHA
+`50a78e85cb4eff9a482fd3150335ef9d66a01503`. All seven required GitHub Actions
+workflows were triggered on that SHA. Inventory run `38216580855` passed;
+quality run `38216580909` was queued; desktop build `38216580854`, plugin
+renderer `38216580860`, loaded-plugin workflows `38216580968`, Rust CI
+`38216580946`, and Obsidian vault round-trip `38216580835` were in progress at
+capture. Run URLs and current status are in
+[`evidence/r2.8.98-attempt-1-50a78e8.json`](evidence/r2.8.98-attempt-1-50a78e8.json).
+No local project validation was run. C07/C07.1 remain pending.
+
+## 2026-10-12 — R2.8.98 attempt 1 completed, not accepted
+
+Attempt 1 completed on exact source SHA
+`50a78e85cb4eff9a482fd3150335ef9d66a01503`. Inventory, quality, desktop
+build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed on
+Rust 1.95, Ubuntu, Windows, and macOS; Ubuntu also failed formatting. The UI
+panel test exposed ambiguous path labels and platform-specific separators, the
+selector interaction failed to choose the second `.base` path, and many existing
+vault UI interactions were blocked while an automatically started Bases
+snapshot held the shared busy gate. The Obsidian round-trip passed on macOS;
+Windows timed out while waiting for the note-list refresh control after watcher
+refresh, with `bases_receiver=true`; Linux failed while polling an empty X11
+window inventory because `xdotool search --onlyvisible --name .` returned exit
+1. The 20 job conclusions and 12 artifact IDs, sizes, and archive SHA-256
+digests are recorded in
+[`evidence/r2.8.98-attempt-1-50a78e8.json`](evidence/r2.8.98-attempt-1-50a78e8.json).
+
+The correction makes a Bases snapshot user-initiated, adjusts UI assertions for
+multiple labels and native path display, and treats xdotool's no-window exit as
+an empty poll result while preserving other errors. A separate embedded Bases
+document test slice remains uncommitted and is excluded from this correction.
+No local tests, builds, formatters, linters, validators, or application launches
+were run. C07/C07.1 remain pending until all required workflows pass on a
+corrected implementation SHA.

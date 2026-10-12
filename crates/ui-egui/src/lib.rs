@@ -6,10 +6,10 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use markdown_math::{MathRendererCache, math_render_callback};
 use openobsidian_engine::{
     BaseFileEvaluation, BaseFileListing, CanvasEditError, CanvasNoteCreateResult, LinkKind,
-    LinkRenameAction, LinkResolutionStatus,
-    MAX_NOTE_SOURCE_PREVIEW_BYTES, MarkdownPreviewDisposition, MarkdownUnsupportedSyntax,
-    TransclusionBlockReason, VaultConflictAction, VaultConflictRead, VaultConflictResolution,
-    VaultError, VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
+    LinkRenameAction, LinkResolutionStatus, MAX_NOTE_SOURCE_PREVIEW_BYTES,
+    MarkdownPreviewDisposition, MarkdownUnsupportedSyntax, TransclusionBlockReason,
+    VaultConflictAction, VaultConflictRead, VaultConflictResolution, VaultError,
+    VaultHistoryCleanup, VaultHistoryKind, VaultHistoryPlan, VaultHistoryPolicy,
     VaultHistoryRecord, VaultInlineImage, VaultLinkResolution, VaultNoteEmbedDisposition,
     VaultNoteEmbedNode, VaultNoteEmbedReport, VaultRenamePreview, VaultRenameRecoveryReport,
     VaultRenameResult, VaultSession, VaultWatcher, VaultWriteRecoveryReport, VaultWriteRequest,
@@ -780,10 +780,7 @@ impl OpenObsidianApp {
         let (sender, receiver) = mpsc::channel();
         rayon::spawn(move || {
             let result = session.list_base_files().map_err(|error| {
-                format_bases_text(
-                    MAX_BASES_DISPLAY_FIELD_BYTES,
-                    format_args!("{error}"),
-                )
+                format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{error}"))
             });
             let _ = sender.send(BasesTaskMessage::Listing(result));
         });
@@ -802,10 +799,7 @@ impl OpenObsidianApp {
             let result = session
                 .evaluate_base_file_by_view_index(&relative_path, view_index)
                 .map_err(|error| {
-                    format_bases_text(
-                        MAX_BASES_DISPLAY_FIELD_BYTES,
-                        format_args!("{error}"),
-                    )
+                    format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{error}"))
                 });
             let _ = sender.send(BasesTaskMessage::Evaluation(result));
         });
@@ -892,21 +886,16 @@ impl OpenObsidianApp {
         if self.bases_listing.is_none()
             && self.bases_receiver.is_none()
             && self.bases_error.is_none()
-            && !other_vault_operation_busy
         {
-            self.start_bases_listing();
-        }
-        if self.bases_listing.is_none()
-            && self.bases_receiver.is_none()
-            && other_vault_operation_busy
-        {
-            ui.small("Waiting for current vault work to finish before reading Bases…");
+            ui.small("Use Refresh Bases files to read a bounded, stable vault snapshot.");
         }
 
-        let refresh_enabled =
-            self.bases_receiver.is_none() && !other_vault_operation_busy;
+        let refresh_enabled = self.bases_receiver.is_none() && !other_vault_operation_busy;
         if ui
-            .add_enabled(refresh_enabled, eframe::egui::Button::new("Refresh Bases files"))
+            .add_enabled(
+                refresh_enabled,
+                eframe::egui::Button::new("Refresh Bases files"),
+            )
             .clicked()
         {
             self.bases_selected_view = None;
@@ -1064,10 +1053,8 @@ impl OpenObsidianApp {
                     let _ = view_status.write_str(name);
                 }
                 None => {
-                    let _ = view_status.write_fmt(format_args!(
-                        "Unnamed view {}",
-                        selected_view_index + 1
-                    ));
+                    let _ = view_status
+                        .write_fmt(format_args!("Unnamed view {}", selected_view_index + 1));
                 }
             }
             ui.label(view_status.finish());
@@ -1079,7 +1066,8 @@ impl OpenObsidianApp {
                     "Results are partial because one or more notes could not be safely collected.",
                 );
             }
-            let source_hash_suffix = format!(" · source SHA-256 {}", evaluation.base_revision_sha256);
+            let source_hash_suffix =
+                format!(" · source SHA-256 {}", evaluation.base_revision_sha256);
             let mut base_status =
                 BoundedBasesText::new(MAX_BASES_DISPLAY_FIELD_BYTES, &source_hash_suffix);
             let _ = base_status.write_fmt(format_args!("Base: {path}"));
@@ -4202,14 +4190,8 @@ fn format_bases_text_with_suffix(
 }
 
 fn format_bases_issue(path: impl fmt::Display, message: &str) -> String {
-    let path = format_bases_text(
-        MAX_BASES_ISSUE_COMPONENT_BYTES,
-        format_args!("{path}"),
-    );
-    let message = format_bases_text(
-        MAX_BASES_ISSUE_COMPONENT_BYTES,
-        format_args!("{message}"),
-    );
+    let path = format_bases_text(MAX_BASES_ISSUE_COMPONENT_BYTES, format_args!("{path}"));
+    let message = format_bases_text(MAX_BASES_ISSUE_COMPONENT_BYTES, format_args!("{message}"));
     format_bases_text(
         MAX_BASES_DISPLAY_FIELD_BYTES,
         format_args!("{path}: {message}"),
@@ -4230,10 +4212,7 @@ fn show_base_row<'a, K, V>(
         .take(MAX_BASE_PROPERTIES_PER_ROW)
         .collect::<Vec<_>>();
     let omitted_properties = values.count();
-    let path = format_bases_text(
-        MAX_BASES_DISPLAY_FIELD_BYTES,
-        format_args!("{path}"),
-    );
+    let path = format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{path}"));
     let property_omission = if omitted_properties > 0 {
         format!(
             " · {omitted_properties} additional properties omitted (per-row UI limit: {MAX_BASE_PROPERTIES_PER_ROW})."
@@ -4257,19 +4236,13 @@ fn show_base_row<'a, K, V>(
             if row.is_truncated() {
                 break;
             }
-            let key = format_bases_text(
-                MAX_BASES_DISPLAY_FIELD_BYTES,
-                format_args!("{key}"),
-            );
+            let key = format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{key}"));
             let _ = row.write_str(&key);
             let _ = row.write_str(": ");
             if row.is_truncated() {
                 break;
             }
-            let value = format_bases_text(
-                MAX_BASES_DISPLAY_FIELD_BYTES,
-                format_args!("{value}"),
-            );
+            let value = format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{value}"));
             let _ = row.write_str(&value);
         }
     }
@@ -4913,11 +4886,8 @@ mod tests {
         let source_prefix = &truncated[..truncated.len() - BASES_TRUNCATION_MARKER.len()];
         assert_eq!(source_prefix.len() % "🧪".len(), 0);
 
-        let selected = format_bases_text_with_suffix(
-            64,
-            " · view 9",
-            format_args!("{multibyte_source}"),
-        );
+        let selected =
+            format_bases_text_with_suffix(64, " · view 9", format_args!("{multibyte_source}"));
         assert!(selected.len() <= 64);
         assert!(selected.ends_with(" · view 9"));
         assert!(selected.contains(BASES_TRUNCATION_MARKER));
@@ -4949,10 +4919,7 @@ mod tests {
     #[test]
     fn bases_bounded_writer_stops_display_after_overflow() {
         let later_chunks = AtomicUsize::new(0);
-        let rendered = format_bases_text(
-            32,
-            format_args!("{}", CountingDisplay(&later_chunks)),
-        );
+        let rendered = format_bases_text(32, format_args!("{}", CountingDisplay(&later_chunks)));
 
         assert!(rendered.len() <= 32);
         assert!(rendered.ends_with(BASES_TRUNCATION_MARKER));
@@ -5119,8 +5086,7 @@ mod tests {
             .as_str()
             .expect("fixture must provide Bases source");
         let base_source = format!("{base_source}  - type: list\n    name: All tasks\n");
-        std::fs::write(base_file_path, base_source)
-        .expect("write Bases fixture source");
+        std::fs::write(base_file_path, base_source).expect("write Bases fixture source");
 
         for note in fixture["notes"]
             .as_array()
@@ -5151,8 +5117,8 @@ mod tests {
         std::fs::write(&invalid_note_path, [0xff])
             .expect("write invalid UTF-8 note for collection issue coverage");
 
-        let session = VaultSession::open(vault_path, app_data_path)
-            .expect("open Bases fixture vault");
+        let session =
+            VaultSession::open(vault_path, app_data_path).expect("open Bases fixture vault");
         OpenObsidianApp {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
@@ -6338,6 +6304,12 @@ mod tests {
         let app_data_before = existing_vault_tree_snapshot(&app_data_path);
 
         harness.step();
+        assert!(
+            harness.state().bases_receiver.is_none(),
+            "opening a vault should not start an expensive Bases snapshot implicitly"
+        );
+        harness.get_by_label("Refresh Bases files").click();
+        harness.step();
         wait_for_bases_evaluation(&mut harness);
 
         let result = harness
@@ -6354,30 +6326,40 @@ mod tests {
                 .collect::<Vec<_>>(),
             ["Notes/Ada.md", "Notes/Cora.md"]
         );
-        assert!(result
-            .evaluation
-            .rows
-            .iter()
-            .all(|row| !row.values.contains_key("unsupportedDate")));
+        assert!(
+            result
+                .evaluation
+                .rows
+                .iter()
+                .all(|row| !row.values.contains_key("unsupportedDate"))
+        );
         assert_eq!(
-            result.snapshot_before_sha256,
-            result.snapshot_after_sha256,
+            result.snapshot_before_sha256, result.snapshot_after_sha256,
             "the panel should display an evaluation bound to one stable snapshot"
         );
-        assert!(result.collection_issues.iter().any(|issue| {
-            issue.relative_path == PathBuf::from("Notes/Unreadable.md")
-        }));
+        assert!(
+            result
+                .collection_issues
+                .iter()
+                .any(|issue| { issue.relative_path == PathBuf::from("Notes/Unreadable.md") })
+        );
 
         harness.get_by_label("Bases");
         harness.get_by_label("Base file");
         harness.get_by_label("Open tasks · view 1 · Table · 2 matching note(s) · read-only");
-        harness.get_by_label("Boards/Tasks.base: Unsupported Bases formula: date(today)");
+        let displayed_base_path = Path::new("Boards/Tasks.base").display().to_string();
+        harness.get_by_label(&format!(
+            "{displayed_base_path}: Unsupported Bases formula: date(today)"
+        ));
         harness.get_by_label("Expression: date(today)");
         harness.get_by_label("Group: red");
-        harness.get_by_label("Notes/Ada.md");
-        harness.get_by_label("Notes/Cora.md");
+        assert!(harness.query_all_by_label("Notes/Ada.md").next().is_some());
+        assert!(harness.query_all_by_label("Notes/Cora.md").next().is_some());
+        let unreadable_note_path = Path::new("Notes/Unreadable.md").display().to_string();
         harness.get_by_label(
-            "Notes/Unreadable.md: Markdown note contains invalid UTF-8 in its bounded source prefix",
+            &format!(
+                "{unreadable_note_path}: Markdown note contains invalid UTF-8 in its bounded source prefix"
+            ),
         );
         harness.get_by_label("Vault snapshot SHA-256");
         assert_eq!(existing_vault_tree_snapshot(&vault_path), vault_before);
@@ -6427,6 +6409,9 @@ mod tests {
         };
         let mut harness = Harness::new_ui_state(|ui, app| app.show_ui(ui), app);
         harness.step();
+        assert!(harness.state().bases_receiver.is_none());
+        harness.get_by_label("Refresh Bases files").click();
+        harness.step();
         wait_for_bases_evaluation(&mut harness);
         assert_eq!(
             harness.state().bases_selected_path.as_deref(),
@@ -6436,7 +6421,9 @@ mod tests {
 
         harness.get_by_label("Base file").click();
         harness.step();
-        harness.get_by_label("Boards/Tasks.base").click();
+        harness
+            .get_by_label(&Path::new("Boards/Tasks.base").display().to_string())
+            .click();
         harness.step();
         wait_for_bases_evaluation(&mut harness);
         let selected_path = Path::new("Boards/Tasks.base");
@@ -6455,7 +6442,10 @@ mod tests {
             selected_path,
             "the evaluation must use the exact selected .base path"
         );
-        harness.get_by_label("Boards/Tasks.base: Unsupported Bases formula: date(today)");
+        let displayed_base_path = Path::new("Boards/Tasks.base").display().to_string();
+        harness.get_by_label(&format!(
+            "{displayed_base_path}: Unsupported Bases formula: date(today)"
+        ));
         harness.get_by_label("Expression: date(today)");
 
         for (label, expected_index, expected_name, expected_limit) in [
