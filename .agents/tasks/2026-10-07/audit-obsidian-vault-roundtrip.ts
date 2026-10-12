@@ -5103,9 +5103,13 @@ async function locateCanvasTextInput(
   const tsvCandidates = [runTesseractTsv(ocrImagePath, "6"), runTesseractTsv(ocrImagePath, "11")];
   let labelBoundsOcr: OcrWordBounds | null = null;
   for (const tsv of tsvCandidates) {
-    // The instruction above the form repeats these labels. Select the last visible match,
-    // which is the actual field label in the expanded form.
-    labelBoundsOcr = findOcrPhraseBounds(tsv, controlName, 0, true);
+    // The instruction above the form repeats these labels. Bound the search below its
+    // opening words so OCR cannot mistake the instruction for a field label.
+    const instructionBounds = findOcrPhraseBounds(tsv, "Enter a", 0)
+      ?? findOcrPhraseBounds(tsv, "Preview and confirm", 0);
+    if (!instructionBounds) continue;
+    const formRowMinimumTop = instructionBounds.top + instructionBounds.height;
+    labelBoundsOcr = findOcrPhraseBounds(tsv, controlName, formRowMinimumTop, true);
     if (labelBoundsOcr) break;
   }
   if (!labelBoundsOcr) {
@@ -5257,32 +5261,54 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
   }
 
   const verificationDeadline = Date.now() + 5_000;
-  let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
+  let clipboardReadback = "";
+  let clipboardReadbackError = "";
   let verificationAttempts = 0;
-  let readback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
   while (Date.now() < verificationDeadline) {
     verificationAttempts += 1;
-    verification = await captureOpenObsidianScreenshot(
-      windowId,
-      child,
-      `openobsidian-canvas-input-${fileSafeName}-readback-${verificationAttempts}`,
-    );
-    readback = await readCanvasInputScreenshotValue(verification, controlName, value);
-    if (readback.exact) break;
+    xdotool("key", "--clearmodifiers", "ctrl+a");
+    xdotool("key", "--clearmodifiers", "ctrl+c");
+    await delay(100);
+    try {
+      clipboardReadback = execFileSync("xclip", ["-selection", "clipboard", "-o"], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 2_000,
+      });
+      clipboardReadbackError = "";
+    } catch (error) {
+      const failure = error as NodeJS.ErrnoException;
+      clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
+    }
+    if (clipboardReadback === value) break;
     await delay(200);
   }
-  if (!verification || !readback?.exact) {
-    throw new Error(`Linux field-crop OCR did not confirm the exact ${controlName} value: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(readback?.text ?? "")}; click=(${clickX},${clickY}); attempts=${verificationAttempts}; crop=${readback ? relative(reportDirectory, readback.cropPath) : "unavailable"}; screenshot=${verification ? relative(reportDirectory, verification.windowPngPath) : "unavailable"}`);
+  xdotool("key", "--clearmodifiers", "Right");
+  const verification = await captureOpenObsidianScreenshot(
+    windowId,
+    child,
+    `openobsidian-canvas-input-${fileSafeName}-readback`,
+  );
+  let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
+  let visualReadbackError = "";
+  try {
+    visualReadback = await readCanvasInputScreenshotValue(verification, controlName, value);
+  } catch (error) {
+    visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
+  }
+  if (clipboardReadback !== value) {
+    throw new Error(`Linux clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=(${clickX},${clickY}); attempts=${verificationAttempts}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.windowPngPath)}`);
   }
 
   return JSON.stringify({
     name: controlName,
     action: "focused the OCR-positioned field, then Ctrl+A and keyboard entry",
     exact_readback: true,
-    readback_source: "magnified crop of the original screenshot",
-    readback_ocr: readback.text,
+    readback_source: "X11 clipboard after selecting and copying the focused field",
+    readback_ocr: visualReadback?.text ?? "",
+    visual_ocr_exact: visualReadback?.exact ?? false,
     expected_length: value.length,
-    readback_length: value.length,
+    readback_length: clipboardReadback.length,
     click_x: clickX,
     click_y: clickY,
     position_source: "current visible label bounds and form layout",
@@ -5290,8 +5316,8 @@ async function replaceLinuxOpenObsidianTextInputWithKeyboard(
     readback_attempts: verificationAttempts,
     before_screenshot: relative(reportDirectory, before.windowPngPath),
     readback_screenshot: relative(reportDirectory, verification.windowPngPath),
-    readback_crop: relative(reportDirectory, readback.cropPath),
-    readback_crop_bounds: readback.layout.cropBounds,
+    readback_crop: visualReadback ? relative(reportDirectory, visualReadback.cropPath) : null,
+    readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
   });
 }
 
@@ -5317,43 +5343,56 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       keystroke "a" using {command down}
       delay 0.1
       keystroke replacement
+      delay 0.1
+      keystroke "a" using {command down}
+      keystroke "c" using {command down}
+      delay 0.1
+      key code 124
     end tell
   end run`;
   execFileSync("osascript", ["-e", typeScript, String(child.pid ?? -1), value], {stdio: "ignore"});
-
-  const verificationDeadline = Date.now() + 5_000;
-  let verification: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
-  let readback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
-  let verificationAttempts = 0;
-  while (Date.now() < verificationDeadline) {
-    verificationAttempts += 1;
-    verification = await captureOpenObsidianScreenshot(
-      windowId,
-      child,
-      `openobsidian-canvas-input-${fileSafeName}-readback-${verificationAttempts}`,
-    );
-    readback = await readCanvasInputScreenshotValue(verification, controlName, value);
-    if (readback.exact) break;
-    await delay(200);
+  let clipboardReadback = "";
+  let clipboardReadbackError = "";
+  try {
+    clipboardReadback = execFileSync("pbpaste", [], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 2_000,
+    });
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException;
+    clipboardReadbackError = `code=${failure.code ?? "unknown"}; syscall=${failure.syscall ?? "unknown"}`;
   }
-  if (!verification || !readback?.exact) {
-    throw new Error(`macOS field-crop OCR did not confirm the exact ${controlName} value after keyboard entry: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(readback?.text ?? "")}; click=${click}; attempts=${verificationAttempts}; crop=${readback ? relative(reportDirectory, readback.cropPath) : "unavailable"}; screenshot=${verification ? relative(reportDirectory, verification.pngPath) : "unavailable"}`);
+  const verification = await captureOpenObsidianScreenshot(
+    windowId,
+    child,
+    `openobsidian-canvas-input-${fileSafeName}-readback`,
+  );
+  let visualReadback: Awaited<ReturnType<typeof readCanvasInputScreenshotValue>> | undefined;
+  let visualReadbackError = "";
+  try {
+    visualReadback = await readCanvasInputScreenshotValue(verification, controlName, value);
+  } catch (error) {
+    visualReadbackError = error instanceof Error ? error.message : "unknown screenshot OCR error";
+  }
+  if (clipboardReadback !== value) {
+    throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   return JSON.stringify({
     name: controlName,
     action: "focused the OCR-positioned field, then Cmd+A and keyboard entry",
     exact_readback: true,
-    readback_source: "magnified crop of the original desktop screenshot",
-    readback_ocr: readback.text,
+    readback_source: "macOS clipboard after selecting and copying the focused field",
+    readback_ocr: visualReadback?.text ?? "",
+    visual_ocr_exact: visualReadback?.exact ?? false,
     expected_length: value.length,
-    readback_length: value.length,
+    readback_length: clipboardReadback.length,
     position_source: "current visible label bounds and form layout",
     click,
-    readback_attempts: verificationAttempts,
     before_screenshot: relative(reportDirectory, before.pngPath),
     readback_screenshot: relative(reportDirectory, verification.pngPath),
-    readback_crop: relative(reportDirectory, readback.cropPath),
-    readback_crop_bounds: readback.layout.cropBounds,
+    readback_crop: visualReadback ? relative(reportDirectory, visualReadback.cropPath) : null,
+    readback_crop_bounds: visualReadback?.layout.cropBounds ?? null,
   });
 }
 
@@ -5810,7 +5849,7 @@ async function runOpenObsidianCanvasNoteCreation(
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-review", noteReport),
       (capture) => capture.ocrText.includes(canvasMarker)
         && capture.ocrText.includes(canvasNotePath)
-        && capture.ocrText.includes("Confirm and create note"),
+        && capture.ocrText.includes("from this Canvas text card"),
       30_000,
     );
     screenshots.review = relative(reportDirectory, review.windowPngPath);
