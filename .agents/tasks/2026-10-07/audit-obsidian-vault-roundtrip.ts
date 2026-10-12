@@ -5559,15 +5559,23 @@ function normalizeVisibleInputOcr(value: string): string {
 
 function canvasInputOcrMatches(text: string, controlName: string, expectedValue: string): boolean {
   const expected = normalizeVisibleInputOcr(expectedValue);
+  const expectsMarkdownExtension = controlName === "New Markdown path" && /\.md$/i.test(expectedValue);
+  const expectedWithoutMarkdownDot = expectsMarkdownExtension
+    ? normalizeVisibleInputOcr(expectedValue.replace(/\.md$/i, "md"))
+    : "";
+  const expectedWithObservedFinalGlyphMisread = expectsMarkdownExtension
+    ? expectedWithoutMarkdownDot.replace(/md$/i, "mq")
+    : "";
   return text.split(/\r?\n/).some((line) => {
     const observed = normalizeVisibleInputOcr(line.replace(/^[\[\](){}|]+/, ""));
     if (observed === expected) return true;
-    // Tesseract often drops the dot immediately before a Markdown extension in the
-    // enlarged macOS field crop. Preserve the directory separator and accept only
-    // this single known punctuation loss, with clipboard readback checked separately.
-    return controlName === "New Markdown path"
-      && /\.md$/i.test(expectedValue)
-      && observed === normalizeVisibleInputOcr(expectedValue.replace(/\.md$/i, "md"));
+    if (!expectsMarkdownExtension) return false;
+    // On macOS the enlarged field crop can drop the dot and read the final d as q.
+    // Keep the expected directory/name intact and accept only these observed suffix
+    // variants; the caller separately requires an exact clipboard readback.
+    const observedWithoutSpaceBeforeMisreadSuffix = observed.replace(/\s+mq$/i, "mq");
+    return observed === expectedWithoutMarkdownDot
+      || observedWithoutSpaceBeforeMisreadSuffix === expectedWithObservedFinalGlyphMisread;
   });
 }
 
@@ -6213,41 +6221,37 @@ sys.exit(1)
               } catch {
                 throw "OpenObsidian keyboard fallback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
               }
-              $keyboardChunkSize = 8
-              for ($offset = 0; $offset -lt $replacement.Length; $offset += $keyboardChunkSize) {
-                $chunkLength = [Math]::Min($keyboardChunkSize, $replacement.Length - $offset)
-                $chunk = $replacement.Substring($offset, $chunkLength)
+              for ($offset = 0; $offset -lt $replacement.Length; $offset++) {
+                $character = [string]$replacement[$offset]
                 $sendKeys = [System.Text.StringBuilder]::new()
-                foreach ($character in $chunk.ToCharArray()) {
-                  switch -CaseSensitive ([string]$character) {
-                    "+" { $null = $sendKeys.Append("{+}") }
-                    "^" { $null = $sendKeys.Append("{^}") }
-                    "%" { $null = $sendKeys.Append("{%}") }
-                    "~" { $null = $sendKeys.Append("{~}") }
-                    "(" { $null = $sendKeys.Append("{(}") }
-                    ")" { $null = $sendKeys.Append("{)}") }
-                    "[" { $null = $sendKeys.Append("{[}") }
-                    "]" { $null = $sendKeys.Append("{]}") }
-                    "{" { $null = $sendKeys.Append("{{}") }
-                    "}" { $null = $sendKeys.Append("{}}") }
-                    default { $null = $sendKeys.Append($character) }
-                  }
+                switch -CaseSensitive ($character) {
+                  "+" { $null = $sendKeys.Append("{+}") }
+                  "^" { $null = $sendKeys.Append("{^}") }
+                  "%" { $null = $sendKeys.Append("{%}") }
+                  "~" { $null = $sendKeys.Append("{~}") }
+                  "(" { $null = $sendKeys.Append("{(}") }
+                  ")" { $null = $sendKeys.Append("{)}") }
+                  "[" { $null = $sendKeys.Append("{[}") }
+                  "]" { $null = $sendKeys.Append("{]}") }
+                  "{" { $null = $sendKeys.Append("{{}") }
+                  "}" { $null = $sendKeys.Append("{}}") }
+                  default { $null = $sendKeys.Append($character) }
                 }
                 try {
                   [System.Windows.Forms.SendKeys]::SendWait($sendKeys.ToString())
                 } catch {
                   throw "OpenObsidian keyboard fallback failed for '$targetName' at offset $offset (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
                 }
-                $expectedPrefix = $replacement.Substring(0, $offset + $chunkLength)
-                $prefixDeadline = [DateTime]::UtcNow.AddSeconds(5)
+                $expectedPrefix = $replacement.Substring(0, $offset + 1)
+                $prefixDeadline = [DateTime]::UtcNow.AddSeconds(2)
                 do {
-                  Start-Sleep -Milliseconds 100
+                  Start-Sleep -Milliseconds 50
                   $readbackPolls++
                   try { $actual = [string]$pattern.Current.Value } catch { $actual = "" }
                   if ($actual -ceq $expectedPrefix) { break }
                 } while ([DateTime]::UtcNow -lt $prefixDeadline)
                 if ($actual -cne $expectedPrefix) {
-                  throw "OpenObsidian exact readback failed for '$targetName' after keyboard chunk (expected_length=$($replacement.Length); expected_prefix_length=$($expectedPrefix.Length); actual_length=$($actual.Length); chunk_offset=$offset; keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
+                  throw "OpenObsidian exact readback failed for '$targetName' after keyboard character (expected_length=$($replacement.Length); expected_prefix_length=$($expectedPrefix.Length); actual_length=$($actual.Length); character_offset=$offset; keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
                 }
               }
               if ($actual -cne $replacement) {
