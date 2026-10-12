@@ -816,10 +816,7 @@ pub fn evaluate_base(
     if let Some(field) = &view.group_by {
         let field = normalize_field(field);
         for row in &rows {
-            let value = row
-                .values
-                .get(field)
-                .filter(|value| !value.is_null());
+            let value = row.values.get(field).filter(|value| !value.is_null());
             let key = value.map_or_else(String::new, js_string);
             let index = match group_indices.get(&key) {
                 Some(index) => *index,
@@ -1082,7 +1079,12 @@ fn compare_numbers(left: &Number, right: &Number) -> std::cmp::Ordering {
             .map(i128::from)
             .or_else(|| number.as_u64().map(i128::from))
     };
-    match (integer_value(left), integer_value(right), left.as_f64(), right.as_f64()) {
+    match (
+        integer_value(left),
+        integer_value(right),
+        left.as_f64(),
+        right.as_f64(),
+    ) {
         (Some(left), Some(right), _, _) => left.cmp(&right),
         (Some(integer), None, _, Some(float)) => compare_integer_to_float(integer, float),
         (None, Some(integer), Some(float), _) => compare_integer_to_float(integer, float).reverse(),
@@ -2172,7 +2174,10 @@ mod tests {
         let rows = vec![
             BaseRow {
                 path: "integer.md".to_owned(),
-                properties: serde_json::json!({"score": integer}).as_object().unwrap().clone(),
+                properties: serde_json::json!({"score": integer})
+                    .as_object()
+                    .unwrap()
+                    .clone(),
             },
             BaseRow {
                 path: "float.md".to_owned(),
@@ -2182,8 +2187,8 @@ mod tests {
                     .clone(),
             },
         ];
-        let result = evaluate_base(&document, "Exact numbers", &rows)
-            .expect("numeric view must evaluate");
+        let result =
+            evaluate_base(&document, "Exact numbers", &rows).expect("numeric view must evaluate");
         assert_eq!(
             result
                 .rows
@@ -2214,7 +2219,12 @@ mod tests {
                 .collect::<Vec<_>>(),
             ["a.md", "z.md"]
         );
-        assert!(result.rows.iter().all(|row| row.values.get("bad").is_none()));
+        assert!(
+            result
+                .rows
+                .iter()
+                .all(|row| row.values.get("bad").is_none())
+        );
         assert_eq!(result.groups.len(), 1);
         assert_eq!(result.groups[0].key, "");
         assert_eq!(result.groups[0].rows.len(), 2);
@@ -2234,15 +2244,18 @@ mod tests {
         let rows = vec![
             BaseRow {
                 path: "null.md".to_owned(),
-                properties: serde_json::json!({"optional": null}).as_object().unwrap().clone(),
+                properties: serde_json::json!({"optional": null})
+                    .as_object()
+                    .unwrap()
+                    .clone(),
             },
             BaseRow {
                 path: "missing.md".to_owned(),
                 properties: serde_json::Map::new(),
             },
         ];
-        let result = evaluate_base(&document, "Missing first", &rows)
-            .expect("null sort view must evaluate");
+        let result =
+            evaluate_base(&document, "Missing first", &rows).expect("null sort view must evaluate");
         assert_eq!(
             result
                 .rows
@@ -2268,8 +2281,8 @@ mod tests {
                 properties: serde_json::json!({"rank": 1}).as_object().unwrap().clone(),
             },
         ];
-        let result = evaluate_base(&document, "Limited", &rows)
-            .expect("limited view must evaluate");
+        let result =
+            evaluate_base(&document, "Limited", &rows).expect("limited view must evaluate");
         assert_eq!(result.rows.len(), 1);
         assert_eq!(result.rows[0].path, "a10.md");
     }
@@ -2286,8 +2299,7 @@ mod tests {
                 .clone(),
         };
         let rows = vec![row("ada.md", "Ada", 2), row("zulu.md", "Zulu", 1)];
-        let result = evaluate_base(&document, "Grouped", &rows)
-            .expect("group view must evaluate");
+        let result = evaluate_base(&document, "Grouped", &rows).expect("group view must evaluate");
         assert_eq!(
             result
                 .groups
