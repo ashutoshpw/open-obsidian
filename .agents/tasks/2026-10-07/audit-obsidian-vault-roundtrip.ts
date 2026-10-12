@@ -2568,6 +2568,45 @@ function findOcrPhraseBounds(tsv: string, phrase: string, minimumTop = 0, lastMa
   return selected;
 }
 
+function findOcrJoinedPhraseBounds(tsv: string, phrase: string, minimumTop = 0, maxEdits = 1): OcrWordBounds | null {
+  const expected = phrase.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!expected) return null;
+
+  const wordsByLine = new Map<string, OcrWordBounds[]>();
+  for (const line of tsv.split(/\r?\n/).slice(1)) {
+    const columns = line.split("\t");
+    if (columns[0] !== "5" || columns.length < 12) continue;
+    const text = (columns[11] ?? "").trim();
+    if (!text) continue;
+    const [left, top, width, height] = columns.slice(6, 10).map(Number);
+    if (![left, top, width, height].every(Number.isFinite)) continue;
+    const lineId = columns.slice(1, 5).join(":");
+    const words = wordsByLine.get(lineId) ?? [];
+    words.push({text, left, top, width, height});
+    wordsByLine.set(lineId, words);
+  }
+
+  for (const words of wordsByLine.values()) {
+    for (let start = 0; start < words.length; start += 1) {
+      let normalized = "";
+      for (let end = start; end < words.length; end += 1) {
+        normalized += words[end]!.text.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (normalized.length > expected.length + maxEdits) break;
+        if (!editDistanceWithinLimit(normalized, expected, maxEdits)) continue;
+
+        const match = words.slice(start, end + 1);
+        const left = Math.min(...match.map((word) => word.left));
+        const top = Math.min(...match.map((word) => word.top));
+        if (top < minimumTop) continue;
+        const right = Math.max(...match.map((word) => word.left + word.width));
+        const bottom = Math.max(...match.map((word) => word.top + word.height));
+        return {text: match.map((word) => word.text).join(" "), left, top, width: right - left, height: bottom - top};
+      }
+    }
+  }
+  return null;
+}
+
 async function pngDimensions(path: string): Promise<{width: number; height: number}> {
   const bytes = await readFile(path);
   if (bytes.length < 24 || bytes.toString("ascii", 1, 4) !== "PNG") throw new Error(`Could not read PNG dimensions from ${path}`);
@@ -5518,6 +5557,20 @@ function normalizeVisibleInputOcr(value: string): string {
     .trim();
 }
 
+function canvasInputOcrMatches(text: string, controlName: string, expectedValue: string): boolean {
+  const expected = normalizeVisibleInputOcr(expectedValue);
+  return text.split(/\r?\n/).some((line) => {
+    const observed = normalizeVisibleInputOcr(line.replace(/^[\[\](){}|]+/, ""));
+    if (observed === expected) return true;
+    // Tesseract often drops the dot immediately before a Markdown extension in the
+    // enlarged macOS field crop. Preserve the directory separator and accept only
+    // this single known punctuation loss, with clipboard readback checked separately.
+    return controlName === "New Markdown path"
+      && /\.md$/i.test(expectedValue)
+      && observed === normalizeVisibleInputOcr(expectedValue.replace(/\.md$/i, "md"));
+  });
+}
+
 type CanvasInputFieldLayout = {
   imagePath: string;
   ocrImagePath: string;
@@ -5598,6 +5651,7 @@ async function locateCanvasTextInput(
     const formRowMinimumTop = instructionBounds.top + instructionBounds.height;
     for (const labelPhrase of labelPhrases) {
       labelBoundsOcr = findOcrPhraseBounds(tsv, labelPhrase, formRowMinimumTop, true);
+      labelBoundsOcr ??= findOcrJoinedPhraseBounds(tsv, labelPhrase, formRowMinimumTop, 1);
       if (labelBoundsOcr) break;
     }
     if (labelBoundsOcr) break;
@@ -5666,7 +5720,7 @@ async function readCanvasInputScreenshotValue(
     cropPath,
   ], {stdio: "ignore"});
   const text = runTesseractOcr(cropPath, ["7", "6"]);
-  const exact = text.split(/\r?\n/).some((line) => normalizeVisibleInputOcr(line) === normalizeVisibleInputOcr(expectedValue));
+  const exact = canvasInputOcrMatches(text, controlName, expectedValue);
   return {exact, text, cropPath, layout};
 }
 
@@ -5839,14 +5893,68 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   value: string,
   logPath = join(reportDirectory, "openobsidian-canvas-note-create.log"),
 ): Promise<string> {
-  await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
   const fileSafeName = controlName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
-  const layout = await locateCanvasTextInput(before, controlName);
-  const click = await clickMacOSDesktopFraction(
-    layout.fieldCenter.x / layout.imageDimensions.width,
-    layout.fieldCenter.y / layout.imageDimensions.height,
-  );
+  const maximumPositionAttempts = controlName === "New Markdown path" ? 3 : 1;
+  let before: Awaited<ReturnType<typeof captureOpenObsidianScreenshot>> | undefined;
+  let layout: CanvasInputFieldLayout | undefined;
+  let click = "";
+  let lastPositionFailure = "no field-position attempt completed";
+  if (controlName === "New Markdown path") {
+    const probeScript = `on run argv
+      set processId to (item 1 of argv) as integer
+      tell application "System Events"
+        set targetProcess to first process whose unix id is processId
+        set frontmost of targetProcess to true
+        keystroke "a" using {command down}
+        delay 0.1
+        keystroke "c" using {command down}
+        delay 0.1
+      end tell
+    end run`;
+    for (let attempt = 1; attempt <= maximumPositionAttempts; attempt += 1) {
+      await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+      const refreshBeforeCapture = await readOpenObsidianRefreshDiagnostics(logPath);
+      const attemptBefore = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
+      const attemptLayout = await locateCanvasTextInput(attemptBefore, controlName);
+      const refreshBeforeClick = await readOpenObsidianRefreshDiagnostics(logPath);
+      if (openObsidianRefreshActivityChanged(refreshBeforeCapture, refreshBeforeClick)
+        || (refreshBeforeClick.receiverStates.at(-1)?.busy ?? false)) {
+        lastPositionFailure = `vault refresh changed the form layout before positioning attempt ${attempt}`;
+        continue;
+      }
+      const attemptClick = await clickMacOSDesktopFraction(
+        attemptLayout.fieldCenter.x / attemptLayout.imageDimensions.width,
+        attemptLayout.fieldCenter.y / attemptLayout.imageDimensions.height,
+      );
+      execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
+      execFileSync("osascript", ["-e", probeScript, String(child.pid ?? -1)], {stdio: "ignore"});
+      const initialFieldValue = execFileSync("pbpaste", [], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 2_000,
+      });
+      if (initialFieldValue !== "") {
+        lastPositionFailure = `clicked field was not blank (initial_readback_length=${initialFieldValue.length}); click=${attemptClick}; screenshot=${relative(reportDirectory, attemptBefore.pngPath)}`;
+        continue;
+      }
+      before = attemptBefore;
+      layout = attemptLayout;
+      click = attemptClick;
+      break;
+    }
+    if (!before || !layout) {
+      throw new Error(`macOS could not establish the blank New Markdown path field before typing after ${maximumPositionAttempts} fresh-position attempts: ${lastPositionFailure}`);
+    }
+  } else {
+    await waitForOpenObsidianRefreshIdle(0, 0, false, logPath);
+    before = await captureOpenObsidianScreenshot(windowId, child, `openobsidian-canvas-input-${fileSafeName}-before`);
+    layout = await locateCanvasTextInput(before, controlName);
+    click = await clickMacOSDesktopFraction(
+      layout.fieldCenter.x / layout.imageDimensions.width,
+      layout.fieldCenter.y / layout.imageDimensions.height,
+    );
+  }
+  if (!before || !layout) throw new Error(`Could not position the macOS ${controlName} input`);
   const typeScript = `on run argv
     set processId to (item 1 of argv) as integer
     set replacement to item 2 of argv
@@ -5863,6 +5971,7 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
       key code 124
     end tell
   end run`;
+  execFileSync("pbcopy", [], {input: "", stdio: ["pipe", "ignore", "ignore"]});
   execFileSync("osascript", ["-e", typeScript, String(child.pid ?? -1), value], {stdio: "ignore"});
   let clipboardReadback = "";
   let clipboardReadbackError = "";
@@ -5890,6 +5999,9 @@ async function replaceMacOSOpenObsidianTextInputWithKeyboard(
   }
   if (clipboardReadback !== value) {
     throw new Error(`macOS clipboard readback did not confirm the exact ${controlName} value: expected_length=${value.length}; actual_length=${clipboardReadback.length}; clipboard_error=${clipboardReadbackError || "none"}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
+  }
+  if (controlName === "New Markdown path" && !visualReadback?.exact) {
+    throw new Error(`macOS New Markdown path field crop did not visually confirm the exact destination after clipboard readback: expected=${JSON.stringify(value)}; crop_ocr=${JSON.stringify(visualReadback?.text ?? "")}; visual_readback_error=${visualReadbackError || "none"}; click=${click}; crop=${visualReadback ? relative(reportDirectory, visualReadback.cropPath) : "unavailable"}; screenshot=${relative(reportDirectory, verification.pngPath)}`);
   }
   return JSON.stringify({
     name: controlName,
@@ -6098,8 +6210,15 @@ sys.exit(1)
                 $focusSet = $true
                 Start-Sleep -Milliseconds 120
                 [System.Windows.Forms.SendKeys]::SendWait("^a")
+              } catch {
+                throw "OpenObsidian keyboard fallback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
+              }
+              $keyboardChunkSize = 8
+              for ($offset = 0; $offset -lt $replacement.Length; $offset += $keyboardChunkSize) {
+                $chunkLength = [Math]::Min($keyboardChunkSize, $replacement.Length - $offset)
+                $chunk = $replacement.Substring($offset, $chunkLength)
                 $sendKeys = [System.Text.StringBuilder]::new()
-                foreach ($character in $replacement.ToCharArray()) {
+                foreach ($character in $chunk.ToCharArray()) {
                   switch -CaseSensitive ([string]$character) {
                     "+" { $null = $sendKeys.Append("{+}") }
                     "^" { $null = $sendKeys.Append("{^}") }
@@ -6114,17 +6233,23 @@ sys.exit(1)
                     default { $null = $sendKeys.Append($character) }
                   }
                 }
-                [System.Windows.Forms.SendKeys]::SendWait($sendKeys.ToString())
-              } catch {
-                throw "OpenObsidian keyboard fallback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
+                try {
+                  [System.Windows.Forms.SendKeys]::SendWait($sendKeys.ToString())
+                } catch {
+                  throw "OpenObsidian keyboard fallback failed for '$targetName' at offset $offset (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
+                }
+                $expectedPrefix = $replacement.Substring(0, $offset + $chunkLength)
+                $prefixDeadline = [DateTime]::UtcNow.AddSeconds(5)
+                do {
+                  Start-Sleep -Milliseconds 100
+                  $readbackPolls++
+                  try { $actual = [string]$pattern.Current.Value } catch { $actual = "" }
+                  if ($actual -ceq $expectedPrefix) { break }
+                } while ([DateTime]::UtcNow -lt $prefixDeadline)
+                if ($actual -cne $expectedPrefix) {
+                  throw "OpenObsidian exact readback failed for '$targetName' after keyboard chunk (expected_length=$($replacement.Length); expected_prefix_length=$($expectedPrefix.Length); actual_length=$($actual.Length); chunk_offset=$offset; keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
+                }
               }
-              $readbackDeadline = [DateTime]::UtcNow.AddSeconds(5)
-              do {
-                Start-Sleep -Milliseconds 100
-                $readbackPolls++
-                try { $actual = [string]$pattern.Current.Value } catch { $actual = "" }
-                if ($actual -ceq $replacement) { break }
-              } while ([DateTime]::UtcNow -lt $readbackDeadline)
               if ($actual -cne $replacement) {
                 throw "OpenObsidian exact readback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; final_readback_length=$($actual.Length); keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
               }
