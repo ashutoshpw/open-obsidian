@@ -4860,3 +4860,32 @@ required by its fixture.
 
 No local project tests, builds, formatters, linters, validators, or application
 launches were run. All executable validation evidence came from GitHub Actions.
+
+## 2026-10-12 — R2.8.97 attempt 1 CI findings
+
+Attempt 1 ran on exact source SHA
+`fb7dff956188738938508f92af2a8764a03eeb98` and is not accepted. Six of the
+seven required workflows passed; Rust CI run `38212918823` failed. Its Rust
+1.95 job `114690929100` passed, and the workspace test steps passed on Ubuntu,
+macOS, and Windows. Ubuntu job `114690929420` failed only `Check formatting`
+on three rustfmt differences in `crates/engine/src/bases.rs`: the
+`list_base_files` signature, the unclosed-frontmatter error return, and the
+base-listing test assertion. macOS job `114690929345` and Windows job
+`114690929668` failed `Run Clippy` on `clippy::cmp_owned` at line 506, where a
+`PathBuf` was constructed for a path comparison.
+
+The pinned Obsidian 1.14.4 round-trip passed on Linux, Windows, and macOS in run
+`38212918747` (jobs `114690929731`, `114690929982`, and `114690930083`). The
+inventory (`38212918651`), quality (`38212918704`), desktop build
+(`38212918778`), plugin renderer (`38212918739`), and loaded-plugin
+(`38212918843`) workflows also passed. Exact workflow/job conclusions and all
+12 artifact IDs, sizes, and archive SHA-256 digests are recorded in
+[`evidence/r2.8.97-attempt-1-fb7dff9.json`](evidence/r2.8.97-attempt-1-fb7dff9.json).
+GitHub Actions logs included non-blocking Node.js deprecation warnings.
+
+The correction applies the CI formatting and borrowed-path comparison fixes
+and adds index-based view selection so unnamed, explicitly empty-name, and
+duplicate-name views can be selected exactly while preserving the existing
+name-based behavior. This follow-up is not validated by attempt 1 and needs a
+fresh exact-SHA Actions run. C07/C07.1 remain pending. No local project tests,
+builds, formatters, linters, validators, or application launches were run.

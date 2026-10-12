@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T08:17:53+02:00",
+  "updated_at": "2026-10-12T08:48:18+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
-  "current_milestone": "R2.8.96",
-  "next_action": "Continue the bounded C07/C07.1 work by integrating Bases loading/rendering and visible unsupported-expression reporting in small reviewed phases. Keep project validation on GitHub Actions only; push focused phase or milestone commits to origin/main when CI results are needed. Preserve the recorded compatibility limits until explicitly resolved.",
-  "push_status": "R2.8.96 accepted on exact pushed source SHA 01d7ad437f28667e6e79455b2450c73e7b6d3916 after all seven required GitHub Actions workflows passed. The macOS round-trip failed once during a watcher-refresh UI timing race and passed when only that failed job was rerun on the same SHA; the final Linux, Windows, and macOS jobs all pass. Exact workflow/job IDs and all 17 artifact IDs, sizes, and archive digests are in evidence/r2.8.96-attempt-3-01d7ad4.json. No local project validation was run. C07/C07.1 remain pending until app integration and visible issue reporting are implemented.",
+  "last_reconciled_head": "fb7dff956188738938508f92af2a8764a03eeb98",
+  "current_milestone": "R2.8.97",
+  "next_action": "Continue R2.8.97 by completing index-based Bases view selection for unnamed, explicitly empty-name, and duplicate-name views; apply the exact CI formatting and Clippy corrections; then push the focused correction and validate its exact SHA on all seven required GitHub Actions workflows. Keep C07/C07.1 pending until app integration and visible issue reporting are accepted. Preserve the recorded compatibility limits.",
+  "push_status": "R2.8.97 attempt 1 ran on exact source SHA fb7dff956188738938508f92af2a8764a03eeb98 and is not accepted. Six of seven required workflows passed; Rust CI failed Ubuntu formatting and macOS/Windows Clippy. Rust 1.95 and all workspace test steps passed. The pinned Obsidian round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and all 12 artifact IDs, sizes, and archive digests are in evidence/r2.8.97-attempt-1-fb7dff9.json. No local project validation was run. C07/C07.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -32304,6 +32304,48 @@
         "Reporting date(today) as unsupported for empty or fully filtered inputs is a deliberate strengthening required by the linked fixture."
       ],
       "push_status": "R2.8.96 accepted on exact pushed source SHA 01d7ad437f28667e6e79455b2450c73e7b6d3916 after all seven required GitHub Actions workflows passed. The macOS round-trip failed once during a watcher-refresh UI timing race and passed when only that failed job was rerun on the same SHA; the final Linux, Windows, and macOS jobs all pass. Exact workflow/job IDs and all 17 artifact IDs, sizes, and archive digests are in evidence/r2.8.96-attempt-3-01d7ad4.json. No local project validation was run. C07/C07.1 remain pending until app integration and visible issue reporting are implemented."
+    },
+    "R2.8.97": {
+      "status": "in_progress",
+      "starting_sha": "01d7ad437f28667e6e79455b2450c73e7b6d3916",
+      "scope": "Add bounded, read-only engine evaluation and safe discovery for native Bases files, backed by stable vault snapshots, note frontmatter projection, path-attributed collection issues, and explicit completeness reporting. C07/C07.1 remain pending until Bases loading/rendering and visible issue reporting are integrated.",
+      "acceptance": [
+        "Evaluate a selected .base view from bounded, snapshot-stable vault inputs without modifying vault files.",
+        "Expose bounded .base discovery without UI callers walking the vault root directly.",
+        "Skip unsafe note metadata with path-attributed issues and report incomplete collection rather than fabricating values.",
+        "Preserve view selection by source index for unnamed, explicitly empty-name, and duplicate-name views while keeping the existing name-based API behavior.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA; executable validation runs only in GitHub Actions."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "fb7dff956188738938508f92af2a8764a03eeb98",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.97-attempt-1-fb7dff9.json",
+          "workflow_runs": {
+            "inventory": 38212918651,
+            "quality": 38212918704,
+            "desktop_build": 38212918778,
+            "plugin_renderer": 38212918739,
+            "loaded_plugins": 38212918843,
+            "rust_ci": 38212918823,
+            "vault_roundtrip": 38212918747
+          },
+          "finding": "Six of seven required workflows passed. Rust CI failed: Ubuntu job 114690929420 failed only Check formatting on three rustfmt hunks in crates/engine/src/bases.rs; macOS job 114690929345 and Windows job 114690929668 failed Run Clippy on clippy::cmp_owned at line 506. Rust 1.95 job 114690929100 and workspace test steps on Ubuntu, macOS, and Windows passed. The pinned Obsidian round-trip passed on Linux, Windows, and macOS; inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Exact job and artifact IDs, sizes, and digests are in the evidence file."
+        }
+      ],
+      "implementation_sha": "fb7dff956188738938508f92af2a8764a03eeb98",
+      "evidence": "evidence/r2.8.97-attempt-1-fb7dff9.json",
+      "push_status": "R2.8.97 attempt 1 is not accepted on source SHA fb7dff956188738938508f92af2a8764a03eeb98. The CI formatting and Clippy corrections and index-based view selector are implemented locally but remain unvalidated; they are awaiting a focused commit and push for a new exact-SHA attempt across all seven required workflows. No local project validation was run."
     }
   },
   "ci_preparation": {

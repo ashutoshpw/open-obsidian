@@ -1,8 +1,8 @@
 //! Bounded, read-only evaluation of a Bases file against a vault snapshot.
 
 use openobsidian_doc::{
-    BaseDocument, BaseEvaluation, BaseRow, MarkdownSource, YamlMappingEntry, YamlValue,
-    evaluate_base, parse_base,
+    BaseDocument, BaseEvaluation, BaseParseError, BaseRow, MarkdownSource, YamlMappingEntry,
+    YamlValue, evaluate_base, evaluate_base_by_view_index, parse_base,
 };
 use openobsidian_vault::{
     VaultError, VaultRoot, VaultSnapshot, VaultSnapshotEntry, VaultSnapshotEntryKind,
@@ -117,9 +117,7 @@ pub enum BaseFileEvaluationError {
 }
 
 /// Discover `.base` paths without walking the vault from a UI caller.
-pub(crate) fn list_base_files(
-    root: &VaultRoot,
-) -> Result<BaseFileListing, BaseFileListingError> {
+pub(crate) fn list_base_files(root: &VaultRoot) -> Result<BaseFileListing, BaseFileListingError> {
     let before = root.snapshot().map_err(map_listing_vault_error)?;
     let (files, complete) = base_paths_from_snapshot(&before);
     let after = root.snapshot().map_err(map_listing_vault_error)?;
@@ -162,6 +160,27 @@ pub(crate) fn evaluate_base_file(
     root: &VaultRoot,
     relative_path: &Path,
     view_name: &str,
+) -> Result<BaseFileEvaluation, BaseFileEvaluationError> {
+    evaluate_base_file_with_selector(root, relative_path, BaseViewSelector::Name(view_name))
+}
+
+pub(crate) fn evaluate_base_file_by_view_index(
+    root: &VaultRoot,
+    relative_path: &Path,
+    view_index: usize,
+) -> Result<BaseFileEvaluation, BaseFileEvaluationError> {
+    evaluate_base_file_with_selector(root, relative_path, BaseViewSelector::Index(view_index))
+}
+
+enum BaseViewSelector<'a> {
+    Name(&'a str),
+    Index(usize),
+}
+
+fn evaluate_base_file_with_selector(
+    root: &VaultRoot,
+    relative_path: &Path,
+    selector: BaseViewSelector<'_>,
 ) -> Result<BaseFileEvaluation, BaseFileEvaluationError> {
     if !relative_path
         .extension()
@@ -213,6 +232,16 @@ pub(crate) fn evaluate_base_file(
         return Err(BaseFileEvaluationError::SnapshotChanged);
     }
     let base = parse_base(base_preview.source.as_bytes())?;
+    if let BaseViewSelector::Index(view_index) = &selector {
+        let view_count = base.views().len();
+        if *view_index >= view_count {
+            return Err(BaseParseError::InvalidViewIndex {
+                index: *view_index,
+                view_count,
+            }
+            .into());
+        }
+    }
 
     // Take a fresh listing for every call; the session's cached note list can be stale.
     let notes = root.scan_markdown().map_err(map_vault_error)?;
@@ -295,7 +324,12 @@ pub(crate) fn evaluate_base_file(
         }
     }
 
-    let evaluation = evaluate_base(&base, view_name, &rows)?;
+    let evaluation = match selector {
+        BaseViewSelector::Name(view_name) => evaluate_base(&base, view_name, &rows)?,
+        BaseViewSelector::Index(view_index) => {
+            evaluate_base_by_view_index(&base, view_index, &rows)?
+        }
+    };
     let after = root.snapshot().map_err(map_vault_error)?;
     if before.revision_sha256 != after.revision_sha256 {
         return Err(BaseFileEvaluationError::SnapshotChanged);
@@ -353,7 +387,9 @@ fn note_properties(source_bytes: &[u8], truncated: bool) -> Result<Map<String, V
 
     if source.frontmatter_bounds().is_none() {
         if has_frontmatter_opener(source.as_bytes()) {
-            return Err("Markdown note has an unclosed frontmatter block in the bounded prefix".into());
+            return Err(
+                "Markdown note has an unclosed frontmatter block in the bounded prefix".into(),
+            );
         }
         // A note without frontmatter has a complete empty property map, even when its body is
         // longer than the bounded read prefix.
@@ -503,7 +539,7 @@ mod tests {
             .entries
             .iter()
             .find(|entry| {
-                entry.relative_path == PathBuf::from(base_path)
+                entry.relative_path.as_path() == Path::new(base_path)
                     && entry.kind == VaultSnapshotEntryKind::File
             })
             .unwrap();
@@ -546,6 +582,35 @@ mod tests {
     }
 
     #[test]
+    fn session_selects_unnamed_empty_and_duplicate_views_by_index() {
+        let tree = TempTree::new();
+        let (vault, app_data) = tree.layout();
+        let source = br#"{"version":1,"views":[{"type":"table","limit":1},{"type":"table","name":"","limit":2},{"type":"table","name":"Duplicate","limit":3},{"type":"table","name":"Duplicate","limit":4}]}"#;
+        write_file(&vault, "views.base", source);
+        for index in 0..4 {
+            write_file(&vault, &format!("Notes/{index}.md"), b"note body\n");
+        }
+        let session = session_for(&vault, &app_data);
+
+        for (view_index, expected_limit) in [1, 2, 3, 4].into_iter().enumerate() {
+            let result = session
+                .evaluate_base_file_by_view_index(Path::new("views.base"), view_index)
+                .expect("view index must select a parsed view");
+            assert_eq!(result.evaluation.view.limit, Some(expected_limit));
+            assert_eq!(result.evaluation.rows.len(), expected_limit);
+        }
+        let explicit_empty = session
+            .evaluate_base_file(Path::new("views.base"), "")
+            .expect("an explicit empty name must keep name-based selection");
+        assert_eq!(explicit_empty.evaluation.view.name.as_deref(), Some(""));
+        assert_eq!(explicit_empty.evaluation.view.limit, Some(2));
+        let first_duplicate = session
+            .evaluate_base_file(Path::new("views.base"), "Duplicate")
+            .expect("name lookup must retain its first duplicate behavior");
+        assert_eq!(first_duplicate.evaluation.view.limit, Some(3));
+    }
+
+    #[test]
     fn base_listing_is_sorted_snapshot_bound_and_excludes_symlinks() {
         let tree = TempTree::new();
         let (vault, app_data) = tree.layout();
@@ -564,7 +629,9 @@ mod tests {
         let session = session_for(&vault, &app_data);
         let root = VaultRoot::open(&vault).unwrap();
         let snapshot = root.snapshot().unwrap();
-        let listing = session.list_base_files().expect("base listing must be stable");
+        let listing = session
+            .list_base_files()
+            .expect("base listing must be stable");
 
         assert!(listing.complete);
         assert_eq!(listing.snapshot_sha256, snapshot.revision_sha256);

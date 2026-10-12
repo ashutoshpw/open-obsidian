@@ -184,6 +184,7 @@ pub enum BaseParseError {
     MalformedJson(serde_json::Error),
     InvalidDocument(String),
     InvalidView { index: usize, reason: String },
+    InvalidViewIndex { index: usize, view_count: usize },
 }
 
 impl fmt::Display for BaseParseError {
@@ -195,6 +196,10 @@ impl fmt::Display for BaseParseError {
             Self::InvalidView { index, reason } => {
                 write!(formatter, "Bases view {index} is invalid: {reason}")
             }
+            Self::InvalidViewIndex { index, view_count } => write!(
+                formatter,
+                "Bases view index {index} is out of bounds for {view_count} views"
+            ),
         }
     }
 }
@@ -203,7 +208,10 @@ impl std::error::Error for BaseParseError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::MalformedJson(error) => Some(error),
-            Self::InvalidUtf8 | Self::InvalidDocument(_) | Self::InvalidView { .. } => None,
+            Self::InvalidUtf8
+            | Self::InvalidDocument(_)
+            | Self::InvalidView { .. }
+            | Self::InvalidViewIndex { .. } => None,
         }
     }
 }
@@ -773,6 +781,31 @@ pub fn evaluate_base(
         .or_else(|| document.views.first())
         .ok_or_else(|| BaseParseError::InvalidDocument("Bases document has no views".to_owned()))?
         .clone();
+    evaluate_selected_base_view(document, view, source_rows)
+}
+
+/// Evaluate the view at its source index, preserving unnamed and duplicate-name selection.
+pub fn evaluate_base_by_view_index(
+    document: &BaseDocument,
+    view_index: usize,
+    source_rows: &[BaseRow],
+) -> Result<BaseEvaluation, BaseParseError> {
+    let view = document
+        .views
+        .get(view_index)
+        .cloned()
+        .ok_or(BaseParseError::InvalidViewIndex {
+            index: view_index,
+            view_count: document.views.len(),
+        })?;
+    evaluate_selected_base_view(document, view, source_rows)
+}
+
+fn evaluate_selected_base_view(
+    document: &BaseDocument,
+    view: BaseView,
+    source_rows: &[BaseRow],
+) -> Result<BaseEvaluation, BaseParseError> {
     let mut issues = document.issues.clone();
     let filtered = source_rows
         .iter()
@@ -1353,7 +1386,7 @@ mod tests {
     use super::{
         BaseEvaluation, BaseIssueKind, BaseRawValue, BaseRow, BaseSourceFormat, BaseViewType,
         YamlValue, array_includes, compare_numbers, compare_values, encode_base, evaluate_base,
-        parse_base, parse_embedded_bases,
+        evaluate_base_by_view_index, parse_base, parse_embedded_bases,
     };
     use serde_json::Value;
 
@@ -2310,6 +2343,40 @@ mod tests {
         );
         assert_eq!(result.groups[0].rows[0].path, "zulu.md");
         assert_eq!(result.groups[1].rows[0].path, "ada.md");
+    }
+
+    #[test]
+    fn view_index_selects_unnamed_empty_and_duplicate_names_exactly() {
+        let source = br#"{"version":1,"views":[{"type":"table","limit":1},{"type":"table","name":"","limit":2},{"type":"table","name":"Duplicate","limit":3},{"type":"table","name":"Duplicate","limit":4}]}"#;
+        let document = parse_base(source).expect("view selection source must parse");
+        let rows = (0..4)
+            .map(|index| BaseRow {
+                path: format!("{index}.md"),
+                properties: serde_json::Map::new(),
+            })
+            .collect::<Vec<_>>();
+
+        for (index, expected_limit) in [1, 2, 3, 4].into_iter().enumerate() {
+            let result = evaluate_base_by_view_index(&document, index, &rows)
+                .expect("view index must select a parsed view");
+            assert_eq!(result.view.limit, Some(expected_limit));
+            assert_eq!(result.rows.len(), expected_limit);
+        }
+        assert!(matches!(
+            evaluate_base_by_view_index(&document, 4, &rows),
+            Err(super::BaseParseError::InvalidViewIndex {
+                index: 4,
+                view_count: 4
+            })
+        ));
+
+        let explicit_empty = evaluate_base(&document, "", &rows)
+            .expect("an explicit empty name must select its named view");
+        assert_eq!(explicit_empty.view.name.as_deref(), Some(""));
+        assert_eq!(explicit_empty.view.limit, Some(2));
+        let first_duplicate = evaluate_base(&document, "Duplicate", &rows)
+            .expect("name lookup must retain its first duplicate behavior");
+        assert_eq!(first_duplicate.view.limit, Some(3));
     }
 
     #[test]

@@ -13,7 +13,7 @@ pub use bases::{
     BaseComparisonOperator, BaseDocument, BaseEvaluation, BaseFilter, BaseGroup, BaseIssue,
     BaseIssueKind, BaseParseError, BaseRawValue, BaseRow, BaseSort, BaseSourceFormat, BaseValue,
     BaseView, BaseViewType, EmbeddedBaseDefinition, EvaluatedBaseRow, encode_base, evaluate_base,
-    parse_base, parse_embedded_bases,
+    evaluate_base_by_view_index, parse_base, parse_embedded_bases,
 };
 pub use canvas::{CanvasDocument, CanvasError, encode_canvas, parse_canvas};
 pub use configuration::{

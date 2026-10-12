@@ -81,6 +81,18 @@ impl VaultSession {
         bases::evaluate_base_file(self.store.root(), &relative_path, view_name)
     }
 
+    /// Evaluates a `.base` view by its source index, preserving duplicate and unnamed views.
+    ///
+    /// Snapshotting hashes every regular vault file, so call this off the UI frame.
+    pub fn evaluate_base_file_by_view_index(
+        &self,
+        relative_path: impl AsRef<Path>,
+        view_index: usize,
+    ) -> Result<BaseFileEvaluation, BaseFileEvaluationError> {
+        let relative_path = normalize_portable_path(relative_path.as_ref())?;
+        bases::evaluate_base_file_by_view_index(self.store.root(), &relative_path, view_index)
+    }
+
     /// Returns the recovery outcome processed before the Markdown listing was scanned.
     pub fn rename_recovery_report(&self) -> &VaultRenameRecoveryReport {
         &self.rename_recovery
