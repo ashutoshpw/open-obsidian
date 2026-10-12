@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T06:40:09+02:00",
+  "updated_at": "2026-10-12T06:58:00+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "471082995724190ff75c98e541a93f631e04a265",
-  "current_milestone": "R2.8.95",
-  "next_action": "Push the focused Windows STA clipboard-paste correction with attempt 5 evidence to origin/main, then wait for and record all seven exact-SHA GitHub Actions workflows before accepting R2.8.95.",
-  "push_status": "R2.8.95 attempt 5 on exact SHA 471082995724190ff75c98e541a93f631e04a265 is not accepted. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed; the pinned Obsidian round-trip passed on Linux and macOS but failed on Windows during exact Canvas draft readback before Save. See evidence/r2.8.95-attempt-5-4710829.json for exact run/job IDs and 16 artifact IDs, sizes, and archive digests. No Canvas write or note creation occurred during Windows load/input.",
+  "last_reconciled_head": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
+  "current_milestone": "R2.8.96",
+  "next_action": "Integrate the bounded C07 Bases parser/evaluator foundation from the isolated worktree, keep C07 and C07.1 pending until app loading/rendering and visible unsupported-expression reporting exist, then push the focused slice to origin/main and await all seven exact-SHA workflows.",
+  "push_status": "R2.8.95 attempt 6 is accepted on adc1ddce142f41dd250c37722ed8b48b9194bd5c. R2.8.96 is the in-progress C07 document-layer parser/evaluator foundation; no C07 or C07.1 requirement is being marked complete.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "471082995724190ff75c98e541a93f631e04a265"
+      "implementation_sha": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
+      "next_action": "Integrate the bounded C07 Bases parser/evaluator foundation from the isolated worktree, keep C07 and C07.1 pending until app loading/rendering and visible unsupported-expression reporting exist, then push the focused slice to origin/main and await all seven exact-SHA workflows."
     },
     "R3": {
       "status": "pending",
@@ -76,6 +77,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.95 attempt 6 accepted on exact source SHA adc1ddce142f41dd250c37722ed8b48b9194bd5c after all seven required GitHub Actions workflows passed, including all three pinned Obsidian round-trips. Exact run/job IDs and 16 artifact IDs, sizes, and archive digests are recorded in evidence/r2.8.95-attempt-6-adc1ddc.json. R2.8.96 starts a bounded C07 document-layer parser/evaluator foundation; C07/C07.1 remain pending until app integration and visible issue reporting.",
     "R2.8.95 attempt 2 correction commit 400fec03669e8eb97d05270d1166d0e9ff7026ed was pushed to origin/main after attempt 1's seven required runs completed. Attempt 2 completed: inventory, desktop build, plugin renderer and loaded-plugin workflows passed; Ubuntu quality failed its Electron retrieval-final-status audit; Rust CI failed the stale-draft Reload receiver assertion on Ubuntu/macOS/Windows/Rust 1.95; Obsidian round-trip failed on Linux/Windows/macOS. Exact job IDs, artifact IDs/sizes/digests and findings are in evidence/r2.8.95-attempt-2-400fec0.json. No local executable validation was run.",
     "R2.8.95 attempt 1 ran on exact source SHA 7c8dd7bcf8edfff6e668fbeb519767b63b8dc3d2 and is not accepted. Inventory, quality, desktop build, plugin renderer, and loaded-plugin workflows passed. Rust CI failed four note-selector tests on Ubuntu, macOS, Windows, and Rust 1.95 because the selected path remained README.md; Ubuntu also reported rustfmt differences. Pinned Obsidian 1.14.4 round-trip failed before Canvas Save on Linux/macOS/Windows due OCR/accessibility field targeting. Exact run/job IDs and all 12 artifact IDs, sizes, and digests are in evidence/r2.8.95-attempt-1-7c8dd7b.json. The correction moves the Canvas editor after existing panels, applies formatter changes directly from CI output, and updates round-trip OCR field-label/status matching. No local tests/builds/formatters/linters/validators/apps were run. One accidental local git diff --check is recorded in the evidence as a process deviation.",
     "R2.8.94 accepted on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642 after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; pinned Obsidian 1.14.4 Canvas note-creation round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and 16 artifact IDs, sizes, and digests are in evidence/r2.8.94-attempt-8-e32331d.json. No local tests, builds, formatters, validators, or application launches ran.",
@@ -31864,7 +31866,7 @@
       "push_status": "Accepted on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642 after all seven required GitHub Actions workflows passed, including Rust CI on all three operating systems and Rust 1.95, plus pinned Obsidian 1.14.4 round-trip on Linux, Windows, and macOS. Attempt 7's OCR/accessibility failures are retained in its evidence. Manual Canvas path/card ID entry remains; Canvas text editing and broader C06/C06.1 acceptance remain pending."
     },
     "R2.8.95": {
-      "status": "in_progress",
+      "status": "complete",
       "starting_sha": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
       "scope": "Add a native editor for one manually selected Canvas text card. Load a revision-stamped preview from a bounded Canvas read capped at 4 MiB, allow draft edits, and persist only after explicit Save; keep Cancel, Reload, and stale-revision handling separate from the Canvas note-creation flow. Enforce the .canvas extension in the engine edit API. Preserve unknown JSON fields and siblings, never create a note during editing, and verify visibility after reopening in pinned Obsidian.",
       "acceptance": [
@@ -31969,12 +31971,58 @@
             "vault_roundtrip": 38203799691
           },
           "finding": "Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed, including Rust 1.95. The Obsidian round-trip passed on Linux and macOS. Windows passed its earlier C01.2 checks but failed exact readback while entering the 42-character Canvas draft at character offset 22; the 741-byte Canvas stayed unchanged and no explicit Save or note creation occurred. Exact run/job IDs and 16 artifact IDs, sizes, and archive digests are recorded in the attempt evidence."
+        },
+        {
+          "attempt": 6,
+          "source_sha": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
+          "outcome": "accepted",
+          "evidence": "evidence/r2.8.95-attempt-6-adc1ddc.json",
+          "workflow_runs": {
+            "inventory": 38204838204,
+            "quality": 38204838298,
+            "desktop_build": 38204838295,
+            "plugin_renderer": 38204838249,
+            "loaded_plugins": 38204838361,
+            "rust_ci": 38204838262,
+            "vault_roundtrip": 38204838235
+          },
+          "finding": "All seven required workflows passed on the exact source SHA, including Rust 1.95 and the pinned Obsidian 1.14.4 round-trip on Linux, Windows, and macOS. Round-trip evidence confirms save-only Canvas changes, exact draft readback, preservation of sibling data, no Markdown note during edit, and first-open/reopen visibility. Windows STA Unicode clipboard fallback passed. macOS normalized Canvas JSON on first close while preserving semantics; bytes stayed stable afterward. Exact job and artifact metadata are in the evidence file."
         }
       ],
-      "implementation_sha": "471082995724190ff75c98e541a93f631e04a265",
-      "evidence": "evidence/r2.8.95-attempt-5-4710829.json",
+      "implementation_sha": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
+      "evidence": "evidence/r2.8.95-attempt-6-adc1ddc.json",
+      "accepted_attempt": 6,
+      "push_status": "R2.8.95 accepted on exact source SHA adc1ddce142f41dd250c37722ed8b48b9194bd5c after all seven required workflows and all 20 jobs passed. Exact workflow/job IDs and 16 artifact IDs, sizes, and archive digests are in evidence/r2.8.95-attempt-6-adc1ddc.json."
+    },
+    "R2.8.96": {
+      "status": "in_progress",
+      "starting_sha": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
+      "scope": "Add a bounded, source-preserving Bases parser/evaluator foundation in crates/doc for native .base YAML/JSON and embedded definitions; cover supported filter/formula/property/sort/group/limit/view behavior, retain unknown fields and exact source, and report unsupported results without fabricating values. This is a document-layer foundation only; Bases loading/rendering and visible compatibility issues remain pending.",
+      "acceptance": [
+        "fixtures/c07-bases.json evaluates the supported definitions and preserves source definitions and unknown fields.",
+        "fixtures/c07-unsupported-formula.json records unsupported formulas explicitly, retains source, and never exposes a colliding property as a fabricated formula result, including empty and fully filtered inputs.",
+        "fixtures/bases-native.yaml is directly parsed/evaluated and source-preserved; embedded definitions retain source spans.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA; executable validation runs only in GitHub Actions."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [],
+      "implementation_sha": null,
+      "evidence": null,
       "accepted_attempt": null,
-      "push_status": "R2.8.95 attempt 5 on exact SHA 471082995724190ff75c98e541a93f631e04a265 is not accepted. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI passed; the pinned Obsidian round-trip passed on Linux and macOS but failed on Windows during exact Canvas draft readback before Save. See evidence/r2.8.95-attempt-5-4710829.json for exact run/job IDs and 16 artifact IDs, sizes, and archive digests. No Canvas write or note creation occurred during Windows load/input."
+      "known_limits": [
+        "No engine or UI callsite loads or renders Bases yet.",
+        "C07 and C07.1 remain pending; visible unsupported-expression reporting is not implemented.",
+        "The evaluator supports a bounded subset and does not claim full Bases compatibility."
+      ],
+      "push_status": "Preparation in progress. The C07 code is isolated on prep/r2.8.96-bases; no implementation SHA has been integrated or pushed yet."
     }
   },
   "ci_preparation": {

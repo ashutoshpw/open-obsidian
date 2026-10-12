@@ -4717,3 +4717,28 @@ The focused attempt 5 corrections add `pbcopy` to Knip's binary allow-list, veri
 Attempt 5 ran on exact source SHA `471082995724190ff75c98e541a93f631e04a265` and is not accepted. Inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Rust CI all passed; Rust CI passed Ubuntu, macOS, Windows, and the Rust 1.95 MSRV job. The pinned Obsidian 1.14.4 round-trip passed on Linux and macOS, including Canvas text-card edit/save, note creation from the edited card, no-write checks during load/input, and reopen checks. Windows passed its earlier C01.2 source preview, note creation/edit/rename, attachment, refresh, and reopen checks, then failed while entering the Canvas draft. The 42-character field readback stalled at 22 characters when 23 were expected at character offset 22 after 55 polls. The 741-byte Canvas source remained at its original SHA-256, the destination note was absent, and explicit Save was never activated. Exact run/job IDs and all 16 artifact IDs, sizes, and archive digests are recorded in [`evidence/r2.8.95-attempt-5-4710829.json`](evidence/r2.8.95-attempt-5-4710829.json).
 
 The attempt 6 correction replaces the Windows per-character fallback with an STA Unicode clipboard paste and exact ordinal UI Automation readback. Diagnostics retain clipboard verification, focus, selection/paste status, mismatch index, and bounded polling details. The correction is integrated locally as a focused commit, while attempt 5's exact-SHA evidence remains recorded separately. No local tests, builds, formatters, linters, validators, or application launches were run.
+
+## 2026-10-12 — R2.8.95 attempt 6 accepted; R2.8.96 C07 foundation started
+
+Attempt 6 passed on exact source SHA
+`adc1ddce142f41dd250c37722ed8b48b9194bd5c`. All seven required GitHub Actions
+workflows and all 20 jobs succeeded, including Rust 1.95 and the pinned Obsidian
+1.14.4 round-trip on Linux, Windows, and macOS. Exact workflow/job IDs and all
+16 artifact IDs, sizes, and archive digests are recorded in
+[`evidence/r2.8.95-attempt-6-adc1ddc.json`](evidence/r2.8.95-attempt-6-adc1ddc.json).
+The round-trip reports confirm exact draft readback, no write before explicit
+Save, preservation of sibling Canvas data, no Markdown note created during edit,
+and first-open/reopen visibility. Windows' STA Unicode clipboard fallback
+passed. macOS normalized Canvas JSON on first close while retaining expected
+semantics; the file remained stable after that normalization. No local executable
+validation was run.
+
+R2.8.96 is scoped to a bounded `crates/doc` Bases parser/evaluator foundation
+covering native `.base` JSON/YAML, embedded definitions, source retention,
+unknown fields, supported evaluation and explicit unsupported-result data. The
+isolated branch adds fixture-driven cases for unsupported formula collisions,
+empty/fully filtered inputs, and direct coverage of `fixtures/bases-native.yaml`.
+This does not load or render Bases in the app. C07 and C07.1 remain pending until
+engine/UI integration and visible compatibility issue reporting are implemented.
+The focused code commits are under independent source review; no local tests,
+builds, formatters, validators, or application launches were run.
