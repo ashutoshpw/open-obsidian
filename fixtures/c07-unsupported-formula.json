@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c07-unsupported-formula",
+  "description": "Unsupported formulas produce a typed compatibility issue and no fabricated result.",
+  "source": {
+    "version": 1,
+    "views": [
+      {
+        "type": "list",
+        "name": "Notes",
+        "formulas": {
+          "bad": "date(today)"
+        },
+        "unknownView": {
+          "keep": "view-field"
+        }
+      }
+    ],
+    "unknownRoot": {
+      "keep": "root-field"
+    }
+  },
+  "view": "Notes",
+  "rows": [
+    {
+      "path": "note.md",
+      "properties": {
+        "status": "open"
+      }
+    }
+  ],
+  "expected": {
+    "formula": "bad",
+    "issue_kind": "unsupported-formula",
+    "issue_expression": "date(today)",
+    "issue_message": "Unsupported Bases formula: date(today)"
+  }
+}

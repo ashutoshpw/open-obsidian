@@ -1,5 +1,6 @@
 //! Lossless document values shared by the vault engine and native UI.
 
+mod bases;
 mod canvas;
 mod configuration;
 mod hotkeys;
@@ -8,6 +9,12 @@ mod merge;
 mod themes;
 mod yaml;
 
+pub use bases::{
+    BaseComparisonOperator, BaseDocument, BaseEvaluation, BaseFilter, BaseIssue, BaseIssueKind,
+    BaseParseError, BaseRawValue, BaseRow, BaseSort, BaseSourceFormat, BaseValue, BaseView,
+    BaseViewType, EmbeddedBaseDefinition, EvaluatedBaseRow, encode_base, evaluate_base,
+    parse_base, parse_embedded_bases,
+};
 pub use canvas::{CanvasDocument, CanvasError, encode_canvas, parse_canvas};
 pub use configuration::{
     AppSettings, AppearanceMode, AppearanceSettings, DailyNoteSettings, TemplateSettings,

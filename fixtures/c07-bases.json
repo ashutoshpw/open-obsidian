@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c07-bases",
+  "description": "Supported JSON and native YAML definitions, unknown fields, evaluation, and embedded source spans.",
+  "supported_cases": [
+    {
+      "id": "json-supported-definition",
+      "format": "json",
+      "source": {
+        "version": 1,
+        "views": [
+          {
+            "type": "table",
+            "name": "Open",
+            "filter": {
+              "kind": "all",
+              "filters": [
+                {"kind": "comparison", "field": "status", "operator": "equals", "value": "open"},
+                {"kind": "comparison", "field": "priority", "operator": "gte", "value": 2}
+              ]
+            },
+            "sort": [{"field": "priority", "direction": "desc"}],
+            "groupBy": "owner",
+            "limit": 1,
+            "formulas": {"pathLabel": "file.path", "isOpen": "true", "answer": "42", "quoted": "\"hello\""},
+            "unknownView": {"keep": "view-field"}
+          },
+          {"type": "list", "name": "List", "properties": ["status"]},
+          {"type": "cards", "name": "Cards", "cardSize": "medium"}
+        ],
+        "unknownRoot": {"keep": "root-field"}
+      },
+      "view": "Open",
+      "rows": [
+        {"path": "folder/a.md", "properties": {"status": "open", "priority": 1, "owner": "Ada"}},
+        {"path": "folder/b.md", "properties": {"status": "open", "priority": 2, "owner": "Bea", "metadata": {"labels": ["one"]}}},
+        {"path": "folder/c.md", "properties": {"status": "done", "priority": 3, "owner": "Cal"}}
+      ],
+      "expected": {
+        "paths": ["folder/b.md"],
+        "formula": {"name": "pathLabel", "value": "folder/b.md"},
+        "group_names": ["Bea"],
+        "view_types": ["table", "list", "cards"]
+      }
+    },
+    {
+      "id": "native-yaml-supported-definition",
+      "format": "yaml",
+      "source": "filters:\n  and:\n    - status == \"open\"\n    - priority >= 2\nformulas:\n  pathLabel: file.path\nproperties:\n  status:\n    displayName: Status\nviews:\n  - type: table\n    name: Open items\n    limit: 1\n    groupBy:\n      property: owner\n      direction: DESC\n    filters:\n      and:\n        - status == \"open\"\n    order:\n      - priority\n    unknownView: keep-view-field\n  - type: list\n    name: All items\nunknownRoot:\n  keep: root-field\n",
+      "view": "Open items",
+      "rows": [
+        {"path": "a.md", "properties": {"status": "open", "priority": 3, "owner": "Ada"}},
+        {"path": "b.md", "properties": {"status": "open", "priority": 2, "owner": "Bea"}},
+        {"path": "c.md", "properties": {"status": "done", "priority": 4, "owner": "Cal"}}
+      ],
+      "expected": {
+        "paths": ["b.md"],
+        "formula": {"name": "pathLabel", "value": "b.md"},
+        "group_names": ["Bea"],
+        "view_types": ["table", "list"]
+      }
+    }
+  ],
+  "unsupported_native_filter": {
+    "id": "native-unsupported-filter-is-not-applied",
+    "source": "filters: file.hasTag(\"open\")\nviews:\n  - type: list\n    name: Notes\n",
+    "view": "Notes",
+    "rows": [
+      {"path": "closed.md", "properties": {"status": "closed"}}
+    ],
+    "expected": {
+      "paths": ["closed.md"],
+      "issue_kind": "invalid-filter",
+      "issue_message": "Native Bases filter is outside the supported comparison subset: file.hasTag(\"open\")"
+    }
+  },
+  "filter_operator_case": {
+    "id": "json-filter-operator-subset",
+    "source": {
+      "version": 1,
+      "views": [
+        {
+          "type": "list",
+          "name": "Matching notes",
+          "filter": {
+            "kind": "all",
+            "filters": [
+              {"kind": "comparison", "field": "tags", "operator": "contains", "value": "review"},
+              {"kind": "comparison", "field": "title", "operator": "contains", "value": "beta"},
+              {"kind": "comparison", "field": "priority", "operator": "gt", "value": 1},
+              {"kind": "comparison", "field": "priority", "operator": "gte", "value": 3},
+              {"kind": "comparison", "field": "priority", "operator": "lt", "value": 4},
+              {"kind": "comparison", "field": "priority", "operator": "lte", "value": 3},
+              {"kind": "comparison", "field": "priority", "operator": "not-equals", "value": 9},
+              {"kind": "not", "filter": {"kind": "comparison", "field": "status", "operator": "equals", "value": "closed"}},
+              {"kind": "any", "filters": [
+                {"kind": "comparison", "field": "status", "operator": "equals", "value": "open"},
+                {"kind": "comparison", "field": "status", "operator": "not-equals", "value": "archived"}
+              ]}
+            ]
+          }
+        }
+      ]
+    },
+    "view": "Matching notes",
+    "rows": [
+      {"path": "match.md", "properties": {"status": "open", "priority": 3, "tags": ["review"], "title": "Beta task"}},
+      {"path": "closed.md", "properties": {"status": "closed", "priority": 3, "tags": ["review"], "title": "Beta task"}},
+      {"path": "high.md", "properties": {"status": "open", "priority": 5, "tags": ["review"], "title": "Beta task"}}
+    ],
+    "expected": {
+      "paths": ["match.md"]
+    }
+  },
+  "embedded_case": {
+    "id": "embedded-definitions-retain-source-spans",
+    "source": "# Overview\r\n\r\n\u0060\u0060\u0060base\r\nviews:\r\n  - type: list\r\n    name: Notes\r\n    unknownView: keep-me\r\n\u0060\u0060\u0060\r\n",
+    "expected_count": 1,
+    "expected_view": "Notes"
+  },
+  "unclosed_embedded_case": {
+    "id": "unclosed-definition-is-an-issue",
+    "source": "~~~base\nviews:\n  - type: list\n",
+    "expected_issue": "Embedded base fence is not closed"
+  }
+}
