@@ -6209,74 +6209,92 @@ sys.exit(1)
             Start-Sleep -Milliseconds 150
             $actual = [string]$pattern.Current.Value
             $initialReadbackLength = $actual.Length
-            $keyboardFallback = $actual -cne $replacement
+            $clipboardFallback = -not [string]::Equals($actual, $replacement, [System.StringComparison]::Ordinal)
             $readbackPolls = 1
-            if ($keyboardFallback) {
-              $focusSet = $false
+            $clipboardSet = $false
+            $clipboardVerified = $false
+            $focusSet = $false
+            $hasKeyboardFocus = $false
+            $selectAllSent = $false
+            $pasteSent = $false
+            if ($clipboardFallback) {
+              $clipboardFailureType = "none"
+              $clipboardFailureMessage = "none"
+              $clipboardApartmentState = [System.Threading.Thread]::CurrentThread.ApartmentState.ToString()
+              $clipboardReadbackLength = -1
+              $clipboardFirstDifferenceIndex = -1
               try {
+                [System.Windows.Forms.Clipboard]::SetText($replacement, [System.Windows.Forms.TextDataFormat]::UnicodeText)
+                $clipboardSet = $true
+                $clipboardReadback = [System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::UnicodeText)
+                $clipboardReadbackLength = $clipboardReadback.Length
+                $clipboardVerified = [string]::Equals([string]$clipboardReadback, $replacement, [System.StringComparison]::Ordinal)
+                if (-not $clipboardVerified) {
+                  $clipboardFirstDifferenceIndex = 0
+                  $clipboardCommonLength = [Math]::Min($clipboardReadbackLength, $replacement.Length)
+                  while ($clipboardFirstDifferenceIndex -lt $clipboardCommonLength -and [string]::Equals([string]$clipboardReadback[$clipboardFirstDifferenceIndex], [string]$replacement[$clipboardFirstDifferenceIndex], [System.StringComparison]::Ordinal)) {
+                    $clipboardFirstDifferenceIndex++
+                  }
+                  if ($clipboardFirstDifferenceIndex -eq $clipboardCommonLength -and $clipboardReadbackLength -eq $replacement.Length) { $clipboardFirstDifferenceIndex = -1 }
+                  throw "Unicode clipboard readback did not exactly match the replacement"
+                }
                 $element.SetFocus()
                 $focusSet = $true
                 Start-Sleep -Milliseconds 120
+                try { $hasKeyboardFocus = [bool]$element.Current.HasKeyboardFocus } catch { $hasKeyboardFocus = $false }
                 [System.Windows.Forms.SendKeys]::SendWait("^a")
+                $selectAllSent = $true
+                Start-Sleep -Milliseconds 120
+                [System.Windows.Forms.SendKeys]::SendWait("^v")
+                $pasteSent = $true
               } catch {
-                throw "OpenObsidian keyboard fallback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
+                $clipboardFailureType = $_.Exception.GetType().Name
+                $clipboardFailureMessage = $_.Exception.Message
+                throw "OpenObsidian clipboard fallback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; clipboard_apartment_state=$clipboardApartmentState; clipboard_set=$clipboardSet; clipboard_verified=$clipboardVerified; clipboard_readback_length=$clipboardReadbackLength; clipboard_first_difference_index=$clipboardFirstDifferenceIndex; focus_set=$focusSet; has_keyboard_focus=$hasKeyboardFocus; select_all_sent=$selectAllSent; paste_sent=$pasteSent; error_type=$clipboardFailureType; error_message=$clipboardFailureMessage)"
               }
-              for ($offset = 0; $offset -lt $replacement.Length; $offset++) {
-                $character = [string]$replacement[$offset]
-                $sendKeys = [System.Text.StringBuilder]::new()
-                switch -CaseSensitive ($character) {
-                  "+" { $null = $sendKeys.Append("{+}") }
-                  "^" { $null = $sendKeys.Append("{^}") }
-                  "%" { $null = $sendKeys.Append("{%}") }
-                  "~" { $null = $sendKeys.Append("{~}") }
-                  "(" { $null = $sendKeys.Append("{(}") }
-                  ")" { $null = $sendKeys.Append("{)}") }
-                  "[" { $null = $sendKeys.Append("{[}") }
-                  "]" { $null = $sendKeys.Append("{]}") }
-                  "{" { $null = $sendKeys.Append("{{}") }
-                  "}" { $null = $sendKeys.Append("{}}") }
-                  default { $null = $sendKeys.Append($character) }
-                }
-                try {
-                  [System.Windows.Forms.SendKeys]::SendWait($sendKeys.ToString())
-                } catch {
-                  throw "OpenObsidian keyboard fallback failed for '$targetName' at offset $offset (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; focus_set=$focusSet; error_type=$($_.Exception.GetType().Name))"
-                }
-                $expectedPrefix = $replacement.Substring(0, $offset + 1)
-                $prefixDeadline = [DateTime]::UtcNow.AddSeconds(2)
-                do {
-                  Start-Sleep -Milliseconds 50
-                  $readbackPolls++
-                  try { $actual = [string]$pattern.Current.Value } catch { $actual = "" }
-                  if ($actual -ceq $expectedPrefix) { break }
-                } while ([DateTime]::UtcNow -lt $prefixDeadline)
-                if ($actual -cne $expectedPrefix) {
-                  throw "OpenObsidian exact readback failed for '$targetName' after keyboard character (expected_length=$($replacement.Length); expected_prefix_length=$($expectedPrefix.Length); actual_length=$($actual.Length); character_offset=$offset; keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
-                }
+              $pasteDeadline = [DateTime]::UtcNow.AddSeconds(10)
+              do {
+                Start-Sleep -Milliseconds 50
+                $readbackPolls++
+                try { $actual = [string]$pattern.Current.Value } catch { $actual = "" }
+                if ([string]::Equals($actual, $replacement, [System.StringComparison]::Ordinal)) { break }
+              } while ([DateTime]::UtcNow -lt $pasteDeadline)
+              $firstDifferenceIndex = 0
+              $commonLength = [Math]::Min($actual.Length, $replacement.Length)
+              while ($firstDifferenceIndex -lt $commonLength -and $actual[$firstDifferenceIndex] -ceq $replacement[$firstDifferenceIndex]) {
+                $firstDifferenceIndex++
               }
-              if ($actual -cne $replacement) {
-                throw "OpenObsidian exact readback failed for '$targetName' (expected_length=$($replacement.Length); initial_readback_length=$initialReadbackLength; final_readback_length=$($actual.Length); keyboard_fallback=true; polls=$readbackPolls; focus_set=$focusSet)"
+              if ($firstDifferenceIndex -eq $commonLength -and $actual.Length -eq $replacement.Length) { $firstDifferenceIndex = -1 }
+              if (-not [string]::Equals($actual, $replacement, [System.StringComparison]::Ordinal)) {
+                throw "OpenObsidian exact readback failed for '$targetName' after clipboard paste (expected_length=$($replacement.Length); actual_length=$($actual.Length); first_difference_index=$firstDifferenceIndex; clipboard_apartment_state=$clipboardApartmentState; clipboard_set=$clipboardSet; clipboard_verified=$clipboardVerified; clipboard_readback_length=$clipboardReadbackLength; clipboard_first_difference_index=$clipboardFirstDifferenceIndex; focus_set=$focusSet; has_keyboard_focus=$hasKeyboardFocus; select_all_sent=$selectAllSent; paste_sent=$pasteSent; clipboard_fallback=true; polls=$readbackPolls)"
               }
             }
             [pscustomobject]@{
               name = $targetName
-              action = if ($keyboardFallback) { "ValuePattern.SetValue + focused Ctrl+A and keyboard entry" } else { "ValuePattern.SetValue" }
+              action = if ($clipboardFallback) { "ValuePattern.SetValue + focused Ctrl+A and Unicode clipboard paste" } else { "ValuePattern.SetValue" }
               exact_readback = $true
-              keyboard_fallback = $keyboardFallback
+              clipboard_fallback = $clipboardFallback
+              clipboard_apartment_state = if ($clipboardFallback) { $clipboardApartmentState } else { "not_used" }
+              clipboard_set = $clipboardSet
+              clipboard_verified = $clipboardVerified
+              focus_set = $focusSet
+              has_keyboard_focus = $hasKeyboardFocus
+              select_all_sent = $selectAllSent
+              paste_sent = $pasteSent
               expected_length = $replacement.Length
               readback_length = $actual.Length
               readback_polls = $readbackPolls
             } | ConvertTo-Json -Compress
             exit 0
           } catch {
-            if ($_.Exception.Message -like "The accessible edit field is read-only:*" -or $_.Exception.Message -like "OpenObsidian keyboard fallback failed*" -or $_.Exception.Message -like "OpenObsidian exact readback failed*" ) { throw }
+            if ($_.Exception.Message -like "The accessible edit field is read-only:*" -or $_.Exception.Message -like "OpenObsidian clipboard fallback failed*" -or $_.Exception.Message -like "OpenObsidian exact readback failed*" ) { throw }
           }
         }
         Start-Sleep -Milliseconds 250
       } while ([DateTime]::UtcNow -lt $deadline)
       throw "Accessible editable field was not found: $targetName"
     `;
-    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script], {
+    const output = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-STA", "-Command", script], {
       encoding: "utf8",
       env: {
         ...process.env,
