@@ -80,7 +80,7 @@ type BasesReceiver = Receiver<BasesTaskMessage>;
 
 enum BasesTaskMessage {
     Listing(Result<BaseFileListing, String>),
-    Evaluation(Result<BaseFileEvaluation, String>),
+    Evaluation(Result<Box<BaseFileEvaluation>, String>),
 }
 
 struct LinkTaskMessage {
@@ -801,7 +801,7 @@ impl OpenObsidianApp {
                 .map_err(|error| {
                     format_bases_text(MAX_BASES_DISPLAY_FIELD_BYTES, format_args!("{error}"))
                 });
-            let _ = sender.send(BasesTaskMessage::Evaluation(result));
+            let _ = sender.send(BasesTaskMessage::Evaluation(result.map(Box::new)));
         });
         self.bases_receiver = Some(receiver);
     }
@@ -849,7 +849,7 @@ impl OpenObsidianApp {
                 if self.bases_selected_view.is_none() {
                     self.bases_selected_view = Some(0);
                 }
-                self.bases_evaluation = Some(evaluation);
+                self.bases_evaluation = Some(*evaluation);
                 self.bases_error = None;
             }
             Some(Ok(BasesTaskMessage::Evaluation(Err(error)))) => {
@@ -4072,7 +4072,7 @@ fn bounded_visible_indices(total: usize, limit: usize, selected: Option<usize>) 
 }
 
 fn bases_view_label(name: Option<&str>, index: usize) -> String {
-    let label = match name {
+    match name {
         Some("") => format_bases_text(
             MAX_BASES_DISPLAY_FIELD_BYTES,
             format_args!("Unnamed view {} (empty name)", index + 1),
@@ -4089,8 +4089,7 @@ fn bases_view_label(name: Option<&str>, index: usize) -> String {
             MAX_BASES_DISPLAY_FIELD_BYTES,
             format_args!("Unnamed view {}", index + 1),
         ),
-    };
-    label
+    }
 }
 
 struct BoundedBasesText<'a> {
