@@ -1,0 +1,97 @@
+{
+  "milestone": "R2.8.96",
+  "attempt": 1,
+  "source_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+  "outcome": "not_accepted",
+  "captured_at": "2026-10-12T07:25:12+02:00",
+  "artifact_source": "Exact-SHA GitHub Actions workflow and job metadata. Linux, macOS, and Windows Obsidian round-trip reports and screenshots were inspected as remote CI evidence only. No project executable was run locally.",
+  "workflow_runs": {
+    "inventory": {
+      "id": 38206586421,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586421",
+      "jobs": [{ "id": 114671299298, "name": "inventory", "conclusion": "success" }]
+    },
+    "quality": {
+      "id": 38206586331,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586331",
+      "jobs": [
+        { "id": 114671299261, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114671299369, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114671299434, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "desktop_build": {
+      "id": 38206586279,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586279",
+      "jobs": [
+        { "id": 114671299052, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114671299158, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114671299240, "name": "ubuntu-latest", "conclusion": "success" }
+      ]
+    },
+    "plugin_renderer": {
+      "id": 38206586326,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586326",
+      "jobs": [
+        { "id": 114671299356, "name": "macos-latest", "conclusion": "success" },
+        { "id": 114671299512, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114671299517, "name": "windows-latest", "conclusion": "success" }
+      ]
+    },
+    "loaded_plugins": {
+      "id": 38206586311,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586311",
+      "jobs": [
+        { "id": 114671299110, "name": "windows-latest", "conclusion": "success" },
+        { "id": 114671299306, "name": "ubuntu-latest", "conclusion": "success" },
+        { "id": 114671299344, "name": "macos-latest", "conclusion": "success" }
+      ]
+    },
+    "rust_ci": {
+      "id": 38206586280,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "failure",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586280",
+      "jobs": [
+        { "id": 114671298717, "name": "minimum supported Rust (1.95)", "conclusion": "success" },
+        { "id": 114671298860, "name": "rust (windows-latest)", "conclusion": "failure" },
+        { "id": 114671298932, "name": "rust (ubuntu-latest)", "conclusion": "failure" },
+        { "id": 114671298949, "name": "rust (macos-latest)", "conclusion": "failure" }
+      ]
+    },
+    "vault_roundtrip": {
+      "id": 38206586290,
+      "head_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+      "conclusion": "success",
+      "url": "https://github.com/ashutoshpw/open-obsidian/actions/runs/38206586290",
+      "jobs": [
+        { "id": 114671298857, "name": "Obsidian 1.14.4 vault round-trip on ubuntu-24.04", "conclusion": "success" },
+        { "id": 114671299004, "name": "Obsidian 1.14.4 vault round-trip on macos-latest", "conclusion": "success" },
+        { "id": 114671299136, "name": "Obsidian 1.14.4 vault round-trip on windows-latest", "conclusion": "success" }
+      ]
+    }
+  },
+  "artifacts": [
+    { "workflow": "vault_roundtrip", "id": 11727971869, "runner_os": "Windows", "size_in_bytes": 13093362, "archive_sha256": "af17f510c216994e61dcf1669cc35bfa744b65a8f48fb59798305ae74e98f78e", "report": "passed; source SHA matched; second shutdown bytes were stable" },
+    { "workflow": "vault_roundtrip", "id": 11727648169, "runner_os": "macOS", "size_in_bytes": 20090791, "archive_sha256": "00ac3ab8440722e50c02a9b5b14f8473b4111a637582a9f80c3b17811015983e", "report": "passed; source SHA matched; second shutdown bytes were stable" },
+    { "workflow": "vault_roundtrip", "id": 11727383548, "runner_os": "Linux", "size_in_bytes": 14855313, "archive_sha256": "e1057608b1b611ebabae553561b0d89c87b5d19f4559b0587c45b208718bb244", "report": "passed; source SHA matched; second shutdown bytes were stable" }
+  ],
+  "findings": [
+    "Six of seven required workflows passed on the exact source SHA. The Rust migration inventory, quality, desktop build, plugin renderer, loaded-plugin workflows, and Obsidian vault round-trip passed.",
+    "Rust CI failed. The Rust 1.95 job passed. Workspace tests passed in the Ubuntu, Windows, and macOS jobs before later checks failed. Ubuntu rustfmt reported differences in crates/doc/src/bases.rs and a re-export in crates/doc/src/lib.rs. Windows and macOS Clippy reported a collapsible if near bases.rs:637 and an unnecessary lifetime on field_value near bases.rs:829.",
+    "The Obsidian 1.14.4 round-trip reports passed on Linux, macOS, and Windows with matching source SHA and stable second shutdown bytes. The round-trip workflow does not establish Bases UI acceptance.",
+    "Additional source review identified precision loss for mixed integer/f64 comparisons, unsupported formula collision fallback in sorting/grouping, inconsistent missing/null ordering, nested fence recognition, integer-valued floating limits, path tie-break differences, and first-seen group-order differences. These are being corrected before the next attempt.",
+    "C07 and C07.1 remain pending because no engine/UI callsite loads or renders Bases and unsupported-expression issues are not yet visible in the app."
+  ],
+  "local_validation": "No local tests, builds, formatters, linters, validators, or application launches were run. GitHub Actions artifacts were inspected only as remote CI evidence."
+}

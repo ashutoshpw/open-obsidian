@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T07:05:02+02:00",
+  "updated_at": "2026-10-12T07:33:15+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
+  "last_reconciled_head": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
   "current_milestone": "R2.8.96",
-  "next_action": "Verify origin/main is still at adc1ddce142f41dd250c37722ed8b48b9194bd5c, push the focused R2.8.96 C07 document-layer slice, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented.",
-  "push_status": "R2.8.96 C07 document-layer implementation and fixture coverage are integrated locally in four focused commits through 034c3ed35ac3f43c74511dc724c82b3a0ed2189c. No CI attempt has been pushed yet; all project validation remains pending in GitHub Actions. C07/C07.1 remain pending.",
+  "next_action": "Verify origin/main is still at 1a0854d837f9d67432d6bafb35fb1405f8036c7d, push the focused R2.8.96 code, fixture, and tracker commits, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented.",
+  "push_status": "R2.8.96 attempt 1 ran on exact SHA 1a0854d837f9d67432d6bafb35fb1405f8036c7d and was not accepted: six workflows passed, while Rust CI failed on formatting and Clippy. Corrections are committed locally in 053d85c and 0884a12, with the attempt evidence reconciled. These commits have not yet been pushed. C07/C07.1 remain pending.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,8 +47,8 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "034c3ed35ac3f43c74511dc724c82b3a0ed2189c",
-      "next_action": "Verify origin/main is still at adc1ddce142f41dd250c37722ed8b48b9194bd5c, push the focused R2.8.96 C07 document-layer slice, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented."
+      "implementation_sha": "0884a128dcdc14e20027e3aad251ef6d444118e4",
+      "next_action": "Verify origin/main is still at 1a0854d837f9d67432d6bafb35fb1405f8036c7d, push the focused R2.8.96 code, fixture, and tracker commits, and inspect all seven required GitHub Actions workflows on the exact pushed SHA. Keep C07 and C07.1 pending until Bases app integration and visible issue reporting are implemented."
     },
     "R3": {
       "status": "pending",
@@ -32013,16 +32013,35 @@
         "OpenObsidian Rust CI",
         "Obsidian vault round-trip acceptance"
       ],
-      "attempts": [],
-      "implementation_sha": "034c3ed35ac3f43c74511dc724c82b3a0ed2189c",
-      "evidence": null,
+      "attempts": [
+        {
+          "attempt": 1,
+          "source_sha": "1a0854d837f9d67432d6bafb35fb1405f8036c7d",
+          "outcome": "not_accepted",
+          "evidence": "evidence/r2.8.96-attempt-1-1a0854d.json",
+          "workflow_runs": {
+            "inventory": 38206586421,
+            "quality": 38206586331,
+            "desktop_build": 38206586279,
+            "plugin_renderer": 38206586326,
+            "loaded_plugins": 38206586311,
+            "rust_ci": 38206586280,
+            "vault_roundtrip": 38206586290
+          },
+          "finding": "Six required workflows passed on the exact source SHA. Rust CI failed on Ubuntu rustfmt and Windows/macOS Clippy. The Rust 1.95 job and workspace tests passed. Source review identified additional Bases edge cases; corrections are in progress."
+        }
+      ],
+      "implementation_sha": "0884a128dcdc14e20027e3aad251ef6d444118e4",
+      "evidence": "evidence/r2.8.96-attempt-1-1a0854d.json",
       "accepted_attempt": null,
       "known_limits": [
         "No engine or UI callsite loads or renders Bases yet.",
         "C07 and C07.1 remain pending; visible unsupported-expression reporting is not implemented.",
-        "The evaluator supports a bounded subset and does not claim full Bases compatibility."
+        "The evaluator supports a bounded subset and does not claim full Bases compatibility.",
+        "Exact JSON numeric ordering preserves integer precision above 2^53 and intentionally differs from legacy JavaScript Number rounding for those values.",
+        "Deterministic case-insensitive natural text ordering does not fully match ambient JavaScript locale collation for accents and non-ASCII strings; resolve or explicitly bound this before claiming full C07 parity."
       ],
-      "push_status": "Integrated locally through 034c3ed35ac3f43c74511dc724c82b3a0ed2189c with focused parser, unsupported-result, typed comparison, and fixture-coverage commits. Confirm origin/main and push the exact slice for all seven required workflows; no local project validation has run."
+      "push_status": "Attempt 1 on 1a0854d837f9d67432d6bafb35fb1405f8036c7d was not accepted because Rust CI failed. The correction code is committed in 053d85c and fixture/inventory updates in 0884a12; tracker evidence is committed separately. These commits are prepared locally for a fresh exact-SHA attempt. No local project validation has run."
     }
   },
   "ci_preparation": {

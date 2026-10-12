@@ -4767,6 +4767,32 @@ validators, or application launches were run. C07 and C07.1 remain pending
 because no engine/UI callsite loads or renders Bases and unsupported-expression
 issues are not yet visible in the app.
 
-The next action is to confirm `origin/main` remains at accepted SHA
-`adc1ddce142f41dd250c37722ed8b48b9194bd5c`, push the prepared slice, and inspect
-all seven required workflows on its exact pushed SHA.
+The next action recorded here was completed; attempt 1 and the reconciled
+follow-up are recorded below.
+
+## 2026-10-12 — R2.8.96 attempt 1 and parallel correction review
+
+Attempt 1 ran on exact pushed SHA
+`1a0854d837f9d67432d6bafb35fb1405f8036c7d`. The Rust migration inventory,
+quality, desktop build, plugin renderer, loaded-plugin workflows, and Obsidian
+1.14.4 round-trip passed. Rust CI failed: Rust 1.95 and workspace tests passed;
+Ubuntu reported rustfmt differences in `crates/doc/src/bases.rs` and its public
+re-export, while Windows and macOS Clippy reported a collapsible conditional and
+an unnecessary `field_value` lifetime. Exact run/job IDs and round-trip artifact
+digests are recorded in
+[`evidence/r2.8.96-attempt-1-1a0854d.json`](evidence/r2.8.96-attempt-1-1a0854d.json).
+
+Parallel source review also found precision loss for mixed integer/f64 numeric
+comparisons, unsupported formula collision fallback during sorting and
+grouping, inconsistent missing/null ordering, nested-fence recognition,
+integer-valued floating limits, path tie-break differences, and first-seen group
+order differences. Fixtures now cover these cases, including UTF-8 source-span
+offsets. The Rust engine fixes and fixture-harness integration are committed in
+`053d85c`, with fixtures and inventory updates in `0884a12`. Exact numeric
+ordering above 2^53 is a deliberate precision improvement over JavaScript
+Number rounding. Text ordering remains deterministic and case-insensitive, with
+a known difference from ambient `localeCompare` for accents and some non-ASCII
+strings; decision RM-12 records this boundary. The attempt is not accepted; C07
+and C07.1 remain pending. The commits are prepared locally and await an exact
+remote-base check and push for a new seven-workflow CI attempt. No local tests,
+builds, formatters, linters, validators, or application launches were run.
