@@ -4586,3 +4586,24 @@ visible input rows, and opens the Rename section in the two empty-vault tests.
 The correction is prepared for a new focused commit and exact-SHA GitHub
 Actions run. No local tests, builds, formatters, validators, or applications
 were run.
+
+## 2026-10-12 — R2.8.94 attempt 6 CI findings
+
+Attempt 6 ran on exact source SHA
+a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c. Inventory, quality, desktop build,
+plugin renderer, loaded plugin workflows, and Rust CI passed. The Obsidian
+round-trip passed on Windows and failed on Ubuntu and macOS. On Linux the
+focused Canvas path field visibly contained the expected value and clipboard
+readback reached the first-attempt exact-match branch, but strict crop OCR
+rejected its noisy recognition. On macOS the three form fields were visible,
+but the guessed Preview click did not start preview. No vault mismatch was
+reported. Run/job IDs and artifact digests are recorded in
+[evidence/r2.8.94-attempt-6-a06faf8.json](evidence/r2.8.94-attempt-6-a06faf8.json).
+
+The next focused correction uses exact clipboard equality as the Linux field
+value check while keeping OCR and screenshots as diagnostics, reports egui's
+Preview button bounds, clicks that button from the current response rectangle
+on Linux and macOS, and requires preview-only UI text in the screenshot check.
+Only GitHub Actions will run executable validation. The migration milestone
+remains in progress until all seven required workflows pass on the exact
+correction SHA.
