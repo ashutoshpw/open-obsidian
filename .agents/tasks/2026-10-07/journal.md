@@ -4626,3 +4626,28 @@ Confirm clicks on Linux/macOS, and permits one OCR character error in the
 final review phrase while retaining exact marker and destination checks. The
 correction still requires all seven workflows on its exact pushed SHA. No
 local tests, builds, formatters, validators or application launches were run.
+
+## 2026-10-12 — R2.8.94 accepted; R2.8.95 started
+
+R2.8.94 attempt 8 passed on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642. All seven required
+GitHub Actions workflows and all 20 jobs succeeded: inventory, quality, desktop
+build, plugin renderer, loaded-plugin workflows, Rust CI, and the pinned Obsidian
+1.14.4 vault round-trip. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95;
+the round-trip passed on Linux, Windows, and macOS. The workflow/job IDs and all
+16 artifact IDs, sizes, and archive digests are recorded in
+evidence/r2.8.94-attempt-8-e32331d.json. GitHub reported Node.js 20 deprecation annotations
+and a temporary macOS runner capacity notice; neither caused a job failure.
+No local tests, builds, formatters, validators, or application launches ran.
+
+This accepted slice completes the engine-backed, explicit Canvas text-card to
+Markdown-note creation flow. It still requires manual Canvas path and card ID
+entry; Canvas editing and the broader C06/C06.1 acceptance remain pending.
+
+R2.8.95 is now in progress from e32331d50aeb1c7080dff20bf5ad4ea9c1be7642. It adds a separate native editor
+for one Canvas text card with revision-stamped load, draft, explicit Save,
+Cancel/Reload, and stale-revision handling. The editor will use a bounded Canvas
+read capped at 4 MiB and the engine will reject non-.canvas edit targets. Acceptance
+will verify that only Save writes, only the selected card's text changes
+semantically, unknown JSON fields and siblings remain intact, editing creates no
+Markdown note, and pinned Obsidian displays the result after reopen on all three
+operating systems. Executable validation remains GitHub Actions only.

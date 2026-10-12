@@ -2,14 +2,14 @@
   "schema_version": 1,
   "goal_id": "openobsidian-rust",
   "status": "active",
-  "updated_at": "2026-10-12T04:29:23+02:00",
+  "updated_at": "2026-10-12T04:46:34+02:00",
   "branch": "main",
   "baseline_commit": "d0ad51c0c5bc3480a6f4527b8cc3dbc57063ad79",
   "current_phase": "R2",
-  "last_reconciled_head": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
-  "current_milestone": "R2.8.94",
-  "next_action": "Commit the focused R2.8.94 attempt 8 correction for Canvas Review/Confirm geometry and the final review OCR phrase, push it to origin/main, then collect all seven required GitHub Actions results for its exact SHA. Accept R2.8.94 only if every workflow passes.",
-  "push_status": "origin/main contains 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f. R2.8.94 attempt 7 is not accepted: inventory, quality, desktop build, plugin renderer, loaded plugins, and Rust CI passed; the Obsidian round-trip passed on Windows and failed on Linux/macOS during Canvas note confirmation. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-7-6505a8b.json. The attempt 8 correction is in the worktree; no local executable validation ran.",
+  "last_reconciled_head": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
+  "current_milestone": "R2.8.95",
+  "next_action": "Implement R2.8.95 as a separate native Canvas text-card editor: load a revision-stamped preview, edit a draft, and persist only on explicit Save. Cancel and stale-revision rejection must not write; stale rejection preserves the draft until explicit reload. Use a bounded Canvas read with a documented 4 MiB limit, preserve Markdown preview limits, and reject non-.canvas edit targets in the engine API. Extend UI and pinned Obsidian round-trip coverage for semantic JSON preservation, unchanged siblings, no note creation, and reopen visibility on Linux/macOS/Windows. Commit and push the focused slice to origin/main for the seven required CI workflows.",
+  "push_status": "origin/main contains accepted R2.8.94 implementation SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642. All seven required exact-SHA workflows passed; see evidence/r2.8.94-attempt-8-e32331d.json. The R2.8.94 tracker checkpoint records this acceptance. R2.8.95 is now in progress from this baseline.",
   "blockers": [],
   "phases": {
     "R0": {
@@ -47,7 +47,7 @@
         "quality",
         "plugin-renderer"
       ],
-      "implementation_sha": "325ce3ab806f3e41564f12a8d61ef7562ffa45e9"
+      "implementation_sha": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642"
     },
     "R3": {
       "status": "pending",
@@ -76,6 +76,7 @@
     }
   },
   "completed_actions": [
+    "R2.8.94 accepted on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642 after all seven required GitHub Actions workflows and all 20 jobs passed. Rust CI passed on Ubuntu, macOS, Windows, and Rust 1.95; pinned Obsidian 1.14.4 Canvas note-creation round-trip passed on Linux, Windows, and macOS. Exact workflow/job IDs and 16 artifact IDs, sizes, and digests are in evidence/r2.8.94-attempt-8-e32331d.json. No local tests, builds, formatters, validators, or application launches ran.",
     "R2.8.94 attempt 7 ran on exact source SHA 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f. Six required workflows passed. The Obsidian round-trip passed on Windows; Linux timed out on a one-character OCR error in the final review phrase, while macOS could not locate the Confirm button through accessibility or OCR. No note was written and no vault mismatch was reported. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-7-6505a8b.json. The focused attempt 8 correction uses egui response geometry for Review/Confirm on Linux/macOS and tolerant OCR. No local executable validation ran.",
     "R2.8.94 attempt 6 ran on exact source SHA a06faf8ebdcc4979b549ae0ce924e2a2c40ec34c. Inventory, quality, desktop build, plugin renderer, loaded plugin workflows, and Rust CI passed. The pinned Obsidian round-trip passed on Windows and failed on Linux because noisy field-crop OCR rejected a visibly correct Canvas path clipboard readback, and on macOS because the guessed Preview click did not start the preview. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-6-a06faf8.json. No local executable validation ran.",
     "R2.8.94 attempt 5 ran on exact source SHA c8db437492c50af201be4144de5389585f7be63d. Inventory, desktop build, plugin renderer, and loaded-plugin workflows passed. Quality failed only on Ubuntu before the local retrieval boundary. Rust CI failed the same two empty-vault Harness assertions on Ubuntu/macOS/Windows and Rust 1.95 because the tests did not open the collapsed Rename disclosure. The pinned Obsidian round-trip failed on Windows/macOS because OCR preprocessing erased low-contrast source-editor text; Linux passed source preview but clicked the Canvas text-card ID row 14 px too high. Exact run/job IDs and artifact digests are in evidence/r2.8.94-attempt-5-c8db437.json. No local executable validation ran.",
@@ -30927,12 +30928,60 @@
             "vault_roundtrip": 38195087228
           },
           "finding": "Six required workflows passed. The Windows Obsidian round-trip passed. Linux reached the final Canvas confirmation screen, but the exact OCR predicate read “text” as “bext” and timed out. macOS reached review, then accessibility could not locate Confirm and create note and OCR could not find the button; no note was written. Both platforms reported no vault mismatch. See evidence/r2.8.94-attempt-7-6505a8b.json for exact run/job IDs and artifact digests. No local executable validation ran."
+        },
+        {
+          "attempt": 8,
+          "source_sha": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
+          "outcome": "accepted",
+          "evidence": "evidence/r2.8.94-attempt-8-e32331d.json",
+          "workflow_runs": {
+            "inventory": 38196214827,
+            "quality": 38196214837,
+            "desktop_build": 38196214826,
+            "plugin_renderer": 38196214752,
+            "loaded_plugins": 38196214843,
+            "rust_ci": 38196214804,
+            "vault_roundtrip": 38196214779
+          },
+          "finding": "All seven required workflows and all 20 jobs passed on the exact source SHA. Rust CI passed on Ubuntu, macOS, Windows, and minimum supported Rust 1.95; the pinned Obsidian 1.14.4 Canvas note-creation round-trip passed on Linux, Windows, and macOS. Exact run/job IDs and 16 artifact metadata records are in the evidence file. No local executable validation ran."
         }
       ],
-      "implementation_sha": "6505a8b61076d88ac2d73efe746fdc6e48c9eb2f",
-      "evidence": "evidence/r2.8.94-attempt-7-6505a8b.json",
+      "implementation_sha": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
+      "evidence": "evidence/r2.8.94-attempt-8-e32331d.json",
+      "accepted_attempt": 8,
+      "push_status": "Accepted on exact source SHA e32331d50aeb1c7080dff20bf5ad4ea9c1be7642 after all seven required GitHub Actions workflows passed, including Rust CI on all three operating systems and Rust 1.95, plus pinned Obsidian 1.14.4 round-trip on Linux, Windows, and macOS. Attempt 7's OCR/accessibility failures are retained in its evidence. Manual Canvas path/card ID entry remains; Canvas text editing and broader C06/C06.1 acceptance remain pending."
+    },
+    "R2.8.95": {
+      "status": "in_progress",
+      "starting_sha": "e32331d50aeb1c7080dff20bf5ad4ea9c1be7642",
+      "scope": "Add a native editor for one manually selected Canvas text card. Load a revision-stamped preview from a bounded Canvas read capped at 4 MiB, allow draft edits, and persist only after explicit Save; keep Cancel, Reload, and stale-revision handling separate from the Canvas note-creation flow. Enforce the .canvas extension in the engine edit API. Preserve unknown JSON fields and siblings, never create a note during editing, and verify visibility after reopening in pinned Obsidian.",
+      "acceptance": [
+        "Loading, drafting, canceling, and reloading do not write; only explicit Save may call the revision-bound engine edit.",
+        "A stale revision preserves the draft, blocks Save, and requires explicit reload; no automatic retry uses a newer revision.",
+        "A successful save changes only the selected text node semantically, preserves unknown fields and sibling files, and creates no Markdown note.",
+        "Canvas reads over 4 MiB and non-.canvas edit targets fail before writing; the existing 16 KiB Markdown preview limit remains unchanged.",
+        "Pinned Obsidian 1.14.4 round-trip verifies the edit on Linux, Windows, and macOS after reopening the vault.",
+        "All seven required GitHub Actions workflows pass on the exact pushed source SHA; executable validation runs only in GitHub Actions."
+      ],
+      "known_limits": [
+        "The editor uses a manually entered Canvas path and node ID; native Canvas browsing and card selection are separate work.",
+        "Canvas documents larger than 4 MiB are rejected by this bounded editor.",
+        "This slice does not complete full C06 Canvas compatibility."
+      ],
+      "required_workflows": [
+        "Rust migration inventory",
+        "OpenObsidian quality",
+        "OpenObsidian desktop build",
+        "OpenObsidian plugin renderer matrix",
+        "OpenObsidian loaded plugin workflows",
+        "OpenObsidian Rust CI",
+        "Obsidian vault round-trip acceptance"
+      ],
+      "attempts": [],
+      "implementation_sha": null,
+      "evidence": null,
       "accepted_attempt": null,
-      "push_status": "Attempts 1-7 are not accepted. Attempt 7 at 6505a8b61076d88ac2d73efe746fdc6e48c9eb2f passed six required workflows; the Obsidian round-trip passed on Windows and failed on Linux/macOS at Canvas note confirmation. See evidence/r2.8.94-attempt-7-6505a8b.json. A focused correction is prepared to use fresh egui button bounds for Review/Confirm on Linux/macOS and tolerate a one-character OCR error in the final review phrase. No local tests, builds, formatters, or application launches ran."
+      "push_status": "Implementation in progress from the accepted R2.8.94 baseline; no attempt has been pushed."
     }
   },
   "ci_preparation": {
