@@ -1351,6 +1351,16 @@
       "fixture_reader": "crates/doc"
     },
     {
+      "path": "fixtures/c08-attachments.json",
+      "sha256": "63bca421a3eb265ff2f4f7ee71567be1a5c1635100a58a816e3e257d11756eaa",
+      "rust_owner": "crates/vault",
+      "mapping_status": "reviewed",
+      "status": "pending",
+      "migration_phase": "R2",
+      "purpose": "C08 fixture covers source-preserving relative embeds for Markdown, SVG, PDF, audio, video and opaque binaries, including dimensions/fragments, exact bytes across reopen, and no read-generated derivatives.",
+      "fixture_reader": "crates/testkit"
+    },
+    {
       "path": "fixtures/delivery-workflows.json",
       "sha256": "244c13d01f27b0e1dae57f8bb65c7f1dce211e4d87259c041b2df8f001e3ae39",
       "rust_owner": "xtask",

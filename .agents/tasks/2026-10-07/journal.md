@@ -5156,3 +5156,69 @@ rustfmt change from CI, and uses the existing count-aware OCR matcher for both
 startup and restored-vault checks. All attempt-2 jobs are terminal, so the
 next correction push is permitted. No local tests, builds, formatters,
 linters, validators, or application launches were run.
+
+
+## 2026-10-12 — R2.8.99 attempt 3 launched
+
+The focused embedded Bases and OCR corrections were pushed to origin/main as
+exact source SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4. Inventory run 38229475013 passed. Quality
+38229474997, desktop build 38229475032, plugin renderer 38229474913,
+loaded-plugin workflows 38229475025, Rust CI 38229475014, and Obsidian vault
+round-trip 38229475012 were queued or running at initial capture. Exact job
+IDs, URLs, statuses, and the three available Linux artifacts are recorded in
+evidence/r2.8.99-attempt-3-b0ea75d.json.
+
+No local project validation was run. Wait for every exact-SHA workflow and job
+to become terminal, reconcile all results and artifacts, and do not push
+another SHA meanwhile.
+
+
+## 2026-10-12 — R2.8.99 attempt 3 completed and accepted
+
+Attempt 3 passed on exact source SHA b0ea75d06f3e2565b8c5dad706708561ec5190b4. All seven required workflows and
+all 20 jobs succeeded: inventory 38229475013, quality 38229474997, desktop
+build 38229475032, plugin renderer 38229474913, loaded-plugin workflows
+38229475025, Rust CI 38229475014, and Obsidian 1.14.4 vault round-trip
+38229475012.
+
+Rust CI passed on Rust 1.95 job 114745105663 and Ubuntu 114745105970,
+Windows 114745106077, and macOS 114745106107. The embedded Bases UI
+interaction test passed across all four jobs. The round-trip passed on
+Windows 114745105791, Linux 114745106002, and macOS 114745106004.
+Sixteen exact-SHA artifacts were published. Their IDs, sizes, archive
+SHA-256 digests, and expiration times are recorded in
+evidence/r2.8.99-attempt-3-b0ea75d.json.
+
+No local tests, builds, formatters, linters, validators, or application
+launches were run. R2.8.99/C07.1 is accepted. Next, reconcile C06/C06.1
+and C07/C07.1 requirement evidence against the accepted implementation
+milestones, keep unresolved sorting and grouping bounds explicit, and then
+start the fixture-first C08 attachment preservation slice.
+
+
+## 2026-10-12 — C06/C07 crosswalk and R2.8.100 C08 slice prepared
+
+The accepted R2.8.95 attempt 6 evidence supports C06.1's explicit text-card
+save and separate explicit note-creation behavior on all three platforms, so
+C06.1 is marked passing with tested source SHA
+`adc1ddce142f41dd250c37722ed8b48b9194bd5c`. The accepted R2.8.99 attempt 3
+evidence supports C07.1's visible unsupported-formula issue, retained source,
+and absence of a fabricated formula value; C07.1 is marked passing with tested
+source SHA
+`b0ea75d06f3e2565b8c5dad706708561ec5190b4`.
+
+C06 remains pending: full file, web/link, group, and edge editing is not
+implemented, and the rich unknown-field fixture has not been reopened in the
+reference Obsidian workflow. C07 remains pending: the evaluator does not claim
+legacy locale sorting for non-ASCII text, `groupBy.direction`, or JavaScript
+numeric rounding above 2^53. Those bounds remain explicit.
+
+R2.8.100 adds the declared `fixture:c08-attachments` fixture and a shared
+testkit acceptance for exact relative embed references to a Markdown note,
+SVG, PDF, audio, video, and opaque binary. The read-only sequence checks exact
+source and attachment bytes, references, whole-vault snapshots, no generated
+derivative files, and equivalent results after reopening. The fixture is
+listed in the source inventory. C08 remains pending until exact-SHA GitHub
+Actions passes. No local tests, builds, formatters, linters, validators, or
+application launches were run. Commit and push the slice, then wait for all
+seven required workflows before another push.

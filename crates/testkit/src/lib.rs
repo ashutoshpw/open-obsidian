@@ -713,6 +713,7 @@ mod existing_vault_no_op_tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     const EXISTING_VAULT_FIXTURE: &str = include_str!("../../../fixtures/existing-vault.json");
+    const C08_ATTACHMENTS_FIXTURE: &str = include_str!("../../../fixtures/c08-attachments.json");
     static NEXT_TEMP_DIR_ID: AtomicU64 = AtomicU64::new(0);
 
     struct ExistingVaultTempDir(PathBuf);
@@ -857,6 +858,107 @@ mod existing_vault_no_op_tests {
             LinkResolutionStatus::Ambiguous => "ambiguous",
             LinkResolutionStatus::External => "external",
         }
+    }
+
+    fn embed_disposition_name(disposition: &VaultNoteEmbedDisposition) -> &'static str {
+        match disposition {
+            VaultNoteEmbedDisposition::NotRendered => "not_rendered",
+            VaultNoteEmbedDisposition::Blocked(_) => "blocked",
+            VaultNoteEmbedDisposition::Included(_) => "included",
+            VaultNoteEmbedDisposition::Attachment(_) => "attachment",
+        }
+    }
+
+    fn assert_c08_references(
+        vault: &VaultRoot,
+        root: &Path,
+        expected_tree: &[(String, u8, Vec<u8>)],
+        source_path: &str,
+        expected: &Value,
+        before_snapshot: &VaultSnapshot,
+    ) -> (
+        Vec<openobsidian_vault::VaultLinkResolution>,
+        openobsidian_vault::VaultNoteEmbedReport,
+    ) {
+        let expected_references = expected["references"]
+            .as_array()
+            .expect("fixture must state every attachment reference");
+        let links = vault
+            .resolve_links_for_note(source_path)
+            .expect("resolve attachment references without editing the note");
+        assert_eq!(links.len(), expected_references.len());
+        for (actual, expected_reference) in links.iter().zip(expected_references) {
+            assert_eq!(
+                link_kind_name(actual.reference.kind),
+                expected_reference["kind"]
+                    .as_str()
+                    .expect("fixture must state reference kind")
+            );
+            assert_eq!(
+                actual.reference.raw,
+                expected_reference["raw"]
+                    .as_str()
+                    .expect("fixture must retain raw embed source")
+            );
+            assert_eq!(
+                actual.reference.target,
+                expected_reference["target"]
+                    .as_str()
+                    .expect("fixture must state relative destination")
+            );
+            assert_eq!(
+                actual.reference.alias.as_deref(),
+                expected_reference["alias"].as_str()
+            );
+            assert_eq!(
+                actual.reference.subpath.as_deref(),
+                expected_reference["subpath"].as_str()
+            );
+            assert_eq!(
+                resolution_name(actual.resolution.status),
+                expected_reference["status"]
+                    .as_str()
+                    .expect("fixture must state resolution status")
+            );
+            assert_eq!(
+                actual.resolution.target.as_deref(),
+                expected_reference["resolved_path"].as_str()
+            );
+        }
+        assert_unchanged(vault, root, before_snapshot, expected_tree);
+
+        let report = vault
+            .resolve_note_embeds_for_note(source_path)
+            .expect("resolve embedded attachments without editing the vault");
+        assert_eq!(report.embeds.len(), expected_references.len());
+        assert!(!report.truncated);
+        assert_eq!(report.snapshot_sha256, before_snapshot.revision_sha256);
+        for (actual, expected_reference) in report.embeds.iter().zip(expected_references) {
+            assert_eq!(
+                actual.resolution.reference.raw,
+                expected_reference["raw"]
+                    .as_str()
+                    .expect("fixture must retain raw embed source")
+            );
+            assert_eq!(
+                actual.resolution.resolution.status,
+                LinkResolutionStatus::Resolved
+            );
+            assert_eq!(
+                actual.resolution.resolution.target.as_deref(),
+                expected_reference["resolved_path"].as_str()
+            );
+            assert_eq!(
+                embed_disposition_name(&actual.resolution.disposition),
+                expected_reference["disposition"]
+                    .as_str()
+                    .expect("fixture must state embed disposition")
+            );
+            assert_eq!(actual.resolution.snapshot_sha256, before_snapshot.revision_sha256);
+        }
+        assert_unchanged(vault, root, before_snapshot, expected_tree);
+
+        (links, report)
     }
 
     #[test]
@@ -1030,6 +1132,108 @@ mod existing_vault_no_op_tests {
             .verify_rename_preview(&preview)
             .expect("revalidate read-only rename preview");
         assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+    }
+
+    #[test]
+    fn c08_attachment_embeds_keep_original_bytes_and_references_across_reopen() {
+        let fixture: Value = serde_json::from_str(C08_ATTACHMENTS_FIXTURE)
+            .expect("C08 attachment fixture must be valid JSON");
+        assert_eq!(fixture["id"], "fixture:c08-attachments");
+
+        let temporary = ExistingVaultTempDir::new();
+        let vault_path = temporary.0.join("vault");
+        fs::create_dir(&vault_path).expect("create C08 fixture vault root");
+        materialize_fixture(&vault_path, &fixture);
+        let before_tree = tree_snapshot(&vault_path);
+        let expected_tree_paths = fixture["expected"]["tree_paths"]
+            .as_array()
+            .expect("fixture must list every path and directory")
+            .iter()
+            .map(|path| path.as_str().expect("fixture path must be text").to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            before_tree
+                .iter()
+                .map(|(path, _, _)| path.clone())
+                .collect::<Vec<_>>(),
+            expected_tree_paths
+        );
+
+        let vault = VaultRoot::open(&vault_path).expect("open C08 fixture vault");
+        let before_snapshot = vault.snapshot().expect("snapshot C08 fixture before reads");
+        assert_eq!(tree_snapshot(&vault_path), before_tree);
+        let expected_markdown_paths = fixture["expected"]["markdown_paths"]
+            .as_array()
+            .expect("fixture must list Markdown paths")
+            .iter()
+            .map(|path| path.as_str().expect("Markdown path must be text").to_owned())
+            .collect::<Vec<_>>();
+        let markdown_paths = vault
+            .scan_markdown()
+            .expect("scan C08 fixture Markdown files")
+            .into_iter()
+            .map(|entry| entry.relative_path.to_string_lossy().replace('\\', "/"))
+            .collect::<Vec<_>>();
+        assert_eq!(markdown_paths, expected_markdown_paths);
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+
+        let source_path = fixture["expected"]["source_path"]
+            .as_str()
+            .expect("fixture must identify its embed source note");
+        let source = fixture["files"]
+            .as_array()
+            .expect("fixture must list files")
+            .iter()
+            .find(|file| file["relative_path"].as_str() == Some(source_path))
+            .map(fixture_bytes)
+            .expect("source note must be present in the fixture");
+        let read = vault
+            .read(source_path)
+            .expect("read C08 source note without normalization");
+        assert_eq!(read.document.as_bytes(), source);
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+
+        let (links, embeds) = assert_c08_references(
+            &vault,
+            &vault_path,
+            &before_tree,
+            source_path,
+            &fixture["expected"],
+            &before_snapshot,
+        );
+        assert_unchanged(&vault, &vault_path, &before_snapshot, &before_tree);
+
+        drop(vault);
+        let reopened = VaultRoot::open(&vault_path).expect("reopen C08 fixture vault");
+        assert_eq!(
+            reopened.snapshot().expect("snapshot reopened C08 fixture"),
+            before_snapshot
+        );
+        for file in fixture["files"].as_array().expect("fixture must list files") {
+            let relative_path = file["relative_path"]
+                .as_str()
+                .expect("fixture file must have a relative path");
+            assert_eq!(
+                fs::read(vault_path.join(relative_path)).expect("read original fixture bytes"),
+                fixture_bytes(file),
+                "attachment bytes changed after reopen: {relative_path}"
+            );
+        }
+        let reopened_read = reopened
+            .read(source_path)
+            .expect("read C08 source after reopen");
+        assert_eq!(reopened_read.document.as_bytes(), source);
+        let (reopened_links, reopened_embeds) = assert_c08_references(
+            &reopened,
+            &vault_path,
+            &before_tree,
+            source_path,
+            &fixture["expected"],
+            &before_snapshot,
+        );
+        assert_eq!(reopened_links, links);
+        assert_eq!(reopened_embeds, embeds);
+        assert_unchanged(&reopened, &vault_path, &before_snapshot, &before_tree);
     }
 }
 

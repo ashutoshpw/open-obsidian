@@ -3148,9 +3148,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r2.8.95-attempt-6-adc1ddc.json"
+      ],
+      "tested_source_tree": "adc1ddce142f41dd250c37722ed8b48b9194bd5c",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",
@@ -3244,9 +3246,11 @@
         "Windows",
         "Linux"
       ],
-      "status": "pending",
-      "evidence_paths": [],
-      "tested_source_tree": null,
+      "status": "passing",
+      "evidence_paths": [
+        ".agents/tasks/2026-10-07/evidence/r2.8.99-attempt-3-b0ea75d.json"
+      ],
+      "tested_source_tree": "b0ea75d06f3e2565b8c5dad706708561ec5190b4",
       "blocker": null,
       "gate_class": "implementation",
       "decision_id": "D03",

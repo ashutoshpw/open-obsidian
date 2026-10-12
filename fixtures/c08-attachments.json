@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "id": "fixture:c08-attachments",
+  "covers": ["C08"],
+  "purpose": "Preserve source bytes and relative Markdown embed references for image, PDF, audio, video and opaque attachments across read-only vault access and reopen.",
+  "invariants": {
+    "original_attachment_bytes_are_preserved": true,
+    "relative_destinations_and_fragments_are_preserved": true,
+    "dimension_alias_syntax_is_preserved": true,
+    "read_only_access_does_not_create_derivatives": true,
+    "unknown_binary_remains_a_regular_file": true
+  },
+  "files": [
+    {
+      "relative_path": "Notes/Guide.md",
+      "source": "# Attachment preservation\n\nThese references retain their original destinations and embed syntax:\n\n![[Details#Details|Related note]]\n![[diagram.svg|640x480]]\n![[manual.pdf#page=4|Manual page]]\n![[audio.ogg#t=4,9|Audio excerpt]]\n![[video.mp4#t=00:00:12.500|Video excerpt]]\n![[opaque.bin]]\n"
+    },
+    {
+      "relative_path": "Notes/Details.md",
+      "source": "# Details\n\nThe referenced Markdown source remains unchanged.\n"
+    },
+    {
+      "relative_path": "Notes/diagram.svg",
+      "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"640\" height=\"480\" viewBox=\"0 0 640 480\"><title>Fixture diagram</title><rect width=\"640\" height=\"480\" fill=\"#fff\"/></svg>\n"
+    },
+    {
+      "relative_path": "Notes/manual.pdf",
+      "bytes": [37, 80, 68, 70, 45, 49, 46, 55, 10, 37, 32, 115, 121, 110, 116, 104, 101, 116, 105, 99, 32, 80, 68, 70, 32, 97, 116, 116, 97, 99, 104, 109, 101, 110, 116, 10, 49, 32, 48, 32, 111, 98, 106, 10, 60, 60, 32, 47, 84, 121, 112, 101, 32, 47, 67, 97, 116, 97, 108, 111, 103, 32, 62, 62, 10, 101, 110, 100, 111, 98, 106, 10, 37, 37, 69, 79, 70, 10]
+    },
+    {
+      "relative_path": "Notes/audio.ogg",
+      "bytes": [79, 103, 103, 83, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 19, 0, 0]
+    },
+    {
+      "relative_path": "Notes/video.mp4",
+      "bytes": [0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 0, 0, 105, 115, 111, 109, 105, 115, 111, 50]
+    },
+    {
+      "relative_path": "Notes/opaque.bin",
+      "bytes": [0, 255, 7, 10, 128, 65, 0, 13]
+    }
+  ],
+  "expected": {
+    "tree_paths": [
+      "Notes",
+      "Notes/Details.md",
+      "Notes/Guide.md",
+      "Notes/audio.ogg",
+      "Notes/diagram.svg",
+      "Notes/manual.pdf",
+      "Notes/opaque.bin",
+      "Notes/video.mp4"
+    ],
+    "markdown_paths": ["Notes/Details.md", "Notes/Guide.md"],
+    "source_path": "Notes/Guide.md",
+    "references": [
+      {
+        "kind": "embed",
+        "raw": "![[Details#Details|Related note]]",
+        "target": "Details",
+        "alias": "Related note",
+        "subpath": "Details",
+        "status": "resolved",
+        "resolved_path": "Notes/Details.md",
+        "disposition": "included"
+      },
+      {
+        "kind": "embed",
+        "raw": "![[diagram.svg|640x480]]",
+        "target": "diagram.svg",
+        "alias": "640x480",
+        "subpath": null,
+        "status": "resolved",
+        "resolved_path": "Notes/diagram.svg",
+        "disposition": "not_rendered"
+      },
+      {
+        "kind": "embed",
+        "raw": "![[manual.pdf#page=4|Manual page]]",
+        "target": "manual.pdf",
+        "alias": "Manual page",
+        "subpath": "page=4",
+        "status": "resolved",
+        "resolved_path": "Notes/manual.pdf",
+        "disposition": "not_rendered"
+      },
+      {
+        "kind": "embed",
+        "raw": "![[audio.ogg#t=4,9|Audio excerpt]]",
+        "target": "audio.ogg",
+        "alias": "Audio excerpt",
+        "subpath": "t=4,9",
+        "status": "resolved",
+        "resolved_path": "Notes/audio.ogg",
+        "disposition": "not_rendered"
+      },
+      {
+        "kind": "embed",
+        "raw": "![[video.mp4#t=00:00:12.500|Video excerpt]]",
+        "target": "video.mp4",
+        "alias": "Video excerpt",
+        "subpath": "t=00:00:12.500",
+        "status": "resolved",
+        "resolved_path": "Notes/video.mp4",
+        "disposition": "not_rendered"
+      },
+      {
+        "kind": "embed",
+        "raw": "![[opaque.bin]]",
+        "target": "opaque.bin",
+        "alias": null,
+        "subpath": null,
+        "status": "resolved",
+        "resolved_path": "Notes/opaque.bin",
+        "disposition": "not_rendered"
+      }
+    ]
+  }
+}
