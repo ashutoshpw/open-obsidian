@@ -978,6 +978,12 @@ function ocrTextContainsPhrase(text: string, phrase: string): boolean {
   return normalizedText.includes(normalizedPhrase);
 }
 
+function canvasFormFieldLabelsVisible(text: string): boolean {
+  return ocrTextContainsFuzzyPhrase(text, "Canvas path")
+    && ocrTextContainsFuzzyPhrase(text, "Text card ID")
+    && ocrTextContainsFuzzyPhrase(text, "New markdown path");
+}
+
 function editDistanceWithinLimit(left: string, right: string, limit: number): boolean {
   if (Math.abs(left.length - right.length) > limit) return false;
 
@@ -1620,6 +1626,166 @@ function ensureAppDataChangesAreMacEframeUiStateOnly(
       throw new Error(label + " app.ron contains a vault or app-data path");
     }
   }
+}
+
+async function validateCanvasNoteCreationAppDataTransaction(
+  before: SnapshotEntry[],
+  after: SnapshotEntry[],
+  changes: Array<{path: string; before?: SnapshotEntry; after?: SnapshotEntry}>,
+  appDataRoot: string,
+  canonicalAppDataRoot: string,
+  canvasVaultRoot: string,
+  notePath: string,
+  noteBytes: Buffer,
+  noteSha256: string,
+): Promise<{vault_data_id: string; operation_id: string; journal_rows: number; recovery_bytes: number}> {
+  if (createHash("sha256").update(noteBytes).digest("hex") !== noteSha256) {
+    throw new Error("Canvas note creation expected bytes do not match their reported revision");
+  }
+  const vaultDataId = createHash("sha256").update(resolve(canvasVaultRoot)).digest("hex").slice(0, 24);
+  const vaultDataPrefix = `vaults/${vaultDataId}`;
+  const markerPath = `${vaultDataPrefix}/.openobsidian-vault-data`;
+  const beforeMarker = before.find((entry) => entry.path === markerPath);
+  const afterMarker = after.find((entry) => entry.path === markerPath);
+  if (beforeMarker?.kind !== "file" || JSON.stringify(beforeMarker) !== JSON.stringify(afterMarker)) {
+    throw new Error(`Canvas note creation changed or lacked its selected-vault app-data marker: ${markerPath}`);
+  }
+  const markerBytes = await readFile(join(appDataRoot, markerPath));
+  if (!markerBytes.equals(Buffer.from("openobsidian-vault-data-v1\n", "utf8"))) {
+    throw new Error(`Canvas note creation found an unexpected selected-vault app-data marker at ${markerPath}`);
+  }
+
+  const eframeChanges = changes.filter((change) => change.path === "app.ron");
+  const eframeFilesAfter = await readSnapshotTextFiles(
+    appDataRoot,
+    after,
+    (path) => path.toLowerCase().endsWith(".ron"),
+  );
+  ensureAppDataChangesAreMacEframeUiStateOnly(
+    eframeChanges,
+    eframeFilesAfter,
+    "OpenObsidian app data after explicit Canvas note creation",
+    [canvasVaultRoot, resolve(canvasVaultRoot), appDataRoot, canonicalAppDataRoot],
+  );
+
+  const journalPath = `${vaultDataPrefix}/journal.jsonl`;
+  const recoveryDirectoryPath = `${vaultDataPrefix}/recovery`;
+  if (before.some((entry) => entry.path === journalPath || entry.path === recoveryDirectoryPath)) {
+    throw new Error("Canvas note creation app-data baseline already contains a journal or recovery directory for the selected vault");
+  }
+  const outOfScope = changes.filter((change) => (
+    change.path !== "app.ron" && change.path !== vaultDataPrefix && !change.path.startsWith(`${vaultDataPrefix}/`)
+  ));
+  if (outOfScope.length > 0) {
+    throw new Error(`Canvas note creation changed app-data paths outside the selected vault transaction: ${JSON.stringify(outOfScope).slice(0, 6_000)}`);
+  }
+
+  const journalBytes = await readFile(join(appDataRoot, journalPath));
+  const journalEntry = after.find((entry) => entry.path === journalPath);
+  if (journalEntry?.kind !== "file"
+    || journalEntry.bytes !== journalBytes.length
+    || journalEntry.sha256 !== createHash("sha256").update(journalBytes).digest("hex")) {
+    throw new Error("Canvas note creation journal bytes do not match its app-data snapshot");
+  }
+  const journalText = journalBytes.toString("utf8");
+  if (!journalText.endsWith("\n")) throw new Error("Canvas note creation journal is missing its final record delimiter");
+  const journalRecordsText = journalText.replace(/\r?\n$/, "");
+  const journalLines = journalRecordsText.split(/\r?\n/);
+  if (journalLines.length !== 2 || journalLines.some((line) => line.trim().length === 0)) {
+    throw new Error(`Canvas note creation journal must contain exactly two non-empty records: ${journalText.slice(0, 2_000)}`);
+  }
+  const journalRows = journalLines.map((line) => JSON.parse(line) as Record<string, unknown>);
+  const expectedJournalKeys = ["error", "expected_revision", "id", "next_revision", "operation", "recorded_at", "relative_path", "state"].sort();
+  if (journalRows.length !== 2 || journalRows.some((row) => (
+    JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(expectedJournalKeys)
+  ))) {
+    throw new Error(`Canvas note creation journal must contain exactly two complete create records: ${journalText.slice(0, 2_000)}`);
+  }
+  const [prepared, committed] = journalRows;
+  if (!prepared || !committed) throw new Error("Canvas note creation journal is missing a prepared or committed record");
+  const operationId = typeof prepared?.id === "string" ? prepared.id : "";
+  const validTimestamp = (value: unknown): value is string => (
+    typeof value === "string" && /^\d{10,}$/.test(value) && Number.isSafeInteger(Number(value))
+  );
+  if (!/^\d+-\d+-\d+$/.test(operationId)
+    || committed?.id !== operationId
+    || prepared?.operation !== "create"
+    || committed?.operation !== "create"
+    || prepared?.state !== "prepared"
+    || committed?.state !== "committed"
+    || prepared?.relative_path !== notePath
+    || committed?.relative_path !== notePath
+    || prepared?.expected_revision !== null
+    || committed?.expected_revision !== null
+    || prepared?.next_revision !== noteSha256
+    || committed?.next_revision !== noteSha256
+    || prepared?.error !== null
+    || committed?.error !== null
+    || !validTimestamp(prepared?.recorded_at)
+    || !validTimestamp(committed?.recorded_at)
+    || Number(committed.recorded_at) < Number(prepared.recorded_at)) {
+    throw new Error(`Canvas note creation journal records did not match the confirmed destination and bytes: ${journalText.slice(0, 2_000)}`);
+  }
+
+  const incomingName = `${operationId}-incoming`;
+  const recoveryBytesPath = `${recoveryDirectoryPath}/${incomingName}.bin`;
+  const recoveryManifestPath = `${recoveryDirectoryPath}/${incomingName}.json`;
+  const expectedTransactionPaths = new Set([journalPath, recoveryDirectoryPath, recoveryBytesPath, recoveryManifestPath]);
+  const transactionChanges = changes.filter((change) => change.path !== "app.ron");
+  if (transactionChanges.length !== expectedTransactionPaths.size
+    || transactionChanges.some((change) => !expectedTransactionPaths.has(change.path) || change.before !== undefined)) {
+    throw new Error(`Canvas note creation app data contained an unexpected selected-vault delta: ${JSON.stringify(transactionChanges).slice(0, 6_000)}`);
+  }
+  const recoveryDirectory = after.find((entry) => entry.path === recoveryDirectoryPath);
+  if (recoveryDirectory?.kind !== "directory") {
+    throw new Error(`Canvas note creation recovery directory is missing: ${recoveryDirectoryPath}`);
+  }
+
+  const recoveryBytes = await readFile(join(appDataRoot, recoveryBytesPath));
+  const recoveryBytesEntry = after.find((entry) => entry.path === recoveryBytesPath);
+  if (recoveryBytesEntry?.kind !== "file"
+    || !recoveryBytes.equals(noteBytes)
+    || recoveryBytesEntry.bytes !== recoveryBytes.length
+    || recoveryBytesEntry.sha256 !== noteSha256
+    || createHash("sha256").update(recoveryBytes).digest("hex") !== noteSha256) {
+    throw new Error("Canvas note creation recovery bytes do not match the confirmed note or app-data snapshot");
+  }
+
+  const manifestBytes = await readFile(join(appDataRoot, recoveryManifestPath));
+  const manifestEntry = after.find((entry) => entry.path === recoveryManifestPath);
+  if (manifestEntry?.kind !== "file"
+    || manifestEntry.bytes !== manifestBytes.length
+    || manifestEntry.sha256 !== createHash("sha256").update(manifestBytes).digest("hex")) {
+    throw new Error("Canvas note creation recovery manifest does not match its app-data snapshot");
+  }
+  const manifest = JSON.parse(manifestBytes.toString("utf8")) as Record<string, unknown>;
+  const expectedManifestKeys = ["bytes", "captured_at", "current_revision", "expected_revision", "id", "path", "relative_path", "revision"].sort();
+  const expectedIncomingPath = join(canonicalAppDataRoot, recoveryBytesPath);
+  const normalizeRecoveryPath = (value: string): string => {
+    const slashNormalized = value.replace(/\\/g, "/");
+    return process.platform === "win32"
+      ? slashNormalized.replace(/^\/\/\?\//, "").toLowerCase()
+      : slashNormalized;
+  };
+  if (JSON.stringify(Object.keys(manifest).sort()) !== JSON.stringify(expectedManifestKeys)
+    || manifest.id !== incomingName
+    || manifest.relative_path !== notePath
+    || manifest.revision !== noteSha256
+    || manifest.bytes !== noteBytes.length
+    || typeof manifest.path !== "string"
+    || normalizeRecoveryPath(manifest.path) !== normalizeRecoveryPath(expectedIncomingPath)
+    || !validTimestamp(manifest.captured_at)
+    || manifest.expected_revision !== null
+    || manifest.current_revision !== null) {
+    throw new Error(`Canvas note creation recovery manifest did not match the confirmed transaction: ${manifestBytes.toString("utf8").slice(0, 2_000)}`);
+  }
+
+  return {
+    vault_data_id: vaultDataId,
+    operation_id: operationId,
+    journal_rows: journalRows.length,
+    recovery_bytes: recoveryBytes.length,
+  };
 }
 
 async function createObsidianProfile(
@@ -2581,6 +2747,7 @@ async function clickVisibleOpenObsidianControl(
       yFraction = (anchor.top + anchor.height / 2) / ocrSize.height;
     } else {
       let verticalControlOffset = 18;
+      if (controlName === "Preview note creation") verticalControlOffset = 90;
       if (process.platform === "darwin" && controlName === "Read note source preview") verticalControlOffset = 28;
       if (controlName === "Close source preview") {
         verticalControlOffset = anchorPhrase === "Note source preview" ? 70 : 28;
@@ -2593,6 +2760,10 @@ async function clickVisibleOpenObsidianControl(
   } else {
     xFraction = (bounds.left + bounds.width / 2) / ocrSize.width;
     yFraction = (bounds.top + bounds.height / 2) / ocrSize.height;
+  }
+  if (!Number.isFinite(xFraction) || !Number.isFinite(yFraction)
+    || xFraction < 0 || xFraction > 1 || yFraction < 0 || yFraction > 1) {
+    throw new Error(`OCR mapped ${JSON.stringify(controlName)} outside the captured OpenObsidian window`);
   }
   let interaction: string;
 
@@ -3796,42 +3967,62 @@ async function runReferenceImageEmbedResolution(
     30_000,
   );
 
-  // The periodic vault reconciliation is deferred while link resolution is busy.
-  // If it was already due, it runs immediately afterward and clears the displayed
-  // result. Give the deferred reconciliation a chance to arrive, wait for it to
-  // settle, then resolve again for stable UI proof.
+  // A watcher refresh can be logged just after its earlier idle check settles.
+  // Refresh completion clears link results, so the visual-proof loop below also
+  // watches for a newer refresh and restores the result before retrying the proof.
+  let latestResolutionLine = diagnostics.lastIndexOf(expectedSummary);
+  let resolutionRetryCount = 0;
+  const retryAfterWatcherRefresh = async (
+    settledRefresh: Awaited<ReturnType<typeof waitForOpenObsidianRefreshIdle>>,
+  ): Promise<boolean> => {
+    const watcherRequest = settledRefresh.requests.filter((request) => (
+      request.source === "watcher_reconciliation" && request.line > latestResolutionLine
+    )).at(-1);
+    const latestRequest = settledRefresh.requests.at(-1);
+    const latestResult = settledRefresh.consumedResults.at(-1);
+    const receiverBusy = settledRefresh.receiverStates.at(-1)?.busy ?? false;
+    if (!watcherRequest || !latestRequest || !latestResult || latestResult.line <= latestRequest.line || receiverBusy) {
+      return false;
+    }
+    if (!latestResult.succeeded || latestResult.entries !== countMarkdownFiles(vaultBaseline)) {
+      throw new Error(`OpenObsidian watcher refresh after image resolution returned an unexpected result: ${JSON.stringify(latestResult)}`);
+    }
+    resolutionReport.post_resolution_watcher_refresh = {
+      request: watcherRequest,
+      consumed_result: latestResult,
+      receiver_busy: receiverBusy,
+      settled_for_ms: settledRefresh.settled_for_ms,
+    };
+
+    const previousLogLineCount = (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/).length;
+    const retryAction = await invokeResolveLinkStatus();
+    diagnostics = await waitFor(
+      "OpenObsidian to restore the resolved image-embed result after vault reconciliation",
+      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
+      (lines) => {
+        const summaryLine = lines.lastIndexOf(expectedSummary);
+        const retryLines = lines.slice(summaryLine);
+        return summaryLine >= previousLogLineCount - 1
+          && retryLines.includes(expectedReference)
+          && retryLines.some((line) => line.startsWith(expectedEmbedPrefix));
+      },
+      30_000,
+    );
+    latestResolutionLine = diagnostics.lastIndexOf(expectedSummary);
+    resolutionRetryCount += 1;
+    resolutionReport.resolve_link_status_retry_action = retryAction;
+    resolutionReport.resolution_retry_count = resolutionRetryCount;
+    await saveReport();
+    return true;
+  };
+
   await delay(2_000);
   const settledRefresh = await waitForOpenObsidianRefreshIdle(
     0,
     countMarkdownFiles(vaultBaseline),
     false,
   );
-  const initialResolutionLine = diagnostics.findIndex((line) => line === expectedSummary);
-  const refreshAfterInitialResolution = settledRefresh.requests.some((request) => (
-    request.source === "watcher_reconciliation" && request.line > initialResolutionLine
-  ));
-  if (refreshAfterInitialResolution) {
-    resolutionReport.post_resolution_watcher_refresh = {
-      request: settledRefresh.requests.find((request) => (
-        request.source === "watcher_reconciliation" && request.line > initialResolutionLine
-      )) ?? null,
-      consumed_result: settledRefresh.consumedResults.at(-1) ?? null,
-      receiver_busy: settledRefresh.receiverStates.at(-1)?.busy ?? false,
-    };
-    const previousLogLineCount = diagnostics.length;
-    resolutionReport.resolve_link_status_retry_action = await invokeResolveLinkStatus();
-    diagnostics = await waitFor(
-      "OpenObsidian to restore the resolved image-embed result after vault reconciliation",
-      async () => (await readFile(join(reportDirectory, "openobsidian.log"), "utf8").catch(() => "")).split(/\r?\n/),
-      (lines) => {
-        const retryLines = lines.slice(previousLogLineCount);
-        return retryLines.includes(expectedSummary)
-          && retryLines.includes(expectedReference)
-          && retryLines.some((line) => line.startsWith(expectedEmbedPrefix));
-      },
-      30_000,
-    );
-  }
+  await retryAfterWatcherRefresh(settledRefresh);
   const embedDiagnostic = diagnostics.filter((line) => line.startsWith(expectedEmbedPrefix)).at(-1);
   const imageDetails = embedDiagnostic?.match(/dimensions=(\d+)x(\d+), decoded_rgba_bytes=(\d+), alt=(.+)$/);
   if (!embedDiagnostic || !imageDetails) {
@@ -3860,14 +4051,54 @@ async function runReferenceImageEmbedResolution(
     alt_text: imageAltText,
   };
 
-  const rendered = await waitFor("OpenObsidian to show resolved link status and the image attachment in its native window", async () => {
+  type ResolvedImageCapture = Awaited<ReturnType<typeof captureOpenObsidianScreenshot>>;
+  let rendered: ResolvedImageCapture | null = null;
+  let lastRenderedCapture: ResolvedImageCapture | null = null;
+  const renderedDeadline = Date.now() + 30_000;
+  while (Date.now() < renderedDeadline) {
     await delay(350);
-    return await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-resolved-image-embed");
-  }, (capture) => (
-    ocrTextContainsFuzzyPhrase(capture.ocrText, `Link status refreshed for ${authoredNotePath}`)
-    && ocrTextContainsFuzzyPhrase(capture.ocrText, "Resolved: 1")
-    && ocrTextContainsFuzzyPhrase(capture.ocrText, `Vault image: ${attachmentPath}`)
-  ), 30_000);
+    const capture = await captureOpenObsidianScreenshot(window.window_id, child, "openobsidian-resolved-image-embed");
+    lastRenderedCapture = capture;
+    const visualProofMatches = (
+      ocrTextContainsFuzzyPhrase(capture.ocrText, `Link status refreshed for ${authoredNotePath}`)
+      && ocrTextContainsFuzzyPhrase(capture.ocrText, "Resolved: 1")
+      && ocrTextContainsFuzzyPhrase(capture.ocrText, `Vault image: ${attachmentPath}`)
+    );
+
+    const refreshState = await readOpenObsidianRefreshDiagnostics();
+    const staleWatcherRequest = refreshState.requests.some((request) => (
+      request.source === "watcher_reconciliation" && request.line > latestResolutionLine
+    ));
+    if (staleWatcherRequest) {
+      if (resolutionRetryCount >= 3) {
+        resolutionReport.last_visual_proof_screen_ocr = capture.ocrText.slice(0, 4_000);
+        resolutionReport.last_visual_proof_screenshot = relative(reportDirectory, capture.pngPath);
+        await saveReport();
+        throw new Error(`OpenObsidian logged another watcher refresh after ${resolutionRetryCount} image-resolution retries; refusing to accept visual proof from before the refresh`);
+      }
+      const settledAfterStaleRefresh = await waitForOpenObsidianRefreshIdle(
+        0,
+        countMarkdownFiles(vaultBaseline),
+        false,
+      );
+      if (!await retryAfterWatcherRefresh(settledAfterStaleRefresh)) {
+        throw new Error("OpenObsidian logged a watcher refresh after image resolution but its settled state could not be verified");
+      }
+      continue;
+    }
+    if (visualProofMatches) {
+      rendered = capture;
+      break;
+    }
+  }
+  if (!rendered) {
+    if (lastRenderedCapture) {
+      resolutionReport.last_visual_proof_screen_ocr = lastRenderedCapture.ocrText.slice(0, 4_000);
+      resolutionReport.last_visual_proof_screenshot = relative(reportDirectory, lastRenderedCapture.pngPath);
+      await saveReport();
+    }
+    throw new Error(`Timed out waiting for OpenObsidian to show resolved link status and the image attachment in its native window; retries=${resolutionRetryCount}; last OCR=${JSON.stringify(lastRenderedCapture?.ocrText.slice(0, 2_000) ?? "no screenshot captured")}`);
+  }
   resolutionReport.result_screen_ocr = rendered.ocrText.slice(0, 4_000);
   resolutionReport.result_screenshot = relative(reportDirectory, rendered.pngPath);
   resolutionReport.result_window_screenshot = relative(reportDirectory, rendered.windowPngPath);
@@ -5774,9 +6005,9 @@ async function runOpenObsidianCanvasNoteCreation(
     const expandedForm = await waitFor(
       "OpenObsidian to expose the Canvas note-creation fields",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-expanded-form", noteReport),
-      (capture) => capture.ocrText.includes("Canvas path")
-        && capture.ocrText.includes("Text card ID")
-        && capture.ocrText.includes("New Markdown path"),
+      (capture) => ocrTextContainsPhrase(capture.ocrText, "Canvas path")
+        && ocrTextContainsPhrase(capture.ocrText, "Text card ID")
+        && ocrTextContainsPhrase(capture.ocrText, "New Markdown path"),
       30_000,
     );
     screenshots.expanded_form = relative(reportDirectory, expandedForm.windowPngPath);
@@ -5805,9 +6036,7 @@ async function runOpenObsidianCanvasNoteCreation(
     const unverifiedFields = Object.entries(fieldReadbacks).filter(([, result]) => !(result as {exact_readback?: boolean}).exact_readback).map(([name]) => name);
     if (unverifiedFields.length > 0) throw new Error(`Canvas form inputs did not provide exact field-value readbacks: ${unverifiedFields.join(", ")}`);
     const ready = await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-form", noteReport);
-    if (!ready.ocrText.includes("Canvas path")
-      || !ready.ocrText.includes("Text card ID")
-      || !ready.ocrText.includes("New Markdown path")) {
+    if (!canvasFormFieldLabelsVisible(ready.ocrText)) {
       throw new Error(`Canvas note-creation form labels were not visible after exact field-value readback: ${JSON.stringify(ready.ocrText.slice(0, 2_000))}`);
     }
     screenshots.form = relative(reportDirectory, ready.windowPngPath);
@@ -5821,7 +6050,13 @@ async function runOpenObsidianCanvasNoteCreation(
     noteReport.vault_snapshot_after_form = afterForm;
     noteReport.no_write_during_form_entry = true;
 
-    interactions.preview = await invokeNativeAccessibleControl(child, window.window_id, "Preview note creation", undefined, true);
+    interactions.preview = await invokeNativeAccessibleControl(
+      child,
+      window.window_id,
+      "Preview note creation",
+      "Create note from Canvas text card",
+      true,
+    );
     const preview = await waitFor(
       "OpenObsidian to show the exact Canvas text-card preview",
       async () => await captureOpenObsidianScreenshot(window!.window_id, child!, "openobsidian-canvas-note-create-preview", noteReport),
@@ -5932,16 +6167,23 @@ async function runOpenObsidianCanvasNoteCreation(
       appDataAfterCreation,
       (path) => path.toLowerCase().endsWith(".ron"),
     );
-    ensureAppDataChangesAreMacEframeUiStateOnly(
-      appDataChangesFromCreation,
-      eframeFilesAfterCreation,
-      "OpenObsidian app data after explicit Canvas note creation",
-      [canvasVaultRoot, canonicalVault, appDataRoot, canonicalAppData],
-    );
     noteReport.app_data_snapshot_after_creation = appDataAfterCreation;
     noteReport.app_data_changes_from_creation = appDataChangesFromCreation;
-    noteReport.app_data_change_policy_passed = true;
     noteReport.eframe_persistence_files_after_creation = eframeFilesAfterCreation;
+    await saveReport();
+    const transactionValidation = await validateCanvasNoteCreationAppDataTransaction(
+      appDataBeforeCreation,
+      appDataAfterCreation,
+      appDataChangesFromCreation,
+      appDataRoot,
+      canonicalAppData,
+      canvasVaultRoot,
+      canvasNotePath,
+      expectedNoteBytes,
+      expectedNoteSha256,
+    );
+    noteReport.app_data_creation_transaction_validation = transactionValidation;
+    noteReport.app_data_change_policy_passed = true;
     noteReport.vault_unchanged_after_close = true;
     await saveReport();
     return afterClose;
