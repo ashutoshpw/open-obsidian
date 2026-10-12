@@ -833,14 +833,17 @@ fn field_value<'a>(row: &'a BaseRow, field: &str) -> Option<Value> {
         "file.name" => Some(Value::String(
             row.path.rsplit('/').next().unwrap_or(&row.path).to_owned(),
         )),
-        "file.ext" => Some(Value::String(
-            row.path
-                .rfind('.')
-                .map_or("", |index| &row.path[index + 1..])
-                .to_owned(),
-        )),
+        "file.ext" => Some(Value::String(file_extension(&row.path))),
         _ => row.properties.get(field).cloned(),
     }
+}
+
+fn file_extension(path: &str) -> String {
+    let file_name = path.rsplit('/').next().unwrap_or(path);
+    file_name
+        .rfind('.')
+        .map_or("", |index| &file_name[index + 1..])
+        .to_owned()
 }
 
 fn matches_filter(filter: &BaseFilter, row: &BaseRow) -> bool {
@@ -905,6 +908,7 @@ fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> 
         "file.name".to_owned(),
         Value::String(row.path.rsplit('/').next().unwrap_or(&row.path).to_owned()),
     );
+    values.insert("file.ext".to_owned(), Value::String(file_extension(&row.path)));
     for (name, expression) in &view.formulas {
         // A formula owns its output name. If it cannot be evaluated, a
         // same-named source property must not masquerade as the formula value.
@@ -913,17 +917,26 @@ fn evaluate_row(row: &BaseRow, view: &BaseView, issues: &mut Vec<BaseIssue>) -> 
             Some(value) => {
                 values.insert(name.clone(), value);
             }
-            None => issues.push(BaseIssue::new(
-                BaseIssueKind::UnsupportedFormula,
-                format!("Unsupported Bases formula: {expression}"),
-                Some(expression.clone()),
-            )),
+            None => push_issue_once(
+                issues,
+                BaseIssue::new(
+                    BaseIssueKind::UnsupportedFormula,
+                    format!("Unsupported Bases formula: {expression}"),
+                    Some(expression.clone()),
+                ),
+            ),
         }
     }
     EvaluatedBaseRow {
         path: row.path.clone(),
         properties: row.properties.clone(),
         values,
+    }
+}
+
+fn push_issue_once(issues: &mut Vec<BaseIssue>, issue: BaseIssue) {
+    if !issues.contains(&issue) {
+        issues.push(issue);
     }
 }
 
@@ -1029,7 +1042,29 @@ fn compare_values(left: Option<&Value>, right: Option<&Value>) -> std::cmp::Orde
         (None, None) | (Some(Value::Null), Some(Value::Null)) => Ordering::Equal,
         (None, _) | (Some(Value::Null), _) => Ordering::Less,
         (_, None) | (_, Some(Value::Null)) => Ordering::Greater,
+        (Some(Value::Number(left)), Some(Value::Number(right))) => {
+            compare_numbers(left, right)
+        }
         (Some(left), Some(right)) => natural_compare(&js_string(left), &js_string(right)),
+    }
+}
+
+fn compare_numbers(left: &Number, right: &Number) -> std::cmp::Ordering {
+    use std::cmp::Ordering;
+
+    let integer_value = |number: &Number| {
+        number
+            .as_i64()
+            .map(i128::from)
+            .or_else(|| number.as_u64().map(i128::from))
+    };
+    if let (Some(left), Some(right)) = (integer_value(left), integer_value(right)) {
+        return left.cmp(&right);
+    }
+
+    match (left.as_f64(), right.as_f64()) {
+        (Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
+        _ => natural_compare(&left.to_string(), &right.to_string()),
     }
 }
 
@@ -1694,6 +1729,136 @@ mod tests {
             definitions[0].issues[0].message,
             case["expected_issue"].as_str().unwrap()
         );
+    }
+
+    #[test]
+    fn numeric_filters_and_sorting_compare_json_numbers_by_value() {
+        let source = serde_json::json!({
+            "version": 1,
+            "views": [
+                {
+                    "type": "table",
+                    "name": "Ascending",
+                    "sort": [{"field": "score", "direction": "asc"}]
+                },
+                {
+                    "type": "table",
+                    "name": "Natural labels",
+                    "sort": [{"field": "label", "direction": "asc"}]
+                },
+                {
+                    "type": "list",
+                    "name": "Above quarter",
+                    "filter": {
+                        "kind": "comparison",
+                        "field": "score",
+                        "operator": "gt",
+                        "value": 0.25
+                    },
+                    "sort": [{"field": "score", "direction": "asc"}]
+                }
+            ]
+        });
+        let document = parse_base(
+            &serde_json::to_vec(&source).expect("numeric Bases source must encode"),
+        )
+        .expect("numeric Bases source must parse");
+        let row = |path: &str, score: f64, label: &str| BaseRow {
+            path: path.to_owned(),
+            properties: serde_json::json!({"score": score, "label": label})
+                .as_object()
+                .expect("row properties must be an object")
+                .clone(),
+        };
+        let rows = vec![
+            row("half.md", 0.5, "item10"),
+            row("two.md", 2.0, "item2"),
+            row("quarter.md", 0.25, "item3"),
+            row("small.md", 0.05, "item1"),
+        ];
+
+        let sorted = evaluate_base(&document, "Ascending", &rows)
+            .expect("numeric sort view must evaluate");
+        assert_eq!(
+            sorted.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+            ["small.md", "quarter.md", "half.md", "two.md"]
+        );
+
+        let natural = evaluate_base(&document, "Natural labels", &rows)
+            .expect("natural string sort view must evaluate");
+        assert_eq!(
+            natural
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["small.md", "two.md", "quarter.md", "half.md"]
+        );
+
+        let filtered = evaluate_base(&document, "Above quarter", &rows)
+            .expect("numeric filter view must evaluate");
+        assert_eq!(
+            filtered
+                .rows
+                .iter()
+                .map(|row| row.path.as_str())
+                .collect::<Vec<_>>(),
+            ["half.md", "two.md"]
+        );
+    }
+
+    #[test]
+    fn derived_file_extension_uses_basename_and_is_available_for_sorting() {
+        let source = br#"{"version":1,"views":[{"type":"table","name":"By extension","sort":[{"field":"file.ext"}]}]}"#;
+        let document = parse_base(source).expect("file metadata Bases source must parse");
+        let rows = vec![
+            BaseRow {
+                path: "folder.v1/no-extension".to_owned(),
+                properties: serde_json::Map::new(),
+            },
+            BaseRow {
+                path: "folder.v1/readme.md".to_owned(),
+                properties: serde_json::Map::new(),
+            },
+        ];
+
+        let result = evaluate_base(&document, "By extension", &rows)
+            .expect("file metadata view must evaluate");
+        assert_eq!(
+            result.rows.iter().map(|row| row.path.as_str()).collect::<Vec<_>>(),
+            ["folder.v1/no-extension", "folder.v1/readme.md"]
+        );
+        assert_eq!(
+            result.rows[0].values.get("file.ext"),
+            Some(&Value::String(String::new()))
+        );
+        assert_eq!(
+            result.rows[1].values.get("file.ext"),
+            Some(&Value::String("md".to_owned()))
+        );
+        assert_eq!(
+            result.rows[1].values.get("file.name"),
+            Some(&Value::String("readme.md".to_owned()))
+        );
+    }
+
+    #[test]
+    fn identical_unsupported_formula_issues_are_reported_once_for_many_rows() {
+        let source = br#"{"version":1,"views":[{"type":"list","name":"Notes","formulas":{"bad":"date(today)"}}]}"#;
+        let document = parse_base(source).expect("unsupported formula source must parse");
+        let rows = ["one.md", "two.md", "three.md"]
+            .into_iter()
+            .map(|path| BaseRow {
+                path: path.to_owned(),
+                properties: serde_json::Map::new(),
+            })
+            .collect::<Vec<_>>();
+
+        let result = evaluate_base(&document, "Notes", &rows)
+            .expect("unsupported formula view must evaluate with an issue");
+        assert_eq!(result.rows.len(), 3);
+        assert_eq!(result.issues.len(), 1);
+        assert_eq!(result.issues[0].expression.as_deref(), Some("date(today)"));
     }
 
     #[test]
