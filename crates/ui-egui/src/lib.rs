@@ -6352,9 +6352,7 @@ mod tests {
             result
                 .collection_issues
                 .iter()
-                .any(|issue| {
-                    issue.relative_path == Path::new("Notes").join("Unreadable.md")
-                })
+                .any(|issue| { issue.relative_path == Path::new("Notes").join("Unreadable.md") })
         );
 
         harness.get_by_label("Bases");
@@ -6400,7 +6398,7 @@ mod tests {
             ),
             (
                 "Boards/Tasks.base",
-                r#"{"version":1,"formulas":{"unsupportedDate":"date(today)"},"views":[{"type":"table","limit":1},{"type":"table","name":"","limit":2},{"type":"table","name":"Duplicate","limit":3},{"type":"table","name":"Duplicate","limit":4}]}"#,
+                r#"{"version":1,"views":[{"type":"table","limit":1,"formulas":{"unsupportedDate":"date(today)"}},{"type":"table","name":"","limit":2},{"type":"table","name":"Duplicate","limit":3},{"type":"table","name":"Duplicate","limit":4}]}"#,
             ),
         ] {
             let path = vault_path.join(relative_path);
@@ -6443,10 +6441,7 @@ mod tests {
 
         harness.get_by_label("Base file").click();
         harness.step();
-        let tasks_base_label = Path::new("Boards")
-            .join("Tasks.base")
-            .display()
-            .to_string();
+        let tasks_base_label = Path::new("Boards").join("Tasks.base").display().to_string();
         harness.get_by_label(&tasks_base_label).click();
         harness.step();
         wait_for_bases_evaluation(&mut harness);
@@ -14455,10 +14450,7 @@ mod tests {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(
-            |ui, app| app.show_uninstall_cleanup(ui),
-            app,
-        );
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_uninstall_cleanup(ui), app);
 
         assert_eq!(
             uninstall_cleanup_summary(harness.state().uninstall_cleanup),
@@ -14537,10 +14529,7 @@ mod tests {
             session: Some(Arc::new(session)),
             ..OpenObsidianApp::default()
         };
-        let mut harness = Harness::new_ui_state(
-            |ui, app| app.show_uninstall_cleanup(ui),
-            app,
-        );
+        let mut harness = Harness::new_ui_state(|ui, app| app.show_uninstall_cleanup(ui), app);
 
         assert_eq!(
             uninstall_cleanup_summary(harness.state().uninstall_cleanup),

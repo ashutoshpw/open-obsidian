@@ -5008,3 +5008,25 @@ uses native path components and the rendered snapshot label, and verifies each
 selection immediately. The separate embedded Bases document test and fixture
 remain uncommitted. C07/C07.1 remain pending. No local tests, builds,
 formatters, linters, validators, or application launches were run.
+
+## 2026-10-12 — R2.8.98 attempt 3 launched
+
+The focused correction was committed and pushed to `origin/main` as exact source
+SHA `8bbcaaffbf4247786e87b3065549fe67881a6e1c`. Inventory run `38220445135`,
+quality `38220445083`, desktop build `38220445147`, plugin renderer
+`38220445098`, loaded-plugin workflows `38220445101`, Rust CI `38220445070`,
+and Obsidian vault round-trip `38220445088` were triggered on that SHA.
+Inventory, quality, plugin renderer, and loaded-plugin workflows have passed;
+desktop build, Rust CI, and round-trip were still active at capture. Exact job
+IDs, statuses, URLs, and available artifact metadata are in
+[`evidence/r2.8.98-attempt-3-8bbcaaf.json`](evidence/r2.8.98-attempt-3-8bbcaaf.json).
+No local validation was run. Do not push until all seven workflows resolve.
+The separate embedded Bases test and fixture remain uncommitted; C07/C07.1
+remain pending.
+
+
+## 2026-10-12 — R2.8.98 attempt 3 completed, not accepted
+
+Attempt 3 completed on exact source SHA `8bbcaaffbf4247786e87b3065549fe67881a6e1c`. Six of seven required workflows passed: inventory `38220445135`, quality `38220445083`, desktop build `38220445147`, plugin renderer `38220445098`, loaded-plugin workflows `38220445101`, and Obsidian 1.14.4 vault round-trip `38220445088`. Rust CI `38220445070` failed on Rust 1.95 job `114715131262`, macOS `114715131355`, Ubuntu `114715131544`, and Windows `114715131666`. Each job reported 114 passed and 1 failed in `tests::egui_bases_selectors_use_exact_paths_and_source_view_indices`: the fixture placed JSON `formulas` at the document root, so the selected view did not produce the expected unsupported-formula issue label. The parser reads JSON formulas from each view; the attempt 4 correction places the formula inside `views[0]`. Ubuntu also reported four rustfmt-only layout differences, now corrected in the focused UI source diff.
+
+All exact job conclusions and all 12 artifact IDs, sizes, SHA-256 digests, and expiration times are in [`evidence/r2.8.98-attempt-3-8bbcaaf.json`](evidence/r2.8.98-attempt-3-8bbcaaf.json). No local tests, builds, formatters, linters, validators, or application launches were run. The attempt 4 correction is prepared for an exact-SHA GitHub Actions run. The separate R2.8.99 source change `crates/doc/src/bases.rs` and fixture `fixtures/c07-embedded-base-evaluation.json` remain uncommitted and excluded. C07/C07.1 remain pending.
