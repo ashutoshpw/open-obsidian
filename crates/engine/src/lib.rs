@@ -875,7 +875,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            CanvasEditError::NotCanvasFile(path) if path == PathBuf::from("Board.md")
+            CanvasEditError::NotCanvasFile(path) if path.as_path() == Path::new("Board.md")
         ));
         assert_eq!(fs::read(vault.join("Board.md")).unwrap(), source);
     }
@@ -919,7 +919,7 @@ mod tests {
         assert!(matches!(
             preview_error,
             CanvasTextNodePreviewError::TooLarge { relative_path }
-                if relative_path == PathBuf::from("Huge.canvas")
+                if relative_path.as_path() == Path::new("Huge.canvas")
         ));
 
         let edit_error = session
@@ -928,7 +928,7 @@ mod tests {
         assert!(matches!(
             edit_error,
             CanvasEditError::TooLarge { relative_path }
-                if relative_path == PathBuf::from("Huge.canvas")
+                if relative_path.as_path() == Path::new("Huge.canvas")
         ));
         assert_eq!(fs::read(vault.join("Huge.canvas")).unwrap(), source);
 
@@ -943,7 +943,7 @@ mod tests {
         assert!(matches!(
             note_create_error,
             CanvasNoteCreateError::TooLarge { relative_path }
-                if relative_path == PathBuf::from("Huge.canvas")
+                if relative_path.as_path() == Path::new("Huge.canvas")
         ));
         assert!(!vault.join("Notes/Created.md").exists());
     }
@@ -972,7 +972,7 @@ mod tests {
         assert!(matches!(
             error,
             CanvasEditError::TooLarge { relative_path }
-                if relative_path == PathBuf::from("Board.canvas")
+                if relative_path.as_path() == Path::new("Board.canvas")
         ));
         assert_eq!(fs::read(vault.join("Board.canvas")).unwrap(), source);
     }
