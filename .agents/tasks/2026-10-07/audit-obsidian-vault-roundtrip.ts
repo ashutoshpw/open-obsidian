@@ -5074,9 +5074,9 @@ function canvasInputCropWidth(controlName: string): number {
   throw new Error(`No Canvas input crop is configured for ${controlName}`);
 }
 
-const initialCanvasInputValues: Readonly<Record<string, string>> = {
+const canvasInputHintValues: Readonly<Record<string, string>> = {
   "Canvas path": "Boards/Idea.canvas",
-  "Text card ID": "text-1",
+  "Text card ID": "text-card-id",
   "New Markdown path": "Notes/Created.md",
 };
 
@@ -5374,7 +5374,7 @@ import pyatspi
 
 process_id = int(sys.argv[1])
 target_name = sys.argv[2]
-initial_value = sys.argv[3]
+hint_value = sys.argv[3]
 replacement = sys.argv[4]
 deadline = time.monotonic() + 20
 last_matches = []
@@ -5395,8 +5395,8 @@ while time.monotonic() < deadline:
                     editable = accessible.queryEditableText()
                     text = accessible.queryText()
                     current = text.getText(0, text.getCharacterCount())
-                    if name != target_name and current != initial_value:
-                        raise RuntimeError("editable field did not match its label or initial value")
+                    if name != target_name and current != hint_value:
+                        raise RuntimeError("editable field did not match its label or visible hint")
                     last_matches.append({"name": name, "role": role, "value_length": len(current)})
                     editable.setTextContents(replacement)
                     time.sleep(0.15)
@@ -5425,9 +5425,9 @@ print(json.dumps({"error": "editable accessible field was not found", "target": 
 sys.exit(1)
 `;
     try {
-      const initialValue = initialCanvasInputValues[controlName];
-      if (!initialValue) throw new Error(`No initial Linux Canvas value is configured for ${controlName}`);
-      const output = execFileSync("python3", ["-c", script, String(processId), controlName, initialValue, value], {
+      const hintValue = canvasInputHintValues[controlName];
+      if (!hintValue) throw new Error(`No visible Linux Canvas hint is configured for ${controlName}`);
+      const output = execFileSync("python3", ["-c", script, String(processId), controlName, hintValue, value], {
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
       }).trim();
@@ -5444,12 +5444,12 @@ sys.exit(1)
       }
     }
   } else if (process.platform === "darwin") {
-    const initialValue = initialCanvasInputValues[controlName];
-    if (!initialValue) throw new Error(`No initial macOS Canvas value is configured for ${controlName}`);
+    const hintValue = canvasInputHintValues[controlName];
+    if (!hintValue) throw new Error(`No visible macOS Canvas hint is configured for ${controlName}`);
     const script = `on run argv
       set processId to (item 1 of argv) as integer
       set targetName to item 2 of argv
-      set initialValue to item 3 of argv
+      set hintValue to item 3 of argv
       set replacement to item 4 of argv
       tell application "System Events"
         set targetProcess to first process whose unix id is processId
@@ -5466,11 +5466,11 @@ sys.exit(1)
                 set candidateName to name of candidate as text
               end try
               set fieldInventory to fieldInventory & "[role=" & candidateRole & ",name=" & candidateName & ",value=" & candidateValue & "]"
-              if candidateValue is initialValue then set end of matchingFields to candidate
+              if candidateName is targetName or candidateValue is hintValue then set end of matchingFields to candidate
             end if
           end try
         end repeat
-        if (count of matchingFields) is not 1 then error "Could not uniquely resolve the labeled " & targetName & " field by its initial value; matching_fields=" & (count of matchingFields) & "; fields=" & fieldInventory
+        if (count of matchingFields) is not 1 then error "Could not uniquely resolve the labeled " & targetName & " field by its label or visible hint; matching_fields=" & (count of matchingFields) & "; fields=" & fieldInventory
         set targetField to item 1 of matchingFields
         set value of targetField to replacement
         delay 0.15
@@ -5479,7 +5479,7 @@ sys.exit(1)
       end tell
     end run`;
     try {
-      const output = execFileSync("osascript", ["-e", script, String(processId), controlName, initialValue, value], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
+      const output = execFileSync("osascript", ["-e", script, String(processId), controlName, hintValue, value], {encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]}).trim();
       await delay(250);
       return JSON.stringify({
         name: controlName,
@@ -5488,7 +5488,7 @@ sys.exit(1)
         readback_source: "macOS accessibility value",
         expected_length: value.length,
         readback_length: value.length,
-        initial_value_match: initialValue,
+        label_or_hint_match: hintValue,
       });
     } catch (error) {
       const failure = error as NodeJS.ErrnoException & {stderr?: Buffer | string; stdout?: Buffer | string};
