@@ -752,7 +752,7 @@ mod tests {
 
         assert!(matches!(
             error,
-            CanvasNoteCreateError::NotCanvasFile(path) if path == PathBuf::from("Board.md")
+            CanvasNoteCreateError::NotCanvasFile(path) if path == *"Board.md"
         ));
         assert!(!vault.join("Created.md").exists());
         assert_eq!(fs::read(vault.join("Board.md")).unwrap(), source);
@@ -781,7 +781,7 @@ mod tests {
         assert!(matches!(
             session.preview_canvas_text_node("Notes/Index.md", "text-1"),
             Err(CanvasTextNodePreviewError::NotCanvasFile(path))
-                if path == PathBuf::from("Notes/Index.md")
+                if path == *"Notes/Index.md"
         ));
     }
 
